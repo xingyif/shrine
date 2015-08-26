@@ -1,0 +1,147 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html xml:lang="en" xmlns="http://www.w3.org/1999/xhtml" lang="en">
+
+<head>
+
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<link rel="stylesheet" type="text/css" href="../shrinestyle.css" />
+
+
+<title>SHRINE Query Quick Reference</title>
+
+<style>
+
+#guide	{font-family:"Arial", Arial, sans-serif;
+	 font-size:120%;
+	 text-align:center;
+	 padding-top:15px;
+	 padding-bottom:15px;
+	 color:white;
+	} 
+
+#footer	{font-family:"Arial", Arial, sans-serif;
+	 text-align:center;
+	 padding-top:1px;
+	 padding-bottom:1px;
+	 background-color:#D9ECF0;
+
+</style>
+
+</head>
+
+<body>
+
+
+<div>
+    <div id="guide">
+        
+            SHRINE Query Quick Reference
+    </div>
+
+
+<table border="0" bgcolor="white" cellpadding="3" width="100%">
+<tr>
+<td valign="top" width="25%" bgcolor="#D9ECF0"> 
+
+<!-- Navigation -->
+
+    <p>
+        <a href="index.htm">Contents</a> 
+    </p>
+
+
+    <p>
+        <a href="Toc252370633.htm">Query Topics</a></p>
+    <ul>
+    <li>
+
+         <a href="Toc252370633.htm">Data Steward</a>
+    </li>
+    <li>
+        <a href="Toc252370634.htm">Guidelines for Query Topics</a>
+    </li>
+    <li>
+        <a href="Toc252370635.htm">Sample Query Topic</a>
+    </li>
+  </ul>
+
+    <p>
+        <a href="Toc252370637.htm">Query Construction</a></p>
+    <ul>
+    <li>
+        <a href="Toc252370637.htm">Tool Logic</a>
+    </li>
+    <li>
+        <a href="Toc252370638.htm"><strong><em>Constraints</em></strong></a>
+    </li>
+    <li>
+        <a href="Toc252370639.htm">Term Values</a>
+    </li>
+    <li>
+        <a href="Toc252370640.htm">Query Optimization</a>
+    </li>
+  </ul>
+
+    <p>
+        <a href="Toc252370641.htm">Results: Query Status View</a>
+    </p>
+
+    <p>
+        &#91; <a href="../index.htm">SHRINE Help Main Menu</a> &#93;
+    </p>
+
+</td>
+<td valign="top">
+
+
+<!-- Content -->
+
+
+    <h2>
+        <a name="_Toc252370638">Constraints</a>
+    </h2>
+    <p>
+        At the top of each group are three criteria by which you can limit all query terms within that group:
+    </p>
+    <ul>
+    <li>
+        Dates &#8211; Set a date range to query terms associated with patients for that period.
+    <br/>
+        For example, a constraint setting of <em>Diagnosis of Asthma for &lt;date range&gt;</em> returns all patients diagnosed with asthma within the
+        specified date range.
+    </li>
+    <li>
+        Occurs &gt; 0x &#8211; Set the number of times that patients must be associated with the query term.
+    <br />
+        For example, a constraint setting of <em>Diagnosis of Fracture of ankle Occurs &gt; 2x</em> returns all patients diagnosed with a broken an ankle at
+        least twice.
+    </li>
+    <li>
+        Exclude &#8211; Exclude patients meeting the specified term or terms.
+    <br />
+        For example, <em>exclude all patients 35 years old</em> returns all patients who are not 35 years old.
+    </li>
+    </ul>
+
+    <p>
+        To remove a constraint, click the constraint again and remove the check box from the value that you set. For an exclusion constraint, simply click
+        Exclude again to remove it.
+    </p>
+    <p>
+        <strong>Note</strong>: Not all terms accept all constraints. For example, a demographic gender term of <em>Female</em> does not accept a date range constraint.
+    </p>
+</td>
+</tr>
+</table>
+
+</div>
+
+
+    <div id="footer">
+
+<p>Please use our <a href="http://cbmi.catalyst.harvard.edu/formsJsf/shrine_feedback.jsf" target=_BLANK>Feedback</a> form to contact the SHRINE team or to request assistance.</p>
+    </div>
+
+</body>
+
+</html>

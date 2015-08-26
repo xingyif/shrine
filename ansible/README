@@ -1,0 +1,4 @@
+These scripts have been moved to Stash at open.med:
+https://open.med.harvard.edu/stash/projects/SHRINE/repos/shrine-deploy/browse
+
+NOTE: the lone snapshot-deploy directory has been moved up a level, so all files are now sitting at the base of that repository. 

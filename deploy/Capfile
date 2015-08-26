@@ -1,0 +1,191 @@
+load 'deploy' if respond_to?(:namespace)
+Dir['vendor/plugins/*/recipes/*.rb'].each { |plugin| load(plugin) }
+require 'capistrano/ext/multistage'
+set :stages, %w(dev test prod)
+set :default_stage, "dev"
+set :application, 'shrine'
+set :scm, :none
+set :deploy_to do
+  "/opt/shrine/#{component}"
+end
+set :user, 'shrine'
+#set :cell_war, "../hms-war/target/*.war"
+set :cell_war, "../war/target/*.war"
+set :sheriff_war, "../sheriff/sheriff-war/target/*.war"
+set :proxy_war, "../proxy/target/*.war"
+set :webclient_pkg, "../shrine-webclient/"
+set :deploy_via, :copy
+set :repository do
+  fetch(:deploy_from)
+end
+set :deploy_dir, "./work/"
+set :deploy_from do
+  dir = "#{deploy_dir}/prep_#{release_name}"
+  system("mkdir -p #{dir}")
+  dir
+end
+
+namespace :tomcat do
+  desc "start tomcat"
+  task :start do
+    run "nohup $TOMCAT_HOME/bin/startup.sh"
+  end
+
+  desc "stop tomcat"
+  task :stop do
+    run "nohup $TOMCAT_HOME/bin/shutdown.sh"
+  end
+
+  desc "tail $TOMCAT_HOME/logs/*.log and logs/catalina.out"
+  task :tail do
+    stream "tail -f $TOMCAT_HOME/logs/*.log $TOMCAT_HOME/logs/catalina.out"
+  end
+end
+
+before 'cell:deploy' do
+  system("cp #{cell_war} #{deploy_from}")
+end
+
+namespace :cell do
+  desc "push the cell artifact and restart tomcat"
+  task :default, :roles => :cell do
+    tomcat.stop
+    cell.deploy
+    tomcat.start
+  end
+
+  desc "push the cell artifact"
+  task :deploy, :roles => :cell do
+    set :component, 'cell'
+    top.deploy.strategy.deploy!
+    top.deploy.finalize_update
+    run("rm -rf $TOMCAT_HOME/webapps/shrine-cell/")
+    symlink
+  end
+end
+
+after 'cell:deploy' do
+  system("rm #{deploy_from}/*")
+end
+
+before 'sheriff:deploy' do
+  system("cp #{sheriff_war} #{deploy_from}")
+end
+
+namespace :sheriff do
+  desc "push the sheriff artifact and restart tomcat"
+  task :default, :roles => :sheriff do
+    tomcat.stop
+    sheriff.deploy
+    tomcat.start
+  end
+
+  desc "push the sheriff artifact"
+  task :deploy, :roles => :sheriff do
+    set :component, 'sheriff'
+    top.deploy.strategy.deploy!
+    top.deploy.finalize_update
+    run("rm -rf $TOMCAT_HOME/webapps/sheriff/")
+    symlink
+  end
+end
+
+after 'sheriff:deploy' do
+  system("rm #{deploy_from}/*")
+end
+
+before 'proxy:deploy' do
+  system("cp #{proxy_war} #{deploy_from}")
+end
+
+namespace :proxy do
+  desc "push the proxy artifact and restart tomcat"
+  task :default, :roles => :webclient do
+    tomcat.stop
+    proxy.deploy
+    tomcat.start
+  end
+
+  desc "push the proxy artifact"
+  task :deploy, :roles => :webclient do
+    set :component, 'proxy'
+    top.deploy.strategy.deploy!
+    top.deploy.finalize_update
+    run("rm -rf $TOMCAT_HOME/webapps/shrine-proxy/")
+    symlink
+  end
+end
+
+after 'proxy:deploy' do
+  system("rm #{deploy_from}/*")
+end
+
+before 'webclient:deploy' do
+  system("cp -r #{webclient_pkg} #{deploy_from}/shrine-webclient")
+end
+
+namespace :webclient do
+  desc "push the webclient artifact and restart tomcat"
+  task :default, :roles => :webclient do
+    tomcat.stop
+    webclient.deploy
+    tomcat.start
+  end
+
+  desc "push the webclient artifact"
+  task :deploy, :roles => :webclient do
+    set :component, 'webclient'
+    top.deploy.strategy.deploy!
+    top.deploy.finalize_update
+    symlink
+    run("cp -r #{deploy_to}/assets/* #{current_path}/shrine-webclient")
+  end
+end
+
+after 'webclient:deploy' do
+  system("rm -rf #{deploy_from}/*")
+end
+
+
+#recreate the 'current' symlink to point to the release_path
+def symlink
+  run("rm -f #{current_path} && ln -s #{release_path} #{current_path}")
+end
+
+desc "Push all SHRINE-related artifacts and restart the servers"
+task :shrine do
+  tomcat.stop
+  cell.deploy
+  reset_variables
+  sheriff.deploy
+  reset_variables
+  proxy.deploy
+  reset_variables
+  webclient.deploy
+  tomcat.start
+end
+
+#reset all of the existing Capistrano variables, this is needed to allow re-calling deploy tasks for
+#the different artifacts
+def reset_variables
+  @variables.each do |k, v|
+    reset! k
+  end
+end
+
+
+task :clean do
+  system("rm -rf #{deploy_dir}")
+end
+#
+# Disable all the default tasks that
+# either don't apply, or I haven't made work.
+#
+namespace :deploy do
+  [:upload, :cold, :start, :stop, :migrate, :migrations, :finalize_update].each do |the_task|
+    desc "[internal] disabled"
+    task the_task do
+      #do nothing
+    end
+  end
+end

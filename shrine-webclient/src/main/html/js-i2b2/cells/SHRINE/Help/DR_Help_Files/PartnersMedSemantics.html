@@ -1,0 +1,225 @@
+﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html xml:lang="en" xmlns="http://www.w3.org/1999/xhtml" lang="en">
+
+<head>
+
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<link rel="stylesheet" type="text/css" href="../shrinestyle.css" />
+
+
+<title>SHRINE Data Reference Guide</title>
+
+<style>
+
+#guide	{font-family:"Arial", Arial, sans-serif;
+	 font-size:120%;
+	 text-align:center;
+	 padding-top:15px;
+	 padding-bottom:15px;
+	 color:white;
+	} 
+
+#footer	{font-family:"Arial", Arial, sans-serif;
+	 text-align:center;
+	 padding-top:1px;
+	 padding-bottom:1px;
+	 background-color:#D9ECF0;
+
+</style>
+
+</head>
+
+<body>
+
+
+<div>
+    <div id="guide">
+        
+            SHRINE Data Reference Guide
+    </div>
+
+
+<table border="0" bgcolor="white" cellpadding="3" width="100%">
+<tr>
+<td valign="top" width="25%" bgcolor="#D9ECF0"> 
+
+<!-- Navigation -->
+
+    <p>
+        <a href="index.htm">Contents</a> 
+    </p>
+
+    <p>
+        <a href="Toc252797232.htm">Basics</a>
+    </p>
+    <ul><li>
+        <a href="Toc252797232.htm">Terminology</a>
+     </li>
+     <li>
+       <a href="Toc252797233.htm">Availability and Maintenance</a>
+    </li></ul>
+    <p>
+        <a href="Toc252797235.htm">Standards</a>
+    </p>
+    <ul><li>
+        <a href="Toc252797235.htm">Core Standards</a>
+    </li>
+    <li>
+        <a href="Toc252797236.htm">Demographic Standards</a>
+    </li>
+    <li>
+        <a href="Toc252797237.htm">Diagnoses Standards</a>
+    </li>
+    <li>
+        <a href="Toc252797238.htm">Medications Standards</a>
+    <ul><li>
+        <a href="Toc252797239.htm">Site to RxNorm Associations Type Mapping</a>
+    </li>
+    <li>
+        <a href="Toc252797240.htm">Site to NDR-RT Mapping</a>
+    </li></ul>
+    </li>
+    <li>
+        <a href="Toc252797241.htm">Labs Standards</a>
+    </li></ul>
+    <p>
+        <a href="Toc252797243.htm">Local Data</a>
+    </p>
+    <ul><li>
+        <a href="Toc252797243.htm">Semantics Preservation</a>
+
+
+    </li>
+    <li>
+        <a href="LocalDiags.htm">Local Diagnoses Data</a>
+	<ul>
+
+	<li><a href="PartnersDiagSemantics.html">BWH and MGH Diagnoses</a></li>
+
+	</ul>
+    </li>
+    <li>
+        <a href="Toc252797244.htm">Local Medications Data</a>
+	<ul><li><a href="BidmcMedSemantics.html">BIDMC Medications</a></li>
+
+	<li><a href="PartnersMedSemantics.html"><strong><em>BWH and MGH Medications</em></strong></a></li>
+
+	<li><a href="ChbMedSemantics.html">CHB Medications</a></li></ul>
+    </li></ul>
+    <p>
+        &#91; <a href="../index.htm">SHRINE Help Main Menu</a> &#93;
+    </p>
+
+</td>
+<td valign="top">
+
+
+<!-- Content -->
+
+
+    <h3>
+        <a name="PartnersMedSemantics">BWH and MGH Medications</a>
+    </h3>
+    <p>
+        Medications are derived from <i>TSI</i>, the <a href="http://www.partners.org/cird/StaffPrj.asp?cBox=CurrProj&prAb=LMR" target="_blank">Longitudinal Medical Record</a> (LMR), and <i>OnCall</i> systems.  
+    </p>
+
+    <p>
+       Medications from TSI are associated with hospital encounters only. These comprise mainly inpatient status patients, but also include emergency department, surgical day care (SDC), or observation status patients. Hospital-based patient medications for BWH include inpatients, emergency room, observation stays, and newborns. For MGH, medications include inpatients, dialysis, observation stays, surgical day care, newborns and some research patients.
+    </p>
+
+    <p>
+       Medications from the LMR are associated with outpatient encounters, while the codes are defined locally. A number of analytic processes are performed to make the data as consistent and reliable as possible.  If a provider describes a medication in several different ways, such as, for example, aspirin, the analytic processes applied attempt to collapse all of the synonyms under one consistent code and description.  If the LMR code for this common medication is 3644, but it is described as <em>Aspirin</em> 79% of the time, as <em>ASA</em> 19% of the time, and as <em>Bayer</em> 3% of the time, these are reviewed manually, determined to be synonymous, and altered to a single description—Aspirin. 
+    </p>
+
+    <p>
+       Medications from the OnCall system are associated with outpatient encounters within MGH. The codes are in the <a href="http://www.clinfowiki.org/wiki/index.php/COmputer_STored_Ambulatory_Record_(COSTAR)" target="_blank">COSTAR</a> coding system.
+    </p>
+
+
+    <table border="1" cellpadding="3" cellspacing="0">
+        <thead>
+            <tr>
+                <th width="33%">
+                        Code System
+                 </th>
+                <th width="33%">
+                        Institution
+                </th>
+                <th width="34%">
+                        Encounter Type
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>
+                    <p>
+                        TSI Charge Codes
+                    </p>
+                </td>
+                <td>
+                    <p>
+                        BWH, MGH
+                    </p>
+                </td>
+                <td>
+                    <p>
+                        Hospital encounters (inpatient, emergency, observation, dialysis, newborns, research patients)
+                    </p>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <p>
+                        LMR
+                    </p>
+                </td>
+                <td>
+                    <p>
+                        BWH, MGH
+                    </p>
+                </td>
+                <td>
+                    <p>
+                        Outpatient encounters
+                    </p>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <p>
+                        COSTAR
+                    </p>
+                </td>
+                <td>
+                    <p>
+                        MGH
+                    </p>
+                </td>
+                <td>
+                    <p>
+                        Outpatient encounters
+                    </p>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+
+</td>
+</tr>
+</table>
+
+
+</div>
+
+
+    <div id="footer">
+
+<p>Please use our <a href="http://cbmi.catalyst.harvard.edu/formsJsf/shrine_feedback.jsf" target=_BLANK>Feedback</a> form to contact the SHRINE team or to request assistance.</p>
+    </div>
+
+</body>
+
+</html>

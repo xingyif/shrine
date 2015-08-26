@@ -1,0 +1,190 @@
+﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html xml:lang="en" xmlns="http://www.w3.org/1999/xhtml" lang="en">
+
+<head>
+
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<link rel="stylesheet" type="text/css" href="../shrinestyle.css" />
+
+
+<title>SHRINE Data Reference Guide</title>
+
+<style>
+
+#guide	{font-family:"Arial", Arial, sans-serif;
+	 font-size:120%;
+	 text-align:center;
+	 padding-top:15px;
+	 padding-bottom:15px;
+	 color:white;
+	} 
+
+#footer	{font-family:"Arial", Arial, sans-serif;
+	 text-align:center;
+	 padding-top:1px;
+	 padding-bottom:1px;
+	 background-color:#D9ECF0;
+
+</style>
+
+</head>
+
+<body>
+
+
+<div>
+    <div id="guide">
+        
+            SHRINE Data Reference Guide
+    </div>
+
+
+<table border="0" bgcolor="white" cellpadding="3" width="100%">
+<tr>
+<td valign="top" width="25%" bgcolor="#D9ECF0"> 
+
+<!-- Navigation -->
+
+    <p>
+        <a href="index.htm">Contents</a> 
+    </p>
+
+    <p>
+        <a href="Toc252797232.htm"><strong><em>Basics</em></strong></a>
+    </p>
+    <ul><li>
+        <a href="Toc252797232.htm"><strong><em>Terminology</em></strong></a>
+     </li>
+     <li>
+       <a href="Toc252797233.htm">Availability and Maintenance</a>
+    </li></ul>
+    <p>
+        <a href="Toc252797235.htm">Standards</a>
+    </p>
+    <ul><li>
+        <a href="Toc252797235.htm">Core Standards</a>
+    </li>
+    <li>
+        <a href="Toc252797236.htm">Demographic Standards</a>
+    </li>
+    <li>
+        <a href="Toc252797237.htm">Diagnoses Standards</a>
+    </li>
+    <li>
+        <a href="Toc252797238.htm">Medications Standards</a>
+    <ul><li>
+        <a href="Toc252797239.htm">Site to RxNorm Associations Type Mapping</a>
+    </li>
+    <li>
+        <a href="Toc252797240.htm">Site to NDR-RT Mapping</a>
+    </li></ul>
+    </li>
+    <li>
+        <a href="Toc252797241.htm">Labs Standards</a>
+    </li></ul>
+    <p>
+        <a href="Toc252797243.htm">Local Data</a>
+    </p>
+    <ul><li>
+        <a href="Toc252797243.htm">Semantics Preservation</a>
+
+
+    </li>
+    <li>
+        <a href="LocalDiags.htm">Local Diagnoses Data</a>
+	<ul>
+
+	<li><a href="PartnersDiagSemantics.html">BWH and MGH Diagnoses</a></li>
+
+	</ul>
+    </li>
+    <li>
+        <a href="Toc252797244.htm">Local Medications Data</a>
+	<ul><li><a href="BidmcMedSemantics.html">BIDMC Medications</a></li>
+
+	<li><a href="PartnersMedSemantics.html">BWH and MGH Medications</a></li>
+
+	<li><a href="ChbMedSemantics.html">CHB Medications</a></li></ul>
+    </li></ul>
+    <p>
+        &#91; <a href="../index.htm">SHRINE Help Main Menu</a> &#93;
+    </p>
+
+</td>
+<td valign="top">
+
+
+<!-- Content -->
+
+
+    <h1>
+        <a name="_Toc252797232">Basics</a>
+    </h1>
+    <p>
+        SHRINE currently makes patient demographics, diagnoses, medications, and a sample of laboratory results data available to be searched. SHRINE Core
+        ontology is a collection of terms that describe these data and can be used to construct queries. The terms are arranged into a hierarchy for easy
+        navigation; the ontology can be searched for a particular terms as well.
+    </p>
+    <p>
+        A standard terminology was selected where possible to represent each type of data accessible through use of the system. A terminology was modified as
+        necessary to fit the requirements of SHRINE.
+    </p>
+    <h2>
+        <a name="_Toc252797232">Terminology</a>
+    </h2>
+    <p>
+        The following standard terminology provides the baseline for the Core ontology:
+    </p>
+    <ul><li>
+        Demographics &#8211; Patient demographic data available at each participating SHRINE hospital include:
+    <ul>
+    <li>
+        Age
+    </li>
+    <li>
+        Gender &#8211; Health Level Seven International (HL7) <a href="http://www.hl7.org/v3ballot/html/infrastructure/vocabulary/AdministrativeGender.htm" title="HL7 Administrative Gender" target="_blank">Administrative Gender</a>
+    </li>
+    <li>
+        Language &#8211; International Organization for Standardization (ISO) <a href="http://www.iso.org/iso/catalogue_detail?csnumber=22109" title="ISO 639-1" target="_blank">ISO 639-1</a>
+    </li>
+    <li>
+        Marital status &#8211; HL7 <a href="http://www.hl7.org/v3ballot/html/infrastructure/vocabulary/MaritalStatus.htm"  title="HL7 Marital Status" target="_blank">Marital Status</a>
+    </li>
+    <li>
+        Race and Ethnicity &#8211; Centers for Disease Control and Prevention (CDC) <a href="http://www.cdc.gov/nedss/DataModels/index.html" title="CDC Race and Ethnicity" target="_blank">Race and Ethnicity Code Sets</a>
+    </li></ul></li>
+    <li>
+        Diagnoses &#8211; Diagnoses are identified by National Center for Health Statistics (NCHS) <a href="http://www.cdc.gov/nchs/about/otheract/icd9/abticd9.htm" title="ICD-9-CM" target="_blank">ICD-9-CM</a> standards and Clinical Classification
+        Software (<a href="http://www.hcup-us.ahrq.gov/toolssoftware/ccs/ccs.jsp" title="CSS" target="_blank">CCS</a>) hierarchy.
+    </li>
+    <li>
+        Medications &#8211; Medications are identified by the Unified Medical Language System (UMLS) <a href="http://www.nlm.nih.gov/research/umls/rxnorm/" title="RxNorm" target="_blank">RxNorm</a> (Ingredient) and the Veterans Administration
+        (VA) National Drug File Reference Terminology (<a href="http://bioportal.nci.nih.gov/ncbo/faces/pages/ontology_details.xhtml?ontology_display_name=National%20Drug%20File%20-%20Reference%20Terminology" title="NDR-RT" target="_blank">NDF-RT</a>) hierarchy.
+    </li>
+    <li>
+        Lab Tests &#8211; Data on lab tests is derived from the Clinical Data Repository (CDR). Data are identified by Logical Observation Identifiers
+        Names and Codes (<a href="http://loinc.org/" title="LOINC" target="_blank">LOINC</a>) and Partners HealthCare System.
+    </li></ul>
+    <p>
+        The Core ontology was constructed following recommendations of relevant government and private sector bodies using a pragmatic approach. It is a static snapshot of underlying standards. As they change (for example, there are regular updates of ICD-9-CM and RxNorm), we
+        expect that the Core ontology will follow after a reasonable delay to accommodate the effort of introducing the changes, resolving issues and completing quality
+        assurance processes.
+    </p>
+
+
+</td>
+</tr>
+</table>
+
+
+</div>
+
+    <div id="footer">
+
+<p>Please use our <a href="http://cbmi.catalyst.harvard.edu/formsJsf/shrine_feedback.jsf" target=_BLANK>Feedback</a> form to contact the SHRINE team or to request assistance.</p>
+    </div>
+
+
+</body>
+
+</html>

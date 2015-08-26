@@ -1,0 +1,62 @@
+<div>
+    <div class="row">
+        <div class="col-lg-12">
+            <h1 class="page-header">Topics</h1>
+        </div>
+        <!-- /.col-lg-12 -->
+    </div>
+
+        <div class="col-lg-12">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+
+                    <p>
+                    <div ng-switch on="{{userRole == roles.ROLE1}}" ng-cloak>
+                        <!-- researcher -->
+                        <div ng-switch-when="true">
+                            <button type="button"
+                                    class="btn btn-primary"
+                                    ng-click="createTopic()">
+                                New
+                            </button>
+                        </div>
+                        <!-- steward -->
+                        <div ng-cloak ng-switch-when="false">
+                            <div class="btn-group" role="group" aria-label="...">
+                                <button type="button"
+                                        class="btn btn-default"
+                                        ng-click="setStateAndRefresh(states.STATE1)"
+                                        ng-class="{'btn-primary': state === states.STATE1}">
+                                    {{states.STATE1}}
+                                </button>
+                                <button type="button"
+                                        class="btn btn-default"
+                                        ng-click="setStateAndRefresh(states.STATE2)"
+                                        ng-class="{'btn-primary': state === states.STATE2}">
+                                    {{states.STATE2}}
+                                </button>
+                                <button type="button"
+                                        class="btn btn-default"
+                                        ng-click="setStateAndRefresh(states.STATE3)"
+                                        ng-class="{'btn-primary': state === states.STATE3}">
+                                    {{states.STATE3}}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    </p>
+
+                </div>
+                <!-- /.panel-heading -->
+                <div class="panel-body">
+                    <p>
+                        <topic-table sorted-by="changeDate" sort="sort">
+                        </topic-table>
+                    </p>
+                </div>
+                <!-- /.panel-body -->
+            </div>
+
+        </div>
+    </div>
+</div>

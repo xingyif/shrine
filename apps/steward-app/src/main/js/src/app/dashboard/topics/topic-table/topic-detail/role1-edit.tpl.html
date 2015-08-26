@@ -1,0 +1,58 @@
+<div class="row">
+    <form role="form" ng-cloak name="form">
+        <div class="col-lg-12">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <form name="form" role="form">
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <h1 class="page-header">{{topic.name}} Edit</h1>
+                                </div>
+                                <div class="col-lg-12">
+                                    <p>
+                                    <div class="form-group">
+                                        <label>Topic Id:</label> {{topic.id}}
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Date Created:</label> {{formatDate(topic.createDate)}}
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Last Updated:</label> {{formatDate(topic.changeDate)}}
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Status:</label> {{topic.state}}
+                                    </div>
+                                    <div class="form-group">
+                                            <label>Topic Name*</label>
+                                            <input type="text"  ng-model="topic.name" name="topicname"
+                                                   id="topicname" class="form-control" required novalidate>
+                                    </div>
+                                    <div class="form-group">
+                                            <label>Please Describe Your Query's Intent*</label>
+                                            <textarea ng-model="topic.description" name="topicdescription"
+                                                      id="topicdescription" class="form-control" required
+                                                      novalidate></textarea>
+
+
+                                    </div>
+                                    <label>*<small>Required Field</small></label>
+                                    <div class="form-group text-center">
+
+                                        <button class="btn btn-primary" type="submit" ng-disabled="!form.$valid"
+                                                ng-click="update(topic.id, topic.name, topic.description)">
+                                            Update</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                        </div>
+                    </div>
+                </div>
+        </form>
+    </div>
+
+
+
+
+
+

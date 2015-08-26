@@ -1,0 +1,88 @@
+<div>
+    <table class="table table-striped">
+
+        <thead>
+        <tr>
+            <td>
+                <a href="#"
+                   ng-click="sort.currentColumn = 'stewardId'; sort.descending = !sort.descending; refreshHistory()">
+                    ID
+                    <span ng-show="sort.currentColumn == 'stewardId' && !sort.descending" class="fa fa-caret-down"></span>
+                    <span ng-show="sort.currentColumn == 'stewardId' && sort.descending" class="fa fa-caret-up"></span>
+                </a>
+            </td>
+            <td>
+                <a href="#"
+                   ng-click="sort.currentColumn = 'topicName'; sort.descending = !sort.descending; refreshHistory()">
+                    Query Topic
+                    <span ng-show="sort.currentColumn == 'topicName' && !sort.descending" class="fa fa-caret-down"></span>
+                    <span ng-show="sort.currentColumn == 'topicName' && sort.descending" class="fa fa-caret-up"></span>
+                </a>
+            </td>
+            <td>
+                <a href="#" ng-click="sort.currentColumn = 'researcherId'; sort.descending = !sort.descending; refreshHistory()">
+                    Username
+                    <span ng-show="sort.currentColumn == 'researcherId' && !sort.descending" class="fa fa-caret-down"></span>
+                    <span ng-show="sort.currentColumn == 'researcherId' && sort.descending" class="fa fa-caret-up"></span>
+                </a>
+            </td>
+            <td>
+                <a ng-click="sort.currentColumn = 'name'; sort.descending = !sort.descending; refreshHistory()">
+                    Query Text
+                    <span ng-show="sort.currentColumn == 'name' && !sort.descending" class="fa fa-caret-down"></span>
+                    <span ng-show="sort.currentColumn == 'name' && sort.descending" class="fa fa-caret-up"></span>
+                </a>
+            </td>
+            <td>
+                <a ng-click="sort.currentColumn = 'stewardResponse'; sort.descending = !sort.descending; refreshHistory()">
+                    Status
+                    <span ng-show="sort.currentColumn == 'stewardResponse' && !sort.descending" class="fa fa-caret-down"></span>
+                    <span ng-show="sort.currentColumn == 'stewardResponse' && sort.descending" class="fa fa-caret-up"></span>
+                </a>
+            </td>
+            <td>
+                <a ng-click="sort.currentColumn = 'date'; sort.descending= !sort.descending; refreshHistory()">
+                    Date
+                    <span ng-show="sort.currentColumn == 'date' && !sort.descending" class="fa fa-caret-down"></span>
+                    <span ng-show="sort.currentColumn == 'date' && sort.descending" class="fa fa-caret-up"></span>
+                </a>
+            </td>
+        </tr>
+        </thead>
+
+        <tbody>
+
+        <tr ng-repeat="query in queries">
+            <td>{{query.stewardId}}</td>
+            <td class="big-data">{{query.topic.name}}</td>
+            <td>{{query.user.userName}}</td>
+
+            <td class="big-data">
+                <a href ng-click="showQuery(query)">{{query.name}}</a>
+            </td>
+            <td>{{query.stewardResponse}}</td>
+            <td>{{formatDate(query.date)}}</td>
+        </tr>
+        </tbody>
+
+    </table>
+    <!--
+    https://angular-ui.github.io/bootstrap/
+    http://getbootstrap.com/components/
+    -->
+    <div class="form-group text-center" ng-show="range > limit">
+        <pagination boundary-links="true"
+                    ng-change="onPageSelected()"
+                    total-items="length"
+                    ng-model="pageIndex"
+                    class="pagination-sm"
+                    items-per-page="limit"
+                    previous-text="&lsaquo;"
+                    next-text="&rsaquo;"
+                    first-text="&laquo;"
+                    last-text="&raquo;">
+
+        </pagination>
+
+    </div>
+</div>

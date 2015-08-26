@@ -1,0 +1,1 @@
+/trunk/apps/admin-app/src/main/resources/client/test.txt Test!

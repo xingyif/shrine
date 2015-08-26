@@ -1,0 +1,26 @@
+
+<table ng-cloak>
+    <thead>
+    <tr>
+        <th width="100">
+            Status
+        </th>
+        <th width="200">
+            Query Topic Count
+        </th>
+
+    </tr>
+    </thead>
+    <tbody>
+    <tr ng-repeat="state in topicsPerState.states">
+        <td>{{parseStateTitle(state)}}</td>
+        <td>{{parseStateCount(state)}}</td>
+    </tr>
+    </tbody>
+    <tfoot>
+    <tr>
+        <td>Total: </td>
+        <td>{{topicsPerState.total}}</td>
+    </tr>
+    </tfoot>
+</table>

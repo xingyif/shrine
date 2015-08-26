@@ -1,0 +1,15 @@
+{"queryDefinitions": [
+  {
+    "name": "Heartbeat Query",
+    "panels" : [
+    {
+        "terms" : [
+        {
+            "value" : "\\\\SHRINE\\SHRINE\\Diagnoses\\Mental Illness\\Disorders usually diagnosed in infancy, childhood, or adolescence\\Pervasive developmental disorders\\Infantile autism, current or active state\\"
+        }
+        ]
+    }
+    ]
+  }
+]
+}

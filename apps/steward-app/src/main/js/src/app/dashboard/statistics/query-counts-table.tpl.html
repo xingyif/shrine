@@ -1,0 +1,25 @@
+
+<table ng-cloak>
+    <thead>
+    <tr>
+        <th width="100">
+            User
+        </th>
+        <th width="200">
+            Query Count
+        </th>
+    </tr>
+    </thead>
+    <tbody>
+        <tr ng-repeat="user in queriesPerUser.users">
+            <td>{{user._1.userName}}</td>
+            <td>{{user._2}}</td>
+        </tr>
+    </tbody>
+    <tfoot>
+        <tr>
+            <td>Total: </td>
+            <td>{{queriesPerUser.total}}</td>
+        </tr>
+    </tfoot>
+</table>

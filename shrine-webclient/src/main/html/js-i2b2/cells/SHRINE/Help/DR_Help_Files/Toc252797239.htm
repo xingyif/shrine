@@ -1,0 +1,177 @@
+﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html xml:lang="en" xmlns="http://www.w3.org/1999/xhtml" lang="en">
+
+<head>
+
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<link rel="stylesheet" type="text/css" href="../shrinestyle.css" />
+
+
+<title>SHRINE Data Reference Guide</title>
+
+<style>
+
+#guide	{font-family:"Arial", Arial, sans-serif;
+	 font-size:120%;
+	 text-align:center;
+	 padding-top:15px;
+	 padding-bottom:15px;
+	 color:white;
+	} 
+
+#footer	{font-family:"Arial", Arial, sans-serif;
+	 text-align:center;
+	 padding-top:1px;
+	 padding-bottom:1px;
+	 background-color:#D9ECF0;
+
+</style>
+
+</head>
+
+<body>
+
+
+<div>
+    <div id="guide">
+        
+            SHRINE Data Reference Guide
+    </div>
+
+
+<table border="0" bgcolor="white" cellpadding="3" width="100%">
+<tr>
+<td valign="top" width="25%" bgcolor="#D9ECF0"> 
+
+<!-- Navigation -->
+
+    <p>
+        <a href="index.htm">Contents</a> 
+    </p>
+
+    <p>
+        <a href="Toc252797232.htm">Basics</a>
+    </p>
+    <ul><li>
+        <a href="Toc252797232.htm">Terminology</a>
+     </li>
+     <li>
+       <a href="Toc252797233.htm">Availability and Maintenance</a>
+    </li></ul>
+    <p>
+        <a href="Toc252797235.htm">Standards</a>
+    </p>
+    <ul><li>
+        <a href="Toc252797235.htm">Core Standards</a>
+    </li>
+    <li>
+        <a href="Toc252797236.htm">Demographic Standards</a>
+    </li>
+    <li>
+        <a href="Toc252797237.htm">Diagnoses Standards</a>
+    </li>
+    <li>
+        <a href="Toc252797238.htm">Medications Standards</a>
+    <ul><li>
+        <a href="Toc252797239.htm"><strong><em>Site to RxNorm Associations Type Mapping</em></strong></a>
+    </li>
+    <li>
+        <a href="Toc252797240.htm">Site to NDR-RT Mapping</a>
+    </li></ul>
+    </li>
+    <li>
+        <a href="Toc252797241.htm">Labs Standards</a>
+    </li></ul>
+    <p>
+        <a href="Toc252797243.htm">Local Data</a>
+    </p>
+    <ul><li>
+        <a href="Toc252797243.htm">Semantics Preservation</a>
+
+
+    </li>
+    <li>
+        <a href="LocalDiags.htm">Local Diagnoses Data</a>
+	<ul>
+
+	<li><a href="PartnersDiagSemantics.html">BWH and MGH Diagnoses</a></li>
+
+	</ul>
+    </li>
+    <li>
+        <a href="Toc252797244.htm">Local Medications Data</a>
+	<ul><li><a href="BidmcMedSemantics.html">BIDMC Medications</a></li>
+
+	<li><a href="PartnersMedSemantics.html">BWH and MGH Medications</a></li>
+
+	<li><a href="ChbMedSemantics.html">CHB Medications</a></li></ul>
+    </li></ul>
+    <p>
+        &#91; <a href="../index.htm">SHRINE Help Main Menu</a> &#93;
+    </p>
+
+</td>
+<td valign="top">
+
+
+<!-- Content -->
+
+
+    <h3>
+        <a name="_Toc252797239">Site to RxNorm Associations Type Mapping</a>
+    </h3>
+    <p>
+        For the ingredient name (IN) and trade name (BN), the BN is derived from <a href="http://www.fda.gov/Drugs/InformationOnDrugs/ucm142438.htm" title="FDA Trade Name" target="_blank">FDA Trade Name</a>, and is the same as IN in most cases. In cases where they
+        differ, such as extended release variants with something similar to <em>XL</em> in the trade name, that component of the IN is not in the BN.
+    </p>
+    <p>
+        A diagram indicates the datatype relationships for medication data.
+    </p>
+    <p align="left">
+        <img src="images/rxnorm_tty.PNG" width="341" border="0" height="212"/>
+    </p>
+    <p>
+        This relationship map is described as follows:
+    </p>
+    <ul>
+        <li>
+            IN &rarr; has_tradename &rarr; BN
+        </li>
+        <li>
+            IN &rarr; ingedient_of &rarr; SCDC
+        </li>
+        <li>
+            SCDC &rarr; has_tradename &rarr; SBDC
+        </li>
+        <li>
+            IN &rarr; ingredient_of &rarr; SCDF
+        </li>
+        <li>
+            SCDF &rarr; has_tradename &rarr; SBDF
+        </li>
+        <li>
+            SCDF &rarr; inverse_isa &rarr; SCD
+        </li>
+        <li>
+            SCD &rarr; has_tradename &rarr; SBD
+        </li>
+    </ul>
+
+
+
+</td>
+</tr>
+</table>
+
+
+</div>
+
+
+    <div id="footer">
+
+<p>Please use our <a href="http://cbmi.catalyst.harvard.edu/formsJsf/shrine_feedback.jsf" target=_BLANK>Feedback</a> form to contact the SHRINE team or to request assistance.</p>
+    </div>
+
+</body>
+
+</html>
