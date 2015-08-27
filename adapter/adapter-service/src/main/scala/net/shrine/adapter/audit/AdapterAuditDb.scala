@@ -45,12 +45,20 @@ case class AdapterAuditDb(schemaDef:AdapterAuditSchema,dataSource: DataSource) e
     }
   }
 
-  def insertResultSent(resultSent: ResultSent):Unit = {
-    dbRun(allResultsSent += resultSent)
+  def insertQueryReceived(broadcastMessage: BroadcastMessage):Unit = {
+    QueryReceived.fromBroadcastMessage(broadcastMessage).foreach(insertQueryReceived)
   }
 
-  def selectAllResultsSent:Seq[ResultSent] = {
-    dbRun(allResultsSent.result)
+  def insertQueryReceived(queryReceived:QueryReceived):Unit = {
+    dbRun(allQueriesReceived += queryReceived)
+  }
+
+  def selectAllQueriesReceived:Seq[QueryReceived] = {
+    dbRun(allQueriesReceived.result)
+  }
+
+  def insertExecutionStarted(runQueryRequest: RunQueryRequest):Unit = {
+    insertExecutionStarted(ExecutionStarted.fromRequest(runQueryRequest))
   }
 
   def insertExecutionStarted(executionStart:ExecutionStarted):Unit = {
@@ -61,6 +69,10 @@ case class AdapterAuditDb(schemaDef:AdapterAuditSchema,dataSource: DataSource) e
     dbRun(allExecutionStarts.result)
   }
 
+  def insertExecutionCompletedShrineResponse(shrineResponse: ShrineResponse) = {
+    ExecutionCompleted.fromResponse(shrineResponse).foreach(insertExecutionCompleted)
+  }
+
   def insertExecutionCompleted(executionCompleted:ExecutionCompleted):Unit = {
     dbRun(allExecutionCompletes += executionCompleted)
   }
@@ -68,13 +80,16 @@ case class AdapterAuditDb(schemaDef:AdapterAuditSchema,dataSource: DataSource) e
   def selectAllExecutionCompletes:Seq[ExecutionCompleted] = {
     dbRun(allExecutionCompletes.result)
   }
-
-  def insertQueryReceived(queryReceived:QueryReceived):Unit = {
-    dbRun(allQueriesReceived += queryReceived)
+  def insertResultSent(shrineResponse:ShrineResponse):Unit = {
+    ResultSent.fromResponse(shrineResponse).foreach(insertResultSent)
   }
 
-  def selectAllQueriesReceived:Seq[QueryReceived] = {
-    dbRun(allQueriesReceived.result)
+  def insertResultSent(resultSent: ResultSent):Unit = {
+    dbRun(allResultsSent += resultSent)
+  }
+
+  def selectAllResultsSent:Seq[ResultSent] = {
+    dbRun(allResultsSent.result)
   }
 }
 
@@ -161,6 +176,7 @@ case class AdapterAuditSchema(jdbcProfile: JdbcProfile) extends Loggable {
 object AdapterAuditSchema {
 
   val allConfig:Config = AdapterConfigSource.config
+  //todo rename adapter2 to adapter
   val config:Config = allConfig.getConfig("shrine.adapter2.audit.database")
 
   val slickProfileClassName = config.getString("slickProfileClassName")

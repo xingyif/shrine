@@ -1,7 +1,5 @@
 package net.shrine.adapter
 
-import net.shrine.log.Loggable
-
 import scala.concurrent.duration.DurationInt
 import org.junit.Test
 import net.shrine.util.ShouldMatchersForJUnit
@@ -13,7 +11,7 @@ import net.shrine.adapter.translators.QueryDefinitionTranslator
 import net.shrine.client.HttpClient
 import net.shrine.client.HttpResponse
 import net.shrine.client.Poster
-import net.shrine.protocol.{HiveCredentials, AuthenticationInfo, BroadcastMessage, CrcRequest, Credential, I2b2ResultEnvelope, QueryResult, RawCrcRunQueryResponse, ReadResultRequest, ReadResultResponse, ResultOutputType, RunQueryRequest, RunQueryResponse, ErrorResponse, BaseShrineResponse, DefaultBreakdownResultOutputTypes, ShrineRequest}
+import net.shrine.protocol.{HiveCredentials, AuthenticationInfo, BroadcastMessage, CrcRequest, Credential, I2b2ResultEnvelope, QueryResult, RawCrcRunQueryResponse, ReadResultRequest, ReadResultResponse, ResultOutputType, RunQueryRequest, RunQueryResponse, ErrorResponse, BaseShrineResponse, DefaultBreakdownResultOutputTypes}
 import net.shrine.protocol.RawCrcRunQueryResponse.toQueryResultMap
 import net.shrine.protocol.DefaultBreakdownResultOutputTypes.PATIENT_AGE_COUNT_XML
 import net.shrine.protocol.ResultOutputType.PATIENT_COUNT_XML
@@ -25,7 +23,6 @@ import net.shrine.protocol.query.QueryDefinition
 import net.shrine.protocol.query.Term
 import net.shrine.util.XmlDateHelper
 import net.shrine.util.XmlUtil
-import net.shrine.adapter.dao.MockAdapterDao
 import scala.util.Success
 import net.shrine.dao.squeryl.SquerylEntryPoint
 import scala.concurrent.duration.Duration
@@ -35,8 +32,8 @@ import net.shrine.adapter.dao.model.QueryResultRow
 /**
  * @author Bill Simons
  * @author Clint Gilbert
- * @date 4/19/11
- * @link http://cbmi.med.harvard.edu
+ * @since 4/19/11
+ * @see http://cbmi.med.harvard.edu
  */
 final class RunQueryAdapterTest extends AbstractSquerylAdapterTest with ShouldMatchersForJUnit {
   private val queryDef = QueryDefinition("foo", Term("foo"))
@@ -446,9 +443,9 @@ final class RunQueryAdapterTest extends AbstractSquerylAdapterTest with ShouldMa
     for {
       (resultType, origBreakdown) <- original
 
-      val mappings = Map("network" -> localTerms)
+      mappings = Map("network" -> localTerms)
 
-      val translator = new QueryDefinitionTranslator(new ExpressionTranslator(mappings))
+      translator = new QueryDefinitionTranslator(new ExpressionTranslator(mappings))
       obfscBreakdown <- obfuscated.get(resultType)
       key <- origBreakdown.data.keySet
     } {

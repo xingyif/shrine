@@ -2,13 +2,12 @@ package net.shrine.adapter
 
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
-import net.shrine.adapter.audit.ResultSent
+import net.shrine.adapter.audit.AdapterAuditDb
 
 import scala.Option.option2Iterable
 import scala.concurrent.Await
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
-import scala.concurrent.duration.DurationLong
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
@@ -17,11 +16,8 @@ import net.shrine.adapter.Obfuscator.obfuscateResults
 import net.shrine.adapter.dao.AdapterDao
 import net.shrine.adapter.dao.model.Breakdown
 import net.shrine.adapter.dao.model.ShrineQueryResult
-import net.shrine.protocol.{HiveCredentials, AuthenticationInfo, BroadcastMessage, ErrorResponse, HasQueryResults, QueryResult, ReadResultRequest, ReadResultResponse, ResultOutputType, ShrineRequest, ShrineResponse, BaseShrineRequest, RunQueryRequest, RawCrcRunQueryResponse, RunQueryResponse}
+import net.shrine.protocol.{HiveCredentials, AuthenticationInfo, BroadcastMessage, ErrorResponse, HasQueryResults, QueryResult, ReadResultRequest, ReadResultResponse, ResultOutputType, ShrineRequest, ShrineResponse, BaseShrineRequest}
 import net.shrine.protocol.query.QueryDefinition
-import net.shrine.serialization.I2b2Unmarshaller
-import net.shrine.serialization.XmlMarshaller
-import net.shrine.client.HttpClient
 import net.shrine.util.StackTrace
 import net.shrine.util.Tries.sequence
 import scala.concurrent.duration.Duration
@@ -106,7 +102,6 @@ abstract class AbstractReadQueryResultAdapter[Req <: BaseShrineRequest, Rsp <: S
               errorResponse(queryId) 
             }
             case Some(shrineQueryResult) => {
-              //todo log ACT audit metrics here, too
               if (shrineQueryResult.isDone) {
                 debug(s"Query $queryId is done and already stored, returning stored results")
 
@@ -115,13 +110,8 @@ abstract class AbstractReadQueryResultAdapter[Req <: BaseShrineRequest, Rsp <: S
                 debug(s"Query $queryId is imcomplete, asking CRC for results")
 
                 val result: ShrineResponse = retrieveQueryResults(queryId, req, shrineQueryResult, message)
+                if (collectAdapterAudit) AdapterAuditDb.db.insertResultSent(result)
 
-                if(collectAdapterAudit) {
-                  val queryResponseAuditData = ResultSent.fromResponse(result)
-                  queryResponseAuditData.map {
-                    debug(_)
-                  }
-                }
                 result
               }
             }

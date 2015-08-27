@@ -1,6 +1,6 @@
 package net.shrine.adapter
 
-import net.shrine.adapter.audit.{ExecutionCompleted, ExecutionStarted, QueryReceived, ResultSent}
+import net.shrine.adapter.audit.AdapterAuditDb
 
 import scala.util.Failure
 import scala.util.Success
@@ -51,16 +51,8 @@ final case class RunQueryAdapter(
   }
 
   override protected[adapter] def processRequest(message: BroadcastMessage): ShrineResponse = {
-    //todo to store the ACT metrics audit data, need four tables.
-    //todo One here for when the query arrives
 
-    if(collectAdapterAudit) {
-      val queryReceiptAuditData = QueryReceived.fromBroadcastMessage(message)
-      queryReceiptAuditData.map {
-        debug(_)
-      }
-    }
-    //todo store the ACT metrics audit data here for when results are transmitted back, and also other places for stored queries
+    if (collectAdapterAudit) AdapterAuditDb.db.insertQueryReceived(message)
 
     if (isLockedOut(message.networkAuthn)) {
       throw new AdapterLockoutException(message.networkAuthn)
@@ -79,19 +71,13 @@ final case class RunQueryAdapter(
       debug(s"Queueing query from user ${message.networkAuthn.domain}:${message.networkAuthn.username}")
 
       storeQuery(authnToUse, message, runQueryReq)
-      //todo where are stored query results returned??
 
     } else {
       debug(s"Performing query from user ${message.networkAuthn.domain}:${message.networkAuthn.username}")
 
       val result: ShrineResponse = runQuery(authnToUse, message.copy(request = runQueryReq.withAuthn(authnToUse)), runQueryReq.withAuthn(authnToUse))
-      //todo results transmitted back
-      if (collectAdapterAudit) {
-        val queryResponseAuditData = ResultSent.fromResponse(result)
-        queryResponseAuditData.map {
-          debug(_)
-        }
-      }
+      if (collectAdapterAudit) AdapterAuditDb.db.insertResultSent(result)
+
       result
     }
   }
@@ -126,12 +112,8 @@ final case class RunQueryAdapter(
   }
 
   private def runQuery(authnToUse: AuthenticationInfo, message: BroadcastMessage, request: RunQueryRequest): ShrineResponse = {
-    //todo query started processing here
+    if (collectAdapterAudit) AdapterAuditDb.db.insertQueryReceived(message)
 
-    if(collectAdapterAudit) {
-      val queryExecutionStartAuditData = ExecutionStarted.fromRequest(request)
-      debug(queryExecutionStartAuditData)
-    }
     //NB: Pass through ErrorResponses received from the CRC.
     //See: https://open.med.harvard.edu/jira/browse/SHRINE-794
     val result = super.processRequest(message) match {
@@ -140,12 +122,8 @@ final case class RunQueryAdapter(
         processRawCrcRunQueryResponse(authnToUse, request, rawRunQueryResponse)
       }
     }
-    //todo query finished processing here
+    if (collectAdapterAudit) AdapterAuditDb.db.insertExecutionCompletedShrineResponse(result)
 
-    if(collectAdapterAudit) {
-      val queryExecutionCompletedAuditData = ExecutionCompleted.fromResponse(result)
-      queryExecutionCompletedAuditData.map(debug(_))
-    }
     result
   }
 
