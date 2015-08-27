@@ -16,3 +16,6 @@ target/
 **/resources/client/index.html
 **/resources/client/src/
 
+# idea
+.idea/
+*.iml
