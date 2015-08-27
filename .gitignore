@@ -1,0 +1,18 @@
+*.class
+*.log
+
+# mvn
+target/
+
+# emacs cruft
+*.*~
+
+# javascript artifacts
+**/src/main/js/build/
+**/js/node/
+**/js/node_modules/
+**/resources/client/config/
+**/resources/client/happy/happy-whoami.xml
+**/resources/client/index.html
+**/resources/client/src/
+
