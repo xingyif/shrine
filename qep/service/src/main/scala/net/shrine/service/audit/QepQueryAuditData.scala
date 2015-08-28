@@ -1,6 +1,7 @@
 package net.shrine.service.audit
 
 import net.shrine.audit.{QueryTopicId, Time, QueryName, NetworkQueryId, UserName, ShrineNodeId}
+import net.shrine.protocol.RunQueryRequest
 
 /**
  * Container for QEP audit data for ACT metrics
@@ -17,8 +18,6 @@ case class QepQueryAuditData(shrineNodeId:ShrineNodeId,
 
 object QepQueryAuditData extends ((ShrineNodeId,UserName,NetworkQueryId,QueryName,Time,Option[QueryTopicId]) => QepQueryAuditData) {
 
-//todo should be able to access the actId from the KeyStore.myCn, if you can find a way to get at it.
-
   def apply(
     shrineNodeId:String,
     userName:String,
@@ -33,4 +32,14 @@ object QepQueryAuditData extends ((ShrineNodeId,UserName,NetworkQueryId,QueryNam
       System.currentTimeMillis(),
       queryTopicId
     )
+
+  def fromRunQueryRequest(request:RunQueryRequest,commonName:String):QepQueryAuditData = {
+    QepQueryAuditData(
+      commonName,
+      request.authn.username,
+      request.networkQueryId,
+      request.queryDefinition.name,
+      request.topicId)
+  }
+
 }

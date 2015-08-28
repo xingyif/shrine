@@ -8,6 +8,7 @@ import javax.sql.DataSource
 
 import com.typesafe.config.Config
 import net.shrine.log.Loggable
+import net.shrine.protocol.RunQueryRequest
 import net.shrine.service.QepConfigSource
 import net.shrine.audit.{QueryTopicId, Time, QueryName, NetworkQueryId, UserName, ShrineNodeId}
 
@@ -41,6 +42,10 @@ case class QepAuditDb(schemaDef:QepAuditSchema,dataSource: DataSource) extends L
     blocking {
       Await.result(future, 10 seconds)
     }
+  }
+
+  def insertQepQuery(runQueryRequest:RunQueryRequest,commonName:String):Unit = {
+    insertQepQuery(QepQueryAuditData.fromRunQueryRequest(runQueryRequest,commonName))
   }
 
   def insertQepQuery(qepQueryAuditData: QepQueryAuditData):Unit = {

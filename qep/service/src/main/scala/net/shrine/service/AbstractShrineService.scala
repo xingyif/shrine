@@ -86,18 +86,12 @@ trait AbstractShrineService[BaseResp <: BaseShrineResponse] extends Loggable {
 
     val result = doBroadcastQuery(request, runQueryAggregatorFor(request), shouldBroadcast)
 
-    // tuck the ACT audit data into a database here
-    if(collectQepAudit) {
-      val qepQueryAuditData = QepQueryAuditData(
-        commonName,
-        request.authn.username,
-        request.networkQueryId,
-        request.queryDefinition.name,
-        request.topicId)
+    debug(s"collectQepAudit is $collectQepAudit")
 
-      //todo network id is -1 !
-      QepAuditDb.db.insertQepQuery(qepQueryAuditData)
-    }
+    // tuck the ACT audit metrics data into a database here
+    //todo network id is -1 !
+    if (collectQepAudit) QepAuditDb.db.insertQepQuery(request,commonName)
+
     result
   }
 

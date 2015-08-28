@@ -130,18 +130,18 @@ case class AdapterAuditSchema(jdbcProfile: JdbcProfile) extends Loggable {
   class ResultsSentTable(tag:Tag) extends Table[ResultSent](tag,"resultsSent") {
     def networkQueryId = column[NetworkQueryId]("networkQueryId")
     def queryName = column[QueryName]("queryName")
-    def timeQuerySent = column[Time]("timeQuerySent")
+    def timeResultsSent = column[Time]("timeResultsSent")
 
-    def * = (networkQueryId,queryName,timeQuerySent) <> (ResultSent.tupled,ResultSent.unapply)
+    def * = (networkQueryId,queryName,timeResultsSent) <> (ResultSent.tupled,ResultSent.unapply)
   }
   val allResultsSent = TableQuery[ResultsSentTable]
   
   class ExecutionStartsTable(tag:Tag) extends Table[ExecutionStarted](tag,"executionStarts") {
     def networkQueryId = column[NetworkQueryId]("networkQueryId")
     def queryName = column[QueryName]("queryName")
-    def timeQuerySent = column[Time]("timeQuerySent")
+    def timeExecutionStarts = column[Time]("timeExecutionStarts")
 
-    def * = (networkQueryId,queryName,timeQuerySent) <> (ExecutionStarted.tupled,ExecutionStarted.unapply)
+    def * = (networkQueryId,queryName,timeExecutionStarts) <> (ExecutionStarted.tupled,ExecutionStarted.unapply)
   }
   
   val allExecutionStarts = TableQuery[ExecutionStartsTable]
@@ -149,9 +149,9 @@ case class AdapterAuditSchema(jdbcProfile: JdbcProfile) extends Loggable {
   class ExecutionCompletesTable(tag:Tag) extends Table[ExecutionCompleted](tag,"executionCompletes") {
     def networkQueryId = column[NetworkQueryId]("networkQueryId")
     def queryName = column[QueryName]("queryName")
-    def timeQuerySent = column[Time]("timeQuerySent")
+    def timeExecutionCompletes = column[Time]("timeExecutionCompletes")
 
-    def * = (networkQueryId,queryName,timeQuerySent) <> (ExecutionCompleted.tupled,ExecutionCompleted.unapply)
+    def * = (networkQueryId,queryName,timeExecutionCompletes) <> (ExecutionCompleted.tupled,ExecutionCompleted.unapply)
   }
 
   val allExecutionCompletes = TableQuery[ExecutionCompletesTable]

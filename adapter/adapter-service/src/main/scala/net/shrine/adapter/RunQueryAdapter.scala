@@ -112,7 +112,7 @@ final case class RunQueryAdapter(
   }
 
   private def runQuery(authnToUse: AuthenticationInfo, message: BroadcastMessage, request: RunQueryRequest): ShrineResponse = {
-    if (collectAdapterAudit) AdapterAuditDb.db.insertQueryReceived(message)
+    if (collectAdapterAudit) AdapterAuditDb.db.insertExecutionStarted(request)
 
     //NB: Pass through ErrorResponses received from the CRC.
     //See: https://open.med.harvard.edu/jira/browse/SHRINE-794
