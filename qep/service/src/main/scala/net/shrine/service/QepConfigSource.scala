@@ -2,6 +2,7 @@ package net.shrine.service
 
 import com.typesafe.config.{Config, ConfigFactory}
 import net.shrine.config.AtomicConfigSource
+import net.shrine.log.Log
 
 /**
  * Source of config for the Qep. Put new config fields here, not in QepConfig, to enable Config-based apply() methods.
@@ -16,6 +17,10 @@ object QepConfigSource {
   def config:Config = {
     atomicConfig.config
   }
+
+  Log.debug(s"shrine.qep.audit.collectQepAudit is ${config.getBoolean("shrine.qep.audit.collectQepAudit")}")
+
+  Log.debug(s"config is $config")
 
   def configForBlock[T](key:String,value:AnyRef,origin:String)(block: => T):T = {
     atomicConfig.configForBlock(key,value,origin)(block)

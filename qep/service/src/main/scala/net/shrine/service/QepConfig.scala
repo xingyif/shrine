@@ -7,6 +7,7 @@ import net.shrine.authorization.steward.StewardConfig
 import net.shrine.client.EndpointConfig
 import net.shrine.config.{DurationConfigParser, Keys,ConfigExtensions}
 import net.shrine.crypto.SigningCertStrategy
+import net.shrine.log.Log
 import net.shrine.protocol.CredentialConfig
 
 import scala.concurrent.duration.Duration
@@ -15,7 +16,7 @@ import scala.concurrent.duration.Duration
  * @author clint
  * @since Feb 28, 2014
  */
-final case class QepConfig(
+final case class QepConfig (
   authenticationType: AuthenticationType,
   authorizationType: AuthorizationType,
   //NB: optional, only needed for HMS
@@ -29,7 +30,9 @@ final case class QepConfig(
   broadcasterServiceEndpoint: Option[EndpointConfig],
   signingCertStrategy: SigningCertStrategy,
   collectQepAudit:Boolean) {
-  
+
+  Log.debug(s"QepConfig collectQepAudit is $collectQepAudit")
+
   def broadcasterIsLocal: Boolean = broadcasterServiceEndpoint.isEmpty 
 }
 
@@ -53,6 +56,7 @@ object QepConfig {
       DurationConfigParser(config.getConfig(maxQueryWaitTime)),
       endpointOption(broadcasterServiceEndpoint,config),
       signingCertAttachmentStrategy(attachSigningCert,config),
+    //todo change to shrine.queryEntryPoint...
       QepConfigSource.config.getBoolean("shrine.qep.audit.collectQepAudit")
     )
   }

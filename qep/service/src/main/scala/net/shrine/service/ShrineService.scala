@@ -31,6 +31,8 @@ final case class ShrineService(
     breakdownTypes: Set[ResultOutputType],
     collectQepAudit:Boolean) extends AbstractShrineService[BaseShrineResponse] with ShrineRequestHandler {
 
+  debug(s"ShrineService collectQepAudit is $collectQepAudit")
+
   override def flagQuery(request: FlagQueryRequest, shouldBroadcast: Boolean = true) = doFlagQuery(request, shouldBroadcast)
   
   override def unFlagQuery(request: UnFlagQueryRequest, shouldBroadcast: Boolean = true) = doUnFlagQuery(request, shouldBroadcast)
