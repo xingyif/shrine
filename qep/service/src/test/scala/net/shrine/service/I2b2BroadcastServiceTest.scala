@@ -36,7 +36,7 @@ final class I2b2BroadcastServiceTest extends ShouldMatchersForJUnit {
     
     val breakdownResultOutputTypes = DefaultBreakdownResultOutputTypes.toSet
 
-    val service = I2b2BroadcastService("example.com",null, authenticator, null, includeAggregateResult = true, null, 1.day, breakdownResultOutputTypes)
+    val service = I2b2BroadcastService("example.com",null, authenticator, null, includeAggregateResult = true, null, 1.day, breakdownResultOutputTypes,false)
 
     {
       val req = ReadResultOutputTypesRequest("project-id", 1.minute, AuthenticationInfo("d", knownUsername, Credential("foo", isToken = false)))

@@ -65,7 +65,9 @@ object Hubs {
           includeAggregateResult = false,
           signingBroadcastService(broadcasterClient.getOrElse(inJvmBroadcasterClient)),
           1.hour,
-          Set.empty)
+          Set.empty,
+          false
+      )
     }
     
     override def clientFor(projectId: String, networkAuthn: AuthenticationInfo): ShrineClient = {

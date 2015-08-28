@@ -34,7 +34,7 @@ import net.shrine.protocol.ResultOutputType
 
 /**
  * @author clint
- * @date Feb 19, 2014
+ * @since Feb 19, 2014
  */
 final case class I2b2BroadcastService(
     commonName:String,
@@ -44,9 +44,8 @@ final case class I2b2BroadcastService(
     includeAggregateResult: Boolean,
     broadcastAndAggregationService: BroadcastAndAggregationService,
     queryTimeout: Duration,
-    breakdownTypes: Set[ResultOutputType]) extends AbstractShrineService[ShrineResponse] with I2b2RequestHandler {
-
-  override val collectQepAudit = false
+    breakdownTypes: Set[ResultOutputType],
+    collectQepAudit:Boolean) extends AbstractShrineService[ShrineResponse] with I2b2RequestHandler {
 
   override def readResultOutputTypes(request: ReadResultOutputTypesRequest): ShrineResponse = doReadResultOutputTypes(request)
   

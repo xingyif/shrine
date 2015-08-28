@@ -251,8 +251,28 @@ class ManuallyWiredShrineJaxrsResources(authStrategy: AuthStrategy = AuthStrateg
       debug(s"authorizationService set to $authorizationService")
 
       QueryEntryPointComponents(
-        ShrineService(commonName, auditDao, authenticator, authorizationService, queryEntryPointConfig.includeAggregateResults, broadcastService, queryEntryPointConfig.maxQueryWaitTime, breakdownTypes,queryEntryPointConfig.collectQepAudit),
-        I2b2BroadcastService(commonName,auditDao, authenticator, authorizationService, queryEntryPointConfig.includeAggregateResults, broadcastService, queryEntryPointConfig.maxQueryWaitTime, breakdownTypes),
+        ShrineService(
+          commonName,
+          auditDao,
+          authenticator,
+          authorizationService,
+          queryEntryPointConfig.includeAggregateResults,
+          broadcastService,
+          queryEntryPointConfig.maxQueryWaitTime,
+          breakdownTypes,
+          queryEntryPointConfig.collectQepAudit
+        ),
+        I2b2BroadcastService(
+          commonName,
+          auditDao,
+          authenticator,
+          authorizationService,
+          queryEntryPointConfig.includeAggregateResults,
+          broadcastService,
+          queryEntryPointConfig.maxQueryWaitTime,
+          breakdownTypes,
+          queryEntryPointConfig.collectQepAudit
+        ),
         auditDao)
     })
   
