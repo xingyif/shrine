@@ -10,24 +10,24 @@ import net.shrine.protocol.RunQueryRequest
 
 /**
  * @author clint
- * @date Mar 14, 2013
+ * @since Mar 14, 2013
  */
 final class AggregatorsTest extends ShouldMatchersForJUnit {
   @Test
-  def testForRunQueryRequest {
+  def testForRunQueryRequest() {
 
-    val authn = AuthenticationInfo("some-domain", "some-user", Credential("some-password", false))
+    val authn = AuthenticationInfo("some-domain", "some-user", Credential("some-password", isToken = false))
     val projectId = "projectId"
     val queryDef = QueryDefinition("yo", Term("foo"))
     
     import scala.concurrent.duration._
     
-    val request = RunQueryRequest(projectId, 1.millisecond, authn, 0L, Some("topicId"), Set.empty, queryDef)
+    val request = RunQueryRequest(projectId, 1.millisecond, authn, 0L, Some("topicId"), Some("Topic Name"), Set.empty, queryDef)
     
     def doTestRunQueryAggregatorFor(addAggregatedResult: Boolean) {
       val aggregator = Aggregators.forRunQueryRequest(addAggregatedResult)(request)
 
-      aggregator should not be (null)
+      aggregator should not be null
 
       aggregator.queryId should be(-1L)
       aggregator.groupId should be(projectId)

@@ -16,7 +16,7 @@ import net.shrine.protocol.query.QueryDefinition
 
 /**
  * @author clint
- * @date Apr 12, 2013
+ * @since Apr 12, 2013
  *
  * NB: Ideally we would extend JerseyTest here, but since we have to extend AbstractDependencyInjectionSpringContextTests,
  * we get into a diamond-problem when extending JerseyTest as well, even when both of them are extended by shim traits.
@@ -168,7 +168,7 @@ final class I2b2AdminResourceEndToEndJaxrsTest extends AbstractI2b2AdminResource
     val queryName = "aslkdjasljkd"
     val queryExpr = Term("n1")
     
-    val runQueryReq = RunQueryRequest(projectId, waitTime, authn, networkQueryId, None, Set(ResultOutputType.PATIENT_COUNT_XML), QueryDefinition(queryName, queryExpr))
+    val runQueryReq = RunQueryRequest(projectId, waitTime, authn, networkQueryId, None, None, Set(ResultOutputType.PATIENT_COUNT_XML), QueryDefinition(queryName, queryExpr))
 
     runQueryAdapter.copy(runQueriesImmediately = false).processRequest(BroadcastMessage(networkAuthn, runQueryReq))
     

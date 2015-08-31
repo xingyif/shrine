@@ -51,6 +51,7 @@ final class RunQueryAdapterTest extends AbstractSquerylAdapterTest with ShouldMa
   private val userId = "userId"
   private val groupId = "groupId"
   private val topicId = "some-topic-id-123-foo"
+  private val topicName = "Topic Name"
 
   private val justCounts = Set(PATIENT_COUNT_XML)
 
@@ -125,7 +126,7 @@ final class RunQueryAdapterTest extends AbstractSquerylAdapterTest with ShouldMa
       collectAdapterAudit = false
     )
 
-    val request = RunQueryRequest(projectId, 1.second, authn, expectedNetworkQueryId, Option(topicId), outputTypes, queryDef)
+    val request = RunQueryRequest(projectId, 1.second, authn, expectedNetworkQueryId, Option(topicId), Option(topicName), outputTypes, queryDef)
 
     val networkAuthn = AuthenticationInfo("some-domain", "username", Credential("sadasdasdasd", false))
     
@@ -197,7 +198,7 @@ final class RunQueryAdapterTest extends AbstractSquerylAdapterTest with ShouldMa
     
     val translator = new QueryDefinitionTranslator(new ExpressionTranslator(Map("network" -> Set("local1a", "local1b"))))
 
-    val request = RunQueryRequest(projectId, 1.second, authn, expectedNetworkQueryId, Option(topicId), outputTypes, queryDef)
+    val request = RunQueryRequest(projectId, 1.second, authn, expectedNetworkQueryId, Option(topicId), Option(topicName), outputTypes, queryDef)
 
     val networkAuthn = AuthenticationInfo("some-domain", "username", Credential("sadasdasdasd", false))
     
@@ -477,7 +478,7 @@ final class RunQueryAdapterTest extends AbstractSquerylAdapterTest with ShouldMa
 
     val authn = AuthenticationInfo("d", "u", Credential("p", false))
 
-    val req = RunQueryRequest("projectId", Duration.Inf, authn, 12345L, None, Set.empty, queryDef)
+    val req = RunQueryRequest("projectId", Duration.Inf, authn, 12345L, None, None, Set.empty, queryDef)
 
     try {
       adapter.translateNetworkToLocal(req)
@@ -538,7 +539,7 @@ final class RunQueryAdapterTest extends AbstractSquerylAdapterTest with ShouldMa
 
     import scala.concurrent.duration._
 
-    val req = RunQueryRequest(projectId, 1.second, authn, expectedNetworkQueryId, Option(topicId), Set(PATIENT_COUNT_XML), queryDef)
+    val req = RunQueryRequest(projectId, 1.second, authn, expectedNetworkQueryId, Option(topicId), Option(topicName), Set(PATIENT_COUNT_XML), queryDef)
 
     val broadcastMessage = BroadcastMessage(queryId, networkAuthn, req)
 
@@ -950,7 +951,7 @@ final class RunQueryAdapterTest extends AbstractSquerylAdapterTest with ShouldMa
 
     import scala.concurrent.duration._
 
-    val req = RunQueryRequest(projectId, 1.second, authn, expectedNetworkQueryId, Option(topicId), outputTypes, queryDef)
+    val req = RunQueryRequest(projectId, 1.second, authn, expectedNetworkQueryId, Option(topicId), Option(topicName), outputTypes, queryDef)
 
     val networkAuthn = AuthenticationInfo("some-domain", "username", Credential("sadasdasdasd", false))
 

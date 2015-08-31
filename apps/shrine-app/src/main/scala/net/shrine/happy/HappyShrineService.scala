@@ -202,6 +202,7 @@ final class HappyShrineService(
       authn,
       BroadcastMessage.Ids.next,
       None,
+      None,
       Set(ResultOutputType.PATIENT_COUNT_XML),
       queryDefinition)
   }

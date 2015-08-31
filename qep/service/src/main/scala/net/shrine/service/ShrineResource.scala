@@ -25,7 +25,6 @@ import net.shrine.protocol.ReadQueryResultRequest
 import net.shrine.protocol.RenameQueryRequest
 import net.shrine.protocol.RunQueryRequest
 import net.shrine.protocol.ShrineRequestHandler
-import net.shrine.protocol.ShrineResponse
 import net.shrine.protocol.query.QueryDefinition
 import scala.xml.XML
 import net.shrine.protocol.BaseShrineResponse
@@ -36,13 +35,13 @@ import net.shrine.protocol.UnFlagQueryRequest
 /**
  * @author Bill Simons
  * @author Clint Gilbert
- * @date 8/30/11
- * @link http://cbmi.med.harvard.edu
- * @link http://chip.org
+ * @since 8/30/11
+ * @see http://cbmi.med.harvard.edu
+ * @see http://chip.org
  *       <p/>
  *       NOTICE: This software comes with NO guarantees whatsoever and is
  *       licensed as Lgpl Open Source
- * @link http://www.gnu.org/licenses/lgpl.html
+ * @see http://www.gnu.org/licenses/lgpl.html
  */
 @Path("/shrine")
 @Produces(Array(MediaType.APPLICATION_XML)) //NB: Is a case class to get apply on the companion object, for smoother testing
@@ -120,6 +119,7 @@ final case class ShrineResource(shrineRequestHandler: ShrineRequestHandler) exte
     //authorization will be constructed by JAXRS using the String value of the 'Authorization' header
     @HeaderParam("Authorization") authorization: AuthenticationInfo,
     @HeaderParam("topicId") topicId: String,
+    @HeaderParam("topicName") topicName: String,
     //outputTypes will be constructed by JAXRS using the String value of the 'outputTypes' header
     @HeaderParam("outputTypes") outputTypes: OutputTypeSet,
     queryDefinitionXml: String,
@@ -128,12 +128,13 @@ final case class ShrineResource(shrineRequestHandler: ShrineRequestHandler) exte
     val queryDef = QueryDefinition.fromXml(queryDefinitionXml).get
 
     val topicIdOption = Option(topicId).filter(!_.trim.isEmpty)
+    val topicNameOption = Option(topicName).filter(!_.trim.isEmpty)
 
     debug(s"runQuery() with $shrineRequestHandler and $queryDef")
 
     //NB: Create the RunQueryRequest with a dummy networkQueryId of '-1'; 
     //this will be filled in with an appropriately-generated value by the ShrineRequestHandler
-    performAndSerialize(_.runQuery(RunQueryRequest(projectId, waitTime, authorization, -1, topicIdOption, outputTypes.toSet, queryDef), shouldBroadcast))
+    performAndSerialize(_.runQuery(RunQueryRequest(projectId, waitTime, authorization, -1, topicIdOption, topicNameOption, outputTypes.toSet, queryDef), shouldBroadcast))
   }
 
   @GET

@@ -14,7 +14,7 @@ import net.shrine.protocol.ResultOutputType
 
 /**
  * @author clint
- * @date Mar 5, 2013
+ * @since Mar 5, 2013
  */
 final class Scanner(
     val maxTimeToWaitForResult: Duration,
@@ -156,6 +156,7 @@ object Scanner {
   
   final object QueryDefaults {
     val topicId = "Scanner Util - Unknown Topic ID" //???
+    val topicName = "Scanner Util - Unknown Topic Name"
     val outputTypes = Set(ResultOutputType.PATIENT_COUNT_XML)
   }
 }

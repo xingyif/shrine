@@ -196,11 +196,12 @@ final class NetworkSimulationTest extends AbstractSquerylAdapterTest with Should
     val authn = AuthenticationInfo(domain, username, Credential(password, false))
 
     val topicId = "askldjlkas"
+    val topicName = "Topic Name"
     val queryName = "lsadj3028940"
 
     import scala.concurrent.duration._
 
-    val runQueryReq = RunQueryRequest("some-project-id", 1.second, authn, 12345L, Some(topicId), Set(ResultOutputType.PATIENT_COUNT_XML), QueryDefinition(queryName, Term("n1")))
+    val runQueryReq = RunQueryRequest("some-project-id", 1.second, authn, 12345L, Some(topicId), Some(topicName), Set(ResultOutputType.PATIENT_COUNT_XML), QueryDefinition(queryName, Term("n1")))
 
     val aggregatedRunQueryResp = shrineService.runQuery(runQueryReq, true).asInstanceOf[AggregatedRunQueryResponse]
 

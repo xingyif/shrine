@@ -10,17 +10,18 @@ import net.shrine.protocol.query.Term
 
 /**
  * @author Bill Simons
- * @date 3/17/11
- * @link http://cbmi.med.harvard.edu
- * @link http://chip.org
+ * @since 3/17/11
+ * @see http://cbmi.med.harvard.edu
+ * @see http://chip.org
  *       <p/>
  *       NOTICE: This software comes with NO guarantees whatsoever and is
  *       licensed as Lgpl Open Source
- * @link http://www.gnu.org/licenses/lgpl.html
+ * @see http://www.gnu.org/licenses/lgpl.html
  */
 final class RunQueryRequestTest extends ShrineRequestValidator {
   private val queryId = 98765L
   private val topicId = "1"
+  private val topicName = "Test Topic"
   private val queryDefinition = QueryDefinition("Ostium secundum@14:01:35", Term("""\\SHRINE\SHRINE\Diagnoses\Congenital anomalies\Cardiac and circulatory congenital anomalies\Atrial septal defect\Ostium secundum type atrial septal defect\"""))
 
   private val resultOutputTypes = {
@@ -120,6 +121,7 @@ final class RunQueryRequestTest extends ShrineRequestValidator {
       { requestHeaderFragment }
       <queryId>{ queryId }</queryId>
       <topicId>{ topicId }</topicId>
+      <topicName>{ topicName }</topicName>
       <outputTypes>
         { resultOutputTypes.map(_.toXml) }
       </outputTypes>
@@ -174,6 +176,7 @@ final class RunQueryRequestTest extends ShrineRequestValidator {
       1.minute,
       AuthenticationInfo("d", "u", Credential("p", false)),
       12345L,
+      None,
       None,
       Set(PATIENT_COUNT_XML, breakdownOutputType),
       QueryDefinition("foo", Some(Term("bar"))))
@@ -270,7 +273,7 @@ final class RunQueryRequestTest extends ShrineRequestValidator {
   def testMapQueryDefinition {
     val outputTypes = ResultOutputType.nonBreakdownTypes.toSet
 
-    val req = new RunQueryRequest(projectId, waitTime, authn, queryId, Option(topicId), outputTypes, queryDefinition)
+    val req = new RunQueryRequest(projectId, waitTime, authn, queryId, Option(topicId), Option(topicName), outputTypes, queryDefinition)
 
     val bogusTerm = Term("sa;ldk;alskd")
 
@@ -312,6 +315,7 @@ final class RunQueryRequestTest extends ShrineRequestValidator {
         authn,
         queryId,
         Option(topicId),
+        Option(topicName),
         outputTypes,
         queryDefinition)
 
@@ -335,6 +339,7 @@ final class RunQueryRequestTest extends ShrineRequestValidator {
       authn,
       queryId,
       Option(topicId),
+      Option(topicName),
       resultOutputTypes.toSet,
       queryDefinition).toXml should equal(runQueryRequest)
   }
@@ -346,6 +351,7 @@ final class RunQueryRequestTest extends ShrineRequestValidator {
       waitTime,
       authn,
       queryId,
+      None,
       None,
       resultOutputTypes.toSet,
       queryDefinition).toXml should equal(runQueryRequestNoTopicId)
@@ -359,6 +365,7 @@ final class RunQueryRequestTest extends ShrineRequestValidator {
       authn,
       queryId,
       Option(topicId),
+      Option(topicName),
       resultOutputTypes.toSet,
       queryDefinition)
 
@@ -379,6 +386,7 @@ final class RunQueryRequestTest extends ShrineRequestValidator {
       waitTime,
       authn,
       queryId,
+      None,
       None,
       resultOutputTypes.toSet,
       queryDefinition)

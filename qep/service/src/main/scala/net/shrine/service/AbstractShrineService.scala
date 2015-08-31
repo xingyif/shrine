@@ -1,7 +1,7 @@
 package net.shrine.service
 
 import net.shrine.log.Loggable
-import net.shrine.service.audit.{QepAuditDb, QepQueryAuditData}
+import net.shrine.service.audit.QepAuditDb
 import net.shrine.service.dao.AuditDao
 import net.shrine.authentication.Authenticator
 import net.shrine.authorization.QueryAuthorizationService

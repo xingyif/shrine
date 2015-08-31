@@ -9,7 +9,7 @@ import net.shrine.protocol.RunQueryRequest
 
 /**
  * @author clint
- * @date Oct 23, 2014
+ * @since Oct 23, 2014
  */
 final class CrcInvocationExceptionTest extends ShouldMatchersForJUnit {
   @Test
@@ -24,7 +24,7 @@ final class CrcInvocationExceptionTest extends ShouldMatchersForJUnit {
     
     val deleteReq = DeleteQueryRequest("project-id", 1.minute, authn, 12345L)
     
-    val runQueryReq = RunQueryRequest("project-id", 1.minute, authn, 123245L, None, Set.empty, null)
+    val runQueryReq = RunQueryRequest("project-id", 1.minute, authn, 123245L, None, None, Set.empty, null)
     
     {
       val e = CrcInvocationException(url, deleteReq, rootCause)

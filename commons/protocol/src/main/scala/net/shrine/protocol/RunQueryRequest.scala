@@ -1,6 +1,6 @@
 package net.shrine.protocol
 
-import net.shrine.util.{Tries, XmlUtil, NodeSeqEnrichments, OptionEnrichments, XmlDateHelper}
+import net.shrine.util.{Tries, XmlUtil, NodeSeqEnrichments, OptionEnrichments}
 import net.shrine.protocol.query.QueryDefinition
 import scala.xml.NodeSeq
 import scala.xml.Elem
@@ -25,7 +25,8 @@ final case class RunQueryRequest(
   override val waitTime: Duration,
   override val authn: AuthenticationInfo,
   networkQueryId: Long,
-  topicId: Option[String], //data steward when required only
+  topicId: Option[String], //data steward when required only todo would be better to use a tuple Option[(TopicId,TopicName)]
+  topicName: Option[String], //data steward when required only
   outputTypes: Set[ResultOutputType],
   queryDefinition: QueryDefinition) extends ShrineRequest(projectId, waitTime, authn) with CrcRequest with TranslatableRequest[RunQueryRequest] with HandleableShrineRequest with HandleableI2b2Request {
 
@@ -47,6 +48,7 @@ final case class RunQueryRequest(
       { headerFragment }
       <queryId>{ networkQueryId }</queryId>
       { topicId.toXml(<topicId/>) }
+      { topicName.toXml(<topicName/>) }
       <outputTypes>
         { sortedOutputTypes.map(_.toXml) }
       </outputTypes>
@@ -73,6 +75,7 @@ final case class RunQueryRequest(
         </result_output_list>
       </ns4:request>
       <shrine>{ topicId.toXml(<queryTopicID/>) }</shrine>
+      <shrine>{ topicName.toXml(<queryTopicName/>) }</shrine>
     </message_body>
   }
 
@@ -106,6 +109,7 @@ object RunQueryRequest extends I2b2XmlUnmarshaller[RunQueryRequest] with ShrineX
       waitTime <- i2b2WaitTime(xml)
       authn <- i2b2AuthenticationInfo(xml)
       topicId = (xml \ "message_body" \ "shrine" \ "queryTopicID").headOption.map(XmlUtil.trim)
+      topicName = (xml \ "message_body" \ "shrine" \ "queryTopicName").headOption.map(XmlUtil.trim)
       outputTypes = determineI2b2OutputTypes(breakdownTypes)(xml \ "message_body" \ "request" \ "result_output_list")
       queryDef <- QueryDefinition.fromI2b2(queryDefXml)
     } yield {
@@ -113,8 +117,9 @@ object RunQueryRequest extends I2b2XmlUnmarshaller[RunQueryRequest] with ShrineX
         projectId,
         waitTime,
         authn,
-        -1L, //TODO: appropriate?
+        -1L, //TODO: appropriate? todo really annoying for ACT metrics audit
         topicId,
+        topicName,
         outputTypes,
         queryDef)
     }
@@ -154,10 +159,11 @@ object RunQueryRequest extends I2b2XmlUnmarshaller[RunQueryRequest] with ShrineX
       authn <- shrineAuthenticationInfo(xml)
       queryId <- xml.withChild("queryId").map(XmlUtil.toLong)
       topicId = (xml \ "topicId").headOption.map(XmlUtil.trim)
+      topicName = (xml \ "topicName").headOption.map(XmlUtil.trim)
       outputTypes <- xml.withChild("outputTypes").map(determineShrineOutputTypes)
       queryDef <- xml.withChild(QueryDefinition.rootTagName).flatMap(QueryDefinition.fromXml)
     } yield {
-      RunQueryRequest(projectId, waitTime, authn, queryId, topicId, outputTypes, queryDef)
+      RunQueryRequest(projectId, waitTime, authn, queryId, topicId, topicName, outputTypes, queryDef)
     }
 
     attempt.map(addPatientCountXmlIfNecessary)

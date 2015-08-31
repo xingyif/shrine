@@ -9,7 +9,7 @@ import scala.xml.XML
 
 /**
  * @author clint
- * @date Mar 22, 2013
+ * @since Mar 22, 2013
  */
 final class ShrineRequestTest extends ShouldMatchersForJUnit {
   @Test
@@ -34,6 +34,7 @@ final class ShrineRequestTest extends ShouldMatchersForJUnit {
     val fetchSize = 12345
     val queryName = "saljkd;salda"
     val topicId = "saldjkasljdasdsadsadasdas"
+    val topicName = "Topic Name"
     val outputTypes = ResultOutputType.nonBreakdownTypes.toSet
     val queryDefinition = QueryDefinition(queryName, Term("oiweruoiewkldfhsofi"))
     val localResultId = "aoiduaojsdpaojcmsal"
@@ -68,8 +69,8 @@ final class ShrineRequestTest extends ShouldMatchersForJUnit {
     doMarshallingRoundTrip(ReadQueryDefinitionRequest(projectId, waitTime, authn, queryId))
     doMarshallingRoundTrip(ReadQueryInstancesRequest(projectId, waitTime, authn, queryId))
     doMarshallingRoundTrip(RenameQueryRequest(projectId, waitTime, authn, queryId, queryName))
-    doMarshallingRoundTrip(RunQueryRequest(projectId, waitTime, authn, queryId, Option(topicId), outputTypes, queryDefinition))
-    doMarshallingRoundTrip(RunQueryRequest(projectId, waitTime, authn, queryId, None, outputTypes, queryDefinition))
+    doMarshallingRoundTrip(RunQueryRequest(projectId, waitTime, authn, queryId, Option(topicId), Option(topicName), outputTypes, queryDefinition))
+    doMarshallingRoundTrip(RunQueryRequest(projectId, waitTime, authn, queryId, None, None, outputTypes, queryDefinition))
     doMarshallingRoundTrip(ReadResultRequest(projectId, waitTime, authn, localResultId))
     doMarshallingRoundTrip(FlagQueryRequest(projectId, waitTime, authn, queryId, None))
     doMarshallingRoundTrip(FlagQueryRequest(projectId, waitTime, authn, queryId, Some("some-message")))

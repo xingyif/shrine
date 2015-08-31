@@ -14,13 +14,13 @@ import org.junit.Before
 
 /**
  * @author Clint Gilbert
- * @date 9/13/2011
- * @link http://cbmi.med.harvard.edu
- * @link http://chip.org
+ * @since 9/13/2011
+ * @see http://cbmi.med.harvard.edu
+ * @see http://chip.org
  *       <p/>
  *       NOTICE: This software comes with NO guarantees whatsoever and is
  *       licensed as Lgpl Open Source
- * @link http://www.gnu.org/licenses/lgpl.html
+ * @see http://www.gnu.org/licenses/lgpl.html
  */
 final class ShrineResourceTest extends ShouldMatchersForJUnit with EasyMockSugar {
 
@@ -81,8 +81,9 @@ final class ShrineResourceTest extends ShouldMatchersForJUnit with EasyMockSugar
     val outputTypes = ResultOutputType.values.toSet
     val queryDef = QueryDefinition("foo", Term("nuh"))
     val topicId = Some("topicId")
+    val topicName = Some("topicName")
 
-    val expectedRequest = RunQueryRequest(projectId, waitTime, authenticationInfo, 999L, topicId, outputTypes, queryDef)
+    val expectedRequest = RunQueryRequest(projectId, waitTime, authenticationInfo, 999L, topicId, topicName, outputTypes, queryDef)
     val expectedResponse = RunQueryResponse(999L, null, "userId", "groupId", queryDef, 0L, QueryResult(1L, 0L, Some(ResultOutputType.PATIENT_COUNT_XML), 123L, None, None, None, QueryResult.StatusType.Finished, None, Map.empty))
 
     def isEqualToExceptForQueryId(expected: RunQueryRequest): RunQueryRequest = {
@@ -113,7 +114,7 @@ final class ShrineResourceTest extends ShouldMatchersForJUnit with EasyMockSugar
     }
 
     execute {
-      resource.runQuery(projectId, authenticationInfo, topicId.get, new OutputTypeSet(outputTypes), queryDef.toXmlString, shouldBroadcast)
+      resource.runQuery(projectId, authenticationInfo, topicId.get, topicName.get, new OutputTypeSet(outputTypes), queryDef.toXmlString, shouldBroadcast)
     }
   }
 

@@ -18,19 +18,19 @@ import net.shrine.aggregation.ReadQueryResultAggregator
 
 /**
  * @author clint
- * @date Mar 14, 2013
+ * @since Mar 14, 2013
  */
 final class BroadcastAndAggregationServiceTest extends ShouldMatchersForJUnit {
   import BroadcastAndAggregationServiceTest._
   
-  private val authn = AuthenticationInfo("some-domain", "some-user", Credential("some-password", false))
+  private val authn = AuthenticationInfo("some-domain", "some-user", Credential("some-password", isToken = false))
   
   private val queryDef = QueryDefinition("yo", Term("foo"))
   
   import scala.concurrent.duration._
   
   @Test
-  def testSendAndAggregateShrineRequest {
+  def testSendAndAggregateShrineRequest() {
     val service = new TestBroadcastAndAggregationService
     
     {
@@ -38,45 +38,45 @@ final class BroadcastAndAggregationServiceTest extends ShouldMatchersForJUnit {
       
       val aggregator = new DeleteQueryAggregator
       
-      val networkAuthn = AuthenticationInfo("d", "u", Credential("p", false))
+      val networkAuthn = AuthenticationInfo("d", "u", Credential("p", isToken = false))
       
-      service.sendAndAggregate(networkAuthn, req, aggregator, true)
+      service.sendAndAggregate(networkAuthn, req, aggregator, shouldBroadcast = true)
       
       service.args.shouldBroadcast should be(Some(true))
       
-      service.sendAndAggregate(networkAuthn, req, aggregator, false)
+      service.sendAndAggregate(networkAuthn, req, aggregator, shouldBroadcast = false)
       
       service.args.shouldBroadcast should be(Some(false))
       service.args.aggregator should be(aggregator)
       service.args.message.networkAuthn should be(networkAuthn)
       service.args.message.request should be(req)
-      (service.args.message.requestId > 0) should be(true)
+      (service.args.message.requestId > 0) should be(right = true)
     }
     
     {
       val invalidQueryId = -1L
       
-      val req = RunQueryRequest("projectId", 1.millisecond, authn, invalidQueryId, Some("topicId"), Set.empty, queryDef)
+      val req = RunQueryRequest("projectId", 1.millisecond, authn, invalidQueryId, Some("topicId"), Some("Topic Name"), Set.empty, queryDef)
       
       val aggregator = new RunQueryAggregator(invalidQueryId, authn.username, authn.domain, queryDef, true)
       
-      val networkAuthn = AuthenticationInfo("d", "u", Credential("p", false))
+      val networkAuthn = AuthenticationInfo("d", "u", Credential("p", isToken = false))
       
-      service.sendAndAggregate(networkAuthn, req, aggregator, true)
+      service.sendAndAggregate(networkAuthn, req, aggregator, shouldBroadcast = true)
       
       service.args.shouldBroadcast should be(Some(true))
       
-      (service.args.message.requestId > 0) should be(true)
-      service.args.message.request should not be(req)
+      (service.args.message.requestId > 0) should be(right = true)
+      service.args.message.request should not be req
       service.args.message.request.asInstanceOf[RunQueryRequest].networkQueryId should be(service.args.message.requestId)
       service.args.message.networkAuthn should be(networkAuthn)
-      service.args.aggregator should not be(aggregator)
+      service.args.aggregator should not be aggregator
       service.args.aggregator.asInstanceOf[RunQueryAggregator].queryId should be(service.args.message.requestId)
     }
   }
   
   @Test
-  def testAddQueryIdAggregator {
+  def testAddQueryIdAggregator() {
     val service = new TestBroadcastAndAggregationService
     
     {
@@ -84,7 +84,7 @@ final class BroadcastAndAggregationServiceTest extends ShouldMatchersForJUnit {
       
       val munged = service.addQueryId(null, aggregator)
       
-      (munged eq aggregator) should be(true)
+      (munged eq aggregator) should be(right = true)
     }
     
     {
@@ -109,7 +109,7 @@ final class BroadcastAndAggregationServiceTest extends ShouldMatchersForJUnit {
       
       val munged = service.addQueryId(message, aggregator).asInstanceOf[ReadQueryResultAggregator]
       
-      munged should not be(aggregator)
+      munged should not be aggregator
       
       munged.shrineNetworkQueryId should be(message.requestId)
       
@@ -121,7 +121,7 @@ final class BroadcastAndAggregationServiceTest extends ShouldMatchersForJUnit {
   }
   
   @Test
-  def testAddQueryIdShrineRequest {
+  def testAddQueryIdShrineRequest() {
     val service = new TestBroadcastAndAggregationService
     
     {
@@ -135,13 +135,13 @@ final class BroadcastAndAggregationServiceTest extends ShouldMatchersForJUnit {
     }
     
     {
-      val req = RunQueryRequest("projectId", 1.millisecond, authn, -1L, Some("topicId"), Set.empty, QueryDefinition("yo", Term("foo")))
+      val req = RunQueryRequest("projectId", 1.millisecond, authn, -1L, Some("topicId"), Some("Topic Name"), Set.empty, QueryDefinition("yo", Term("foo")))
       
       val (queryIdOption, transformedReq: RunQueryRequest) = service.addQueryId(req)
       
-      queryIdOption should not be(None)
+      queryIdOption should not be None
       
-      (queryIdOption.get > 0) should be(true) 
+      (queryIdOption.get > 0) should be(right = true)
       
       transformedReq.networkQueryId should be(queryIdOption.get)
       

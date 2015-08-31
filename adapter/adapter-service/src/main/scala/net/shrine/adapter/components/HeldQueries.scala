@@ -35,7 +35,8 @@ final case class HeldQueries(dao: AdapterDao, runQueryAdapter: RunQueryAdapter) 
           req.waitTime,
           savedAuthn,
           queryId,
-          None, //topic id
+          topicId = None,
+          topicName = None,
           outputTypes,
           savedQuery.queryDefinition)
 

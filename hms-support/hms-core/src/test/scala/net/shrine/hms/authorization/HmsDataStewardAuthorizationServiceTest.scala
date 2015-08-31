@@ -17,13 +17,13 @@ import net.shrine.protocol.ReadApprovedQueryTopicsResponse
 
 /**
  * @author Bill Simons
- * @date 1/30/12
- * @link http://cbmi.med.harvard.edu
- * @link http://chip.org
+ * @since 1/30/12
+ * @see http://cbmi.med.harvard.edu
+ * @see http://chip.org
  *       <p/>
  *       NOTICE: This software comes with NO guarantees whatsoever and is
  *       licensed as Lgpl Open Source
- * @link http://www.gnu.org/licenses/lgpl.html
+ * @see http://www.gnu.org/licenses/lgpl.html
  */
 final class HmsDataStewardAuthorizationServiceTest extends ShouldMatchersForJUnit {
   @Test
@@ -80,20 +80,20 @@ final class HmsDataStewardAuthorizationServiceTest extends ShouldMatchersForJUni
   def testAuthorizeRunQueryRequestNotAuthenticated {
     val service = HmsDataStewardAuthorizationService(null, NeverAuthenticatesAuthenticator)
 
-    def doTest(topicId: Option[String]): Unit = {
-      val result = service.authorizeRunQueryRequest(RunQueryRequest("projectId", 0.minutes, authn, 12345L, topicId, Set.empty, QueryDefinition("foo", Term("foo"))))
+    def doTest(topicId: Option[String],topicName:Option[String]): Unit = {
+      val result = service.authorizeRunQueryRequest(RunQueryRequest("projectId", 0.minutes, authn, 12345L, topicId, topicName, Set.empty, QueryDefinition("foo", Term("foo"))))
 
       result.isAuthorized should be(false)
     }
 
-    doTest(None)
-    doTest(Some("topicId"))
+    doTest(None,None)
+    doTest(Some("topicId"),Some("Topic Name"))
   }
 
   @Test
   def testAuthorizeRunQueryRequestAuthenticated {
 
-    def doTest(isAuthorized: Boolean, topicId: Option[String]): Unit = {
+    def doTest(isAuthorized: Boolean, topicId: Option[String], topicName:Option[String]): Unit = {
       val ecommonsUsername = "abc123"
       val queryDef = QueryDefinition("foo", Term("foo"))
 
@@ -101,7 +101,7 @@ final class HmsDataStewardAuthorizationServiceTest extends ShouldMatchersForJUni
 
       val service = HmsDataStewardAuthorizationService(mockSheriffClient, AlwaysAuthenticatesAuthenticator(ecommonsUsername))
 
-      val result = service.authorizeRunQueryRequest(RunQueryRequest("projectId", 0.minutes, authn, 12345L, topicId, Set.empty, queryDef))
+      val result = service.authorizeRunQueryRequest(RunQueryRequest("projectId", 0.minutes, authn, 12345L, topicId, topicName, Set.empty, queryDef))
 
       val expectedIsAuthorized = isAuthorized && topicId.isDefined
 
@@ -120,10 +120,10 @@ final class HmsDataStewardAuthorizationServiceTest extends ShouldMatchersForJUni
       }
     }
 
-    doTest(true, Some("topic123"))
-    doTest(false, Some("topic123"))
-    doTest(true, None)
-    doTest(false, None)
+    doTest(true, Some("topic123"), Some("Topic Name"))
+    doTest(false, Some("topic123"), Some("Topic Name"))
+    doTest(true, None, None)
+    doTest(false, None, None)
   }
 }
 

@@ -13,7 +13,7 @@ import java.math.BigInteger
 
 /**
  * @author clint
- * @date Feb 24, 2014
+ * @since Feb 24, 2014
  */
 final class ShrineMessageTest extends ShouldMatchersForJUnit {
   @Test
@@ -32,6 +32,7 @@ final class ShrineMessageTest extends ShouldMatchersForJUnit {
     val fetchSize = 12345
     val queryName = "saljkd;salda"
     val topicId = "saldjkasljdasdsadsadasdas"
+    val topicName = "Topic Name"
     val outputTypes = ResultOutputType.nonBreakdownTypes.toSet
     val queryDefinition = QueryDefinition(queryName, Term("oiweruoiewkldfhsofi"))
     val queryDefinition2 = QueryDefinition(queryName, Term("a;slkjflfjlsdkjf"))
@@ -84,8 +85,8 @@ final class ShrineMessageTest extends ShouldMatchersForJUnit {
     doMarshallingRoundTrip(ReadQueryDefinitionRequest(projectId, waitTime, authn, queryId))
     doMarshallingRoundTrip(ReadQueryInstancesRequest(projectId, waitTime, authn, queryId))
     doMarshallingRoundTrip(RenameQueryRequest(projectId, waitTime, authn, queryId, queryName))
-    doMarshallingRoundTrip(RunQueryRequest(projectId, waitTime, authn, queryId, Option(topicId), outputTypes, queryDefinition))
-    doMarshallingRoundTrip(RunQueryRequest(projectId, waitTime, authn, queryId, None, outputTypes, queryDefinition))
+    doMarshallingRoundTrip(RunQueryRequest(projectId, waitTime, authn, queryId, Option(topicId), Option(topicName), outputTypes, queryDefinition))
+    doMarshallingRoundTrip(RunQueryRequest(projectId, waitTime, authn, queryId, None, None, outputTypes, queryDefinition))
     doMarshallingRoundTrip(ReadResultRequest(projectId, waitTime, authn, localResultId))
 
     //Non-i2b2able responses

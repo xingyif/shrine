@@ -7,7 +7,7 @@ import net.shrine.protocol.query.Term
 
 /**
  * @author clint
- * @date Jun 18, 2014
+ * @since Jun 18, 2014
  */
 final class HandleableI2b2RequestTest extends ShouldMatchersForJUnit {
   type Req = ShrineRequest with HandleableI2b2Request
@@ -81,7 +81,7 @@ final class HandleableI2b2RequestTest extends ShouldMatchersForJUnit {
     roundTrip(ReadQueryDefinitionRequest(projectId, waitTime, authn, networkQueryId))
     roundTrip(ReadQueryInstancesRequest(projectId, waitTime, authn, networkQueryId))
     roundTrip(RenameQueryRequest(projectId, waitTime, authn, networkQueryId, "new-name"))
-    roundTrip(RunQueryRequest(projectId, waitTime /*.toMillis.milliseconds*/ , authn, networkQueryId, Some("some-topic-id"), Set(ResultOutputType.PATIENT_COUNT_XML), queryDef))
-    roundTrip(RunQueryRequest(projectId, waitTime /*.toMillis.milliseconds*/ , authn, networkQueryId, None, Set(ResultOutputType.PATIENT_COUNT_XML), queryDef))
+    roundTrip(RunQueryRequest(projectId, waitTime /*.toMillis.milliseconds*/ , authn, networkQueryId, Some("some-topic-id"),Some("some-topic-name"), Set(ResultOutputType.PATIENT_COUNT_XML), queryDef))
+    roundTrip(RunQueryRequest(projectId, waitTime /*.toMillis.milliseconds*/ , authn, networkQueryId, None, None, Set(ResultOutputType.PATIENT_COUNT_XML), queryDef))
   }
 }
