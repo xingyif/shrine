@@ -46,6 +46,8 @@ case class AdapterAuditDb(schemaDef:AdapterAuditSchema,dataSource: DataSource) e
   }
 
   def insertQueryReceived(broadcastMessage: BroadcastMessage):Unit = {
+    debug(s"insertQueryReceived $broadcastMessage")
+
     QueryReceived.fromBroadcastMessage(broadcastMessage).foreach(insertQueryReceived)
   }
 
@@ -58,6 +60,8 @@ case class AdapterAuditDb(schemaDef:AdapterAuditSchema,dataSource: DataSource) e
   }
 
   def insertExecutionStarted(runQueryRequest: RunQueryRequest):Unit = {
+    debug(s"insertExecutionStarted $runQueryRequest")
+
     insertExecutionStarted(ExecutionStarted.fromRequest(runQueryRequest))
   }
 
@@ -70,6 +74,8 @@ case class AdapterAuditDb(schemaDef:AdapterAuditSchema,dataSource: DataSource) e
   }
 
   def insertExecutionCompletedShrineResponse(shrineResponse: ShrineResponse) = {
+    debug(s"insertExecutionCompleted $shrineResponse")
+
     ExecutionCompleted.fromResponse(shrineResponse).foreach(insertExecutionCompleted)
   }
 
@@ -81,6 +87,8 @@ case class AdapterAuditDb(schemaDef:AdapterAuditSchema,dataSource: DataSource) e
     dbRun(allExecutionCompletes.result)
   }
   def insertResultSent(shrineResponse:ShrineResponse):Unit = {
+    debug(s"insertResultSent $shrineResponse")
+
     ResultSent.fromResponse(shrineResponse).foreach(insertResultSent)
   }
 

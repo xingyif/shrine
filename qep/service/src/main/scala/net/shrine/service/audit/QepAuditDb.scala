@@ -45,6 +45,8 @@ case class QepAuditDb(schemaDef:QepAuditSchema,dataSource: DataSource) extends L
   }
 
   def insertQepQuery(runQueryRequest:RunQueryRequest,commonName:String):Unit = {
+    debug(s"insertQepQuery $runQueryRequest")
+
     insertQepQuery(QepQueryAuditData.fromRunQueryRequest(runQueryRequest,commonName))
   }
 
