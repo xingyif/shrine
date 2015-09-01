@@ -39,7 +39,7 @@ object QepQueryAuditData extends ((ShrineNodeId,UserName,NetworkQueryId,QueryNam
       request.authn.username,
       request.networkQueryId,
       request.queryDefinition.name,
-      request.topicIdAndName.map(_._1)) //todo pick up the topic name here
+      request.topicId)
   }
 
 }

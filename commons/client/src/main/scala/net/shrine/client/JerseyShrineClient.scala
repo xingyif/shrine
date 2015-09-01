@@ -97,9 +97,9 @@ final class JerseyShrineClient(val shrineUrl: String, val projectId: String, val
     }
   }
 
-  override def runQuery(topicId: String, topicName:String, outputTypes: Set[ResultOutputType], queryDefinition: QueryDefinition, shouldBroadcast: Boolean = true) = {
+  override def runQuery(topicId: String, outputTypes: Set[ResultOutputType], queryDefinition: QueryDefinition, shouldBroadcast: Boolean = true) = {
     post[AggregatedRunQueryResponse](shouldBroadcast) {
-      webResource.path("/shrine/queries").header("outputTypes", OutputTypeSet(outputTypes).serialized).header("topicId", topicId).header("topicName", topicName).entity(queryDefinition.toXmlString, MediaType.APPLICATION_XML)
+      webResource.path("/shrine/queries").header("outputTypes", OutputTypeSet(outputTypes).serialized).header("topicId", topicId).entity(queryDefinition.toXmlString, MediaType.APPLICATION_XML)
     }
   }
 

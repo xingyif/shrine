@@ -16,7 +16,7 @@ import net.shrine.protocol.Credential
 
 /**
  * @author clint
- * @since May 2, 2014
+ * @date May 2, 2014
  */
 final case class HeldQueries(dao: AdapterDao, runQueryAdapter: RunQueryAdapter) {
   def run(req: RunHeldQueryRequest): ShrineResponse = {
@@ -35,7 +35,8 @@ final case class HeldQueries(dao: AdapterDao, runQueryAdapter: RunQueryAdapter) 
           req.waitTime,
           savedAuthn,
           queryId,
-          topicIdAndName = None,
+          topicId = None,
+          topicName = None,
           outputTypes,
           savedQuery.queryDefinition)
 

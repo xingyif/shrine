@@ -134,7 +134,7 @@ import spray.can.Http
   override def authorizeRunQueryRequest(runQueryRequest: RunQueryRequest): AuthorizationResult = {
     debug(s"authorizeRunQueryRequest started for ${runQueryRequest.queryDefinition.name}")
 
-    val interpreted = runQueryRequest.topicIdAndName.fold(
+    val interpreted = runQueryRequest.topicId.fold(
       authorizeRunQueryRequestNoTopic(runQueryRequest)
     )(
       authorizeRunQueryRequestForTopic(runQueryRequest,_)
@@ -158,18 +158,20 @@ import spray.can.Http
     interpretAuthorizeRunQueryResponse(response)
   }
 
-  def authorizeRunQueryRequestForTopic(runQueryRequest: RunQueryRequest,topicIdAndName:(String,String)): AuthorizationResult = {
+  def authorizeRunQueryRequestForTopic(runQueryRequest: RunQueryRequest,topicIdString:String): AuthorizationResult = {
     val userName = runQueryRequest.authn.username
     val queryId = runQueryRequest.queryDefinition.name
 
     //xml's .text returns something that looks like xquery with backwards slashes. toString() returns xml.
     val queryForJson = InboundShrineQuery(runQueryRequest.networkQueryId,queryId,runQueryRequest.queryDefinition.toXml.toString())
 
-    val request = Post(s"$stewardBaseUrl/steward/qep/requestQueryAccess/user/$userName/topic/${topicIdAndName._1}", queryForJson)
+    val request = Post(s"$stewardBaseUrl/steward/qep/requestQueryAccess/user/$userName/topic/$topicIdString", queryForJson)
     val response:HttpResponse = sendAndReceive(request,runQueryRequest.waitTime)
 
     interpretAuthorizeRunQueryResponse(response)
   }
+
+
 
 /** Interpret the response from the steward app. Primarily here for testing. */
   def interpretAuthorizeRunQueryResponse(response:HttpResponse):AuthorizationResult = {

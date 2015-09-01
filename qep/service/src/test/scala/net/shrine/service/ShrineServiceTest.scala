@@ -65,7 +65,7 @@ final class ShrineServiceTest extends AbstractAuditDaoTest with EasyMockSugar {
   private val authn = AuthenticationInfo("some-domain", "some-user", Credential("some-password", false))
   private val projectId = "projectId"
   private val queryDef = QueryDefinition("yo", Term("foo"))
-  private val request = RunQueryRequest(projectId, 1.millisecond, authn, 0L, Some(("topicId","Topic Name")), Set.empty, queryDef)
+  private val request = RunQueryRequest(projectId, 1.millisecond, authn, 0L, Some("topicId"), Some("Topic Name"), Set.empty, queryDef)
 
   @Test
   def testRunQueryAggregatorFor {
@@ -112,7 +112,7 @@ final class ShrineServiceTest extends AbstractAuditDaoTest with EasyMockSugar {
       entry.username should be(authn.username)
       entry.project should be(projectId)
       entry.queryText should be(Some(queryDef.toI2b2String))
-      entry.queryTopic should be(request.topicIdAndName.map(_._1))
+      entry.queryTopic should be(request.topicId)
       entry.time should not be (null)
     }
 
@@ -171,7 +171,7 @@ final class ShrineServiceTest extends AbstractAuditDaoTest with EasyMockSugar {
       entry.username should be(authn.username)
       entry.project should be(projectId)
       entry.queryText should be(Some(queryDef.toI2b2String))
-      entry.queryTopic should be(request.topicIdAndName.map(_._1))
+      entry.queryTopic should be(request.topicId)
       entry.time should not be (null)
     }
 

@@ -1,5 +1,6 @@
 package net.shrine.authorization
 
+import net.shrine.authorization.AuthorizationType
 import net.shrine.util.ShouldMatchersForJUnit
 import org.junit.Test
 

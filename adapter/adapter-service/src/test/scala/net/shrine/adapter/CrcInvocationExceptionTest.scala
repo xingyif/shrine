@@ -13,10 +13,10 @@ import net.shrine.protocol.RunQueryRequest
  */
 final class CrcInvocationExceptionTest extends ShouldMatchersForJUnit {
   @Test
-  def testApply(): Unit = {
+  def testApply: Unit = {
     import scala.concurrent.duration._
 
-    val authn = AuthenticationInfo("d", "p", Credential("alksfh", isToken = false))
+    val authn = AuthenticationInfo("d", "p", Credential("alksfh", false))
     
     val rootCause = new Exception with scala.util.control.NoStackTrace
     
@@ -24,7 +24,7 @@ final class CrcInvocationExceptionTest extends ShouldMatchersForJUnit {
     
     val deleteReq = DeleteQueryRequest("project-id", 1.minute, authn, 12345L)
     
-    val runQueryReq = RunQueryRequest("project-id", 1.minute, authn, 123245L, None, Set.empty, null)
+    val runQueryReq = RunQueryRequest("project-id", 1.minute, authn, 123245L, None, None, Set.empty, null)
     
     {
       val e = CrcInvocationException(url, deleteReq, rootCause)

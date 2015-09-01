@@ -1,11 +1,14 @@
 package net.shrine.client
 
+import net.shrine.client.EndpointConfig
 import net.shrine.util.ShouldMatchersForJUnit
 import org.junit.Test
+import java.net.URL
+import scala.concurrent.duration.Duration
 
 /**
  * @author clint
- * @since Dec 19, 2013
+ * @date Dec 19, 2013
  */
 final class PosterTest extends ShouldMatchersForJUnit {
   @Test

@@ -337,7 +337,7 @@ object QueryReceived extends ((
           rqr.networkQueryId,
           rqr.queryDefinition.name,
           timestampAndShrineNodeCn._1,
-          rqr.topicIdAndName.map(_._1),//todo pull out the topic name here
+          rqr.topicId,
           System.currentTimeMillis()
         ))
 

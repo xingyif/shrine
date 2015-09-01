@@ -8,6 +8,7 @@ import net.shrine.protocol.Credential
 import net.shrine.protocol.DeleteQueryRequest
 import net.shrine.protocol.RunQueryRequest
 import net.shrine.protocol.ResultOutputType
+import net.shrine.protocol.query.Term
 import net.shrine.protocol.query.QueryDefinition
 import net.shrine.protocol.query.Term
 import net.shrine.protocol.query.Modifiers
@@ -185,7 +186,7 @@ final class DefaultSignerVerifierTest extends ShouldMatchersForJUnit {
     def shouldVerify(signingCertStrategy: SigningCertStrategy): Unit = {
       val resultTypes = DefaultBreakdownResultOutputTypes.toSet + ResultOutputType.PATIENT_COUNT_XML
 
-      val unsignedMessage = BroadcastMessage(authn, RunQueryRequest("some-project-id", 12345.milliseconds, authn, 8934765L, Some(("topic-id","Topic Name")), resultTypes, queryDef))
+      val unsignedMessage = BroadcastMessage(authn, RunQueryRequest("some-project-id", 12345.milliseconds, authn, 8934765L, Some("topic-id"), Some("Topic Name"), resultTypes, queryDef))
 
       val signedMessage = signerVerifier.sign(unsignedMessage, signingCertStrategy)
 
@@ -211,7 +212,7 @@ final class DefaultSignerVerifierTest extends ShouldMatchersForJUnit {
 
       val resultTypes = DefaultBreakdownResultOutputTypes.toSet + ResultOutputType.PATIENT_COUNT_XML
 
-      val unsignedMessage = BroadcastMessage(authn, RunQueryRequest("some-project-id", 12345.milliseconds, authn, 8934765L, Some(("topic-id","Topic Name")), resultTypes, queryDef))
+      val unsignedMessage = BroadcastMessage(authn, RunQueryRequest("some-project-id", 12345.milliseconds, authn, 8934765L, Some("topic-id"), Some("Topic Name"), resultTypes, queryDef))
 
       val signedMessage = signerVerifier.sign(unsignedMessage, signingCertStrategy)
 
@@ -380,7 +381,7 @@ final class DefaultSignerVerifierTest extends ShouldMatchersForJUnit {
     import scala.concurrent.duration._
 
     def doVerificationTest(signingCertStrategy: SigningCertStrategy, queryDef: QueryDefinition): Unit = {
-      val req = RunQueryRequest("some-project-id", 12345.milliseconds, authn, 8934765L, Some(("topic-id","Topic Name")), Set(ResultOutputType.PATIENT_COUNT_XML), queryDef)
+      val req = RunQueryRequest("some-project-id", 12345.milliseconds, authn, 8934765L, Some("topic-id"), Some("Topic Name"), Set(ResultOutputType.PATIENT_COUNT_XML), queryDef)
 
       val unsignedMessage = BroadcastMessage(authn, req)
 

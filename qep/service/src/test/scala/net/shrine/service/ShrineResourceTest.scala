@@ -77,12 +77,13 @@ final class ShrineResourceTest extends ShouldMatchersForJUnit with EasyMockSugar
   }
 
   @Test
-  def testRunQuery() {
+  def testRunQuery {
     val outputTypes = ResultOutputType.values.toSet
     val queryDef = QueryDefinition("foo", Term("nuh"))
-    val topicIdAndName = Some(("topicId","topicName"))
+    val topicId = Some("topicId")
+    val topicName = Some("topicName")
 
-    val expectedRequest = RunQueryRequest(projectId, waitTime, authenticationInfo, 999L, topicIdAndName, outputTypes, queryDef)
+    val expectedRequest = RunQueryRequest(projectId, waitTime, authenticationInfo, 999L, topicId, topicName, outputTypes, queryDef)
     val expectedResponse = RunQueryResponse(999L, null, "userId", "groupId", queryDef, 0L, QueryResult(1L, 0L, Some(ResultOutputType.PATIENT_COUNT_XML), 123L, None, None, None, QueryResult.StatusType.Finished, None, Map.empty))
 
     def isEqualToExceptForQueryId(expected: RunQueryRequest): RunQueryRequest = {
@@ -97,7 +98,7 @@ final class ShrineResourceTest extends ShouldMatchersForJUnit with EasyMockSugar
             actual.projectId == expected.projectId &&
             actual.queryDefinition == expected.queryDefinition &&
             actual.requestType == expected.requestType &&
-            actual.topicIdAndName == expected.topicIdAndName &&
+            actual.topicId == expected.topicId &&
             actual.waitTime == expected.waitTime
           }
         }
@@ -113,12 +114,12 @@ final class ShrineResourceTest extends ShouldMatchersForJUnit with EasyMockSugar
     }
 
     execute {
-      resource.runQuery(projectId, authenticationInfo, topicIdAndName.get._1, topicIdAndName.get._2, new OutputTypeSet(outputTypes), queryDef.toXmlString, shouldBroadcast)
+      resource.runQuery(projectId, authenticationInfo, topicId.get, topicName.get, new OutputTypeSet(outputTypes), queryDef.toXmlString, shouldBroadcast)
     }
   }
 
   @Test
-  def testReadQueryInstances() {
+  def testReadQueryInstances {
     val queryId = 999L
 
     val expectedRequest = ReadQueryInstancesRequest(projectId, waitTime, authenticationInfo, queryId)

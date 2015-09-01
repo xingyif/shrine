@@ -1,7 +1,9 @@
 package net.shrine.integration
 
 import net.shrine.client.ShrineClient
+import net.shrine.crypto.TrustParam
 import net.shrine.protocol.AuthenticationInfo
+import net.shrine.util.XmlDateHelper
 import net.shrine.client.Poster
 import net.shrine.protocol.ResultOutputType
 import scala.xml.NodeSeq
@@ -25,7 +27,9 @@ import net.shrine.protocol.FlagQueryRequest
 import net.shrine.serialization.I2b2Marshaller
 import net.shrine.protocol.UnFlagQueryRequest
 import net.shrine.protocol.RunQueryRequest
+import net.shrine.protocol.RunQueryResponse
 import net.shrine.protocol.DefaultBreakdownResultOutputTypes
+import scala.xml.Node
 import scala.xml.XML
 import net.shrine.util.XmlUtil
 
@@ -36,10 +40,10 @@ final case class I2b2ShrineClient(poster: Poster, projectId: String, authorizati
 
   override def readPreviousQueries(userId: String, fetchSize: Int, shouldBroadcast: Boolean): ReadPreviousQueriesResponse = ???
 
-  override def runQuery(topicId: String, topicName:String, outputTypes: Set[ResultOutputType], queryDefinition: QueryDefinition, shouldBroadcast: Boolean): AggregatedRunQueryResponse = {
-    val req = RunQueryRequest(projectId, 1.minute, authorization, -1, None, outputTypes, queryDefinition)
+  override def runQuery(topicId: String, outputTypes: Set[ResultOutputType], queryDefinition: QueryDefinition, shouldBroadcast: Boolean): AggregatedRunQueryResponse = {
+    val req = RunQueryRequest(projectId, 1.minute, authorization, -1, None, None, outputTypes, queryDefinition)
     
-    def stripWhitespace(xml: String): String = XmlUtil.stripWhitespace(XML.loadString(xml)).toString()
+    def stripWhitespace(xml: String): String = XmlUtil.stripWhitespace(XML.loadString(xml)).toString
     
     doSend(req, xml => AggregatedRunQueryResponse.fromI2b2String(DefaultBreakdownResultOutputTypes.toSet)(stripWhitespace(xml)).get)
   }

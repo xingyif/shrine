@@ -34,7 +34,7 @@ final class I2b2AdminResourceEndToEndJaxrsTest extends AbstractI2b2AdminResource
   private[this] val dummyInstanceId = 99L
   private[this] val dummyResultId = 42L
   private[this] val dummySetSize = 12345L
-  private[this] val networkAuthn = AuthenticationInfo("network-domain", "network-username", Credential("network-password", isToken = false))
+  private[this] val networkAuthn = AuthenticationInfo("network-domain", "network-username", Credential("network-password", false))
 
   private lazy val runQueryAdapter: RunQueryAdapter = {
     val translator = new QueryDefinitionTranslator(new ExpressionTranslator(Map("n1" -> Set("l1")))) 
@@ -60,8 +60,8 @@ final class I2b2AdminResourceEndToEndJaxrsTest extends AbstractI2b2AdminResource
       HiveCredentials("d", "u", "pwd", "pid"),
       translator,
       1000,
-      doObfuscation = false,
-      runQueriesImmediately = true,
+      false,
+      true,
       DefaultBreakdownResultOutputTypes.toSet,
       collectAdapterAudit = false
     )
@@ -70,20 +70,20 @@ final class I2b2AdminResourceEndToEndJaxrsTest extends AbstractI2b2AdminResource
   override def makeHandler = new I2b2AdminService(dao, i2b2AdminDao, Poster(dummyUrl, AlwaysAuthenticatesMockPmHttpClient), runQueryAdapter)
   
   @Test
-  def testReadQueryDefinition() = afterLoadingTestData {
+  def testReadQueryDefinition = afterLoadingTestData {
     doTestReadQueryDefinition(networkQueryId1, Some((queryName1, queryDef1)))
   }
   
   @Test
-  def testReadQueryDefinitionUnknownQueryId() = afterLoadingTestData {
+  def testReadQueryDefinitionUnknownQueryId = afterLoadingTestData {
     doTestReadQueryDefinition(87134682364L, None)
   }
   
-  import ReadI2b2AdminPreviousQueriesRequest.{Username, Category}
+  import ReadI2b2AdminPreviousQueriesRequest.{Username, Category, SortOrder}
   import Username._
   
   @Test
-  def testReadI2b2AdminPreviousQueries() = afterLoadingTestData {
+  def testReadI2b2AdminPreviousQueries = afterLoadingTestData {
     val searchString = queryName1
     val maxResults = 123
     val sortOrder = ReadI2b2AdminPreviousQueriesRequest.SortOrder.Ascending
@@ -96,7 +96,7 @@ final class I2b2AdminResourceEndToEndJaxrsTest extends AbstractI2b2AdminResource
   }
   
   @Test
-  def testReadI2b2AdminPreviousQueriesNoResultsExpected() = afterLoadingTestData {
+  def testReadI2b2AdminPreviousQueriesNoResultsExpected = afterLoadingTestData {
     //A request that won't return anything
     val request = ReadI2b2AdminPreviousQueriesRequest(projectId, waitTime, authn, All, "askjdhakfgkafgkasf", 123, None)
     
@@ -104,35 +104,35 @@ final class I2b2AdminResourceEndToEndJaxrsTest extends AbstractI2b2AdminResource
   }
   
   @Test
-  def testReadI2b2AdminPreviousQueriesExcludeUser(): Unit = afterLoadingTestData {
+  def testReadI2b2AdminPreviousQueriesExcludeUser: Unit = afterLoadingTestData {
     val request = ReadI2b2AdminPreviousQueriesRequest(projectId, waitTime, authn, Except(authn2.username), "", 10, None)
 
     doTestReadI2b2AdminPreviousQueries(request, Seq(queryMaster2, queryMaster1))
   }
   
   @Test
-  def testReadI2b2AdminPreviousQueriesOnlyFlagged(): Unit = afterLoadingTestData {
+  def testReadI2b2AdminPreviousQueriesOnlyFlagged: Unit = afterLoadingTestData {
     val request = ReadI2b2AdminPreviousQueriesRequest(projectId, waitTime, authn, All, "", 10, None, categoryToSearchWithin = Category.Flagged)
 
     doTestReadI2b2AdminPreviousQueries(request, Seq(queryMaster4, queryMaster1))
   }
   
   @Test
-  def testReadPreviousQueriesOnlyFlaggedExcludingUser(): Unit = afterLoadingTestData {
+  def testReadPreviousQueriesOnlyFlaggedExcludingUser: Unit = afterLoadingTestData {
     val request = ReadI2b2AdminPreviousQueriesRequest(projectId, waitTime, authn, Except(authn.username), "", 10, None, categoryToSearchWithin = Category.Flagged)
 
     doTestReadI2b2AdminPreviousQueries(request, Seq(queryMaster4))
   }
   
   @Test
-  def testReadPreviousQueriesExcludingUserWithSearchString(): Unit = afterLoadingTestData {
+  def testReadPreviousQueriesExcludingUserWithSearchString: Unit = afterLoadingTestData {
     val request = ReadI2b2AdminPreviousQueriesRequest(projectId, waitTime, authn, All, queryName1, 10, None, categoryToSearchWithin = Category.Flagged)
 
     doTestReadI2b2AdminPreviousQueries(request, Seq(queryMaster1))
   }
   
   @Test
-  def testReadI2b2QueryingUsers() = afterLoadingTestData {
+  def testReadI2b2QueryingUsers = afterLoadingTestData {
     val request = ReadI2b2AdminQueryingUsersRequest(projectId, waitTime, authn, "foo")
 
     val ReadI2b2AdminQueryingUsersResponse(users) = adminClient.readI2b2AdminQueryingUsers(request)
@@ -141,7 +141,7 @@ final class I2b2AdminResourceEndToEndJaxrsTest extends AbstractI2b2AdminResource
   }
   
   @Test
-  def testReadI2b2QueryingUsersNoResultsExpected() = afterCreatingTables {
+  def testReadI2b2QueryingUsersNoResultsExpected = afterCreatingTables {
     val request = ReadI2b2AdminQueryingUsersRequest(projectId, waitTime, authn, "foo")
 
     val ReadI2b2AdminQueryingUsersResponse(users) = adminClient.readI2b2AdminQueryingUsers(request)
@@ -151,16 +151,16 @@ final class I2b2AdminResourceEndToEndJaxrsTest extends AbstractI2b2AdminResource
   }
   
   @Test
-  def testRunHeldQueryUnknownQuery() = afterCreatingTables {
+  def testRunHeldQueryUnknownQuery = afterCreatingTables {
     val request = RunHeldQueryRequest(projectId, waitTime, authn, 12345L)
 
     val resp = adminClient.runHeldQuery(request)
     
-    resp.isInstanceOf[ErrorResponse] should be(right = true)
+    resp.isInstanceOf[ErrorResponse] should be(true)
   }
   
   @Test
-  def testRunHeldQueryKnownQuery() = afterCreatingTables {
+  def testRunHeldQueryKnownQuery = afterCreatingTables {
     val networkQueryId = 12345L
     
     val request = RunHeldQueryRequest(projectId, waitTime, authn, networkQueryId)
@@ -168,7 +168,7 @@ final class I2b2AdminResourceEndToEndJaxrsTest extends AbstractI2b2AdminResource
     val queryName = "aslkdjasljkd"
     val queryExpr = Term("n1")
     
-    val runQueryReq = RunQueryRequest(projectId, waitTime, authn, networkQueryId, None, Set(ResultOutputType.PATIENT_COUNT_XML), QueryDefinition(queryName, queryExpr))
+    val runQueryReq = RunQueryRequest(projectId, waitTime, authn, networkQueryId, None, None, Set(ResultOutputType.PATIENT_COUNT_XML), QueryDefinition(queryName, queryExpr))
 
     runQueryAdapter.copy(runQueriesImmediately = false).processRequest(BroadcastMessage(networkAuthn, runQueryReq))
     
@@ -176,7 +176,7 @@ final class I2b2AdminResourceEndToEndJaxrsTest extends AbstractI2b2AdminResource
     
     val runQueryResp = resp.asInstanceOf[RunQueryResponse]
     
-    runQueryResp.createDate should not be null
+    runQueryResp.createDate should not be(null)
     runQueryResp.groupId should be(networkAuthn.domain)
     runQueryResp.userId should equal(networkAuthn.username)
     runQueryResp.queryId should equal(dummyMasterId)

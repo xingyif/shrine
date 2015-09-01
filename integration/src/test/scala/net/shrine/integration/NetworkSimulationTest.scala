@@ -201,7 +201,7 @@ final class NetworkSimulationTest extends AbstractSquerylAdapterTest with Should
 
     import scala.concurrent.duration._
 
-    val runQueryReq = RunQueryRequest("some-project-id", 1.second, authn, 12345L, Some((topicId,topicName)), Set(ResultOutputType.PATIENT_COUNT_XML), QueryDefinition(queryName, Term("n1")))
+    val runQueryReq = RunQueryRequest("some-project-id", 1.second, authn, 12345L, Some(topicId), Some(topicName), Set(ResultOutputType.PATIENT_COUNT_XML), QueryDefinition(queryName, Term("n1")))
 
     val aggregatedRunQueryResp = shrineService.runQuery(runQueryReq, true).asInstanceOf[AggregatedRunQueryResponse]
 
@@ -225,7 +225,7 @@ final class NetworkSimulationTest extends AbstractSquerylAdapterTest with Should
       lastReq.outputTypes should equal(runQueryReq.outputTypes)
       lastReq.projectId should equal(runQueryReq.projectId)
       lastReq.queryDefinition should equal(runQueryReq.queryDefinition)
-      lastReq.topicIdAndName should equal(runQueryReq.topicIdAndName)
+      lastReq.topicId should equal(runQueryReq.topicId)
 
       val runQueryResp = mockAdapter.lastResult.response.asInstanceOf[RunQueryResponse]
 

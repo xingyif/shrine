@@ -8,7 +8,7 @@ import net.shrine.util.NodeSeqEnrichments
 
 /**
  * @author clint
- * @since Feb 19, 2014
+ * @date Feb 19, 2014
  */
 abstract class AbstractShrineRequestI2b2UnmarshallerCompanion[Req <: ShrineRequest](i2b2CrcRequestUnmarshallers: Map[CrcRequestType, I2b2XmlUnmarshaller[Req]]) extends AbstractI2b2UnmarshallerCompanion[Req](i2b2CrcRequestUnmarshallers) {
 

@@ -202,7 +202,7 @@ trait AbstractShrineService[BaseResp <: BaseShrineResponse] extends Loggable {
         request.authn.domain,
         request.authn.username,
         request.queryDefinition.toI2b2String, //TODO: Use i2b2 format Still?
-        request.topicIdAndName.map(_._1)) //todo topic name, too?
+        request.topicId)
     }
   }
 

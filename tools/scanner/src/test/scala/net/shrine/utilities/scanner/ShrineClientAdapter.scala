@@ -20,14 +20,14 @@ import net.shrine.protocol.UnFlagQueryResponse
 
 /**
  * @author clint
- * @since Mar 7, 2013
+ * @date Mar 7, 2013
  */
 abstract class ShrineClientAdapter extends ShrineClient {
   override def readApprovedQueryTopics(userId: String, shouldBroadcast: Boolean): ReadApprovedQueryTopicsResponse = null
 
   override def readPreviousQueries(userId: String, fetchSize: Int, shouldBroadcast: Boolean): ReadPreviousQueriesResponse = null
 
-  override def runQuery(topicId: String, topicName:String, outputTypes: Set[ResultOutputType], queryDefinition: QueryDefinition, shouldBroadcast: Boolean): AggregatedRunQueryResponse = null
+  override def runQuery(topicId: String, outputTypes: Set[ResultOutputType], queryDefinition: QueryDefinition, shouldBroadcast: Boolean): AggregatedRunQueryResponse = null
 
   override def readQueryInstances(queryId: Long, shouldBroadcast: Boolean): ReadQueryInstancesResponse = null
 

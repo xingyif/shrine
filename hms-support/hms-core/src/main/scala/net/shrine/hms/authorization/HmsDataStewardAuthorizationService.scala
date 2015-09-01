@@ -68,13 +68,13 @@ final case class HmsDataStewardAuthorizationService(
   override def authorizeRunQueryRequest(request: RunQueryRequest): AuthorizationResult = {
     val authn = request.authn
 
-    if (request.topicIdAndName.isEmpty) {
+    if (request.topicId.isEmpty) {
       AuthorizationResult.NotAuthorized(s"HMS queries require a topic id; couldn't authenticate user ${toDomainAndUser(authn)}")
     } else {
       authenticate(authn) match {
         case None => AuthorizationResult.NotAuthorized(s"Requested topic is not approved; couldn't authenticate user ${toDomainAndUser(authn)}")
         case Some(ecommonsUsername) => {
-          val isAuthorized = sheriffClient.isAuthorized(ecommonsUsername, request.topicIdAndName.get._1, request.queryDefinition.toI2b2String)
+          val isAuthorized = sheriffClient.isAuthorized(ecommonsUsername, request.topicId.get, request.queryDefinition.toI2b2String)
 
           if (isAuthorized) { AuthorizationResult.Authorized }
           else { AuthorizationResult.NotAuthorized("Requested topic is not approved") }

@@ -23,7 +23,7 @@ trait ShrineBatchQuerier extends BatchQuerier with Loggable { self: HasShrineCli
       val result = Try {
         info(s"($i/$runsPerQueryDef) Running query '${queryDef.name}': ${queryDef.expr}")
         
-        client.runQuery(config.topicId, config.topicName, outputTypes, queryDef, shouldBroadcast)
+        client.runQuery(config.topicId, outputTypes, queryDef, shouldBroadcast)
       }
       
       result match {

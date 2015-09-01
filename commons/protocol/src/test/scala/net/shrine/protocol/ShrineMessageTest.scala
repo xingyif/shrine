@@ -4,6 +4,7 @@ import net.shrine.serialization.XmlMarshaller
 import net.shrine.serialization.XmlUnmarshaller
 import net.shrine.util.ShouldMatchersForJUnit
 import org.junit.Test
+import scala.util.Try
 import scala.xml.NodeSeq
 import net.shrine.protocol.query.QueryDefinition
 import net.shrine.protocol.query.Term
@@ -84,8 +85,8 @@ final class ShrineMessageTest extends ShouldMatchersForJUnit {
     doMarshallingRoundTrip(ReadQueryDefinitionRequest(projectId, waitTime, authn, queryId))
     doMarshallingRoundTrip(ReadQueryInstancesRequest(projectId, waitTime, authn, queryId))
     doMarshallingRoundTrip(RenameQueryRequest(projectId, waitTime, authn, queryId, queryName))
-    doMarshallingRoundTrip(RunQueryRequest(projectId, waitTime, authn, queryId, Option((topicId,topicName)), outputTypes, queryDefinition))
-    doMarshallingRoundTrip(RunQueryRequest(projectId, waitTime, authn, queryId, None, outputTypes, queryDefinition))
+    doMarshallingRoundTrip(RunQueryRequest(projectId, waitTime, authn, queryId, Option(topicId), Option(topicName), outputTypes, queryDefinition))
+    doMarshallingRoundTrip(RunQueryRequest(projectId, waitTime, authn, queryId, None, None, outputTypes, queryDefinition))
     doMarshallingRoundTrip(ReadResultRequest(projectId, waitTime, authn, localResultId))
 
     //Non-i2b2able responses
