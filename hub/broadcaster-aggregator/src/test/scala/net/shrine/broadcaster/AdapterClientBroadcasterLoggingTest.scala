@@ -34,7 +34,7 @@ import net.shrine.broadcaster.dao.model.HubQueryStatus
 
 /**
  * @author clint
- * @date Dec 15, 2014
+ * @since Dec 15, 2014
  */
 final class AdapterClientBroadcasterLoggingTest extends AbstractSquerylHubDaoTest with ShouldMatchersForJUnit {
 
@@ -52,7 +52,7 @@ final class AdapterClientBroadcasterLoggingTest extends AbstractSquerylHubDaoTes
     def apply(toReturn: => Result): TestAdapterClient = new TestAdapterClient(toReturn)
   }
   
-  private val authn = AuthenticationInfo("domain", "username", Credential("asdasd", false))
+  private val authn = AuthenticationInfo("domain", "username", Credential("asdasd", isToken = false))
   
   private val queryDef = QueryDefinition("foo", Or(Term("x"), Term("y")))
   
@@ -63,7 +63,7 @@ final class AdapterClientBroadcasterLoggingTest extends AbstractSquerylHubDaoTes
   import ResultOutputType.PATIENT_COUNT_XML
   
   private val broadcastMessageRunQuery = {
-    BroadcastMessage(authn, RunQueryRequest("projectId", 12345.milliseconds, authn, -1L, None, None, Set(PATIENT_COUNT_XML), queryDef))
+    BroadcastMessage(authn, RunQueryRequest("projectId", 12345.milliseconds, authn, -1L, None, Set(PATIENT_COUNT_XML), queryDef))
   }
   
   private val deleteQueryAggregator = new DeleteQueryAggregator
@@ -71,7 +71,7 @@ final class AdapterClientBroadcasterLoggingTest extends AbstractSquerylHubDaoTes
   import SquerylEntryPoint._
   
   @Test
-  def testShouldntLogAllNodesSucceed: Unit = afterCreatingTables {
+  def testShouldntLogAllNodesSucceed(): Unit = afterCreatingTables {
     val workingNodes = Set(
         NodeHandle(NodeId("X"), TestAdapterClient(Result(NodeId("X"), 1.second, DeleteQueryResponse(12345L)))),
         NodeHandle(NodeId("Y"), TestAdapterClient(Result(NodeId("Y"), 1.second, DeleteQueryResponse(12345L)))))
@@ -80,7 +80,7 @@ final class AdapterClientBroadcasterLoggingTest extends AbstractSquerylHubDaoTes
   }
   
   @Test
-  def testShouldntLogSomeNodesSucceed: Unit = afterCreatingTables {
+  def testShouldntLogSomeNodesSucceed(): Unit = afterCreatingTables {
     val nodes = Set(
         NodeHandle(NodeId("X"), TestAdapterClient(Result(NodeId("X"), 1.second, DeleteQueryResponse(12345L)))),
         NodeHandle(NodeId("Y"), TestAdapterClient(throw new Exception)))
@@ -89,7 +89,7 @@ final class AdapterClientBroadcasterLoggingTest extends AbstractSquerylHubDaoTes
   }
   
   @Test
-  def testShouldntLogNoNodesSucceed: Unit = afterCreatingTables {
+  def testShouldntLogNoNodesSucceed(): Unit = afterCreatingTables {
     val failingNodes = Set(
         NodeHandle(NodeId("X"), TestAdapterClient(throw new Exception)),
         NodeHandle(NodeId("Y"), TestAdapterClient(throw new Exception)))
@@ -114,13 +114,13 @@ final class AdapterClientBroadcasterLoggingTest extends AbstractSquerylHubDaoTes
   import net.shrine.broadcaster.dao.model.{HubQueryStatus => hqs}
   
   @Test
-  def testShouldLogAllNodesSucceed: Unit = doTestShouldLog(Map("X" -> hqs.Success, "Y" -> hqs.Success))
+  def testShouldLogAllNodesSucceed(): Unit = doTestShouldLog(Map("X" -> hqs.Success, "Y" -> hqs.Success))
   
   @Test
-  def testShouldLogSomeNodesSucceed: Unit = doTestShouldLog(Map("X" -> hqs.Success, "Y" -> hqs.Failure))
+  def testShouldLogSomeNodesSucceed(): Unit = doTestShouldLog(Map("X" -> hqs.Success, "Y" -> hqs.Failure))
   
   @Test
-  def testShouldLogNoNodesSucceed: Unit = doTestShouldLog(Map("X" -> hqs.Failure, "Y" -> hqs.Failure))
+  def testShouldLogNoNodesSucceed(): Unit = doTestShouldLog(Map("X" -> hqs.Failure, "Y" -> hqs.Failure))
   
   private def doTestShouldLog(expectedStatusesByNodeName: Map[String, HubQueryStatus]): Unit = afterCreatingTables {
     val queryResult = QueryResult(99L, 11L,Some(PATIENT_COUNT_XML), 42L, Some(XmlDateHelper.now), Some(XmlDateHelper.now), Some("desc"), QueryResult.StatusType.Finished, Some("status"))

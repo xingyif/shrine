@@ -3,7 +3,6 @@ package net.shrine.service
 import org.junit.Test
 import net.shrine.util.ShouldMatchersForJUnit
 import com.sun.jersey.api.client.UniformInterfaceException
-import com.sun.jersey.test.framework.JerseyTest
 import net.shrine.client.JerseyShrineClient
 import net.shrine.crypto.TrustParam.AcceptAllCerts
 import net.shrine.protocol.AggregatedReadInstanceResultsResponse
@@ -38,7 +37,6 @@ import net.shrine.protocol.ResultOutputType
 import net.shrine.protocol.RunQueryRequest
 import net.shrine.protocol.ShrineRequest
 import net.shrine.protocol.ShrineRequestHandler
-import net.shrine.protocol.ShrineResponse
 import net.shrine.protocol.query.QueryDefinition
 import net.shrine.protocol.query.Term
 import net.shrine.util.JerseyAppDescriptor
@@ -58,12 +56,12 @@ import net.shrine.protocol.DefaultBreakdownResultOutputTypes
 /**
  *
  * @author Clint Gilbert
- * @date Sep 14, 2011
+ * @since Sep 14, 2011
  *
- * @link http://cbmi.med.harvard.edu
+ * @see http://cbmi.med.harvard.edu
  *
  * This software is licensed under the LGPL
- * @link http://www.gnu.org/licenses/lgpl.html
+ * @see http://www.gnu.org/licenses/lgpl.html
  *
  * Starts a ShrineResource in an embedded HTTP server, sends requests to it, then verifies that the requests don't fail,
  * and that the parameters made it from the client to the ShrineResource successfully.  Uses a mock ShrineRequestHandler, so
@@ -73,6 +71,7 @@ final class ShrineResourceJaxrsTest extends AbstractPortSearchingJerseyTest with
   private val projectId = "some-project-id"
 
   private val topicId = "some-topic-id"
+  private val topicName = "some-topic-name"
 
   private val userId = "some-user-id"
 
@@ -93,7 +92,7 @@ final class ShrineResourceJaxrsTest extends AbstractPortSearchingJerseyTest with
   override def tearDown(): Unit = super.tearDown()
   
   @Test
-  def testReadApprovedQueryTopics {
+  def testReadApprovedQueryTopics() {
     val response = shrineClient.readApprovedQueryTopics(userId)
 
     response should not(be(null))
@@ -116,7 +115,7 @@ final class ShrineResourceJaxrsTest extends AbstractPortSearchingJerseyTest with
   }
 
   @Test
-  def testReadPreviousQueries = resetMockThen {
+  def testReadPreviousQueries() = resetMockThen {
     val fetchSize = 123
 
     val response = shrineClient.readPreviousQueries(userId, fetchSize)
@@ -142,7 +141,7 @@ final class ShrineResourceJaxrsTest extends AbstractPortSearchingJerseyTest with
   }
 
   @Test
-  def testReadPreviousQueriesUsernameMismatch = resetMockThen {
+  def testReadPreviousQueriesUsernameMismatch() = resetMockThen {
     intercept[UniformInterfaceException] {
       shrineClient.readPreviousQueries("foo", 123)
     }
@@ -160,7 +159,7 @@ final class ShrineResourceJaxrsTest extends AbstractPortSearchingJerseyTest with
   }
 
   @Test
-  def testRunQuery = resetMockThen {
+  def testRunQuery() = resetMockThen {
 
     val queryDef = QueryDefinition("foo", Term("nuh"))
 
@@ -184,15 +183,16 @@ final class ShrineResourceJaxrsTest extends AbstractPortSearchingJerseyTest with
 
       param.outputTypes should equal(expectedOutputTypes)
       param.queryDefinition should equal(queryDef)
-      param.topicId should equal(Some(topicId))
+      param.topicIdAndName.get._1 should equal(topicId)
+      param.topicIdAndName.get._2 should equal(topicName)
     }
 
     def doTestRunQuery(outputTypes: Set[ResultOutputType]) {
-      val responseScalaSet = shrineClient.runQuery(topicId, outputTypes, queryDef)
+      val responseScalaSet = shrineClient.runQuery(topicId, topicName, outputTypes, queryDef)
 
       doTestRunQueryResponse(responseScalaSet, outputTypes)
 
-      val responseJavaSet = shrineClient.runQuery(topicId, outputTypes, queryDef)
+      val responseJavaSet = shrineClient.runQuery(topicId, topicName, outputTypes, queryDef)
 
       doTestRunQueryResponse(responseJavaSet, outputTypes)
     }
@@ -204,7 +204,7 @@ final class ShrineResourceJaxrsTest extends AbstractPortSearchingJerseyTest with
   }
 
   @Test
-  def testReadQueryInstances = resetMockThen {
+  def testReadQueryInstances() = resetMockThen {
     val queryId = 123L
 
     val response = shrineClient.readQueryInstances(queryId)
@@ -229,7 +229,7 @@ final class ShrineResourceJaxrsTest extends AbstractPortSearchingJerseyTest with
   }
 
   @Test
-  def testReadInstanceResults = resetMockThen {
+  def testReadInstanceResults() = resetMockThen {
     val shrineNetworkQueryId = 98765L
 
     val response = shrineClient.readInstanceResults(shrineNetworkQueryId)
@@ -254,7 +254,7 @@ final class ShrineResourceJaxrsTest extends AbstractPortSearchingJerseyTest with
   }
 
   @Test
-  def testReadPdo = resetMockThen {
+  def testReadPdo() = resetMockThen {
     val patientSetId = "patientSetId"
     val optionsXml = <foo><bar/></foo>
 
@@ -278,11 +278,11 @@ final class ShrineResourceJaxrsTest extends AbstractPortSearchingJerseyTest with
 
     param.patientSetCollId should equal(patientSetId)
     //Turn NodeSeqs to Strings for reliable comparisons
-    param.optionsXml.toString should equal(optionsXml.toString)
+    param.optionsXml.toString should equal(optionsXml.toString())
   }
 
   @Test
-  def testReadQueryDefinition = resetMockThen {
+  def testReadQueryDefinition() = resetMockThen {
     val queryId = 3789894L
 
     val response = shrineClient.readQueryDefinition(queryId)
@@ -307,7 +307,7 @@ final class ShrineResourceJaxrsTest extends AbstractPortSearchingJerseyTest with
   }
 
   @Test
-  def testDeleteQuery = resetMockThen {
+  def testDeleteQuery() = resetMockThen {
     val queryId = 3789894L
 
     val response = shrineClient.deleteQuery(queryId)
@@ -331,7 +331,7 @@ final class ShrineResourceJaxrsTest extends AbstractPortSearchingJerseyTest with
   }
 
   @Test
-  def testRenameQuery = resetMockThen {
+  def testRenameQuery() = resetMockThen {
     val queryId = 3789894L
     val queryName = "aslkfhkasfh"
 
@@ -357,7 +357,7 @@ final class ShrineResourceJaxrsTest extends AbstractPortSearchingJerseyTest with
   }
 
   @Test
-  def testReadQueryResult = resetMockThen {
+  def testReadQueryResult() = resetMockThen {
     val queryId = 3789894L
 
     val response = shrineClient.readQueryResult(queryId)
@@ -375,7 +375,7 @@ final class ShrineResourceJaxrsTest extends AbstractPortSearchingJerseyTest with
 
     val param = MockShrineRequestHandler.readQueryResultParam
 
-    MockShrineRequestHandler.shouldBroadcastParam should be(true)
+    MockShrineRequestHandler.shouldBroadcastParam should be(right = true)
     param should not(be(null))
     param.projectId should equal(projectId)
     param.authn should equal(authenticationInfo)
@@ -386,7 +386,7 @@ final class ShrineResourceJaxrsTest extends AbstractPortSearchingJerseyTest with
   }
   
   @Test
-  def testReadTranslatedQueryDefinition = resetMockThen {
+  def testReadTranslatedQueryDefinition() = resetMockThen {
     val queryDef = QueryDefinition("foo", Term("network"))
     
     val response = shrineClient.readTranslatedQueryDefinition(queryDef)
@@ -405,7 +405,7 @@ final class ShrineResourceJaxrsTest extends AbstractPortSearchingJerseyTest with
 
     val param = MockShrineRequestHandler.readTranslatedQueryDefinitionParam
 
-    MockShrineRequestHandler.shouldBroadcastParam should be(true)
+    MockShrineRequestHandler.shouldBroadcastParam should be(right = true)
     param should not(be(null))
     param.authn should equal(authenticationInfo)
     param.requestType should equal(RequestType.ReadTranslatedQueryDefinitionRequest)
@@ -414,10 +414,10 @@ final class ShrineResourceJaxrsTest extends AbstractPortSearchingJerseyTest with
   }
   
   @Test
-  def testFlagQuery: Unit = resetMockThen {
+  def testFlagQuery(): Unit = resetMockThen {
     val queryId = 12345L
     val message = "laskfhdklsjfhksdf"
-    val response = shrineClient.flagQuery(queryId, Some(message), true)
+    val response = shrineClient.flagQuery(queryId, Some(message), shouldBroadcast = true)
 
     response should equal(FlagQueryResponse)
 
@@ -434,7 +434,7 @@ final class ShrineResourceJaxrsTest extends AbstractPortSearchingJerseyTest with
 
     val param = MockShrineRequestHandler.flagQueryRequestParam
 
-    MockShrineRequestHandler.shouldBroadcastParam should be(true)
+    MockShrineRequestHandler.shouldBroadcastParam should be(right = true)
     
     param should not(be(null))
     param.authn should equal(authenticationInfo)
@@ -445,10 +445,10 @@ final class ShrineResourceJaxrsTest extends AbstractPortSearchingJerseyTest with
   }
   
   @Test
-  def testUnFlagQuery: Unit = resetMockThen {
+  def testUnFlagQuery(): Unit = resetMockThen {
     val queryId = 12345L
     
-    val response = shrineClient.unFlagQuery(queryId, true)
+    val response = shrineClient.unFlagQuery(queryId, shouldBroadcast = true)
 
     response should equal(UnFlagQueryResponse)
 
@@ -466,7 +466,7 @@ final class ShrineResourceJaxrsTest extends AbstractPortSearchingJerseyTest with
 
     val param = MockShrineRequestHandler.unFlagQueryRequestParam
 
-    MockShrineRequestHandler.shouldBroadcastParam should be(true)
+    MockShrineRequestHandler.shouldBroadcastParam should be(right = true)
     
     param should not(be(null))
     param.authn should equal(authenticationInfo)
@@ -476,7 +476,7 @@ final class ShrineResourceJaxrsTest extends AbstractPortSearchingJerseyTest with
   }
 
   private def validateCachedParam(param: ShrineRequest, expectedRequestType: RequestType) {
-    MockShrineRequestHandler.shouldBroadcastParam should be(true)
+    MockShrineRequestHandler.shouldBroadcastParam should be(right = true)
     param should not(be(null))
     param.projectId should equal(projectId)
     param.authn should equal(authenticationInfo)

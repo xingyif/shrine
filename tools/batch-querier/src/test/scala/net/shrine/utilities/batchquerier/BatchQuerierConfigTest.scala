@@ -10,7 +10,7 @@ import net.shrine.util.ShouldMatchersForJUnit
 
 /**
  * @author clint
- * @date Sep 9, 2013
+ * @since Sep 9, 2013
  */
 final class BatchQuerierConfigTest extends ShouldMatchersForJUnit {
   import BatchQuerierConfigTest._
@@ -27,6 +27,7 @@ final class BatchQuerierConfigTest extends ShouldMatchersForJUnit {
     val outputFile = "output.csv"
     val inputFile = "input.xml"
     val topicId = "some-topic-id"
+    val topicName = "some-topic-name"
 
     import net.shrine.utilities.scallop.{Keys => BaseKeys}
       
@@ -40,7 +41,8 @@ final class BatchQuerierConfigTest extends ShouldMatchersForJUnit {
         BatchQuerierConfigKeys.shrineUrl -> shrineUrl,
         BatchQuerierConfigKeys.outputFile -> outputFile,
         BatchQuerierConfigKeys.inputFile -> inputFile,
-        BatchQuerierConfigKeys.topicId -> topicId).asConfig
+        BatchQuerierConfigKeys.topicId -> topicId,
+        BatchQuerierConfigKeys.topicName -> topicName).asConfig
     }
     
     //Should parse

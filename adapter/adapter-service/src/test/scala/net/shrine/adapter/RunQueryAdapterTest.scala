@@ -63,7 +63,7 @@ final class RunQueryAdapterTest extends AbstractSquerylAdapterTest with ShouldMa
 
   private val hiveCredentials = HiveCredentials("some-hive-domain", "hive-username", "hive-password", "hive-project")
 
-  private val authn = AuthenticationInfo("some-domain", "username", Credential("jksafhkjaf", false))
+  private val authn = AuthenticationInfo("some-domain", "username", Credential("jksafhkjaf", isToken = false))
 
   private val adapterLockoutThreshold = 99
 
@@ -109,7 +109,7 @@ final class RunQueryAdapterTest extends AbstractSquerylAdapterTest with ShouldMa
   }.toString
 
   @Test
-  def testProcessRawCrcRunQueryResponseCountQueryOnly: Unit = afterCreatingTables{
+  def testProcessRawCrcRunQueryResponseCountQueryOnly(): Unit = afterCreatingTables{
     val outputTypes = Set(PATIENT_COUNT_XML)
     
     val translator = new QueryDefinitionTranslator(new ExpressionTranslator(Map("network" -> Set("local1a", "local1b"))))
@@ -126,9 +126,9 @@ final class RunQueryAdapterTest extends AbstractSquerylAdapterTest with ShouldMa
       collectAdapterAudit = false
     )
 
-    val request = RunQueryRequest(projectId, 1.second, authn, expectedNetworkQueryId, Option(topicId), Option(topicName), outputTypes, queryDef)
+    val request = RunQueryRequest(projectId, 1.second, authn, expectedNetworkQueryId, Option((topicId,topicName)), outputTypes, queryDef)
 
-    val networkAuthn = AuthenticationInfo("some-domain", "username", Credential("sadasdasdasd", false))
+    val networkAuthn = AuthenticationInfo("some-domain", "username", Credential("sadasdasdasd", isToken = false))
     
     val broadcastMessage = BroadcastMessage(queryId, networkAuthn, request)
     
@@ -143,19 +143,19 @@ final class RunQueryAdapterTest extends AbstractSquerylAdapterTest with ShouldMa
     
     val resp = adapter.processRawCrcRunQueryResponse(networkAuthn, request, rawRunQueryResponse).asInstanceOf[RunQueryResponse]
 
-    resp should not be (null)
+    resp should not be null
     
     //Validate the response
     
-    resp.createDate should not be(null)
+    resp.createDate should not be null
     resp.groupId should be(request.authn.domain)
     resp.userId should be(request.authn.username)
     resp.queryId should be(queryId)
     resp.queryInstanceId should be(12345L)
     resp.requestXml should equal(request.queryDefinition)
     
-    (countQueryResult eq resp.singleNodeResult) should be(false)
-    within3(resp.singleNodeResult.setSize, countQueryResult.setSize) should be(true)
+    (countQueryResult eq resp.singleNodeResult) should be(right = false)
+    within3(resp.singleNodeResult.setSize, countQueryResult.setSize) should be(right = true)
     
     resp.singleNodeResult.resultType.get should equal(PATIENT_COUNT_XML)
     
@@ -169,7 +169,7 @@ final class RunQueryAdapterTest extends AbstractSquerylAdapterTest with ShouldMa
     val Seq(queryRow) = list(queryRows)
 
     {
-      queryRow.dateCreated should not be (null)
+      queryRow.dateCreated should not be null
       queryRow.domain should equal(request.authn.domain)
       queryRow.name should equal(queryDef.name)
       queryRow.localId should equal(expectedLocalMasterId)
@@ -182,14 +182,14 @@ final class RunQueryAdapterTest extends AbstractSquerylAdapterTest with ShouldMa
     val Seq(countRow) = list(countResultRows)
 
     {
-      countRow.creationDate should not be (null)
+      countRow.creationDate should not be null
       countRow.originalValue should equal(countQueryResult.setSize)
-      within3(countRow.obfuscatedValue, countRow.originalValue) should be(true)
+      within3(countRow.obfuscatedValue, countRow.originalValue) should be(right = true)
     }
   }
   
   @Test
-  def testProcessRawCrcRunQueryResponseCountAndBreakdownQuery: Unit = afterCreatingTables {
+  def testProcessRawCrcRunQueryResponseCountAndBreakdownQuery(): Unit = afterCreatingTables {
     val allBreakdownTypes = DefaultBreakdownResultOutputTypes.toSet
     
     val breakdownTypes = Seq(PATIENT_GENDER_COUNT_XML)
@@ -198,9 +198,9 @@ final class RunQueryAdapterTest extends AbstractSquerylAdapterTest with ShouldMa
     
     val translator = new QueryDefinitionTranslator(new ExpressionTranslator(Map("network" -> Set("local1a", "local1b"))))
 
-    val request = RunQueryRequest(projectId, 1.second, authn, expectedNetworkQueryId, Option(topicId), Option(topicName), outputTypes, queryDef)
+    val request = RunQueryRequest(projectId, 1.second, authn, expectedNetworkQueryId, Option((topicId,topicName)), outputTypes, queryDef)
 
-    val networkAuthn = AuthenticationInfo("some-domain", "username", Credential("sadasdasdasd", false))
+    val networkAuthn = AuthenticationInfo("some-domain", "username", Credential("sadasdasdasd", isToken = false))
     
     val broadcastMessage = BroadcastMessage(queryId, networkAuthn, request)
     
@@ -245,19 +245,19 @@ final class RunQueryAdapterTest extends AbstractSquerylAdapterTest with ShouldMa
         
     val resp = adapter.processRawCrcRunQueryResponse(networkAuthn, request, rawRunQueryResponse).asInstanceOf[RunQueryResponse]
 
-    resp should not be (null)
+    resp should not be null
     
     //Validate the response
     
-    resp.createDate should not be(null)
+    resp.createDate should not be null
     resp.groupId should be(request.authn.domain)
     resp.userId should be(request.authn.username)
     resp.queryId should be(queryId)
     resp.queryInstanceId should be(12345L)
     resp.requestXml should equal(request.queryDefinition)
     
-    (countQueryResult eq resp.singleNodeResult) should be(false)
-    within3(resp.singleNodeResult.setSize, countQueryResult.setSize) should be(true)
+    (countQueryResult eq resp.singleNodeResult) should be(right = false)
+    within3(resp.singleNodeResult.setSize, countQueryResult.setSize) should be(right = true)
     
     resp.singleNodeResult.resultType.get should equal(PATIENT_COUNT_XML)
     resp.singleNodeResult.breakdowns.keySet should equal(Set(PATIENT_GENDER_COUNT_XML))
@@ -271,7 +271,7 @@ final class RunQueryAdapterTest extends AbstractSquerylAdapterTest with ShouldMa
     for {
       (key, value) <- breakdownEnvelope.data
     } {
-      within3(value, dummyBreakdownData(key)) should be(true)
+      within3(value, dummyBreakdownData(key)) should be(right = true)
     }
     
     //validate the DB
@@ -282,7 +282,7 @@ final class RunQueryAdapterTest extends AbstractSquerylAdapterTest with ShouldMa
     val Seq(queryRow) = list(queryRows)
 
     {
-      queryRow.dateCreated should not be (null)
+      queryRow.dateCreated should not be null
       queryRow.domain should equal(request.authn.domain)
       queryRow.name should equal(queryDef.name)
       queryRow.localId should equal(expectedLocalMasterId)
@@ -295,28 +295,28 @@ final class RunQueryAdapterTest extends AbstractSquerylAdapterTest with ShouldMa
     val Seq(countRow) = list(countResultRows)
 
     {
-      countRow.creationDate should not be (null)
+      countRow.creationDate should not be null
       countRow.originalValue should equal(countQueryResult.setSize)
-      within3(countRow.obfuscatedValue, countRow.originalValue) should be(true)
+      within3(countRow.obfuscatedValue, countRow.originalValue) should be(right = true)
     }
 
     val breakdownRows @ Seq(xRow, yRow, zRow) = list(breakdownResultRows)
 
     breakdownRows.map(_.dataKey).toSet should equal(dummyBreakdownData.keySet)
     
-    within3(xRow.obfuscatedValue, xRow.originalValue) should be(true)
+    within3(xRow.obfuscatedValue, xRow.originalValue) should be(right = true)
     xRow.originalValue should be(dummyBreakdownData(xRow.dataKey))
     
-    within3(yRow.obfuscatedValue, yRow.originalValue) should be(true)
+    within3(yRow.obfuscatedValue, yRow.originalValue) should be(right = true)
     yRow.originalValue should be(dummyBreakdownData(yRow.dataKey))
     
-    within3(zRow.obfuscatedValue, zRow.originalValue) should be(true)
+    within3(zRow.obfuscatedValue, zRow.originalValue) should be(right = true)
     zRow.originalValue should be(dummyBreakdownData(zRow.dataKey))
   }
 
   //NB: See https://open.med.harvard.edu/jira/browse/SHRINE-745
   @Test
-  def testParseAltErrorXml {
+  def testParseAltErrorXml() {
     val adapter = new RunQueryAdapter(
       Poster("crc-url", null),
       null,
@@ -331,13 +331,13 @@ final class RunQueryAdapterTest extends AbstractSquerylAdapterTest with ShouldMa
 
     val resp = adapter.parseShrineErrorResponseWithFallback(altI2b2ErrorXml).asInstanceOf[ErrorResponse]
 
-    resp should not be (null)
+    resp should not be null
 
     resp.errorMessage should be("Query result instance id 3126 not found")
   }
 
   @Test
-  def testParseErrorXml {
+  def testParseErrorXml() {
     val xml = {
       <ns5:response xmlns:ns2="http://www.i2b2.org/xsd/hive/pdo/1.1/" xmlns:ns4="http://www.i2b2.org/xsd/cell/crc/psm/1.1/" xmlns:ns3="http://www.i2b2.org/xsd/cell/crc/pdo/1.1/" xmlns:tns="http://axis2.crc.i2b2.harvard.edu" xmlns:ns9="http://www.i2b2.org/xsd/cell/ont/1.1/" xmlns:ns5="http://www.i2b2.org/xsd/hive/msg/1.1/" xmlns:ns6="http://www.i2b2.org/xsd/cell/crc/psm/querydefinition/1.1/" xmlns:ns7="http://www.i2b2.org/xsd/cell/crc/psm/analysisdefinition/1.1/" xmlns:ns10="http://www.i2b2.org/xsd/hive/msg/result/1.1/" xmlns:ns8="http://www.i2b2.org/xsd/cell/pm/1.1/">
         <message_header>
@@ -420,13 +420,13 @@ final class RunQueryAdapterTest extends AbstractSquerylAdapterTest with ShouldMa
 
     val resp = adapter.parseShrineErrorResponseWithFallback(xml).asInstanceOf[ErrorResponse]
 
-    resp should not be (null)
+    resp should not be null
 
-    resp.errorMessage should not be ("")
+    resp.errorMessage should not be ""
   }
 
   @Test
-  def testObfuscateBreakdowns {
+  def testObfuscateBreakdowns() {
     val breakdown1 = I2b2ResultEnvelope(PATIENT_AGE_COUNT_XML, Map.empty)
     val breakdown2 = I2b2ResultEnvelope(PATIENT_GENDER_COUNT_XML, Map("foo" -> 123, "bar" -> 345))
     val breakdown3 = I2b2ResultEnvelope(PATIENT_RACE_COUNT_XML, Map("x" -> 999, "y" -> 888))
@@ -437,7 +437,7 @@ final class RunQueryAdapterTest extends AbstractSquerylAdapterTest with ShouldMa
 
     original.keySet should equal(obfuscated.keySet)
 
-    original.keySet.forall(resultType => original(resultType).data.keySet == obfuscated(resultType).data.keySet) should be(true)
+    original.keySet.forall(resultType => original(resultType).data.keySet == obfuscated(resultType).data.keySet) should be(right = true)
 
     val localTerms = Set("local1a", "local1b")
     
@@ -450,14 +450,14 @@ final class RunQueryAdapterTest extends AbstractSquerylAdapterTest with ShouldMa
       obfscBreakdown <- obfuscated.get(resultType)
       key <- origBreakdown.data.keySet
     } {
-      (origBreakdown eq obfscBreakdown) should be(false)
+      (origBreakdown eq obfscBreakdown) should be(right = false)
 
-      ObfuscatorTest.within3(origBreakdown.data(key), obfscBreakdown.data(key)) should be(true)
+      ObfuscatorTest.within3(origBreakdown.data(key), obfscBreakdown.data(key)) should be(right = true)
     }
   }
 
   @Test
-  def testTranslateNetworkToLocalDoesntLeakCredentialsViaException: Unit = {
+  def testTranslateNetworkToLocalDoesntLeakCredentialsViaException(): Unit = {
     val mappings = Map.empty[String, Set[String]]
 
     val translator = new QueryDefinitionTranslator(new ExpressionTranslator(mappings))
@@ -476,9 +476,9 @@ final class RunQueryAdapterTest extends AbstractSquerylAdapterTest with ShouldMa
 
     val queryDefinition = QueryDefinition("foo", Term("blah"))
 
-    val authn = AuthenticationInfo("d", "u", Credential("p", false))
+    val authn = AuthenticationInfo("d", "u", Credential("p", isToken = false))
 
-    val req = RunQueryRequest("projectId", Duration.Inf, authn, 12345L, None, None, Set.empty, queryDef)
+    val req = RunQueryRequest("projectId", Duration.Inf, authn, 12345L, None, Set.empty, queryDef)
 
     try {
       adapter.translateNetworkToLocal(req)
@@ -486,14 +486,14 @@ final class RunQueryAdapterTest extends AbstractSquerylAdapterTest with ShouldMa
       fail("Expected an AdapterMappingException")
     } catch {
       case e: AdapterMappingException => {
-        e.getMessage.contains(authn.rawToString) should be(false)
-        e.getMessage.contains(AuthenticationInfo.elided.toString) should be(true)
+        e.getMessage.contains(authn.rawToString) should be(right = false)
+        e.getMessage.contains(AuthenticationInfo.elided.toString) should be(right = true)
       }
     }
   }
 
   @Test
-  def testTranslateQueryDefinitionXml {
+  def testTranslateQueryDefinitionXml() {
     val localTerms = Set("local1a", "local1b")
 
     val mappings = Map("network" -> localTerms)
@@ -522,7 +522,7 @@ final class RunQueryAdapterTest extends AbstractSquerylAdapterTest with ShouldMa
   }
 
   @Test
-  def testQueuedRegularCountQuery: Unit = afterCreatingTables {
+  def testQueuedRegularCountQuery(): Unit = afterCreatingTables {
     val adapter = RunQueryAdapter(
       Poster("crc-url", MockHttpClient),
       dao,
@@ -535,44 +535,44 @@ final class RunQueryAdapterTest extends AbstractSquerylAdapterTest with ShouldMa
       collectAdapterAudit = false
     )
 
-    val networkAuthn = AuthenticationInfo("nd", "nu", Credential("np", false))
+    val networkAuthn = AuthenticationInfo("nd", "nu", Credential("np", isToken = false))
 
     import scala.concurrent.duration._
 
-    val req = RunQueryRequest(projectId, 1.second, authn, expectedNetworkQueryId, Option(topicId), Option(topicName), Set(PATIENT_COUNT_XML), queryDef)
+    val req = RunQueryRequest(projectId, 1.second, authn, expectedNetworkQueryId, Option((topicId,topicName)), Set(PATIENT_COUNT_XML), queryDef)
 
     val broadcastMessage = BroadcastMessage(queryId, networkAuthn, req)
 
     val resp = adapter.processRequest(broadcastMessage).asInstanceOf[RunQueryResponse]
 
     resp.groupId should equal(networkAuthn.domain)
-    resp.createDate should not be (null) // :\
+    resp.createDate should not be null // :\
     resp.queryId should equal(-1L)
     resp.queryInstanceId should equal(-1L)
     resp.requestXml should equal(queryDef)
     resp.userId should equal(networkAuthn.username)
 
     resp.singleNodeResult.breakdowns should equal(Map.empty)
-    resp.singleNodeResult.description.isDefined should be(true)
+    resp.singleNodeResult.description.isDefined should be(right = true)
     resp.singleNodeResult.elapsed should equal(Some(0L))
-    resp.singleNodeResult.endDate.isDefined should be(true)
-    resp.singleNodeResult.startDate.isDefined should be(true)
+    resp.singleNodeResult.endDate.isDefined should be(right = true)
+    resp.singleNodeResult.startDate.isDefined should be(right = true)
     resp.singleNodeResult.instanceId should equal(-1L)
-    resp.singleNodeResult.isError should be(false)
+    resp.singleNodeResult.isError should be(right = false)
     resp.singleNodeResult.resultId should equal(-1L)
     resp.singleNodeResult.resultType should be(Some(PATIENT_COUNT_XML))
     resp.singleNodeResult.setSize should equal(-1L)
-    resp.singleNodeResult.statusMessage.isDefined should be(true)
+    resp.singleNodeResult.statusMessage.isDefined should be(right = true)
     resp.singleNodeResult.statusType should be(QueryResult.StatusType.Held)
-    resp.singleNodeResult.endDate.isDefined should be(true)
+    resp.singleNodeResult.endDate.isDefined should be(right = true)
 
     val Some(storedQuery) = dao.findQueryByNetworkId(expectedNetworkQueryId)
 
-    storedQuery.dateCreated should not be (null) // :\
+    storedQuery.dateCreated should not be null // :\
     storedQuery.domain should equal(networkAuthn.domain)
     storedQuery.hasBeenRun should equal(false)
     storedQuery.isFlagged should equal(false)
-    storedQuery.localId should equal(-1L.toString)
+    storedQuery.localId should equal((-1L).toString)
     storedQuery.name should equal(queryDef.name)
     storedQuery.networkId should equal(expectedNetworkQueryId)
     storedQuery.queryDefinition should equal(queryDef)
@@ -606,33 +606,33 @@ final class RunQueryAdapterTest extends AbstractSquerylAdapterTest with ShouldMa
 
     savedQuery.networkQueryId should equal(expectedNetworkQueryId)
     savedQuery.breakdowns should equal(Nil)
-    savedQuery.count.creationDate should not be (null)
+    savedQuery.count.creationDate should not be null
     savedQuery.count.localId should equal(countQueryResultToUse.resultId)
     //savedQuery.count.resultId should equal(resultId) TODO: REVISIT
     savedQuery.count.statusType should equal(status)
 
     if (status.isDone && !status.isError) {
-      savedQuery.count.data.get.startDate should not be (null)
-      savedQuery.count.data.get.endDate should not be (null)
+      savedQuery.count.data.get.startDate should not be null
+      savedQuery.count.data.get.endDate should not be null
 
       savedQuery.count.data.get.originalValue should be(count)
-      ObfuscatorTest.within3(savedQuery.count.data.get.obfuscatedValue, count) should be(true)
+      ObfuscatorTest.within3(savedQuery.count.data.get.obfuscatedValue, count) should be(right = true)
     } else {
       savedQuery.count.data should be(None)
     }
   }
 
   @Test
-  def testRegularCountQuery = doTestRegularCountQuery(QueryResult.StatusType.Finished, countQueryResult.setSize)
+  def testRegularCountQuery() = doTestRegularCountQuery(QueryResult.StatusType.Finished, countQueryResult.setSize)
 
   @Test
-  def testRegularCountQueryComesBackProcessing = doTestRegularCountQuery(QueryResult.StatusType.Processing, -1L)
+  def testRegularCountQueryComesBackProcessing() = doTestRegularCountQuery(QueryResult.StatusType.Processing, -1L)
 
   @Test
-  def testRegularCountQueryComesBackQueued = doTestRegularCountQuery(QueryResult.StatusType.Queued, -1L)
+  def testRegularCountQueryComesBackQueued() = doTestRegularCountQuery(QueryResult.StatusType.Queued, -1L)
 
   @Test
-  def testRegularCountQueryComesBackError = afterCreatingTables {
+  def testRegularCountQueryComesBackError() = afterCreatingTables {
     val errorQueryResult = QueryResult.errorResult(Some("some-description"), "some-status-message")
 
     val outputTypes = justCounts
@@ -677,7 +677,7 @@ final class RunQueryAdapterTest extends AbstractSquerylAdapterTest with ShouldMa
       }
     }
 
-    errorRow should not be (null)
+    errorRow should not be null
     //TODO:
     //errorRow.message should equal(errorQueryResult.statusMessage)
   }
@@ -689,13 +689,13 @@ final class RunQueryAdapterTest extends AbstractSquerylAdapterTest with ShouldMa
       for {
         breakdownName <- actualBreakdowns.keySet
       } {
-        within3(actualBreakdowns(breakdownName), dummyBreakdownData(breakdownName)) should be(true)
+        within3(actualBreakdowns(breakdownName), dummyBreakdownData(breakdownName)) should be(right = true)
       }
     }
   }
 
   @Test
-  def testGetBreakdownsWithRegularCountQuery {
+  def testGetBreakdownsWithRegularCountQuery() {
     val breakdowns = DefaultBreakdownResultOutputTypes.values.map(breakdownFor)
 
     val resp = doTestGetBreakdowns(breakdowns)
@@ -713,7 +713,7 @@ final class RunQueryAdapterTest extends AbstractSquerylAdapterTest with ShouldMa
   }
 
   @Test
-  def testGetBreakdownsSomeFailures {
+  def testGetBreakdownsSomeFailures() {
     val resultTypesExpectedToSucceed = Seq(PATIENT_AGE_COUNT_XML, PATIENT_GENDER_COUNT_XML)
 
     val breakdowns = resultTypesExpectedToSucceed.map(breakdownFor)
@@ -733,7 +733,7 @@ final class RunQueryAdapterTest extends AbstractSquerylAdapterTest with ShouldMa
   }
 
   @Test
-  def testErrorResponsesArePassedThrough: Unit = {
+  def testErrorResponsesArePassedThrough(): Unit = {
     val errorResponse = ErrorResponse("blarg!")
 
     val resp = doQuery(Set(PATIENT_COUNT_XML)) {
@@ -834,7 +834,7 @@ final class RunQueryAdapterTest extends AbstractSquerylAdapterTest with ShouldMa
     val queryRow = first(queryRows)
 
     {
-      queryRow.dateCreated should not be (null)
+      queryRow.dateCreated should not be null
       queryRow.domain should equal(authn.domain)
       queryRow.name should equal(queryDef.name)
       queryRow.localId should equal(expectedLocalMasterId)
@@ -849,10 +849,10 @@ final class RunQueryAdapterTest extends AbstractSquerylAdapterTest with ShouldMa
     val countRow = first(countResultRows)
 
     {
-      countRow.creationDate should not be (null)
+      countRow.creationDate should not be null
       countRow.originalValue should equal(countQueryResult.setSize)
-      within3(countRow.obfuscatedValue, countQueryResult.setSize) should be(true)
-      within3(countRow.obfuscatedValue, countRow.originalValue) should be(true)
+      within3(countRow.obfuscatedValue, countQueryResult.setSize) should be(right = true)
+      within3(countRow.obfuscatedValue, countRow.originalValue) should be(right = true)
     }
 
     list(countResultRows).size should equal(1)
@@ -898,7 +898,7 @@ final class RunQueryAdapterTest extends AbstractSquerylAdapterTest with ShouldMa
         resultType = queryResult.resultType
         resultId = queryResult.id
       } {
-        errorResults.find(_.resultId == resultId).isDefined should be(true)
+        errorResults.exists(_.resultId == resultId) should be(right = true)
       }
     }
 
@@ -923,7 +923,7 @@ final class RunQueryAdapterTest extends AbstractSquerylAdapterTest with ShouldMa
         rowsWithType.map(row => row.dataKey -> row.originalValue).toMap should equal(dummyBreakdownData)
 
         for (breakdownRow <- rowsWithType) {
-          within3(breakdownRow.obfuscatedValue, dummyBreakdownData(breakdownRow.dataKey)) should be(true)
+          within3(breakdownRow.obfuscatedValue, dummyBreakdownData(breakdownRow.dataKey)) should be(right = true)
         }
       }
     }
@@ -951,9 +951,9 @@ final class RunQueryAdapterTest extends AbstractSquerylAdapterTest with ShouldMa
 
     import scala.concurrent.duration._
 
-    val req = RunQueryRequest(projectId, 1.second, authn, expectedNetworkQueryId, Option(topicId), Option(topicName), outputTypes, queryDef)
+    val req = RunQueryRequest(projectId, 1.second, authn, expectedNetworkQueryId, Option((topicId,topicName)), outputTypes, queryDef)
 
-    val networkAuthn = AuthenticationInfo("some-domain", "username", Credential("sadasdasdasd", false))
+    val networkAuthn = AuthenticationInfo("some-domain", "username", Credential("sadasdasdasd", isToken = false))
 
     val broadcastMessage = BroadcastMessage(queryId, networkAuthn, req)
 

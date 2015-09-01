@@ -56,7 +56,7 @@ final class BroadcastAndAggregationServiceTest extends ShouldMatchersForJUnit {
     {
       val invalidQueryId = -1L
       
-      val req = RunQueryRequest("projectId", 1.millisecond, authn, invalidQueryId, Some("topicId"), Some("Topic Name"), Set.empty, queryDef)
+      val req = RunQueryRequest("projectId", 1.millisecond, authn, invalidQueryId, Some(("topicId","Topic Name")), Set.empty, queryDef)
       
       val aggregator = new RunQueryAggregator(invalidQueryId, authn.username, authn.domain, queryDef, true)
       
@@ -135,7 +135,7 @@ final class BroadcastAndAggregationServiceTest extends ShouldMatchersForJUnit {
     }
     
     {
-      val req = RunQueryRequest("projectId", 1.millisecond, authn, -1L, Some("topicId"), Some("Topic Name"), Set.empty, QueryDefinition("yo", Term("foo")))
+      val req = RunQueryRequest("projectId", 1.millisecond, authn, -1L, Some(("topicId","Topic Name")), Set.empty, QueryDefinition("yo", Term("foo")))
       
       val (queryIdOption, transformedReq: RunQueryRequest) = service.addQueryId(req)
       
@@ -148,7 +148,7 @@ final class BroadcastAndAggregationServiceTest extends ShouldMatchersForJUnit {
       transformedReq.projectId should be(req.projectId)
       transformedReq.waitTime should be(req.waitTime)
       transformedReq.authn should be(req.authn)
-      transformedReq.topicId should be(req.topicId)
+      transformedReq.topicIdAndName should be(req.topicIdAndName)
       transformedReq.outputTypes should be(req.outputTypes)
       transformedReq.queryDefinition should be(req.queryDefinition)
     }

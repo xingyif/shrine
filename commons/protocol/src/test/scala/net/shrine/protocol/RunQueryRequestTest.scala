@@ -59,7 +59,7 @@ final class RunQueryRequestTest extends ShrineRequestValidator {
         { queryDefinition.toI2b2 }
         { resultOutputTypesI2b2Xml }
       </ns4:request>
-      <shrine><queryTopicID>{ topicId }</queryTopicID></shrine>
+      <shrine><queryTopicID>{ topicId }</queryTopicID><queryTopicName>{ topicName }</queryTopicName></shrine>
     </message_body>
   }
 
@@ -91,7 +91,7 @@ final class RunQueryRequestTest extends ShrineRequestValidator {
         { queryDefinition.toI2b2 }
         <result_output_list></result_output_list>
       </ns4:request>
-      <shrine><queryTopicID>{ topicId }</queryTopicID></shrine>
+      <shrine><queryTopicID>{ topicId }</queryTopicID><queryTopicName>{ topicName }</queryTopicName></shrine>
     </message_body>
   }
 
@@ -112,7 +112,7 @@ final class RunQueryRequestTest extends ShrineRequestValidator {
           <result_output priority_index="6" name="patIent_vITalSTaTuS_Count_Xml"/>
         </result_output_list>
       </ns4:request>
-      <shrine><queryTopicID>{ topicId }</queryTopicID></shrine>
+      <shrine><queryTopicID>{ topicId }</queryTopicID><queryTopicName>{ topicName }</queryTopicName></shrine>
     </message_body>
   }
 
@@ -134,6 +134,7 @@ final class RunQueryRequestTest extends ShrineRequestValidator {
       { requestHeaderFragment }
       <queryId>{ queryId }</queryId>
       <topicId>{ topicId }</topicId>
+      <topicName>{ topicName }</topicName>
       <outputTypes>
         { nonCountResultOutputTypes.map(_.toXml) }
       </outputTypes>
@@ -146,6 +147,7 @@ final class RunQueryRequestTest extends ShrineRequestValidator {
       { requestHeaderFragment }
       <queryId>{ queryId }</queryId>
       <topicId>{ topicId }</topicId>
+      <topicName>{ topicName }</topicName>
       <outputTypes>
       </outputTypes>
       { queryDefinition.toXml }
@@ -177,7 +179,6 @@ final class RunQueryRequestTest extends ShrineRequestValidator {
       AuthenticationInfo("d", "u", Credential("p", false)),
       12345L,
       None,
-      None,
       Set(PATIENT_COUNT_XML, breakdownOutputType),
       QueryDefinition("foo", Some(Term("bar"))))
 
@@ -196,7 +197,7 @@ final class RunQueryRequestTest extends ShrineRequestValidator {
 
   @Test
   def testElideAuthenticationInfo: Unit = {
-    val req = RunQueryRequest.fromI2b2(DefaultBreakdownResultOutputTypes.toSet)(request()).get
+    val req: RunQueryRequest = RunQueryRequest.fromI2b2(DefaultBreakdownResultOutputTypes.toSet)(request()).get
 
     req.authn.username should equal(username)
     req.authn.domain should equal(domain)
@@ -214,7 +215,7 @@ final class RunQueryRequestTest extends ShrineRequestValidator {
     val translatedRequest = RunQueryRequest.fromI2b2(DefaultBreakdownResultOutputTypes.toSet)(request()).get
 
     validateRequestWith(translatedRequest) {
-      translatedRequest.topicId should equal(Some(topicId))
+      translatedRequest.topicIdAndName should equal(Some((topicId,topicName)))
       translatedRequest.outputTypes should equal(ResultOutputType.nonErrorTypes.toSet ++ DefaultBreakdownResultOutputTypes.toSet)
       translatedRequest.queryDefinition should equal(queryDefinition)
 
@@ -229,7 +230,7 @@ final class RunQueryRequestTest extends ShrineRequestValidator {
     val translatedRequest = RunQueryRequest.fromI2b2(DefaultBreakdownResultOutputTypes.toSet)(request(() => messageBodyNoTopicId)).get
 
     validateRequestWith(translatedRequest) {
-      translatedRequest.topicId should equal(None)
+      translatedRequest.topicIdAndName should equal(None)
       translatedRequest.outputTypes should equal(ResultOutputType.nonErrorTypes.toSet ++ DefaultBreakdownResultOutputTypes.toSet)
       translatedRequest.queryDefinition should equal(queryDefinition)
 
@@ -244,7 +245,7 @@ final class RunQueryRequestTest extends ShrineRequestValidator {
     val translatedRequest = RunQueryRequest.fromI2b2(DefaultBreakdownResultOutputTypes.toSet)(request(() => messageBodyNoOutputTypes)).get
 
     validateRequestWith(translatedRequest) {
-      translatedRequest.topicId should equal(Some(topicId))
+      translatedRequest.topicIdAndName should equal(Some((topicId,topicName)))
       translatedRequest.outputTypes should equal(Set(ResultOutputType.PATIENT_COUNT_XML))
       translatedRequest.queryDefinition should equal(queryDefinition)
 
@@ -259,7 +260,7 @@ final class RunQueryRequestTest extends ShrineRequestValidator {
     val translatedRequest = RunQueryRequest.fromI2b2(DefaultBreakdownResultOutputTypes.toSet)(request(() => messageBodyNoCountOutputType)).get
 
     validateRequestWith(translatedRequest) {
-      translatedRequest.topicId should equal(Some(topicId))
+      translatedRequest.topicIdAndName should equal(Some((topicId,topicName)))
       translatedRequest.outputTypes should equal(DefaultBreakdownResultOutputTypes.toSet + ResultOutputType.PATIENT_COUNT_XML)
       translatedRequest.queryDefinition should equal(queryDefinition)
 
@@ -273,7 +274,7 @@ final class RunQueryRequestTest extends ShrineRequestValidator {
   def testMapQueryDefinition {
     val outputTypes = ResultOutputType.nonBreakdownTypes.toSet
 
-    val req = new RunQueryRequest(projectId, waitTime, authn, queryId, Option(topicId), Option(topicName), outputTypes, queryDefinition)
+    val req = new RunQueryRequest(projectId, waitTime, authn, queryId, Option((topicId,topicName)), outputTypes, queryDefinition)
 
     val bogusTerm = Term("sa;ldk;alskd")
 
@@ -286,7 +287,7 @@ final class RunQueryRequestTest extends ShrineRequestValidator {
     mapped.projectId should equal(projectId)
     mapped.waitTime should equal(waitTime)
     mapped.authn should equal(authn)
-    mapped.topicId should equal(Option(topicId))
+    mapped.topicIdAndName should equal(Option((topicId,topicName)))
     mapped.outputTypes should equal(outputTypes)
     mapped.queryDefinition.name should equal(queryDefinition.name)
     mapped.queryDefinition.expr.get should equal(bogusTerm)
@@ -300,7 +301,7 @@ final class RunQueryRequestTest extends ShrineRequestValidator {
   }
 
   @Test
-  def testDoubleDispatchingShrineRequestFromI2b2 {
+  def testDoubleDispatchingShrineRequestFromI2b2() {
     val shrineRequest = HandleableShrineRequest.fromI2b2(DefaultBreakdownResultOutputTypes.toSet)(request()).get
 
     shrineRequest.isInstanceOf[RunQueryRequest] should be(true)
@@ -314,8 +315,7 @@ final class RunQueryRequestTest extends ShrineRequestValidator {
         waitTime,
         authn,
         queryId,
-        Option(topicId),
-        Option(topicName),
+        Option((topicId,topicName)),
         outputTypes,
         queryDefinition)
 
@@ -338,8 +338,7 @@ final class RunQueryRequestTest extends ShrineRequestValidator {
       waitTime,
       authn,
       queryId,
-      Option(topicId),
-      Option(topicName),
+      Option((topicId,topicName)),
       resultOutputTypes.toSet,
       queryDefinition).toXml should equal(runQueryRequest)
   }
@@ -352,7 +351,6 @@ final class RunQueryRequestTest extends ShrineRequestValidator {
       authn,
       queryId,
       None,
-      None,
       resultOutputTypes.toSet,
       queryDefinition).toXml should equal(runQueryRequestNoTopicId)
   }
@@ -364,8 +362,7 @@ final class RunQueryRequestTest extends ShrineRequestValidator {
       waitTime,
       authn,
       queryId,
-      Option(topicId),
-      Option(topicName),
+      Option((topicId,topicName)),
       resultOutputTypes.toSet,
       queryDefinition)
 
@@ -373,7 +370,7 @@ final class RunQueryRequestTest extends ShrineRequestValidator {
 
     validateRequestWith(actual) {
       actual.networkQueryId should equal(-1L)
-      actual.topicId should equal(Some(topicId))
+      actual.topicIdAndName should equal(Some((topicId,topicName)))
       actual.outputTypes should equal(resultOutputTypes.toSet)
       actual.queryDefinition should equal(queryDefinition)
     }
@@ -387,7 +384,6 @@ final class RunQueryRequestTest extends ShrineRequestValidator {
       authn,
       queryId,
       None,
-      None,
       resultOutputTypes.toSet,
       queryDefinition)
 
@@ -395,7 +391,7 @@ final class RunQueryRequestTest extends ShrineRequestValidator {
 
     validateRequestWith(actual) {
       actual.networkQueryId should equal(-1L)
-      actual.topicId should equal(None)
+      actual.topicIdAndName should equal(None)
       actual.outputTypes should equal(resultOutputTypes.toSet)
       actual.queryDefinition should equal(queryDefinition)
     }
@@ -407,7 +403,7 @@ final class RunQueryRequestTest extends ShrineRequestValidator {
 
     validateRequestWith(actual) {
       actual.networkQueryId should equal(queryId)
-      actual.topicId should equal(Some(topicId))
+      actual.topicIdAndName should equal(Some((topicId,topicName)))
       actual.outputTypes should equal(resultOutputTypes.toSet)
       actual.queryDefinition should equal(queryDefinition)
 
@@ -424,7 +420,7 @@ final class RunQueryRequestTest extends ShrineRequestValidator {
 
     validateRequestWith(actual) {
       actual.networkQueryId should equal(queryId)
-      actual.topicId should equal(None)
+      actual.topicIdAndName should equal(None)
       actual.outputTypes should equal(resultOutputTypes.toSet)
       actual.queryDefinition should equal(queryDefinition)
 
@@ -441,7 +437,7 @@ final class RunQueryRequestTest extends ShrineRequestValidator {
 
     validateRequestWith(actual) {
       actual.networkQueryId should equal(queryId)
-      actual.topicId should equal(Some(topicId))
+      actual.topicIdAndName should equal(Some((topicId,topicName)))
       actual.outputTypes should equal(Set(ResultOutputType.PATIENT_COUNT_XML))
       actual.queryDefinition should equal(queryDefinition)
 
@@ -458,7 +454,7 @@ final class RunQueryRequestTest extends ShrineRequestValidator {
 
     validateRequestWith(actual) {
       actual.networkQueryId should equal(queryId)
-      actual.topicId should equal(Some(topicId))
+      actual.topicIdAndName should equal(Some((topicId,topicName)))
       actual.outputTypes should equal(nonCountResultOutputTypes.toSet + ResultOutputType.PATIENT_COUNT_XML)
       actual.queryDefinition should equal(queryDefinition)
 
@@ -470,7 +466,7 @@ final class RunQueryRequestTest extends ShrineRequestValidator {
   }
 
   @Test
-  def testShrineRequestFromXml {
-    ShrineRequest.fromXml(DefaultBreakdownResultOutputTypes.toSet)(runQueryRequest).get.isInstanceOf[RunQueryRequest] should be(true)
+  def testShrineRequestFromXml() {
+    ShrineRequest.fromXml(DefaultBreakdownResultOutputTypes.toSet)(runQueryRequest).get.isInstanceOf[RunQueryRequest] should be(right = true)
   }
 }

@@ -20,11 +20,10 @@ import scala.concurrent.duration.Duration
 import net.shrine.authentication.AuthenticationResult
 import net.shrine.protocol.Credential
 import net.shrine.authentication.Authenticator
-import net.shrine.authentication.NotAuthenticatedException
 
 /**
  * @author clint
- * @date Mar 14, 2013
+ * @since Mar 14, 2013
  */
 class BroadcastServiceScannerClient(
     val projectId: String, 
@@ -41,18 +40,18 @@ class BroadcastServiceScannerClient(
   }
   
   //Don't ask for an aggregated (summed) result, since we'll get at most one result back in any case 
-  private val runQueryAggregatorSource = Aggregators.forRunQueryRequest(false) _
+  private val runQueryAggregatorSource = Aggregators.forRunQueryRequest(addAggregatedResult = false) _
   
-  private def toAuthn(authResult: AuthenticationResult.Authenticated) = AuthenticationInfo(authResult.domain, authResult.username, Credential("", false)) 
+  private def toAuthn(authResult: AuthenticationResult.Authenticated) = AuthenticationInfo(authResult.domain, authResult.username, Credential("", isToken = false))
   
   override def query(term: String): Future[TermResult] = afterAuthenticating { authResult =>
     import Scanner.QueryDefaults._
 
     info(s"Querying for '$term'")
     
-    val request = RunQueryRequest(projectId, waitTime, authn, -1L, Option(topicId), Option(topicName), outputTypes, toQueryDef(term))
+    val request = RunQueryRequest(projectId, waitTime, authn, -1L, Option((topicId,topicName)), outputTypes, toQueryDef(term))
     
-    val futureResponse = broadcastAndAggregationService.sendAndAggregate(toAuthn(authResult), request, runQueryAggregatorSource(request), false)
+    val futureResponse = broadcastAndAggregationService.sendAndAggregate(toAuthn(authResult), request, runQueryAggregatorSource(request), shouldBroadcast = false)
     
     def toTermResult(runQueryResponse: AggregatedRunQueryResponse): TermResult = {
       val termResultOption = for {
@@ -71,7 +70,7 @@ class BroadcastServiceScannerClient(
     
     val request = ReadQueryResultRequest(projectId, waitTime, authn, termResult.networkQueryId)
     
-    val futureResponse = broadcastAndAggregationService.sendAndAggregate(toAuthn(authResult), request, new ReadQueryResultAggregator(termResult.networkQueryId, false), false)
+    val futureResponse = broadcastAndAggregationService.sendAndAggregate(toAuthn(authResult), request, new ReadQueryResultAggregator(termResult.networkQueryId, false), shouldBroadcast = false)
     
     def toTermResult(readQueryResultResponse: AggregatedReadQueryResultResponse): TermResult = {
       val termResultOption = for {

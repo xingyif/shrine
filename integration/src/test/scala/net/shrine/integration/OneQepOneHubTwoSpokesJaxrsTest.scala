@@ -118,7 +118,7 @@ final class OneQepOneHubTwoSpokesJaxrsTest extends AbstractHubAndSpokesTest with
     val queryDefinition = QueryDefinition("foo", Or(Term("x"), Constrained(Term("y"), Modifiers("some-modifier", "ap", "k"), ValueConstraint("foo", Some("bar"), "baz", "nuh"))))
     
     //Broadcast a message
-    val resp = client.runQuery("some-topic-id", Set(ResultOutputType.PATIENT_COUNT_XML), queryDefinition, true)
+    val resp = client.runQuery("some-topic-id","some-topic-name", Set(ResultOutputType.PATIENT_COUNT_XML), queryDefinition, true)
     
     resp.results.size should equal(spokes.size)
     

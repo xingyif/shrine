@@ -20,9 +20,9 @@ import net.shrine.protocol.UnFlagQueryResponse
 /**
  *
  * @author Clint Gilbert
- * @date Sep 14, 2011
+ * @since Sep 14, 2011
  *
- * @link http://cbmi.med.harvard.edu
+ * @see http://cbmi.med.harvard.edu
  *
  */
 trait ShrineClient {
@@ -30,7 +30,7 @@ trait ShrineClient {
 
   def readPreviousQueries(userId: String, fetchSize: Int, shouldBroadcast: Boolean): ReadPreviousQueriesResponse
 
-  def runQuery(topicId: String, outputTypes: Set[ResultOutputType], queryDefinition: QueryDefinition, shouldBroadcast: Boolean): AggregatedRunQueryResponse
+  def runQuery(topicId: String, topicName:String, outputTypes: Set[ResultOutputType], queryDefinition: QueryDefinition, shouldBroadcast: Boolean): AggregatedRunQueryResponse
   
   def readQueryInstances(queryId: Long, shouldBroadcast: Boolean): ReadQueryInstancesResponse
   
@@ -55,5 +55,5 @@ trait ShrineClient {
   //Overloads for Java interop
   import scala.collection.JavaConverters._
 
-  def runQuery(topicId: String, outputTypes: java.util.Set[ResultOutputType], queryDefinition: QueryDefinition, shouldBroadcast: Boolean): AggregatedRunQueryResponse = runQuery(topicId, outputTypes.asScala.toSet, queryDefinition, shouldBroadcast)
+  def runQuery(topicId: String, topicName:String, outputTypes: java.util.Set[ResultOutputType], queryDefinition: QueryDefinition, shouldBroadcast: Boolean): AggregatedRunQueryResponse = runQuery(topicId, topicName, outputTypes.asScala.toSet, queryDefinition, shouldBroadcast)
 }

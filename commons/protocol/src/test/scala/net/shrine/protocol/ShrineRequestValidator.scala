@@ -11,13 +11,13 @@ import net.shrine.util.XmlUtil
 
 /**
  * @author Bill Simons
- * @date 3/16/11
- * @link http://cbmi.med.harvard.edu
- * @link http://chip.org
+ * @since 3/16/11
+ * @see http://cbmi.med.harvard.edu
+ * @see http://chip.org
  *       <p/>
  *       NOTICE: This software comes with NO guarantees whatsoever and is
  *       licensed as Lgpl Open Source
- * @link http://www.gnu.org/licenses/lgpl.html
+ * @see http://www.gnu.org/licenses/lgpl.html
  */
 trait ShrineRequestValidator extends ShouldMatchersForJUnit with XmlSerializableValidator with I2b2SerializableValidator {
   val projectId = "test_project_id"

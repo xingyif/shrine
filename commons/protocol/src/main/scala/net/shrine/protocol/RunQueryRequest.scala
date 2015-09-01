@@ -25,8 +25,7 @@ final case class RunQueryRequest(
   override val waitTime: Duration,
   override val authn: AuthenticationInfo,
   networkQueryId: Long,
-  topicId: Option[String], //data steward when required only todo would be better to use a tuple Option[(TopicId,TopicName)]
-  topicName: Option[String], //data steward when required only
+  topicIdAndName: Option[(String,String)],
   outputTypes: Set[ResultOutputType],
   queryDefinition: QueryDefinition) extends ShrineRequest(projectId, waitTime, authn) with CrcRequest with TranslatableRequest[RunQueryRequest] with HandleableShrineRequest with HandleableI2b2Request {
 
@@ -47,8 +46,8 @@ final case class RunQueryRequest(
     <runQuery>
       { headerFragment }
       <queryId>{ networkQueryId }</queryId>
-      { topicId.toXml(<topicId/>) }
-      { topicName.toXml(<topicName/>) }
+      { topicIdAndName.map(_._1).toXml(<topicId/>) }
+      { topicIdAndName.map(_._2).toXml(<topicName/>) }
       <outputTypes>
         { sortedOutputTypes.map(_.toXml) }
       </outputTypes>
@@ -74,8 +73,8 @@ final case class RunQueryRequest(
           }
         </result_output_list>
       </ns4:request>
-      <shrine>{ topicId.toXml(<queryTopicID/>) }</shrine>
-      <shrine>{ topicName.toXml(<queryTopicName/>) }</shrine>
+      <shrine>{ topicIdAndName.map(_._1).toXml(<queryTopicID/>) }</shrine>
+      <shrine>{ topicIdAndName.map(_._2).toXml(<queryTopicName/>) }</shrine>
     </message_body>
   }
 
@@ -113,13 +112,17 @@ object RunQueryRequest extends I2b2XmlUnmarshaller[RunQueryRequest] with ShrineX
       outputTypes = determineI2b2OutputTypes(breakdownTypes)(xml \ "message_body" \ "request" \ "result_output_list")
       queryDef <- QueryDefinition.fromI2b2(queryDefXml)
     } yield {
+      val topicIdAndName = (topicId,topicName) match {
+          case (Some(id),Some(name)) => Some((id,name))
+          case (None,None) => None
+        }
+
       RunQueryRequest(
         projectId,
         waitTime,
         authn,
         -1L, //TODO: appropriate? todo really annoying for ACT metrics audit
-        topicId,
-        topicName,
+        topicIdAndName,
         outputTypes,
         queryDef)
     }
@@ -163,7 +166,11 @@ object RunQueryRequest extends I2b2XmlUnmarshaller[RunQueryRequest] with ShrineX
       outputTypes <- xml.withChild("outputTypes").map(determineShrineOutputTypes)
       queryDef <- xml.withChild(QueryDefinition.rootTagName).flatMap(QueryDefinition.fromXml)
     } yield {
-      RunQueryRequest(projectId, waitTime, authn, queryId, topicId, topicName, outputTypes, queryDef)
+      val topicIdAndName = (topicId,topicName) match {
+        case (Some(id),Some(name)) => Some((id,name))
+        case (None,None) => None
+      }
+      RunQueryRequest(projectId, waitTime, authn, queryId, topicIdAndName, outputTypes, queryDef)
     }
 
     attempt.map(addPatientCountXmlIfNecessary)

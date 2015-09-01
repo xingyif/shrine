@@ -73,31 +73,39 @@ final class HappyShrineService(
 
     XmlUtil.stripWhitespace {
       <keystoreReport>
-        <keystoreFile>{ config.keystoreDescriptor.file }</keystoreFile>
-        <keystoreType>{ config.keystoreDescriptor.keyStoreType }</keystoreType>
-        <privateKeyAlias>{ config.keystoreDescriptor.privateKeyAlias.getOrElse("unspecified") }</privateKeyAlias>
-        {
-          myCertId.map { myId =>
-            <certId>
-              <name>{ unpack(myId.name) }</name>
-              <serial>{ myId.serial }</serial>
-            </certId>
-          }.getOrElse {
-            <noPrivateKeysFound/>
-          }
-        }
-        <importedCerts>
-          {
-            certCollection.ids.map { certId =>
-              <cert>
-                <name>{ unpack(certId.name) }</name>
-                <serial>{ certId.serial }</serial>
-              </cert>
-            }
-          }
-        </importedCerts>
+        <keystoreFile>
+          {config.keystoreDescriptor.file}
+        </keystoreFile>
+        <keystoreType>
+          {config.keystoreDescriptor.keyStoreType}
+        </keystoreType>
+        <privateKeyAlias>
+          {config.keystoreDescriptor.privateKeyAlias.getOrElse("unspecified")}
+        </privateKeyAlias>{myCertId.map { myId =>
+        <certId>
+          <name>
+            {unpack(myId.name)}
+          </name>
+          <serial>
+            {myId.serial}
+          </serial>
+        </certId>
+      }.getOrElse {
+          <noPrivateKeysFound/>
+      }}<importedCerts>
+        {certCollection.ids.map { certId =>
+          <cert>
+            <name>
+              {unpack(certId.name)}
+            </name>
+            <serial>
+              {certId.serial}
+            </serial>
+          </cert>
+        }}
+      </importedCerts>
       </keystoreReport>
-    }.toString
+    }.toString()
   }
 
   private def nodeListAsXml: Iterable[Node] = config.hubConfig match {
@@ -113,8 +121,10 @@ final class HappyShrineService(
   }
 
   override def routingReport: String = XmlUtil.stripWhitespace {
-    <downstreamNodes>{ nodeListAsXml }</downstreamNodes>
-  }.toString
+    <downstreamNodes>
+      {nodeListAsXml}
+    </downstreamNodes>
+  }.toString()
 
   override def hiveReport: String = {
     val report = for {
@@ -168,24 +178,29 @@ final class HappyShrineService(
 
       XmlUtil.stripWhitespace {
         <net>
-          <shouldQuerySelf>{ hubConfig.shouldQuerySelf }</shouldQuerySelf>
-          <downstreamNodes>{ nodeListAsXml }</downstreamNodes>
-          <noProblems>{ noProblems }</noProblems>
-          <expectedResultCount>{ broadcaster.destinations.size }</expectedResultCount>
-          <validResultCount>{ validResults.size }</validResultCount>
-          <failureCount>{ failures.size }</failureCount>
-          <timeoutCount>{ timeouts.size }</timeoutCount>
-          {
-            nodeListAsXml
-          }
-          {
-            failures.map(failureToXml)
-          }
-          {
-            timeouts.map(timeoutToXml)
-          }
+          <shouldQuerySelf>
+            {hubConfig.shouldQuerySelf}
+          </shouldQuerySelf>
+          <downstreamNodes>
+            {nodeListAsXml}
+          </downstreamNodes>
+          <noProblems>
+            {noProblems}
+          </noProblems>
+          <expectedResultCount>
+            {broadcaster.destinations.size}
+          </expectedResultCount>
+          <validResultCount>
+            {validResults.size}
+          </validResultCount>
+          <failureCount>
+            {failures.size}
+          </failureCount>
+          <timeoutCount>
+            {timeouts.size}
+          </timeoutCount>{nodeListAsXml}{failures.map(failureToXml)}{timeouts.map(timeoutToXml)}
         </net>
-      }.toString
+      }.toString()
     }
 
     report.getOrElse(notAHub)
@@ -201,7 +216,6 @@ final class HappyShrineService(
       3.minutes,
       authn,
       BroadcastMessage.Ids.next,
-      None,
       None,
       Set(ResultOutputType.PATIENT_COUNT_XML),
       queryDefinition)
@@ -233,20 +247,24 @@ final class HappyShrineService(
 
       XmlUtil.stripWhitespace {
         <adapter>
-          {
-            resultAttempt match {
-              case scala.util.Failure(cause) => failureToXml(Failure(NodeId("Local"), cause))
-              case scala.util.Success(Result(origin, elapsed, response)) => {
-                <result>
-                  <description>{ origin }</description>
-                  <elapsed> { elapsed }</elapsed>
-                  <response> { response.toXml }</response>
-                </result>
-              }
-            }
+          {resultAttempt match {
+          case scala.util.Failure(cause) => failureToXml(Failure(NodeId("Local"), cause))
+          case scala.util.Success(Result(origin, elapsed, response)) => {
+            <result>
+              <description>
+                {origin}
+              </description>
+              <elapsed>
+                {elapsed}
+              </elapsed>
+              <response>
+                {response.toXml}
+              </response>
+            </result>
           }
+        }}
         </adapter>
-      }.toString
+      }.toString()
     }
 
     report.getOrElse(notAnAdapter)
@@ -261,17 +279,21 @@ final class HappyShrineService(
 
       XmlUtil.stripWhitespace {
         <recentAuditEntries>
-          {
-            recentEntries map { entry =>
-              <entry>
-                <id>{ entry.id }</id>
-                <time>{ entry.time }</time>
-                <username>{ entry.username }</username>
-              </entry>
-            }
-          }
+          {recentEntries map { entry =>
+          <entry>
+            <id>
+              {entry.id}
+            </id>
+            <time>
+              {entry.time}
+            </time>
+            <username>
+              {entry.username}
+            </username>
+          </entry>
+        }}
         </recentAuditEntries>
-      }.toString
+      }.toString()
     }
 
     report.getOrElse(notAHub)
@@ -285,17 +307,21 @@ final class HappyShrineService(
 
       XmlUtil.stripWhitespace {
         <recentQueries>
-          {
-            recentQueries.map { query =>
-              <query>
-                <id>{ query.networkId }</id>
-                <date>{ query.dateCreated }</date>
-                <name>{ query.name }</name>
-              </query>
-            }
-          }
+          {recentQueries.map { query =>
+          <query>
+            <id>
+              {query.networkId}
+            </id>
+            <date>
+              {query.dateCreated}
+            </date>
+            <name>
+              {query.name}
+            </name>
+          </query>
+        }}
         </recentQueries>
-      }.toString
+      }.toString()
     }
 
     report.getOrElse(notAnAdapter)
@@ -303,14 +329,26 @@ final class HappyShrineService(
 
   override def versionReport: String = XmlUtil.stripWhitespace {
     <versionInfo>
-      <shrineVersion>{ Versions.version }</shrineVersion>
-      <ontologyVersion>{ ontologyMetadata.ontologyVersion }</ontologyVersion>
-      <adapterMappingsVersion>{ adapterMappings.map(_.version).getOrElse("No adapter mappings present") }</adapterMappingsVersion>
-      <scmRevision>{ Versions.scmRevision }</scmRevision>
-      <scmBranch>{ Versions.scmBranch }</scmBranch>
-      <buildDate>{ Versions.buildDate }</buildDate>
+      <shrineVersion>
+        {Versions.version}
+      </shrineVersion>
+      <ontologyVersion>
+        {ontologyMetadata.ontologyVersion}
+      </ontologyVersion>
+      <adapterMappingsVersion>
+        {adapterMappings.map(_.version).getOrElse("No adapter mappings present")}
+      </adapterMappingsVersion>
+      <scmRevision>
+        {Versions.scmRevision}
+      </scmRevision>
+      <scmBranch>
+        {Versions.scmBranch}
+      </scmBranch>
+      <buildDate>
+        {Versions.buildDate}
+      </buildDate>
     </versionInfo>
-  }.toString
+  }.toString()
 
   override def all: String = {
     s"<all>$versionReport$keystoreReport$routingReport$hiveReport$networkReport$adapterReport$auditReport$queryReport</all>"

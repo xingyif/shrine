@@ -15,12 +15,12 @@ final class HandleableI2b2RequestTest extends ShouldMatchersForJUnit {
   import HandleableI2b2Request.fromI2b2
   import scala.concurrent.duration._
 
-  private val authn = AuthenticationInfo("some-domain", "some-user", Credential("some-password", false))
+  private val authn = AuthenticationInfo("some-domain", "some-user", Credential("some-password", isToken = false))
   private val waitTime = 1.minute
   private val projectId = "some-project-id"
 
   @Test
-  def testFromI2b2ReadResultOutputTypesRequest: Unit = {
+  def testFromI2b2ReadResultOutputTypesRequest(): Unit = {
     val i2b2Xml = ReadResultOutputTypesRequestTest.i2b2Xml(CrcRequestType.GetResultOutputTypes)
 
     val req = fromI2b2(DefaultBreakdownResultOutputTypes.toSet)(i2b2Xml).get
@@ -31,7 +31,7 @@ final class HandleableI2b2RequestTest extends ShouldMatchersForJUnit {
   }
 
   @Test
-  def testFromI2b2: Unit = {
+  def testFromI2b2(): Unit = {
     def roundTrip(req: Req): Unit = {
       val xml = req.toI2b2
 
@@ -48,20 +48,20 @@ final class HandleableI2b2RequestTest extends ShouldMatchersForJUnit {
     }
 
     //Junk input
-    fromI2b2(DefaultBreakdownResultOutputTypes.toSet)(null).isFailure should be(true)
-    fromI2b2(DefaultBreakdownResultOutputTypes.toSet)(<foo/>).isFailure should be(true)
+    fromI2b2(DefaultBreakdownResultOutputTypes.toSet)(null).isFailure should be(right = true)
+    fromI2b2(DefaultBreakdownResultOutputTypes.toSet)(<foo/>).isFailure should be(right = true)
 
     val queryDef = QueryDefinition("foo", Term("foo"))
 
     //A request that isn't a HandleableI2b2Request
     val invalidReq = ReadTranslatedQueryDefinitionRequest(authn, waitTime, queryDef)
 
-    fromI2b2(DefaultBreakdownResultOutputTypes.toSet)(invalidReq.toXml).isFailure should be(true)
+    fromI2b2(DefaultBreakdownResultOutputTypes.toSet)(invalidReq.toXml).isFailure should be(right = true)
 
     val networkQueryId = 12345L
     val userId = "some-user"
 
-    fromI2b2(DefaultBreakdownResultOutputTypes.toSet)(ReadPdoRequest(projectId, waitTime, authn, "patient-set-coll-id", <foo/>).toI2b2).isFailure should be(true)
+    fromI2b2(DefaultBreakdownResultOutputTypes.toSet)(ReadPdoRequest(projectId, waitTime, authn, "patient-set-coll-id", <foo/>).toI2b2).isFailure should be(right = true)
 
     roundTrip(DeleteQueryRequest(projectId, waitTime, authn, networkQueryId))
     roundTrip(FlagQueryRequest(projectId, waitTime, authn, networkQueryId, None))
@@ -81,7 +81,7 @@ final class HandleableI2b2RequestTest extends ShouldMatchersForJUnit {
     roundTrip(ReadQueryDefinitionRequest(projectId, waitTime, authn, networkQueryId))
     roundTrip(ReadQueryInstancesRequest(projectId, waitTime, authn, networkQueryId))
     roundTrip(RenameQueryRequest(projectId, waitTime, authn, networkQueryId, "new-name"))
-    roundTrip(RunQueryRequest(projectId, waitTime /*.toMillis.milliseconds*/ , authn, networkQueryId, Some("some-topic-id"),Some("some-topic-name"), Set(ResultOutputType.PATIENT_COUNT_XML), queryDef))
-    roundTrip(RunQueryRequest(projectId, waitTime /*.toMillis.milliseconds*/ , authn, networkQueryId, None, None, Set(ResultOutputType.PATIENT_COUNT_XML), queryDef))
+    roundTrip(RunQueryRequest(projectId, waitTime /*.toMillis.milliseconds*/ , authn, networkQueryId, Some(("some-topic-id","some-topic-name")), Set(ResultOutputType.PATIENT_COUNT_XML), queryDef))
+    roundTrip(RunQueryRequest(projectId, waitTime /*.toMillis.milliseconds*/ , authn, networkQueryId, None, Set(ResultOutputType.PATIENT_COUNT_XML), queryDef))
   }
 }

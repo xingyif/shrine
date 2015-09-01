@@ -19,6 +19,7 @@ final case class BatchQuerierConfig(
     outputFile: File,
     projectId: String,
     topicId: String,
+    topicName: String,
     queriesPerTerm: Int,
     breakdownTypes: Set[ResultOutputType])
     
@@ -48,14 +49,15 @@ object BatchQuerierConfig {
     import BatchQuerierConfigKeys._
     
     BatchQuerierConfig(
-        file(string(inputFile)),
-        string(shrineUrl),
-        getAuthInfo(config.getConfig(credentials)),
-        file(string(outputFile)),
-        string(projectId),
-        string(topicId),
-        intOption(queriesPerTerm).getOrElse(Defaults.queriesPerTerm),
-        Try(ResultOutputTypes.fromConfig(config.getConfig(breakdownResultOutputTypes))).getOrElse(Set.empty))
+      file(string(inputFile)),
+      string(shrineUrl),
+      getAuthInfo(config.getConfig(credentials)),
+      file(string(outputFile)),
+      string(projectId),
+      string(topicId),
+      config.getString(topicName),
+      intOption(queriesPerTerm).getOrElse(Defaults.queriesPerTerm),
+      Try(ResultOutputTypes.fromConfig(config.getConfig(breakdownResultOutputTypes))).getOrElse(Set.empty))
   }
   
   object Defaults {
@@ -73,6 +75,7 @@ object BatchQuerierConfig {
     val credentials = BaseKeys.credentials(base)
     val projectId = subKey("projectId")
     val topicId = subKey("topicId")
+    val topicName = subKey("topicName")
     val queriesPerTerm = subKey("queriesPerTerm")
     val breakdownResultOutputTypes = Keys.breakdownResultOutputTypes
   }

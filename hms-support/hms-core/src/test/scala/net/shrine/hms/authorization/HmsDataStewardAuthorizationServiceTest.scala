@@ -80,20 +80,20 @@ final class HmsDataStewardAuthorizationServiceTest extends ShouldMatchersForJUni
   def testAuthorizeRunQueryRequestNotAuthenticated {
     val service = HmsDataStewardAuthorizationService(null, NeverAuthenticatesAuthenticator)
 
-    def doTest(topicId: Option[String],topicName:Option[String]): Unit = {
-      val result = service.authorizeRunQueryRequest(RunQueryRequest("projectId", 0.minutes, authn, 12345L, topicId, topicName, Set.empty, QueryDefinition("foo", Term("foo"))))
+    def doTest(topicIdAndName: Option[(String,String)]): Unit = {
+      val result = service.authorizeRunQueryRequest(RunQueryRequest("projectId", 0.minutes, authn, 12345L, topicIdAndName, Set.empty, QueryDefinition("foo", Term("foo"))))
 
       result.isAuthorized should be(false)
     }
 
-    doTest(None,None)
-    doTest(Some("topicId"),Some("Topic Name"))
+    doTest(None)
+    doTest(Some(("topicId","Topic Name")))
   }
 
   @Test
   def testAuthorizeRunQueryRequestAuthenticated {
 
-    def doTest(isAuthorized: Boolean, topicId: Option[String], topicName:Option[String]): Unit = {
+    def doTest(isAuthorized: Boolean, topicIdAndName: Option[(String,String)]): Unit = {
       val ecommonsUsername = "abc123"
       val queryDef = QueryDefinition("foo", Term("foo"))
 
@@ -101,15 +101,15 @@ final class HmsDataStewardAuthorizationServiceTest extends ShouldMatchersForJUni
 
       val service = HmsDataStewardAuthorizationService(mockSheriffClient, AlwaysAuthenticatesAuthenticator(ecommonsUsername))
 
-      val result = service.authorizeRunQueryRequest(RunQueryRequest("projectId", 0.minutes, authn, 12345L, topicId, topicName, Set.empty, queryDef))
+      val result = service.authorizeRunQueryRequest(RunQueryRequest("projectId", 0.minutes, authn, 12345L, topicIdAndName, Set.empty, queryDef))
 
-      val expectedIsAuthorized = isAuthorized && topicId.isDefined
+      val expectedIsAuthorized = isAuthorized && topicIdAndName.isDefined
 
       result.isAuthorized should be(expectedIsAuthorized)
 
-      if (topicId.isDefined) {
+      if (topicIdAndName.isDefined) {
         mockSheriffClient.Params.user should equal(ecommonsUsername)
-        mockSheriffClient.Params.topicId should equal(topicId.get)
+        mockSheriffClient.Params.topicId should equal(topicIdAndName.get._1)
         mockSheriffClient.Params.queryText should equal(queryDef.toI2b2String)
         mockSheriffClient.Params.ecommonsUsername should be(null)
       } else {
@@ -120,10 +120,10 @@ final class HmsDataStewardAuthorizationServiceTest extends ShouldMatchersForJUni
       }
     }
 
-    doTest(true, Some("topic123"), Some("Topic Name"))
-    doTest(false, Some("topic123"), Some("Topic Name"))
-    doTest(true, None, None)
-    doTest(false, None, None)
+    doTest(true, Some(("topic123","Topic Name")))
+    doTest(false, Some(("topic123","Topic Name")))
+    doTest(true, None)
+    doTest(false, None)
   }
 }
 

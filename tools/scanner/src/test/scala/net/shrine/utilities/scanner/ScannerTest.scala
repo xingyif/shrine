@@ -205,7 +205,7 @@ object ScannerTest {
   import QueryResult.StatusType
 
   private object AllQueriesCompleteShrineClient extends ShrineClientAdapter with HasShouldBroadcastFlag {
-    override def runQuery(topicId: String, outputTypes: Set[ResultOutputType], queryDefinition: QueryDefinition, shouldBroadcast: Boolean): AggregatedRunQueryResponse = {
+    override def runQuery(topicId: String, topicName:String, outputTypes: Set[ResultOutputType], queryDefinition: QueryDefinition, shouldBroadcast: Boolean): AggregatedRunQueryResponse = {
       this.everToldToBroadcast ||= shouldBroadcast
 
       aggregatedRunQueryResponse(random.nextLong, queryDefinition, StatusType.Finished)
@@ -213,7 +213,7 @@ object ScannerTest {
   }
 
   private object AllQueriesErrorShrineClient extends ShrineClientAdapter with HasShouldBroadcastFlag {
-    override def runQuery(topicId: String, outputTypes: Set[ResultOutputType], queryDefinition: QueryDefinition, shouldBroadcast: Boolean): AggregatedRunQueryResponse = {
+    override def runQuery(topicId: String, topicName:String, outputTypes: Set[ResultOutputType], queryDefinition: QueryDefinition, shouldBroadcast: Boolean): AggregatedRunQueryResponse = {
       this.everToldToBroadcast ||= shouldBroadcast
 
       aggregatedRunQueryResponse(random.nextLong, queryDefinition, StatusType.Error)
@@ -254,7 +254,7 @@ object ScannerTest {
     
     var timedOutTerms = Map.empty[Long, Query]
 
-    override def runQuery(topicId: String, outputTypes: Set[ResultOutputType], queryDefinition: QueryDefinition, shouldBroadcast: Boolean): AggregatedRunQueryResponse = {
+    override def runQuery(topicId: String, topicName:String, outputTypes: Set[ResultOutputType], queryDefinition: QueryDefinition, shouldBroadcast: Boolean): AggregatedRunQueryResponse = {
       this.everToldToBroadcast ||= shouldBroadcast
 
       val Term(term) = queryDefinition.expr.get
