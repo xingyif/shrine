@@ -152,11 +152,6 @@ trait AbstractShrineService[BaseResp <: BaseShrineResponse] extends Loggable {
 
   protected def doBroadcastQuery(request: BaseShrineRequest, aggregator: Aggregator, shouldBroadcast: Boolean): BaseResp = {
 
-    info(s"doBroadcastQuery($request)")
-
-    //TODO: XXX: HACK: Would like to remove the cast
-    def doSynchronousQuery(networkAuthn: AuthenticationInfo) = waitFor(sendAndAggregate(networkAuthn, request, aggregator, shouldBroadcast)).asInstanceOf[BaseResp]
-
     afterAuthenticating(request) { authResult =>
 
       debug(s"doBroadcastQuery($request) authResult is $authResult")
@@ -167,10 +162,18 @@ trait AbstractShrineService[BaseResp <: BaseShrineResponse] extends Loggable {
       //NB: Only audit RunQueryRequests
       request match {
         case runQueryRequest: RunQueryRequest =>
-          afterAuditingAndAuthorizing(runQueryRequest) (doSynchronousQuery(networkAuthn))
-        case _ => doSynchronousQuery(networkAuthn)
+          //todo inject new runQueryRequest here
+          afterAuditingAndAuthorizing(runQueryRequest) (doSynchronousQuery(networkAuthn,request,aggregator,shouldBroadcast))
+        case _ => doSynchronousQuery(networkAuthn,request,aggregator,shouldBroadcast)
       }
     }
+  }
+
+  private def doSynchronousQuery(networkAuthn: AuthenticationInfo,request: BaseShrineRequest, aggregator: Aggregator, shouldBroadcast: Boolean) = {
+    info(s"doSynchronousQuery($request) started")
+    val response = waitFor(sendAndAggregate(networkAuthn, request, aggregator, shouldBroadcast)).asInstanceOf[BaseResp]
+    info(s"doSynchronousQuery($request) completed")
+    response
   }
 
   private[service] val runQueryAggregatorFor: RunQueryRequest => RunQueryAggregator = Aggregators.forRunQueryRequest(includeAggregateResult)
