@@ -124,10 +124,11 @@ trait StewardService extends HttpService with Json4sSupport {
   def requestQueryAccessWithTopic:Route = path("user" /Segment/ "topic" / IntNumber) { (userId,topicId) =>
     entity(as[InboundShrineQuery]) { shrineQuery:InboundShrineQuery =>
       //todo really pull the user out of the shrine query and check vs the PM. If they aren't there, reject them for this new reason
-      val result = StewardDatabase.db.logAndCheckQuery(userId,Some(topicId),shrineQuery)
+      val result: (TopicState, Option[(TopicId, String)]) = StewardDatabase.db.logAndCheckQuery(userId,Some(topicId),shrineQuery)
 
-      respondWithStatus(result.statusCode) {
-        complete(result.message)
+      respondWithStatus(result._1.statusCode) {
+        if(result._1.statusCode == StatusCodes.OK) complete (result._2.getOrElse(""))
+        else complete(result._1.message)
       }
     }
   }
@@ -136,8 +137,9 @@ trait StewardService extends HttpService with Json4sSupport {
     entity(as[InboundShrineQuery]) { shrineQuery:InboundShrineQuery =>
       //todo really pull the user out of the shrine query and check vs the PM. If they aren't there, reject them for this new reason
       val result = StewardDatabase.db.logAndCheckQuery(userId,None,shrineQuery)
-      respondWithStatus(result.statusCode) {
-        complete(result.message)
+      respondWithStatus(result._1.statusCode) {
+        if(result._1.statusCode == StatusCodes.OK) complete (result._2)
+        else complete(result._1.message)
       }
     }
   }

@@ -171,12 +171,14 @@ import spray.can.Http
     interpretAuthorizeRunQueryResponse(response)
   }
 
-
-
 /** Interpret the response from the steward app. Primarily here for testing. */
   def interpretAuthorizeRunQueryResponse(response:HttpResponse):AuthorizationResult = {
     response.status match {
-      case OK => Authorized
+      case OK => {
+        val topicJson = new String(response.entity.data.toByteArray)
+        val topic:Option[(String,String)] = parse(topicJson).extractOpt[(String,String)]
+        Authorized(topic)
+      }
       case UnavailableForLegalReasons => NotAuthorized(response.entity.asString)
       case Unauthorized => throw new AuthorizationException(s"steward rejected qep's login credentials. $response")
       case _ => throw new AuthorizationException(s"QueryAuthorizationService detected a problem: $response")

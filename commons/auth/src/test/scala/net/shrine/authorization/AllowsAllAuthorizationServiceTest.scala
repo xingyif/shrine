@@ -10,7 +10,7 @@ import org.junit.Test
 final class AllowsAllAuthorizationServiceTest extends ShouldMatchersForJUnit {
   @Test
   def testAuthorizeRunQueryRequest {
-    AllowsAllAuthorizationService.authorizeRunQueryRequest(null) should be(AuthorizationResult.Authorized)
+    AllowsAllAuthorizationService.authorizeRunQueryRequest(null) should be(AuthorizationResult.Authorized(None))
   }
   
   @Test

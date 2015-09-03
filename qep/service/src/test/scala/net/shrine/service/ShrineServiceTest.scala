@@ -192,7 +192,12 @@ object ShrineServiceTest {
 
   final class MockAuthService(shouldWork: Boolean) extends QueryAuthorizationService {
     def authorizeRunQueryRequest(request: RunQueryRequest): AuthorizationResult = {
-      if (shouldWork) { AuthorizationResult.Authorized }
+      if (shouldWork) {
+        val topicIdAndName = (request.topicId,request.topicName) match {
+          case (Some(id),Some(name)) => Some((id,name))
+          case (None,None) => None
+        }
+        AuthorizationResult.Authorized(topicIdAndName)}
       else { AuthorizationResult.NotAuthorized("blarg") }
     }
 

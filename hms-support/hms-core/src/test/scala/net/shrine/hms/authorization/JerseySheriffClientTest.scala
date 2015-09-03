@@ -7,7 +7,7 @@ import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter
 
 /**
  * @author clint
- * @date Apr 3, 2014
+ * @since Apr 3, 2014
  */
 final class JerseySheriffClientTest extends ShouldMatchersForJUnit {
   @Test

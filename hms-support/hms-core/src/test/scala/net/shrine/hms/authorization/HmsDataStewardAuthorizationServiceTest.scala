@@ -1,5 +1,6 @@
 package net.shrine.hms.authorization
 
+import net.shrine.authorization.AuthorizationResult.{NotAuthorized, Authorized}
 import net.shrine.util.ShouldMatchersForJUnit
 import org.junit.Test
 import net.shrine.protocol.ApprovedTopic
@@ -151,12 +152,13 @@ object HmsDataStewardAuthorizationServiceTest {
       topics
     }
 
-    override def isAuthorized(user: String, topicId: String, queryText: String): Boolean = {
+    override def isAuthorized(user: String, topicId: String, queryText: String) = {
       Params.user = user
       Params.topicId = topicId
       Params.queryText = queryText
 
-      authorized
+      if(authorized) Authorized(Some((topicId,"Mock Topic")))
+      else NotAuthorized("Mock authorization failure")
     }
   }
 }

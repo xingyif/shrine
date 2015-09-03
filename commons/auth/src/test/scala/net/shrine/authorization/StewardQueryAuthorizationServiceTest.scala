@@ -20,7 +20,7 @@ class StewardQueryAuthorizationServiceTest extends ShouldMatchersForJUnit {
   def testAuthorizeRunQueryRequest {
     val stewardQueryAuthorizer = StewardQueryAuthorizationService("qep","trustme",baseUrl)
     val fineResponse = HttpResponse(OK)
-    stewardQueryAuthorizer.interpretAuthorizeRunQueryResponse(fineResponse) should be (Authorized)
+    stewardQueryAuthorizer.interpretAuthorizeRunQueryResponse(fineResponse) should be (Authorized(None))
   }
 
   @Test

@@ -50,10 +50,7 @@ final case class HmsDataStewardAuthorizationService(
       authenticate(authn) match {
         case None => AuthorizationResult.NotAuthorized(s"Requested topic is not approved; couldn't authenticate user ${toDomainAndUser(authn)}")
         case Some(ecommonsUsername) => {
-          val isAuthorized = sheriffClient.isAuthorized(ecommonsUsername, request.topicId.get, request.queryDefinition.toI2b2String)
-
-          if (isAuthorized) { AuthorizationResult.Authorized }
-          else { AuthorizationResult.NotAuthorized("Requested topic is not approved") }
+          sheriffClient.isAuthorized(ecommonsUsername, request.topicId.get, request.queryDefinition.toI2b2String)
         }
       }
     }

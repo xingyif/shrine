@@ -7,9 +7,8 @@ package net.shrine.authorization
 sealed abstract class AuthorizationResult(val isAuthorized: Boolean)
 
 object AuthorizationResult {
-//todo   final case class Authorized(topicId:String,topicName:String) extends AuthorizationResult(true)
-  final case object Authorized extends AuthorizationResult(true)
-  
+  final case class Authorized(topicIdAndName:Option[(String,String)]) extends AuthorizationResult(true)
+
   final case class NotAuthorized(reason: String) extends AuthorizationResult(false) {
     def toException = new AuthorizationException(reason)
   }
