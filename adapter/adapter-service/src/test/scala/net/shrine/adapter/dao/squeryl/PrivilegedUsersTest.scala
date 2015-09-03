@@ -1,6 +1,6 @@
 package net.shrine.adapter.dao.squeryl
 
-import org.junit.Test
+import org.junit.{Ignore, Test}
 import net.shrine.util.ShouldMatchersForJUnit
 import org.squeryl.Query
 import javax.xml.datatype.XMLGregorianCalendar
@@ -18,7 +18,7 @@ import net.shrine.dao.squeryl.SquerylEntryPoint
 
 /**
  * @author clint
- * @date Nov 19, 2012
+ * @since Nov 19, 2012
  *
  * Ported
  */
@@ -76,6 +76,24 @@ final class PrivilegedUsersTest extends AbstractSquerylAdapterTest with ShouldMa
   }
 
   @Test
+  @Ignore
+  def testIsUserNotLockedOutByRunningQueries = afterInsertingTestUser {
+    dao.isUserLockedOut(testAuthn, defaultThreshold) should be(false)
+
+    logCountQueryResult("masterId:0", 0, testAuthn, 42)
+
+    dao.isUserLockedOut(testAuthn, defaultThreshold) should be(false)
+
+    runQueriesDoNotLockoutUser(testAuthn, 42)
+
+    dao.isUserLockedOut(testAuthn, defaultThreshold) should be(false)
+
+    // Make sure username + domain is how users are identified
+    dao.isUserLockedOut(authn(testDomain, "some-other-username"), defaultThreshold) should be(false)
+    dao.isUserLockedOut(authn("some-other-domain", testUsername), defaultThreshold) should be(false)
+  }
+
+  @Test
   def testIsUserLockedOutWithResultSetSizeOfZero = afterInsertingTestUser {
     dao.isUserLockedOut(testAuthn, defaultThreshold) should be(false)
 
@@ -119,6 +137,12 @@ final class PrivilegedUsersTest extends AbstractSquerylAdapterTest with ShouldMa
   private def lockoutUser(lockedOutAuthn: AuthenticationInfo, resultSetSize: Int) {
     for (i <- 1 until testThreshold + 2) {
       logCountQueryResult("masterId:" + i, i, lockedOutAuthn, resultSetSize)
+    }
+  }
+
+  private def runQueriesDoNotLockoutUser(lockedOutAuthn: AuthenticationInfo, startResultSetSize: Int) {
+    for (i <- 1 until testThreshold + 2) {
+      logCountQueryResult("masterId:" + i, i, lockedOutAuthn, startResultSetSize + 1)
     }
   }
 
