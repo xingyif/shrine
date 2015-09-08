@@ -4,7 +4,7 @@ import akka.actor.Actor
 import akka.event.Logging
 import net.shrine.authentication.UserAuthenticator
 
-import net.shrine.authorization.steward.{Date, TopicId, InboundTopicRequest, InboundShrineQuery, StewardsTopics, TopicState, OutboundUser, OutboundTopic, UserName}
+import net.shrine.authorization.steward.{TopicIdAndName, Date, TopicId, InboundTopicRequest, InboundShrineQuery, StewardsTopics, TopicState, OutboundUser, OutboundTopic, UserName}
 import net.shrine.i2b2.protocol.pm.User
 import net.shrine.steward.db.{DetectedAttemptByWrongUserToChangeTopic, ApprovedTopicCanNotBeChanged, TopicDoesNotExist, SortOrder, QueryParameters, StewardDatabase}
 import net.shrine.steward.pmauth.Authorizer
@@ -124,7 +124,7 @@ trait StewardService extends HttpService with Json4sSupport {
   def requestQueryAccessWithTopic:Route = path("user" /Segment/ "topic" / IntNumber) { (userId,topicId) =>
     entity(as[InboundShrineQuery]) { shrineQuery:InboundShrineQuery =>
       //todo really pull the user out of the shrine query and check vs the PM. If they aren't there, reject them for this new reason
-      val result: (TopicState, Option[(TopicId, String)]) = StewardDatabase.db.logAndCheckQuery(userId,Some(topicId),shrineQuery)
+      val result: (TopicState, Option[TopicIdAndName]) = StewardDatabase.db.logAndCheckQuery(userId,Some(topicId),shrineQuery)
 
       respondWithStatus(result._1.statusCode) {
         if(result._1.statusCode == StatusCodes.OK) complete (result._2.getOrElse(""))

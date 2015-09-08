@@ -38,5 +38,4 @@ class StewardQueryAuthorizationServiceTest extends ShouldMatchersForJUnit {
       stewardQueryAuthorizer.interpretAuthorizeRunQueryResponse(rejectedResponse) should not be (Authorized)
     }
   }
-
 }

@@ -213,6 +213,7 @@ case class QueryHistory(totalCount:Int,skipped:Int,queryRecords:Seq[OutboundShri
 
 }
 
+case class TopicIdAndName(id:String,name:String)
 
 //http request Json
 case class InboundShrineQuery(

@@ -8,7 +8,7 @@ import javax.naming.InitialContext
 import javax.sql.DataSource
 
 import com.typesafe.config.Config
-import net.shrine.authorization.steward.{TopicsPerState, QueriesPerUser, OutboundUser, TopicStateName, StewardQueryId, InboundTopicRequest, InboundShrineQuery, QueryHistory, StewardsTopics, ResearchersTopics, OutboundShrineQuery, TopicState, OutboundTopic, UserName, Date, QueryContents, ExternalQueryId, TopicId, researcherRole, stewardRole}
+import net.shrine.authorization.steward.{TopicIdAndName, TopicsPerState, QueriesPerUser, OutboundUser, TopicStateName, StewardQueryId, InboundTopicRequest, InboundShrineQuery, QueryHistory, StewardsTopics, ResearchersTopics, OutboundShrineQuery, TopicState, OutboundTopic, UserName, Date, QueryContents, ExternalQueryId, TopicId, researcherRole, stewardRole}
 import net.shrine.i2b2.protocol.pm.User
 import net.shrine.log.Loggable
 import net.shrine.steward.{CreateTopicsMode, StewardConfigSource}
@@ -184,7 +184,7 @@ case class StewardDatabase(schemaDef:StewardSchema,dataSource: DataSource) exten
     groupedByState.map{case (state,result) => (state,result.length)}
   }
 
-  def logAndCheckQuery(userId:UserName,topicId:Option[TopicId],shrineQuery:InboundShrineQuery):(TopicState,Option[(TopicId,String)]) = {
+  def logAndCheckQuery(userId:UserName,topicId:Option[TopicId],shrineQuery:InboundShrineQuery):(TopicState,Option[TopicIdAndName]) = {
 
     //todo upsertUser(user) when the info is available from the PM
     val noOpDBIOForState: DBIOAction[TopicState, NoStream, Effect.Read] = DBIO.successful {
@@ -206,8 +206,8 @@ case class StewardDatabase(schemaDef:StewardSchema,dataSource: DataSource) exten
       _ <- allQueryTable += ShrineQueryRecord(userId,topicId,shrineQuery,state)
     } yield (state,topicName))
 
-    val topicIdAndName:Option[(TopicId,String)] = (topicId,topicName) match {
-      case (Some(id),Some(name)) => Option((id,name))
+    val topicIdAndName:Option[TopicIdAndName] = (topicId,topicName) match {
+      case (Some(id),Some(name)) => Option(TopicIdAndName(id.toString,name))
       case (None,None) => None
       case (Some(id),None) => {
         if(state == TopicState.unknownForUser) None
