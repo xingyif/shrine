@@ -168,6 +168,8 @@ import spray.can.Http
     val request = Post(s"$stewardBaseUrl/steward/qep/requestQueryAccess/user/$userName/topic/$topicIdString", queryForJson)
     val response:HttpResponse = sendAndReceive(request,runQueryRequest.waitTime)
 
+    debug(s"authorizeRunQueryRequestForTopic response is $response")
+
     interpretAuthorizeRunQueryResponse(response)
   }
 
@@ -176,7 +178,11 @@ import spray.can.Http
     response.status match {
       case OK => {
         val topicJson = new String(response.entity.data.toByteArray)
+        debug(s"topicJson is $topicJson")
+
         val topic:Option[(String,String)] = parse(topicJson).extractOpt[(String,String)]
+        debug(s"topic is $topic")
+
         Authorized(topic)
       }
       case UnavailableForLegalReasons => NotAuthorized(response.entity.asString)
