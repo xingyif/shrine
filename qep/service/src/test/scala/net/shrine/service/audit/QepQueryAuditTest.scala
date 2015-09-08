@@ -10,7 +10,7 @@ import org.junit.{After, Before, Test}
  */
 class QepQueryAuditTest extends ShouldMatchersForJUnit {// with TestWithDatabase {
 
-  val qepAuditData = QepQueryAuditData("example.com","ben",-1,"ben's query",Some("ben's topic"))
+  val qepAuditData = QepQueryAuditData("example.com","ben",-1,"ben's query",Some("61"),Some("ben's topic"))
 
   @Test
   def testApply() {

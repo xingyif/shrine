@@ -14,4 +14,5 @@ package object audit {
   type QueryName = String
   type Time = Long
   type QueryTopicId = String
+  type QueryTopicName = String
 }

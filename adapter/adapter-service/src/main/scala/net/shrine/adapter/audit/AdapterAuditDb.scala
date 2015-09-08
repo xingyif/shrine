@@ -10,7 +10,7 @@ import com.typesafe.config.Config
 import net.shrine.adapter.service.AdapterConfigSource
 import net.shrine.crypto.KeyStoreCertCollection
 import net.shrine.log.Loggable
-import net.shrine.audit.{QueryTopicId, Time, QueryName, NetworkQueryId, UserName, ShrineNodeId}
+import net.shrine.audit.{QueryTopicName, QueryTopicId, Time, QueryName, NetworkQueryId, UserName, ShrineNodeId}
 import net.shrine.protocol.{BroadcastMessage, RunQueryRequest, RunQueryResponse, ShrineResponse}
 
 import slick.driver.JdbcProfile
@@ -171,14 +171,13 @@ case class AdapterAuditSchema(jdbcProfile: JdbcProfile) extends Loggable {
     def queryName = column[QueryName]("queryName")
     def timeQuerySent = column[Time]("timeSent")
     def queryTopicId = column[Option[QueryTopicId]]("topicId")
+    def queryTopicName = column[Option[QueryTopicName]]("topicName")
     def timeQueryReceived = column[Time]("timeReceived")
 
-    def * = (shrineNodeId,userName,networkQueryId,queryName,timeQuerySent,queryTopicId,timeQueryReceived) <> (QueryReceived.tupled,QueryReceived.unapply)
+    def * = (shrineNodeId,userName,networkQueryId,queryName,timeQuerySent,queryTopicId,queryTopicName,timeQueryReceived) <> (QueryReceived.tupled,QueryReceived.unapply)
   }
 
   val allQueriesReceived = TableQuery[QueriesReceivedAuditTable]
-
-
 }
 
 object AdapterAuditSchema {
@@ -315,6 +314,7 @@ case class QueryReceived(
                           queryName:QueryName,
                           timeQuerySent:Time,
                           queryTopicId:Option[QueryTopicId],
+                          queryTopicName:Option[QueryTopicName],
                           timeQueryReceived:Time
                           )
 
@@ -325,6 +325,7 @@ object QueryReceived extends ((
     QueryName,
     Time,
     Option[QueryTopicId],
+    Option[QueryTopicName],
     Time
   ) => QueryReceived) with Loggable {
 
@@ -346,6 +347,7 @@ object QueryReceived extends ((
           rqr.queryDefinition.name,
           timestampAndShrineNodeCn._1,
           rqr.topicId,
+          rqr.topicName,
           System.currentTimeMillis()
         ))
 
