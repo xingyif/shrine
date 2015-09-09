@@ -422,13 +422,16 @@ i2b2.CRC.ctrlr.QueryStatus.prototype = function() {
 						shortDescription: "Desination site was unable to translate SHRINE query term to local ontology.",
 						stackTrace:  "Error mapping query terms from" +
 						" network to local forms. request:" +
-							"RunQueryRequest(I2B2_PROJECT_NAME,180000 milliseconds,"+
-							"AuthenticationInfo(*****,****,Credential(******,false)),"+
-					"QUERY_ID,None,Set(PATIENT_COUNT_XML)," +
+						"RunQueryRequest(I2B2_PROJECT_NAME,180000 milliseconds,"+
+						"AuthenticationInfo(*****,****,Credential(******,false)),"+
+						"QUERY_ID,None,Set(PATIENT_COUNT_XML)," +
 						"QueryDefinition(QUERY_NAME,Some(" +
-							"Term(\\PROJECT\\AND\\CONCEPT\\PATH\\OF\\UNMAPPED\\TERM),"+
-					"Some(ANY),None,None,None,List())))",
-						longDescription: 'The site responding to the query does not understand how to map the SHRINE query term it was given to its own local i2b2 term.)'
+						"Term(\\PROJECT\\AND\\CONCEPT\\PATH\\OF\\UNMAPPED\\TERM),"+
+						"Some(ANY),None,None,None,List())))",
+						longDescription:
+							'The site responding to the query does not understand how to map the SHRINE query term it was given to its own local i2b2 term.)',
+						wikiUrl:
+							'https://open.med.harvard.edu/wiki/display/SHRINETEAM/Error+Types+for+Improved+Error+Messaging'
 					};
 
 					errorObjects.push(errorObj);
@@ -498,13 +501,15 @@ i2b2.CRC.ctrlr.QueryStatus.prototype = function() {
 
 			addAnchorEvents();
 
+
 			function expandErrorDetailDiv (ev) {
 				btnExpand.style.display   = 'none';
 				btnContract.style.display = 'inline';
 				document.getElementById('errorDetailDiv').style.height          = '200px';
 				$('errorDetailDiv').innerHTML = '<span style="font-weight: bold">' +errorData.shortDescription + '<br/><br/>' +
-				errorData.longDescription + '<br/><br/>' +
-				errorData.stackTrace + '<span/>';
+					errorData.longDescription + '<br/><br/>' +
+					errorData.stackTrace + '<span/><br/><br/><a href="' +
+					errorData.wikiUrl + '"' +' target="_blank">Click here for more information.</a>';
 			}
 
 
@@ -512,7 +517,8 @@ i2b2.CRC.ctrlr.QueryStatus.prototype = function() {
 				btnExpand.style.display   = 'inline';
 				btnContract.style.display = 'none';
 				document.getElementById('errorDetailDiv').style.height = '80px';
-				$('errorDetailDiv').innerHTML = '<span style="font-weight: bold">' + errorData.shortDescription + '<span/>';
+				$('errorDetailDiv').innerHTML = '<span style="font-weight: bold">' +errorData.shortDescription + '<br/><br/>' +
+					errorData.longDescription + '<br/><br/>'
 			}
 
 			function onClick(event) {
