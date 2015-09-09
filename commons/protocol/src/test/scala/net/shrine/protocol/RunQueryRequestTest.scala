@@ -175,7 +175,6 @@ final class RunQueryRequestTest extends ShrineRequestValidator {
       "project-Id",
       1.minute,
       AuthenticationInfo("d", "u", Credential("p", false)),
-      12345L,
       None,
       None,
       Set(PATIENT_COUNT_XML, breakdownOutputType),
@@ -372,7 +371,6 @@ final class RunQueryRequestTest extends ShrineRequestValidator {
     val actual = RunQueryRequest.fromI2b2(DefaultBreakdownResultOutputTypes.toSet)(req.toI2b2).get
 
     validateRequestWith(actual) {
-      actual.networkQueryId should equal(-1L)
       actual.topicId should equal(Some(topicId))
       actual.outputTypes should equal(resultOutputTypes.toSet)
       actual.queryDefinition should equal(queryDefinition)
@@ -394,7 +392,6 @@ final class RunQueryRequestTest extends ShrineRequestValidator {
     val actual = RunQueryRequest.fromI2b2(DefaultBreakdownResultOutputTypes.toSet)(req.toI2b2).get
 
     validateRequestWith(actual) {
-      actual.networkQueryId should equal(-1L)
       actual.topicId should equal(None)
       actual.outputTypes should equal(resultOutputTypes.toSet)
       actual.queryDefinition should equal(queryDefinition)

@@ -22,7 +22,7 @@ final class AggregatorsTest extends ShouldMatchersForJUnit {
     
     import scala.concurrent.duration._
     
-    val request = RunQueryRequest(projectId, 1.millisecond, authn, 0L, Some("topicId"), Some("Topic Name"), Set.empty, queryDef)
+    val request = RunQueryRequest(projectId, 1.millisecond, authn, Some("topicId"), Some("Topic Name"), Set.empty, queryDef)
     
     def doTestRunQueryAggregatorFor(addAggregatedResult: Boolean) {
       val aggregator = Aggregators.forRunQueryRequest(addAggregatedResult)(request)

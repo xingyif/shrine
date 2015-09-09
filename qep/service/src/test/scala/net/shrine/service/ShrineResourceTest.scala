@@ -82,9 +82,11 @@ final class ShrineResourceTest extends ShouldMatchersForJUnit with EasyMockSugar
     val queryDef = QueryDefinition("foo", Term("nuh"))
     val topicId = Some("topicId")
     val topicName = Some("topicName")
+    val networkQueryId: Long = 999L
 
-    val expectedRequest = RunQueryRequest(projectId, waitTime, authenticationInfo, 999L, topicId, topicName, outputTypes, queryDef)
-    val expectedResponse = RunQueryResponse(999L, null, "userId", "groupId", queryDef, 0L, QueryResult(1L, 0L, Some(ResultOutputType.PATIENT_COUNT_XML), 123L, None, None, None, QueryResult.StatusType.Finished, None, Map.empty))
+
+    val expectedRequest = RunQueryRequest(projectId, waitTime, authenticationInfo, networkQueryId, topicId, topicName, outputTypes, queryDef)
+    val expectedResponse = RunQueryResponse(networkQueryId, null, "userId", "groupId", queryDef, 0L, QueryResult(1L, 0L, Some(ResultOutputType.PATIENT_COUNT_XML), 123L, None, None, None, QueryResult.StatusType.Finished, None, Map.empty))
 
     def isEqualToExceptForQueryId(expected: RunQueryRequest): RunQueryRequest = {
       reportMatcher(new IArgumentMatcher {

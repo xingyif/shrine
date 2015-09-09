@@ -108,6 +108,8 @@ final class RunQueryAdapterTest extends AbstractSquerylAdapterTest with ShouldMa
     </ns5:response>
   }.toString
 
+  private val otherNetworkId: Long = 12345L
+
   @Test
   def testProcessRawCrcRunQueryResponseCountQueryOnly: Unit = afterCreatingTables{
     val outputTypes = Set(PATIENT_COUNT_XML)
@@ -138,7 +140,7 @@ final class RunQueryAdapterTest extends AbstractSquerylAdapterTest with ShouldMa
         userId = request.authn.username, 
         groupId = request.authn.domain, 
         requestXml = request.queryDefinition, 
-        queryInstanceId = 12345L,
+        queryInstanceId = otherNetworkId,
         singleNodeResults = toQueryResultMap(Seq(countQueryResult)))
     
     val resp = adapter.processRawCrcRunQueryResponse(networkAuthn, request, rawRunQueryResponse).asInstanceOf[RunQueryResponse]
@@ -151,7 +153,7 @@ final class RunQueryAdapterTest extends AbstractSquerylAdapterTest with ShouldMa
     resp.groupId should be(request.authn.domain)
     resp.userId should be(request.authn.username)
     resp.queryId should be(queryId)
-    resp.queryInstanceId should be(12345L)
+    resp.queryInstanceId should be(otherNetworkId)
     resp.requestXml should equal(request.queryDefinition)
     
     (countQueryResult eq resp.singleNodeResult) should be(false)
@@ -217,7 +219,7 @@ final class RunQueryAdapterTest extends AbstractSquerylAdapterTest with ShouldMa
         userId = request.authn.username, 
         groupId = request.authn.domain, 
         requestXml = request.queryDefinition, 
-        queryInstanceId = 12345L,
+        queryInstanceId = otherNetworkId,
         singleNodeResults = singleNodeResults)
 
     //Set up our mock CRC
@@ -253,7 +255,7 @@ final class RunQueryAdapterTest extends AbstractSquerylAdapterTest with ShouldMa
     resp.groupId should be(request.authn.domain)
     resp.userId should be(request.authn.username)
     resp.queryId should be(queryId)
-    resp.queryInstanceId should be(12345L)
+    resp.queryInstanceId should be(otherNetworkId)
     resp.requestXml should equal(request.queryDefinition)
     
     (countQueryResult eq resp.singleNodeResult) should be(false)
@@ -478,7 +480,7 @@ final class RunQueryAdapterTest extends AbstractSquerylAdapterTest with ShouldMa
 
     val authn = AuthenticationInfo("d", "u", Credential("p", false))
 
-    val req = RunQueryRequest("projectId", Duration.Inf, authn, 12345L, None, None, Set.empty, queryDef)
+    val req = RunQueryRequest("projectId", Duration.Inf, authn, otherNetworkId, None, None, Set.empty, queryDef)
 
     try {
       adapter.translateNetworkToLocal(req)

@@ -39,7 +39,7 @@ object BroadcastMessage extends XmlUnmarshaller[Try[BroadcastMessage]] {
 
   /**
    * @author clint
-   * @date Nov 29, 2012
+   * @since Nov 29, 2012
    */
   object Ids {
     private val random = new java.util.Random

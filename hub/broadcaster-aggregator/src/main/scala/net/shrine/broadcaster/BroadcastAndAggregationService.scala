@@ -14,7 +14,7 @@ import net.shrine.protocol.AuthenticationInfo
 
 /**
  * @author clint
- * @date Mar 13, 2013
+ * @since Mar 13, 2013
  */
 trait BroadcastAndAggregationService {
   def sendAndAggregate(message: BroadcastMessage, aggregator: Aggregator, shouldBroadcast: Boolean): Future[BaseShrineResponse]

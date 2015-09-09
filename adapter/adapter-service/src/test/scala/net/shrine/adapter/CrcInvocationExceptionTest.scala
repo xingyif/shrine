@@ -12,6 +12,7 @@ import net.shrine.protocol.RunQueryRequest
  * @since Oct 23, 2014
  */
 final class CrcInvocationExceptionTest extends ShouldMatchersForJUnit {
+
   @Test
   def testApply: Unit = {
     import scala.concurrent.duration._
@@ -21,8 +22,9 @@ final class CrcInvocationExceptionTest extends ShouldMatchersForJUnit {
     val rootCause = new Exception with scala.util.control.NoStackTrace
     
     val url = "http://example.com"
-    
-    val deleteReq = DeleteQueryRequest("project-id", 1.minute, authn, 12345L)
+
+    val queryId = 12345L
+    val deleteReq = DeleteQueryRequest("project-id", 1.minute, authn, queryId)
     
     val runQueryReq = RunQueryRequest("project-id", 1.minute, authn, 123245L, None, None, Set.empty, null)
     

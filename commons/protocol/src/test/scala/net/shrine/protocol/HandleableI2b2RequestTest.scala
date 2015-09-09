@@ -41,7 +41,7 @@ final class HandleableI2b2RequestTest extends ShouldMatchersForJUnit {
         //NB: Special handling for RunQueryRequest, which does not preserve networkQueryIds when serializing to i2b2 format
         case (expected: RunQueryRequest, actual: RunQueryRequest) => {
           //NB: When unmarshalling from i2b2 format, networkQueryId will always be -1; other fields should be fine
-          actual should equal(expected.withNetworkQueryId(-1L))
+          actual should equal(expected.withNetworkQueryId(actual.networkQueryId))
         }
         case _ => unmarshalled should equal(req)
       }

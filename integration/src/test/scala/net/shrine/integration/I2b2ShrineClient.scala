@@ -41,7 +41,7 @@ final case class I2b2ShrineClient(poster: Poster, projectId: String, authorizati
   override def readPreviousQueries(userId: String, fetchSize: Int, shouldBroadcast: Boolean): ReadPreviousQueriesResponse = ???
 
   override def runQuery(topicId: String, outputTypes: Set[ResultOutputType], queryDefinition: QueryDefinition, shouldBroadcast: Boolean): AggregatedRunQueryResponse = {
-    val req = RunQueryRequest(projectId, 1.minute, authorization, -1, None, None, outputTypes, queryDefinition)
+    val req = RunQueryRequest(projectId, 1.minute, authorization, None, None, outputTypes, queryDefinition)
     
     def stripWhitespace(xml: String): String = XmlUtil.stripWhitespace(XML.loadString(xml)).toString
     

@@ -156,12 +156,13 @@ trait AbstractShrineService[BaseResp <: BaseShrineResponse] extends Loggable {
         case runQueryRequest: RunQueryRequest =>
           // inject modified, authorized runQueryRequest
           auditAuthorizeAndThen(runQueryRequest) { authorizedRequest =>
-            debug(s"collectQepAudit is $collectQepAudit")
+            debug(s"doBroadcastQuery($request) authResult is $authResult")
 
             // tuck the ACT audit metrics data into a database here
             //todo network id is -1 !
             if (collectQepAudit) QepAuditDb.db.insertQepQuery(authorizedRequest,commonName)
 
+            debug(s"doBroadcastQuery authorizedRequest is $authorizedRequest")
             doSynchronousQuery(networkAuthn,authorizedRequest,aggregator,shouldBroadcast)
           }
         case _ => doSynchronousQuery(networkAuthn,request,aggregator,shouldBroadcast)

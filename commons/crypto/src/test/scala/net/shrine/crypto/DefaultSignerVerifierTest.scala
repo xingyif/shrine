@@ -8,7 +8,6 @@ import net.shrine.protocol.Credential
 import net.shrine.protocol.DeleteQueryRequest
 import net.shrine.protocol.RunQueryRequest
 import net.shrine.protocol.ResultOutputType
-import net.shrine.protocol.query.Term
 import net.shrine.protocol.query.QueryDefinition
 import net.shrine.protocol.query.Term
 import net.shrine.protocol.query.Modifiers
@@ -29,7 +28,7 @@ import java.io.ByteArrayInputStream
  * @since Nov 27, 2013
  */
 final class DefaultSignerVerifierTest extends ShouldMatchersForJUnit {
-  private val authn = AuthenticationInfo("some-domain", "some-username", Credential("sadkljlajdl", false))
+  private val authn = AuthenticationInfo("some-domain", "some-username", Credential("sadkljlajdl", isToken = false))
 
   private val certCollection = TestKeystore.certCollection
 
@@ -39,7 +38,7 @@ final class DefaultSignerVerifierTest extends ShouldMatchersForJUnit {
   import scala.concurrent.duration._
 
   @Test
-  def testIssuersMatchBetweenCertsWithIPsInDistinguishedNames: Unit = {
+  def testIssuersMatchBetweenCertsWithIPsInDistinguishedNames(): Unit = {
     def readCert(fileName: String): X509Certificate = {
       val factory = CertificateFactory.getInstance("X.509")
       
@@ -82,7 +81,7 @@ final class DefaultSignerVerifierTest extends ShouldMatchersForJUnit {
   }
   
   @Test
-  def testSigningAndVerificationQueryDefWithSubQueries: Unit = {
+  def testSigningAndVerificationQueryDefWithSubQueries(): Unit = {
     //A failing case reported by Ben C.
     val queryDef = QueryDefinition.fromI2b2 {
       <query_definition>
@@ -186,18 +185,18 @@ final class DefaultSignerVerifierTest extends ShouldMatchersForJUnit {
     def shouldVerify(signingCertStrategy: SigningCertStrategy): Unit = {
       val resultTypes = DefaultBreakdownResultOutputTypes.toSet + ResultOutputType.PATIENT_COUNT_XML
 
-      val unsignedMessage = BroadcastMessage(authn, RunQueryRequest("some-project-id", 12345.milliseconds, authn, 8934765L, Some("topic-id"), Some("Topic Name"), resultTypes, queryDef))
+      val unsignedMessage = BroadcastMessage(authn, RunQueryRequest("some-project-id", 12345.milliseconds, authn, Some("topic-id"), Some("Topic Name"), resultTypes, queryDef))
 
       val signedMessage = signerVerifier.sign(unsignedMessage, signingCertStrategy)
 
-      signerVerifier.verifySig(signedMessage, 1.hour) should be(true)
+      signerVerifier.verifySig(signedMessage, 1.hour) should be(right = true)
 
       //NB: Simulate going from one machine to another
       val roundTripped = xmlRoundTrip(signedMessage)
 
       roundTripped.signature should equal(signedMessage.signature)
 
-      signerVerifier.verifySig(roundTripped, 1.hour) should be(true)
+      signerVerifier.verifySig(roundTripped, 1.hour) should be(right = true)
     }
 
     //shouldVerify(Attach)
@@ -206,24 +205,24 @@ final class DefaultSignerVerifierTest extends ShouldMatchersForJUnit {
 
   //See https://open.med.harvard.edu/jira/browse/SHRINE-859
   @Test
-  def testSigningAndVerificationQueryNameWithSpaces: Unit = {
+  def testSigningAndVerificationQueryNameWithSpaces(): Unit = {
     def shouldVerify(queryName: String, signingCertStrategy: SigningCertStrategy): Unit = {
       val queryDef = QueryDefinition(queryName, Term("""\\PCORNET\PCORI\DEMOGRAPHIC\Age\&gt;= 65 years old\65\"""))
 
       val resultTypes = DefaultBreakdownResultOutputTypes.toSet + ResultOutputType.PATIENT_COUNT_XML
 
-      val unsignedMessage = BroadcastMessage(authn, RunQueryRequest("some-project-id", 12345.milliseconds, authn, 8934765L, Some("topic-id"), Some("Topic Name"), resultTypes, queryDef))
+      val unsignedMessage = BroadcastMessage(authn, RunQueryRequest("some-project-id", 12345.milliseconds, authn, Some("topic-id"), Some("Topic Name"), resultTypes, queryDef))
 
       val signedMessage = signerVerifier.sign(unsignedMessage, signingCertStrategy)
 
-      signerVerifier.verifySig(signedMessage, 1.hour) should be(true)
+      signerVerifier.verifySig(signedMessage, 1.hour) should be(right = true)
 
       //NB: Simulate going from one machine to another
       val roundTripped = xmlRoundTrip(signedMessage)
 
       roundTripped.signature should equal(signedMessage.signature)
 
-      signerVerifier.verifySig(roundTripped, 1.hour) should be(true)
+      signerVerifier.verifySig(roundTripped, 1.hour) should be(right = true)
     }
 
     shouldVerify("foo", Attach)
@@ -240,10 +239,10 @@ final class DefaultSignerVerifierTest extends ShouldMatchersForJUnit {
   }
 
   @Test
-  def testSigningAndVerification: Unit = doTestSigningAndVerification(signerVerifier)
+  def testSigningAndVerification(): Unit = doTestSigningAndVerification(signerVerifier)
 
   @Test
-  def testSigningAndVerificationAttachedKnownCertNotSignedByCA: Unit = {
+  def testSigningAndVerificationAttachedKnownCertNotSignedByCA(): Unit = {
     //Messages will be signed with a key that's in our keystore, but is not signed by a CA 
 
     val descriptor = KeyStoreDescriptor(
@@ -259,11 +258,11 @@ final class DefaultSignerVerifierTest extends ShouldMatchersForJUnit {
 
     val signedMessage = mySignerVerifier.sign(unsignedMessage, Attach)
 
-    mySignerVerifier.verifySig(signedMessage, 1.hour) should be(false)
+    mySignerVerifier.verifySig(signedMessage, 1.hour) should be(right = false)
   }
 
   @Test
-  def testSigningAndVerificationAttachedUnknownCertNotSignedByCA: Unit = {
+  def testSigningAndVerificationAttachedUnknownCertNotSignedByCA(): Unit = {
     //Messages will be signed with a key that's NOT in our keystore, but is not signed by a CA 
 
     val signerDescriptor = KeyStoreDescriptor(
@@ -281,7 +280,7 @@ final class DefaultSignerVerifierTest extends ShouldMatchersForJUnit {
 
     val signedMessage = signer.sign(unsignedMessage, Attach)
 
-    verifier.verifySig(signedMessage, 1.hour) should be(false)
+    verifier.verifySig(signedMessage, 1.hour) should be(right = false)
   }
 
   private def doTestSigningAndVerification(signerVerifier: Signer with Verifier): Unit = {
@@ -292,7 +291,7 @@ final class DefaultSignerVerifierTest extends ShouldMatchersForJUnit {
 
       val signedMessage = signerVerifier.sign(unsignedMessage, signingCertStrategy)
 
-      (unsignedMessage eq signedMessage) should be(false)
+      (unsignedMessage eq signedMessage) should be(right = false)
       unsignedMessage should not equal (signedMessage)
 
       signedMessage.networkAuthn should equal(unsignedMessage.networkAuthn)
@@ -300,7 +299,7 @@ final class DefaultSignerVerifierTest extends ShouldMatchersForJUnit {
       signedMessage.requestId should equal(unsignedMessage.requestId)
 
       unsignedMessage.signature should be(None)
-      signedMessage.signature.isDefined should be(true)
+      signedMessage.signature.isDefined should be(right = true)
 
       val sig = signedMessage.signature.get
 
@@ -309,17 +308,17 @@ final class DefaultSignerVerifierTest extends ShouldMatchersForJUnit {
       sig.value should not be (null)
 
       //The signed message should verify
-      signerVerifier.verifySig(signedMessage, 1.hour) should be(true)
+      signerVerifier.verifySig(signedMessage, 1.hour) should be(right = true)
 
       def shouldNotVerify(message: BroadcastMessage) {
-        signerVerifier.verifySig(xmlRoundTrip(message), 1.hour) should be(false)
+        signerVerifier.verifySig(xmlRoundTrip(message), 1.hour) should be(right = false)
       }
 
       //The unsigned one should not
       shouldNotVerify(unsignedMessage)
 
       //Expired sigs shouldn't verify
-      signerVerifier.verifySig(signedMessage, 0.hours) should be(false)
+      signerVerifier.verifySig(signedMessage, 0.hours) should be(right = false)
 
       //modifying anything should prevent verification
 
@@ -377,17 +376,17 @@ final class DefaultSignerVerifierTest extends ShouldMatchersForJUnit {
   }
 
   @Test
-  def testSigningAndVerificationModifiedTerm: Unit = {
+  def testSigningAndVerificationModifiedTerm(): Unit = {
     import scala.concurrent.duration._
 
     def doVerificationTest(signingCertStrategy: SigningCertStrategy, queryDef: QueryDefinition): Unit = {
-      val req = RunQueryRequest("some-project-id", 12345.milliseconds, authn, 8934765L, Some("topic-id"), Some("Topic Name"), Set(ResultOutputType.PATIENT_COUNT_XML), queryDef)
+      val req = RunQueryRequest("some-project-id", 12345.milliseconds, authn, Some("topic-id"), Some("Topic Name"), Set(ResultOutputType.PATIENT_COUNT_XML), queryDef)
 
       val unsignedMessage = BroadcastMessage(authn, req)
 
       val signedMessage = signerVerifier.sign(unsignedMessage, signingCertStrategy)
 
-      (unsignedMessage eq signedMessage) should be(false)
+      (unsignedMessage eq signedMessage) should be(right = false)
       unsignedMessage should not equal (signedMessage)
 
       signedMessage.networkAuthn should equal(unsignedMessage.networkAuthn)
@@ -395,7 +394,7 @@ final class DefaultSignerVerifierTest extends ShouldMatchersForJUnit {
       signedMessage.requestId should equal(unsignedMessage.requestId)
 
       unsignedMessage.signature should be(None)
-      signedMessage.signature.isDefined should be(true)
+      signedMessage.signature.isDefined should be(right = true)
 
       val sig = signedMessage.signature.get
 
@@ -404,7 +403,7 @@ final class DefaultSignerVerifierTest extends ShouldMatchersForJUnit {
       sig.value should not be (null)
 
       //The signed message should verify
-      signerVerifier.verifySig(xmlRoundTrip(signedMessage), 1.hour) should be(true)
+      signerVerifier.verifySig(xmlRoundTrip(signedMessage), 1.hour) should be(right = true)
     }
 
     val t1 = Term("t1")
@@ -433,9 +432,9 @@ final class DefaultSignerVerifierTest extends ShouldMatchersForJUnit {
   }
 
   @Test
-  def testSigningAndVerificationReadQueryResultRequest: Unit = {
+  def testSigningAndVerificationReadQueryResultRequest(): Unit = {
     def doTest(signingCertStrategy: SigningCertStrategy) {
-      val localAuthn = AuthenticationInfo("i2b2demo", "shrine", Credential("SessionKey:PX4LlvLrMhybWRQfoobarbaz", true))
+      val localAuthn = AuthenticationInfo("i2b2demo", "shrine", Credential("SessionKey:PX4LlvLrMhybWRQfoobarbaz", isToken = true))
 
       import scala.concurrent.duration._
 
@@ -443,7 +442,7 @@ final class DefaultSignerVerifierTest extends ShouldMatchersForJUnit {
 
       val signedMessage = signerVerifier.sign(unsignedMessage, signingCertStrategy)
 
-      (unsignedMessage eq signedMessage) should be(false)
+      (unsignedMessage eq signedMessage) should be(right = false)
       unsignedMessage should not equal (signedMessage)
 
       signedMessage.networkAuthn should equal(unsignedMessage.networkAuthn)
@@ -451,7 +450,7 @@ final class DefaultSignerVerifierTest extends ShouldMatchersForJUnit {
       signedMessage.requestId should equal(unsignedMessage.requestId)
 
       unsignedMessage.signature should be(None)
-      signedMessage.signature.isDefined should be(true)
+      signedMessage.signature.isDefined should be(right = true)
 
       val sig = signedMessage.signature.get
 
@@ -462,7 +461,7 @@ final class DefaultSignerVerifierTest extends ShouldMatchersForJUnit {
       import scala.concurrent.duration._
 
       //The signed message should verify
-      signerVerifier.verifySig(xmlRoundTrip(signedMessage), 1.hour) should be(true)
+      signerVerifier.verifySig(xmlRoundTrip(signedMessage), 1.hour) should be(right = true)
     }
 
     doTest(Attach)
@@ -472,22 +471,22 @@ final class DefaultSignerVerifierTest extends ShouldMatchersForJUnit {
   private def getCertByAlias(alias: String) = certCollection.asInstanceOf[KeyStoreCertCollection].getX509Cert(alias).get
 
   @Test
-  def testIsSignedByTrustedCA: Unit = {
+  def testIsSignedByTrustedCA(): Unit = {
 
     import signerVerifier.isSignedByTrustedCA
 
     val signedByCa = getCertByAlias("test-cert")
     val notSignedByCa = getCertByAlias("spin-t1")
 
-    isSignedByTrustedCA(signedByCa).get should be(true)
-    isSignedByTrustedCA(notSignedByCa).isFailure should be(true)
+    isSignedByTrustedCA(signedByCa).get should be(right = true)
+    isSignedByTrustedCA(notSignedByCa).isFailure should be(right = true)
 
     //TODO: Test case where isSignedByTrustedCA produces Success(false): 
     //where CA cert (param's issuer-DN) IS in our keystore, but X509Certificate.verify(PublicKey) returns false 
   }
 
   @Test
-  def testObtainAndValidateSigningCert: Unit = {
+  def testObtainAndValidateSigningCert(): Unit = {
     import signerVerifier.obtainAndValidateSigningCert
 
     import scala.concurrent.duration._
@@ -522,7 +521,7 @@ final class DefaultSignerVerifierTest extends ShouldMatchersForJUnit {
 
       val signerCertAttempt = obtainAndValidateSigningCert(signedMessageWithUnknownSigner.signature.get)
 
-      signerCertAttempt.isFailure should be(true)
+      signerCertAttempt.isFailure should be(right = true)
     }
   }
 

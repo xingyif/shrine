@@ -25,10 +25,11 @@ final case class RunQueryRequest(
   override val waitTime: Duration,
   override val authn: AuthenticationInfo,
   networkQueryId: Long,
-  topicId: Option[String], //data steward when required only todo would be better to use a tuple Option[(TopicId,TopicName)]
+  topicId: Option[String], //data steward when required only, must be separate from topicName because HMS DSA does not supply topic names.
   topicName: Option[String], //data steward when required only
   outputTypes: Set[ResultOutputType],
-  queryDefinition: QueryDefinition) extends ShrineRequest(projectId, waitTime, authn) with CrcRequest with TranslatableRequest[RunQueryRequest] with HandleableShrineRequest with HandleableI2b2Request {
+  queryDefinition: QueryDefinition
+  ) extends ShrineRequest(projectId, waitTime, authn) with CrcRequest with TranslatableRequest[RunQueryRequest] with HandleableShrineRequest with HandleableI2b2Request {
 
   override val requestType = RequestType.QueryDefinitionRequest
 
@@ -92,6 +93,24 @@ final case class RunQueryRequest(
 
 object RunQueryRequest extends I2b2XmlUnmarshaller[RunQueryRequest] with ShrineXmlUnmarshaller[RunQueryRequest] with ShrineRequestUnmarshaller with I2b2UnmarshallingHelpers {
 
+  def apply(projectId: String,
+  waitTime: Duration,
+  authn: AuthenticationInfo,
+  topicId: Option[String], //data steward when required only, must be separate from topicName because HMS DSA does not supply topic names.
+  topicName: Option[String], //data steward when required only
+  outputTypes: Set[ResultOutputType],
+  queryDefinition: QueryDefinition
+             ):RunQueryRequest = RunQueryRequest(
+                                                  projectId,
+                                                  waitTime,
+                                                  authn,
+                                                  BroadcastMessage.Ids.next,
+                                                  topicId,
+                                                  topicName,
+                                                  outputTypes,
+                                                  queryDefinition
+                                                )
+
   val neededI2b2Namespace = "http://www.i2b2.org/xsd/cell/crc/psm/1.1/"
 
   override def fromI2b2(breakdownTypes: Set[ResultOutputType])(xml: NodeSeq): Try[RunQueryRequest] = {
@@ -117,7 +136,6 @@ object RunQueryRequest extends I2b2XmlUnmarshaller[RunQueryRequest] with ShrineX
         projectId,
         waitTime,
         authn,
-        -1L, //TODO: appropriate? todo really annoying for ACT metrics audit
         topicId,
         topicName,
         outputTypes,

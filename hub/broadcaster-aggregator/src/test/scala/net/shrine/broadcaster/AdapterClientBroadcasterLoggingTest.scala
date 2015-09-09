@@ -63,7 +63,7 @@ final class AdapterClientBroadcasterLoggingTest extends AbstractSquerylHubDaoTes
   import ResultOutputType.PATIENT_COUNT_XML
   
   private val broadcastMessageRunQuery = {
-    BroadcastMessage(authn, RunQueryRequest("projectId", 12345.milliseconds, authn, -1L, None, None, Set(PATIENT_COUNT_XML), queryDef))
+    BroadcastMessage(authn, RunQueryRequest("projectId", 12345.milliseconds, authn, None, None, Set(PATIENT_COUNT_XML), queryDef))
   }
   
   private val deleteQueryAggregator = new DeleteQueryAggregator
