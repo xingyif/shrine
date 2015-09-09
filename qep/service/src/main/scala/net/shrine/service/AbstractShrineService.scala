@@ -11,7 +11,7 @@ import net.shrine.util.XmlDateHelper
 import scala.concurrent.Future
 import scala.concurrent.Await
 import net.shrine.protocol.RunQueryRequest
-import net.shrine.authorization.AuthorizationResult.NotAuthorized
+import net.shrine.authorization.AuthorizationResult.{Authorized, NotAuthorized}
 import net.shrine.protocol.BaseShrineRequest
 import net.shrine.protocol.AuthenticationInfo
 import net.shrine.protocol.Credential
@@ -65,7 +65,7 @@ trait AbstractShrineService[BaseResp <: BaseShrineResponse] extends Loggable {
   protected def doReadResultOutputTypes(request: ReadResultOutputTypesRequest): BaseResp = {
     info(s"doReadResultOutputTypes($request)")
 
-    afterAuthenticating(request) { authResult =>
+    authenticateAndThen(request) { authResult =>
       val resultOutputTypes = ResultOutputType.nonErrorTypes ++ breakdownTypes
 
       //TODO: XXX: HACK: Would like to remove the cast
@@ -84,15 +84,7 @@ trait AbstractShrineService[BaseResp <: BaseShrineResponse] extends Loggable {
   protected def doRunQuery(request: RunQueryRequest, shouldBroadcast: Boolean): BaseResp = {
     info(s"doRunQuery($request,$shouldBroadcast) with $runQueryAggregatorFor")
 
-    val result = doBroadcastQuery(request, runQueryAggregatorFor(request), shouldBroadcast)
-
-    debug(s"collectQepAudit is $collectQepAudit")
-
-    // tuck the ACT audit metrics data into a database here
-    //todo network id is -1 !
-    if (collectQepAudit) QepAuditDb.db.insertQepQuery(request,commonName)
-
-    result
+    doBroadcastQuery(request, runQueryAggregatorFor(request), shouldBroadcast)
   }
 
   protected def doReadQueryDefinition(request: ReadQueryDefinitionRequest, shouldBroadcast: Boolean): BaseResp = {
@@ -109,7 +101,7 @@ trait AbstractShrineService[BaseResp <: BaseShrineResponse] extends Loggable {
 
   protected def doReadQueryInstances(request: ReadQueryInstancesRequest, shouldBroadcast: Boolean): BaseResp = {
     info(s"doReadQueryInstances($request)")
-    afterAuthenticating(request) { authResult =>
+    authenticateAndThen(request) { authResult =>
       val now = XmlDateHelper.now
       val networkQueryId = request.queryId
       val username = request.authn.username
@@ -138,7 +130,7 @@ trait AbstractShrineService[BaseResp <: BaseShrineResponse] extends Loggable {
     doBroadcastQuery(request, new DeleteQueryAggregator, shouldBroadcast)
   }
 
-  protected def doReadApprovedQueryTopics(request: ReadApprovedQueryTopicsRequest, shouldBroadcast: Boolean): BaseResp = afterAuthenticating(request) { _ =>
+  protected def doReadApprovedQueryTopics(request: ReadApprovedQueryTopicsRequest, shouldBroadcast: Boolean): BaseResp = authenticateAndThen(request) { _ =>
     info(s"doReadApprovedQueryTopics($request)")
     //TODO: Is authenticating necessary?
     //TODO: XXX: HACK: Would like to remove the cast
@@ -152,7 +144,7 @@ trait AbstractShrineService[BaseResp <: BaseShrineResponse] extends Loggable {
 
   protected def doBroadcastQuery(request: BaseShrineRequest, aggregator: Aggregator, shouldBroadcast: Boolean): BaseResp = {
 
-    afterAuthenticating(request) { authResult =>
+    authenticateAndThen(request) { authResult =>
 
       debug(s"doBroadcastQuery($request) authResult is $authResult")
       //NB: Use credentials obtained from Authenticator (oddly, we authenticate with one set of credentials and are "logged in" under (possibly!) another
@@ -162,8 +154,16 @@ trait AbstractShrineService[BaseResp <: BaseShrineResponse] extends Loggable {
       //NB: Only audit RunQueryRequests
       request match {
         case runQueryRequest: RunQueryRequest =>
-          //todo inject new runQueryRequest here
-          afterAuditingAndAuthorizing(runQueryRequest) (doSynchronousQuery(networkAuthn,request,aggregator,shouldBroadcast))
+          // inject modified, authorized runQueryRequest
+          auditAuthorizeAndThen(runQueryRequest) { authorizedRequest =>
+            debug(s"collectQepAudit is $collectQepAudit")
+
+            // tuck the ACT audit metrics data into a database here
+            //todo network id is -1 !
+            if (collectQepAudit) QepAuditDb.db.insertQepQuery(authorizedRequest,commonName)
+
+            doSynchronousQuery(networkAuthn,authorizedRequest,aggregator,shouldBroadcast)
+          }
         case _ => doSynchronousQuery(networkAuthn,request,aggregator,shouldBroadcast)
       }
     }
@@ -184,17 +184,19 @@ trait AbstractShrineService[BaseResp <: BaseShrineResponse] extends Loggable {
     }
   }
 
-  private[service] def afterAuditingAndAuthorizing[T](request: RunQueryRequest)(body: => T): T = {
+  private[service] def auditAuthorizeAndThen[T](request: RunQueryRequest)(body: (RunQueryRequest => T)): T = {
     auditTransactionally(request) {
 
-      debug(s"afterAuditingAndAuthorizing($request) with $authorizationService")
+      debug(s"auditAuthorizeAndThen($request) with $authorizationService")
 
-      authorizationService.authorizeRunQueryRequest(request) match {
+      val authorizedRequest = authorizationService.authorizeRunQueryRequest(request) match {
         case na: NotAuthorized => throw na.toException
-        case _ => ()
+        case authorized: Authorized => {
+          request.copy(topicName = authorized.topicIdAndName.map(x => x._2))
+        }
       }
 
-      body
+      body(authorizedRequest)
     }
   }
 
@@ -211,7 +213,7 @@ trait AbstractShrineService[BaseResp <: BaseShrineResponse] extends Loggable {
 
   import AuthenticationResult._
   
-  private[service] def afterAuthenticating[T](request: BaseShrineRequest)(f: Authenticated => T): T = {
+  private[service] def authenticateAndThen[T](request: BaseShrineRequest)(f: Authenticated => T): T = {
     val AuthenticationInfo(domain, username, _) = request.authn
 
     val authResult = authenticator.authenticate(request.authn)

@@ -41,32 +41,32 @@ import net.shrine.protocol.query.ValueConstraint
 
 /**
  * @author clint
- * @date Mar 6, 2014
+ * @since Mar 6, 2014
  */
 final class OneQepOneHubTwoSpokesJaxrsTest extends AbstractHubAndSpokesTest with ShouldMatchersForJUnit { thisTest =>
   @Test
-  def testBroadcastDeleteQueryShrine: Unit = doTestBroadcastDeleteQuery(shrineQueryEntryPointComponent)
+  def testBroadcastDeleteQueryShrine(): Unit = doTestBroadcastDeleteQuery(shrineQueryEntryPointComponent)
   
   @Test
-  def testBroadcastDeleteQueryI2b2: Unit = doTestBroadcastDeleteQuery(i2b2QueryEntryPointComponent)
+  def testBroadcastDeleteQueryI2b2(): Unit = doTestBroadcastDeleteQuery(i2b2QueryEntryPointComponent)
   
   @Test
-  def testBroadcastFlagQueryShrine: Unit = doTestBroadcastFlagQuery(shrineQueryEntryPointComponent)
+  def testBroadcastFlagQueryShrine(): Unit = doTestBroadcastFlagQuery(shrineQueryEntryPointComponent)
   
   @Test
-  def testBroadcastFlagQueryI2b2: Unit = doTestBroadcastFlagQuery(i2b2QueryEntryPointComponent)
+  def testBroadcastFlagQueryI2b2(): Unit = doTestBroadcastFlagQuery(i2b2QueryEntryPointComponent)
   
   @Test
-  def testBroadcastUnFlagQueryShrine: Unit = doTestBroadcastUnFlagQuery(shrineQueryEntryPointComponent)
+  def testBroadcastUnFlagQueryShrine(): Unit = doTestBroadcastUnFlagQuery(shrineQueryEntryPointComponent)
   
   @Test
-  def testBroadcastUnFlagQueryI2b2: Unit = doTestBroadcastUnFlagQuery(i2b2QueryEntryPointComponent)
+  def testBroadcastUnFlagQueryI2b2(): Unit = doTestBroadcastUnFlagQuery(i2b2QueryEntryPointComponent)
   
   @Test
-  def testBroadcastRunQueryShrine: Unit = doTestBroadcastRunQuery(shrineQueryEntryPointComponent)
+  def testBroadcastRunQueryShrine(): Unit = doTestBroadcastRunQuery(shrineQueryEntryPointComponent)
   
   @Test
-  def testBroadcastRunQueryI2b2: Unit = doTestBroadcastRunQuery(i2b2QueryEntryPointComponent)
+  def testBroadcastRunQueryI2b2(): Unit = doTestBroadcastRunQuery(i2b2QueryEntryPointComponent)
   
   private def doTestBroadcastDeleteQuery[H <: AnyRef](queryEntryPointComponent: AbstractHubComponent[H]): Unit = {
     val masterId = 123456L

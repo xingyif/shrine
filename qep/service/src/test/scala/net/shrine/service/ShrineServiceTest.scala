@@ -35,14 +35,14 @@ final class ShrineServiceTest extends AbstractAuditDaoTest with EasyMockSugar {
   import scala.concurrent.duration._
   
   @Test
-  def testReadQueryInstances {
+  def testReadQueryInstances() {
     val projectId = "foo"
     val queryId = 123L
-    val authn = AuthenticationInfo("some-domain", "some-username", Credential("blarg", false))
+    val authn = AuthenticationInfo("some-domain", "some-username", Credential("blarg", isToken = false))
     
     val req = ReadQueryInstancesRequest(projectId, 1.millisecond, authn, queryId)
 
-    val service = ShrineService("example.com",null, AllowsAllAuthenticator, null, true, null, null, Set.empty,false)
+    val service = ShrineService("example.com",null, AllowsAllAuthenticator, null, includeAggregateResult = true, null, null, Set.empty,collectQepAudit = false)
 
     val response = service.readQueryInstances(req).asInstanceOf[ReadQueryInstancesResponse]
 
@@ -62,16 +62,16 @@ final class ShrineServiceTest extends AbstractAuditDaoTest with EasyMockSugar {
     instance.userId should equal(authn.username)
   }
 
-  private val authn = AuthenticationInfo("some-domain", "some-user", Credential("some-password", false))
+  private val authn = AuthenticationInfo("some-domain", "some-user", Credential("some-password", isToken = false))
   private val projectId = "projectId"
   private val queryDef = QueryDefinition("yo", Term("foo"))
   private val request = RunQueryRequest(projectId, 1.millisecond, authn, 0L, Some("topicId"), Some("Topic Name"), Set.empty, queryDef)
 
   @Test
-  def testRunQueryAggregatorFor {
+  def testRunQueryAggregatorFor() {
 
     def doTestRunQueryAggregatorFor(addAggregatedResult: Boolean) {
-      val service = ShrineService("example.com",null, null, null, addAggregatedResult, null, null, Set.empty,false)
+      val service = ShrineService("example.com",null, null, null, addAggregatedResult, null, null, Set.empty,collectQepAudit = false)
 
       val aggregator = service.runQueryAggregatorFor(request)
 
@@ -89,9 +89,9 @@ final class ShrineServiceTest extends AbstractAuditDaoTest with EasyMockSugar {
   }
 
   @Test
-  def testAuditTransactionally = afterMakingTables {
+  def testAuditTransactionally() = afterMakingTables {
     def doTestAuditTransactionally(shouldThrow: Boolean) {
-      val service = ShrineService("example.com",auditDao, null, null, true, null, null, Set.empty,false)
+      val service = ShrineService("example.com",auditDao, null, null, includeAggregateResult = true, null, null, Set.empty,collectQepAudit = false)
 
       if (shouldThrow) {
         intercept[Exception] {
@@ -123,21 +123,21 @@ final class ShrineServiceTest extends AbstractAuditDaoTest with EasyMockSugar {
   import ShrineServiceTest._
 
   @Test
-  def testAfterAuthenticating {
+  def testAfterAuthenticating() {
     def doTestAfterAuthenticating(shouldAuthenticate: Boolean) {
-      val service = ShrineService("example.com",auditDao, new MockAuthenticator(shouldAuthenticate), new MockAuthService(true), true, null, null, Set.empty,false)
+      val service = ShrineService("example.com",auditDao, new MockAuthenticator(shouldAuthenticate), new MockAuthService(true), includeAggregateResult = true, null, null, Set.empty,collectQepAudit = false)
 
       if (shouldAuthenticate) {
         var foo = false
 
-        service.afterAuthenticating(request) { _ =>
+        service.authenticateAndThen(request) { _ =>
           foo = true
         }
         
-        foo should be(true)
+        foo should be(right = true)
       } else {
         intercept[NotAuthenticatedException] {
-          service.afterAuthenticating(request) { _ => () }
+          service.authenticateAndThen(request) { _ => () }
         }
       }
     }
@@ -147,19 +147,19 @@ final class ShrineServiceTest extends AbstractAuditDaoTest with EasyMockSugar {
   }
 
   @Test
-  def testAfterAuditingAndAuthorizing = afterMakingTables {
+  def testAfterAuditingAndAuthorizing() = afterMakingTables {
 
     def doAfterAuditingAndAuthorizing(shouldBeAuthorized: Boolean, shouldThrow: Boolean) {
-      val service = ShrineService("example.com",auditDao, AllowsAllAuthenticator, new MockAuthService(shouldBeAuthorized), true, null, null, Set.empty,false)
+      val service = ShrineService("example.com",auditDao, AllowsAllAuthenticator, new MockAuthService(shouldBeAuthorized), includeAggregateResult = true, null, null, Set.empty,collectQepAudit = false)
 
       if (shouldThrow || !shouldBeAuthorized) {
         intercept[Exception] {
-          service.afterAuditingAndAuthorizing(request)(throw new Exception)
+          service.auditAuthorizeAndThen(request)(request => throw new Exception)
         }
       } else {
         val x = 1
 
-        val actual = service.afterAuditingAndAuthorizing(request)(x)
+        val actual = service.auditAuthorizeAndThen(request)(request => x)
 
         actual should be(x)
       }
@@ -175,10 +175,10 @@ final class ShrineServiceTest extends AbstractAuditDaoTest with EasyMockSugar {
       entry.time should not be (null)
     }
 
-    doAfterAuditingAndAuthorizing(true, true)
-    doAfterAuditingAndAuthorizing(true, false)
-    doAfterAuditingAndAuthorizing(false, true)
-    doAfterAuditingAndAuthorizing(false, false)
+    doAfterAuditingAndAuthorizing(shouldBeAuthorized = true, shouldThrow = true)
+    doAfterAuditingAndAuthorizing(shouldBeAuthorized = true, shouldThrow = false)
+    doAfterAuditingAndAuthorizing(shouldBeAuthorized = false, shouldThrow = true)
+    doAfterAuditingAndAuthorizing(shouldBeAuthorized = false, shouldThrow = false)
   }
 }
 
