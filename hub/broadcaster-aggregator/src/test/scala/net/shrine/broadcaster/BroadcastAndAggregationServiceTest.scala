@@ -135,7 +135,7 @@ final class BroadcastAndAggregationServiceTest extends ShouldMatchersForJUnit {
     }
     
     {
-      val req = RunQueryRequest("projectId", 1.millisecond, authn, Some("topicId"), Some("Topic Name"), Set.empty, QueryDefinition("yo", Term("foo")))
+      val req = RunQueryRequest("projectId", 1.millisecond, authn, -1L, Some("topicId"), Some("Topic Name"), Set.empty, QueryDefinition("yo", Term("foo")))
       
       val (queryIdOption, transformedReq: RunQueryRequest) = service.addQueryId(req)
       

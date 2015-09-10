@@ -173,7 +173,7 @@ trait AbstractShrineService[BaseResp <: BaseShrineResponse] extends Loggable {
   private def doSynchronousQuery(networkAuthn: AuthenticationInfo,request: BaseShrineRequest, aggregator: Aggregator, shouldBroadcast: Boolean) = {
     info(s"doSynchronousQuery($request) started")
     val response = waitFor(sendAndAggregate(networkAuthn, request, aggregator, shouldBroadcast)).asInstanceOf[BaseResp]
-    info(s"doSynchronousQuery($request) completed")
+    info(s"doSynchronousQuery($request) completed with response $response")
     response
   }
 

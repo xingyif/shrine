@@ -1,5 +1,6 @@
 package net.shrine.broadcaster
 
+import net.shrine.log.Loggable
 import net.shrine.protocol.ShrineRequest
 import scala.concurrent.Future
 import net.shrine.protocol.ShrineResponse
@@ -16,7 +17,7 @@ import net.shrine.protocol.AuthenticationInfo
  * @author clint
  * @since Mar 13, 2013
  */
-trait BroadcastAndAggregationService {
+trait BroadcastAndAggregationService extends Loggable {
   def sendAndAggregate(message: BroadcastMessage, aggregator: Aggregator, shouldBroadcast: Boolean): Future[BaseShrineResponse]
   
   def sendAndAggregate(networkAuthn: AuthenticationInfo, request: BaseShrineRequest, aggregator: Aggregator, shouldBroadcast: Boolean): Future[BaseShrineResponse] = {
@@ -30,9 +31,9 @@ trait BroadcastAndAggregationService {
   }
   
   protected[broadcaster] def addQueryId(request: BaseShrineRequest): (Option[Long], BaseShrineRequest) = request match {
-    case runQueryReq: RunQueryRequest => {
+    case runQueryReq: RunQueryRequest if runQueryReq.networkQueryId == -1L => {
       val queryId = newQueryId
-
+      debug(s"Replaced id ${runQueryReq.networkQueryId} with $queryId")
       (Some(queryId), runQueryReq.withNetworkQueryId(queryId))
     }
     case _ => (None, request)
