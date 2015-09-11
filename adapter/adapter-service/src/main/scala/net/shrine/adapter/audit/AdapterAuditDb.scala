@@ -73,10 +73,10 @@ case class AdapterAuditDb(schemaDef:AdapterAuditSchema,dataSource: DataSource) e
     dbRun(allExecutionStarts.result)
   }
 
-  def insertExecutionCompletedShrineResponse(shrineResponse: ShrineResponse) = {
-    debug(s"insertExecutionCompleted $shrineResponse")
+  def insertExecutionCompletedShrineResponse(request: RunQueryRequest,shrineResponse: ShrineResponse) = {
+    debug(s"insertExecutionCompleted $shrineResponse for $request")
 
-    ExecutionCompleted.fromResponse(shrineResponse).foreach(insertExecutionCompleted)
+    ExecutionCompleted.fromRequestResponse(request,shrineResponse).foreach(insertExecutionCompleted)
   }
 
   def insertExecutionCompleted(executionCompleted:ExecutionCompleted):Unit = {
@@ -86,10 +86,10 @@ case class AdapterAuditDb(schemaDef:AdapterAuditSchema,dataSource: DataSource) e
   def selectAllExecutionCompletes:Seq[ExecutionCompleted] = {
     dbRun(allExecutionCompletes.result)
   }
-  def insertResultSent(shrineResponse:ShrineResponse):Unit = {
-    debug(s"insertResultSent $shrineResponse")
+  def insertResultSent(networkQueryId: NetworkQueryId,shrineResponse:ShrineResponse):Unit = {
+    debug(s"insertResultSent $shrineResponse for $networkQueryId")
 
-    ResultSent.fromResponse(shrineResponse).foreach(insertResultSent)
+    ResultSent.fromResponse(networkQueryId,shrineResponse).foreach(insertResultSent)
   }
 
   def insertResultSent(resultSent: ResultSent):Unit = {
@@ -137,10 +137,11 @@ case class AdapterAuditSchema(jdbcProfile: JdbcProfile) extends Loggable {
 
   class ResultsSentTable(tag:Tag) extends Table[ResultSent](tag,"resultsSent") {
     def networkQueryId = column[NetworkQueryId]("networkQueryId")
+    def replyId = column[Long]("replyId")
     def queryName = column[QueryName]("queryName")
     def timeResultsSent = column[Time]("timeResultsSent")
 
-    def * = (networkQueryId,queryName,timeResultsSent) <> (ResultSent.tupled,ResultSent.unapply)
+    def * = (networkQueryId,replyId,queryName,timeResultsSent) <> (ResultSent.tupled,ResultSent.unapply)
   }
   val allResultsSent = TableQuery[ResultsSentTable]
   
@@ -156,10 +157,11 @@ case class AdapterAuditSchema(jdbcProfile: JdbcProfile) extends Loggable {
 
   class ExecutionCompletesTable(tag:Tag) extends Table[ExecutionCompleted](tag,"executionCompletes") {
     def networkQueryId = column[NetworkQueryId]("networkQueryId")
+    def replyId = column[Long]("replyId")
     def queryName = column[QueryName]("queryName")
     def timeExecutionCompletes = column[Time]("timeExecutionCompletes")
 
-    def * = (networkQueryId,queryName,timeExecutionCompletes) <> (ExecutionCompleted.tupled,ExecutionCompleted.unapply)
+    def * = (networkQueryId,replyId,queryName,timeExecutionCompletes) <> (ExecutionCompleted.tupled,ExecutionCompleted.unapply)
   }
 
   val allExecutionCompletes = TableQuery[ExecutionCompletesTable]
@@ -246,19 +248,23 @@ object AdapterAuditDb {
 
 case class ResultSent(
                        networkQueryId:NetworkQueryId,
+                       responseId:Long,
                        queryName:QueryName,
                        timeQueryResponse:Time
                        )
 
 object ResultSent extends ((
-  NetworkQueryId,
+    NetworkQueryId,
+    Long,
     QueryName,
     Time
   ) => ResultSent){
-  def fromResponse(shrineResponse:ShrineResponse) = {
+  def fromResponse(networkQueryId:NetworkQueryId,shrineResponse:ShrineResponse) = {
 
     shrineResponse match {
-      case rqr:RunQueryResponse => Some(ResultSent(rqr.queryId,
+      case rqr:RunQueryResponse => Some(ResultSent(
+        networkQueryId,
+        rqr.queryId,
         rqr.queryName,
         System.currentTimeMillis()))
       case _ => None
@@ -287,19 +293,23 @@ object ExecutionStarted extends ((
 
 case class ExecutionCompleted(
                               networkQueryId:NetworkQueryId,
+                              replyId:Long,
                               queryName:QueryName,
                               timeQueryResponse:Time
-                              )
+                             )
 
 object ExecutionCompleted extends ((
-  NetworkQueryId,
+    NetworkQueryId,
+    Long,
     QueryName,
     Time
   ) => ExecutionCompleted){
-  def fromResponse(shrineResponse:ShrineResponse) = {
+  def fromRequestResponse(request: RunQueryRequest,shrineResponse:ShrineResponse) = {
 
     shrineResponse match {
-      case rqr:RunQueryResponse => Some(ExecutionCompleted(rqr.queryId,
+      case rqr:RunQueryResponse => Some(ExecutionCompleted(
+        request.networkQueryId,
+        rqr.queryId,
         rqr.queryName,
         System.currentTimeMillis()))
       case _ => None

@@ -10,9 +10,9 @@ import org.junit.{After, Before, Test}
  */
 class AdapterAuditDbTest extends ShouldMatchersForJUnit {// with TestWithDatabase {
 
-  val resultsSent = ResultSent(-1,"ben's query",System.currentTimeMillis())
+  val resultsSent = ResultSent(-1,-1,"ben's query",System.currentTimeMillis())
   val executionStarted = ExecutionStarted(-1,"ben's query",System.currentTimeMillis())
-  val executionCompleted = ExecutionCompleted(-1,"ben's query",System.currentTimeMillis())
+  val executionCompleted = ExecutionCompleted(-1,-1,"ben's query",System.currentTimeMillis())
   val queryReceived = QueryReceived("example.com","ben",-1,"ben's query",System.currentTimeMillis(),Some("1"),Some("test topic"),System.currentTimeMillis())
 
   @Test

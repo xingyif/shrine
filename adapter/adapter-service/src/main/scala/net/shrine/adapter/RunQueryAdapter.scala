@@ -76,7 +76,7 @@ final case class RunQueryAdapter(
       debug(s"Performing query from user ${message.networkAuthn.domain}:${message.networkAuthn.username}")
 
       val result: ShrineResponse = runQuery(authnToUse, message.copy(request = runQueryReq.withAuthn(authnToUse)), runQueryReq.withAuthn(authnToUse))
-      if (collectAdapterAudit) AdapterAuditDb.db.insertResultSent(result)
+      if (collectAdapterAudit) AdapterAuditDb.db.insertResultSent(runQueryReq.networkQueryId,result)
 
       result
     }
@@ -122,7 +122,7 @@ final case class RunQueryAdapter(
         processRawCrcRunQueryResponse(authnToUse, request, rawRunQueryResponse)
       }
     }
-    if (collectAdapterAudit) AdapterAuditDb.db.insertExecutionCompletedShrineResponse(result)
+    if (collectAdapterAudit) AdapterAuditDb.db.insertExecutionCompletedShrineResponse(request,result)
 
     result
   }
