@@ -110,10 +110,10 @@ case class AdapterAuditSchema(jdbcProfile: JdbcProfile) extends Loggable {
   import jdbcProfile.api._
 
   def ddlForAllTables = {
-    allResultsSent.schema ++
-      allExecutionStarts.schema ++
-      allExecutionCompletes.schema ++
-      allQueriesReceived.schema
+    allQueriesReceived.schema ++
+    allExecutionStarts.schema ++
+    allExecutionCompletes.schema ++
+    allResultsSent.schema
   }
 
   //to get the schema, use the REPL
@@ -135,16 +135,21 @@ case class AdapterAuditSchema(jdbcProfile: JdbcProfile) extends Loggable {
     Await.result(future,Duration.Inf)
   }
 
-  class ResultsSentTable(tag:Tag) extends Table[ResultSent](tag,"resultsSent") {
+  class QueriesReceivedAuditTable(tag:Tag) extends Table[QueryReceived](tag,"queryReceived") {
+    def shrineNodeId = column[ShrineNodeId]("shrineNodeId")
+    def userName = column[UserName]("userName")
     def networkQueryId = column[NetworkQueryId]("networkQueryId")
-    def replyId = column[Long]("replyId")
     def queryName = column[QueryName]("queryName")
-    def timeResultsSent = column[Time]("timeResultsSent")
+    def timeQuerySent = column[Time]("timeSent")
+    def queryTopicId = column[Option[QueryTopicId]]("topicId")
+    def queryTopicName = column[Option[QueryTopicName]]("topicName")
+    def timeQueryReceived = column[Time]("timeReceived")
 
-    def * = (networkQueryId,replyId,queryName,timeResultsSent) <> (ResultSent.tupled,ResultSent.unapply)
+    def * = (shrineNodeId,userName,networkQueryId,queryName,timeQuerySent,queryTopicId,queryTopicName,timeQueryReceived) <> (QueryReceived.tupled,QueryReceived.unapply)
   }
-  val allResultsSent = TableQuery[ResultsSentTable]
-  
+
+  val allQueriesReceived = TableQuery[QueriesReceivedAuditTable]
+
   class ExecutionStartsTable(tag:Tag) extends Table[ExecutionStarted](tag,"executionStarts") {
     def networkQueryId = column[NetworkQueryId]("networkQueryId")
     def queryName = column[QueryName]("queryName")
@@ -166,20 +171,15 @@ case class AdapterAuditSchema(jdbcProfile: JdbcProfile) extends Loggable {
 
   val allExecutionCompletes = TableQuery[ExecutionCompletesTable]
 
-  class QueriesReceivedAuditTable(tag:Tag) extends Table[QueryReceived](tag,"queryReceived") {
-    def shrineNodeId = column[ShrineNodeId]("shrineNodeId")
-    def userName = column[UserName]("userName")
+  class ResultsSentTable(tag:Tag) extends Table[ResultSent](tag,"resultsSent") {
     def networkQueryId = column[NetworkQueryId]("networkQueryId")
+    def replyId = column[Long]("replyId")
     def queryName = column[QueryName]("queryName")
-    def timeQuerySent = column[Time]("timeSent")
-    def queryTopicId = column[Option[QueryTopicId]]("topicId")
-    def queryTopicName = column[Option[QueryTopicName]]("topicName")
-    def timeQueryReceived = column[Time]("timeReceived")
+    def timeResultsSent = column[Time]("timeResultsSent")
 
-    def * = (shrineNodeId,userName,networkQueryId,queryName,timeQuerySent,queryTopicId,queryTopicName,timeQueryReceived) <> (QueryReceived.tupled,QueryReceived.unapply)
+    def * = (networkQueryId,replyId,queryName,timeResultsSent) <> (ResultSent.tupled,ResultSent.unapply)
   }
-
-  val allQueriesReceived = TableQuery[QueriesReceivedAuditTable]
+  val allResultsSent = TableQuery[ResultsSentTable]
 }
 
 object AdapterAuditSchema {
