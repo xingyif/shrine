@@ -1,23 +1,19 @@
-<div class="navbar-default sidebar" role="navigation">
+<div class="navbar-default sidebar" role="navigation" ng-show="isUserLoggedIn()">
     <div class="sidebar-nav navbar-collapse">
         <ul class="nav in" id="side-menu">
-            <li ng-cloak>
-                <img alt="Harvard Catalyst" src="{{bannerUrl}}"
-                     style="max-height:50px; margin: 15px; 10px; 10px">
-            </li>
-            <li ui-sref-active="active" ng-show="isUserLoggedIn()" ng-cloak>
+            <li ui-sref-active="active">
                 <a ui-sref="dashboard.topics">
                     <i class="fa fa-table fa-fw"></i>
                     QueryTopics
                 </a>
             </li>
-            <li ui-sref-active="active" ng-show="isUserLoggedIn()" ng-cloak>
+            <li ui-sref-active="active" ng-cloak>
                 <a ui-sref="dashboard.history">
                     <i class="fa fa-dashboard fa-fw"></i>
                     QueryHistory
                 </a>
             </li>
-            <li ui-sref-active="active" ng-show="isUserLoggedIn()" ng-cloak>
+            <li ui-sref-active="active" ng-cloak>
                 <a ui-sref="dashboard.statistics">
                     <i class="fa fa-bar-chart-o fa-fw"></i>
                     Query Statistics

@@ -1,16 +1,16 @@
-<nav class="navbar navbar-default navbar-static-top" role="navigation"
+<nav class="navbar navbar-default navbar-static-top shrine-navbar" role="navigation"
      style="margin-bottom: 0">
-    <div class="navbar-header">
-        <div class="navbar-brand">
-            SHRINE Data Steward
-        </div>
 
-
+    <div class="shrine-brand">
+        <span>SHRINE</span> DATA STEWARD
     </div>
+
+    <image src="{{bannerUrl}}" class="pull-right"></image>
+
     <!-- /.navbar-header -->
     <header-notification></header-notification>
 
     <br/>
-    <sidebar banner-url="{{bannerUrl}}" is-user-logged-in="isUserLoggedIn()"
+    <sidebar is-user-logged-in="isUserLoggedIn()"
              logout="logout()"></sidebar>
 </nav>

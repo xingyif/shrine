@@ -1,4 +1,5 @@
 {
-  "banner": "src/assets/img/logo_tsu-small.png",
-  "help": "src/assets/img/SHRINE-Data-Steward-Help.pdf"
+  "banner":  "src/assets/img/logo_TSU.png",
+  "footer":  "src/assets/img/logo_harvard_catalyst.png",
+  "help":    "src/assets/img/SHRINE-Data-Steward-Help.pdf"
 }
