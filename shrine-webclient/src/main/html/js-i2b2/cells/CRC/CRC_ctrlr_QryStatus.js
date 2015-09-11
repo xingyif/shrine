@@ -393,14 +393,13 @@ i2b2.CRC.ctrlr.QueryStatus.prototype = function() {
             self.dispDIV.innerHTML += '<div style="margin-left:20px; clear:both; line-height:16px; ">Compute Time: '+ s +' secs</div>';
 
             // -- query result instance vars -- //
-            var qriNodeList                     = results.refXML.getElementsByTagName('query_result_instance'),
+			var qriNodeList	= results.refXML.getElementsByTagName('query_result_instance'),
                 qriIdx, qriNode, qriObj, breakdownType,
+				errorObjects = [];
 
             // -- breakdown vars -- //
             brdNodeList, brdNode,  brdIdx, brdObj;
 
-
-			var errorObjects = [];
             //iterate through each query result.
             for (qriIdx = 0; qriIdx < qriNodeList.length; qriIdx++) {
 
@@ -411,9 +410,6 @@ i2b2.CRC.ctrlr.QueryStatus.prototype = function() {
 
                 //which hospital
                 self.dispDIV.innerHTML += '<div style="clear:both;"><br/><div style="float:left; font-weight:bold; margin-left:20px;">' + qriObj.description + ' "' +self.QM.name+ '"</div>';
-
-				//for testing.
-				qriObj.statusName = "ERROR"
 
                 //if there was an error display it.
                 if((qriObj.statusName == "ERROR") || (qriObj.statusName == "UNAVAILABLE")){
@@ -489,6 +485,11 @@ i2b2.CRC.ctrlr.QueryStatus.prototype = function() {
 		 *  Scope for error dialog.
 		 */
 		function createErrorDialogue (container, errorObjects) {
+
+			// -- no errors abandon ship! -- //
+			if(errorObjects.length < 1) {
+				return;
+			}
 
 			var anchors, btnExpand, btnContract, errObjects = errorObjects, errorData;
 
