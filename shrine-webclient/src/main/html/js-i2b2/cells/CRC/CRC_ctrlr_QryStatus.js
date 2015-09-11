@@ -399,6 +399,8 @@ i2b2.CRC.ctrlr.QueryStatus.prototype = function() {
             // -- breakdown vars -- //
             brdNodeList, brdNode,  brdIdx, brdObj;
 
+
+			var errorObjects = [];
             //iterate through each query result.
             for (qriIdx = 0; qriIdx < qriNodeList.length; qriIdx++) {
 
@@ -410,10 +412,32 @@ i2b2.CRC.ctrlr.QueryStatus.prototype = function() {
                 //which hospital
                 self.dispDIV.innerHTML += '<div style="clear:both;"><br/><div style="float:left; font-weight:bold; margin-left:20px;">' + qriObj.description + ' "' +self.QM.name+ '"</div>';
 
+				//for testing.
+				qriObj.statusName = "ERROR"
+
                 //if there was an error display it.
                 if((qriObj.statusName == "ERROR") || (qriObj.statusName == "UNAVAILABLE")){
-                    self.dispDIV.innerHTML += "<span title='" + qriObj.statusDescription +"'>      <b><font color='#dd0000'>     Issue</font></b></span>";
-                    continue;
+
+					var errorObj = {
+						shortDescription: "Desination site was unable to translate SHRINE query term to local ontology.",
+						stackTrace:  "Error mapping query terms from" +
+						" network to local forms. request:" +
+						"RunQueryRequest(I2B2_PROJECT_NAME,180000 milliseconds,"+
+						"AuthenticationInfo(*****,****,Credential(******,false)),"+
+						"QUERY_ID,None,Set(PATIENT_COUNT_XML)," +
+						"QueryDefinition(QUERY_NAME,Some(" +
+						"Term(\\PROJECT\\AND\\CONCEPT\\PATH\\OF\\UNMAPPED\\TERM),"+
+						"Some(ANY),None,None,None,List())))",
+						longDescription:
+							'The site responding to the query does not understand how to map the SHRINE query term it was given to its own local i2b2 term.)',
+						wikiUrl:
+							'https://open.med.harvard.edu/wiki/display/SHRINETEAM/Error+Types+for+Improved+Error+Messaging'
+					};
+
+					errorObjects.push(errorObj);
+
+                    self.dispDIV.innerHTML += "<span title='" + qriObj.statusDescription +"'>      <b><a class='query-error-anchor' href='#' style='color:#ff0000'>      <b><span color='#ff0000'>" + errorObj.shortDescription + "</span></b></a></b></span>";
+					continue;
                 }
 				else if((qriObj.statusName == "PROCESSING")){
 					self.dispDIV.innerHTML += " - <span><b><font color='#00dd00'>Still Processing Request</font></b></span>";
@@ -455,8 +479,121 @@ i2b2.CRC.ctrlr.QueryStatus.prototype = function() {
 						+ "</font></div>";
                 }
             }
+
+			createErrorDialogue(self.dispDIV, errorObjects);
 			i2b2.CRC.ctrlr.history.Refresh();
         }
+
+
+		/**
+		 *  Scope for error dialog.
+		 */
+		function createErrorDialogue (container, errorObjects) {
+
+			var anchors, btnExpand, btnContract, errObjects = errorObjects, errorData;
+
+			//this sets up the events.
+			anchors     = container.getElementsByClassName('query-error-anchor');
+
+			if(anchors.length == 0) {
+				return;
+			}
+
+			addAnchorEvents();
+
+
+			function expandErrorDetailDiv (ev) {
+				btnExpand.style.display   = 'none';
+				btnContract.style.display = 'inline';
+				document.getElementById('errorDetailDiv').style.height          = '200px';
+				$('errorDetailDiv').innerHTML = '<span style="font-weight: bold">' +errorData.shortDescription + '<br/><br/>' +
+					errorData.longDescription + '<br/><br/>' +
+					errorData.stackTrace + '<span/><br/><br/><a href="' +
+					errorData.wikiUrl + '"' +' target="_blank">Click here for more information.</a>';
+			}
+
+
+			function retractErrorDetailDiv (ev) {
+				btnExpand.style.display   = 'inline';
+				btnContract.style.display = 'none';
+				document.getElementById('errorDetailDiv').style.height = '80px';
+				$('errorDetailDiv').innerHTML = '<span style="font-weight: bold">' +errorData.shortDescription + '<br/><br/>' +
+					errorData.longDescription + '<br/><br/>'
+			}
+
+			function onClick(event) {
+
+				event.preventDefault();
+
+				errorData = event.currentTarget.__errorData__;
+
+				btnExpand   = document.getElementById('btnExpandErrorDetail');
+				btnContract = document.getElementById('btnContractErrorDetail');
+
+				// -- add event listeners for expand and contract as well --//
+				btnExpand.addEventListener('click', expandErrorDetailDiv, false);
+				btnContract.addEventListener('click', retractErrorDetailDiv, false);
+
+				showErrorDetail(errorData);
+			}
+
+			function showErrorDetail(detailObj) {
+				var handleCancel = function() {
+					this.cancel();
+					removeAllEvents();
+					retractErrorDetailDiv();
+				};
+
+				var dialogErrorDetail = new YAHOO.widget.SimpleDialog("dialogErrorDetail", {
+					width: "820px",
+					fixedcenter: true,
+					constraintoviewport: true,
+					modal: true,
+					zindex: 700,
+					buttons: [ {
+						text: "Done",
+						handler: handleCancel,
+						isDefault: true
+					}]
+				});
+
+
+				dialogErrorDetail._doClose = function (e) {
+					e.preventDefault();
+					this.cancel();
+					removeAllEvents();
+					retractErrorDetailDiv();
+				}
+
+
+				$('dialogErrorDetail').show();
+				dialogErrorDetail.validate = function(){
+					return true;
+				};
+				dialogErrorDetail.render(document.body);
+
+				// / display the dialoge
+				dialogErrorDetail.center();
+				dialogErrorDetail.show();
+				$('errorDetailDiv').innerHTML = '<span style="font-weight: bold">' + errorData.shortDescription + '<span/>';
+			}
+
+			function addAnchorEvents () {
+				var el, length = anchors.length;
+
+				// -- will need to iterate over these once they are created and add event listeners.
+				for(var i = 0; i < length; i ++) {
+					var el = anchors[i];
+					el.__errorData__ = errorObjects[i];
+					el.addEventListener('click', onClick, false);
+				}
+			}
+
+			function removeAllEvents () {
+				btnExpand.removeEventListener('click', expandErrorDetailDiv);
+				btnContract.removeEventListener('click', retractErrorDetailDiv);
+			}
+		}
 
 
         /**
@@ -498,11 +635,6 @@ i2b2.CRC.ctrlr.QueryStatus.prototype = function() {
                 value:              grabXmlNodeData(brdNode,     'value'),
                 parentResultType:   grabXmlNodeData(brdNode,  'parent::breakdown_data/resultType')
             }
-
-            //if is obfuscated.
-            /*if (i2b2.PM.model.isObfuscated) {
-                brdObj.value  = (+brdObj.value < 4)? "<3" : brdObj.value + "+-3"
-            }*/
 
             return brdObj;
         }

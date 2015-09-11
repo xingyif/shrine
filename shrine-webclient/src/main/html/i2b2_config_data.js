@@ -17,8 +17,8 @@
         debug: true,
         urlCellPM: "http://shrine-qa1.hms.harvard.edu/i2b2/services/PMService/",
         //urlCellPM: "http://192.168.169.131/i2b2/services/PMService/",
-        allowAnalysis: true/*,
-        isSHRINE: true*/
+        allowAnalysis: true,
+        isSHRINE: true
     }
 ]
     // -------------------------------------------------------------------------------------------
