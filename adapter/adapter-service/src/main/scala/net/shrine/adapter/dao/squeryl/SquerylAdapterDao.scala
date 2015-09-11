@@ -158,6 +158,12 @@ final class SquerylAdapterDao(initializer: SquerylInitializer, tables: Tables)(i
     }
   }
 
+  def findAllCounts():Seq[SquerylCountRow] = {
+    inTransaction{
+      Queries.allCountResults.toSeq
+    }
+  }
+
   override def renameQuery(networkQueryId: Long, newName: String) {
     inTransaction {
       update(tables.shrineQueries) { queryRow =>
@@ -333,6 +339,7 @@ final class SquerylAdapterDao(initializer: SquerylInitializer, tables: Tables)(i
    * @since Nov 19, 2012
    */
   object Queries {
+
     def privilegedUsers(domain: String, username: String): Query[SquerylPrivilegedUser] = {
       from(tables.privilegedUsers) { user =>
         where(user.username === username and user.domain === domain).select(user)
@@ -340,8 +347,10 @@ final class SquerylAdapterDao(initializer: SquerylInitializer, tables: Tables)(i
     }
 
     def repeatedResults(domain: String, username: String, overrideDate: XMLGregorianCalendar): Query[Long] = {
+
       val counts = join(tables.shrineQueries, tables.queryResults, tables.countResults) { (queryRow, resultRow, countRow) =>
         where(queryRow.username === username and queryRow.domain === domain and (countRow.originalValue <> 0L) and queryRow.dateCreated > DateHelpers.toTimestamp(overrideDate)).
+          groupBy(countRow.originalValue).
           compute(count(countRow.originalValue)).
           on(queryRow.id === resultRow.queryId, resultRow.id === countRow.resultId)
       }
@@ -363,8 +372,14 @@ final class SquerylAdapterDao(initializer: SquerylInitializer, tables: Tables)(i
     def queriesForUser(username: String, domain: String): Query[SquerylShrineQuery] = {
       from(tables.shrineQueries) { queryRow =>
         where(queryRow.domain === domain and queryRow.username === username).
-        select(queryRow).
-        orderBy(queryRow.dateCreated.desc)
+          select(queryRow).
+          orderBy(queryRow.dateCreated.desc)
+      }
+    }
+
+    val allCountResults: Query[SquerylCountRow] = {
+      from(tables.countResults) { queryRow =>
+        select(queryRow)
       }
     }
 

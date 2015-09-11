@@ -10,7 +10,7 @@ import com.typesafe.config.Config
 import net.shrine.log.Loggable
 import net.shrine.protocol.RunQueryRequest
 import net.shrine.service.QepConfigSource
-import net.shrine.audit.{QueryTopicId, Time, QueryName, NetworkQueryId, UserName, ShrineNodeId}
+import net.shrine.audit.{QueryTopicName, QueryTopicId, Time, QueryName, NetworkQueryId, UserName, ShrineNodeId}
 
 import slick.driver.JdbcProfile
 import scala.concurrent.{Future, Await}
@@ -98,8 +98,9 @@ case class QepAuditSchema(jdbcProfile: JdbcProfile) extends Loggable {
     def queryName = column[QueryName]("queryName")
     def timeQuerySent = column[Time]("timeQuerySent")
     def queryTopicId = column[Option[QueryTopicId]]("queryTopicId")
+    def queryTopicName = column[Option[QueryTopicName]]("queryTopicName")
 
-    def * = (shrineNodeId,userName,networkQueryId,queryName,timeQuerySent,queryTopicId) <> (QepQueryAuditData.tupled,QepQueryAuditData.unapply)
+    def * = (shrineNodeId,userName,networkQueryId,queryName,timeQuerySent,queryTopicId,queryTopicName) <> (QepQueryAuditData.tupled,QepQueryAuditData.unapply)
 
   }
   val allQepQueryQuery = TableQuery[QepQueryAuditTable]

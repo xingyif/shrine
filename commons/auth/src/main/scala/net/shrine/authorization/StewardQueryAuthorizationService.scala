@@ -6,7 +6,7 @@ import java.security.cert.X509Certificate
 
 import akka.io.IO
 import net.shrine.authorization.AuthorizationResult.{NotAuthorized, Authorized}
-import net.shrine.authorization.steward.{ResearchersTopics, InboundShrineQuery}
+import net.shrine.authorization.steward.{TopicIdAndName, ResearchersTopics, InboundShrineQuery}
 import net.shrine.log.Loggable
 import net.shrine.protocol.{ApprovedTopic, RunQueryRequest, ReadApprovedQueryTopicsResponse, ErrorResponse, ReadApprovedQueryTopicsRequest}
 
@@ -168,15 +168,23 @@ import spray.can.Http
     val request = Post(s"$stewardBaseUrl/steward/qep/requestQueryAccess/user/$userName/topic/$topicIdString", queryForJson)
     val response:HttpResponse = sendAndReceive(request,runQueryRequest.waitTime)
 
+    debug(s"authorizeRunQueryRequestForTopic response is $response")
+
     interpretAuthorizeRunQueryResponse(response)
   }
-
-
 
 /** Interpret the response from the steward app. Primarily here for testing. */
   def interpretAuthorizeRunQueryResponse(response:HttpResponse):AuthorizationResult = {
     response.status match {
-      case OK => Authorized
+      case OK => {
+        val topicJson = new String(response.entity.data.toByteArray)
+        debug(s"topicJson is $topicJson")
+
+        val topic:Option[TopicIdAndName] = parse(topicJson).extractOpt[TopicIdAndName]
+        debug(s"topic is $topic")
+
+        Authorized(topic.map(x => (x.id,x.name)))
+      }
       case UnavailableForLegalReasons => NotAuthorized(response.entity.asString)
       case Unauthorized => throw new AuthorizationException(s"steward rejected qep's login credentials. $response")
       case _ => throw new AuthorizationException(s"QueryAuthorizationService detected a problem: $response")

@@ -1,12 +1,12 @@
 package net.shrine.hms.authorization
 
+import net.shrine.authorization.AuthorizationResult
+import net.shrine.authorization.AuthorizationResult.{NotAuthorized, Authorized}
 import net.shrine.log.Loggable
 import net.shrine.protocol.ApprovedTopic
 import net.shrine.client.JerseyHttpClient
 import net.shrine.crypto.TrustParam.AcceptAllCerts
 import net.shrine.client.HttpCredentials
-import net.shrine.authentication.AuthenticationResult
-import net.shrine.protocol.AuthenticationInfo
 import net.liftweb.json.DefaultFormats
 import net.liftweb.json.JsonAST.JValue
 import net.liftweb.json.JsonAST.JField
@@ -19,7 +19,7 @@ import javax.ws.rs.core.MediaType
 
 /**
  * @author clint
- * @date Apr 3, 2014
+ * @since Apr 3, 2014
  */
 final case class JerseySheriffClient(
   sheriffUrl: String,
@@ -34,7 +34,7 @@ final case class JerseySheriffClient(
     parseApprovedTopics(responseString)
   }
 
-  override def isAuthorized(user: String, topicId: String, queryText: String): Boolean = {
+  override def isAuthorized(user: String, topicId: String, queryText: String): AuthorizationResult = {
     val responseString = {
       val escapedText = escapeQueryText(queryText)
 
@@ -44,7 +44,9 @@ final case class JerseySheriffClient(
       resource.path(s"authorize/$user/$topicId").entity(s"{'queryText': '$escapedText'}", APPLICATION_JSON).post(classOf[String])
     }
 
-    parseAuthorizationResponse(responseString)
+    val result = parseAuthorizationResponse(responseString)
+    if(result) Authorized(None)
+    else NotAuthorized(s"Requested topic $topicId is not approved")
   }
 
   private[authorization] lazy val resource = {
@@ -98,7 +100,7 @@ object JerseySheriffClient extends Loggable {
 
     val trimmedXml = XmlUtil.stripWhitespace(queryXml)
 
-    val escapedText = Utility.escape(trimmedXml.toString)
+    val escapedText = Utility.escape(trimmedXml.toString())
 
     escapedText.replace("\\", "\\\\")
   }

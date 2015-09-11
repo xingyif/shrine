@@ -1,6 +1,5 @@
 package net.shrine.authentication
 
-import net.shrine.authentication.AuthenticationType
 import net.shrine.util.ShouldMatchersForJUnit
 import org.junit.Test
 
@@ -12,7 +11,7 @@ final class AuthenticationTypeTest extends ShouldMatchersForJUnit {
   @Test
   def testNames: Unit = {
     import AuthenticationType._
-    
+
     Ecommons.name should equal("ecommons")
     Pm.name should equal("pm")
     NoAuthentication.name should equal("none")

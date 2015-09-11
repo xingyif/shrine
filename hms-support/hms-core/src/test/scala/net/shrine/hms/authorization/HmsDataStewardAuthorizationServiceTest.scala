@@ -1,5 +1,6 @@
 package net.shrine.hms.authorization
 
+import net.shrine.authorization.AuthorizationResult.{NotAuthorized, Authorized}
 import net.shrine.util.ShouldMatchersForJUnit
 import org.junit.Test
 import net.shrine.protocol.ApprovedTopic
@@ -81,7 +82,7 @@ final class HmsDataStewardAuthorizationServiceTest extends ShouldMatchersForJUni
     val service = HmsDataStewardAuthorizationService(null, NeverAuthenticatesAuthenticator)
 
     def doTest(topicId: Option[String],topicName:Option[String]): Unit = {
-      val result = service.authorizeRunQueryRequest(RunQueryRequest("projectId", 0.minutes, authn, 12345L, topicId, topicName, Set.empty, QueryDefinition("foo", Term("foo"))))
+      val result = service.authorizeRunQueryRequest(RunQueryRequest("projectId", 0.minutes, authn, topicId, topicName, Set.empty, QueryDefinition("foo", Term("foo"))))
 
       result.isAuthorized should be(false)
     }
@@ -101,7 +102,7 @@ final class HmsDataStewardAuthorizationServiceTest extends ShouldMatchersForJUni
 
       val service = HmsDataStewardAuthorizationService(mockSheriffClient, AlwaysAuthenticatesAuthenticator(ecommonsUsername))
 
-      val result = service.authorizeRunQueryRequest(RunQueryRequest("projectId", 0.minutes, authn, 12345L, topicId, topicName, Set.empty, queryDef))
+      val result = service.authorizeRunQueryRequest(RunQueryRequest("projectId", 0.minutes, authn, topicId, topicName, Set.empty, queryDef))
 
       val expectedIsAuthorized = isAuthorized && topicId.isDefined
 
@@ -122,6 +123,7 @@ final class HmsDataStewardAuthorizationServiceTest extends ShouldMatchersForJUni
 
     doTest(true, Some("topic123"), Some("Topic Name"))
     doTest(false, Some("topic123"), Some("Topic Name"))
+    doTest(false, Some("topic123"), None)
     doTest(true, None, None)
     doTest(false, None, None)
   }
@@ -151,12 +153,13 @@ object HmsDataStewardAuthorizationServiceTest {
       topics
     }
 
-    override def isAuthorized(user: String, topicId: String, queryText: String): Boolean = {
+    override def isAuthorized(user: String, topicId: String, queryText: String) = {
       Params.user = user
       Params.topicId = topicId
       Params.queryText = queryText
 
-      authorized
+      if(authorized) Authorized(Some((topicId,"Mock Topic")))
+      else NotAuthorized("Mock authorization failure")
     }
   }
 }

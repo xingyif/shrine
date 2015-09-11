@@ -1,6 +1,6 @@
 package net.shrine.adapter.dao.squeryl
 
-import org.junit.Test
+import org.junit.{Ignore, Test}
 import net.shrine.util.ShouldMatchersForJUnit
 import org.squeryl.Query
 import javax.xml.datatype.XMLGregorianCalendar
@@ -9,7 +9,6 @@ import net.shrine.dao.DateHelpers
 import net.shrine.protocol.AuthenticationInfo
 import net.shrine.protocol.Credential
 import net.shrine.protocol.QueryResult
-import net.shrine.protocol.ResultOutputType.PATIENT_COUNT_XML
 import net.shrine.protocol.query.QueryDefinition
 import net.shrine.protocol.query.Term
 import net.shrine.util.XmlDateHelper
@@ -18,7 +17,7 @@ import net.shrine.dao.squeryl.SquerylEntryPoint
 
 /**
  * @author clint
- * @date Nov 19, 2012
+ * @since Nov 19, 2012
  *
  * Ported
  */
@@ -26,23 +25,23 @@ final class PrivilegedUsersTest extends AbstractSquerylAdapterTest with ShouldMa
 
   private val testDomain = "testDomain"
   private val testUsername = "testUsername"
-  private val testAuthn = AuthenticationInfo(testDomain, testUsername, Credential("asdalksdasd", false))
+  private val testAuthn = AuthenticationInfo(testDomain, testUsername, Credential("asdalksdasd", isToken = false))
   private val testThreshold = 3
   private val defaultThreshold = 10
 
   import SquerylEntryPoint._
   
   @Test
-  def testGetUserThreshold = afterInsertingTestUser {
+  def testGetUserThreshold() = afterInsertingTestUser {
     val threshold = userThresholdQuery(testAuthn).single
 
     threshold should equal(testThreshold)
   }
 
-  private def authn(domain: String, username: String) = AuthenticationInfo(domain, username, Credential("sakdjhajksdh", false))
+  private def authn(domain: String, username: String) = AuthenticationInfo(domain, username, Credential("sakdjhajksdh", isToken = false))
   
   @Test
-  def testIsUserWithNoThresholdEntryLockedOut = afterInsertingTestUser {
+  def testIsUserWithNoThresholdEntryLockedOut() = afterInsertingTestUser {
     val username = "noEntry"
     val domain = "noEntryDomain"
 
@@ -50,58 +49,75 @@ final class PrivilegedUsersTest extends AbstractSquerylAdapterTest with ShouldMa
     val noThresholdId2 = authn(domain, testUsername)
 
     for (noThresholdId <- Seq(noThresholdId1, noThresholdId2)) {
-      dao.isUserLockedOut(noThresholdId, defaultThreshold) should be(false)
+      dao.isUserLockedOut(noThresholdId, defaultThreshold) should be(right = false)
 
       lockoutUser(noThresholdId, 42)
 
-      dao.isUserLockedOut(noThresholdId, defaultThreshold) should be(false)
+      dao.isUserLockedOut(noThresholdId, defaultThreshold) should be(right = false)
     }
   }
 
   @Test
-  def testIsUserLockedOut = afterInsertingTestUser {
-    dao.isUserLockedOut(testAuthn, defaultThreshold) should be(false)
+  def testIsUserLockedOut() = afterInsertingTestUser {
+    dao.isUserLockedOut(testAuthn, defaultThreshold) should be(right = false)
 
     logCountQueryResult("masterId:0", 0, testAuthn, 42)
 
-    dao.isUserLockedOut(testAuthn, defaultThreshold) should be(false)
+    dao.isUserLockedOut(testAuthn, defaultThreshold) should be(right = false)
 
     lockoutUser(testAuthn, 42)
 
-    dao.isUserLockedOut(testAuthn, defaultThreshold) should be(true)
+    dao.isUserLockedOut(testAuthn, defaultThreshold) should be(right = true)
 
     // Make sure username + domain is how users are identified
-    dao.isUserLockedOut(authn(testDomain, "some-other-username"), defaultThreshold) should be(false)
-    dao.isUserLockedOut(authn("some-other-domain", testUsername), defaultThreshold) should be(false)
+    dao.isUserLockedOut(authn(testDomain, "some-other-username"), defaultThreshold) should be(right = false)
+    dao.isUserLockedOut(authn("some-other-domain", testUsername), defaultThreshold) should be(right = false)
   }
 
   @Test
-  def testIsUserLockedOutWithResultSetSizeOfZero = afterInsertingTestUser {
-    dao.isUserLockedOut(testAuthn, defaultThreshold) should be(false)
+  def testIsUserNotLockedOutByRunningQueries() = afterInsertingTestUser {
+    dao.isUserLockedOut(testAuthn, defaultThreshold) should be(right = false)
+
+    logCountQueryResult("masterId:0", 0, testAuthn, 42)
+
+    dao.isUserLockedOut(testAuthn, defaultThreshold) should be(right = false)
+
+    runQueriesDoNotLockoutUser(testAuthn, 42)
+
+    dao.isUserLockedOut(testAuthn, defaultThreshold) should be(right = false)
+
+    // Make sure username + domain is how users are identified
+    dao.isUserLockedOut(authn(testDomain, "some-other-username"), defaultThreshold) should be(right = false)
+    dao.isUserLockedOut(authn("some-other-domain", testUsername), defaultThreshold) should be(right = false)
+  }
+
+  @Test
+  def testIsUserLockedOutWithResultSetSizeOfZero() = afterInsertingTestUser {
+    dao.isUserLockedOut(testAuthn, defaultThreshold) should be(right = false)
 
     logCountQueryResult("masterId:0", 0, testAuthn, 0)
 
-    dao.isUserLockedOut(testAuthn, defaultThreshold) should be(false)
+    dao.isUserLockedOut(testAuthn, defaultThreshold) should be(right = false)
 
     lockoutUser(testAuthn, 0)
 
     // user should not be locked out
-    dao.isUserLockedOut(testAuthn, defaultThreshold) should be(false)
+    dao.isUserLockedOut(testAuthn, defaultThreshold) should be(right = false)
   }
 
   @Test
-  def testLockoutOverride = afterInsertingTestUser {
-    dao.isUserLockedOut(testAuthn, defaultThreshold) should be(false)
+  def testLockoutOverride() = afterInsertingTestUser {
+    dao.isUserLockedOut(testAuthn, defaultThreshold) should be(right = false)
 
     lockoutUser(testAuthn, 42)
 
-    dao.isUserLockedOut(testAuthn, defaultThreshold) should be(true)
+    dao.isUserLockedOut(testAuthn, defaultThreshold) should be(right = true)
 
     val tomorrow = DateHelpers.daysFromNow(1)
 
     setOverrideDate(testAuthn, tomorrow)
 
-    dao.isUserLockedOut(testAuthn, defaultThreshold) should be(false)
+    dao.isUserLockedOut(testAuthn, defaultThreshold) should be(right = false)
 
     val thirtyOneDaysAgo = DateHelpers.daysFromNow(-31)
 
@@ -119,6 +135,12 @@ final class PrivilegedUsersTest extends AbstractSquerylAdapterTest with ShouldMa
   private def lockoutUser(lockedOutAuthn: AuthenticationInfo, resultSetSize: Int) {
     for (i <- 1 until testThreshold + 2) {
       logCountQueryResult("masterId:" + i, i, lockedOutAuthn, resultSetSize)
+    }
+  }
+
+  private def runQueriesDoNotLockoutUser(lockedOutAuthn: AuthenticationInfo, startResultSetSize: Int) {
+    for (i <- 1 until testThreshold + 2) {
+      logCountQueryResult("masterId:" + i, i, lockedOutAuthn, startResultSetSize + i)
     }
   }
 

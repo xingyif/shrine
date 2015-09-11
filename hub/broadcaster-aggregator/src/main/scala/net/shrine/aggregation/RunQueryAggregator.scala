@@ -16,8 +16,8 @@ import net.shrine.util.XmlDateHelper
  *
  * @author Justin Quan
  * @author Clint Gilbert
- * @link http://chip.org
- * Date: 8/11/11
+ * @see http://chip.org
+ * @since 8/11/11
  */
 final class RunQueryAggregator(
   val queryId: Long,

@@ -1,6 +1,6 @@
 package net.shrine.service.audit
 
-import net.shrine.audit.{QueryTopicId, Time, QueryName, NetworkQueryId, UserName, ShrineNodeId}
+import net.shrine.audit.{QueryTopicName, QueryTopicId, Time, QueryName, NetworkQueryId, UserName, ShrineNodeId}
 import net.shrine.protocol.RunQueryRequest
 
 /**
@@ -14,23 +14,35 @@ case class QepQueryAuditData(shrineNodeId:ShrineNodeId,
                              networkQueryId:NetworkQueryId,
                              queryName:QueryName,
                              timeQuerySent:Time,
-                             queryTopicId:Option[QueryTopicId]) {}
+                             queryTopicId:Option[QueryTopicId],
+                             queryTopicName:Option[QueryTopicName]
+                              ) {}
 
-object QepQueryAuditData extends ((ShrineNodeId,UserName,NetworkQueryId,QueryName,Time,Option[QueryTopicId]) => QepQueryAuditData) {
+object QepQueryAuditData extends ((
+    ShrineNodeId,
+    UserName,
+    NetworkQueryId,
+    QueryName,
+    Time,
+    Option[QueryTopicId],
+    Option[QueryTopicName]
+  ) => QepQueryAuditData) {
 
   def apply(
     shrineNodeId:String,
     userName:String,
     networkQueryId:Long,
     queryName:String,
-    queryTopicId:Option[String]
+    queryTopicId:Option[String],
+    queryTopicName: Option[QueryTopicName]
     ):QepQueryAuditData = QepQueryAuditData(
       shrineNodeId,
       userName,
       networkQueryId,
       queryName,
       System.currentTimeMillis(),
-      queryTopicId
+      queryTopicId,
+      queryTopicName
     )
 
   def fromRunQueryRequest(request:RunQueryRequest,commonName:String):QepQueryAuditData = {
@@ -39,7 +51,9 @@ object QepQueryAuditData extends ((ShrineNodeId,UserName,NetworkQueryId,QueryNam
       request.authn.username,
       request.networkQueryId,
       request.queryDefinition.name,
-      request.topicId)
+      request.topicId,
+      request.topicName
+    )
   }
 
 }

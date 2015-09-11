@@ -50,7 +50,7 @@ class BroadcastServiceScannerClient(
 
     info(s"Querying for '$term'")
     
-    val request = RunQueryRequest(projectId, waitTime, authn, -1L, Option(topicId), Option(topicName), outputTypes, toQueryDef(term))
+    val request = RunQueryRequest(projectId, waitTime, authn, Option(topicId), Option(topicName), outputTypes, toQueryDef(term))
     
     val futureResponse = broadcastAndAggregationService.sendAndAggregate(toAuthn(authResult), request, runQueryAggregatorSource(request), false)
     

@@ -132,9 +132,7 @@ final case class ShrineResource(shrineRequestHandler: ShrineRequestHandler) exte
 
     debug(s"runQuery() with $shrineRequestHandler and $queryDef")
 
-    //NB: Create the RunQueryRequest with a dummy networkQueryId of '-1'; 
-    //this will be filled in with an appropriately-generated value by the ShrineRequestHandler
-    performAndSerialize(_.runQuery(RunQueryRequest(projectId, waitTime, authorization, -1, topicIdOption, topicNameOption, outputTypes.toSet, queryDef), shouldBroadcast))
+    performAndSerialize(_.runQuery(RunQueryRequest(projectId, waitTime, authorization, topicIdOption, topicNameOption, outputTypes.toSet, queryDef), shouldBroadcast))
   }
 
   @GET
