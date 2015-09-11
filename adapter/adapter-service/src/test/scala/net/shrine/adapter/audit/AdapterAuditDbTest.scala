@@ -13,7 +13,7 @@ class AdapterAuditDbTest extends ShouldMatchersForJUnit {// with TestWithDatabas
   val resultsSent = ResultSent(-1,-1,"ben's query",System.currentTimeMillis())
   val executionStarted = ExecutionStarted(-1,"ben's query",System.currentTimeMillis())
   val executionCompleted = ExecutionCompleted(-1,-1,"ben's query",System.currentTimeMillis())
-  val queryReceived = QueryReceived("example.com","ben",-1,"ben's query",System.currentTimeMillis(),Some("1"),Some("test topic"),System.currentTimeMillis())
+  val queryReceived = QueryReceived("example.com","ben",-1,"ben's query",Some("1"),Some("test topic"),System.currentTimeMillis(),System.currentTimeMillis())
 
   @Test
   def testInsertResultsSent() {

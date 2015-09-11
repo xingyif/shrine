@@ -16,11 +16,9 @@ import net.shrine.protocol.{BroadcastMessage, RunQueryRequest, RunQueryResponse,
 import slick.driver.JdbcProfile
 import scala.concurrent.{Future, Await}
 import scala.concurrent.duration.{Duration,DurationInt}
-import scala.language.postfixOps
-
 import scala.concurrent.ExecutionContext.Implicits.global
-
 import scala.concurrent.blocking
+import scala.language.postfixOps
 
 /**
  * DB code for the Adapter audit metrics.
@@ -66,11 +64,11 @@ case class AdapterAuditDb(schemaDef:AdapterAuditSchema,dataSource: DataSource) e
   }
 
   def insertExecutionStarted(executionStart:ExecutionStarted):Unit = {
-    dbRun(allExecutionStarts += executionStart)
+    dbRun(allExecutionsStarted += executionStart)
   }
 
   def selectAllExecutionStarts:Seq[ExecutionStarted] = {
-    dbRun(allExecutionStarts.result)
+    dbRun(allExecutionsStarted.result)
   }
 
   def insertExecutionCompletedShrineResponse(request: RunQueryRequest,shrineResponse: ShrineResponse) = {
@@ -80,11 +78,11 @@ case class AdapterAuditDb(schemaDef:AdapterAuditSchema,dataSource: DataSource) e
   }
 
   def insertExecutionCompleted(executionCompleted:ExecutionCompleted):Unit = {
-    dbRun(allExecutionCompletes += executionCompleted)
+    dbRun(allExecutionsCompleted += executionCompleted)
   }
 
   def selectAllExecutionCompletes:Seq[ExecutionCompleted] = {
-    dbRun(allExecutionCompletes.result)
+    dbRun(allExecutionsCompleted.result)
   }
   def insertResultSent(networkQueryId: NetworkQueryId,shrineResponse:ShrineResponse):Unit = {
     debug(s"insertResultSent $shrineResponse for $networkQueryId")
@@ -111,8 +109,8 @@ case class AdapterAuditSchema(jdbcProfile: JdbcProfile) extends Loggable {
 
   def ddlForAllTables = {
     allQueriesReceived.schema ++
-    allExecutionStarts.schema ++
-    allExecutionCompletes.schema ++
+    allExecutionsStarted.schema ++
+    allExecutionsCompleted.schema ++
     allResultsSent.schema
   }
 
@@ -135,41 +133,41 @@ case class AdapterAuditSchema(jdbcProfile: JdbcProfile) extends Loggable {
     Await.result(future,Duration.Inf)
   }
 
-  class QueriesReceivedAuditTable(tag:Tag) extends Table[QueryReceived](tag,"queryReceived") {
+  class QueriesReceivedAuditTable(tag:Tag) extends Table[QueryReceived](tag,"queriesReceived") {
     def shrineNodeId = column[ShrineNodeId]("shrineNodeId")
     def userName = column[UserName]("userName")
     def networkQueryId = column[NetworkQueryId]("networkQueryId")
     def queryName = column[QueryName]("queryName")
-    def timeQuerySent = column[Time]("timeSent")
     def queryTopicId = column[Option[QueryTopicId]]("topicId")
     def queryTopicName = column[Option[QueryTopicName]]("topicName")
+    def timeQuerySent = column[Time]("timeSent")
     def timeQueryReceived = column[Time]("timeReceived")
 
-    def * = (shrineNodeId,userName,networkQueryId,queryName,timeQuerySent,queryTopicId,queryTopicName,timeQueryReceived) <> (QueryReceived.tupled,QueryReceived.unapply)
+    def * = (shrineNodeId,userName,networkQueryId,queryName,queryTopicId,queryTopicName,timeQuerySent,timeQueryReceived) <> (QueryReceived.tupled,QueryReceived.unapply)
   }
 
   val allQueriesReceived = TableQuery[QueriesReceivedAuditTable]
 
-  class ExecutionStartsTable(tag:Tag) extends Table[ExecutionStarted](tag,"executionStarts") {
+  class ExecutionsStartedTable(tag:Tag) extends Table[ExecutionStarted](tag,"executionsStarted") {
     def networkQueryId = column[NetworkQueryId]("networkQueryId")
     def queryName = column[QueryName]("queryName")
-    def timeExecutionStarts = column[Time]("timeExecutionStarts")
+    def timeExecutionStarts = column[Time]("timeExecutionStarted")
 
     def * = (networkQueryId,queryName,timeExecutionStarts) <> (ExecutionStarted.tupled,ExecutionStarted.unapply)
   }
   
-  val allExecutionStarts = TableQuery[ExecutionStartsTable]
+  val allExecutionsStarted = TableQuery[ExecutionsStartedTable]
 
-  class ExecutionCompletesTable(tag:Tag) extends Table[ExecutionCompleted](tag,"executionCompletes") {
+  class ExecutionsCompletedTable(tag:Tag) extends Table[ExecutionCompleted](tag,"executionsCompleted") {
     def networkQueryId = column[NetworkQueryId]("networkQueryId")
     def replyId = column[Long]("replyId")
     def queryName = column[QueryName]("queryName")
-    def timeExecutionCompletes = column[Time]("timeExecutionCompletes")
+    def timeExecutionCompletes = column[Time]("timeExecutionCompleted")
 
     def * = (networkQueryId,replyId,queryName,timeExecutionCompletes) <> (ExecutionCompleted.tupled,ExecutionCompleted.unapply)
   }
 
-  val allExecutionCompletes = TableQuery[ExecutionCompletesTable]
+  val allExecutionsCompleted = TableQuery[ExecutionsCompletedTable]
 
   class ResultsSentTable(tag:Tag) extends Table[ResultSent](tag,"resultsSent") {
     def networkQueryId = column[NetworkQueryId]("networkQueryId")
@@ -246,27 +244,50 @@ object AdapterAuditDb {
 
 }
 
-case class ResultSent(
-                       networkQueryId:NetworkQueryId,
-                       responseId:Long,
-                       queryName:QueryName,
-                       timeQueryResponse:Time
-                       )
+case class QueryReceived(
+                          shrineNodeId:ShrineNodeId,
+                          userName:UserName,
+                          networkQueryId:NetworkQueryId,
+                          queryName:QueryName,
+                          queryTopicId:Option[QueryTopicId],
+                          queryTopicName:Option[QueryTopicName],
+                          timeQuerySent:Time,
+                          timeQueryReceived:Time
+                        )
 
-object ResultSent extends ((
+object QueryReceived extends ((
+  ShrineNodeId,
+    UserName,
     NetworkQueryId,
-    Long,
     QueryName,
+    Option[QueryTopicId],
+    Option[QueryTopicName],
+    Time,
     Time
-  ) => ResultSent){
-  def fromResponse(networkQueryId:NetworkQueryId,shrineResponse:ShrineResponse) = {
+  ) => QueryReceived) with Loggable {
 
-    shrineResponse match {
-      case rqr:RunQueryResponse => Some(ResultSent(
-        networkQueryId,
-        rqr.queryId,
-        rqr.queryName,
-        System.currentTimeMillis()))
+  def fromBroadcastMessage(message:BroadcastMessage):Option[QueryReceived] = {
+    message.request match {
+      case rqr:RunQueryRequest =>
+
+        val timestampAndShrineNodeCn:(Time,ShrineNodeId) = message.signature.fold{
+          warn(s"No signature on message ${message.requestId}")
+          (-1L,"No Cert For Message")}{signature =>
+          val timesamp = signature.timestamp.toGregorianCalendar.getTimeInMillis
+          val shrineNodeId:ShrineNodeId = signature.signingCert.fold("Signing Cert Not Available")(x => KeyStoreCertCollection.extractCommonName(x.toCertificate).getOrElse("Common name not in cert"))
+          (timesamp,shrineNodeId)
+        }
+
+        Some(QueryReceived(timestampAndShrineNodeCn._2,
+          message.networkAuthn.username,
+          rqr.networkQueryId,
+          rqr.queryDefinition.name,
+          rqr.topicId,
+          rqr.topicName,
+          timestampAndShrineNodeCn._1,
+          System.currentTimeMillis()
+        ))
+
       case _ => None
     }
   }
@@ -275,7 +296,7 @@ object ResultSent extends ((
 case class ExecutionStarted(
                              networkQueryId:NetworkQueryId,
                              queryName:QueryName,
-                             timeQueryResponse:Time
+                             timeExecutionStarted:Time
                              )
 
 object ExecutionStarted extends ((
@@ -295,7 +316,7 @@ case class ExecutionCompleted(
                               networkQueryId:NetworkQueryId,
                               replyId:Long,
                               queryName:QueryName,
-                              timeQueryResponse:Time
+                              timeExecutionCompleted:Time
                              )
 
 object ExecutionCompleted extends ((
@@ -317,51 +338,29 @@ object ExecutionCompleted extends ((
   }
 }
 
-case class QueryReceived(
-                          shrineNodeId:ShrineNodeId,
-                          userName:UserName,
-                          networkQueryId:NetworkQueryId,
-                          queryName:QueryName,
-                          timeQuerySent:Time,
-                          queryTopicId:Option[QueryTopicId],
-                          queryTopicName:Option[QueryTopicName],
-                          timeQueryReceived:Time
-                          )
+case class ResultSent(
+                       networkQueryId:NetworkQueryId,
+                       responseId:Long,
+                       queryName:QueryName,
+                       timeResultSent:Time
+                       )
 
-object QueryReceived extends ((
-  ShrineNodeId,
-    UserName,
-    NetworkQueryId,
+object ResultSent extends ((
+  NetworkQueryId,
+    Long,
     QueryName,
-    Time,
-    Option[QueryTopicId],
-    Option[QueryTopicName],
     Time
-  ) => QueryReceived) with Loggable {
+  ) => ResultSent){
+  def fromResponse(networkQueryId:NetworkQueryId,shrineResponse:ShrineResponse) = {
 
-  def fromBroadcastMessage(message:BroadcastMessage):Option[QueryReceived] = {
-    message.request match {
-      case rqr:RunQueryRequest =>
-
-        val timestampAndShrineNodeCn:(Time,ShrineNodeId) = message.signature.fold{
-          warn(s"No signature on message ${message.requestId}")
-          (-1L,"No Cert For Message")}{signature =>
-          val timesamp = signature.timestamp.toGregorianCalendar.getTimeInMillis
-          val shrineNodeId:ShrineNodeId = signature.signingCert.fold("Signing Cert Not Available")(x => KeyStoreCertCollection.extractCommonName(x.toCertificate).getOrElse("Common name not in cert"))
-          (timesamp,shrineNodeId)
-        }
-
-        Some(QueryReceived(timestampAndShrineNodeCn._2,
-          message.networkAuthn.username,
-          rqr.networkQueryId,
-          rqr.queryDefinition.name,
-          timestampAndShrineNodeCn._1,
-          rqr.topicId,
-          rqr.topicName,
-          System.currentTimeMillis()
-        ))
-
+    shrineResponse match {
+      case rqr:RunQueryResponse => Some(ResultSent(
+        networkQueryId,
+        rqr.queryId,
+        rqr.queryName,
+        System.currentTimeMillis()))
       case _ => None
     }
   }
 }
+
