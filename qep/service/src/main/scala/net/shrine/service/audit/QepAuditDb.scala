@@ -60,63 +60,6 @@ case class QepAuditDb(schemaDef:QepAuditSchema,dataSource: DataSource) extends L
 
 }
 
-/**
- * Separate class to support schema generation without actually connecting to the database.
- *
- * @param jdbcProfile Database profile to use for the schema
- */
-case class QepAuditSchema(jdbcProfile: JdbcProfile) extends Loggable {
-  import jdbcProfile.api._
-
-  def ddlForAllTables = {
-    allQepQueryQuery.schema
-  }
-
-  //to get the schema, use the REPL
-  //println(QepAuditSchema.schema.ddlForAllTables.createStatements.mkString(";\n"))
-
-  def createTables(database:Database) = {
-    try {
-      val future = database.run(ddlForAllTables.create)
-      Await.result(future,10 seconds)
-    } catch {
-      //I'd prefer to check and create schema only if absent. No way to do that with Oracle.
-      case x:SQLException => info("Caught exception while creating tables. Recover by assuming the tables already exist.",x)
-    }
-  }
-
-  def dropTables(database:Database) = {
-    val future = database.run(ddlForAllTables.drop)
-    //Really wait forever for the cleanup
-    Await.result(future,Duration.Inf)
-  }
-
-  class QepQueryAuditTable(tag:Tag) extends Table[QepQueryAuditData](tag,"qepQueries") {
-    def shrineNodeId = column[ShrineNodeId]("shrineNodeId")
-    def userName = column[UserName]("userName")
-    def networkQueryId = column[NetworkQueryId]("networkQueryId")
-    def queryName = column[QueryName]("queryName")
-    def timeQuerySent = column[Time]("timeQuerySent")
-    def queryTopicId = column[Option[QueryTopicId]]("queryTopicId")
-    def queryTopicName = column[Option[QueryTopicName]]("queryTopicName")
-
-    def * = (shrineNodeId,userName,networkQueryId,queryName,timeQuerySent,queryTopicId,queryTopicName) <> (QepQueryAuditData.tupled,QepQueryAuditData.unapply)
-
-  }
-  val allQepQueryQuery = TableQuery[QepQueryAuditTable]
-}
-
-object QepAuditSchema {
-
-  val allConfig:Config = QepConfigSource.config
-  val config:Config = allConfig.getConfig("shrine.qep.audit.database")
-
-  val slickProfileClassName = config.getString("slickProfileClassName")
-  val slickProfile:JdbcProfile = QepConfigSource.objectForName(slickProfileClassName)
-
-  val schema = QepAuditSchema(slickProfile)
-}
-
 object QepAuditDb {
 
   val dataSource:DataSource = {
@@ -169,3 +112,116 @@ object QepAuditDb {
 
 }
 
+/**
+ * Separate class to support schema generation without actually connecting to the database.
+ *
+ * @param jdbcProfile Database profile to use for the schema
+ */
+case class QepAuditSchema(jdbcProfile: JdbcProfile) extends Loggable {
+  import jdbcProfile.api._
+
+  def ddlForAllTables = {
+    allQepQueryQuery.schema
+  }
+
+  //to get the schema, use the REPL
+  //println(QepAuditSchema.schema.ddlForAllTables.createStatements.mkString(";\n"))
+
+  def createTables(database:Database) = {
+    try {
+      val future = database.run(ddlForAllTables.create)
+      Await.result(future,10 seconds)
+    } catch {
+      //I'd prefer to check and create schema only if absent. No way to do that with Oracle.
+      case x:SQLException => info("Caught exception while creating tables. Recover by assuming the tables already exist.",x)
+    }
+  }
+
+  def dropTables(database:Database) = {
+    val future = database.run(ddlForAllTables.drop)
+    //Really wait forever for the cleanup
+    Await.result(future,Duration.Inf)
+  }
+
+  class QueriesSent(tag:Tag) extends Table[QepQueryAuditData](tag,"queriesSent") {
+    def shrineNodeId = column[ShrineNodeId]("shrineNodeId")
+    def userName = column[UserName]("userName")
+    def networkQueryId = column[NetworkQueryId]("networkQueryId")
+    def queryName = column[QueryName]("queryName")
+    def queryTopicId = column[Option[QueryTopicId]]("queryTopicId")
+    def queryTopicName = column[Option[QueryTopicName]]("queryTopicName")
+    def timeQuerySent = column[Time]("timeQuerySent")
+
+    def * = (shrineNodeId,userName,networkQueryId,queryName,queryTopicId,queryTopicName,timeQuerySent) <> (QepQueryAuditData.tupled,QepQueryAuditData.unapply)
+
+  }
+  val allQepQueryQuery = TableQuery[QueriesSent]
+}
+
+object QepAuditSchema {
+
+  val allConfig:Config = QepConfigSource.config
+  val config:Config = allConfig.getConfig("shrine.qep.audit.database")
+
+  val slickProfileClassName = config.getString("slickProfileClassName")
+  val slickProfile:JdbcProfile = QepConfigSource.objectForName(slickProfileClassName)
+
+  val schema = QepAuditSchema(slickProfile)
+}
+
+
+/**
+ * Container for QEP audit data for ACT metrics
+ *
+ * @author david
+ * @since 8/17/15
+ */
+case class QepQueryAuditData(
+                              shrineNodeId:ShrineNodeId,
+                              userName:UserName,
+                              networkQueryId:NetworkQueryId,
+                              queryName:QueryName,
+                              queryTopicId:Option[QueryTopicId],
+                              queryTopicName:Option[QueryTopicName],
+                              timeQuerySent:Time
+                            ) {}
+
+object QepQueryAuditData extends ((
+                                    ShrineNodeId,
+                                    UserName,
+                                    NetworkQueryId,
+                                    QueryName,
+                                    Option[QueryTopicId],
+                                    Option[QueryTopicName],
+                                    Time
+                                  ) => QepQueryAuditData) {
+
+  def apply(
+             shrineNodeId:String,
+             userName:String,
+             networkQueryId:Long,
+             queryName:String,
+             queryTopicId:Option[String],
+             queryTopicName: Option[QueryTopicName]
+             ):QepQueryAuditData = QepQueryAuditData(
+                                                      shrineNodeId,
+                                                      userName,
+                                                      networkQueryId,
+                                                      queryName,
+                                                      queryTopicId,
+                                                      queryTopicName,
+                                                      System.currentTimeMillis()
+                                                    )
+
+  def fromRunQueryRequest(request:RunQueryRequest,commonName:String):QepQueryAuditData = {
+    QepQueryAuditData(
+      commonName,
+      request.authn.username,
+      request.networkQueryId,
+      request.queryDefinition.name,
+      request.topicId,
+      request.topicName
+    )
+  }
+
+}
