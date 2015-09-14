@@ -9,6 +9,26 @@
     src: url('../fnt/nexa/Nexa-Bold.otf');
 }
 
+@font-face {
+    font-family: "Open Sans Semibold";
+    src: url('../fnt/open-sans/OpenSans-Semibold.ttf');
+}
+
+@font-face {
+    font-family: "Open Sans Regular";
+    src: url('../fnt/open-sans/OpenSans-Regular.ttf');
+}
+
+@font-face{
+    font-family: "Roboto Bold";
+    src: url('../fnt/roboto/Roboto-Bold.ttf');
+}
+
+@font-face{
+    font-family: "Roboto Regular";
+    src: url('../fnt/roboto/Roboto-Regular.ttf');
+}
+
 .main-app{
     background-image: url('../img/Background_Shrine.jpg');
     background-size: cover;
@@ -41,6 +61,81 @@
     margin-right: 20px;
 }
 
+.shrine-button{
+    cursor: pointer !important;
+}
+
+.shrine-btn-default{
+    margin-right: 6px;
+    border:none;
+}
+
+.shrine-btn-on{
+    padding: 12px 12px;
+    border-radius: 0;
+    font-family: "Roboto Bold" !important;
+    color: #FFFFFF !important;
+    background: linear-gradient(#048DBE, #025978) !important;
+}
+
+.shrine-btn-off{
+    padding: 6px 12px;
+    border-radius: 4px !important;
+    font-family: "Open Sans Semibold";
+    background-color: #8896A4;
+    color: #FFFFFF;
+}
+
+
+.shrine-on, .shrine-on a{
+    font-family: "Roboto Bold" !important;
+    color: #FFFFFF !important;
+    background: linear-gradient(#048DBE, #025978) !important;
+}
+
+.shrine-off{
+    font-family: "Roboto Regular" !important;
+    color: #2C5566 !important;
+    background-color: #ECEEEE !important;
+}
+
+
+.shrine-button.disabled, .shrine-button[disabled] {
+    cursor: default !important;
+    opacity: 0.2 !important;
+}
+
+.shrine-copy-bold{
+    font-family: "Nexa Bold";
+    color: #64818e;
+}
+
+.shrine-copy{
+    font-family: "Nexa";
+    color: #000000;
+}
+
+.form-group span{
+    font-family: "Open Sans Semibold";
+    color: #2c5566;
+}
+
+fieldset button{
+    color: #2E5366;
+}
+
+fieldset button:hover, form a:hover{
+    color: #008CBA;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+form a{
+    font-family: "Open Sans Regular";
+    color: #647d8d;
+    text-decoration: none;
+}
+
 footer img{
     margin-left: 10px;
 
@@ -54,6 +149,34 @@ footer {
     min-height: 60px;
 }
 
+table{
+    background-image: url('../img/bckg_diagonal_lines_no_border.png');
+    border: 1px solid #CCD8DF;
+
+}
+
+.table-striped>tbody>tr:nth-of-type(odd) {
+    background-color: #EFF6F9;
+}
+
+.table-striped>tbody>tr:nth-of-type(even) {
+    background-color: #FFFFFF;
+}
+
+thead tr{
+    border: 1px solid #CCD8DF;
+}
+
+td{
+    border-right: 1px solid #CCD8DF;
+}
+
+td a, td a:hover{
+    text-decoration: none !important;
+    cursor: pointer;
+    font-family: "Open Sans Semibold";
+    color: #003153;
+}
 
 .shrine-panel{
     background-image: url('../img/bckg_diagonal_lines.png');
@@ -83,7 +206,7 @@ body {
 
 #page-wrapper {
     background-color: transparent;
-    margin-top: 100px;
+    margin-top: 51px;
     margin-right: 20px;
     margin-left: 10px;
 }
@@ -194,6 +317,7 @@ body {
         position: absolute;
         width: 250px;
         margin-top: 51px;
+        margin-left: 10%;
     }
 
     .navbar-top-links .dropdown-messages,

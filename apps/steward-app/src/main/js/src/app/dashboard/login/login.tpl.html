@@ -1,13 +1,14 @@
 
     <div class="row">
         <div class="col-sm-4">
-            <p>
+            <p class="shrine-copy-bold">
             The role of the Data Steward is to ensure scientific and
             institutional integrity when accessing clinical data from SHRINE
             and its participating organizations.  The Data Steward will:
             </p>
 
-            <ul>
+
+            <ul class="shrine-copy">
                 <li>
                     Review and either approve or deny your Query Topic request
                 </li>
@@ -16,9 +17,9 @@
                 </li>
             </ul>
 
-            <p>
+            <p class="shrine-copy">
             Each project will require a separate Query Topic once your request has
-            been approved by tghe Data Steward.  you can start querying SHRINE The
+            been approved by the Data Steward.  you can start querying SHRINE The
             review cyle for straightforward query topics should be complete in two
             working days.
             </p>
@@ -30,7 +31,7 @@
                     <form name="form" ng-submit="login()" role="form">
                         <fieldset>
                             <div class="form-group">
-                                Username*
+                                <span>Username*</span>
 
                                 <input class="form-control" type="text" name="username"
                                        id="username" class="form-control"
@@ -47,10 +48,10 @@
                                 <label ng-show="loginFail === true"
                                        class="control-label" for="inputError">Invalid Login</label>                            </div>
                             <div>
-                                <span class="pull-left">Need Help?</span>
+                                <a class="pull-left" href="#">Need Help?</a>
                                 <button type="submit"
-                                        class="btn btn-primary pull-right"
-                                        ng-disabled="!form.$valid">Login</button>
+                                        class="pull-right fa fa-chevron-right fa-3x shrine-button"
+                                        ng-disabled="!form.$valid"></button>
                             </div>
                         </fieldset>
                     </form>

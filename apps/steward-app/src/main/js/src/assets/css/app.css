@@ -136,14 +136,6 @@ fieldset legend, legend{
 }
 
 
-button.disabled, button[disabled], .button.disabled, .button[disabled] {
-    background-color: #008CBA;
-    border-color: #007095;
-    color: #FFFFFF;
-    cursor: default;
-    opacity: 0.2;
-}
-
 .big-data{
     max-width: 130px;
     overflow:auto;
