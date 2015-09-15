@@ -14,7 +14,6 @@ angular.module('stewardApp')
       restrict: 'E',
       replace: true,
       scope: {
-          bannerUrl: "@",
           isUserLoggedIn: "&",
           logout: "&",
           getRole: "&"
