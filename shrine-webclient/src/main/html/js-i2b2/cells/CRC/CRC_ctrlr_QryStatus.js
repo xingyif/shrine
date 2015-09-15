@@ -395,10 +395,8 @@ i2b2.CRC.ctrlr.QueryStatus.prototype = function() {
             // -- query result instance vars -- //
 			var qriNodeList	= results.refXML.getElementsByTagName('query_result_instance'),
                 qriIdx, qriNode, qriObj, breakdownType,
-				errorObjects = [];
-
-            // -- breakdown vars -- //
-            brdNodeList, brdNode,  brdIdx, brdObj;
+				errorObjects = [],
+				brdNodeList, brdNode,  brdIdx, brdObj;
 
             //iterate through each query result.
             for (qriIdx = 0; qriIdx < qriNodeList.length; qriIdx++) {
