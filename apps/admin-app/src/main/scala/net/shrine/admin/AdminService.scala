@@ -1,6 +1,6 @@
 package net.shrine.admin
 
-import akka.actor.Actor
+import akka.actor.{ActorSystem, Actor}
 import akka.event.Logging
 import net.shrine.authentication.UserAuthenticator
 
@@ -16,6 +16,8 @@ import spray.routing.{AuthenticationFailedRejection, Rejected, RouteConcatenatio
 import org.json4s.{DefaultFormats, Formats}
 
 import scala.concurrent.ExecutionContext.Implicits.global
+
+import net.shrine.admin.proxyto.ProxyDirectives.{proxyTo,proxyToUnmatchedPath}
 
 // we don't implement our route structure directly in the service actor because
 // we want to be able to test it independently, without having to spin up an actor
@@ -58,7 +60,8 @@ trait AdminService extends HttpService with Json4sSupport {
   def authenticatedInBrowser: Route = pathPrefixTest("user"|"admin") {
     reportIfFailedToAuthenticate {
         authenticate(userAuthenticator.basicUserAuthenticator) { user =>
-          pathPrefix("user") {userRoute(user)}
+          pathPrefix("user") {userRoute(user)} ~
+          pathPrefix("admin") {adminRoute(user)}
       }
     }
   }
@@ -89,6 +92,17 @@ trait AdminService extends HttpService with Json4sSupport {
   def userRoute(user:User):Route = get {
     pathPrefix("whoami") {
       complete(OutboundUser.createFromUser(user))
+    }
+  }
+
+  //todo is this an admin? Does it matter?
+  def adminRoute(user:User):Route = get {
+    pathPrefix("happy") {
+      val happyHost = AdminConfigSource.config.getString("shrine.admin.happyHost")
+      val happyPort = AdminConfigSource.config.getString("shrine.admin.happyPort")
+      implicit val system = ActorSystem("sprayServer")
+
+      proxyToUnmatchedPath(s"http://$happyHost:$happyPort/happy")
     }
   }
 
