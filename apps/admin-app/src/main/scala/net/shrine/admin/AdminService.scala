@@ -100,8 +100,9 @@ trait AdminService extends HttpService with Json4sSupport {
     pathPrefix("happy") {
       val happyBaseUrl = AdminConfigSource.config.getString("shrine.admin.happyBaseUrl")
       implicit val system = ActorSystem("sprayServer")
-
-      proxyToUnmatchedPath(happyBaseUrl)
+      autoChunkFileBytes(5) {
+        proxyToUnmatchedPath(happyBaseUrl)
+      }
     }
   }
 
