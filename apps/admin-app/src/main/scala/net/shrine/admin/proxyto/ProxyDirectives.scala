@@ -1,5 +1,6 @@
 package net.shrine.admin.proxyto
 
+import net.shrine.log.Loggable
 import spray.can.Http
 import akka.io.IO
 import akka.actor.ActorSystem
@@ -13,11 +14,15 @@ import spray.routing.{Route, RequestContext}
  * @author david
  * @since 9/14/15
  */
-trait ProxyDirectives {
+trait ProxyDirectives extends Loggable {
 
   private def sending(f: RequestContext ⇒ HttpRequest)(implicit system: ActorSystem): Route = {
     val transport = IO(Http)(system)
-    ctx ⇒ transport.tell(f(ctx), ctx.responder)
+    ctx ⇒ {
+      val request = f(ctx)
+      debug(s"Forwarding request to happy service $request")
+      transport.tell(f(ctx), ctx.responder)
+    }
   }
 
   private def stripHostHeader(headers: List[HttpHeader] = Nil) =

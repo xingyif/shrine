@@ -98,11 +98,11 @@ trait AdminService extends HttpService with Json4sSupport {
   //todo is this an admin? Does it matter?
   def adminRoute(user:User):Route = get {
     pathPrefix("happy") {
-      val happyHost = AdminConfigSource.config.getString("shrine.admin.happyHost")
-      val happyPort = AdminConfigSource.config.getString("shrine.admin.happyPort")
+      val happyBaseUrl = AdminConfigSource.config.getString("shrine.admin.happyBaseUrl")
       implicit val system = ActorSystem("sprayServer")
-
-      proxyToUnmatchedPath(s"http://$happyHost:$happyPort/happy")
+      autoChunkFileBytes(5) {
+        proxyToUnmatchedPath(happyBaseUrl)
+      }
     }
   }
 
