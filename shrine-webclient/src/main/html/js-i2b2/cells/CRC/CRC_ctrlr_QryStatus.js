@@ -505,8 +505,7 @@ i2b2.CRC.ctrlr.QueryStatus.prototype = function() {
 			function expandErrorDetailDiv (ev) {
 				btnExpand.style.display   = 'none';
 				btnContract.style.display = 'inline';
-				document.getElementById('errorDetailDiv').style.height          = '200px';
-				$('errorDetailDiv').innerHTML = '<div><b>Name:</b></div><div>' +errorData.shortDescription + '</div><br/>' +
+				$('errorDetailDiv').innerHTML = '<div><b>Name:</b></div><div>' + errorData.shortDescription + '</div><br/>' +
 					'<div><b>Description:</b></div><div>' + errorData.longDescription + '</div><br/>' +
 					'<div><b>Technical Details:</b></div><pre style="margin-top:0">' + errorData.stackTrace + '</pre><br/>' +
 					'<div><i>For information on troubleshooting and resolution, check <a href="' + errorData.wikiUrl +'" target="_blank">the SHRINE Error Codex</a>.</i></div>';
@@ -516,8 +515,7 @@ i2b2.CRC.ctrlr.QueryStatus.prototype = function() {
 			function retractErrorDetailDiv (ev) {
 				btnExpand.style.display   = 'inline';
 				btnContract.style.display = 'none';
-				document.getElementById('errorDetailDiv').style.height = '80px';
-				$('errorDetailDiv').innerHTML = '<div><b>Name:</b></div><div>' +errorData.shortDescription + '</div><br/>' +
+				$('errorDetailDiv').innerHTML = '<div><b>Name:</b></div><div>' + errorData.shortDescription + '</div><br/>' +
 					'<div><b>Description:</b></div><div>' + errorData.longDescription + '</div>'
 			}
 
@@ -575,7 +573,7 @@ i2b2.CRC.ctrlr.QueryStatus.prototype = function() {
 				// / display the dialoge
 				dialogErrorDetail.center();
 				dialogErrorDetail.show();
-				$('errorDetailDiv').innerHTML = '<div><b>Name:</b></div><div>' +errorData.shortDescription + '</div><br/>' +
+				$('errorDetailDiv').innerHTML = '<div><b>Name:</b></div><div>' + errorData.shortDescription + '</div><br/>' +
 					'<div><b>Description:</b></div><div>' + errorData.longDescription + '</div>';
 			}
 
