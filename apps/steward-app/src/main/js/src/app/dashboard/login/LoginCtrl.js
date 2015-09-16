@@ -4,10 +4,10 @@ angular.module("login", ['hms-authentication'])
         HMSAuthenticationService.ClearCredentials();
         $scope.loginFail = false;
         $scope.login = function () {
-            HMSAuthenticationService.SetAuthHeader($scope.username.toLowerCase(), $scope.password);
+            HMSAuthenticationService.SetAuthHeader($scope.username, $scope.password);
 
             function onLoginSuccess (response) {
-                HMSAuthenticationService.SetCredentials($scope.username.toLowerCase(), $scope.password, response.roles);
+                HMSAuthenticationService.SetCredentials($scope.username, $scope.password, response.roles);
                 $location.path('/topics/approved');
             }
 
