@@ -414,7 +414,7 @@ i2b2.CRC.ctrlr.QueryStatus.prototype = function() {
 
           // placeholder
 					var errorObj = {
-						shortDescription: "Desination site was unable to translate SHRINE query term to local ontology.",
+						shortDescription: "Mapping Error",
 						stackTrace:  "Error mapping query terms from" +
 						" network to local forms. request:" +
 						"RunQueryRequest(I2B2_PROJECT_NAME,180000 milliseconds,"+
@@ -424,7 +424,7 @@ i2b2.CRC.ctrlr.QueryStatus.prototype = function() {
 						"Term(\\PROJECT\\AND\\CONCEPT\\PATH\\OF\\UNMAPPED\\TERM),"+
 						"Some(ANY),None,None,None,List())))",
 						longDescription:
-							'The site responding to the query does not understand how to map the SHRINE query term it was given to its own local i2b2 term.)',
+							'The adapter at the remote site does not understand how to map the SHRINE query term it was given to its own local i2b2 term.',
 						wikiUrl:
 							'https://open.med.harvard.edu/wiki/display/SHRINETEAM/Error+Types+for+Improved+Error+Messaging'
 					};
