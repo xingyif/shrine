@@ -431,7 +431,7 @@ i2b2.CRC.ctrlr.QueryStatus.prototype = function() {
 
 					errorObjects.push(errorObj);
 
-                    self.dispDIV.innerHTML += " - <span title='" + qriObj.statusDescription +"'>      <b><a class='query-error-anchor' href='#' style='color:#ff0000'>      <b><span color='#ff0000'>" + errorObj.shortDescription + "</span></b></a></b></span>";
+                    self.dispDIV.innerHTML += " &nbsp;- <span title='" + qriObj.statusDescription +"'>      <b><a class='query-error-anchor' href='#' style='color:#ff0000'>      <b><span color='#ff0000'>" + errorObj.shortDescription + "</span></b></a></b></span>";
 					continue;
                 }
 				else if((qriObj.statusName == "PROCESSING")){
@@ -509,7 +509,7 @@ i2b2.CRC.ctrlr.QueryStatus.prototype = function() {
 				$('errorDetailDiv').innerHTML = '<div><b>Name:</b></div><div>' +errorData.shortDescription + '</div><br/>' +
 					'<div><b>Description:</b></div><div>' + errorData.longDescription + '</div><br/>' +
 					'<div><b>Technical Details:</b></div><pre style="margin-top:0">' + errorData.stackTrace + '</pre><br/>' +
-					'<div><i>For information on troubleshooting and resolution, check' + '<a href="' + errorData.wikiUrl +'" target="_blank">the SHRINE Error Codex</a>.</i></div>';
+					'<div><i>For information on troubleshooting and resolution, check <a href="' + errorData.wikiUrl +'" target="_blank">the SHRINE Error Codex</a>.</i></div>';
 			}
 
 
