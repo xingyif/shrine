@@ -412,6 +412,7 @@ i2b2.CRC.ctrlr.QueryStatus.prototype = function() {
                 //if there was an error display it.
                 if((qriObj.statusName == "ERROR") || (qriObj.statusName == "UNAVAILABLE")){
 
+          // placeholder
 					var errorObj = {
 						shortDescription: "Desination site was unable to translate SHRINE query term to local ontology.",
 						stackTrace:  "Error mapping query terms from" +
@@ -430,7 +431,7 @@ i2b2.CRC.ctrlr.QueryStatus.prototype = function() {
 
 					errorObjects.push(errorObj);
 
-                    self.dispDIV.innerHTML += "<span title='" + qriObj.statusDescription +"'>      <b><a class='query-error-anchor' href='#' style='color:#ff0000'>      <b><span color='#ff0000'>" + errorObj.shortDescription + "</span></b></a></b></span>";
+                    self.dispDIV.innerHTML += " - <span title='" + qriObj.statusDescription +"'>      <b><a class='query-error-anchor' href='#' style='color:#ff0000'>      <b><span color='#ff0000'>" + errorObj.shortDescription + "</span></b></a></b></span>";
 					continue;
                 }
 				else if((qriObj.statusName == "PROCESSING")){
@@ -505,10 +506,10 @@ i2b2.CRC.ctrlr.QueryStatus.prototype = function() {
 				btnExpand.style.display   = 'none';
 				btnContract.style.display = 'inline';
 				document.getElementById('errorDetailDiv').style.height          = '200px';
-				$('errorDetailDiv').innerHTML = '<span style="font-weight: bold">' +errorData.shortDescription + '<br/><br/>' +
-					errorData.longDescription + '<br/><br/>' +
-					errorData.stackTrace + '<span/><br/><br/><a href="' +
-					errorData.wikiUrl + '"' +' target="_blank">Click here for more information.</a>';
+				$('errorDetailDiv').innerHTML = '<div><b>Name:</b></div><div>' +errorData.shortDescription + '</div><br/>' +
+					'<div><b>Description:</b></div><div>' + errorData.longDescription + '</div><br/>' +
+					'<div><b>Technical Details:</b></div><pre style="margin-top:0">' + errorData.stackTrace + '</pre><br/>' +
+					'<div><i>For information on troubleshooting and resolution, check' + '<a href="' + errorData.wikiUrl +'" target="_blank">the SHRINE Error Codex</a>.</i></div>';
 			}
 
 
@@ -516,8 +517,8 @@ i2b2.CRC.ctrlr.QueryStatus.prototype = function() {
 				btnExpand.style.display   = 'inline';
 				btnContract.style.display = 'none';
 				document.getElementById('errorDetailDiv').style.height = '80px';
-				$('errorDetailDiv').innerHTML = '<span style="font-weight: bold">' +errorData.shortDescription + '<br/><br/>' +
-					errorData.longDescription + '<br/><br/>'
+				$('errorDetailDiv').innerHTML = '<div><b>Name:</b></div><div>' +errorData.shortDescription + '</div><br/>' +
+					'<div><b>Description:</b></div><div>' + errorData.longDescription + '</div>'
 			}
 
 			function onClick(event) {
@@ -574,7 +575,7 @@ i2b2.CRC.ctrlr.QueryStatus.prototype = function() {
 				// / display the dialoge
 				dialogErrorDetail.center();
 				dialogErrorDetail.show();
-				$('errorDetailDiv').innerHTML = '<span style="font-weight: bold">' + errorData.shortDescription + '<span/>';
+				$('errorDetailDiv').innerHTML = '<div><b>Name:</b></div><div>' + errorData.shortDescription + '</div>';
 			}
 
 			function addAnchorEvents () {
