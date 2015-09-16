@@ -575,7 +575,8 @@ i2b2.CRC.ctrlr.QueryStatus.prototype = function() {
 				// / display the dialoge
 				dialogErrorDetail.center();
 				dialogErrorDetail.show();
-				$('errorDetailDiv').innerHTML = '<div><b>Name:</b></div><div>' + errorData.shortDescription + '</div>';
+				$('errorDetailDiv').innerHTML = '<div><b>Name:</b></div><div>' +errorData.shortDescription + '</div><br/>' +
+					'<div><b>Description:</b></div><div>' + errorData.longDescription + '</div>';
 			}
 
 			function addAnchorEvents () {
