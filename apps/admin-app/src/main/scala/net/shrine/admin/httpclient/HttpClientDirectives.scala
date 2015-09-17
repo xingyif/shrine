@@ -1,27 +1,26 @@
-package net.shrine.admin.proxyto
+package net.shrine.admin.httpclient
 
 import net.shrine.log.Loggable
 import spray.can.Http
 import akka.io.IO
 import akka.actor.{ActorRef, ActorSystem}
-import spray.http.{HttpResponse, HttpHeader, HttpHeaders, HttpRequest, Uri}
+import spray.http.{HttpResponse, HttpRequest, Uri}
 import spray.routing.{Route, RequestContext}
 import akka.pattern.ask
 
-import scala.concurrent.{Await, Future}
-import scala.concurrent.duration.{Duration, FiniteDuration, DurationInt}
+import scala.concurrent.duration.DurationInt
 import scala.util.Try
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
 /**
  * From https://github.com/bthuillier/spray/commit/d31fc1b5e1415e1b908fe7d1f01f364a727e2593 with extra bits from http://www.cakesolutions.net/teamblogs/http-proxy-with-spray .
- * Replace when Spray has its own proxy if this class is even still in use then.
+ * Replace when Spray has its own version.
  *
  * @author david
  * @since 9/14/15
  */
-trait ProxyDirectives extends Loggable {
+trait HttpClientDirectives extends Loggable {
 
   private def sending(f: RequestContext ⇒ HttpRequest)(implicit system: ActorSystem): Route = {
     val transport: ActorRef = IO(Http)(system)
@@ -41,34 +40,27 @@ trait ProxyDirectives extends Loggable {
     }
   }
 
-  private def stripHostHeader(headers: List[HttpHeader] = Nil) =
-    headers filterNot (header => header is (HttpHeaders.Host.lowercaseName))
-
   /**
    * proxy the request to the specified uri
    *
    */
-  def proxyTo(uri: Uri)(implicit system: ActorSystem): Route = {
-    sending(ctx =>
-      ctx.request.copy(
-        uri = uri,
-        headers = stripHostHeader(ctx.request.headers)
-      )
-    )
+  def httpRequest(uri: Uri)(implicit system: ActorSystem): Route = {
+    sending { ctx =>
+      HttpRequest(ctx.request.method,
+        uri.withPath(uri.path.++(ctx.unmatchedPath)))
+    }
   }
 
   /**
    * proxy the request to the specified uri with the unmatched path
    *
    */
-  def proxyToUnmatchedPath(uri: Uri)(implicit system: ActorSystem): Route = {
-    sending(ctx ⇒
-      ctx.request.copy(
-        uri = uri.withPath(uri.path.++(ctx.unmatchedPath)),
-        headers = stripHostHeader(ctx.request.headers)
-      )
-    )
+  def httpRequestWithUnmatchedPath(uri: Uri)(implicit system: ActorSystem): Route = {
+    sending { ctx ⇒
+      HttpRequest(ctx.request.method,
+                  uri.withPath(uri.path.++(ctx.unmatchedPath)))
+    }
   }
 }
 
-object ProxyDirectives extends ProxyDirectives
+object HttpClientDirectives extends HttpClientDirectives

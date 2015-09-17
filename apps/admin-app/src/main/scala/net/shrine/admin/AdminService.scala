@@ -17,7 +17,7 @@ import org.json4s.{DefaultFormats, Formats}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-import net.shrine.admin.proxyto.ProxyDirectives.{proxyTo,proxyToUnmatchedPath}
+import net.shrine.admin.httpclient.HttpClientDirectives.httpRequestWithUnmatchedPath
 
 // we don't implement our route structure directly in the service actor because
 // we want to be able to test it independently, without having to spin up an actor
@@ -101,7 +101,7 @@ trait AdminService extends HttpService with Json4sSupport {
       val happyBaseUrl = AdminConfigSource.config.getString("shrine.admin.happyBaseUrl")
       implicit val system = ActorSystem("sprayServer")
 
-      proxyToUnmatchedPath(happyBaseUrl)
+      httpRequestWithUnmatchedPath(happyBaseUrl)
     }
   }
 
