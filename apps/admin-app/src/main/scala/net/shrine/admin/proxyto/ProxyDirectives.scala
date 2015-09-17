@@ -28,29 +28,16 @@ trait ProxyDirectives extends Loggable {
     ctx ⇒ {
       val request = f(ctx)
       debug(s"Forwarding request to happy service $request")
-//todo how to tell it to do another function next? Read Akka docs
-//      val tellresult = transport.tell(request, ctx.responder)
-//todo blocking
-      transport.ask(request)(10 seconds).onComplete{ tryAny: Try[Any] =>
-
-        val any = tryAny.get
-        any match {
-          case response:HttpResponse => ctx.complete(response.entity)
+      import scala.concurrent.blocking
+      blocking {
+        transport.ask(request)(10 seconds).onComplete { tryAny: Try[Any] =>
+//todo replace with fold when try gets it in scala 2.12
+          val any = tryAny.get
+          any match {
+            case response: HttpResponse => ctx.complete(response.entity)
+          }
         }
       }
-
-      /*
-      val responseFuture: Future[Any] = transport.ask(request)(10 seconds)
-      val responseFromTunnel:Any = Await.ready(responseFuture,10 seconds)
-      responseFromTunnel match {
-        case httpResponse:HttpResponse => {
-          ctx.complete(httpResponse.entity)
-        }
-        case x => {
-          throw new IllegalStateException(s"Got $x instead of an HttpResponse")
-        }
-      }
-      */
     }
   }
 
