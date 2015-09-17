@@ -314,8 +314,7 @@ body {
 @media(min-width:768px) {
     .sidebar {
         z-index: 1;
-        position: absolute;
-        width: 250px;
+        width: 100%;
         margin-top: 51px;
         margin-left: 10%;
     }
