@@ -10,6 +10,9 @@ import akka.pattern.ask
 
 import scala.concurrent.{Await, Future}
 import scala.concurrent.duration.{Duration, FiniteDuration, DurationInt}
+import scala.util.Try
+
+import scala.concurrent.ExecutionContext.Implicits.global
 
 /**
  * From https://github.com/bthuillier/spray/commit/d31fc1b5e1415e1b908fe7d1f01f364a727e2593 with extra bits from http://www.cakesolutions.net/teamblogs/http-proxy-with-spray .
@@ -25,9 +28,19 @@ trait ProxyDirectives extends Loggable {
     ctx ⇒ {
       val request = f(ctx)
       debug(s"Forwarding request to happy service $request")
-//todo how to tell it to do another function next? Read Akka docs      transport.tell(request, ctx.responder)
-      val responseFuture: Future[Any] = transport.ask(request)(10 seconds)
+//todo how to tell it to do another function next? Read Akka docs
+//      val tellresult = transport.tell(request, ctx.responder)
+//todo blocking
+      transport.ask(request)(10 seconds).onComplete{ tryAny: Try[Any] =>
 
+        val any = tryAny.get
+        any match {
+          case response:HttpResponse => ctx.complete(response.entity)
+        }
+      }
+
+      /*
+      val responseFuture: Future[Any] = transport.ask(request)(10 seconds)
       val responseFromTunnel:Any = Await.ready(responseFuture,10 seconds)
       responseFromTunnel match {
         case httpResponse:HttpResponse => {
@@ -37,6 +50,7 @@ trait ProxyDirectives extends Loggable {
           throw new IllegalStateException(s"Got $x instead of an HttpResponse")
         }
       }
+      */
     }
   }
 
