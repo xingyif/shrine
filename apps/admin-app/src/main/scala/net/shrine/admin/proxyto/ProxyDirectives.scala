@@ -3,9 +3,13 @@ package net.shrine.admin.proxyto
 import net.shrine.log.Loggable
 import spray.can.Http
 import akka.io.IO
-import akka.actor.ActorSystem
-import spray.http.{HttpHeader, HttpHeaders, HttpRequest, Uri}
+import akka.actor.{ActorRef, ActorSystem}
+import spray.http.{HttpResponse, HttpHeader, HttpHeaders, HttpRequest, Uri}
 import spray.routing.{Route, RequestContext}
+import akka.pattern.ask
+
+import scala.concurrent.{Await, Future}
+import scala.concurrent.duration.{Duration, FiniteDuration, DurationInt}
 
 /**
  * From https://github.com/bthuillier/spray/commit/d31fc1b5e1415e1b908fe7d1f01f364a727e2593 with extra bits from http://www.cakesolutions.net/teamblogs/http-proxy-with-spray .
@@ -17,11 +21,22 @@ import spray.routing.{Route, RequestContext}
 trait ProxyDirectives extends Loggable {
 
   private def sending(f: RequestContext ⇒ HttpRequest)(implicit system: ActorSystem): Route = {
-    val transport = IO(Http)(system)
+    val transport: ActorRef = IO(Http)(system)
     ctx ⇒ {
       val request = f(ctx)
       debug(s"Forwarding request to happy service $request")
-      transport.tell(f(ctx), ctx.responder)
+//todo how to tell it to do another function next? Read Akka docs      transport.tell(request, ctx.responder)
+      val responseFuture: Future[Any] = transport.ask(request)(10 seconds)
+
+      val responseFromTunnel:Any = Await.ready(responseFuture,10 seconds)
+      responseFromTunnel match {
+        case httpResponse:HttpResponse => {
+          ctx.complete(httpResponse.entity)
+        }
+        case x => {
+          throw new IllegalStateException(s"Got $x instead of an HttpResponse")
+        }
+      }
     }
   }
 
