@@ -8,7 +8,7 @@ import spray.http.{HttpHeader, HttpHeaders, HttpRequest, Uri}
 import spray.routing.{Route, RequestContext}
 
 /**
- * From https://github.com/bthuillier/spray/commit/d31fc1b5e1415e1b908fe7d1f01f364a727e2593 with extra bits from http://www.cakesolutions.net/teamblogs/http-proxy-with-spray.
+ * From https://github.com/bthuillier/spray/commit/d31fc1b5e1415e1b908fe7d1f01f364a727e2593 with extra bits from http://www.cakesolutions.net/teamblogs/http-proxy-with-spray .
  * Replace when Spray has its own proxy if this class is even still in use then.
  *
  * @author david
