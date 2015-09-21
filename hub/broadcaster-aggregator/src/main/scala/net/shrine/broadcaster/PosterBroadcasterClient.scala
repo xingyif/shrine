@@ -1,30 +1,37 @@
 package net.shrine.broadcaster
 
-import net.shrine.client.Poster
-import net.shrine.protocol.BroadcastMessage
+import net.shrine.client.{HttpResponse, Poster}
+import net.shrine.log.Loggable
+import net.shrine.protocol.{NodeId, BroadcastMessage, SingleNodeResult, MultiplexedResults, ResultOutputType}
 import scala.concurrent.Future
 import scala.concurrent.blocking
-import net.shrine.protocol.SingleNodeResult
-import net.shrine.protocol.MultiplexedResults
-import net.shrine.protocol.ResultOutputType
+import scala.util.{Success, Try}
 import scala.xml.XML
 
 /**
  * @author clint
- * @date Mar 3, 2014
+ * @since Mar 3, 2014
  */
-final case class PosterBroadcasterClient(poster: Poster, breakdownTypes: Set[ResultOutputType]) extends BroadcasterClient {
+final case class PosterBroadcasterClient(poster: Poster, breakdownTypes: Set[ResultOutputType]) extends BroadcasterClient with Loggable {
   override def broadcast(message: BroadcastMessage): Future[Iterable[SingleNodeResult]] = {
     //TODO: REVISIT
     import scala.concurrent.ExecutionContext.Implicits.global
     
     for {
-      response <- Future { blocking { poster.post(message.toXmlString) } }
+      response: HttpResponse <- Future { blocking { poster.post(message.toXmlString) } }
     } yield {
-      //TODO: Better handling of parsing failure; for now, this will complete the mapped
-      //Future with an exception if parsing fails, which will hopefully have the original
-      //parsing-failure exception as a root cause.
-      MultiplexedResults.fromXml(breakdownTypes)(XML.loadString(response.body)).get.results
+
+      val tryResults: Try[Seq[SingleNodeResult]] = MultiplexedResults.fromXml(breakdownTypes)(XML.loadString(response.body)).map(_.results)
+
+      //todo use fold()() in Scala 2.12
+      tryResults match {
+        case Success(results) => results
+        case scala.util.Failure(ex) => {
+          error(s"Exception while parsing response with status ${response.statusCode} from ${poster.url} while parsing ${response.body}",ex)
+          //todo where to get a real nodeId?
+          Seq(net.shrine.protocol.Failure(NodeId(poster.url),ex))
+        }
+      }
     }
   }
 }
