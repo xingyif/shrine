@@ -66,8 +66,9 @@ object Timeout extends SingleNodeResultCompanion[Timeout]("shrineTimeout") {
 
 /**
  * @author clint
- * @date Nov 1, 2013
+ * @since Nov 1, 2013
  */
+//todo rename to something not in scala.util
 final case class Failure(override val origin: NodeId, cause: Throwable) extends SingleNodeResult(origin) {
   //NB: Sidestep serializing throwables by just serializing the cause's message and stack trace as a big string 
   override def toXml: NodeSeq = XmlUtil.stripWhitespace {
