@@ -1,12 +1,8 @@
-<div class="navbar-default sidebar" role="navigation">
+<div class="navbar-default sidebar" role="navigation" ng-show="isUserLoggedIn()">
     <div class="sidebar-nav navbar-collapse">
         <ul class="nav in" id="side-menu">
-            <li ng-cloak>
-                <img alt="Harvard Catalyst" src="{{bannerUrl}}"
-                     style="max-height:50px; margin: 15px; 10px; 10px">
-            </li>
-            <li ui-sref-active="active" ng-show="isUserLoggedIn()" ng-cloak>
-                <a ui-sref="dashboard.topics">
+            <li ui-sref="dashboard.happy" ui-sref-active="shrine-on" ng-cloak>
+                <a class="shrine-off">
                     <i class="fa fa-table fa-fw"></i>
                     Happy Shrine
                 </a>
@@ -14,7 +10,8 @@
         </ul>
     </div>
     <!-- /.sidebar-collapse -->
-</div> 
+</div>
+
 
 
 

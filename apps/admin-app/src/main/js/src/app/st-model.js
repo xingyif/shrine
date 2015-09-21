@@ -12,12 +12,12 @@ angular.module("st-model", ['model-service'])
         function onFail(result) {
             this.model = result;
             this.model.message  = "Get App Config Failed: ";
-            return this;
+            return this.model;
         }
 
         function parseConfig(result) {
             this.model = result.data;
-            return result;
+            return this.model;
         }
 
         STMdl.prototype.getConfig = function () {
