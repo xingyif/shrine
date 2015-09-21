@@ -17,6 +17,8 @@ trait Problem {
 
   def throwable:Option[Throwable] = None
 
+  def source:ProblemSources.ProblemSource
+
   def stamp:Stamp
 }
 
@@ -26,7 +28,7 @@ object Stamp {
   def apply(): Stamp = Stamp(InetAddress.getLocalHost,System.currentTimeMillis())
 }
 
-abstract class AbstractProblem extends Problem {
+abstract class AbstractProblem(override val source:ProblemSources.ProblemSource) extends Problem {
   val stamp = Stamp()
 }
 
@@ -46,6 +48,18 @@ object LoggingProblemHandler extends ProblemHandler with Loggable {
   }
 }
 
+object ProblemSources{
+
+  sealed trait ProblemSource
+
+  case object Adapter extends ProblemSource
+  case object Hub extends ProblemSource
+  case object Qep extends ProblemSource
+  case object Dsa extends ProblemSource
+
+  def problemSources = Set(Adapter,Hub,Qep,Dsa)
+}
+
 /**
  * For "Failure querying node 'SITE NAME': java.net.ConnectException: Connection refused"
  *
@@ -57,9 +71,9 @@ object LoggingProblemHandler extends ProblemHandler with Loggable {
 //todo NodeId is in protocol, which will be accessible from the hub code where this class should live
 
 //case class CouldNotConnectToQueryNode(nodeId:NodeId,connectExcepition:ConnectException) extends Problem {
-case class CouldNotConnectToNode(nodeName:String,connectException:ConnectException) extends AbstractProblem {
+case class CouldNotConnectToNode(nodeName:String,connectException:ConnectException) extends AbstractProblem(ProblemSources.Hub) {
 
-  val message = s"Could not connect to node ${nodeName}"
+  val message = s"Could not connect to node $nodeName"
 
   override def throwable = Some(connectException)
 }
