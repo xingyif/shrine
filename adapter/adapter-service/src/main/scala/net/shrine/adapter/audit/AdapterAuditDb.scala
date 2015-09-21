@@ -140,7 +140,7 @@ case class AdapterAuditSchema(jdbcProfile: JdbcProfile) extends Loggable {
     def queryName = column[QueryName]("queryName")
     def queryTopicId = column[Option[QueryTopicId]]("topicId")
     def queryTopicName = column[Option[QueryTopicName]]("topicName")
-    def timeQuerySent = column[Time]("timeSent")
+    def timeQuerySent = column[Time]("timeQuerySent")
     def timeQueryReceived = column[Time]("timeReceived")
 
     def * = (shrineNodeId,userName,networkQueryId,queryName,queryTopicId,queryTopicName,timeQuerySent,timeQueryReceived) <> (QueryReceived.tupled,QueryReceived.unapply)
