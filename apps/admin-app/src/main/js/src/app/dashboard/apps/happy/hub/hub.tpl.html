@@ -1,0 +1,60 @@
+<div>
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            <td colspan="5" style="text-align: center">
+                Hub Network
+            </td>
+        </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>
+                    <label>Expected Result Count:</label>
+                </td>
+                <td colspan="4">
+                    {{net.expectedResultCount}}
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label>Valid Result Count:</label>
+                </td>
+                <td colspan="4">
+                    {{net.validResultCount}}
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label>Failure Count:</label>
+                </td>
+                <td colspan="4">
+                    {{net.failureCount}}
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label>Timeout Count:</label>
+                </td>
+                <td colspan="4">
+                    {{net.timeoutCount}}
+                </td>
+            </tr>
+        </tbody>
+        <tfoot>
+        <tr>
+            <td colspan="2">
+                <span>Nodes:</span>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <span>Name: </span>&nbsp;&nbsp;{{net.node.name}}
+            </td>
+            <td>
+                <span>Url:</span>&nbsp;&nbsp;{{net.node.url}}
+            </td>
+        </tr>
+        </tfoot>
+    </table>
+</div>
