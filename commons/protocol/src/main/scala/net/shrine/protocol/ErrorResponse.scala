@@ -22,6 +22,8 @@ import scala.util.control.NonFatal
  */
 final case class ErrorResponse(errorMessage: String) extends ShrineResponse {
 
+  //todo codec id, one-liner, medium message, detailed message
+
   override protected def status = <status type="ERROR">{ errorMessage }</status>
 
   override protected def i2b2MessageBody = null
@@ -31,7 +33,10 @@ final case class ErrorResponse(errorMessage: String) extends ShrineResponse {
   override def toXml = XmlUtil.stripWhitespace {
     XmlUtil.renameRootTag(rootTagName) {
       <errorResponse>
-        <message>{ errorMessage }</message>
+        <codec>net.shrine.something.is.Broken</codec>
+        <summary>Something is borked</summary>
+        <message>{ errorMessage } has extra xml</message>
+        <details>Herein is a stack trace, multiple lines</details>
       </errorResponse>
     }
   }
@@ -39,6 +44,8 @@ final case class ErrorResponse(errorMessage: String) extends ShrineResponse {
 
 object ErrorResponse extends XmlUnmarshaller[ErrorResponse] with I2b2Unmarshaller[ErrorResponse] with HasRootTagName {
   val rootTagName = "errorResponse"
+
+
 
   override def fromXml(xml: NodeSeq): ErrorResponse = {
     val messageXml = xml \ "message"
