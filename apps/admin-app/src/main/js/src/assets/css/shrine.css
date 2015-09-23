@@ -76,16 +76,16 @@
     font-family: "Roboto Bold" !important;
     color: #FFFFFF !important;
     background:
-        linear-gradient(rgba(4, 141, 190, .80), rgba(2, 89, 120, .80)),
-        url('../img/bckg_diagonal_lines_no_border.png') !important;
+    linear-gradient(rgba(4, 141, 190, .80), rgba(2, 89, 120, .80)),
+    url('../img/bckg_diagonal_lines_no_border.png') !important;
 }
 
 .shrine-btn-off{
-    padding: 6px 12px;
+    padding: 6px 12px !important;
     border-radius: 4px !important;
-    font-family: "Open Sans Semibold";
-    background-color: #8896A4;
-    color: #FFFFFF;
+    font-family: "Open Sans Semibold" !important;
+    background-color: #8896A4 !important;
+    color: #FFFFFF !important;
 }
 
 
@@ -232,7 +232,7 @@ body {
     background-color: transparent;
     margin-top: 51px;
     margin-right: 20px;
-    margin-left: 10px;
+    margin-left: 100px;
 }
 
 .navbar-top-links {
@@ -567,4 +567,65 @@ table.dataTable thead .sorting:after {
 
 .panel-yellow a:hover {
     color: #df8a13;
+}
+
+.modal-content{
+    border: none;
+}
+
+.shrine-modal{
+    background-color: white;
+    border: 1px solid #2c5566;
+    font-family: "Open Sans Semibold";
+    color: #2e5366;
+    padding: 15px;
+}
+
+.shrine-modal input, .shrine-modal textarea{
+    border-radius: 0px;
+    border: 1px solid #2c5566;
+}
+
+.shrine-modal span{
+    font-family: "Nexa Bold";
+    color: #2e5366;
+}
+
+.shrine-modal span:hover{
+    font-family: "Nexa Bold";
+    color: #008CBA;
+}
+
+.shrine-modal button{
+    background-color: white;
+    border: none;
+    font-family: "Nexa Bold";
+    color: #2e5366;
+}
+
+.shrine-modal button span{
+    position: relative;
+    bottom: 6px;
+}
+
+.shrine-modal button:hover{
+    font-family: "Nexa Bold";
+    color: #008CBA;
+    background-color: transparent;
+    border: none;
+}
+
+i.shrine-close{
+    position: relative;
+    top: -50px;
+    right: -40px;
+}
+
+i.shrine-close:hover{
+    color: #008CBA;
+}
+
+button.shrine-submit{
+    position: relative;
+    right: -25px;
 }
