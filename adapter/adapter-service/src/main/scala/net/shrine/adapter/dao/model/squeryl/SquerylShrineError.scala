@@ -6,7 +6,7 @@ import org.squeryl.annotations.Column
 
 /**
  * @author clint
- * @date May 28, 2013
+ * @since May 28, 2013
  */
 case class SquerylShrineError(
     @Column(name = "ID")

@@ -19,16 +19,16 @@ import scala.util.Try
  * NB: this is a case class to get a structural equality contract in hashCode and equals, mostly for testing
  */
 final case class QueryResult(
-  val resultId: Long,
-  val instanceId: Long,
-  val resultType: Option[ResultOutputType], //this won't be present in the case of an error result
-  val setSize: Long,
-  val startDate: Option[XMLGregorianCalendar],
-  val endDate: Option[XMLGregorianCalendar],
-  val description: Option[String],
-  val statusType: QueryResult.StatusType,
-  val statusMessage: Option[String],
-  val breakdowns: Map[ResultOutputType, I2b2ResultEnvelope] = Map.empty) extends XmlMarshaller with I2b2Marshaller {
+  resultId: Long,
+  instanceId: Long,
+  resultType: Option[ResultOutputType], //this won't be present in the case of an error result
+  setSize: Long,
+  startDate: Option[XMLGregorianCalendar],
+  endDate: Option[XMLGregorianCalendar],
+  description: Option[String],
+  statusType: QueryResult.StatusType,
+  statusMessage: Option[String], //todo maybe add an optional field here for the error message text
+  breakdowns: Map[ResultOutputType, I2b2ResultEnvelope] = Map.empty) extends XmlMarshaller with I2b2Marshaller {
 
   def this(resultId: Long, instanceId: Long, resultType: ResultOutputType, setSize: Long, startDate: XMLGregorianCalendar, endDate: XMLGregorianCalendar, statusType: QueryResult.StatusType) = {
     this(resultId, instanceId, Option(resultType), setSize, Option(startDate), Option(endDate), None, statusType, None)
@@ -135,28 +135,37 @@ final case class QueryResult(
 }
 
 object QueryResult {
-  final case class StatusType(name: String, isDone: Boolean, i2b2Id: Option[Int] = Some(-1), private val doToI2b2: QueryResult => NodeSeq = StatusType.defaultToI2b2) extends StatusType.Value {
+  final case class StatusType(
+    name: String,
+    isDone: Boolean,
+    i2b2Id: Option[Int] = Some(-1),
+    private val doToI2b2:(QueryResult => NodeSeq) = StatusType.defaultToI2b2) extends StatusType.Value {
+
     def isError = this == StatusType.Error
 
     def toI2b2(queryResult: QueryResult): NodeSeq = doToI2b2(queryResult)
   }
 
   object StatusType extends SEnum[StatusType] {
-    //TODO: Avoid .get, but it's reasonably safe here
-    private val defaultToI2b2: QueryResult => NodeSeq = { queryResult => <status_type_id>{ queryResult.statusType.i2b2Id.get }</status_type_id><description>{ queryResult.statusType.name }</description> }
+    private val defaultToI2b2: QueryResult => NodeSeq = { queryResult =>
+      val i2b2Id: Int = queryResult.statusType.i2b2Id.getOrElse{
+        throw new IllegalStateException(s"queryResult.statusType ${queryResult.statusType} has no i2b2Id")
+      }
+      <status_type_id>{ queryResult.statusType.i2b2Id.get }</status_type_id><description>{ queryResult.statusType.name }</description>
+    }
 
     val Error = StatusType("ERROR", true, None, _.statusMessage.map(msg => <description>{ msg }</description>).orNull)
-    val Finished = StatusType("FINISHED", true, Some(3))
+    val Finished = StatusType("FINISHED", isDone = true, Some(3))
     //TODO: Can we use the same <status_type_id> for Queued, Processing, and Incomplete?
-    val Processing = StatusType("PROCESSING", false, Some(2))
-    val Queued = StatusType("QUEUED", false, Some(2))
-    val Incomplete = StatusType("INCOMPLETE", false, Some(2))
+    val Processing = StatusType("PROCESSING", isDone = false, Some(2))
+    val Queued = StatusType("QUEUED", isDone = false, Some(2))
+    val Incomplete = StatusType("INCOMPLETE", isDone = false, Some(2))
     //TODO: What <status_type_id>s should these have?  Does anyone care?
-    val Held = StatusType("HELD", false)
-    val SmallQueue = StatusType("SMALL_QUEUE", false)
-    val MediumQueue = StatusType("MEDIUM_QUEUE", false)
-    val LargeQueue = StatusType("LARGE_QUEUE", false)
-    val NoMoreQueue = StatusType("NO_MORE_QUEUE", false)
+    val Held = StatusType("HELD", isDone = false)
+    val SmallQueue = StatusType("SMALL_QUEUE", isDone = false)
+    val MediumQueue = StatusType("MEDIUM_QUEUE", isDone = false)
+    val LargeQueue = StatusType("LARGE_QUEUE", isDone = false)
+    val NoMoreQueue = StatusType("NO_MORE_QUEUE", isDone = false)
   }
 
   def extractLong(nodeSeq: NodeSeq)(elemName: String): Long = (nodeSeq \ elemName).text.toLong
@@ -224,15 +233,15 @@ object QueryResult {
     def asXmlGcOption(path: String): Option[XMLGregorianCalendar] = asTextOption(path).filter(!_.isEmpty).flatMap(parseDate)
 
     QueryResult(
-      asLong("result_instance_id"),
-      asLong("query_instance_id"),
-      extractResultOutputType(xml \ "query_result_type")(ResultOutputType.fromI2b2),
-      asLong("set_size"),
-      asXmlGcOption("start_date"),
-      asXmlGcOption("end_date"),
-      asTextOption("description"),
-      StatusType.valueOf(asText("query_status_type", "name")(xml)).get, //TODO: Avoid fragile .get call
-      asTextOption("query_status_type", "description"))
+      resultId = asLong("result_instance_id"),
+      instanceId = asLong("query_instance_id"),
+      resultType = extractResultOutputType(xml \ "query_result_type")(ResultOutputType.fromI2b2),
+      setSize = asLong("set_size"),
+      startDate = asXmlGcOption("start_date"),
+      endDate = asXmlGcOption("end_date"),
+      description = asTextOption("description"),
+      statusType = StatusType.valueOf(asText("query_status_type", "name")(xml)).get, //TODO: Avoid fragile .get call
+      statusMessage = asTextOption("query_status_type", "description"))
   }
 
   def errorResult(description: Option[String], statusMessage: String) = {

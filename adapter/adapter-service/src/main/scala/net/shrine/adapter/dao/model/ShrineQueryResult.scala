@@ -7,10 +7,9 @@ import net.shrine.protocol.I2b2ResultEnvelope
 
 /**
  * @author clint
- * @date Oct 16, 2012
+ * @since Oct 16, 2012
  *
  * NB: Named ShrineQueryResult to avoid clashes with net.shrine.protocol.QueryResult
- * NB: Can't be final, since Squeryl runs this class through cglib to make a synthetic subclass :(
  */
 final case class ShrineQueryResult(
   networkQueryId: Long,

@@ -50,7 +50,7 @@ abstract class BasicAggregator[T <: BaseShrineResponse: Manifest] extends Aggreg
           case Result(origin, elapsed, response: T) if isAggregatable(response) => Valid(origin, elapsed, response)
           case Timeout(origin) => Error(Option(origin), ErrorResponse(s"Timed out querying node '${origin.name}'"))
           case Failure(origin, cause) => Error(Option(origin), ErrorResponse(s"Failure querying node '${origin.name}': ${cause.getMessage}"))
-          case _ => Invalid(None, s"Unexpected response in ${getClass}:\r\n $result")
+          case _ => Invalid(None, s"Unexpected response in $getClass:\r\n $result")
         }
 
         parsedResponse

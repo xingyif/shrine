@@ -10,17 +10,17 @@ import scala.util.control.NonFatal
 
 /**
  * @author Bill Simons
- * @date 4/25/11
- * @link http://cbmi.med.harvard.edu
- * @link http://chip.org
+ * @since 4/25/11
+ * @see http://cbmi.med.harvard.edu
+ * @see http://chip.org
  *       <p/>
  *       NOTICE: This software comes with NO guarantees whatsoever and is
  *       licensed as Lgpl Open Source
- * @link http://www.gnu.org/licenses/lgpl.html
+ * @see http://www.gnu.org/licenses/lgpl.html
  *
  * NB: Now a case class for structural equality
  */
-final case class ErrorResponse(val errorMessage: String) extends ShrineResponse {
+final case class ErrorResponse(errorMessage: String) extends ShrineResponse {
 
   override protected def status = <status type="ERROR">{ errorMessage }</status>
 
@@ -41,7 +41,7 @@ object ErrorResponse extends XmlUnmarshaller[ErrorResponse] with I2b2Unmarshalle
   val rootTagName = "errorResponse"
 
   override def fromXml(xml: NodeSeq): ErrorResponse = {
-    val messageXml = (xml \ "message")
+    val messageXml = xml \ "message"
 
     //NB: Fail fast
     require(messageXml.nonEmpty)
@@ -55,7 +55,7 @@ object ErrorResponse extends XmlUnmarshaller[ErrorResponse] with I2b2Unmarshalle
     def parseFormatA: Try[ErrorResponse] = {
       for {
         statusXml <- xml withChild "response_header" withChild "result_status" withChild "status"
-        typeText <- (statusXml attribute "type")
+        typeText <- statusXml attribute "type"
         if typeText == "ERROR" //NB: Fail fast
         statusMessage = XmlUtil.trim(statusXml)
       } yield {
