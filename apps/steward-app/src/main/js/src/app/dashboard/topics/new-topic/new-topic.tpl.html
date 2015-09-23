@@ -1,45 +1,46 @@
-<div class="row">
-    <div class="col-lg-12">
-        <div class="panel panel-primary">
-            <div class="panel-heading">
-                New Query Topic
+
+<div class="col-sm-12 shrine-modal">
+    <span>NEW QUERY TOPIC</span>
+
+    <div class="col-sm-12">
+        <i class="fa fa-times-circle-o fa-3x shrine-button pull-right shrine-close"
+           ng-click="cancel()"></i>
+        <form role="form" name="form" ng-submit="ok()" ng-cloak>
+
+            <div class="form-group" ng-class="'has-error': form.topicname.$error.required">
+
+                <label class="control-label">Topic Name
+                    <span class="control-label" ng-show="form.topicname.$error.required">*</span>
+                </label>
+
+                <label class="pull-right" ng-show="form.topicname.$error.required ||
+                        form.topicdescription.$error.required">
+                    *<small>Required Field</small>
+                </label>
+                <input type="text" ng-model="newTopic.name" name="topicname"
+                       id="topicname" class="form-control" required novalidate>
             </div>
-                <div class="panel-body">
-                    <div class="row">
-                        <div class="col-lg-6">
-                            <form role="form" name="form" ng-submit="ok()" ng-cloak>
-                                <div class="form-group" ng-class="'has-error': form.topicname.$error.required">
+            <div class="form-group" ng-class="'has-error': form.topicname.$error.required">
 
-                                    <label class="control-label">Topic Name
-                                        <span class="control-label" ng-show="form.topicname.$error.required">*</span>
-                                    </label>
-                                    <input type="text" ng-model="newTopic.name" name="topicname"
-                                           id="topicname" class="form-control" required novalidate>
-                                </div>
-                                <div class="form-group" ng-class="'has-error': form.topicname.$error.required">
-
-                                    <label class="control-label">Please Describe Your Query's Intent
-                                        <span ng-show="form.topicdescription.$error.required">*</span>
-                                    </label>
-                                    <textarea class="form-control" rows="3"
-                                              ng-model="newTopic.description"
-                                              name="topicdescription"
-                                              id="topicdescription"
-                                            required novalidate>
-                                    </textarea>
-                                </div>
-                                <label ng-show="form.topicname.$error.required || form.topicdescription.$error.required">
-                                    *<small>Required Field</small>
-                                </label>
-                                <div class="col-lg-12 text-center">
-                                    <button type="submit" class="btn btn-primary" type="submit" ng-disabled="!form.$valid">Submit
-                                    </button>
-                                </div>
-
-                            </form>
-                        </div>
-                    </div>
-                </div>
+                <label class="control-label">Please Describe Your Query's Intent
+                    <span ng-show="form.topicdescription.$error.required">*</span>
+                </label>
+                <textarea class="form-control" rows="3"
+                          ng-model="newTopic.description"
+                          name="topicdescription"
+                          id="topicdescription"
+                        required novalidate>
+                </textarea>
             </div>
-        </div>
+            <div class="col-lg-12 text-center">
+                <button type="submit"
+                        class="pull-right shrine-button shrine-submit"
+                        ng-disabled="!form.$valid">
+                    <span>SUBMIT</span>
+                    <i class="fa fa-chevron-right fa-2x"></i>
+                </button>
+
+            </div>
+        </form>
     </div>
+</div>

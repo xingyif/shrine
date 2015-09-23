@@ -11,7 +11,7 @@ angular.module("happy-model", ['model-service'])
             NETWORK:   'network',
             ADAPTER:    'adapter',
             AUDIT:      'audit'
-        }, base = 'happy/';
+        }, base = 'admin/happy/';
 
 
         function HappyMdl() {
@@ -28,7 +28,7 @@ angular.module("happy-model", ['model-service'])
         }
 
         function hget(verb) {
-            var url = base + 'happy-' + verb + '.xml';
+            var url = mdlSvc.url.base + base + verb;
             return $http.get(url)
                 .then(parseResult, onFail);
         }

@@ -1,6 +1,12 @@
 'use strict';
 angular.module('shrine-happy', ['happy-model', 'ngAnimate', 'ui.bootstrap'])
-    .controller('HappyCtrl', ['$rootScope', '$scope', '$location', '$app', 'HappyMdl', function ($rootScope, $scope, $location, $app, model) {
+    .constant("HappyStates", {
+        STATE1: "General",
+        STATE2: "Keystore Report",
+        STATE3: "Hub",
+        STATE4: "Adapter"
+    })
+    .controller('HappyCtrl', ['$rootScope', '$scope', '$location', '$app', 'HappyMdl', 'HappyStates', function ($rootScope, $scope, $location, $app, model, states) {
         $scope.$app = $app;
         $scope.versionInfo          = {};
         $scope.adapter              = {};
@@ -10,24 +16,15 @@ angular.module('shrine-happy', ['happy-model', 'ngAnimate', 'ui.bootstrap'])
         $scope.net                  = {};
         $scope.downstreamNodes      = {};
         $scope.recentQueries        = {};
-
-        $scope.status = {
-
-        };
-
-        function reset() {
-            $scope.versionInfo          = {};
-            $scope.adapter              = {};
-            $scope.recentAuditEntries   = {};
-            $scope.hiveConfig           = {};
-            $scope.keystoreReport       = {};
-            $scope.net                  = {};
-            $scope.downstreamNodes      = {};
-            $scope.recentQueries        = {};
+        $scope.states               = states;
+        $scope.state                = $scope.states.STATE1;
+        $scope.general = {
+            keystoreOk:     true,
+            hubOk:          true,
+            adapterOk:      true
         }
 
         $scope.setAll = function () {
-            reset();
             model.getAll()
                 .then(function (data) {
                     $scope.adapter              = data.all.adapter;
@@ -38,150 +35,51 @@ angular.module('shrine-happy', ['happy-model', 'ngAnimate', 'ui.bootstrap'])
                     $scope.recentAuditEntries   = data.all.recentAuditEntries;
                     $scope.recentQueries        = data.all.recentQueries;
                     $scope.versionInfo          = data.all.versionInfo;
+                    $scope.general.keystoreOk   = true;
+                    $scope.general.adapterOk    = $scope.adapter.result.response.errorResponse === undefined;
+                    $scope.net.hasFailures      = Number($scope.net.failureCount) > 0;
+                    $scope.net.hasInvalidResults = (Number($scope.net.validResultCount) < Number($scope.net.expectedResulultCount));
+                    $scope.net.hasTimeouts      = Number($scope.net.timeoutCount);
+                    $scope.general.hubOk        = !($scope.net.hasFailures && $scope.net.hasInvalidResults && $scope.net.hasTimeouts)
                 });
         };
 
-        $scope.setKeystoreReport = function () {
-            reset();
-            model.getKeystore()
-                .then(function (data) {
-                    $scope.keystoreReport       = data.keystoreReport;
-                });
-        };
+        $scope.setStateAndRefresh = function (state) {
+            $scope.state = state;
+        }
 
-        $scope.setVersionInfo = function () {
-            reset();
-            model.getVersion()
-                .then(function (data) {
-                    $scope.versionInfo       = data.versionInfo;
-                });
-        };
-
+        $scope.setStateAndRefresh(states.STATE1);
         $scope.setAll();
     }])
-    .directive("collapsible", function () {
-        return {
-            scope: {
-                ngModel:       '='
-            },
-            require: 'ngModel',
-            restrict: 'A',
-            templateUrl: "src/app/dashboard/apps/happy/collapsible.tpl.html",
-            replace: true,
-            controller: function ($scope, $element, $attrs) {
-                $scope.collapsed = Boolean($attrs.collapsible === 'true');
-            }
-        };
-    })
-    .directive("versionInfo", function () {
-        return {
-            scope: {
-                ngModel:       '='
-            },
-            require: 'ngModel',
-            restrict: "E",
-            templateUrl: "src/app/dashboard/apps/happy/version-info.tpl.html",
-            replace: true,
-            controller: function ($scope, $element, $attrs) {
-            }
-        };
-    })
-    .directive("recentQueries", function () {
+    .directive("general", function () {
         return {
             restrict: "E",
-            templateUrl: "src/app/dashboard/apps/happy/recent-queries.tpl.html",
-            replace: true,
-            scope: {
-                ngModel:       '='
-            },
-            require: 'ngModel',
-            controller: function ($scope, $element, $attrs, $app) {
-                $scope.dateFormatter = function (timestamp) {
-                    return $app.utils.utcToMMDDYYYY(Date.parse(timestamp));
-                };
-            }
-        };
-    })
-    .directive("recentAuditEntries", function () {
-        return {
-            restrict: "E",
-            templateUrl: "src/app/dashboard/apps/happy/recent-audit-entries.tpl.html",
-            replace: true,
-            scope: {
-                ngModel:       '='
-            },
-            require: 'ngModel',
-            controller: function ($scope, $element, $attrs, $app) {
-                $scope.dateFormatter = function (timestamp) {
-                    return $app.utils.utcToMMDDYYYY(Date.parse(timestamp));
-                };
-            }
-        };
-    })
-    .directive("network", function () {
-        return {
-            restrict: "E",
-            templateUrl: "src/app/dashboard/apps/happy/network.tpl.html",
-            replace: true,
-            scope: {
-                ngModel:       '='
-            },
-            require: 'ngModel',
-            controller: function ($scope, $element, $attrs, $app) {
-            }
+            templateUrl: "src/app/dashboard/apps/happy/general/general.tpl.html",
+            replace: true
         };
     })
     .directive("keystoreReport", function () {
         return {
             restrict: "E",
-            templateUrl: "src/app/dashboard/apps/happy/keystore-report.tpl.html",
-            replace: true,
-            scope: {
-                ngModel:       '='
-            },
-            require: 'ngModel',
-            controller: function ($scope, $element, $attrs, $app) {
-            }
+            templateUrl: "src/app/dashboard/apps/happy/keystore-report/keystore-report.tpl.html",
+            replace: true
         };
     })
-    .directive("hiveConfig", function () {
+    .directive("hub", function () {
         return {
             restrict: "E",
-            templateUrl: "src/app/dashboard/apps/happy/hive-config.tpl.html",
-            replace: true,
-            scope: {
-                ngModel:       '='
-            },
-            require: 'ngModel',
-            controller: function ($scope, $element, $attrs, $app) {
-            }
-        };
-    })
-    .directive("downstreamNodes", function () {
-        return {
-            restrict: "E",
-            templateUrl: "src/app/dashboard/apps/happy/downstream-nodes.tpl.html",
-            replace: true,
-            scope: {
-                ngModel:       '='
-            },
-            require: 'ngModel',
-            controller: function ($scope, $element, $attrs, $app) {
-            }
+            templateUrl: "src/app/dashboard/apps/happy/hub/hub.tpl.html",
+            replace: true
         };
     })
     .directive("adapter", function () {
         return {
             restrict: "E",
-            templateUrl: "src/app/dashboard/apps/happy/adapter.tpl.html",
-            replace: true,
-            scope: {
-                ngModel:       '='
-            },
-            require: 'ngModel',
-            controller: function ($scope, $element, $attrs, $app) {
-            }
+            templateUrl: "src/app/dashboard/apps/happy/adapter/adapter.tpl.html",
+            replace: true
         };
-    })
+    });
+
+
 
 

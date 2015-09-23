@@ -37,7 +37,7 @@ angular
 
         if (absUrl.indexOf('localhost') < 0) {
             urlIdx = absUrl.indexOf(key);
-            url.base    = absUrl.substring(0, urlIdx) + 'admin-war/';
+            url.base    = absUrl.substring(0, urlIdx) + 'shrine-admin/';
         }
 
         model.verbs  = verbs;

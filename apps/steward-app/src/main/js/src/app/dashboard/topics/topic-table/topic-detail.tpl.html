@@ -1,44 +1,37 @@
-<div class="panel">
 
-        <div  class="panel-default">
-            <div class="panel-heading">
-                <a class="close" ng-click="cancel()">&#215;</a>
-                <p>
-                <div class="btn-group" role="group" aria-label="...">
-                    <button type="button"
-                            class="btn btn-default"
-                            ng-click="tabState = 'description'"
-                            ng-class="{'btn-primary': tabState === 'description'}">
-                        Description
-                    </button>
-                    <button type="button"
-                            class="btn btn-default"
-                            ng-click="tabState = 'history'"
-                            ng-disabled="!canViewHistory()"
-                            ng-class="{'btn-primary': tabState !== 'description'}"
-                            style="color: #333;">
-                        Query History
-                    </button>
-                </div>
-                </p>
-            </div>
-            <!-- /.panel-heading -->
-            <div class="panel-body">
-                <div ng-switch on="{{userRole == roles.ROLE1}}" ng-cloak>
-                    <!-- researcher -->
-                    <div ng-switch-when="true">
-                        <role1-edit         ng-show="tabState == 'edit'"></role1-edit>
-                        <role1-description  ng-show="tabState == 'description'"></role1-description>
-                    </div>
-                    <!-- steward -->
-                    <div ng-cloak ng-switch-when="false">
-                        <role2-edit         ng-show="tabState == 'edit'"></role2-edit>
-                        <role2-description  ng-show="tabState == 'description'"></role2-description>
-                    </div>
-                </div>
-                <query-history topic="topic" ng-show="tabState == 'history'"></query-history>
-                </p>
-            </div>
-            <!-- /.panel-body -->
+<div class="col-sm-12 shrine-modal">
+    <div class="col-sm-12">
+        <i class="fa fa-times-circle-o fa-3x shrine-button pull-right shrine-close"
+           ng-click="cancel()"></i>
+
+        <div class="btn-group" role="group" aria-label="...">
+            <button type="button"
+                    class="btn btn-default shrine-btn-default"
+                    ng-click="tabState = 'description'"
+                    ng-class="tabState === 'description' ? 'shrine-btn-on' : 'shrine-btn-off'">
+                Description
+            </button>
+            <button type="button"
+                    class="btn btn-default shrine-btn-default"
+                    ng-click="tabState = 'history'"
+                    ng-disabled="!canViewHistory()"
+                    ng-class="tabState !== 'description' ? 'shrine-btn-on' : 'shrine-btn-off'">
+                Query History
+            </button>
         </div>
+        <div ng-switch on="{{userRole == roles.ROLE1}}" ng-cloak>
+            <!-- researcher -->
+            <div ng-switch-when="true">
+                <role1-edit         ng-show="tabState == 'edit'"></role1-edit>
+                <role1-description  ng-show="tabState == 'description'"></role1-description>
+            </div>
+            <!-- steward -->
+            <div ng-cloak ng-switch-when="false">
+                <role2-edit         ng-show="tabState == 'edit'"></role2-edit>
+                <role2-description  ng-show="tabState == 'description'"></role2-description>
+            </div>
+        </div>
+        <query-history topic="topic" ng-show="tabState == 'history'"></query-history>
+
+    </div>
 </div>

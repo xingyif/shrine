@@ -1,0 +1,76 @@
+<div>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <td colspan="2" style="text-align: center">
+                    Adapter
+                </td>
+            </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td>
+                <label>Description:</label>
+            </td>
+            <td>
+                {{adapter.result.description}}
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <label>Elapsed Time</label>
+            </td>
+            <td>
+                {{adapter.result.elapsed}}
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <label>Responses:</label>
+            </td>
+            <td colspan="2">
+                <span>Error Response: </span>
+                <span class="error">{{adapter.result.response.errorResponse}} </span>
+            </td>
+        </tr>
+        </tbody>
+
+    </table>
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <td colspan="2" style="text-align: center">
+                    Hive Config
+                </td>
+            </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td>
+                <label>CRC Url:</label>
+            </td>
+            <td>
+                {{hiveConfig.crcUrl}}
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <label>Ont Url:</label>
+            </td>
+            <td>
+                {{hiveConfig.ontUrl}}
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <label>PM Url:</label>
+            </td>
+            <td>
+                (needed)
+            </td>
+        </tr>
+        </tbody>
+
+    </table>
+</div>

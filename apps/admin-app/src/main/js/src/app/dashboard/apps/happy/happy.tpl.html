@@ -1,228 +1,44 @@
 <div class="container"  ng-cloak>
-    <div style="min-height: 561px;">
-        <div class="row">
-            <div class="col-lg-12">
-                <h1 class="page-header">SHRINE Happy</h1>
-            </div>
-            <!-- /.col-lg-12 -->
+    <div class="col-sm-12">
+        <div class="btn-group" role="group" aria-label="...">
+            <button type="button"
+                    class="btn btn-default shrine-btn-default"
+                    ng-click="setStateAndRefresh(states.STATE1)"
+                    ng-class="state === states.STATE1 ? 'shrine-btn-on' : 'shrine-btn-off'">
+                General
+            </button>
+            <button type="button"
+                    class="btn btn-default shrine-btn-default"
+                    ng-click="setStateAndRefresh(states.STATE2)"
+                    ng-class="state === states.STATE2 ? 'shrine-btn-on' : 'shrine-btn-off'">
+                Keystore Report
+            </button>
+            <button type="button"
+                    class="btn btn-default shrine-btn-default"
+                    ng-click="setStateAndRefresh(states.STATE3)"
+                    ng-class="state === states.STATE3 ? 'shrine-btn-on' : 'shrine-btn-off'">
+                Hub
+            </button>
+            <button type="button"
+                    class="btn btn-default shrine-btn-default"
+                    ng-click="setStateAndRefresh(states.STATE4)"
+                    ng-class="state === states.STATE4 ? 'shrine-btn-on' : 'shrine-btn-off'">
+                Adapter
+            </button>
         </div>
-
-        <!-- http://angular-ui.github.io/bootstrap/#/accordion -->
-        <accordion close-others="false">
-            <accordion-group  class="panel panel-primary">
-                <accordion-heading class="panel-heading">
-
-                        <div class="row">
-                            <div class="col-xs-3">
-                                <i class="fa fa-cloud fa-2x"></i>
-                            </div>
-                            <div class="col-xs-7 ">
-                                <div class="huge">Version Info</div>
-                            </div>
-                            <div class="col-xs-2 ">
-                                <span class="pull-right"><i
-                                        class="fa fa-arrow-circle-down"></i></span>
-                            </div>
-                        </div>
-
-                </accordion-heading>
-
-                            <span>
-                                <version-info ng-model="versionInfo"></version-info>
-                            </span>
-
-                    <div class="clearfix"></div>
-
-            </accordion-group>
-            <accordion-group  class="panel panel-primary">
-                <accordion-heading class="panel-heading">
-
-                    <div class="row">
-                        <div class="col-xs-3">
-                            <i class="fa fa-cloud fa-2x"></i>
-                        </div>
-                        <div class="col-xs-7 ">
-                            <div class="huge">Recent Queries</div>
-                        </div>
-                        <div class="col-xs-2 ">
-                            <span class="pull-right">
-
-                                <i class="fa" ng-class="{'fa-arrow-circle-down': status.open, 'fa-arrow-circle-down': !status.open}"></i></span>
-                        </div>
-                    </div>
-
-                </accordion-heading>
-
-                            <span>
-                                <recent-queries ng-model="recentQueries "></recent-queries>
-                            </span>
-
-                <div class="clearfix"></div>
-
-            </accordion-group>
-            <accordion-group  class="panel panel-primary">
-                <accordion-heading class="panel-heading">
-
-                    <div class="row">
-                        <div class="col-xs-3">
-                            <i class="fa fa-cloud fa-2x"></i>
-                        </div>
-                        <div class="col-xs-7 ">
-                            <div class="huge">Recent Audit Entries</div>
-                        </div>
-                        <div class="col-xs-2 ">
-                            <span class="pull-right"><i
-                                    class="fa fa-arrow-circle-down"></i></span>
-                        </div>
-                    </div>
-
-                </accordion-heading>
-
-                            <span>
-                                <recent-audit-entries
-                                        ng-model="recentAuditEntries"></recent-audit-entries>
-                            </span>
-
-                <div class="clearfix"></div>
-
-            </accordion-group>
-            <accordion-group  class="panel panel-primary">
-                <accordion-heading class="panel-heading">
-
-                    <div class="row">
-                        <div class="col-xs-3">
-                            <i class="fa fa-cloud fa-2x"></i>
-                        </div>
-                        <div class="col-xs-7 ">
-                            <div class="huge">Network</div>
-                        </div>
-                        <div class="col-xs-2 ">
-                            <span class="pull-right"><i
-                                    class="fa fa-arrow-circle-down"></i></span>
-                        </div>
-                    </div>
-
-                </accordion-heading>
-
-                            <span>
-                                <network ng-model="net"></network>
-                            </span>
-
-                <div class="clearfix"></div>
-
-            </accordion-group>
-
-            <accordion-group  class="panel panel-primary">
-                <accordion-heading class="panel-heading">
-
-                    <div class="row">
-                        <div class="col-xs-3">
-                            <i class="fa fa-cloud fa-2x"></i>
-                        </div>
-                        <div class="col-xs-7 ">
-                            <div class="huge">Keystore Report</div>
-                        </div>
-                        <div class="col-xs-2 ">
-                            <span class="pull-right"><i
-                                    class="fa fa-arrow-circle-down"></i></span>
-                        </div>
-                    </div>
-
-                </accordion-heading>
-
-                            <span>
-                                <keystore-report ng-model="keystoreReport"></keystore-report>
-                            </span>
-
-                <div class="clearfix"></div>
-
-            </accordion-group>
-
-            <accordion-group  class="panel panel-primary">
-                <accordion-heading class="panel-heading">
-
-                    <div class="row">
-                        <div class="col-xs-3">
-                            <i class="fa fa-cloud fa-2x"></i>
-                        </div>
-                        <div class="col-xs-7 ">
-                            <div class="huge">Hive Config</div>
-                        </div>
-                        <div class="col-xs-2 ">
-                            <span class="pull-right"><i
-                                    class="fa fa-arrow-circle-down"></i></span>
-                        </div>
-                    </div>
-
-                </accordion-heading>
-
-                            <span >
-                                <hive-config ng-model="hiveConfig"></hive-config>
-                            </span>
-
-                <div class="clearfix"></div>
-
-            </accordion-group>
-
-            <accordion-group  class="panel panel-primary">
-                <accordion-heading class="panel-heading">
-
-                    <div class="row">
-                        <div class="col-xs-3">
-                            <i class="fa fa-cloud fa-2x"></i>
-                        </div>
-                        <div class="col-xs-7 ">
-                            <div class="huge">Downstream Nodes</div>
-                        </div>
-                        <div class="col-xs-2 ">
-                            <span class="pull-right"><i
-                                    class="fa fa-arrow-circle-down"></i></span>
-                        </div>
-                    </div>
-
-                </accordion-heading>
-
-                            <span>
-                                <downstream-nodes
-                                        ng-model="downstreamNodes"></downstream-nodes>
-                            </span>
-
-                <div class="clearfix"></div>
-
-            </accordion-group>
-
-            <accordion-group  class="panel panel-primary">
-                <accordion-heading class="panel-heading">
-
-                    <div class="row">
-                        <div class="col-xs-3">
-                            <i class="fa fa-cloud fa-2x"></i>
-                        </div>
-                        <div class="col-xs-7 ">
-                            <div class="huge">Adapter</div>
-                        </div>
-                        <div class="col-xs-2 ">
-                            <span class="pull-right"><i
-                                    class="fa fa-arrow-circle-down"></i></span>
-                        </div>
-                    </div>
-
-                </accordion-heading>
-
-                            <span>
-                                <adapter ng-model="adapter"></adapter>
-                            </span>
-
-                <div class="clearfix"></div>
-
-            </accordion-group>
-
-        </accordion>
-
-
-
-
-
-
+        <div>
+            <p>
+            <div ng-switch on="state">
+                <general ng-switch-when="General">
+                </general>
+                <keystore-report ng-model="states" ng-switch-when="Keystore Report">
+                </keystore-report>
+                <hub ng-model="states" ng-switch-when="Hub">
+                </hub>
+                <adapter ng-model="states" ng-switch-when="Adapter">
+                </adapter>
+            </div>
+            </p>
+        </div>
     </div>
 </div>

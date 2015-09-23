@@ -1,51 +1,52 @@
 <div>
     <table class="table table-striped">
         <thead>
+        <tr>
+            <td colspan="2" style="text-align: center">
+                Version Info
+            </td>
+        </tr>
         </thead>
-            <tr>
-                <td colspan="2" style="text-align: center">
-                    Version Info
-                </td>
-            </tr>
+
         <tbody>
             <tr>
                 <td>
-                    Shrine Version:
+                    <label>Shrine Version:<?
                 </td>
                 <td>
-                    1.20.0-SNAPSHOT
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    Ontology Version:
-                </td>
-                <td>
-                    UNKNOWN
+                    {{versionInfo.shrineVersion}}
                 </td>
             </tr>
             <tr>
                 <td>
-                    Adapter Mappings:
+                    <label>Ontology Version:</label>
                 </td>
                 <td>
-                    UNKNOWN
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    SCM Revision:
-                </td>
-                <td>
-                    (not available)
+                    {{versionInfo.ontologyVersion}}
                 </td>
             </tr>
             <tr>
                 <td>
-                    SCM Branch:
+                    <label>Adapter Mappings Version:</label>
                 </td>
                 <td>
-                    UNKNOWN BRANCH
+                    {{versionInfo.adapterMappingsVersion}}
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label>SCM Revision:</label>
+                </td>
+                <td>
+                    {{versionInfo.scmRevision}}
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label>SCM Branch:</label>
+                </td>
+                <td>
+                    {{versionInfo.scmRevision}}
                 </td>
             </tr>
         </tbody>
@@ -54,35 +55,47 @@
 
     <table class="table table-striped">
         <thead>
+            <tr>
+                <td colspan="2" style="text-align: center">
+                    <label>System Health</label>
+                </td>
+            </tr>
         </thead>
-        <tr>
-            <td colspan="2" style="text-align: center">
-                System Health
-            </td>
-        </tr>
         <tbody>
         <tr>
             <td>
-                Keystore:
+                <label>Keystore:</label>
             </td>
-            <td class="ok">
+            <td ng-show="general.keystoreOk === false" class="error">
+                Error: <a href="#" ng-click="setStateAndRefresh(states.STATE2)">click
+                here for more details.</a>
+            </td>
+            <td ng-show="general.keystoreOk === true" class="ok">
                 OK
             </td>
         </tr>
         <tr>
             <td>
-                Hub:
+                <label>Hub:</label>
             </td>
-            <td class="ok">
+            <td ng-show="general.hubOk === false" class="error">
+                Error: <a href="#" ng-click="setStateAndRefresh(states.STATE3)">click
+                here for more details.</a>
+            </td>
+            <td ng-show="general.hubOk === true" class="ok">
                 OK
             </td>
         </tr>
         <tr>
             <td>
-                Adapter:
+                <label>Adapter:</label>
             </td>
-            <td class="error">
-                Error: <a href="#">click here for more details.</a>
+            <td ng-show="general.adapterOk === false" class="error">
+                Error: <a href="#" ng-click="setStateAndRefresh(states.STATE4)">click
+                here for more details.</a>
+            </td>
+            <td ng-show="general.adapterOk === true" class="ok">
+                OK
             </td>
         </tr>
         </tbody>

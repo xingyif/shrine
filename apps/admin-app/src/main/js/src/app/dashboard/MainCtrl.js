@@ -10,8 +10,9 @@
     $scope.getConfigData = function () {
         STMdl.getConfig()
             .then(function (data) {
-                $scope.bannerUrl = data.data.banner;
-                $scope.helpUrl   = data.data.help;
+                $scope.bannerUrl = data.banner;
+                $scope.footerUrl = data.footer;
+                $scope.helpUrl   = data.help;
             });
     };
 

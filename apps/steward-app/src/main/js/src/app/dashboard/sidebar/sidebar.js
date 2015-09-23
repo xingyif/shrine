@@ -19,7 +19,7 @@ angular.module('stewardApp')
           getRole: "&"
       },
       controller:function($scope){
-        $scope.selectedMenu = 'dashboard';
+        $scope.selectedMenu = '';
         $scope.collapseVar = 0;
         $scope.multiCollapseVar = 0;
         
