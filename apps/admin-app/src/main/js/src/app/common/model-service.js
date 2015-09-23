@@ -29,7 +29,7 @@ angular
 
         var model    = this,
             absUrl   = $location.$$absUrl,
-            key      = 'admin',
+            key      = 'shrine-admin',
             url      = {
                 base: "http://localhost:8080/admin-war/"
             },
