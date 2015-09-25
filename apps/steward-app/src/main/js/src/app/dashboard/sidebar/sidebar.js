@@ -14,14 +14,12 @@ angular.module('stewardApp')
       restrict: 'E',
       replace: true,
       scope: {
-          isUserLoggedIn: "&",
-          logout: "&",
-          getRole: "&"
       },
-      controller:function($scope){
+      controller:function($scope, $app){
         $scope.selectedMenu = '';
         $scope.collapseVar = 0;
         $scope.multiCollapseVar = 0;
+        $scope.roles = $app.globals.UserRoles;
         
         $scope.check = function(x){
           

@@ -1,5 +1,5 @@
 <div>
-    <div class="col-sm-12">
+    <div class="col-sm-12 shrine-modal" style="margin-bottom: 50px;">
         <div class="row">
             <div class="col-sm-3">
                 <label>Start Date: </label>
@@ -12,7 +12,6 @@
             <div class="col-sm-3">
                 <p class="input-group">
                     <input type="text"
-                           class="form-control"
                            datepicker-popup="{{format}}"
                            max-date="endDate"
                            ng-model="startDate"
@@ -32,7 +31,6 @@
             <div class="col-sm-3">
                 <p class="input-group">
                     <input type="text"
-                           class="form-control"
                            datepicker-popup="{{format}}"
                            ng-model="endDate"
                            min-date="startDate"
@@ -40,6 +38,8 @@
                            ng-required="true"
                            close-text="Close"/>
                         <span class="input-group-btn">
+
+
                              <button type="button"
                                      class="btn btn-default"
                                      ng-click="openEnd($event)">
@@ -50,19 +50,20 @@
             </div>
 
             <div class="col-sm-3">
-                <button class="shrine-btn-default shrine-btn-on" type="submit"
+                <button type="submit"
+                        class="shrine-button shrine-submit"
                         ng-disabled="!validateRange()"
                         ng-click="addDateRange()">
-                    Apply Date Range
+                    <span>APPLY RANGE</span>
+                    <i class="fa fa-chevron-right fa-2x"></i>
                 </button>
             </div>
         </div>
     </div>
 
     <topic-status></topic-status>
-
-
-
+    <br/>
+    <br/>
     <query-counts></query-counts>
 
 

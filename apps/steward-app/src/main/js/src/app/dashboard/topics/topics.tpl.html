@@ -11,6 +11,7 @@
                                     class="btn shrine-btn-default shrine-btn-on"
                                     ng-click="createTopic()">
                                 New
+                                <i class="fa fa-plus pull-right"></i>
                             </button>
                         </div>
                         <!-- steward -->
@@ -21,17 +22,20 @@
                                         ng-click="setStateAndRefresh(states.STATE1)"
                                         ng-class="state === states.STATE1 ? 'shrine-btn-on' : 'shrine-btn-off'">
                                     {{states.STATE1}}
+
                                 </button>
                                 <button type="button"
                                         class="btn btn-default shrine-btn-default"
                                         ng-click="setStateAndRefresh(states.STATE2)"
                                         ng-class="state === states.STATE2 ? 'shrine-btn-on' : 'shrine-btn-off'">
+                                    <i class="fa fa-check pull-right"></i>
                                     {{states.STATE2}}
                                 </button>
                                 <button type="button"
                                         class="btn btn-default shrine-btn-default"
                                         ng-click="setStateAndRefresh(states.STATE3)"
                                         ng-class="state === states.STATE3 ? 'shrine-btn-on' : 'shrine-btn-off'">
+                                    <i class="fa fa-remove pull-right"></i>
                                     {{states.STATE3}}
                                 </button>
                             </div>

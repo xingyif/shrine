@@ -12,7 +12,7 @@
 angular.module('stewardApp')
     .directive('hmsFooter',function(){
         return {
-            templateUrl:'src/app/dashboard/footer/footer.tpl.html',
+            templateUrl:'src/app/footer/footer.tpl.html',
             restrict: 'E',
             replace: true
         }

@@ -45,9 +45,27 @@ angular
         }
 
         $stateProvider
+            .state('login',{
+                url:'/login',
+                controller: 'LoginCtrl',
+                templateUrl:'src/app/login/login.tpl.html',
+                resolve: {
+                    loadMyFiles:function($ocLazyLoad) {
+                        return $ocLazyLoad.load({
+                            name:'stewardApp',
+                            files:[
+                                'src/app/common/authentication/authentication-model.js',
+                                'src/app/common/authentication/authentication.js',
+                                'src/app/login/LoginCtrl.js'
+
+                            ]
+                        });
+                    }
+                }
+            })
             .state('dashboard', {
                 url:'/dashboard',
-                controller: 'MainCtrl',
+                controller: 'AppCtrl',
                 templateUrl: 'src/app/dashboard/main.tpl.html',
                 resolve: {
                     loadMyDirectives:function($ocLazyLoad){
@@ -56,11 +74,8 @@ angular
                                 name:'stewardApp',
                                 files:[
                                     'src/app/dashboard/MainCtrl.js',
-                                    'src/app/dashboard/header/header.js',
-                                    'src/app/dashboard/header/header-notification/header-notification.js',
                                     'src/app/dashboard/sidebar/sidebar.js',
-                                    'src/app/dashboard/sidebar/sidebar-search/sidebar-search.js',
-                                    'src/app/dashboard/footer/footer.js'
+                                    'src/app/dashboard/sidebar/sidebar-search/sidebar-search.js'
                                 ]
                             }),
                             $ocLazyLoad.load(
@@ -110,27 +125,9 @@ angular
                                 'src/app/dashboard/history/history-model.js',
                                 'src/app/dashboard/history/history.js',
                                 'src/app/dashboard/topics/topics-model.js',
-                                'src/app/dashboard/topics/topics.js',
-                                'src/app/dashboard/stats/stats.js'
+                                'src/app/dashboard/topics/topics.js'
                             ]
                         })
-                    }
-                }
-            })
-            .state('dashboard.login',{
-                url:'/login',
-                controller: 'LoginCtrl',
-                templateUrl:'src/app/dashboard/login/login.tpl.html',
-                resolve: {
-                    loadMyFiles:function($ocLazyLoad) {
-                        return $ocLazyLoad.load({
-                            name:'stewardApp',
-                            files:[
-                                'src/app/common/authentication/authentication-model.js',
-                                'src/app/common/authentication/authentication.js',
-                                'src/app/dashboard/login/LoginCtrl.js'
-                            ]
-                        });
                     }
                 }
             })
@@ -181,8 +178,8 @@ angular
 
         $rootScope.$on( "$locationChangeStart", function (event, next, current) {
             // redirect to login page if not logged in
-            if ($location.path() !== '/dashboard/login' && (!$app.globals.currentUser || !$app.globals.currentUser.isLoggedIn)) {
-                $location.path('/dashboard/login');
+            if ($location.path() !== '/login' && (!$app.globals.currentUser || !$app.globals.currentUser.isLoggedIn)) {
+                $location.path('/login');
             }
         });
     })
@@ -241,5 +238,44 @@ angular
             utils:   $rootScope.app.utils
         };
 
-    });
+    })
+    .controller('AppCtrl', ['$rootScope', '$scope', '$location', '$app', 'AppMdl', function ($rootScope, $scope, $location, $app, AppMdl) {
+        $scope.bannerUrl = '';
+        $scope.helpUrl   = '';
+
+        $scope.$app = $app;
+
+        $scope.getConfigData = function () {
+            AppMdl.getConfig()
+                .then(function (data) {
+                    $scope.bannerUrl = data.banner;
+                    $scope.footerUrl = data.footer;
+                    $scope.helpUrl   = data.help;
+                });
+        };
+
+        $scope.getUsername = function () {
+            return ($app.globals.currentUser) ?
+                $app.globals.currentUser.username : '';
+        };
+
+        $scope.getRole = function () {
+            if (!$app.globals.currentUser) {
+                return '';
+            }
+            var idx = $app.globals.currentUser.roles.length - 1;
+            return $app.globals.currentUser.roles[idx];
+        };
+
+        $scope.isUserLoggedIn = function () {
+            return ($app.globals.currentUser !== undefined && $app.globals.currentUser.isLoggedIn === true);
+        };
+
+        $scope.logout = function () {
+            $location.path('/login');
+        };
+
+        $scope.getConfigData();
+    }]);
+
 

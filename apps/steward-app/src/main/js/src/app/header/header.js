@@ -7,11 +7,11 @@
  * # adminPosHeader
  */
 angular.module('stewardApp')
-	.directive('headerNotification',function(){
+	.directive('header',function(){
 		return {
-        templateUrl:'src/app/dashboard/header/header-notification/header-notification.tpl.html',
+        templateUrl:'src/app/header/header.tpl.html',
         restrict: 'E',
-        replace: true,
+        replace: true
     	}
 	});
 

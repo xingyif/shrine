@@ -1,17 +1,14 @@
 <div id="wrapper">
 
 
-    <header></header>
-
     <!-- /.navbar-top-links -->
 
     <div class="row">
-        <div class="col-sm-2">
-            <sidebar is-user-logged-in="isUserLoggedIn()"
-                     logout="logout()"></sidebar>
+        <div class="col-sm-2" >
+            <sidebar></sidebar>
         </div>
-        <div class="col-sm-10">
-            <div id="page-wrapper" class="ng-view">
+        <div class="col-sm-9 shrine-content">
+            <div id="page-wrapper" class="ng-view page-wrapper">
 
                 <div ui-view></div>
 
@@ -23,7 +20,5 @@
     <!-- /.navbar-static-side -->
 
 
-    <!-- /#page-wrapper -->
-    <!-- footer -->
-    <hms-footer footer-url="footerUrl"></hms-footer>
+
 </div>

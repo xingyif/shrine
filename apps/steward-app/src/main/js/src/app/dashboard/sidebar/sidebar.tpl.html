@@ -1,19 +1,19 @@
-<div class="navbar-default sidebar" role="navigation" ng-show="isUserLoggedIn()">
+<div class="navbar-default sidebar" role="navigation">
     <div class="sidebar-nav navbar-collapse">
         <ul class="nav in" id="side-menu">
             <li ui-sref-active="shrine-on" ng-cloak>
                 <a ui-sref="dashboard.topics" class="shrine-off">
-                    <i class="fa fa-table fa-fw"></i>
-                    Query Topics
+                    <i class="fa fa-globe fa-fw"></i>
+                    Topics
                 </a>
             </li>
             <li ui-sref-active="shrine-on" ng-cloak>
                 <a ui-sref="dashboard.history" class="shrine-off">
-                    <i class="fa fa-dashboard fa-fw"></i>
-                    Query History
+                    <i class="fa fa-history fa-fw"></i>
+                    History
                 </a>
             </li>
-            <li ui-sref-active="shrine-on" ng-cloak>
+            <li ui-sref-active="shrine-on" ng-cloak restrict="{{roles.ROLE2}}">
                 <a ui-sref="dashboard.statistics" class="shrine-off">
                     <i class="fa fa-bar-chart-o fa-fw"></i>
                     Query Statistics
