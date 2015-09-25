@@ -7,7 +7,7 @@ import scala.util.Try
 
 /**
  * @author clint
- * @date Mar 11, 2011
+ * @since Mar 11, 2011
  *
  * Adapted from http://stackoverflow.com/questions/1898932/case-classes-vs-enumerations-in-scala/4958905#4958905
  *

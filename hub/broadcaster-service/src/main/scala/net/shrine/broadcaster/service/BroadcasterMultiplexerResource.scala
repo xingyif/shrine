@@ -5,14 +5,12 @@ import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.POST
 import javax.ws.rs.Consumes
-import net.shrine.protocol.BroadcastMessage
-import net.shrine.protocol.MultiplexedResults
+import net.shrine.protocol.{SingleNodeResult, BroadcastMessage, MultiplexedResults, ResultOutputType}
 import javax.ws.rs.core.Response
 import scala.util.control.NonFatal
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
-import net.shrine.protocol.ResultOutputType
 import scala.xml.XML
 import net.shrine.util.StringEnrichments
 
@@ -34,7 +32,7 @@ final case class BroadcasterMultiplexerResource(handler: BroadcasterMultiplexerR
       if (messageAttempt.isFailure) { Response.status(400) }
       else {
         messageAttempt.map { message =>
-          val results = handler.broadcastAndMultiplex(message)
+          val results: Iterable[SingleNodeResult] = handler.broadcastAndMultiplex(message)
 
           val resultsXml = MultiplexedResults(results.toSeq).toXmlString
 
