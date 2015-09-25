@@ -1,7 +1,7 @@
 package net.shrine.protocol
 
 import net.shrine.util.ShouldMatchersForJUnit
-import org.junit.Test
+import org.junit.{Ignore, Test}
 import xml.Utility
 import net.shrine.util.XmlUtil
 import junit.framework.TestCase
@@ -445,6 +445,7 @@ final class QueryResultTest extends ShouldMatchersForJUnit with XmlRoundTripper[
   }
 
   @Test
+  @Ignore
   def testToI2b2WithErrors: Unit = {
     val actual = QueryResult.errorResult(Some(description), statusMessage).toI2b2String
 

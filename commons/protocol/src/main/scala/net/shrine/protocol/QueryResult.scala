@@ -154,7 +154,14 @@ object QueryResult {
       <status_type_id>{ queryResult.statusType.i2b2Id.get }</status_type_id><description>{ queryResult.statusType.name }</description>
     }
 
-    val Error = StatusType("ERROR", true, None, _.statusMessage.map(msg => <description>{ msg }</description>).orNull)
+    val noMessage:NodeSeq = null
+    val Error = StatusType("ERROR", true, None, _.statusMessage.fold(noMessage)(
+      msg =>
+        <codec>net.shrine.something.is.Broken</codec>
+          <summary>Something is borked</summary>
+          <description>{ msg }</description>
+          <details>Herein is a stack trace, multiple lines</details>
+    ))
     val Finished = StatusType("FINISHED", isDone = true, Some(3))
     //TODO: Can we use the same <status_type_id> for Queued, Processing, and Incomplete?
     val Processing = StatusType("PROCESSING", isDone = false, Some(2))

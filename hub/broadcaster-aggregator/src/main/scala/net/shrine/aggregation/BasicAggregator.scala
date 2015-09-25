@@ -49,6 +49,7 @@ abstract class BasicAggregator[T <: BaseShrineResponse: Manifest] extends Aggreg
           case Result(origin, _, errorResponse: ErrorResponse) => Error(Option(origin), errorResponse)
           case Result(origin, elapsed, response: T) if isAggregatable(response) => Valid(origin, elapsed, response)
           case Timeout(origin) => Error(Option(origin), ErrorResponse(s"Timed out querying node '${origin.name}'"))
+            //todo failure becomes an ErrorResponse and Error status type here. And the stack trace gets eaten.
           case Failure(origin, cause) => Error(Option(origin), ErrorResponse(s"Failure querying node '${origin.name}': ${cause.getMessage}"))
           case _ => Invalid(None, s"Unexpected response in $getClass:\r\n $result")
         }
@@ -61,7 +62,7 @@ abstract class BasicAggregator[T <: BaseShrineResponse: Manifest] extends Aggreg
 
     val validResponses = resultsOrErrors.collect { case valid: Valid[T] => valid }
 
-    val errorResponses = resultsOrErrors.collect { case error: Error => error }
+    val errorResponses: Iterable[Error] = resultsOrErrors.collect { case error: Error => error }
 
     //Log all parsing errors
     invalidResponses.map(_.errorMessage).foreach(this.error(_))
