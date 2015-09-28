@@ -38,9 +38,9 @@ angular.module('shrine-happy', ['happy-model', 'ngAnimate', 'ui.bootstrap'])
                     $scope.general.keystoreOk   = true;
                     $scope.general.adapterOk    = $scope.adapter.result.response.errorResponse === undefined;
                     $scope.net.hasFailures      = Number($scope.net.failureCount) > 0;
-                    $scope.net.hasInvalidResults = (Number($scope.net.validResultCount) < Number($scope.net.expectedResulultCount));
+                    $scope.net.hasInvalidResults = (Number($scope.net.validResultCount) < Number($scope.net.expectedResultCount));
                     $scope.net.hasTimeouts      = Number($scope.net.timeoutCount);
-                    $scope.general.hubOk        = !($scope.net.hasFailures && $scope.net.hasInvalidResults && $scope.net.hasTimeouts)
+                    $scope.general.hubOk        = !($scope.net.hasFailures || $scope.net.hasInvalidResults || $scope.net.hasTimeouts)
                 });
         };
 
