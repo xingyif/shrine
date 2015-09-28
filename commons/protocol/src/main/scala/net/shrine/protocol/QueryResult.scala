@@ -119,6 +119,7 @@ final case class QueryResult(
         //The number of breakdowns will be at most 4, so performance should not be an issue. 
         sortedBreakdowns.map(_.toXml)
       }
+      { problemDigest.map(_.toXml).orNull }
     </queryResult>
   }
 
@@ -140,6 +141,7 @@ final case class QueryResult(
 }
 
 object QueryResult {
+
   final case class StatusType(
     name: String,
     isDone: Boolean,
@@ -160,13 +162,22 @@ object QueryResult {
     }
 
     val noMessage:NodeSeq = null
-    val Error = StatusType("ERROR", isDone = true, None, _.statusMessage.fold(noMessage)(
+    val Error = StatusType("ERROR", isDone = true, None, { queryResult =>
+      (queryResult.statusMessage, queryResult.problemDigest) match {
+        case (Some(msg),Some(pd)) => <description>{ msg }</description> ++ pd.toXml
+        case (Some(msg),None) => <description>{ msg }</description>
+        case (None,Some(pd)) => pd.toXml
+        case (None, None) => noMessage
+      }
+    })
+    /*
       msg =>
         <codec>net.shrine.something.is.Broken</codec>
           <summary>Something is borked</summary>
           <description>{ msg }</description>
           <details>Herein is a stack trace, multiple lines</details>
     ))
+    */
     val Finished = StatusType("FINISHED", isDone = true, Some(3))
     //TODO: Can we use the same <status_type_id> for Queued, Processing, and Incomplete?
     val Processing = StatusType("PROCESSING", isDone = false, Some(2))
@@ -225,6 +236,13 @@ object QueryResult {
       mapAttempt.getOrElse(Map.empty)
     }
 
+    def extractProblemDigest():Option[ProblemDigest] = {
+//todo start here. Add tests of things in the problemDigests
+      val subXml = xml \ "problemDigest"
+      if(subXml.nonEmpty) Some(ProblemDigest.fromXml(subXml))
+      else None
+    }
+
     QueryResult(
       asLong("resultId"),
       asLong("instanceId"),
@@ -235,7 +253,9 @@ object QueryResult {
       extract("description"),
       StatusType.valueOf(asText("status")(xml)).get, //TODO: Avoid fragile .get call
       extract("statusMessage"),
-      extractBreakdowns("resultEnvelope"))
+      extractBreakdowns("resultEnvelope"),
+      extractProblemDigest()
+    )
   }
 
   def fromI2b2(breakdownTypes: Set[ResultOutputType])(xml: NodeSeq): QueryResult = {
