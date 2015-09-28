@@ -2,7 +2,7 @@ package net.shrine.protocol
 
 import junit.framework.TestCase
 import net.shrine.util.ShouldMatchersForJUnit
-import org.junit.{Ignore, Test}
+import org.junit.Test
 import scala.xml.NodeSeq
 import net.shrine.util.XmlUtil
 
@@ -48,29 +48,26 @@ final class ErrorResponseTest extends TestCase with ShouldMatchersForJUnit {
   }
 
   @Test
-  def testToXml = doTestToXml(expectedShrineXml, _.toXml)
+  def testToXml() = doTestToXml(expectedShrineXml, _.toXml)
 
   @Test
-  def testToI2b2 = doTestToXml(expectedI2b2Xml, _.toI2b2)
-
-/*
-  @Test
-  @Ignore
-  def testToXmlRoundTrip = doTestRoundTrip(_.toXml, ErrorResponse.fromXml)
-*/
-  @Test
-  @Ignore
-  def testToI2b2RoundTrip = doTestRoundTrip(_.toI2b2, ErrorResponse.fromI2b2)
+  def testToI2b2() = doTestToXml(expectedI2b2Xml, _.toI2b2)
 
   @Test
-  def testFromXml = doTestFromXml(expectedShrineXml, ErrorResponse.fromXml)
+  def testToXmlRoundTrip() = doTestRoundTrip(_.toXml, ErrorResponse.fromXml)
 
   @Test
-  def testFromI2b2 = doTestFromXml(expectedI2b2Xml, ErrorResponse.fromI2b2)
+  def testToI2b2RoundTrip() = doTestRoundTrip(_.toI2b2, ErrorResponse.fromI2b2)
+
+  @Test
+  def testFromXml() = doTestFromXml(expectedShrineXml, ErrorResponse.fromXml)
+
+  @Test
+  def testFromI2b2() = doTestFromXml(expectedI2b2Xml, ErrorResponse.fromI2b2)
 
   //NB: See https://open.med.harvard.edu/jira/browse/SHRINE-745
   @Test
-  def testFromI2b2AlternateFormat {
+  def testFromI2b2AlternateFormat() {
     val altI2b2Xml = XmlUtil.stripWhitespace {
       <ns5:response xmlns:ns2="http://www.i2b2.org/xsd/hive/pdo/1.1/" xmlns:ns4="http://www.i2b2.org/xsd/cell/crc/psm/1.1/" xmlns:ns3="http://www.i2b2.org/xsd/cell/crc/pdo/1.1/" xmlns:tns="http://axis2.crc.i2b2.harvard.edu" xmlns:ns9="http://www.i2b2.org/xsd/cell/ont/1.1/" xmlns:ns5="http://www.i2b2.org/xsd/hive/msg/1.1/" xmlns:ns6="http://www.i2b2.org/xsd/cell/crc/psm/querydefinition/1.1/" xmlns:ns7="http://www.i2b2.org/xsd/cell/crc/psm/analysisdefinition/1.1/" xmlns:ns10="http://www.i2b2.org/xsd/hive/msg/result/1.1/" xmlns:ns8="http://www.i2b2.org/xsd/cell/pm/1.1/">
         <message_header>
@@ -114,7 +111,7 @@ final class ErrorResponseTest extends TestCase with ShouldMatchersForJUnit {
     
     val resp = ErrorResponse.fromI2b2(altI2b2Xml)
     
-    resp should not be(null)
+    resp should not be null
     
     resp.errorMessage should equal("Query result instance id 3126 not found")
   }

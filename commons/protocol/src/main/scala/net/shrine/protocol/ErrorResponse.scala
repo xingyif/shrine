@@ -33,9 +33,10 @@ final case class ErrorResponse(errorMessage: String) extends ShrineResponse {
   override def toXml = XmlUtil.stripWhitespace {
     XmlUtil.renameRootTag(rootTagName) {
       <errorResponse>
+        //todo this is where the ProblemDigest goes.
 <!--        <codec>net.shrine.something.is.Broken</codec>
         <summary>Something is borked</summary> -->
-        <message>{ errorMessage } has extra xml</message>
+        <message>{ errorMessage }</message>
 <!--        <details>Herein is a stack trace, multiple lines</details> -->
       </errorResponse>
     }
