@@ -9,7 +9,7 @@ import net.shrine.protocol.DefaultBreakdownResultOutputTypes
 
 /**
  * @author clint
- * @date Oct 22, 2012
+ * @since Oct 22, 2012
  */
 object ObfuscatorTest {
   private def within(range: Long)(a: Long, b: Long) = scala.math.abs(b - a) <= range
@@ -22,16 +22,16 @@ final class ObfuscatorTest extends ShouldMatchersForJUnit {
   import ObfuscatorTest._
   
   @Test
-  def testObfuscateLong {
+  def testObfuscateLong() {
     val l = 12345L
     
     val obfuscated = Obfuscator.obfuscate(l)
     
-    within3(l, obfuscated) should be(true)
+    within3(l, obfuscated) should be(right = true)
   }
   
   @Test
-  def testObfuscateQueryResult {
+  def testObfuscateQueryResult() {
     import DefaultBreakdownResultOutputTypes._
     import ResultOutputType._
     
@@ -60,9 +60,9 @@ final class ObfuscatorTest extends ShouldMatchersForJUnit {
     
     //breakdowns
     {
-      val QueryResult(_, _, _, obfscSetSize1, _, _, _, _, _, obfscBreakdowns) = Obfuscator.obfuscate(queryResult(resultId1, setSize1))
+      val QueryResult(_, _, _, obfscSetSize1, _, _, _, _, _, obfscBreakdowns,_) = Obfuscator.obfuscate(queryResult(resultId1, setSize1))
               
-      within3(setSize1, obfscSetSize1) should be(true)
+      within3(setSize1, obfscSetSize1) should be(right = true)
       
       breakdowns.keySet should equal(obfscBreakdowns.keySet)
       
@@ -76,7 +76,7 @@ final class ObfuscatorTest extends ShouldMatchersForJUnit {
           (key, value) <- env.data
           obfscValue <- obfscEnv.data.get(key)
         } {
-          within3(value, obfscValue) should be(true)
+          within3(value, obfscValue) should be(right = true)
         }
       }
     }

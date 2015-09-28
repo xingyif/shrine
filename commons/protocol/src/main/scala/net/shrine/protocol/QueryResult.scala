@@ -1,9 +1,11 @@
 package net.shrine.protocol
 
 import javax.xml.datatype.XMLGregorianCalendar
+import net.shrine.problem.ProblemDigest
+
 import scala.xml.NodeSeq
 import net.shrine.util.{Tries, XmlUtil, NodeSeqEnrichments, SEnum, XmlDateHelper, OptionEnrichments}
-import net.shrine.serialization.{ I2b2Marshaller, I2b2Unmarshaller, XmlMarshaller, XmlUnmarshaller }
+import net.shrine.serialization.{ I2b2Marshaller, XmlMarshaller }
 import scala.util.Try
 
 /**
@@ -27,8 +29,10 @@ final case class QueryResult(
   endDate: Option[XMLGregorianCalendar],
   description: Option[String],
   statusType: QueryResult.StatusType,
-  statusMessage: Option[String], //todo maybe add an optional field here for the error message text
-  breakdowns: Map[ResultOutputType, I2b2ResultEnvelope] = Map.empty) extends XmlMarshaller with I2b2Marshaller {
+  statusMessage: Option[String],
+  breakdowns: Map[ResultOutputType, I2b2ResultEnvelope] = Map.empty,
+  problemDigest: Option[ProblemDigest] = None
+) extends XmlMarshaller with I2b2Marshaller {
 
   def this(resultId: Long, instanceId: Long, resultType: ResultOutputType, setSize: Long, startDate: XMLGregorianCalendar, endDate: XMLGregorianCalendar, statusType: QueryResult.StatusType) = {
     this(resultId, instanceId, Option(resultType), setSize, Option(startDate), Option(endDate), None, statusType, None)
@@ -73,7 +77,8 @@ final case class QueryResult(
         { description.toXml(<description/>) }
         {
           resultType match {
-            case Some(rt) if !rt.isError => {
+            case Some(rt) if !rt.isError => //noinspection RedundantBlock
+            {
               if (rt.isBreakdown) { rt.toI2b2NameOnly() }
               else { rt.toI2b2 }
             }
@@ -151,11 +156,11 @@ object QueryResult {
       val i2b2Id: Int = queryResult.statusType.i2b2Id.getOrElse{
         throw new IllegalStateException(s"queryResult.statusType ${queryResult.statusType} has no i2b2Id")
       }
-      <status_type_id>{ queryResult.statusType.i2b2Id.get }</status_type_id><description>{ queryResult.statusType.name }</description>
+      <status_type_id>{ i2b2Id }</status_type_id><description>{ queryResult.statusType.name }</description>
     }
 
     val noMessage:NodeSeq = null
-    val Error = StatusType("ERROR", true, None, _.statusMessage.fold(noMessage)(
+    val Error = StatusType("ERROR", isDone = true, None, _.statusMessage.fold(noMessage)(
       msg =>
         <codec>net.shrine.something.is.Broken</codec>
           <summary>Something is borked</summary>
@@ -210,6 +215,7 @@ object QueryResult {
     import Tries.sequence
 
     def extractBreakdowns(elemName: String): Map[ResultOutputType, I2b2ResultEnvelope] = {
+      //noinspection ScalaUnnecessaryParentheses
       val mapAttempt = for {
         subXml <- xml.withChild(elemName)
         envelopes <- sequence(subXml.map(I2b2ResultEnvelope.fromXml(breakdownTypes)))

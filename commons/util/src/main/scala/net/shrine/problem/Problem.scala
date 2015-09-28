@@ -4,6 +4,9 @@ import java.net.{InetAddress, ConnectException}
 import java.util.Date
 
 import net.shrine.log.Loggable
+import net.shrine.serialization.{XmlUnmarshaller, XmlMarshaller}
+
+import scala.xml.NodeSeq
 
 /**
  * Describes what information we have about a problem at the site in code where we discover it.
@@ -30,14 +33,34 @@ trait Problem {
 
 }
 
-case class ProblemDigest(codec:String,summary:String,description:String,details:String)
+case class ProblemDigest(codec:String,summary:String,description:String,details:String) extends XmlMarshaller {
+  override def toXml: NodeSeq = {
+    <problem>
+      <codec>{codec}</codec>
+      <summary>{summary}</summary>
+      <description>{description}</description>
+      <details>{details}</details>
+    </problem>
+  }
+}
 
-object ProblemDigest extends Loggable {
+object ProblemDigest extends XmlUnmarshaller[ProblemDigest] with Loggable {
   def apply(oldMessage:String):ProblemDigest = {
     val ex = new IllegalStateException(s"'$oldMessage' detected, not in codec. Please report this problem and stack trace to Shrine dev.")
     ex.fillInStackTrace()
     warn(ex)
     ProblemDigest("ProblemNotInCodec",oldMessage,"","")
+  }
+
+  override def fromXml(xml: NodeSeq): ProblemDigest = {
+    def extractText(tagName:String) = (xml \ tagName).text
+
+    val codec = extractText("codec")
+    val summary = extractText("summary")
+    val description = extractText("description")
+    val details = extractText("details")
+
+    ProblemDigest(codec,summary,description,details)
   }
 }
 
