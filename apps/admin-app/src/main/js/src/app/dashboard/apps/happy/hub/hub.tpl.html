@@ -29,7 +29,7 @@
                     <label>Failure Count:</label>
                 </td>
                 <td colspan="4">
-                    {{net.failureCount}}
+                    <span class="error">{{net.failureCount}}</span>
                 </td>
             </tr>
             <tr>
@@ -53,6 +53,14 @@
             </td>
             <td>
                 <span>Url:</span>&nbsp;&nbsp;{{net.node.url}}
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <span>Name: </span>&nbsp;&nbsp;{{net.failure.origin}}
+            </td>
+            <td>
+                <span>Url:</span>&nbsp;&nbsp;<span class="error">{{net.failure.description}}</span>
             </td>
         </tr>
         </tfoot>
