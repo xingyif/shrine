@@ -1,6 +1,7 @@
 package net.shrine.problem
 
 import java.net.{InetAddress, ConnectException}
+import java.util.Date
 
 import net.shrine.log.Loggable
 
@@ -11,25 +12,45 @@ import net.shrine.log.Loggable
  * @since 8/6/15
  */
 trait Problem {
-  def message:String
+  def summary:String
 
-  def getProblemName = getClass.getName
+  def problemName = getClass.getName
 
   def throwable:Option[Throwable] = None
 
-  def source:ProblemSources.ProblemSource
-
   def stamp:Stamp
+
+  def description = s"$summary ${stamp.pretty}"
+
+  def throwableDetail = throwable.map(x => x.getStackTrace.mkString(sys.props("line.separator")))
+
+  def details = s"$description ${throwableDetail.getOrElse("")}"
+
+  def toDigest:ProblemDigest = ProblemDigest(problemName,summary,description,details)
+
 }
 
-case class Stamp(host:InetAddress,time:Long)
+case class ProblemDigest(codec:String,summary:String,description:String,details:String)
+
+object ProblemDigest extends Loggable {
+  def apply(oldMessage:String):ProblemDigest = {
+    val ex = new IllegalStateException(s"'$oldMessage' detected, not in codec. Please report this problem and stack trace to Shrine dev.")
+    ex.fillInStackTrace()
+    warn(ex)
+    ProblemDigest("ProblemNotInCodec",oldMessage,"","")
+  }
+}
+
+case class Stamp(host:InetAddress,time:Long,source:ProblemSources.ProblemSource) {
+  def pretty = s"at ${new Date(time)} on $host ${source.pretty}"
+}
 
 object Stamp {
-  def apply(): Stamp = Stamp(InetAddress.getLocalHost,System.currentTimeMillis())
+  def apply(source:ProblemSources.ProblemSource): Stamp = Stamp(InetAddress.getLocalHost,System.currentTimeMillis(),source)
 }
 
-abstract class AbstractProblem(override val source:ProblemSources.ProblemSource) extends Problem {
-  val stamp = Stamp()
+abstract class AbstractProblem(source:ProblemSources.ProblemSource) extends Problem {
+  val stamp = Stamp(source)
 }
 
 trait ProblemHandler {
@@ -50,7 +71,9 @@ object LoggingProblemHandler extends ProblemHandler with Loggable {
 
 object ProblemSources{
 
-  sealed trait ProblemSource
+  sealed trait ProblemSource {
+    def pretty = getClass.getSimpleName
+  }
 
   case object Adapter extends ProblemSource
   case object Hub extends ProblemSource
@@ -73,7 +96,7 @@ object ProblemSources{
 //case class CouldNotConnectToQueryNode(nodeId:NodeId,connectExcepition:ConnectException) extends Problem {
 case class CouldNotConnectToNode(nodeName:String,connectException:ConnectException) extends AbstractProblem(ProblemSources.Hub) {
 
-  val message = s"Could not connect to node $nodeName"
+  val summary = s"Could not connect to node $nodeName"
 
   override def throwable = Some(connectException)
 }
