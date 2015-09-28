@@ -228,11 +228,16 @@ body {
     width: 100%;
 }
 
+.login-wrapper{
+    margin-top: 51px;
+    margin-right: 20px;
+    margin-top: 51px;
+}
+
 #page-wrapper {
     background-color: transparent;
     margin-top: 51px;
     margin-right: 20px;
-    margin-left: 100px;
 }
 
 .navbar-top-links {
@@ -608,7 +613,7 @@ table.dataTable thead .sorting:after {
     bottom: 6px;
 }
 
-.shrine-modal button:hover{
+.shrine-modal button:hover, .btn-success{
     font-family: "Nexa Bold";
     color: #008CBA;
     background-color: transparent;
@@ -629,3 +634,18 @@ button.shrine-submit{
     position: relative;
     right: -25px;
 }
+
+.shrine-login{
+    margin-top: 8%;
+    margin-left: 1%;
+}
+
+
+@media (min-width: 768px) {
+    .shrine-content {
+        width: 75%;
+        position: absolute;
+        left: 280px;
+    }
+}
+

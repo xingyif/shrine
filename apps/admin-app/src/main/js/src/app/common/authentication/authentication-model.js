@@ -14,7 +14,7 @@
             // -- private -- //
             var model   = this,
                 URLS    =  {
-                    AUTHENTICATE: 'admin/user/whoami'
+                    AUTHENTICATE: 'user/whoami'
                 };
             
             function parseResult(result) {
