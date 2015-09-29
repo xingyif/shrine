@@ -496,11 +496,6 @@ final class QueryResultTest extends ShouldMatchersForJUnit with XmlRoundTripper[
 
     val i2b2 = actual.toI2b2
     val fromI2b2 = QueryResult.fromI2b2(Set.empty)(i2b2)
-
-    println(i2b2)
-
-    println(fromI2b2)
-
     fromI2b2 should equal(actual)
 
     val xml = actual.toXml
