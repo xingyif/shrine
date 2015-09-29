@@ -34,12 +34,45 @@ final case class QueryResult(
   problemDigest: Option[ProblemDigest] = None
 ) extends XmlMarshaller with I2b2Marshaller {
 
-  def this(resultId: Long, instanceId: Long, resultType: ResultOutputType, setSize: Long, startDate: XMLGregorianCalendar, endDate: XMLGregorianCalendar, statusType: QueryResult.StatusType) = {
-    this(resultId, instanceId, Option(resultType), setSize, Option(startDate), Option(endDate), None, statusType, None)
+  def this(
+            resultId: Long,
+            instanceId: Long,
+            resultType: ResultOutputType,
+            setSize: Long,
+            startDate: XMLGregorianCalendar,
+            endDate: XMLGregorianCalendar,
+            statusType: QueryResult.StatusType) = {
+    this(
+      resultId,
+      instanceId,
+      Option(resultType),
+      setSize,
+      Option(startDate),
+      Option(endDate),
+      None, //description
+      statusType,
+      None) //statusMessage 
   }
 
-  def this(resultId: Long, instanceId: Long, resultType: ResultOutputType, setSize: Long, startDate: XMLGregorianCalendar, endDate: XMLGregorianCalendar, description: String, statusType: QueryResult.StatusType) = {
-    this(resultId, instanceId, Option(resultType), setSize, Option(startDate), Option(endDate), Option(description), statusType, None)
+  def this(
+            resultId: Long,
+            instanceId: Long,
+            resultType: ResultOutputType,
+            setSize: Long,
+            startDate: XMLGregorianCalendar,
+            endDate: XMLGregorianCalendar,
+            description: String,
+            statusType: QueryResult.StatusType) = {
+    this(
+      resultId,
+      instanceId,
+      Option(resultType),
+      setSize,
+      Option(startDate),
+      Option(endDate),
+      Option(description),
+      statusType,
+      None) //statusMessage
   }
 
   def resultTypeIs(testedResultType: ResultOutputType): Boolean = resultType match {
@@ -237,7 +270,6 @@ object QueryResult {
     }
 
     def extractProblemDigest():Option[ProblemDigest] = {
-//todo start here. Add tests of things in the problemDigests
       val subXml = xml \ "problemDigest"
       if(subXml.nonEmpty) Some(ProblemDigest.fromXml(subXml))
       else None
@@ -277,7 +309,18 @@ object QueryResult {
       statusMessage = asTextOption("query_status_type", "description"))
   }
 
-  def errorResult(description: Option[String], statusMessage: String) = {
-    QueryResult(0L, 0L, None, 0L, None, None, description, StatusType.Error, Option(statusMessage))
+  //todo default problem description goes here
+  def errorResult(description: Option[String], statusMessage: String,problemDigest:Option[ProblemDigest] = None) = {
+    QueryResult(
+      resultId = 0L,
+      instanceId = 0L,
+      resultType = None,
+      setSize = 0L,
+      startDate = None,
+      endDate = None,
+      description = description,
+      statusType = StatusType.Error,
+      statusMessage = Option(statusMessage),
+      problemDigest = problemDigest)
   }
 }
