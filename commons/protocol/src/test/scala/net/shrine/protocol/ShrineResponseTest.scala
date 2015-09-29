@@ -29,7 +29,16 @@ final class ShrineResponseTest extends ShouldMatchersForJUnit {
       unmarshalled should equal(Success(response))
     }
 
-    val queryResult1 = QueryResult(1L, 2342L, Some(ResultOutputType.PATIENT_COUNT_XML), 123L, None, None, None, QueryResult.StatusType.Finished, None, Map.empty)
+    val queryResult1 = QueryResult(
+      resultId = 1L,
+      instanceId = 2342L,
+      resultType = Some(ResultOutputType.PATIENT_COUNT_XML),
+      setSize = 123L,
+      startDate = None,
+      endDate = None,
+      description = None,
+      statusType = QueryResult.StatusType.Finished,
+      statusMessage = None)
 
     roundTrip(ReadQueryResultResponse(123L, queryResult1))
     roundTrip(AggregatedReadQueryResultResponse(123L, Seq(queryResult1)))

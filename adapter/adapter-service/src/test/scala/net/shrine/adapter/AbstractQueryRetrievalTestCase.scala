@@ -23,7 +23,7 @@ import scala.util.Success
 
 /**
  * @author clint
- * @date Nov 8, 2012
+ * @since Nov 8, 2012
  */
 abstract class AbstractQueryRetrievalTestCase[R <: BaseShrineResponse](
   makeAdapter: (AdapterDao, HttpClient) => WithHiveCredentialsAdapter,
@@ -91,7 +91,17 @@ abstract class AbstractQueryRetrievalTestCase[R <: BaseShrineResponse](
     val countResultId = 456L
     val breakdownResultId = 98237943265436L
 
-    val incompleteCountResult = QueryResult(countResultId, instanceId, Some(PATIENT_COUNT_XML), setSize, Option(startDate), Option(endDate), Some("results from node X"), QueryResult.StatusType.Processing, None, breakdowns)
+    val incompleteCountResult = QueryResult(
+      resultId = countResultId,
+      instanceId = instanceId,
+      resultType = Some(PATIENT_COUNT_XML),
+      setSize = setSize,
+      startDate = Option(startDate),
+      endDate = Option(endDate),
+      description = Some("results from node X"),
+      statusType = QueryResult.StatusType.Processing,
+      statusMessage = None,
+      breakdowns = breakdowns)
 
     val breakdownResult = breakdowns.head match {
       case (resultType, data) => incompleteCountResult.withId(breakdownResultId).withBreakdowns(Map(resultType -> data)).withResultType(resultType)
@@ -275,7 +285,18 @@ abstract class AbstractQueryRetrievalTestCase[R <: BaseShrineResponse](
       startDate + elapsed.milliseconds
     }
 
-    val countResult = QueryResult(456L, instanceId, Some(PATIENT_COUNT_XML), setSize, Option(startDate), Option(endDate), Some("results from node X"), QueryResult.StatusType.Finished, None, breakdowns)
+    val countResult = QueryResult(
+      resultId = 456L,
+      instanceId = instanceId,
+      resultType = Some(PATIENT_COUNT_XML),
+      setSize = setSize,
+      startDate = Option(startDate),
+      endDate = Option(endDate),
+      description = Some("results from node X"),
+      statusType = QueryResult.StatusType.Finished,
+      statusMessage = None,
+      breakdowns = breakdowns
+    )
 
     val breakdownResults = breakdowns.map {
       case (resultType, data) =>

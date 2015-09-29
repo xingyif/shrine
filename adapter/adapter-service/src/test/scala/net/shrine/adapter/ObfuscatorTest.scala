@@ -39,7 +39,18 @@ final class ObfuscatorTest extends ShouldMatchersForJUnit {
         PATIENT_AGE_COUNT_XML -> I2b2ResultEnvelope(PATIENT_AGE_COUNT_XML, Map("x" -> 1, "y" -> 42)), 
     		PATIENT_GENDER_COUNT_XML -> I2b2ResultEnvelope(PATIENT_GENDER_COUNT_XML, Map("a" -> 123, "b" -> 456)))
     
-    def queryResult(resultId: Long, setSize: Long) = QueryResult(resultId, 123L, Some(PATIENT_COUNT_XML), setSize, None, None, None, QueryResult.StatusType.Finished, None, breakdowns)
+    def queryResult(resultId: Long, setSize: Long) = QueryResult(
+      resultId = resultId,
+      instanceId = 123L,
+      resultType = Some(PATIENT_COUNT_XML),
+      setSize = setSize,
+      startDate = None,
+      endDate = None,
+      description = None,
+      statusType = QueryResult.StatusType.Finished,
+      statusMessage = None,
+      breakdowns = breakdowns
+    )
 
     val resultId1 = 12345L
     
@@ -60,7 +71,7 @@ final class ObfuscatorTest extends ShouldMatchersForJUnit {
     
     //breakdowns
     {
-      val QueryResult(_, _, _, obfscSetSize1, _, _, _, _, _, obfscBreakdowns,_) = Obfuscator.obfuscate(queryResult(resultId1, setSize1))
+      val QueryResult(_, _, _, obfscSetSize1, _, _, _, _, _, _, obfscBreakdowns) = Obfuscator.obfuscate(queryResult(resultId1, setSize1))
               
       within3(setSize1, obfscSetSize1) should be(right = true)
       

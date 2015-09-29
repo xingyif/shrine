@@ -2,6 +2,7 @@ package net.shrine.protocol
 
 import javax.xml.datatype.XMLGregorianCalendar
 import net.shrine.problem.ProblemDigest
+import net.shrine.protocol.QueryResult.StatusType
 
 import scala.xml.NodeSeq
 import net.shrine.util.{Tries, XmlUtil, NodeSeqEnrichments, SEnum, XmlDateHelper, OptionEnrichments}
@@ -23,15 +24,15 @@ import scala.util.Try
 final case class QueryResult(
   resultId: Long,
   instanceId: Long,
-  resultType: Option[ResultOutputType], //this won't be present in the case of an error result
+  resultType: Option[ResultOutputType],
   setSize: Long,
   startDate: Option[XMLGregorianCalendar],
   endDate: Option[XMLGregorianCalendar],
   description: Option[String],
-  statusType: QueryResult.StatusType,
+  statusType: StatusType,
   statusMessage: Option[String],
-  breakdowns: Map[ResultOutputType, I2b2ResultEnvelope] = Map.empty,
-  problemDigest: Option[ProblemDigest] = None
+  problemDigest: Option[ProblemDigest] = None,
+  breakdowns: Map[ResultOutputType,I2b2ResultEnvelope] = Map.empty
 ) extends XmlMarshaller with I2b2Marshaller {
 
   def this(
@@ -277,17 +278,17 @@ object QueryResult {
     }
 
     QueryResult(
-      asLong("resultId"),
-      asLong("instanceId"),
-      extractResultOutputType(xml \ "resultType")(ResultOutputType.fromXml),
-      asLong("setSize"),
-      extractDate("startDate"),
-      extractDate("endDate"),
-      extract("description"),
-      StatusType.valueOf(asText("status")(xml)).get, //TODO: Avoid fragile .get call
-      extract("statusMessage"),
-      extractBreakdowns("resultEnvelope"),
-      extractProblemDigest(xml)
+      resultId = asLong("resultId"),
+      instanceId = asLong("instanceId"),
+      resultType = extractResultOutputType(xml \ "resultType")(ResultOutputType.fromXml),
+      setSize = asLong("setSize"),
+      startDate = extractDate("startDate"),
+      endDate = extractDate("endDate"),
+      description = extract("description"),
+      statusType = StatusType.valueOf(asText("status")(xml)).get, //TODO: Avoid fragile .get call
+      statusMessage = extract("statusMessage"),
+      problemDigest = extractProblemDigest(xml),
+      breakdowns = extractBreakdowns("resultEnvelope")
     )
   }
 

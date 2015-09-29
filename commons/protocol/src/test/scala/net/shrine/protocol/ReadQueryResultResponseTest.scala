@@ -6,22 +6,22 @@ import org.junit.Test
 
 /**
  * @author clint
- * @date Nov 2, 2012
+ * @since Nov 2, 2012
  */
 final class ReadQueryResultResponseTest extends TestCase with ShouldMatchersForJUnit {
   import DefaultBreakdownResultOutputTypes._
   
   private val result = QueryResult(
-    123L,
-    456L,
-    Some(ResultOutputType.PATIENT_COUNT_XML),
-    999L,
-    None,
-    None,
-    None,
-    QueryResult.StatusType.Finished,
-    None,
-    Map(PATIENT_AGE_COUNT_XML -> I2b2ResultEnvelope(PATIENT_AGE_COUNT_XML, Map("x" -> 123, "y" -> 214))))
+    resultId = 123L,
+    instanceId = 456L,
+    resultType = Some(ResultOutputType.PATIENT_COUNT_XML),
+    setSize = 999L,
+    startDate = None,
+    endDate = None,
+    description = None,
+    statusType = QueryResult.StatusType.Finished,
+    statusMessage = None,
+    breakdowns = Map(PATIENT_AGE_COUNT_XML -> I2b2ResultEnvelope(PATIENT_AGE_COUNT_XML, Map("x" -> 123, "y" -> 214))))
 
   private val resp = ReadQueryResultResponse(123, result)
 
