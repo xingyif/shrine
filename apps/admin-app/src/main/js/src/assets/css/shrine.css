@@ -41,6 +41,7 @@
     font-family: "Nexa";
     color: #5d5d5d;
     min-height: 60px;
+    width: 101%
 }
 
 .shrine-brand{
@@ -160,7 +161,7 @@ footer img{
 footer {
     background-color: rgba(50, 62, 74, 0.48);
     position: absolute;
-    width: 100%;
+    width: 102%;
     bottom: 0px;
     min-height: 60px;
 }
@@ -638,6 +639,11 @@ button.shrine-submit{
 .shrine-login{
     margin-top: 8%;
     margin-left: 1%;
+}
+
+.shrine-content{
+    height: 75%;
+    overflow: auto;
 }
 
 
