@@ -483,12 +483,28 @@ final class QueryResultTest extends ShouldMatchersForJUnit with XmlRoundTripper[
   }
 
   @Test
-  def testToI2B2WithErrorsAndProblemDigest():Unit = {
+  def testWithErrorsAndProblemDigest():Unit = {
+
     val actual = QueryResult.errorResult(
       Some(description),
       statusMessage,
-      Option(ProblemDigest(problemCodec,problemSummary,problemDescription,problemDetails))).toI2b2String
+      Option(ProblemDigest(problemCodec,problemSummary,problemDescription,problemDetails)))
 
-    actual should equal(expectedI2b2ErrorWithProblemDigestXml)
+    val i2b2String = actual.toI2b2String
+
+    i2b2String should equal(expectedI2b2ErrorWithProblemDigestXml)
+
+    val i2b2 = actual.toI2b2
+    val fromI2b2 = QueryResult.fromI2b2(Set.empty)(i2b2)
+
+    println(i2b2)
+
+    println(fromI2b2)
+
+    fromI2b2 should equal(actual)
+
+    val xml = actual.toXml
+    val fromXml = QueryResult.fromXml(Set.empty)(xml)
+    fromXml should equal(actual)
   }
 }

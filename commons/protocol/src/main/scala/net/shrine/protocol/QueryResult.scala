@@ -152,7 +152,7 @@ final case class QueryResult(
         //The number of breakdowns will be at most 4, so performance should not be an issue. 
         sortedBreakdowns.map(_.toXml)
       }
-      { problemDigest.map(_.toXml).orNull }
+      { problemDigest.map(_.toXml).getOrElse("") }
     </queryResult>
   }
 
@@ -246,6 +246,13 @@ object QueryResult {
     attempt.toOption
   }
 
+  def extractProblemDigest(xml: NodeSeq):Option[ProblemDigest] = {
+
+    val subXml = xml \ "problem"
+    if(subXml.nonEmpty) Some(ProblemDigest.fromXml(subXml))
+    else None
+  }
+
   def fromXml(breakdownTypes: Set[ResultOutputType])(xml: NodeSeq): QueryResult = {
     def extract(elemName: String): Option[String] = {
       Option((xml \ elemName).text.trim).filter(!_.isEmpty)
@@ -269,12 +276,6 @@ object QueryResult {
       mapAttempt.getOrElse(Map.empty)
     }
 
-    def extractProblemDigest():Option[ProblemDigest] = {
-      val subXml = xml \ "problemDigest"
-      if(subXml.nonEmpty) Some(ProblemDigest.fromXml(subXml))
-      else None
-    }
-
     QueryResult(
       asLong("resultId"),
       asLong("instanceId"),
@@ -286,7 +287,7 @@ object QueryResult {
       StatusType.valueOf(asText("status")(xml)).get, //TODO: Avoid fragile .get call
       extract("statusMessage"),
       extractBreakdowns("resultEnvelope"),
-      extractProblemDigest()
+      extractProblemDigest(xml)
     )
   }
 
@@ -306,7 +307,8 @@ object QueryResult {
       endDate = asXmlGcOption("end_date"),
       description = asTextOption("description"),
       statusType = StatusType.valueOf(asText("query_status_type", "name")(xml)).get, //TODO: Avoid fragile .get call
-      statusMessage = asTextOption("query_status_type", "description"))
+      statusMessage = asTextOption("query_status_type", "description"),
+      problemDigest = extractProblemDigest(xml \ "query_status_type"))
   }
 
   //todo default problem description goes here
