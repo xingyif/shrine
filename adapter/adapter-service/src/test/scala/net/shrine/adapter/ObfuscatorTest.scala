@@ -9,7 +9,7 @@ import net.shrine.protocol.DefaultBreakdownResultOutputTypes
 
 /**
  * @author clint
- * @date Oct 22, 2012
+ * @since Oct 22, 2012
  */
 object ObfuscatorTest {
   private def within(range: Long)(a: Long, b: Long) = scala.math.abs(b - a) <= range
@@ -22,16 +22,16 @@ final class ObfuscatorTest extends ShouldMatchersForJUnit {
   import ObfuscatorTest._
   
   @Test
-  def testObfuscateLong {
+  def testObfuscateLong() {
     val l = 12345L
     
     val obfuscated = Obfuscator.obfuscate(l)
     
-    within3(l, obfuscated) should be(true)
+    within3(l, obfuscated) should be(right = true)
   }
   
   @Test
-  def testObfuscateQueryResult {
+  def testObfuscateQueryResult() {
     import DefaultBreakdownResultOutputTypes._
     import ResultOutputType._
     
@@ -39,7 +39,18 @@ final class ObfuscatorTest extends ShouldMatchersForJUnit {
         PATIENT_AGE_COUNT_XML -> I2b2ResultEnvelope(PATIENT_AGE_COUNT_XML, Map("x" -> 1, "y" -> 42)), 
     		PATIENT_GENDER_COUNT_XML -> I2b2ResultEnvelope(PATIENT_GENDER_COUNT_XML, Map("a" -> 123, "b" -> 456)))
     
-    def queryResult(resultId: Long, setSize: Long) = QueryResult(resultId, 123L, Some(PATIENT_COUNT_XML), setSize, None, None, None, QueryResult.StatusType.Finished, None, breakdowns)
+    def queryResult(resultId: Long, setSize: Long) = QueryResult(
+      resultId = resultId,
+      instanceId = 123L,
+      resultType = Some(PATIENT_COUNT_XML),
+      setSize = setSize,
+      startDate = None,
+      endDate = None,
+      description = None,
+      statusType = QueryResult.StatusType.Finished,
+      statusMessage = None,
+      breakdowns = breakdowns
+    )
 
     val resultId1 = 12345L
     
@@ -60,9 +71,9 @@ final class ObfuscatorTest extends ShouldMatchersForJUnit {
     
     //breakdowns
     {
-      val QueryResult(_, _, _, obfscSetSize1, _, _, _, _, _, obfscBreakdowns) = Obfuscator.obfuscate(queryResult(resultId1, setSize1))
+      val QueryResult(_, _, _, obfscSetSize1, _, _, _, _, _, _, obfscBreakdowns) = Obfuscator.obfuscate(queryResult(resultId1, setSize1))
               
-      within3(setSize1, obfscSetSize1) should be(true)
+      within3(setSize1, obfscSetSize1) should be(right = true)
       
       breakdowns.keySet should equal(obfscBreakdowns.keySet)
       
@@ -76,7 +87,7 @@ final class ObfuscatorTest extends ShouldMatchersForJUnit {
           (key, value) <- env.data
           obfscValue <- obfscEnv.data.get(key)
         } {
-          within3(value, obfscValue) should be(true)
+          within3(value, obfscValue) should be(right = true)
         }
       }
     }

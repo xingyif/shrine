@@ -13,9 +13,10 @@ import net.shrine.util.XmlUtil
  *
  *
  * @author Justin Quan
- * @link http://chip.org
+ * @see http://chip.org
  * Date: 8/12/11
  */
+//noinspection EmptyParenMethodOverridenAsParameterless,EmptyParenMethodAccessedAsParameterless,UnitMethodIsParameterless
 final class RunQueryResponseTest extends ShrineResponseI2b2SerializableValidator {
   private val queryId = 1L
   private val queryName = "queryName"
@@ -25,7 +26,6 @@ final class RunQueryResponseTest extends ShrineResponseI2b2SerializableValidator
   private val requestQueryDef = QueryDefinition(queryName, Term("""\\i2b2\i2b2\Demographics\Age\0-9 years old\"""))
   private val queryInstanceId = 2L
   private val resultId = 3L
-  private val description = Option("description")
   private val setSize = 10L
   private val startDate = createDate
   private val endDate = createDate
@@ -82,8 +82,16 @@ final class RunQueryResponseTest extends ShrineResponseI2b2SerializableValidator
     </message_body>
   }
 
-  private val qr1 = QueryResult(resultId, queryInstanceId, Option(resultType1), setSize, Option(createDate), Option(createDate), None, statusType, Some(statusType.name), Map.empty)
-  private val qr2 = QueryResult(resultId2, queryInstanceId, Option(resultType2), setSize, Option(createDate), Option(createDate), None, statusType, None, Map.empty)
+  private val qr1 = QueryResult(
+    resultId = resultId,
+    instanceId = queryInstanceId,
+    resultType = Option(resultType1),
+    setSize = setSize,
+    startDate = Option(createDate),
+    endDate = Option(createDate),
+    description = None,
+    statusType = statusType,
+    statusMessage = Some(statusType.name))
 
   private val runQueryResponse = XmlUtil.stripWhitespace {
     <runQueryResponse>

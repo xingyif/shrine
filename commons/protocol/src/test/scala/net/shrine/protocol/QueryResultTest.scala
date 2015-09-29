@@ -1,26 +1,24 @@
 package net.shrine.protocol
 
+import net.shrine.problem.ProblemDigest
 import net.shrine.util.ShouldMatchersForJUnit
-import org.junit.{Ignore, Test}
-import xml.Utility
+import org.junit.Test
 import net.shrine.util.XmlUtil
-import junit.framework.TestCase
-import java.util.GregorianCalendar
-import net.shrine.protocol.I2b2ResultEnvelope.Column
 import net.shrine.util.XmlDateHelper
 import net.shrine.util.XmlGcEnrichments
 
 /**
  * @author Bill Simons
  * @author clint
- * @date 8/19/11
- * @link http://cbmi.med.harvard.edu
- * @link http://chip.org
+ * @since 8/19/11
+ * @see http://cbmi.med.harvard.edu
+ * @see http://chip.org
  *       <p/>
  *       NOTICE: This software comes with NO guarantees whatsoever and is
  *       licensed as Lgpl Open Source
- * @link http://www.gnu.org/licenses/lgpl.html
+ * @see http://www.gnu.org/licenses/lgpl.html
  */
+//noinspection EmptyParenMethodAccessedAsParameterless,NameBooleanParameters
 final class QueryResultTest extends ShouldMatchersForJUnit with XmlRoundTripper[QueryResult] with I2b2SerializableValidator {
   private val date = XmlDateHelper.now
   private val resultId = 1L
@@ -30,6 +28,15 @@ final class QueryResultTest extends ShouldMatchersForJUnit with XmlRoundTripper[
   private val statusType = QueryResult.StatusType.Finished
   private val description = "description"
   private val statusMessage = "lakjdalsjd"
+  private val problemCodec = "problem.codec"
+  private val problemSummary = "test problem"
+  private val problemDescription = "problem for testing"
+  private val problemDetails =
+    """Details of the problem
+      |sometimes take
+      |multiple lines.
+    """.stripMargin
+
   private val queryResult = QueryResult(resultId, instanceId, Some(resultType), setSize, Option(date), Option(date), Option(description), statusType, Option(statusType.name))
 
   import DefaultBreakdownResultOutputTypes.{ values => breakdownTypes, _ }
@@ -196,6 +203,30 @@ final class QueryResultTest extends ShouldMatchersForJUnit with XmlRoundTripper[
     </query_result_instance>
   }.toString
 
+  private val expectedI2b2ErrorWithProblemDigestXml = XmlUtil.stripWhitespace {
+    <query_result_instance>
+      <result_instance_id>0</result_instance_id>
+      <query_instance_id>0</query_instance_id>
+      <description>{ description }</description>
+      <query_result_type>
+        <name></name>
+      </query_result_type>
+      <set_size>0</set_size>
+      <query_status_type>
+        <name>ERROR</name>
+        <description>{ statusMessage }</description>
+        <problem>
+          <codec>{ problemCodec }</codec>
+          <summary>{ problemSummary }</summary>
+          <description>{ problemDescription }</description>
+          <details>{ problemDetails }</details>
+        </problem>
+      </query_status_type>
+    </query_result_instance>
+  }.toString
+
+
+
   //NB: See https://open.med.harvard.edu/jira/browse/SHRINE-745
   private val expectedI2b2IncompleteXml = XmlUtil.stripWhitespace {
     <query_result_instance>
@@ -217,14 +248,14 @@ final class QueryResultTest extends ShouldMatchersForJUnit with XmlRoundTripper[
 
   //NB: See https://open.med.harvard.edu/jira/browse/SHRINE-745
   @Test
-  def testParseIncomplete {
+  def testParseIncomplete() {
     val qr = QueryResult.fromI2b2(breakdownTypes.toSet)(loadString(expectedI2b2IncompleteXml))
 
     qr.statusType should be(QueryResult.StatusType.Incomplete)
   }
 
   @Test
-  def testElapsed {
+  def testElapsed() {
     queryResult.copy(startDate = None).elapsed should be(None)
     queryResult.copy(endDate = None).elapsed should be(None)
 
@@ -251,7 +282,7 @@ final class QueryResultTest extends ShouldMatchersForJUnit with XmlRoundTripper[
   }
 
   @Test
-  def testIsError {
+  def testIsError() {
     queryResult.isError should be(false)
 
     queryResult.copy(statusType = QueryResult.StatusType.Processing).isError should be(false)
@@ -263,7 +294,7 @@ final class QueryResultTest extends ShouldMatchersForJUnit with XmlRoundTripper[
   }
 
   @Test
-  def testToXml {
+  def testToXml() {
     val queryResultForShrine = queryResult.copy(statusMessage = Some(statusMessage))
 
     val expectedWhenNoBreakdowns = XmlUtil.stripWhitespace {
@@ -346,12 +377,12 @@ final class QueryResultTest extends ShouldMatchersForJUnit with XmlRoundTripper[
   }
 
   @Test
-  def testFromXml {
+  def testFromXml() {
     QueryResult.fromXml(breakdownTypes.toSet)(loadString(expectedWhenBreakdownsArePresent)) should equal(resultWithBreakDowns)
   }
 
   @Test
-  def testShrineRoundTrip = {
+  def testShrineRoundTrip() = {
     QueryResult.fromXml(breakdownTypes.toSet)(resultWithBreakDowns.toXml) should equal(resultWithBreakDowns)
   }
 
@@ -370,7 +401,7 @@ final class QueryResultTest extends ShouldMatchersForJUnit with XmlRoundTripper[
   }
 
   @Test
-  def testI2b2RoundTrip = {
+  def testI2b2RoundTrip() = {
     //NB: Needed because i2b2 handles status messages differently. In the error case, statusMessage is
     //descriptive; otherwise, it's the all-caps name of the status type.  This is different from how
     //Shrine creates and parses statusMessage XML, so we need a new QueryResult here.  (Previously, we
@@ -387,12 +418,12 @@ final class QueryResultTest extends ShouldMatchersForJUnit with XmlRoundTripper[
   }
 
   @Test
-  def testFromI2b2 {
+  def testFromI2b2() {
     compareIgnoringBreakdowns(QueryResult.fromI2b2(breakdownTypes.toSet)(loadString(expectedI2b2Xml)), queryResult)
   }
 
   @Test
-  def testFromI2b2WithErrors {
+  def testFromI2b2WithErrors() {
     val errorResult = QueryResult.errorResult(Some(description), statusMessage)
 
     val actual = QueryResult.fromI2b2(breakdownTypes.toSet)(loadString(expectedI2b2ErrorXml))
@@ -401,17 +432,17 @@ final class QueryResultTest extends ShouldMatchersForJUnit with XmlRoundTripper[
   }
 
   @Test
-  def testToI2b2 {
+  def testToI2b2() {
     queryResult.toI2b2String should equal(expectedI2b2Xml)
   }
 
   @Test
-  def testToI2b2WithBreakdowns {
+  def testToI2b2WithBreakdowns() {
     resultWithBreakDowns.toI2b2String should equal(expectedI2b2XmlWithBreakdowns)
   }
 
   @Test
-  def testToI2b2AllStatusTypes: Unit = {
+  def testToI2b2AllStatusTypes(): Unit = {
     def doTest(statusType: QueryResult.StatusType) {
       val expectedI2b2Xml = XmlUtil.stripWhitespace {
         <query_result_instance>
@@ -445,10 +476,35 @@ final class QueryResultTest extends ShouldMatchersForJUnit with XmlRoundTripper[
   }
 
   @Test
-  @Ignore
-  def testToI2b2WithErrors: Unit = {
+  def testToI2b2WithErrors(): Unit = {
     val actual = QueryResult.errorResult(Some(description), statusMessage).toI2b2String
 
     actual should equal(expectedI2b2ErrorXml)
+  }
+
+  @Test
+  def testWithErrorsAndProblemDigest():Unit = {
+
+    val actual = QueryResult.errorResult(
+      Some(description),
+      statusMessage,
+      Option(ProblemDigest(problemCodec,problemSummary,problemDescription,problemDetails)))
+
+    val i2b2String = actual.toI2b2String
+
+    i2b2String should equal(expectedI2b2ErrorWithProblemDigestXml)
+
+    val i2b2 = actual.toI2b2
+    val fromI2b2 = QueryResult.fromI2b2(Set.empty)(i2b2)
+
+    println(i2b2)
+
+    println(fromI2b2)
+
+    fromI2b2 should equal(actual)
+
+    val xml = actual.toXml
+    val fromXml = QueryResult.fromXml(Set.empty)(xml)
+    fromXml should equal(actual)
   }
 }

@@ -1,10 +1,6 @@
 package net.shrine.client
 
-import scala.xml.NodeSeq
-import org.scalatest.junit.AssertionsForJUnit
 import net.shrine.util.ShouldMatchersForJUnit
-import JerseyShrineClient.Deserializer
-import net.shrine.client.JerseyShrineClient.Deserializer
 import net.shrine.crypto.TrustParam.AcceptAllCerts
 import net.shrine.protocol.AggregatedReadInstanceResultsResponse
 import net.shrine.protocol.AggregatedReadQueryResultResponse
@@ -25,7 +21,6 @@ import net.shrine.protocol.ReadQueryDefinitionResponse
 import net.shrine.protocol.ReadQueryInstancesResponse
 import net.shrine.protocol.RenameQueryResponse
 import net.shrine.protocol.ResultOutputType
-import net.shrine.protocol.ResultOutputType.PATIENT_COUNT_XML
 import net.shrine.protocol.ShrineResponse
 import net.shrine.protocol.query.QueryDefinition
 import net.shrine.protocol.query.Term
@@ -39,16 +34,17 @@ import scala.util.Try
 /**
  *
  * @author Clint Gilbert
- * @date Sep 19, 2011
+ * @since Sep 19, 2011
  *
- * @link http://cbmi.med.harvard.edu
+ * @see http://cbmi.med.harvard.edu
  *
  * This software is licensed under the LGPL
- * @link http://www.gnu.org/licenses/lgpl.html
+ * @see http://www.gnu.org/licenses/lgpl.html
  *
  * A client for remote ShrineResources, implemented using Jersey
  *
  */
+//noinspection UnitMethodIsParameterless,NameBooleanParameters,ScalaUnnecessaryParentheses,EmptyParenMethodAccessedAsParameterless
 final class JerseyShrineClientTest extends ShouldMatchersForJUnit {
   
   private val uri = "http://example.com"
@@ -116,8 +112,8 @@ final class JerseyShrineClientTest extends ShouldMatchersForJUnit {
       roundTripped should equal(Success(response))
     }
     
-    val queryResult1 = QueryResult(1L, 456L, Some(ResultOutputType.PATIENT_COUNT_XML), 123L, None, None, None, QueryResult.StatusType.Finished, None, Map.empty)
-    val queryResult2 = QueryResult(2L, 456L, Some(ResultOutputType.PATIENT_COUNT_XML), 123L, None, None, None, QueryResult.StatusType.Finished, None, Map.empty)
+    val queryResult1 = QueryResult(1L, 456L, Some(ResultOutputType.PATIENT_COUNT_XML), 123L, None, None, None, QueryResult.StatusType.Finished, None)
+    val queryResult2 = QueryResult(2L, 456L, Some(ResultOutputType.PATIENT_COUNT_XML), 123L, None, None, None, QueryResult.StatusType.Finished, None)
 
     import XmlDateHelper.now
     
@@ -144,7 +140,7 @@ final class JerseyShrineClientTest extends ShouldMatchersForJUnit {
 
   import ResultOutputType._
   
-  private def dummyQueryResult(enclosingInstanceId: Long) = new QueryResult(123L, enclosingInstanceId, Some(PATIENT_COUNT_XML), 789L, None, None, Some("description"), QueryResult.StatusType.Finished, Some("statusMessage"), Map.empty)
+  private def dummyQueryResult(enclosingInstanceId: Long) = new QueryResult(123L, enclosingInstanceId, Some(PATIENT_COUNT_XML), 789L, None, None, Some("description"), QueryResult.StatusType.Finished, Some("statusMessage"), breakdowns = Map.empty)
 
   private def paramResponse: ParamResponse = {
     def randomString = java.util.UUID.randomUUID.toString

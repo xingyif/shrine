@@ -10,12 +10,11 @@ import net.shrine.protocol.QueryResult
 import net.shrine.protocol.ReadQueryResultResponse
 import net.shrine.protocol.Result
 import net.shrine.protocol.ResultOutputType
-import net.shrine.protocol.ShrineResponse
 import net.shrine.protocol.BaseShrineResponse
 
 /**
  * @author clint
- * @date Nov 7, 2012
+ * @since Nov 7, 2012
  */
 final class ReadQueryResultAggregatorTest extends ShouldMatchersForJUnit {
   private val queryId = 12345L
@@ -28,8 +27,8 @@ final class ReadQueryResultAggregatorTest extends ShouldMatchersForJUnit {
   private val setSize2 = 456L
   private val totalSetSize = setSize1 + setSize2
 
-  private val queryResult1 = QueryResult(1L, 2L, Some(PATIENT_COUNT_XML), setSize1, None, None, None, QueryResult.StatusType.Finished, None, Map.empty)
-  private val queryResult2 = QueryResult(1L, 2L, Some(PATIENT_COUNT_XML), setSize2, None, None, None, QueryResult.StatusType.Finished, None, Map.empty)
+  private val queryResult1 = QueryResult(1L, 2L, Some(PATIENT_COUNT_XML), setSize1, None, None, None, QueryResult.StatusType.Finished, None)
+  private val queryResult2 = QueryResult(1L, 2L, Some(PATIENT_COUNT_XML), setSize2, None, None, None, QueryResult.StatusType.Finished, None)
 
   private val response1 = ReadQueryResultResponse(queryId, queryResult1)
   private val response2 = ReadQueryResultResponse(queryId, queryResult2)

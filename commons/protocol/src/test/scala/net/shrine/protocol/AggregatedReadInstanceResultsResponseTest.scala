@@ -9,8 +9,9 @@ import scala.xml.NodeSeq
 /**
  * @author clint
  * @author Bill Simons
- * @date Dec 4, 2012
+ * @since Dec 4, 2012
  */
+//noinspection EmptyParenMethodOverridenAsParameterless,UnitMethodIsParameterless
 final class AggregatedReadInstanceResultsResponseTest extends TestCase with ShrineResponseI2b2SerializableValidator {
   val shrineNetworkQueryId = 1111111L
   val resultId1 = 1111111L
@@ -19,7 +20,17 @@ final class AggregatedReadInstanceResultsResponseTest extends TestCase with Shri
   val statusType1 = QueryResult.StatusType.Finished
   val startDate1 = XmlDateHelper.now
   val endDate1 = XmlDateHelper.now
-  val result1 = QueryResult(resultId1, shrineNetworkQueryId, Option(type1), setSize, Option(startDate1), Option(endDate1), None, statusType1, Option(statusType1.name))
+  val result1 = QueryResult(
+    resultId = resultId1,
+    instanceId = shrineNetworkQueryId,
+    resultType = Option(type1),
+    setSize = setSize,
+    startDate = Option(startDate1),
+    endDate = Option(endDate1),
+    description = None,
+    statusType = statusType1,
+    statusMessage = Option(statusType1.name)
+  )
 
   val resultId2 = 222222L
   val type2 = ResultOutputType.PATIENT_COUNT_XML
@@ -97,11 +108,11 @@ final class AggregatedReadInstanceResultsResponseTest extends TestCase with Shri
   @Test
   def testFromXml {
     
-    val actual = AggregatedReadInstanceResultsResponse.fromXml(breakdownTypes.toSet)(readInstanceResultsResponse)
+    val fromXml = AggregatedReadInstanceResultsResponse.fromXml(breakdownTypes.toSet)(readInstanceResultsResponse)
 
-    actual.shrineNetworkQueryId should equal(shrineNetworkQueryId)
+    fromXml.shrineNetworkQueryId should equal(shrineNetworkQueryId)
 
-    actual.results should equal(Seq(result1, result2))
+    fromXml.results should equal(Seq(result1, result2))
   }
 
   @Test
@@ -111,16 +122,9 @@ final class AggregatedReadInstanceResultsResponseTest extends TestCase with Shri
 
   @Test
   def testToXml {
-    //NB: Needed because i2b2 handles status messages differently. In the error case, statusMessage is
-    //descriptive; otherwise, it's the all-caps name of the status type.  This is different from how
-    //Shrine creates and parses ststusMessage XML, so we need a new QueryResult here.  (Previously, we
-    //could use the same one, since we were ignoring statusMessage and description when unmarshalling
-    //from i2b2 format.) 
-    val shrineResult1 = result1.copy(statusMessage = None)
-    val shrineResult2 = result2.copy(statusMessage = None)
-    
+    val xml = AggregatedReadInstanceResultsResponse(shrineNetworkQueryId, Seq(result1, result2)).toXmlString
     //we compare the string versions of the xml because Scala's xml equality does not always behave properly
-    AggregatedReadInstanceResultsResponse(shrineNetworkQueryId, Seq(result1, result2)).toXmlString should equal(readInstanceResultsResponse.toString)
+   xml should equal(readInstanceResultsResponse.toString())
   }
 
   @Test
@@ -137,6 +141,6 @@ final class AggregatedReadInstanceResultsResponseTest extends TestCase with Shri
     //we compare the string versions of the xml because Scala's xml equality does not always behave properly
     val actual = AggregatedReadInstanceResultsResponse(shrineNetworkQueryId, Seq(result1, result2)).toI2b2String
 
-    actual should equal(response.toString)
+    actual should equal(response.toString())
   }
 }

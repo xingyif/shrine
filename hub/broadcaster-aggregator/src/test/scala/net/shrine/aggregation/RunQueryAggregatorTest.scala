@@ -115,9 +115,9 @@ final class RunQueryAggregatorTest extends ShouldMatchersForJUnit {
       resultType -> I2b2ResultEnvelope(resultType, (11 to 20).map(toColumnTuple).toMap)
     }
     
-    val qr1 = new QueryResult(1L, queryInstanceId, Some(PATIENT_COUNT_XML), 10L, Some(now), Some(now), Some("Desc"), QueryResult.StatusType.Finished, None, breakdowns1)
+    val qr1 = new QueryResult(1L, queryInstanceId, Some(PATIENT_COUNT_XML), 10L, Some(now), Some(now), Some("Desc"), QueryResult.StatusType.Finished, None, breakdowns = breakdowns1)
     
-    val qr2 = new QueryResult(2L, queryInstanceId, Some(PATIENT_COUNT_XML), 20L, Some(now), Some(now), Some("Desc"), QueryResult.StatusType.Finished, None, breakdowns2)
+    val qr2 = new QueryResult(2L, queryInstanceId, Some(PATIENT_COUNT_XML), 20L, Some(now), Some(now), Some("Desc"), QueryResult.StatusType.Finished, None, breakdowns = breakdowns2)
 
     val rqr1 = RunQueryResponse(queryId, now, userId, groupId, requestQueryDef, queryInstanceId, qr1)
     

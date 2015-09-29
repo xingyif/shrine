@@ -1,9 +1,12 @@
 package net.shrine.protocol
 
 import javax.xml.datatype.XMLGregorianCalendar
+import net.shrine.problem.ProblemDigest
+import net.shrine.protocol.QueryResult.StatusType
+
 import scala.xml.NodeSeq
 import net.shrine.util.{Tries, XmlUtil, NodeSeqEnrichments, SEnum, XmlDateHelper, OptionEnrichments}
-import net.shrine.serialization.{ I2b2Marshaller, I2b2Unmarshaller, XmlMarshaller, XmlUnmarshaller }
+import net.shrine.serialization.{ I2b2Marshaller, XmlMarshaller }
 import scala.util.Try
 
 /**
@@ -21,21 +24,56 @@ import scala.util.Try
 final case class QueryResult(
   resultId: Long,
   instanceId: Long,
-  resultType: Option[ResultOutputType], //this won't be present in the case of an error result
+  resultType: Option[ResultOutputType],
   setSize: Long,
   startDate: Option[XMLGregorianCalendar],
   endDate: Option[XMLGregorianCalendar],
   description: Option[String],
-  statusType: QueryResult.StatusType,
-  statusMessage: Option[String], //todo maybe add an optional field here for the error message text
-  breakdowns: Map[ResultOutputType, I2b2ResultEnvelope] = Map.empty) extends XmlMarshaller with I2b2Marshaller {
+  statusType: StatusType,
+  statusMessage: Option[String],
+  problemDigest: Option[ProblemDigest] = None,
+  breakdowns: Map[ResultOutputType,I2b2ResultEnvelope] = Map.empty
+) extends XmlMarshaller with I2b2Marshaller {
 
-  def this(resultId: Long, instanceId: Long, resultType: ResultOutputType, setSize: Long, startDate: XMLGregorianCalendar, endDate: XMLGregorianCalendar, statusType: QueryResult.StatusType) = {
-    this(resultId, instanceId, Option(resultType), setSize, Option(startDate), Option(endDate), None, statusType, None)
+  def this(
+            resultId: Long,
+            instanceId: Long,
+            resultType: ResultOutputType,
+            setSize: Long,
+            startDate: XMLGregorianCalendar,
+            endDate: XMLGregorianCalendar,
+            statusType: QueryResult.StatusType) = {
+    this(
+      resultId,
+      instanceId,
+      Option(resultType),
+      setSize,
+      Option(startDate),
+      Option(endDate),
+      None, //description
+      statusType,
+      None) //statusMessage 
   }
 
-  def this(resultId: Long, instanceId: Long, resultType: ResultOutputType, setSize: Long, startDate: XMLGregorianCalendar, endDate: XMLGregorianCalendar, description: String, statusType: QueryResult.StatusType) = {
-    this(resultId, instanceId, Option(resultType), setSize, Option(startDate), Option(endDate), Option(description), statusType, None)
+  def this(
+            resultId: Long,
+            instanceId: Long,
+            resultType: ResultOutputType,
+            setSize: Long,
+            startDate: XMLGregorianCalendar,
+            endDate: XMLGregorianCalendar,
+            description: String,
+            statusType: QueryResult.StatusType) = {
+    this(
+      resultId,
+      instanceId,
+      Option(resultType),
+      setSize,
+      Option(startDate),
+      Option(endDate),
+      Option(description),
+      statusType,
+      None) //statusMessage
   }
 
   def resultTypeIs(testedResultType: ResultOutputType): Boolean = resultType match {
@@ -73,7 +111,8 @@ final case class QueryResult(
         { description.toXml(<description/>) }
         {
           resultType match {
-            case Some(rt) if !rt.isError => {
+            case Some(rt) if !rt.isError => //noinspection RedundantBlock
+            {
               if (rt.isBreakdown) { rt.toI2b2NameOnly() }
               else { rt.toI2b2 }
             }
@@ -114,6 +153,7 @@ final case class QueryResult(
         //The number of breakdowns will be at most 4, so performance should not be an issue. 
         sortedBreakdowns.map(_.toXml)
       }
+      { problemDigest.map(_.toXml).getOrElse("") }
     </queryResult>
   }
 
@@ -135,6 +175,7 @@ final case class QueryResult(
 }
 
 object QueryResult {
+
   final case class StatusType(
     name: String,
     isDone: Boolean,
@@ -151,17 +192,26 @@ object QueryResult {
       val i2b2Id: Int = queryResult.statusType.i2b2Id.getOrElse{
         throw new IllegalStateException(s"queryResult.statusType ${queryResult.statusType} has no i2b2Id")
       }
-      <status_type_id>{ queryResult.statusType.i2b2Id.get }</status_type_id><description>{ queryResult.statusType.name }</description>
+      <status_type_id>{ i2b2Id }</status_type_id><description>{ queryResult.statusType.name }</description>
     }
 
     val noMessage:NodeSeq = null
-    val Error = StatusType("ERROR", true, None, _.statusMessage.fold(noMessage)(
+    val Error = StatusType("ERROR", isDone = true, None, { queryResult =>
+      (queryResult.statusMessage, queryResult.problemDigest) match {
+        case (Some(msg),Some(pd)) => <description>{ msg }</description> ++ pd.toXml
+        case (Some(msg),None) => <description>{ msg }</description>
+        case (None,Some(pd)) => pd.toXml
+        case (None, None) => noMessage
+      }
+    })
+    /*
       msg =>
         <codec>net.shrine.something.is.Broken</codec>
           <summary>Something is borked</summary>
           <description>{ msg }</description>
           <details>Herein is a stack trace, multiple lines</details>
     ))
+    */
     val Finished = StatusType("FINISHED", isDone = true, Some(3))
     //TODO: Can we use the same <status_type_id> for Queued, Processing, and Incomplete?
     val Processing = StatusType("PROCESSING", isDone = false, Some(2))
@@ -197,6 +247,13 @@ object QueryResult {
     attempt.toOption
   }
 
+  def extractProblemDigest(xml: NodeSeq):Option[ProblemDigest] = {
+
+    val subXml = xml \ "problem"
+    if(subXml.nonEmpty) Some(ProblemDigest.fromXml(subXml))
+    else None
+  }
+
   def fromXml(breakdownTypes: Set[ResultOutputType])(xml: NodeSeq): QueryResult = {
     def extract(elemName: String): Option[String] = {
       Option((xml \ elemName).text.trim).filter(!_.isEmpty)
@@ -210,6 +267,7 @@ object QueryResult {
     import Tries.sequence
 
     def extractBreakdowns(elemName: String): Map[ResultOutputType, I2b2ResultEnvelope] = {
+      //noinspection ScalaUnnecessaryParentheses
       val mapAttempt = for {
         subXml <- xml.withChild(elemName)
         envelopes <- sequence(subXml.map(I2b2ResultEnvelope.fromXml(breakdownTypes)))
@@ -220,16 +278,18 @@ object QueryResult {
     }
 
     QueryResult(
-      asLong("resultId"),
-      asLong("instanceId"),
-      extractResultOutputType(xml \ "resultType")(ResultOutputType.fromXml),
-      asLong("setSize"),
-      extractDate("startDate"),
-      extractDate("endDate"),
-      extract("description"),
-      StatusType.valueOf(asText("status")(xml)).get, //TODO: Avoid fragile .get call
-      extract("statusMessage"),
-      extractBreakdowns("resultEnvelope"))
+      resultId = asLong("resultId"),
+      instanceId = asLong("instanceId"),
+      resultType = extractResultOutputType(xml \ "resultType")(ResultOutputType.fromXml),
+      setSize = asLong("setSize"),
+      startDate = extractDate("startDate"),
+      endDate = extractDate("endDate"),
+      description = extract("description"),
+      statusType = StatusType.valueOf(asText("status")(xml)).get, //TODO: Avoid fragile .get call
+      statusMessage = extract("statusMessage"),
+      problemDigest = extractProblemDigest(xml),
+      breakdowns = extractBreakdowns("resultEnvelope")
+    )
   }
 
   def fromI2b2(breakdownTypes: Set[ResultOutputType])(xml: NodeSeq): QueryResult = {
@@ -248,10 +308,22 @@ object QueryResult {
       endDate = asXmlGcOption("end_date"),
       description = asTextOption("description"),
       statusType = StatusType.valueOf(asText("query_status_type", "name")(xml)).get, //TODO: Avoid fragile .get call
-      statusMessage = asTextOption("query_status_type", "description"))
+      statusMessage = asTextOption("query_status_type", "description"),
+      problemDigest = extractProblemDigest(xml \ "query_status_type"))
   }
 
-  def errorResult(description: Option[String], statusMessage: String) = {
-    QueryResult(0L, 0L, None, 0L, None, None, description, StatusType.Error, Option(statusMessage))
+  //todo default problem description goes here
+  def errorResult(description: Option[String], statusMessage: String,problemDigest:Option[ProblemDigest] = None) = {
+    QueryResult(
+      resultId = 0L,
+      instanceId = 0L,
+      resultType = None,
+      setSize = 0L,
+      startDate = None,
+      endDate = None,
+      description = description,
+      statusType = StatusType.Error,
+      statusMessage = Option(statusMessage),
+      problemDigest = problemDigest)
   }
 }

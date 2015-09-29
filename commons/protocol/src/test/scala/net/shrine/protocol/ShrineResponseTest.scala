@@ -1,23 +1,21 @@
 package net.shrine.protocol
 
 import scala.xml.NodeSeq
-import org.junit.{Ignore, Test}
+import org.junit.Test
 import net.shrine.util.ShouldMatchersForJUnit
-import junit.framework.TestCase
 import net.shrine.protocol.query.QueryDefinition
 import net.shrine.protocol.query.Term
 import net.shrine.util.XmlDateHelper
 import net.shrine.util.XmlUtil
 import scala.util.Success
-import scala.util.Try
 
 /**
  * @author clint
- * @date Nov 5, 2012
+ * @since Nov 5, 2012
  */
+//noinspection UnitMethodIsParameterless,NameBooleanParameters,ScalaUnnecessaryParentheses
 final class ShrineResponseTest extends ShouldMatchersForJUnit {
   @Test
-  @Ignore
   def testFromXml {
     //ShrineResponse.fromXml(null: String).isFailure should be(true)
     ShrineResponse.fromXml(DefaultBreakdownResultOutputTypes.toSet)(null: NodeSeq).isFailure should be(true)
@@ -31,7 +29,16 @@ final class ShrineResponseTest extends ShouldMatchersForJUnit {
       unmarshalled should equal(Success(response))
     }
 
-    val queryResult1 = QueryResult(1L, 2342L, Some(ResultOutputType.PATIENT_COUNT_XML), 123L, None, None, None, QueryResult.StatusType.Finished, None, Map.empty)
+    val queryResult1 = QueryResult(
+      resultId = 1L,
+      instanceId = 2342L,
+      resultType = Some(ResultOutputType.PATIENT_COUNT_XML),
+      setSize = 123L,
+      startDate = None,
+      endDate = None,
+      description = None,
+      statusType = QueryResult.StatusType.Finished,
+      statusMessage = None)
 
     roundTrip(ReadQueryResultResponse(123L, queryResult1))
     roundTrip(AggregatedReadQueryResultResponse(123L, Seq(queryResult1)))
@@ -86,7 +93,7 @@ final class ShrineResponseTest extends ShouldMatchersForJUnit {
 
     val response = new FooResponse
 
-    response.toI2b2String should equal(expected.toString)
+    response.toI2b2String should equal(expected.toString())
   }
 
   private final class FooResponse extends ShrineResponse {
