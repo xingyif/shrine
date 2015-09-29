@@ -7,9 +7,9 @@
  * # adminPosHeader
  */
 angular.module('stewardApp')
-	.directive('headerNotification',function(){
+	.directive('userStatus',function(){
 		return {
-        templateUrl:'src/app/header/header-notification/header-notification.tpl.html',
+        templateUrl:'src/app/header/user-status/user-status.tpl.html',
         restrict: 'E',
         replace: true,
     	}
