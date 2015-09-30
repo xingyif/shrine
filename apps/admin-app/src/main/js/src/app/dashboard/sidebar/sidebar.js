@@ -14,13 +14,9 @@ angular.module('shrine-tools')
       restrict: 'E',
       replace: true,
       scope: {
-          bannerUrl: "@",
-          isUserLoggedIn: "&",
-          logout: "&",
-          getRole: "&"
       },
       controller:function($scope){
-        $scope.selectedMenu = 'dashboard';
+        $scope.selectedMenu = '';
         $scope.collapseVar = 0;
         $scope.multiCollapseVar = 0;
         

@@ -74,8 +74,7 @@ angular
                                 name:'stewardApp',
                                 files:[
                                     'src/app/dashboard/MainCtrl.js',
-                                    'src/app/dashboard/sidebar/sidebar.js',
-                                    'src/app/dashboard/sidebar/sidebar-search/sidebar-search.js'
+                                    'src/app/dashboard/sidebar/sidebar.js'
                                 ]
                             }),
                             $ocLazyLoad.load(

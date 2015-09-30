@@ -8,7 +8,7 @@ angular.module("login", ['hms-authentication'])
 
             function onLoginSuccess (response) {
                 HMSAuthenticationService.SetCredentials($scope.username.toLowerCase(), $scope.password, response.roles);
-                $location.path('/dashboard/happy');
+                $location.path('/dashboard/diagnostics');
             }
 
             function onLoginFail(response) {

@@ -25,7 +25,7 @@ angular
             events:true
         });
 
-        $urlRouterProvider.otherwise('/dashboard/happy');
+        $urlRouterProvider.otherwise('/dashboard/diagnostics');
         $httpProvider.defaults.useXDomain = true;
         delete $httpProvider.defaults.headers.common['X-Requested-With'];
 
@@ -112,7 +112,7 @@ angular
                 }
             })
             .state('dashboard.happy',{
-                url:'/happy',
+                url:'/diagnostics',
                 controller: 'HappyCtrl',
                 templateUrl:'src/app/dashboard/apps/happy/happy.tpl.html',
                 resolve: {
