@@ -40,11 +40,6 @@ final class ReadQueryResultAggregatorTest extends ShouldMatchersForJUnit {
 
   private val errors = Seq(ErrorResponse("blarg"), ErrorResponse("glarg"))
 
-  private val expectedErrorQueryResults = errors.map {
-    case ErrorResponse(message) =>
-      QueryResult.errorResult(None, "No results available")
-  }
-
   @Test
   def testAggregate {
     val aggregator = new ReadQueryResultAggregator(queryId, true)
@@ -87,14 +82,13 @@ final class ReadQueryResultAggregatorTest extends ShouldMatchersForJUnit {
 
   @Test
   def testAggregateOnlyErrorResponses {
-    for (doAggregation <- Seq(true, false)) {
-      val aggregator = new ReadQueryResultAggregator(queryId, true)
+    val aggregator = new ReadQueryResultAggregator(queryId, true)
 
-      val response = asAggregatedResponse(aggregator.aggregate(Nil, errors))
+    val response = asAggregatedResponse(aggregator.aggregate(Nil, errors))
 
-      response.queryId should equal(queryId)
-      response.results should equal(expectedErrorQueryResults)
-    }
+    response.queryId should equal(queryId)
+
+    response.results.exists(qr => qr.problemDigest.exists(pd => pd.codec == classOf[ErrorResultProblem].getName)) should be (true)
   }
 
   @Test
@@ -111,8 +105,8 @@ final class ReadQueryResultAggregatorTest extends ShouldMatchersForJUnit {
     val expectedAggregatedResult = queryResult1.withSetSize(totalSetSize).withInstanceId(queryId).withDescription("Aggregated Count")
 
     aggregatedQueryResult should equal(expectedAggregatedResult)
-    
-    actualErrorQueryResults should equal(expectedErrorQueryResults)
+
+    actualErrorQueryResults.exists(qr => qr.problemDigest.exists(pd => pd.codec == classOf[ErrorResultProblem].getName)) should be (true)
   }
   
   @Test
@@ -132,7 +126,7 @@ final class ReadQueryResultAggregatorTest extends ShouldMatchersForJUnit {
     val expectedAggregatedResult = queryResult1.withSetSize(totalSetSize).withInstanceId(queryId).withDescription("Aggregated Count")
 
     aggregatedQueryResult should equal(expectedAggregatedResult)
-    
-    actualErrorQueryResults should equal(expectedErrorQueryResults.map(_.copy(description = Some("A"))))
+
+    actualErrorQueryResults.forall(qr => qr.description == Some("A"))
   }
 }

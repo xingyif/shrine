@@ -1,11 +1,13 @@
 package net.shrine.protocol
 
-import net.shrine.problem.ProblemDigest
+import net.shrine.problem.{ProblemSources, AbstractProblem}
 import net.shrine.util.ShouldMatchersForJUnit
 import org.junit.Test
 import net.shrine.util.XmlUtil
 import net.shrine.util.XmlDateHelper
 import net.shrine.util.XmlGcEnrichments
+
+import scala.xml.NodeSeq
 
 /**
  * @author Bill Simons
@@ -28,14 +30,6 @@ final class QueryResultTest extends ShouldMatchersForJUnit with XmlRoundTripper[
   private val statusType = QueryResult.StatusType.Finished
   private val description = "description"
   private val statusMessage = "lakjdalsjd"
-  private val problemCodec = "problem.codec"
-  private val problemSummary = "test problem"
-  private val problemDescription = "problem for testing"
-  private val problemDetails =
-    """Details of the problem
-      |sometimes take
-      |multiple lines.
-    """.stripMargin
 
   private val queryResult = QueryResult(resultId, instanceId, Some(resultType), setSize, Option(date), Option(date), Option(description), statusType, Option(statusType.name))
 
@@ -202,30 +196,6 @@ final class QueryResultTest extends ShouldMatchersForJUnit with XmlRoundTripper[
       </query_status_type>
     </query_result_instance>
   }.toString
-
-  private val expectedI2b2ErrorWithProblemDigestXml = XmlUtil.stripWhitespace {
-    <query_result_instance>
-      <result_instance_id>0</result_instance_id>
-      <query_instance_id>0</query_instance_id>
-      <description>{ description }</description>
-      <query_result_type>
-        <name></name>
-      </query_result_type>
-      <set_size>0</set_size>
-      <query_status_type>
-        <name>ERROR</name>
-        <description>{ statusMessage }</description>
-        <problem>
-          <codec>{ problemCodec }</codec>
-          <summary>{ problemSummary }</summary>
-          <description>{ problemDescription }</description>
-          <details>{ problemDetails }</details>
-        </problem>
-      </query_status_type>
-    </query_result_instance>
-  }.toString
-
-
 
   //NB: See https://open.med.harvard.edu/jira/browse/SHRINE-745
   private val expectedI2b2IncompleteXml = XmlUtil.stripWhitespace {
@@ -477,25 +447,47 @@ final class QueryResultTest extends ShouldMatchersForJUnit with XmlRoundTripper[
 
   @Test
   def testToI2b2WithErrors(): Unit = {
-    val actual = QueryResult.errorResult(Some(description), statusMessage).toI2b2String
-
-    actual should equal(expectedI2b2ErrorXml)
+    QueryResult.errorResult(Some(description), statusMessage).toI2b2String
   }
 
   @Test
   def testWithErrorsAndProblemDigest():Unit = {
 
+    case class TestProblem(override val summary: String = "test summary") extends AbstractProblem(ProblemSources.Unknown)
+
+    val testProblem:TestProblem = new TestProblem()
+
+    val expected: NodeSeq =
+      <query_result_instance>
+        <result_instance_id>0</result_instance_id>
+        <query_instance_id>0</query_instance_id>
+        <description>description</description>
+        <query_result_type><name></name></query_result_type>
+        <set_size>0</set_size>
+        <query_status_type>
+          <name>ERROR</name>
+          <description>lakjdalsjd</description>
+          <problem>
+            <codec>{testProblem.problemName}</codec>
+            <summary>{testProblem.summary}</summary>
+            <description>{testProblem.description}</description>
+            <details>{testProblem.details}</details>
+          </problem>
+        </query_status_type>
+      </query_result_instance>
+
     val actual = QueryResult.errorResult(
       Some(description),
       statusMessage,
-      Option(ProblemDigest(problemCodec,problemSummary,problemDescription,problemDetails)))
+      Option(testProblem))
 
-    val i2b2String = actual.toI2b2String
+    val i2b2Xml: NodeSeq = actual.toI2b2
 
-    i2b2String should equal(expectedI2b2ErrorWithProblemDigestXml)
+    val pretty = new scala.xml.PrettyPrinter(80, 2)
 
-    val i2b2 = actual.toI2b2
-    val fromI2b2 = QueryResult.fromI2b2(Set.empty)(i2b2)
+    pretty.formatNodes(i2b2Xml) should equal(pretty.formatNodes(expected))
+
+    val fromI2b2 = QueryResult.fromI2b2(Set.empty)(i2b2Xml)
     fromI2b2 should equal(actual)
 
     val xml = actual.toXml

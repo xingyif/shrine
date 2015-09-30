@@ -1,10 +1,9 @@
 package net.shrine.aggregation
 
 import org.junit.Test
-import org.junit.Assert.{ assertNotNull, assertTrue }
+import org.junit.Assert.assertNotNull
 import net.shrine.protocol.{ ErrorResponse, QueryResult, ReadInstanceResultsResponse }
 import net.shrine.protocol.ResultOutputType._
-import junit.framework.TestCase
 import net.shrine.util.XmlDateHelper
 import net.shrine.protocol.AggregatedReadInstanceResultsResponse
 import net.shrine.protocol.Result
@@ -13,13 +12,13 @@ import net.shrine.util.ShouldMatchersForJUnit
 
 /**
  * @author Bill Simons
- * @date 6/13/11
- * @link http://cbmi.med.harvard.edu
- * @link http://chip.org
+ * @since 6/13/11
+ * @see http://cbmi.med.harvard.edu
+ * @see http://chip.org
  *       <p/>
  *       NOTICE: This software comes with NO guarantees whatsoever and is
  *       licensed as Lgpl Open Source
- * @link http://www.gnu.org/licenses/lgpl.html
+ * @see http://www.gnu.org/licenses/lgpl.html
  */
 final class ReadInstanceResultsAggregatorTest extends ShouldMatchersForJUnit {
 
@@ -100,7 +99,7 @@ final class ReadInstanceResultsAggregatorTest extends ShouldMatchersForJUnit {
     actual.results.size should equal(3)
     
     actual.results.contains(queryResult.withDescription(patientCountNodeDescription)) should be(true)
-    
-    actual.results.contains(QueryResult.errorResult(Option(errorNodeDescription), "No results available")) should be(true)
+
+    actual.results.exists(qr => qr.problemDigest.exists(pd => pd.codec == classOf[ErrorResultProblem].getName)) should be (true)
   }
 }

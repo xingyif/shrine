@@ -1,5 +1,7 @@
 package net.shrine.protocol
 
+import net.shrine.problem.TestProblem
+
 import scala.xml.NodeSeq
 
 import org.junit.Test
@@ -279,7 +281,7 @@ final class AggregatedRunQueryResponseTest extends ShrineResponseI2b2Serializabl
       errors.size should equal(0)
     }
 
-    def error = QueryResult.errorResult(None, "something broke")
+    def error = QueryResult.errorResult(None, "something broke", Some(TestProblem))
 
     {
       val withOnlyErrors = actual.withResults(Seq(error, error))
