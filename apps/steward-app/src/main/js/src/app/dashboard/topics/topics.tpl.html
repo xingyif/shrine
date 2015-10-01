@@ -7,12 +7,8 @@
                     <div ng-switch on="{{userRole == roles.ROLE1}}" ng-cloak>
                         <!-- researcher -->
                         <div ng-switch-when="true">
-                            <button type="button"
-                                    class="btn shrine-btn-default shrine-btn-on"
-                                    ng-click="createTopic()">
-                                New
-                                <i class="fa fa-plus pull-right"></i>
-                            </button>
+
+                            <!-- TODO: update to ng-show from conditional if nothing to put here -->
                         </div>
                         <!-- steward -->
                         <div ng-cloak ng-switch-when="false">
@@ -42,15 +38,16 @@
                         </div>
                     </div>
 
+                    <div>
+                        <p>
+                            <topic-table sorted-by="changeDate" sort="sort">
+                            </topic-table>
+                        </p>
+                    </div>
 
                 </div>
                 <!-- /.panel-heading -->
-                <div>
-                    <p>
-                        <topic-table sorted-by="changeDate" sort="sort">
-                        </topic-table>
-                    </p>
-                </div>
+
                 <!-- /.panel-body -->
             </div>
 
