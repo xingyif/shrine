@@ -107,7 +107,7 @@ abstract class AbstractReadQueryResultAdapter[Req <: BaseShrineRequest, Rsp <: S
 
                 makeResponseFrom(queryId, shrineQueryResult)
               } else {
-                debug(s"Query $queryId is imcomplete, asking CRC for results")
+                debug(s"Query $queryId is incomplete, asking CRC for results")
 
                 val result: ShrineResponse = retrieveQueryResults(queryId, req, shrineQueryResult, message)
                 if (collectAdapterAudit) AdapterAuditDb.db.insertResultSent(queryId,result)

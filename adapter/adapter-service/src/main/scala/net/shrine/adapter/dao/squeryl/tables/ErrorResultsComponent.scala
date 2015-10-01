@@ -14,7 +14,10 @@ trait ErrorResultsComponent extends AbstractTableComponent { self: Schema =>
   
   val errorResults = table[SquerylShrineError]("ERROR_RESULT")
   
-  declareThat(errorResults) { 
-    _.id is (primaryKey, oracleSafeAutoIncremented("ERROR_RESULT_ID"))
-  }
+  declareThat(errorResults) (
+    _.id is (primaryKey, oracleSafeAutoIncremented("ERROR_RESULT_ID")),
+    _.summary is( dbType("TEXT")),
+    _.digestDescription is( dbType("TEXT")),
+    _.details is( dbType("TEXT"))
+  )
 }

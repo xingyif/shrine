@@ -38,6 +38,11 @@ create table error_result(
   constraint error_result_id_pk primary key(id),
   constraint fk_error_result_query_id foreign key (result_id) references query_result (id)
 );
+alter table ERROR_RESULT add column 'CODEC' varchar not null default "Pre-1.20 Error";
+alter table ERROR_RESULT add column 'SUMMARY' text not null default "Pre-1.20 Error";
+alter table ERROR_RESULT add column 'DESCRIPTION' text not null default "Pre-1.20 Error";
+alter table ERROR_RESULT add column 'DETAILS' text not null default "Pre-1.20 Error";
+
 
 create sequence seq_error_result_id
 minvalue 1

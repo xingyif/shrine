@@ -328,4 +328,24 @@ object QueryResult {
       statusMessage = Option(statusMessage),
       problemDigest = Option(problemDigest))
   }
+
+  /**
+   * For reconsitituting errorResults from a database
+   */
+  def errorResult(description:Option[String], statusMessage:String, codec:String, summary:String, digestDescription:String,details:String): QueryResult = {
+
+    val problemDigest = ProblemDigest(codec,summary,digestDescription,details)
+
+    QueryResult(
+      resultId = 0L,
+      instanceId = 0L,
+      resultType = None,
+      setSize = 0L,
+      startDate = None,
+      endDate = None,
+      description = description,
+      statusType = StatusType.Error,
+      statusMessage = Option(statusMessage),
+      problemDigest = Option(problemDigest))
+  }
 }

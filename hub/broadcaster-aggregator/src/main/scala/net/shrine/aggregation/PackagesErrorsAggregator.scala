@@ -29,7 +29,7 @@ abstract class PackagesErrorsAggregator[T <: ShrineResponse : Manifest](
     //Use node name as the description, to avoid giving the web UI more data than it can display
     val desc = originOption.map(_.name) 
     
-    QueryResult.errorResult(desc, errorMessage.getOrElse(errorResponse.errorMessage),Some(ErrorResultProblem(error)))
+    QueryResult.errorResult(desc, errorMessage.getOrElse(errorResponse.errorMessage),Option(ErrorResultProblem(error)))
   }
   
   private[aggregation] def makeInvalidResult(invalid: Invalid): QueryResult = {
