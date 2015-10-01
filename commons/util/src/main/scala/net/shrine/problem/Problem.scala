@@ -27,7 +27,7 @@ trait Problem {
 
   def throwableDetail = throwable.map(x => x.getStackTrace.mkString(sys.props("line.separator")))
 
-  def details = s"$description ${throwableDetail.getOrElse("")}"
+  def details:String = s"$description ${throwableDetail.getOrElse("")}"
 
   def toDigest:ProblemDigest = ProblemDigest(problemName,summary,description,details)
 
@@ -95,6 +95,7 @@ object LoggingProblemHandler extends ProblemHandler with Loggable {
 object ProblemSources{
 
   sealed trait ProblemSource {
+//todo name without $
     def pretty = getClass.getSimpleName
   }
 
@@ -102,8 +103,20 @@ object ProblemSources{
   case object Hub extends ProblemSource
   case object Qep extends ProblemSource
   case object Dsa extends ProblemSource
+  case object Unknown extends ProblemSource
 
-  def problemSources = Set(Adapter,Hub,Qep,Dsa)
+  def problemSources = Set(Adapter,Hub,Qep,Dsa,Unknown)
+}
+
+
+case class ProblemNotInCodec(summary:String) extends AbstractProblem(ProblemSources.Unknown){
+  override val throwable = {
+    val x = new IllegalStateException(s"$summary , is not yet in the codec.")
+    x.fillInStackTrace()
+    Option(x)
+  }
+
+  override val description = s"${super.description} . This error is not yet in the codec. Please report the stack trace to the Shrine development team at TODO"
 }
 
 /**
