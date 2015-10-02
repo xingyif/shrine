@@ -1,14 +1,7 @@
 
 <form name="form" role="form">
-    <br/>
-    <br/>
-    <span>{{topic.name}} EDIT</span>
-    <br/>
-    <label class="pull-right">
-        *<small>Required Field</small>
-    </label>
     <div class="col-sm-12">
-
+        <br/>
         <div class="form-group">
             <label>Topic Id:</label> {{topic.id}}
         </div>
@@ -21,6 +14,9 @@
         <div class="form-group">
             <label>Status:</label> {{topic.state}}
         </div>
+        <label class="pull-right">
+            *<small>Required Field</small>
+        </label>
         <div class="form-group">
             <label>Topic Name*</label>
             <input type="text"  ng-model="topic.name" name="topicname"

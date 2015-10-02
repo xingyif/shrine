@@ -64,7 +64,20 @@
             <td><a ng-click="open(topic)">view</a></td>
         </tr>
         </tbody>
-
+        <tfoot restrict="{{app.globals.UserRoles.ROLE1}}">
+            <tr>
+                <td colspan="7">
+                    <fieldset>
+                        <button type=button"
+                                class="shrine-button pull-right"
+                                ng-click="createTopic()">
+                            <span>NEW</span>
+                            <i class="fa fa-chevron-right fa-2x"></i>
+                        </button>
+                    </fieldset>
+                </td>
+            </tr>
+        </tfoot>
     </table>
     <!--
     https://angular-ui.github.io/bootstrap/

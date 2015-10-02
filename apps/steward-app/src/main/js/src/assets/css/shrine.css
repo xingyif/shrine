@@ -64,6 +64,14 @@
 
 .shrine-button{
     cursor: pointer !important;
+    background-color: transparent;
+    border: none;
+}
+
+.shrine-button span{
+    position: relative;
+    bottom: 5px;
+
 }
 
 .shrine-btn-default{
@@ -587,6 +595,10 @@ table.dataTable thead .sorting:after {
     padding: 15px;
 }
 
+.shrine-modal form div.col-sm-12{
+    border: 1px solid rgba(2, 89, 120, .80);
+}
+
 .shrine-modal input, .shrine-modal textarea{
     border-radius: 0px;
     border: 1px solid #2c5566;
@@ -631,10 +643,6 @@ i.shrine-close:hover{
     color: #008CBA;
 }
 
-button.shrine-submit{
-    position: relative;
-    right: -25px;
-}
 
 .shrine-login{
     margin-top: 8%;
@@ -645,6 +653,12 @@ button.shrine-submit{
     height: 75%;
     overflow: auto;
 }
+
+/*Fix for resizeable text area.*/
+textarea{
+    resize: none;
+}
+
 
 
 @media (min-width: 768px) {
