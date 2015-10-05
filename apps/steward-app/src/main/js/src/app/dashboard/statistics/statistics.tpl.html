@@ -11,7 +11,7 @@
         <div class="row">
             <div class="col-sm-3">
                 <p class="input-group">
-                    <input type="text"
+                    <input type="text" class="shrine-calendar-input"
                            datepicker-popup="{{format}}"
                            max-date="endDate"
                            ng-model="startDate"
@@ -30,7 +30,7 @@
 
             <div class="col-sm-3">
                 <p class="input-group">
-                    <input type="text"
+                    <input type="text" class="shrine-calendar-input"
                            datepicker-popup="{{format}}"
                            ng-model="endDate"
                            min-date="startDate"
@@ -61,6 +61,7 @@
         </div>
     </div>
 
+    <br/>
     <topic-status></topic-status>
     <br/>
     <br/>
