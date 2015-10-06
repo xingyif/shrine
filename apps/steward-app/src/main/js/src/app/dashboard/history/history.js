@@ -102,16 +102,14 @@ angular.module('stewardApp')
                         });
                 };
 
-                /**
-                 * page Index is updated by paginator.
-                 * @param data
+                /*
+                 * Handler for when pagination page is changed.
                  */
-                $scope.onPageSelected = function (data) {
+                $scope.onPageSelected = function () {
                     var mult;
-                    $scope.pageIndex = data.pageIndex;
                     mult             = ($scope.pageIndex > 0) ? $scope.pageIndex - 1 : 0;
                     $scope.skip      = $scope.limit * mult;
-                    $scope.refreshHistory($scope.skip, $scope.limit);
+                    $scope.refreshTopics($scope.skip, $scope.limit);
                 };
 
 

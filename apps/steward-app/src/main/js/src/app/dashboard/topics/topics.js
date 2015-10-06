@@ -101,7 +101,6 @@ angular.module('stewardApp')
 
         /*
          * Handler for when pagination page is changed.
-         * @param: data containing information about the current state of the pagination control.
          */
         $scope.onPageSelected = function () {
             var mult;
