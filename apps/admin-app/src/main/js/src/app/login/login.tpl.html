@@ -2,21 +2,13 @@
 <div class="row shrine-login">
     <div class="col-sm-4">
         <p class="shrine-copy-bold">
-            Description of SHRINE Dashboard here.
         </p>
 
 
         <ul class="shrine-copy">
-            <li>
-                List item 1.
-            </li>
-            <li>
-                List item 2.
-            </li>
         </ul>
 
         <p class="shrine-copy">
-            More description here.
         </p>
     </div>
     <div class="col-sm-4">
@@ -25,6 +17,11 @@
                 <form name="form" ng-submit="login()" role="form">
                     <fieldset>
                         <div class="form-group">
+                            <label class="pull-right shrine-copy-bold"
+                                   ng-show="form.username.$error.required ||
+                                form.password.$error.required">
+                                *<small>Required Field</small>
+                            </label>
                             <span>Username*</span>
 
                             <input class="form-control" type="text" name="username"

@@ -309,9 +309,6 @@ body {
 .navbar-top-links{
     right: 0;
     left: auto;
-    background:
-    linear-gradient(rgba(255, 255, 255, 0), rgba(255, 255, 255, .50)),
-    url('../img/bckg_diagonal_lines_no_border.png') !important;
 }
 
 .sidebar .sidebar-nav.navbar-collapse {
