@@ -19,7 +19,7 @@ case class SquerylShrineError(
     codec:String,
     @Column(name = "SUMMARY")
     summary:String,
-    @Column(name = "DESCRIPTION")
+    @Column(name = "PROBLEM_DESCRIPTION")
     digestDescription:String,
     @Column(name = "DETAILS")
     details:String
