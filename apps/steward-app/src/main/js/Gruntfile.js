@@ -99,5 +99,6 @@ module.exports = function (grunt) {
     grunt.registerTask('test', ['karma']);
     grunt.registerTask('build', ['test', 'clean', 'copy:build', 'uglify:build']);
     grunt.registerTask('deploy', ['copy:deploy']);
-    grunt.registerTask('default', ['test', 'clean', 'copy:build', 'uglify:build', 'copy:deploy']);
+    grunt.registerTask('default', ['test', 'clean', 'copy:build', /*'uglify:build',*/
+     'copy:deploy']);
 };

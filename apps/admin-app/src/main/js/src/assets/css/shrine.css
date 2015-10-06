@@ -306,7 +306,7 @@ body {
     margin-left: -123px;
 }
 
-.navbar-top-links .dropdown-user {
+.navbar-top-links{
     right: 0;
     left: auto;
     background:
@@ -667,5 +667,9 @@ textarea{
         position: absolute;
         left: 280px;
     }
+}
+
+.shrine-calendar-input{
+    margin-right: 1px;
 }
 
