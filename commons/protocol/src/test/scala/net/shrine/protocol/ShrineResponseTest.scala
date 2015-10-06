@@ -1,5 +1,7 @@
 package net.shrine.protocol
 
+import net.shrine.problem.TestProblem
+
 import scala.xml.NodeSeq
 import org.junit.Test
 import net.shrine.util.ShouldMatchersForJUnit
@@ -54,7 +56,7 @@ final class ShrineResponseTest extends ShouldMatchersForJUnit {
     roundTrip(UnFlagQueryResponse)
     roundTrip(FlagQueryResponse)
 
-    roundTrip(ErrorResponse("errorMessage"))
+    roundTrip(ErrorResponse("errorMessage",Some(TestProblem)))
   }
 
   @Test

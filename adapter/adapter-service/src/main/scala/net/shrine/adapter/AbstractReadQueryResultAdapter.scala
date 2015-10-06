@@ -3,6 +3,7 @@ package net.shrine.adapter
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import net.shrine.adapter.audit.AdapterAuditDb
+import net.shrine.problem.{AbstractProblem, ProblemSources}
 
 import scala.Option.option2Iterable
 import scala.concurrent.Await
@@ -121,7 +122,7 @@ abstract class AbstractReadQueryResultAdapter[Req <: BaseShrineRequest, Rsp <: S
     }
   }
 
-  private def errorResponse(queryId: Long) = ErrorResponse(s"Query with id '$queryId' not found")
+  private def errorResponse(queryId: Long) = ErrorResponse(QueryNotFound(queryId))
 
   private def makeResponseFrom(queryId: Long, shrineQueryResult: ShrineQueryResult): ShrineResponse = {
     shrineQueryResult.toQueryResults(doObfuscation).map(toResponse(queryId, _)).getOrElse(errorResponse(queryId))
@@ -289,3 +290,8 @@ abstract class AbstractReadQueryResultAdapter[Req <: BaseShrineRequest, Rsp <: S
 
   private lazy val delegateResultRetrievingAdapter = new DelegateAdapter[ReadResultRequest, ReadResultResponse](ReadResultResponse.fromI2b2 _)
 }
+
+case class QueryNotFound(queryId:Long) extends AbstractProblem(ProblemSources.Adapter) {
+  override def summary: String = s"Query with id '$queryId' not found"
+}
+

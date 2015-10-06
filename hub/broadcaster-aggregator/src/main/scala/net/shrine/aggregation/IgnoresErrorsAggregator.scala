@@ -1,18 +1,19 @@
 package net.shrine.aggregation
-import net.shrine.protocol.ShrineResponse
+
 import net.shrine.aggregation.BasicAggregator.{Invalid, Error, Valid}
+import net.shrine.problem.{ProblemSources, AbstractProblem}
 import net.shrine.protocol.ErrorResponse
 import net.shrine.protocol.BaseShrineResponse
 
 /**
  *
  * @author Clint Gilbert
- * @date Sep 16, 2011
+ * @since Sep 16, 2011
  *
- * @link http://cbmi.med.harvard.edu
+ * @see http://cbmi.med.harvard.edu
  *
  * This software is licensed under the LGPL
- * @link http://www.gnu.org/licenses/lgpl.html
+ * @see http://www.gnu.org/licenses/lgpl.html
  *
  * Extends BasicAggregator to ignore Errors and Invalid responses
  * 
@@ -26,6 +27,15 @@ abstract class IgnoresErrorsAggregator[T <: BaseShrineResponse : Manifest] exten
 
   //Default implementation, just returns first valid response, or if there are none, an ErrorResponse
   private[aggregation] def makeResponseFrom(validResponses: Iterable[Valid[T]]): BaseShrineResponse = {
-    validResponses.map(_.response).toSet.headOption.getOrElse(new ErrorResponse("No valid responses to aggregate"))
+
+
+    validResponses.map(_.response).toSet.headOption.getOrElse{
+      val problem = NoValidResponsesToAggregate()
+      ErrorResponse(problem.summary,Some(problem))
+    }
   }
+}
+
+case class NoValidResponsesToAggregate() extends AbstractProblem(ProblemSources.Hub) {
+  override def summary: String = "No valid responses to aggregate"
 }

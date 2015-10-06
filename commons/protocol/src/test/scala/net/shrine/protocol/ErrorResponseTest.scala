@@ -1,6 +1,7 @@
 package net.shrine.protocol
 
 import junit.framework.TestCase
+import net.shrine.problem.TestProblem
 import net.shrine.util.ShouldMatchersForJUnit
 import org.junit.Test
 import scala.xml.NodeSeq
@@ -13,11 +14,12 @@ import net.shrine.util.XmlUtil
 final class ErrorResponseTest extends TestCase with ShouldMatchersForJUnit {
   val message = "foo"
 
-  val resp = ErrorResponse(message)
+  val resp = ErrorResponse(message,Some(TestProblem))
 
   val expectedShrineXml = XmlUtil.stripWhitespace {
     <errorResponse>
       <message>{ message }</message>
+      {TestProblem.toDigest.toXml}
     </errorResponse>
   }
 
@@ -40,6 +42,7 @@ final class ErrorResponseTest extends TestCase with ShouldMatchersForJUnit {
       <response_header>
         <result_status>
           <status type="ERROR">{ message }</status>
+          {TestProblem.toDigest.toXml}
         </result_status>
       </response_header>
       <message_body>
@@ -66,6 +69,7 @@ final class ErrorResponseTest extends TestCase with ShouldMatchersForJUnit {
   def testFromI2b2() = doTestFromXml(expectedI2b2Xml, ErrorResponse.fromI2b2)
 
   //NB: See https://open.med.harvard.edu/jira/browse/SHRINE-745
+
   @Test
   def testFromI2b2AlternateFormat() {
     val altI2b2Xml = XmlUtil.stripWhitespace {
@@ -136,7 +140,7 @@ final class ErrorResponseTest extends TestCase with ShouldMatchersForJUnit {
   private def doTestToXml(expected: NodeSeq, serialize: ErrorResponse => NodeSeq) {
     val xml = serialize(resp)
 
-//todo turn this back on    xml.toString should equal(expected.toString)
+    xml.toString should equal(expected.toString())
   }
 
   private def doTestRoundTrip(serialize: ErrorResponse => NodeSeq, deserialize: NodeSeq => ErrorResponse) {

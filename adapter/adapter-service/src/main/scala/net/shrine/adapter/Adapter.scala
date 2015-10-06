@@ -1,13 +1,10 @@
 package net.shrine.adapter
 
 import net.shrine.log.Loggable
-import net.shrine.protocol.BroadcastMessage
-import net.shrine.protocol.ErrorResponse
+import net.shrine.problem.{Problem, ProblemNotInCodec, LoggingProblemHandler, ProblemSources, AbstractProblem}
+import net.shrine.protocol.{ShrineRequest, BroadcastMessage, ErrorResponse, ShrineResponse, BaseShrineResponse, AuthenticationInfo}
 import net.shrine.serialization.XmlMarshaller
 import net.shrine.util.StackTrace
-import net.shrine.protocol.ShrineResponse
-import net.shrine.protocol.BaseShrineResponse
-import net.shrine.protocol.AuthenticationInfo
 
 /**
  * @author Bill Simons
@@ -22,43 +19,56 @@ import net.shrine.protocol.AuthenticationInfo
 abstract class Adapter extends Loggable {
   
   final def perform(message: BroadcastMessage): BaseShrineResponse = {
+    def problemToErrorResponse(problem:Problem):ErrorResponse = {
+      LoggingProblemHandler.handleProblem(problem)
+      ErrorResponse(problem)
+    }
+
     val shrineResponse = try {
       processRequest(message)
     } catch {
       case e: AdapterLockoutException => {
-        val AuthenticationInfo(domain, username, _) = message.request.authn
-        
-        warn(s"User '$domain:$username' is locked out")
-        
-        errorResponseFrom(e)
+        problemToErrorResponse(AdapterLockout(message.request.authn,e))
       }
       case e @ CrcInvocationException(invokedCrcUrl, request, cause) => {
-        error(s"Error invoking the CRC at '$invokedCrcUrl' with request $request . Root cause: ", cause)
-        
-        errorResponseFrom(e)
+        problemToErrorResponse(CrcCouldNotBeInvoked(invokedCrcUrl,request,e))
       }
       case e: AdapterMappingException => {
-        warn(s"Error mapping query terms: ${e.getMessage}", e)
-        
-        errorResponseFrom(e)
-      } 
+        problemToErrorResponse(AdapterMappingProblem(e))
+      }
       case e: Exception => {
-        //for now we'll warn on all errors and work towards more specific logging later
-        def messageXml = Option(message).map(_.toXmlString).getOrElse("(Null message)")
-        
-        warn(s"Exception $e in Adapter with stack trace:\r\n${ StackTrace.stackTraceAsString(e) } caused on request\r\n $messageXml", e)
-        
-        errorResponseFrom(e)
+
+        val summary = if(message == null) "Unknown problem in Adapter.perform with null BroadcastMessage"
+                      else s"Unexpected exception in Adapter"
+        problemToErrorResponse(ProblemNotInCodec(summary,e))
       }
     }
 
     shrineResponse
   }
 
-  private def errorResponseFrom(e: Throwable) = ErrorResponse(e.getMessage)
-  
   protected[adapter] def processRequest(message: BroadcastMessage): BaseShrineResponse
   
   //NOOP, may be overridden by subclasses
   def shutdown(): Unit = ()
 }
+
+case class AdapterLockout(authn:AuthenticationInfo,x:AdapterLockoutException) extends AbstractProblem(ProblemSources.Hub) {
+  override def summary: String = s"User '${authn.domain}:${authn.username}' is locked out"
+
+  override def throwable = Some(x)
+}
+
+case class CrcCouldNotBeInvoked(crcUrl:String,request:ShrineRequest,x:CrcInvocationException) extends AbstractProblem(ProblemSources.Hub) {
+  override def summary: String = s"Error invoking the CRC at '$crcUrl' with request $request ."
+
+  override def throwable = Some(x)
+}
+
+case class AdapterMappingProblem(x:AdapterMappingException) extends AbstractProblem(ProblemSources.Hub) {
+  override def summary: String = s"Error mapping query terms: ${x.getMessage}"
+
+  override def throwable = Some(x)
+}
+
+case class ExceptionInAdapter()

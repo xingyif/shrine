@@ -1,6 +1,7 @@
 package net.shrine.authorization
 
 import net.shrine.log.Loggable
+import net.shrine.problem.ProblemNotInCodec
 import org.junit.Test
 import net.shrine.util.ShouldMatchersForJUnit
 import net.shrine.client.HttpClient
@@ -9,13 +10,12 @@ import net.shrine.protocol.AuthenticationInfo
 import net.shrine.protocol.Credential
 import net.shrine.util.XmlUtil
 import net.shrine.client.Poster
-import net.shrine.authorization.PmAuthorizerComponent.Authorized
-import net.shrine.authorization.PmAuthorizerComponent.NotAuthorized
 
 /**
  * @author clint
- * @date Apr 5, 2013
+ * @since Apr 5, 2013
  */
+//noinspection UnitMethodIsParameterless,UnitMethodIsParameterless,EmptyParenMethodAccessedAsParameterless,ScalaUnnecessaryParentheses
 final class PmAuthorizerComponentTest extends ShouldMatchersForJUnit {
   import PmAuthorizerComponentTest._
   
@@ -28,10 +28,10 @@ final class PmAuthorizerComponentTest extends ShouldMatchersForJUnit {
   def testGoodResponseNotManager {
     val component = new TestPmAuthorizerComponent(poster(new LazyMockHttpClient(validUserResponseXml.toString)))
     
-    val NotAuthorized(reason) = component.Pm.authorize(projectId1, Set(User.Roles.Manager), authn)
+    val NotAuthorized(problemDigest) = component.Pm.authorize(projectId1, Set(User.Roles.Manager), authn)
     
-    reason should not be(null)
-    reason.size should not be(0) 
+    problemDigest should not be(null)
+    problemDigest.codec should be (classOf[MissingRequiredRoles].getName)
   }
   
   @Test
@@ -51,29 +51,31 @@ final class PmAuthorizerComponentTest extends ShouldMatchersForJUnit {
   def testErrorResponse {
     val component = new TestPmAuthorizerComponent(poster(new LazyMockHttpClient(i2b2ErrorXml.toString)))
     
-    val NotAuthorized(reason) = component.Pm.authorize(projectId1, Set.empty, authn)
-    
-    reason should be(errorMessage)
+    val NotAuthorized(problemDigest) = component.Pm.authorize(projectId1, Set.empty, authn)
+
+    problemDigest should not be(null)
+
+    problemDigest.codec should be (classOf[CouldNotInterpretResponseFromPmCell].getName)
   } 
   
   @Test
   def testJunkResponse {
     val component = new TestPmAuthorizerComponent(poster(new LazyMockHttpClient("jahfskajhkjashfdkjashkfd")))
     
-    val NotAuthorized(reason) = component.Pm.authorize(projectId1, Set.empty, authn)
-    
-    reason should not be(null)
-    reason.size should not be(0)
-  } 
+    val NotAuthorized(problemDigest) = component.Pm.authorize(projectId1, Set.empty, authn)
+
+    problemDigest should not be(null)
+    problemDigest.codec should be (classOf[CouldNotReachPmCell].getName)
+  }
   
   @Test
-  def testResponseThatBlowsUp {
+  def testResponseThatBlowsUp() {
     val component = new TestPmAuthorizerComponent(poster(new LazyMockHttpClient(throw new Exception with scala.util.control.NoStackTrace)))
     
-    val NotAuthorized(reason) = component.Pm.authorize(projectId1, Set.empty, authn)
-    
-    reason should not be(null)
-    reason.size should not be(0)
+    val NotAuthorized(problemDigest) = component.Pm.authorize(projectId1, Set.empty, authn)
+
+    problemDigest should not be(null)
+    problemDigest.codec should be (classOf[CouldNotReachPmCell].getName)
   }
   
   private val fullName = "Some Person"
@@ -82,7 +84,7 @@ final class PmAuthorizerComponentTest extends ShouldMatchersForJUnit {
   private val password = "sal;dk;aslkd;"
   private val errorMessage = "Something blew up"
 
-  private lazy val authn = AuthenticationInfo(domain, username, Credential(password, true))
+  private lazy val authn = AuthenticationInfo(domain, username, Credential(password, isToken = true))
     
   private val projectId1 = "foo"
   

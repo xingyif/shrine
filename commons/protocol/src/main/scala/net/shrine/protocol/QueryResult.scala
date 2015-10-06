@@ -250,7 +250,7 @@ object QueryResult {
   def extractProblemDigest(xml: NodeSeq):Option[ProblemDigest] = {
 
     val subXml = xml \ "problem"
-    if(subXml.nonEmpty) Some(ProblemDigest.fromXml(subXml))
+    if(subXml.nonEmpty) Some(ProblemDigest.fromXml(xml))
     else None
   }
 

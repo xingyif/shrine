@@ -1,5 +1,7 @@
 package net.shrine.broadcaster
 
+import net.shrine.problem.TestProblem
+
 import scala.concurrent.Await
 import org.junit.Test
 import net.shrine.util.ShouldMatchersForJUnit
@@ -21,13 +23,13 @@ import net.shrine.broadcaster.dao.MockHubDao
 
 /**
  * @author clint
- * @date Nov 19, 2013
+ * @since Nov 19, 2013
  */
 final class HubBroadcastAndAggregationServiceTest extends AbstractSquerylHubDaoTest with ShouldMatchersForJUnit {
   import scala.concurrent.duration._
   import MockBroadcasters._
 
-  private def result(description: Char) = Result(NodeId(description.toString), 1.second, ErrorResponse("blah blah blah"))
+  private def result(description: Char) = Result(NodeId(description.toString), 1.second, ErrorResponse("blah blah blah",Some(TestProblem)))
 
   private val results = "abcde".map(result)
 
@@ -54,7 +56,7 @@ final class HubBroadcastAndAggregationServiceTest extends AbstractSquerylHubDaoT
 
     val aggregator: Aggregator = new Aggregator {
       override def aggregate(results: Iterable[SingleNodeResult], errors: Iterable[ErrorResponse]): ShrineResponse = {
-        ErrorResponse(results.size.toString)
+        ErrorResponse(results.size.toString,Some(TestProblem))
       }
     }
 
@@ -62,7 +64,7 @@ final class HubBroadcastAndAggregationServiceTest extends AbstractSquerylHubDaoT
 
     mockBroadcaster.messageParam.signature.isDefined should be(false)
     
-    aggregatedResult should equal(ErrorResponse(s"${results.size}"))
+    aggregatedResult should equal(ErrorResponse(s"${results.size}",Some(TestProblem)))
   }
 
   @Test
@@ -85,7 +87,7 @@ final class HubBroadcastAndAggregationServiceTest extends AbstractSquerylHubDaoT
 
     val aggregator: Aggregator = new Aggregator {
       override def aggregate(results: Iterable[SingleNodeResult], errors: Iterable[ErrorResponse]): ShrineResponse = {
-        ErrorResponse(s"${results.size},${errors.size}")
+        ErrorResponse(s"${results.size},${errors.size}",Some(TestProblem))
       }
     }
 
@@ -93,6 +95,6 @@ final class HubBroadcastAndAggregationServiceTest extends AbstractSquerylHubDaoT
 
     mockBroadcaster.messageParam.signature.isDefined should be(false)
     
-    aggregatedResult should equal(ErrorResponse(s"${results.size + failuresByOrigin.size + timeoutsByOrigin.size},0"))
+    aggregatedResult should equal(ErrorResponse(s"${results.size + failuresByOrigin.size + timeoutsByOrigin.size},0",Some(TestProblem)))
   }
 }

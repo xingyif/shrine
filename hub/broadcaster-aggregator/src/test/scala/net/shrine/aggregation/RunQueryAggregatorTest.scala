@@ -22,7 +22,7 @@ import net.shrine.protocol.DefaultBreakdownResultOutputTypes
  *
  *
  * @author Justin Quan
- * @link http://chip.org
+ * @see http://chip.org
  * Date: 8/12/11
  */
 final class RunQueryAggregatorTest extends ShouldMatchersForJUnit {
@@ -87,7 +87,7 @@ final class RunQueryAggregatorTest extends ShouldMatchersForJUnit {
 
     val rqr1 = RunQueryResponse(queryId, now, userId, groupId, requestQueryDef, queryInstanceId, qrCount)
     val errorMessage = "error message"
-    val errorResponse = new ErrorResponse(errorMessage)
+    val errorResponse = ErrorResponse(errorMessage)
 
     val result1 = Result(NodeId("description1"), 1.second, rqr1)
     val result2 = Result(NodeId("description2"), 1.second, errorResponse)

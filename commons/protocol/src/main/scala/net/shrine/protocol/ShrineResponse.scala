@@ -2,19 +2,19 @@ package net.shrine.protocol
 
 import net.shrine.serialization.XmlMarshaller
 import net.shrine.serialization.XmlUnmarshaller
-import scala.xml.NodeSeq
+import scala.xml.{Elem, NodeSeq}
 import net.shrine.serialization.I2b2Marshaller
 import net.shrine.util.XmlUtil
 import scala.util.Try
 
 /**
  * @author clint
- * @date Nov 5, 2012
+ * @since Nov 5, 2012
  */
 trait ShrineResponse extends BaseShrineResponse with I2b2Marshaller {
   protected def i2b2MessageBody: NodeSeq
 
-  protected def status = <status type="DONE">DONE</status>
+  protected def status:NodeSeq = <status type="DONE">DONE</status>
 
   //TODO better xmlns strategy
   override def toI2b2: NodeSeq = XmlUtil.stripWhitespace {
@@ -43,6 +43,7 @@ trait ShrineResponse extends BaseShrineResponse with I2b2Marshaller {
       </message_body>
     </ns4:response>
   }
+  //todo start here Monday. figure out I2B2 xml for this
 }
 
 object ShrineResponse {

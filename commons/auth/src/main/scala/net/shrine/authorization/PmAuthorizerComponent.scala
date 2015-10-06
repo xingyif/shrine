@@ -1,6 +1,7 @@
 package net.shrine.authorization
 
 import net.shrine.log.Loggable
+import net.shrine.problem.{LoggingProblemHandler, Problem, ProblemSources, AbstractProblem, ProblemDigest}
 
 import scala.util.Try
 import net.shrine.client.HttpResponse
@@ -12,12 +13,13 @@ import scala.util.control.NonFatal
 
 /**
  * @author clint
- * @date Apr 5, 2013
+ * @since Apr 5, 2013
  */
 trait PmAuthorizerComponent { self: PmHttpClientComponent with Loggable =>
 
   import PmAuthorizerComponent._
 
+  //noinspection RedundantBlock
   object Pm {
     def parsePmResult(authn: AuthenticationInfo)(httpResponse: HttpResponse): Try[Either[ErrorResponse, User]] = {
       User.fromI2b2(httpResponse.body).map(Right(_)).recoverWith {
@@ -28,9 +30,9 @@ trait PmAuthorizerComponent { self: PmHttpClientComponent with Loggable =>
         }
       }.recover {
         case NonFatal(e) => {
-          warn(s"Couldn't understand response from PM: '$httpResponse'", e)
-
-          Left(ErrorResponse(s"Error authorizing ${authn.domain}:${authn.username}: ${e.getMessage}"))
+          val problem = CouldNotInterpretResponseFromPmCell(pmPoster.url,authn,httpResponse,e)
+          LoggingProblemHandler.handleProblem(problem)
+          Left(ErrorResponse(problem.summary,Some(problem)))
         }
       }
     }
@@ -51,15 +53,19 @@ trait PmAuthorizerComponent { self: PmHttpClientComponent with Loggable =>
             if neededRoles.forall(roles.contains)
           } yield user
 
-          managerUserOption.map(Authorized(_)).getOrElse {
-            NotAuthorized(s"User ${authn.domain}:${authn.username} does not have all the needed roles: ${neededRoles.map("'" + _ + "'").mkString(", ")} in the project '$projectId'")
+          managerUserOption.map(Authorized).getOrElse {
+            NotAuthorized(MissingRequiredRoles(projectId,neededRoles,authn))
           }
         }
-        case Left(ErrorResponse(message)) => NotAuthorized(message)
+        case Left(errorResponse) => {
+          //todo remove when ErrorResponse gets its message
+          info(s"ErrorResponse message '${errorResponse.errorMessage}' may not have carried through to the NotAuthorized object")
+          NotAuthorized(errorResponse.problemDigest)
+        }
       }
 
       authStatusAttempt.getOrElse {
-        NotAuthorized(s"Error authorizing ${authn.domain}:${authn.username} with PM at ${pmPoster.url}")
+        NotAuthorized(CouldNotReachPmCell(pmPoster.url,authn))
       }
     }
   }
@@ -70,7 +76,25 @@ object PmAuthorizerComponent {
 
   case class Authorized(user: User) extends AuthorizationStatus
 
-  case class NotAuthorized(reason: String) extends AuthorizationStatus {
-    def toErrorResponse = ErrorResponse(reason)
+  case class NotAuthorized(problemDigest: ProblemDigest) extends AuthorizationStatus {
+    def toErrorResponse = ErrorResponse(problemDigest.summary,problemDigest)
   }
+
+  object NotAuthorized {
+    def apply(problem:Problem):NotAuthorized = NotAuthorized(problem.toDigest)
+  }
+}
+
+case class MissingRequiredRoles(projectId: String, neededRoles: Set[String], authn: AuthenticationInfo) extends AbstractProblem(ProblemSources.Qep) {
+  override val summary: String = s"User ${authn.domain}:${authn.username} does not have all the needed roles: ${neededRoles.map("'" + _ + "'").mkString(", ")} in the project '$projectId'"
+}
+
+case class CouldNotReachPmCell(pmUrl:String,authn: AuthenticationInfo) extends AbstractProblem(ProblemSources.Qep) {
+  override def summary: String = s"Could not reach PM cell at $pmUrl for ${authn.domain}:${authn.username}"
+}
+
+case class CouldNotInterpretResponseFromPmCell(pmUrl:String,authn: AuthenticationInfo,httpResponse: HttpResponse,x:Throwable) extends AbstractProblem(ProblemSources.Qep) {
+  override def summary: String = s"Exception while interpreting response from PM cell at ${pmUrl} for ${authn.domain}:${authn.username}: $httpResponse"
+
+  override def throwable = Some(x)
 }

@@ -63,6 +63,7 @@ final class ShrineSqlOntologyDao(val file: InputStream) extends OntologyDao {
       val result = regex.findFirstMatchIn(line).map(parser)
       
       if(result.isEmpty) {
+        //todo found this scary bit
         println("Failed to parse line: " + line)
       }
       
