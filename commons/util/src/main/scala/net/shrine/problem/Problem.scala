@@ -6,7 +6,7 @@ import java.util.Date
 import net.shrine.log.Loggable
 import net.shrine.serialization.{XmlUnmarshaller, XmlMarshaller}
 
-import scala.xml.NodeSeq
+import scala.xml.{Node, NodeSeq}
 
 /**
  * Describes what information we have about a problem at the site in code where we discover it.
@@ -34,7 +34,7 @@ trait Problem {
 }
 
 case class ProblemDigest(codec:String,summary:String,description:String,details:String) extends XmlMarshaller {
-  override def toXml: NodeSeq = {
+  override def toXml: Node = {
     <problem>
       <codec>{codec}</codec>
       <summary>{summary}</summary>
@@ -53,7 +53,14 @@ object ProblemDigest extends XmlUnmarshaller[ProblemDigest] with Loggable {
   }
 
   override def fromXml(xml: NodeSeq): ProblemDigest = {
-    def extractText(tagName:String) = (xml \ tagName).text
+    val problemNode = xml \ "problem"
+    require(problemNode.nonEmpty,s"No problem tag in $xml")
+
+    def extractText(tagName:String) = {
+      val t = (problemNode \ tagName).text
+      require(t.nonEmpty)
+      t
+    }
 
     val codec = extractText("codec")
     val summary = extractText("summary")
@@ -109,14 +116,19 @@ object ProblemSources{
 }
 
 
-case class ProblemNotInCodec(summary:String) extends AbstractProblem(ProblemSources.Unknown){
-  override val throwable = {
-    val x = new IllegalStateException(s"$summary , is not yet in the codec.")
-    x.fillInStackTrace()
-    Option(x)
-  }
+case class ProblemNotInCodec(summary:String,t:Throwable) extends AbstractProblem(ProblemSources.Unknown){
+  override val throwable = Some(t)
 
   override val description = s"${super.description} . This error is not yet in the codec. Please report the stack trace to the Shrine development team at TODO"
+}
+
+object ProblemNotInCodec {
+
+  def apply(summary:String):ProblemNotInCodec = {
+      val x = new IllegalStateException(s"$summary , is not yet in the codec.")
+      x.fillInStackTrace()
+    new ProblemNotInCodec(summary,x)
+  }
 }
 
 /**

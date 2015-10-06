@@ -44,6 +44,10 @@ create table ERROR_RESULT(
   constraint ERROR_RESULT_id_pk primary key(id),
   constraint fk_ERROR_RESULT_QUERY_RESULT_id foreign key (result_id) references QUERY_RESULT (id) on delete cascade
 )
+alter table ERROR_RESULT add column 'CODEC' varchar not null default "Pre-1.20 Error"
+alter table ERROR_RESULT add column 'SUMMARY' text not null default "Pre-1.20 Error"
+alter table ERROR_RESULT add column 'DESCRIPTION' text not null default "Pre-1.20 Error"
+alter table ERROR_RESULT add column 'DETAILS' text not null default "Pre-1.20 Error"
 
 create table COUNT_RESULT(
   id int not null identity(1,1),

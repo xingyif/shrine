@@ -1,6 +1,8 @@
 package net.shrine.protocol
 
-import xml.NodeSeq
+import net.shrine.problem.{LoggingProblemHandler, Problem, ProblemNotInCodec, ProblemDigest}
+
+import scala.xml.{NodeBuffer, NodeSeq}
 import net.shrine.util.XmlUtil
 import net.shrine.serialization.XmlUnmarshaller
 import net.shrine.serialization.I2b2Unmarshaller
@@ -20,25 +22,26 @@ import scala.util.control.NonFatal
  *
  * NB: Now a case class for structural equality
  */
-final case class ErrorResponse(errorMessage: String) extends ShrineResponse {
+final case class ErrorResponse(errorMessage: String,problemDigest:ProblemDigest) extends ShrineResponse {
 
-  //todo codec id, one-liner, medium message, detailed message
-
-  override protected def status = <status type="ERROR">{ errorMessage }</status>
+  override protected def status: NodeSeq = {
+    val buffer = new NodeBuffer
+    buffer += <status type="ERROR">{ errorMessage }</status>
+    buffer += problemDigest.toXml
+  }
 
   override protected def i2b2MessageBody = null
 
   import ErrorResponse.rootTagName
 
-  override def toXml = XmlUtil.stripWhitespace {
-    XmlUtil.renameRootTag(rootTagName) {
-      <errorResponse>
-        //todo this is where the ProblemDigest goes.
-<!--        <codec>net.shrine.something.is.Broken</codec>
-        <summary>Something is borked</summary> -->
-        <message>{ errorMessage }</message>
-<!--        <details>Herein is a stack trace, multiple lines</details> -->
-      </errorResponse>
+  override def toXml = { XmlUtil.stripWhitespace {
+      val xml = XmlUtil.renameRootTag(rootTagName) {
+        <errorResponse>
+          <message>{ errorMessage }</message>
+          {problemDigest.toXml}
+        </errorResponse>
+      }
+      xml
     }
   }
 }
@@ -46,28 +49,46 @@ final case class ErrorResponse(errorMessage: String) extends ShrineResponse {
 object ErrorResponse extends XmlUnmarshaller[ErrorResponse] with I2b2Unmarshaller[ErrorResponse] with HasRootTagName {
   val rootTagName = "errorResponse"
 
+  //todo deprecate this one
+  def apply(errorMessage:String,problem:Option[Problem] = None) = {
+    new ErrorResponse(errorMessage,problem.fold{
+      val problem = ProblemNotInCodec(s"'$errorMessage'")
+      LoggingProblemHandler.handleProblem(problem) //todo someday hook up to the proper problem handler hierarchy.
+      problem.toDigest
+    }(p => p.toDigest))
+  }
+
+  def apply(problem:Problem) = {
+    new ErrorResponse(problem.summary,problem.toDigest)
+  }
 
 
   override def fromXml(xml: NodeSeq): ErrorResponse = {
+
     val messageXml = xml \ "message"
 
     //NB: Fail fast
     require(messageXml.nonEmpty)
 
-    ErrorResponse(XmlUtil.trim(messageXml))
+    val problemDigest = ProblemDigest.fromXml(xml)
+
+    ErrorResponse(XmlUtil.trim(messageXml),problemDigest)
   }
 
   override def fromI2b2(xml: NodeSeq): ErrorResponse = {
     import NodeSeqEnrichments.Strictness._
 
+    //todo what determines parseFormatA vs parseFormatB when written? It looks like our ErrorResponses use A.
+
     def parseFormatA: Try[ErrorResponse] = {
       for {
         statusXml <- xml withChild "response_header" withChild "result_status" withChild "status"
-        typeText <- statusXml attribute "type"
-        if typeText == "ERROR" //NB: Fail fast
-        statusMessage = XmlUtil.trim(statusXml)
+        resultStatusXml <- xml withChild "response_header" withChild "result_status"
+        typeText <- statusXml attribute "type"    if typeText == "ERROR" //NB: Fail fast{
+                                                    statusMessage = XmlUtil.trim(statusXml)
+                                                    problemDigest = ProblemDigest.fromXml(resultStatusXml)
       } yield {
-        ErrorResponse(statusMessage)
+        ErrorResponse(statusMessage,problemDigest)
       }
     }
 
@@ -82,7 +103,10 @@ object ErrorResponse extends XmlUnmarshaller[ErrorResponse] with I2b2Unmarshalle
       }
     }
 
-    parseFormatA.recoverWith { case NonFatal(e) => parseFormatB }.get
+    parseFormatA.recoverWith { case NonFatal(e) => {
+      e.printStackTrace() //todo log instead
+      parseFormatB
+    } }.get
   }
 
   /**

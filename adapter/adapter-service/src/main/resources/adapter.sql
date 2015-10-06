@@ -37,6 +37,11 @@ create table ERROR_RESULT(
   constraint fk_ERROR_RESULT_QUERY_RESULT_id foreign key (result_id) references QUERY_RESULT (id) on delete cascade
 ) engine=innodb default charset=latin1;
 
+alter table ERROR_RESULT add column CODEC varchar(256) not null default "Pre-1.20 Error"
+alter table ERROR_RESULT add column SUMMARY text not null
+alter table ERROR_RESULT add column PROBLEM_DESCRIPTION text not null
+alter table ERROR_RESULT add column DETAILS text not null
+
 create table COUNT_RESULT(
   id int not null auto_increment,
   result_id int not null,

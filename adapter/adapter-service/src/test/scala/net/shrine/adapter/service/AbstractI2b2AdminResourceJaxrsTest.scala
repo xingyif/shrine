@@ -102,9 +102,7 @@ abstract class AbstractI2b2AdminResourceJaxrsTest extends TestCase with JerseyTe
 
     if(expectedQueryMasters.isEmpty) { queryMasters.isEmpty should be(true) }
     else {
-      println(queryMasters)
-      println(expectedQueryMasters)
-      
+
       (queryMasters zip expectedQueryMasters).foreach { case (queryMaster, expected) =>
         queryMaster.createDate should not be(null)
         queryMaster.name should equal(expected.name)

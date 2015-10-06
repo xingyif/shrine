@@ -1,5 +1,7 @@
 package net.shrine.adapter
 
+import net.shrine.adapter.components.QueryNotInDatabase
+import net.shrine.problem.ProblemNotInCodec
 import org.junit.Test
 import net.shrine.util.ShouldMatchersForJUnit
 
@@ -16,10 +18,10 @@ import net.shrine.protocol.query.Term
 
 /**
  * @author clint
- * @date Nov 28, 2012
+ * @since Nov 28, 2012
  */
 final class ReadQueryDefinitionAdapterTest extends AbstractSquerylAdapterTest with AdapterTestHelpers with ShouldMatchersForJUnit {
-  private val networkAuthn = AuthenticationInfo("network-domain", "network-user", Credential("skajdhkasjdh", false))
+  private val networkAuthn = AuthenticationInfo("network-domain", "network-user", Credential("skajdhkasjdh", isToken = false))
   
   import scala.concurrent.duration._
   
@@ -33,9 +35,11 @@ final class ReadQueryDefinitionAdapterTest extends AbstractSquerylAdapterTest wi
     
     //Should get error for non-existent query
     {
-      val ErrorResponse(msg) = adapter.processRequest(BroadcastMessage(123L, networkAuthn, ReadQueryDefinitionRequest("proj", 1.second, authn, queryId)))
+      val ErrorResponse(msg,problemDigest) = adapter.processRequest(BroadcastMessage(123L, networkAuthn, ReadQueryDefinitionRequest("proj", 1.second, authn, queryId)))
 
       msg should not be(null)
+
+      problemDigest.codec should be (classOf[QueryNotInDatabase].getName)
     }
 
     //Add a query
@@ -50,9 +54,10 @@ final class ReadQueryDefinitionAdapterTest extends AbstractSquerylAdapterTest wi
 
     {
       //Should still get error for non-existent query
-      val ErrorResponse(msg) = adapter.processRequest(BroadcastMessage(123L, networkAuthn, ReadQueryDefinitionRequest("proj", 1.second, authn, bogusQueryId)))
+      val ErrorResponse(msg, problemDigest) = adapter.processRequest(BroadcastMessage(123L, networkAuthn, ReadQueryDefinitionRequest("proj", 1.second, authn, bogusQueryId)))
 
       msg should not be(null)
+      problemDigest.codec should be (classOf[QueryNotInDatabase].getName)
     }
     
     {

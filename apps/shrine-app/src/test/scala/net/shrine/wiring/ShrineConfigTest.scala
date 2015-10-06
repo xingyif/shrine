@@ -111,8 +111,6 @@ final class ShrineConfigTest extends ShouldMatchersForJUnit  {
   def testApplyOptionalFields() {
     val conf = shrineConfig("shrine-no-optional-configs", loadBreakdownsFile = false)
 
-    println(conf)
-
     conf.adapterConfig should be(None)
     conf.hubConfig should be(None)
     conf.queryEntryPointConfig should be(None)

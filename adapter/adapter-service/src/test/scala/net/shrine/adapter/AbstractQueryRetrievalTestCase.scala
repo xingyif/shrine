@@ -25,6 +25,7 @@ import scala.util.Success
  * @author clint
  * @since Nov 8, 2012
  */
+//noinspection UnitMethodIsParameterless
 abstract class AbstractQueryRetrievalTestCase[R <: BaseShrineResponse](
   makeAdapter: (AdapterDao, HttpClient) => WithHiveCredentialsAdapter,
   makeRequest: (Long, AuthenticationInfo) => BaseShrineRequest,
@@ -52,8 +53,6 @@ abstract class AbstractQueryRetrievalTestCase[R <: BaseShrineResponse](
   private val localMasterId = "alksjdkalsdjlasdjlkjsad"
 
   private val shrineNetworkQueryId = 123L
-
-  private val errorResponse = ErrorResponse(s"Query with id '$shrineNetworkQueryId' not found")
 
   private def doGetResults(adapter: Adapter) = adapter.processRequest(BroadcastMessage(shrineNetworkQueryId, authn, makeRequest(shrineNetworkQueryId, authn)))
 
@@ -260,11 +259,17 @@ abstract class AbstractQueryRetrievalTestCase[R <: BaseShrineResponse](
 
     def getResults = doGetResults(adapter)
 
-    getResults should equal(errorResponse)
+    getResults match {
+      case errorResponse:ErrorResponse => errorResponse.problemDigest.codec should be (classOf[QueryNotFound].getName)
+      case x => fail(s"Got $x, not an ErrorResponse")
+    }
 
     val dbQueryId = dao.insertQuery(localMasterId, shrineNetworkQueryId, authn, fooQuery, isFlagged = false, hasBeenRun = false, flagMessage = None)
 
-    getResults should equal(errorResponse)
+    getResults match {
+      case errorResponse:ErrorResponse => errorResponse.problemDigest.codec should be (classOf[QueryNotFound].getName)
+      case x => fail(s"Got $x, not an ErrorResponse")
+    }
 
     import ResultOutputType._
     import XmlDateHelper.now

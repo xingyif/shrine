@@ -127,6 +127,6 @@ final class ReadQueryResultAggregatorTest extends ShouldMatchersForJUnit {
 
     aggregatedQueryResult should equal(expectedAggregatedResult)
 
-    actualErrorQueryResults.forall(qr => qr.description == Some("A"))
+    actualErrorQueryResults.forall(qr => qr.description.contains("A")) should be(true)
   }
 }

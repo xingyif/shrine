@@ -1,6 +1,7 @@
 package net.shrine.adapter.components
 
 import net.shrine.adapter.dao.AdapterDao
+import net.shrine.problem.{ProblemSources, AbstractProblem}
 import net.shrine.protocol.ShrineResponse
 import net.shrine.protocol.ReadQueryDefinitionRequest
 import net.shrine.protocol.ReadQueryDefinitionResponse
@@ -28,6 +29,10 @@ final case class QueryDefinitions[Req <: AbstractReadQueryDefinitionRequest](dao
         shrineQuery.queryDefinition.toI2b2String)
     }
 
-    resultOption.getOrElse(ErrorResponse(s"Couldn't find query with network id: ${request.queryId}"))
+    resultOption.getOrElse(ErrorResponse(QueryNotInDatabase(request)))
   }
+}
+
+case class QueryNotInDatabase(request:AbstractReadQueryDefinitionRequest) extends AbstractProblem(ProblemSources.Hub) {
+  override def summary: String = s"Couldn't find query with network id: ${request.queryId}"
 }

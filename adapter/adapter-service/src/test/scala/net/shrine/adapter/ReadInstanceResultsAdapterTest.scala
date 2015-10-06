@@ -10,7 +10,7 @@ import net.shrine.protocol.DefaultBreakdownResultOutputTypes
 
 /**
  * @author clint
- * @date Nov 7, 2012
+ * @since Nov 7, 2012
  */
 final class ReadInstanceResultsAdapterTest extends 
 	AbstractQueryRetrievalTestCase(
@@ -29,7 +29,7 @@ final class ReadInstanceResultsAdapterTest extends
   
   @Test
   def testProcessRequest = doTestProcessRequest
-  
+
   @Test
   def testProcessRequestMissingQuery = doTestProcessRequestMissingQuery
   

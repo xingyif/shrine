@@ -1,5 +1,6 @@
 package net.shrine.adapter.dao.model
 
+import net.shrine.problem.TestProblem
 import net.shrine.util.ShouldMatchersForJUnit
 import org.junit.Test
 import net.shrine.protocol.ResultOutputType
@@ -12,7 +13,7 @@ import net.shrine.protocol.DefaultBreakdownResultOutputTypes
 
 /**
  * @author clint
- * @date Nov 1, 2012
+ * @since Nov 1, 2012
  */
 final class ShrineQueryResultTest extends ShouldMatchersForJUnit {
   import ResultOutputType._
@@ -58,7 +59,9 @@ final class ShrineQueryResultTest extends ShouldMatchersForJUnit {
     PATIENT_AGE_COUNT_XML -> Seq(BreakdownResultRow(someId, breakdownQueryResultRow1.id, "x", 1, 2), BreakdownResultRow(someId, breakdownQueryResultRow1.id, "y", 2, 3)),
     PATIENT_GENDER_COUNT_XML -> Seq(BreakdownResultRow(someId, breakdownQueryResultRow2.id, "a", 9, 10), BreakdownResultRow(someId, breakdownQueryResultRow2.id, "b", 10, 11)))
 
-  private val errorRows = Seq(ShrineError(someId, errorQueryResultRow1.id, "foo"), ShrineError(someId, errorQueryResultRow2.id, "bar"))
+  private val pd = TestProblem.toDigest
+
+  private val errorRows = Seq(ShrineError(someId, errorQueryResultRow1.id, "foo", pd.codec,pd.summary,pd.description,pd.details), ShrineError(someId, errorQueryResultRow2.id, "bar", pd.codec,pd.summary,pd.description,pd.details))
 
   @Test
   def testToQueryResults {

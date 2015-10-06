@@ -1,18 +1,20 @@
 package net.shrine.adapter.dao.model
 
 import net.shrine.util.ShouldMatchersForJUnit
+import net.shrine.problem.TestProblem
 import net.shrine.protocol.QueryResult
 
 /**
  * @author clint
- * @date Nov 1, 2012
+ * @since Nov 1, 2012
  */
 final class ShrineErrorTest extends ShouldMatchersForJUnit {
-  def testToQueryResult {
+  def testToQueryResult() {
     val message = "something broke"
+    val testProblem = TestProblem
+    val tpd = testProblem.toDigest
+    val error = ShrineError(1, 123, message,tpd.codec,tpd.summary,tpd.description,tpd.details)
     
-    val error = ShrineError(1, 123, message)  
-    
-    error.toQueryResult should equal(QueryResult.errorResult(Some(message), QueryResult.StatusType.Error.name))
+    error.toQueryResult should equal(QueryResult.errorResult(Some(message), QueryResult.StatusType.Error.name,Some(TestProblem)))
   }
 }

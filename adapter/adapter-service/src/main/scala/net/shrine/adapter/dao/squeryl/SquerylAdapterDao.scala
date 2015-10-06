@@ -1,6 +1,7 @@
 package net.shrine.adapter.dao.squeryl
 
 import net.shrine.log.Loggable
+import net.shrine.problem.{AbstractProblem, ProblemSources}
 import org.squeryl.Query
 import javax.xml.datatype.XMLGregorianCalendar
 import net.shrine.adapter.dao.AdapterDao
@@ -135,7 +136,16 @@ final class SquerylAdapterDao(initializer: SquerylInitializer, tables: Tables)(i
       for {
         (insertedErrorResultId, errorQueryResult) <- insertedIdsToErrors
       } {
-        insertErrorResult(insertedErrorResultId, errorQueryResult.statusMessage.getOrElse("Unknown failure"))
+        val pd = errorQueryResult.problemDigest.get //it's an error so it will have a problem digest
+
+        insertErrorResult(
+          insertedErrorResultId,
+          errorQueryResult.statusMessage.getOrElse("Unknown failure"),
+          pd.codec,
+          pd.summary,
+          pd.description,
+          pd.details
+        )
       }
     }
   }
@@ -147,7 +157,21 @@ final class SquerylAdapterDao(initializer: SquerylInitializer, tables: Tables)(i
       for {
         (failedBreakdownType, Seq(resultId)) <- insertedIdsForFailedBreakdownTypes
       } {
-        insertErrorResult(resultId, s"Couldn't retrieve breakdown of type '$failedBreakdownType'")
+        //todo propagate backwards to teh breakdown failure to create the corect problem
+        object BreakdownFailure extends AbstractProblem(ProblemSources.Adapter) {
+          override def summary: String = s"Couldn't retrieve breakdown of type '$failedBreakdownType'"
+        }
+
+        val pd = BreakdownFailure.toDigest
+
+        insertErrorResult(
+          resultId,
+          s"Couldn't retrieve breakdown of type '$failedBreakdownType'",
+          pd.codec,
+          pd.summary,
+          pd.description,
+          pd.details
+        )
       }
     }
   }
@@ -296,10 +320,10 @@ final class SquerylAdapterDao(initializer: SquerylInitializer, tables: Tables)(i
     }
   }
 
-  override def insertErrorResult(parentResultId: Int, errorMessage: String) {
+  override def insertErrorResult(parentResultId: Int, errorMessage: String, codec:String, summary:String, digestDescription:String,details:String) {
     //NB: Squeryl steers us toward inserting with dummy ids :(
     inTransaction {
-      tables.errorResults.insert(SquerylShrineError(0, parentResultId, errorMessage))
+      tables.errorResults.insert(SquerylShrineError(0, parentResultId, errorMessage, codec, summary, digestDescription, details))
     }
   }
 

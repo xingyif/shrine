@@ -680,7 +680,7 @@ final class RunQueryAdapterTest extends AbstractSquerylAdapterTest with ShouldMa
     }
 
     errorRow should not be (null)
-    //TODO:
+    //TODO: ErrorMessage
     //errorRow.message should equal(errorQueryResult.statusMessage)
   }
 

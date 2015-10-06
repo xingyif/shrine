@@ -1,5 +1,6 @@
 package net.shrine.adapter.dao.squeryl
 
+import net.shrine.problem.TestProblem
 import net.shrine.util.ShouldMatchersForJUnit
 import net.shrine.protocol.AuthenticationInfo
 import net.shrine.protocol.query.QueryDefinition
@@ -534,7 +535,9 @@ final class SquerylAdapterDaoTest extends AbstractSquerylAdapterTest with Should
 
     list(errorResultRows).isEmpty should be(true)
 
-    dao.insertErrorResult(resultRow.id, message1)
+    val pd = TestProblem.toDigest
+
+    dao.insertErrorResult(resultRow.id, message1,pd.codec,pd.summary,pd.description,pd.details)
 
     val Seq(errorResultRow) = list(errorResultRows)
 
@@ -543,7 +546,7 @@ final class SquerylAdapterDaoTest extends AbstractSquerylAdapterTest with Should
 
     intercept[Exception] {
       //Should fail due to foreign key constraint
-      dao.insertErrorResult(-12345, "")
+      dao.insertErrorResult(-12345, "",pd.codec,pd.summary,pd.description,pd.details)
     }
   }
 
@@ -621,7 +624,8 @@ final class SquerylAdapterDaoTest extends AbstractSquerylAdapterTest with Should
   private def insertErrors(resultIdsByType: Map[ResultOutputType, Seq[Int]]) {
     (resultIdsByType(ERROR) zip Seq(message1, message2)).foreach {
       case (resultId, message) =>
-        dao.insertErrorResult(resultId, message)
+        val pd = TestProblem.toDigest
+        dao.insertErrorResult(resultId, message,pd.codec,pd.summary,pd.description,pd.details)
     }
   }
 
