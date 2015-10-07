@@ -23,11 +23,11 @@ trait Problem {
 
   def stamp:Stamp
 
-  def description = s"$summary ${stamp.pretty}"
+  def description = s"${stamp.pretty}"
 
   def throwableDetail = throwable.map(x => x.getStackTrace.mkString(sys.props("line.separator")))
 
-  def details:String = s"$description ${throwableDetail.getOrElse("")}"
+  def details:String = s"${throwableDetail.getOrElse("")}"
 
   def toDigest:ProblemDigest = ProblemDigest(problemName,summary,description,details)
 
