@@ -56,11 +56,7 @@ object ProblemDigest extends XmlUnmarshaller[ProblemDigest] with Loggable {
     val problemNode = xml \ "problem"
     require(problemNode.nonEmpty,s"No problem tag in $xml")
 
-    def extractText(tagName:String) = {
-      val t = (problemNode \ tagName).text
-      require(t.nonEmpty)
-      t
-    }
+    def extractText(tagName:String) = (problemNode \ tagName).text
 
     val codec = extractText("codec")
     val summary = extractText("summary")
