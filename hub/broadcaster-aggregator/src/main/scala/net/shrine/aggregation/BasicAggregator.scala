@@ -1,6 +1,8 @@
 package net.shrine.aggregation
 
+import com.sun.mail.iap.ConnectionException
 import net.shrine.log.Loggable
+import net.shrine.problem.{ProblemNotInCodec, ProblemSources, AbstractProblem}
 
 import scala.concurrent.duration.Duration
 import net.shrine.protocol.ErrorResponse
@@ -50,7 +52,12 @@ abstract class BasicAggregator[T <: BaseShrineResponse: Manifest] extends Aggreg
           case Result(origin, elapsed, response: T) if isAggregatable(response) => Valid(origin, elapsed, response)
           case Timeout(origin) => Error(Option(origin), ErrorResponse(s"Timed out querying node '${origin.name}'"))
             //todo failure becomes an ErrorResponse and Error status type here. And the stack trace gets eaten.
-          case Failure(origin, cause) => Error(Option(origin), ErrorResponse(s"Failure querying node '${origin.name}': ${cause.getMessage}"))
+          case Failure(origin, cause) => {
+            cause match {
+              case cx: ConnectionException => Error(Option(origin), ErrorResponse(CouldNotConnectToAdapter(origin, cx)))
+              case x => Error(Option(origin), ErrorResponse(ProblemNotInCodec(s"Failure querying node ${origin.name}",x)))
+            }
+          }
           case _ => Invalid(None, s"Unexpected response in $getClass:\r\n $result")
         }
 
@@ -81,4 +88,9 @@ object BasicAggregator {
   private[aggregation] final case class Valid[T](origin: NodeId, elapsed: Duration, response: T) extends ParsedResult[T]
   private[aggregation] final case class Error(origin: Option[NodeId], response: ErrorResponse) extends ParsedResult[Nothing]
   private[aggregation] final case class Invalid(origin: Option[NodeId], errorMessage: String) extends ParsedResult[Nothing]
+}
+
+case class CouldNotConnectToAdapter(origin:NodeId,cx:ConnectionException) extends AbstractProblem(ProblemSources.Hub) {
+  override def summary: String = s"Could not connect to adapter at ${origin.name}."
+  override def throwable = Some(cx)
 }
