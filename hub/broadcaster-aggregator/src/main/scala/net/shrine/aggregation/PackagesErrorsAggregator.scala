@@ -28,8 +28,8 @@ abstract class PackagesErrorsAggregator[T <: ShrineResponse : Manifest](
 
     //Use node name as the description, to avoid giving the web UI more data than it can display
     val desc = originOption.map(_.name) 
-    
-    QueryResult.errorResult(desc, errorMessage.getOrElse(errorResponse.errorMessage),Option(ErrorResultProblem(error)))
+
+    QueryResult.errorResult(desc, errorMessage.getOrElse(errorResponse.errorMessage),errorResponse.problemDigest)
   }
   
   private[aggregation] def makeInvalidResult(invalid: Invalid): QueryResult = {
@@ -49,10 +49,6 @@ abstract class PackagesErrorsAggregator[T <: ShrineResponse : Manifest](
 }
 
 //todo Problem these two should really propagate problems from the Error or the Invalid result
-case class ErrorResultProblem(error:Error) extends AbstractProblem(ProblemSources.Hub) {
-  override def summary: String = s"${error.response.errorMessage} on ${error.origin.getOrElse("unknown node")}"
-}
-
 case class InvalidResultProblem(invalid:Invalid) extends AbstractProblem(ProblemSources.Hub) {
   override def summary: String = s"${invalid.errorMessage} on ${invalid.origin.getOrElse("unknown node")}"
 }

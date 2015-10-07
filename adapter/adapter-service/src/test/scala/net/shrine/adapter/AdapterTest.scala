@@ -1,6 +1,7 @@
 package net.shrine.adapter
 
 import net.shrine.problem.ProblemNotInCodec
+import net.shrine.protocol.query.QueryDefinition
 import net.shrine.util.ShouldMatchersForJUnit
 import net.shrine.protocol.BaseShrineResponse
 import net.shrine.protocol.BroadcastMessage
@@ -52,7 +53,7 @@ final class AdapterTest extends ShouldMatchersForJUnit {
   
   @Test
   def testHandlesMappingFailureCase: Unit = {
-    doErrorResponseTest(new AdapterMappingException("blarg", new Exception),classOf[AdapterMappingProblem])
+    doErrorResponseTest(new AdapterMappingException(QueryDefinition("test query",None),"blarg", new Exception),classOf[AdapterMappingProblem])
   }
   
   @Test

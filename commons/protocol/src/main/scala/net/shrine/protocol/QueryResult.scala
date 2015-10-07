@@ -312,6 +312,20 @@ object QueryResult {
       problemDigest = extractProblemDigest(xml \ "query_status_type"))
   }
 
+  def errorResult(description: Option[String], statusMessage: String,problemDigest:ProblemDigest):QueryResult = {
+    QueryResult(
+      resultId = 0L,
+      instanceId = 0L,
+      resultType = None,
+      setSize = 0L,
+      startDate = None,
+      endDate = None,
+      description = description,
+      statusType = StatusType.Error,
+      statusMessage = Option(statusMessage),
+      problemDigest = Option(problemDigest))
+  }
+
   def errorResult(description: Option[String], statusMessage: String,problem:Option[Problem] = None):QueryResult = {
 
     val problemDigest = problem.getOrElse(ProblemNotInCodec(statusMessage)).toDigest

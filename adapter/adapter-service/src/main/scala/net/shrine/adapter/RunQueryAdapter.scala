@@ -46,7 +46,7 @@ final case class RunQueryAdapter(
   override protected[adapter] def translateNetworkToLocal(request: RunQueryRequest): RunQueryRequest = {
     try { request.mapQueryDefinition(conceptTranslator.translate) }
     catch {
-      case NonFatal(e) => throw new AdapterMappingException(s"Error mapping query terms from network to local forms. request: ${request.elideAuthenticationInfo}", e)
+      case NonFatal(e) => throw new AdapterMappingException(request.queryDefinition,s"Error mapping query terms from network to local forms. request: ${request.elideAuthenticationInfo}", e)
     }
   }
 
