@@ -1,5 +1,7 @@
 package net.shrine.aggregation
 
+import net.shrine.problem.ProblemNotInCodec
+
 import scala.concurrent.duration.DurationInt
 import org.junit.Test
 import net.shrine.util.ShouldMatchersForJUnit
@@ -88,7 +90,7 @@ final class ReadQueryResultAggregatorTest extends ShouldMatchersForJUnit {
 
     response.queryId should equal(queryId)
 
-    response.results.exists(qr => qr.problemDigest.exists(pd => pd.codec == classOf[ErrorResultProblem].getName)) should be (true)
+    response.results.exists(qr => qr.problemDigest.exists(pd => pd.codec == classOf[ProblemNotInCodec].getName)) should be (true)
   }
 
   @Test
@@ -106,7 +108,7 @@ final class ReadQueryResultAggregatorTest extends ShouldMatchersForJUnit {
 
     aggregatedQueryResult should equal(expectedAggregatedResult)
 
-    actualErrorQueryResults.exists(qr => qr.problemDigest.exists(pd => pd.codec == classOf[ErrorResultProblem].getName)) should be (true)
+    actualErrorQueryResults.exists(qr => qr.problemDigest.exists(pd => pd.codec == classOf[ProblemNotInCodec].getName)) should be (true)
   }
   
   @Test

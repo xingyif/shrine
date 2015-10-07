@@ -1,5 +1,6 @@
 package net.shrine.aggregation
 
+import net.shrine.problem.ProblemNotInCodec
 import org.junit.Test
 import org.junit.Assert.assertNotNull
 import net.shrine.protocol.{ ErrorResponse, QueryResult, ReadInstanceResultsResponse }
@@ -20,6 +21,7 @@ import net.shrine.util.ShouldMatchersForJUnit
  *       licensed as Lgpl Open Source
  * @see http://www.gnu.org/licenses/lgpl.html
  */
+//noinspection UnitMethodIsParameterless,NameBooleanParameters
 final class ReadInstanceResultsAggregatorTest extends ShouldMatchersForJUnit {
 
   import scala.concurrent.duration._
@@ -57,7 +59,7 @@ final class ReadInstanceResultsAggregatorTest extends ShouldMatchersForJUnit {
       
       actual.results.contains(queryResult1.withDescription(description1)) should be(true)
       actual.results.contains(queryResult2.withDescription(description2).withResultType(PATIENT_COUNT_XML)) should be(true)
-      actual.results.find(qr => qr.setSize == expectedTotal && qr.resultTypeIs(PATIENT_COUNT_XML) && qr.description == Some("Aggregated Count")).isDefined should be(true)
+      actual.results.exists(qr => qr.setSize == expectedTotal && qr.resultTypeIs(PATIENT_COUNT_XML) && qr.description.contains("Aggregated Count")) should be(true)
     }
 
     {
@@ -100,6 +102,6 @@ final class ReadInstanceResultsAggregatorTest extends ShouldMatchersForJUnit {
     
     actual.results.contains(queryResult.withDescription(patientCountNodeDescription)) should be(true)
 
-    actual.results.exists(qr => qr.problemDigest.exists(pd => pd.codec == classOf[ErrorResultProblem].getName)) should be (true)
+    actual.results.exists(qr => qr.problemDigest.exists(pd => pd.codec == classOf[ProblemNotInCodec].getName)) should be (true)
   }
 }
