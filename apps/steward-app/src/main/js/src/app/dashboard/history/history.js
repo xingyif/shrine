@@ -109,7 +109,7 @@ angular.module('stewardApp')
                     var mult;
                     mult             = ($scope.pageIndex > 0) ? $scope.pageIndex - 1 : 0;
                     $scope.skip      = $scope.limit * mult;
-                    $scope.refreshTopics($scope.skip, $scope.limit);
+                    $scope.refreshHistory($scope.skip, $scope.limit);
                 };
 
 
