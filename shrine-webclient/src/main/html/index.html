@@ -249,8 +249,10 @@
     function initHelp(){
 
         //grab references to anchor elements.
-        var clientHelp      = document.getElementById('clientHelp'),
-                networkHelp = document.getElementById('networkHelp');
+        var clientHelp          = document.getElementById('clientHelp'),
+                networkHelp     = document.getElementById('networkHelp'),
+                networkStatus   = document.getElementById('networkStatus'),
+                dlgNetworkStatus= document.getElementById('dlgNetworkStatus');
 
         //anonymous click handler to open client help in new window.
         clientHelp.onclick = function(){
@@ -267,6 +269,18 @@
                     '_blank'
             );
         }
+
+        if(i2b2.hive.cfg.networkStatusUrl !== undefined) {
+            dlgNetworkStatus.style.display = networkStatus.style.display = 'inherit';
+            //anonymous click handler to open network help in new window.
+            dlgNetworkStatus.onClick = networkStatus.onclick = function(evt){
+                window.open(
+                        i2b2.hive.cfg.networkStatusUrl,
+                        '_blank'
+                );
+            }
+        }
+
     }
 
     function init() {
@@ -374,7 +388,10 @@
 				&nbsp;|&nbsp;			</span>
                 <a id="clientHelp" style="cursor: pointer">Help</a>
                 &nbsp;|&nbsp;
-                <a id="networkHelp" style="cursor: pointer">Network Info</a>
+                <a id="networkHelp" style="cursor: pointer">Network Help</a>
+                &nbsp;|&nbsp;
+                <a id="networkStatus" style="cursor: pointer; display: none">Network
+                    Status</a>
                 &nbsp;|&nbsp;
                 <a href="Javascript:void(0);" onClick="i2b2.PM.doLogout();">Logout</a>		</div>	</td>
     </tr>
@@ -1304,6 +1321,11 @@
         <button id='btnContractErrorDetail'
                 style='display: none'>Less Detail
         </button>
+        <a id="dlgNetworkStatus"
+           style="cursor: pointer; position:absolute; right:20px;
+               top: 58px; text-decoration:
+               underline; color:blue; display: none">Network
+            Status</a>
         <div style="border: 1px solid #C0C0C0; max-height: 450px;
         background-color: #FFFFFF; overflow: scroll; word-wrap: break-word; padding: 10px 5px;"
              id="errorDetailDiv" class="StatusBoxText">
