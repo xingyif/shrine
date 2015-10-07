@@ -412,26 +412,9 @@ i2b2.CRC.ctrlr.QueryStatus.prototype = function() {
                 //if there was an error display it.
                 if((qriObj.statusName == "ERROR") || (qriObj.statusName == "UNAVAILABLE")){
 
-          // placeholder
-					var errorObj = {
-						shortDescription: "Mapping Error",
-						stackTrace:  "Error mapping query terms from" +
-						" network to local forms. request:" +
-						"RunQueryRequest(I2B2_PROJECT_NAME,180000 milliseconds,"+
-						"AuthenticationInfo(*****,****,Credential(******,false)),"+
-						"QUERY_ID,None,Set(PATIENT_COUNT_XML)," +
-						"QueryDefinition(QUERY_NAME,Some(" +
-						"Term(\\PROJECT\\AND\\CONCEPT\\PATH\\OF\\UNMAPPED\\TERM),"+
-						"Some(ANY),None,None,None,List())))",
-						longDescription:
-							'The adapter at the remote site does not understand how to map the SHRINE query term it was given to its own local i2b2 term.',
-						wikiUrl:
-							'https://open.med.harvard.edu/wiki/display/SHRINETEAM/Error+Types+for+Improved+Error+Messaging'
-					};
+					errorObjects.push(qriObj.problem);
 
-					errorObjects.push(errorObj);
-
-                    self.dispDIV.innerHTML += " &nbsp;- <span title='" + qriObj.statusDescription +"'>      <b><a class='query-error-anchor' href='#' style='color:#ff0000'>      <b><span color='#ff0000'>" + errorObj.shortDescription + "</span></b></a></b></span>";
+                    self.dispDIV.innerHTML += " &nbsp;- <span title='" + qriObj.statusDescription +"'>      <b><a class='query-error-anchor' href='#' style='color:#ff0000'>      <b><span color='#ff0000'>" + qriObj.problem.summary+ "</span></b></a></b></span>";
 					continue;
                 }
 				else if((qriObj.statusName == "PROCESSING")){
@@ -505,18 +488,20 @@ i2b2.CRC.ctrlr.QueryStatus.prototype = function() {
 			function expandErrorDetailDiv (ev) {
 				btnExpand.style.display   = 'none';
 				btnContract.style.display = 'inline';
-				$('errorDetailDiv').innerHTML = '<div><b>Name:</b></div><div>' + errorData.shortDescription + '</div><br/>' +
-					'<div><b>Description:</b></div><div>' + errorData.longDescription + '</div><br/>' +
-					'<div><b>Technical Details:</b></div><pre style="margin-top:0">' + errorData.stackTrace + '</pre><br/>' +
-					'<div><i>For information on troubleshooting and resolution, check <a href="' + errorData.wikiUrl +'" target="_blank">the SHRINE Error Codex</a>.</i></div>';
+				$('errorDetailDiv').innerHTML = '<div><b>Name:</b></div><div>' + errorData.summary + '</div><br/>' +
+					'<div><b>Description:</b></div><div>' + errorData.description + '</div><br/>' +
+					'<div><b>Technical Details:</b></div><pre style="margin-top:0">' + errorData.details + '</pre><br/>' +
+					'<div><i>For information on troubleshooting and resolution, check' +
+					' <a href="' + errorData.codec +'" target="_blank">the SHRINE Error' +
+					' Codex</a>.</i></div>';
 			}
 
 
 			function retractErrorDetailDiv (ev) {
 				btnExpand.style.display   = 'inline';
 				btnContract.style.display = 'none';
-				$('errorDetailDiv').innerHTML = '<div><b>Name:</b></div><div>' + errorData.shortDescription + '</div><br/>' +
-					'<div><b>Description:</b></div><div>' + errorData.longDescription + '</div>'
+				$('errorDetailDiv').innerHTML = '<div><b>Name:</b></div><div>' + errorData.summary + '</div><br/>' +
+					'<div><b>Description:</b></div><div>' + errorData.description + '</div>'
 			}
 
 			function onClick(event) {
@@ -573,8 +558,8 @@ i2b2.CRC.ctrlr.QueryStatus.prototype = function() {
 				// / display the dialoge
 				dialogErrorDetail.center();
 				dialogErrorDetail.show();
-				$('errorDetailDiv').innerHTML = '<div><b>Name:</b></div><div>' + errorData.shortDescription + '</div><br/>' +
-					'<div><b>Description:</b></div><div>' + errorData.longDescription + '</div>';
+				$('errorDetailDiv').innerHTML = '<div><b>Name:</b></div><div>' + errorData.summary+ '</div><br/>' +
+					'<div><b>Description:</b></div><div>' + errorData.description + '</div>';
 			}
 
 			function addAnchorEvents () {
@@ -608,17 +593,17 @@ i2b2.CRC.ctrlr.QueryStatus.prototype = function() {
             };
 
             if(qriObj.statusName == "ERROR"){
+				qriObj.problem = {};
+				qriObj.problem.codec 		= grabXmlNodeData(qriNode, 'descendant-or-self::query_status_type/problem/codec')
+				qriObj.problem.summary 		= grabXmlNodeData(qriNode, 'descendant-or-self::query_status_type/problem/summary')
+				qriObj.problem.description 	= grabXmlNodeData(qriNode, 'descendant-or-self::query_status_type/problem/description')
+				qriObj.problem.details 		= grabXmlNodeData(qriNode, 'descendant-or-self::query_status_type/problem/details')
                 return qriObj;
             }
 
             qriObj.setSize              =   grabXmlNodeData(qriNode, 'descendant-or-self::set_size');
             qriObj.resultName           =   grabXmlNodeData(qriNode, 'descendant-or-self::query_result_type/name');
             qriObj.resultDescription    =   grabXmlNodeData(qriNode, 'descendant-or-self::query_result_type/description');
-
-            //if is obfuscated.
-            /*if (i2b2.PM.model.isObfuscated) {
-                qriObj.setSize  = (+qriObj.setSize < 4)? "<3" : qriObj.setSize + "+-3";
-            }*/
 
             return qriObj;
         }
