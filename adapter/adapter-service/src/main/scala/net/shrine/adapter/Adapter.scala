@@ -66,7 +66,10 @@ case class CrcCouldNotBeInvoked(crcUrl:String,request:ShrineRequest,x:CrcInvocat
 }
 
 case class AdapterMappingProblem(x:AdapterMappingException) extends AbstractProblem(ProblemSources.Hub) {
-  override def summary: String = s"Error mapping query terms: ${x.getMessage}"
+
+  override def summary: String = s"Error mapping query terms on ${stamp.host}: ${x.getMessage}"
+
+  override def description = s"${super.description} ${x.getMessage}"
 
   override def throwable = Some(x)
 }
