@@ -23,11 +23,11 @@ trait Problem {
 
   def stamp:Stamp
 
-  def description = s"$summary ${stamp.pretty}"
+  def description = s"${stamp.pretty}"
 
   def throwableDetail = throwable.map(x => x.getStackTrace.mkString(sys.props("line.separator")))
 
-  def details:String = s"$description ${throwableDetail.getOrElse("")}"
+  def details:String = s"${throwableDetail.getOrElse("")}"
 
   def toDigest:ProblemDigest = ProblemDigest(problemName,summary,description,details)
 
@@ -56,11 +56,7 @@ object ProblemDigest extends XmlUnmarshaller[ProblemDigest] with Loggable {
     val problemNode = xml \ "problem"
     require(problemNode.nonEmpty,s"No problem tag in $xml")
 
-    def extractText(tagName:String) = {
-      val t = (problemNode \ tagName).text
-      require(t.nonEmpty)
-      t
-    }
+    def extractText(tagName:String) = (problemNode \ tagName).text
 
     val codec = extractText("codec")
     val summary = extractText("summary")

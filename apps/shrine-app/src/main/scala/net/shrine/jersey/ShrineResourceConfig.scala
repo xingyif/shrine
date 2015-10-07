@@ -5,7 +5,7 @@ import net.shrine.wiring.ShrineJaxrsResources
 
 /**
  * @author clint
- * @date Jan 14, 2014
+ * @since Jan 14, 2014
  * 
  * Base class for Jersey "entry points".  When given a source of Shrine JAX-RS resource class instances, this
  * class registers them in such a way that Jersey can expose them.

@@ -4,7 +4,7 @@ import net.shrine.wiring.ManuallyWiredShrineJaxrsResources
 
 /**
  * @author clint
- * @date Jan 16, 2014
+ * @since Jan 16, 2014
  * 
  * Default (non-HMS) Shrine "entry point" for Jersey.
  */
