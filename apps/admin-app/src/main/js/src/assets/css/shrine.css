@@ -309,9 +309,6 @@ body {
 .navbar-top-links{
     right: 0;
     left: auto;
-    background:
-    linear-gradient(rgba(255, 255, 255, 0), rgba(255, 255, 255, .50)),
-    url('../img/bckg_diagonal_lines_no_border.png') !important;
 }
 
 .sidebar .sidebar-nav.navbar-collapse {
@@ -633,16 +630,6 @@ table.dataTable thead .sorting:after {
     border: none;
 }
 
-i.shrine-close{
-    position: relative;
-    top: -50px;
-    right: -40px;
-}
-
-i.shrine-close:hover{
-    color: #008CBA;
-}
-
 
 .shrine-login{
     margin-top: 8%;
@@ -671,5 +658,30 @@ textarea{
 
 .shrine-calendar-input{
     margin-right: 1px;
+}
+
+i.shrine-close{
+    float:right;
+    margin-top:-40px;
+    margin-right:-40px;
+    cursor:pointer;
+    color: #fff;
+    border: 2px solid #C8CED1;
+    border-radius: 30px;
+    background: #8896a4;
+    font-size: 31px;
+    font-weight: normal;
+    display: inline-block;
+    line-height: 0px;
+    padding: 11px 3px;
+    font-style:normal;
+}
+
+i.shrine-close:hover{
+    background: #008cba;
+}
+
+.shrine-close:before {
+    content: "×";
 }
 

@@ -2,26 +2,14 @@
     <div class="row shrine-login">
         <div class="col-sm-4">
             <p class="shrine-copy-bold">
-            The role of the Data Steward is to ensure scientific and
-            institutional integrity when accessing clinical data from SHRINE
-            and its participating organizations.  The Data Steward will:
             </p>
 
 
             <ul class="shrine-copy">
-                <li>
-                    Review and either approve or deny your Query Topic request
-                </li>
-                <li>
-                    Audit your individual queris for comliance with the states Query Topic
-                </li>
+
             </ul>
 
             <p class="shrine-copy">
-            Each project will require a separate Query Topic once your request has
-            been approved by the Data Steward.  you can start querying SHRINE The
-            review cyle for straightforward query topics should be complete in two
-            working days.
             </p>
 
         </div>
@@ -31,6 +19,11 @@
                     <form name="form" ng-submit="login()" role="form">
                         <fieldset>
                             <div class="form-group">
+                                <label class="pull-right shrine-copy-bold"
+                                       ng-show="form.username.$error.required ||
+                                form.password.$error.required">
+                                    *<small>Required Field</small>
+                                </label>
                                 <span>Username*</span>
 
                                 <input class="form-control" type="text" name="username"
