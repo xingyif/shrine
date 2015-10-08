@@ -126,21 +126,3 @@ object ProblemNotInCodec {
     new ProblemNotInCodec(summary,x)
   }
 }
-
-/**
- * For "Failure querying node 'SITE NAME': java.net.ConnectException: Connection refused"
- *
- * This one is interesting because "Connection refused" is different from "Connection timed out" according to Keith's
- * notes, but the only way to pick that up is to pull the text out of that contained exception. However, all four options
- * are probably worth checking no matter what the exception's message.
- */
-
-//todo NodeId is in protocol, which will be accessible from the hub code where this class should live
-
-//case class CouldNotConnectToQueryNode(nodeId:NodeId,connectExcepition:ConnectException) extends Problem {
-case class CouldNotConnectToNode(nodeName:String,connectException:ConnectException) extends AbstractProblem(ProblemSources.Hub) {
-
-  val summary = s"Could not connect to node $nodeName"
-
-  override def throwable = Some(connectException)
-}
