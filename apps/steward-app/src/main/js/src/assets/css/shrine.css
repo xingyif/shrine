@@ -44,6 +44,7 @@
     width: 101%
 }
 
+
 .shrine-brand{
     float: left;
     height: 50px;
@@ -60,6 +61,8 @@
 .shrine-navbar img{
     margin-top: 5px;
     margin-right: 20px;
+    max-height: 80px;
+    max-width: 80px;
 }
 
 .shrine-button{
