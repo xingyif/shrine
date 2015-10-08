@@ -1,7 +1,7 @@
 package net.shrine.adapter.client
 
 import java.net.SocketTimeoutException
-import net.shrine.log.Loggable
+import net.shrine.problem.{ProblemNotInCodec, ProblemSources, AbstractProblem}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -11,23 +11,18 @@ import scala.concurrent.duration.DurationInt
 import scala.util.control.NonFatal
 import scala.xml.XML
 import com.sun.jersey.api.client.ClientHandlerException
-import com.sun.jersey.api.client.ClientResponse
-import javax.ws.rs.core.MediaType
-import net.shrine.client.JerseyHttpClient
 import net.shrine.client.TimeoutException
-import net.shrine.crypto.TrustParam
 import net.shrine.protocol.BroadcastMessage
 import net.shrine.protocol.ErrorResponse
 import net.shrine.protocol.NodeId
 import net.shrine.protocol.Result
-import net.shrine.util.XmlUtil
 import net.shrine.client.Poster
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 import net.shrine.protocol.ResultOutputType
 
 /**
  * @author clint
- * @date Nov 15, 2013
+ * @since Nov 15, 2013
  * 
  * 
  */
@@ -54,17 +49,21 @@ final class RemoteAdapterClient private (val poster: Poster, val breakdownTypes:
     Future {
       blocking {
 
-        val response = poster.post(requestXml.toString)
+        val response = poster.post(requestXml.toString())
 
         val responseXml = response.body
 
         import scala.concurrent.duration._
 
         //Should we know the NodeID here?  It would let us make a better error response.
-        Try(XML.loadString(responseXml)).flatMap(Result.fromXml(breakdownTypes)).getOrElse {
-          val errorResponse = ErrorResponse(s"Couldn't understand response from adapter at '${poster.url}': ${XmlUtil.prettyPrint(XML.loadString(responseXml))}")
-          
-          Result(NodeId.Unknown, 0.milliseconds, errorResponse)
+        Try(XML.loadString(responseXml)).flatMap(Result.fromXml(breakdownTypes)) match {
+          case Success(result) => result
+          case Failure(x) => {
+            val errorResponse = x match {
+              case _ => ErrorResponse(ProblemNotInCodec(s"Couldn't understand response from adapter at '${poster.url}': $responseXml", x))
+            }
+            Result(NodeId.Unknown, 0.milliseconds, errorResponse)
+          }
         }
       }
     }.recover {

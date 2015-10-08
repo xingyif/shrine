@@ -25,7 +25,8 @@ trait Problem {
 
   def description = s"${stamp.pretty}"
 
-  def throwableDetail = throwable.map(x => x.getStackTrace.mkString(sys.props("line.separator")))
+  //todo stack trace as xml elements? would be easy
+  def throwableDetail = throwable.map(x => s"${x.getClass.getName} ${x.getMessage}\n${x.getStackTrace.mkString(sys.props("line.separator"))}")
 
   def details:String = s"${throwableDetail.getOrElse("")}"
 
