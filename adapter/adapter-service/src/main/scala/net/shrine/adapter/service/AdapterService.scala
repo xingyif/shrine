@@ -1,6 +1,7 @@
 package net.shrine.adapter.service
 
 import net.shrine.log.Loggable
+import net.shrine.problem.{ProblemSources, AbstractProblem}
 import net.shrine.protocol.NodeId
 import net.shrine.protocol.Result
 import net.shrine.protocol.BroadcastMessage
@@ -39,6 +40,9 @@ final class AdapterService(
     }
   }
 
+  /**
+   * @return None if the signature is fine, Some(result with an ErrorResponse) if not
+   */
   private def handleInvalidSignature(message: BroadcastMessage): Option[Result] = {
     val (sigIsValid, elapsed) = time(signatureVerifier.verifySig(message, maxSignatureAge))
     
@@ -46,7 +50,7 @@ final class AdapterService(
     else {
       info(s"Incoming message had invalid signature: $message")
 
-      Some(Result(nodeId, elapsed.milliseconds, ErrorResponse(s"Couldn't verify signature for message $message")))
+      Some(Result(nodeId, elapsed.milliseconds, ErrorResponse(CouldNotVerifySignature(message))))
     }
   }
 }
@@ -78,4 +82,9 @@ object AdapterService extends Loggable {
 
     Result(nodeId, elapsed.milliseconds, response)
   }
+}
+
+case class CouldNotVerifySignature(message: BroadcastMessage) extends AbstractProblem(ProblemSources.Adapter){
+  override def summary: String = s"Incoming message had invalid signature."
+  override def details: String = s"Signature:\n${message.signature}"
 }

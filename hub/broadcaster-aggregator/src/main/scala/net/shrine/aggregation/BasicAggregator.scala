@@ -1,6 +1,7 @@
 package net.shrine.aggregation
 
 import com.sun.mail.iap.ConnectionException
+import net.shrine.broadcaster.CouldNotParseResultsException
 import net.shrine.log.Loggable
 import net.shrine.problem.{ProblemNotInCodec, ProblemSources, AbstractProblem}
 
@@ -55,6 +56,10 @@ abstract class BasicAggregator[T <: BaseShrineResponse: Manifest] extends Aggreg
           case Failure(origin, cause) => {
             cause match {
               case cx: ConnectionException => Error(Option(origin), ErrorResponse(CouldNotConnectToAdapter(origin, cx)))
+              case cnprx:CouldNotParseResultsException => {
+                if(cnprx.statusCode >= 400) Error(Option(origin), ErrorResponse(HttpErrorResponseProblem(cnprx)))
+                else Error(Option(origin), ErrorResponse(CouldNotParseResultsProblem(cnprx)))
+              }
               case x => Error(Option(origin), ErrorResponse(ProblemNotInCodec(s"Failure querying node ${origin.name}",x)))
             }
           }
@@ -91,6 +96,20 @@ object BasicAggregator {
 }
 
 case class CouldNotConnectToAdapter(origin:NodeId,cx:ConnectionException) extends AbstractProblem(ProblemSources.Hub) {
-  override def summary: String = s"Could not connect to adapter at ${origin.name}."
-  override def throwable = Some(cx)
+  override val summary: String = s"Could not connect to adapter at ${origin.name}."
+  override val throwable = Some(cx)
+}
+
+case class CouldNotParseResultsProblem(cnrpx:CouldNotParseResultsException) extends AbstractProblem(ProblemSources.Hub) {
+  override val summary: String = s"Caught a ${cnrpx.cause.getClass.getSimpleName} while parsing a response from ${cnrpx.url}"
+  override val throwable = Some(cnrpx)
+  override val description = s"${super.description} While parsing a response from ${cnrpx.url} with http code ${cnrpx.url} caught '${cnrpx.cause.getMessage}'"
+  override val details = s"${super.details}\n\nMessage body is: \n ${cnrpx.body}"
+}
+
+case class HttpErrorResponseProblem(cnrpx:CouldNotParseResultsException) extends AbstractProblem(ProblemSources.Hub) {
+  override val summary: String = s"Observed ${cnrpx.statusCode} and caught a ${cnrpx.cause.getClass.getSimpleName} while parsing a response from ${cnrpx.url}"
+  override val throwable = Some(cnrpx)
+  override val description = s"${super.description} While parsing a response from ${cnrpx.url} with http code ${cnrpx.url} caught '${cnrpx.cause.getMessage}'"
+  override val details = s"${super.details}\n\nMessage body is: \n ${cnrpx.body}"
 }
