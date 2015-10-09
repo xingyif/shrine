@@ -1,6 +1,6 @@
 package net.shrine.aggregation
 
-import net.shrine.problem.ProblemNotInCodec
+import net.shrine.problem.ProblemNotYetEncoded
 import org.junit.Test
 import org.junit.Assert.assertNotNull
 import net.shrine.protocol.{ ErrorResponse, QueryResult, ReadInstanceResultsResponse }
@@ -102,6 +102,6 @@ final class ReadInstanceResultsAggregatorTest extends ShouldMatchersForJUnit {
     
     actual.results.contains(queryResult.withDescription(patientCountNodeDescription)) should be(true)
 
-    actual.results.exists(qr => qr.problemDigest.exists(pd => pd.codec == classOf[ProblemNotInCodec].getName)) should be (true)
+    actual.results.exists(qr => qr.problemDigest.exists(pd => pd.codec == classOf[ProblemNotYetEncoded].getName)) should be (true)
   }
 }

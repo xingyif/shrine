@@ -1,6 +1,6 @@
 package net.shrine.protocol
 
-import net.shrine.problem.{LoggingProblemHandler, Problem, ProblemNotInCodec, ProblemDigest}
+import net.shrine.problem.{ProblemNotYetEncoded, LoggingProblemHandler, Problem, ProblemDigest}
 
 import scala.xml.{NodeBuffer, NodeSeq}
 import net.shrine.util.XmlUtil
@@ -52,7 +52,7 @@ object ErrorResponse extends XmlUnmarshaller[ErrorResponse] with I2b2Unmarshalle
   //todo deprecate this one
   def apply(errorMessage:String,problem:Option[Problem] = None) = {
     new ErrorResponse(errorMessage,problem.fold{
-      val problem = ProblemNotInCodec(s"'$errorMessage'")
+      val problem = ProblemNotYetEncoded(s"'$errorMessage'")
       LoggingProblemHandler.handleProblem(problem) //todo someday hook up to the proper problem handler hierarchy.
       problem.toDigest
     }(p => p.toDigest))

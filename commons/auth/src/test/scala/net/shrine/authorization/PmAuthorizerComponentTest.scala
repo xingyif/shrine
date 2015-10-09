@@ -1,7 +1,7 @@
 package net.shrine.authorization
 
 import net.shrine.log.Loggable
-import net.shrine.problem.ProblemNotInCodec
+import net.shrine.problem.ProblemNotYetEncoded
 import org.junit.Test
 import net.shrine.util.ShouldMatchersForJUnit
 import net.shrine.client.HttpClient

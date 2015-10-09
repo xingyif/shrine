@@ -1,6 +1,6 @@
 package net.shrine.adapter
 
-import net.shrine.problem.ProblemNotInCodec
+import net.shrine.problem.ProblemNotYetEncoded
 import net.shrine.protocol.query.QueryDefinition
 import net.shrine.util.ShouldMatchersForJUnit
 import net.shrine.protocol.BaseShrineResponse
@@ -58,7 +58,7 @@ final class AdapterTest extends ShouldMatchersForJUnit {
   
   @Test
   def testHandlesGeneralFailureCase: Unit = {
-    doErrorResponseTest(new Exception("blerg"),classOf[ProblemNotInCodec])
+    doErrorResponseTest(new Exception("blerg"),classOf[ProblemNotYetEncoded])
   }
 
   //noinspection ScalaUnreachableCode,RedundantBlock

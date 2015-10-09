@@ -1,6 +1,6 @@
 package net.shrine.problem
 
-import java.net.{InetAddress, ConnectException}
+import java.net.InetAddress
 import java.util.Date
 
 import net.shrine.log.Loggable
@@ -100,7 +100,7 @@ object ProblemSources{
 
   sealed trait ProblemSource {
 //todo name without $
-    def pretty = getClass.getSimpleName
+    def pretty = getClass.getSimpleName.drop(1)
   }
 
   case object Adapter extends ProblemSource
@@ -113,17 +113,17 @@ object ProblemSources{
 }
 
 
-case class ProblemNotInCodec(summary:String,t:Throwable) extends AbstractProblem(ProblemSources.Unknown){
+case class ProblemNotYetEncoded(summary:String,t:Throwable) extends AbstractProblem(ProblemSources.Unknown){
   override val throwable = Some(t)
 
   override val description = s"${super.description} . This error is not yet in the codec. Please report the stack trace to the Shrine development team at TODO"
 }
 
-object ProblemNotInCodec {
+object ProblemNotYetEncoded {
 
-  def apply(summary:String):ProblemNotInCodec = {
+  def apply(summary:String):ProblemNotYetEncoded = {
       val x = new IllegalStateException(s"$summary , is not yet in the codec.")
       x.fillInStackTrace()
-    new ProblemNotInCodec(summary,x)
+    new ProblemNotYetEncoded(summary,x)
   }
 }

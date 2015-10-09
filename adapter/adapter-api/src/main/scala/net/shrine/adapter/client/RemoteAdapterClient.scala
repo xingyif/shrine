@@ -1,7 +1,7 @@
 package net.shrine.adapter.client
 
 import java.net.SocketTimeoutException
-import net.shrine.problem.{ProblemNotInCodec, ProblemSources, AbstractProblem}
+import net.shrine.problem.{ProblemNotYetEncoded, ProblemSources, AbstractProblem}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -60,7 +60,7 @@ final class RemoteAdapterClient private (val poster: Poster, val breakdownTypes:
           case Success(result) => result
           case Failure(x) => {
             val errorResponse = x match {
-              case _ => ErrorResponse(ProblemNotInCodec(s"Couldn't understand response from adapter at '${poster.url}': $responseXml", x))
+              case _ => ErrorResponse(ProblemNotYetEncoded(s"Couldn't understand response from adapter at '${poster.url}': $responseXml", x))
             }
             Result(NodeId.Unknown, 0.milliseconds, errorResponse)
           }

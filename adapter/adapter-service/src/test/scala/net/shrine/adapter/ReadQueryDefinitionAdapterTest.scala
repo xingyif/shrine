@@ -1,7 +1,7 @@
 package net.shrine.adapter
 
 import net.shrine.adapter.components.QueryNotInDatabase
-import net.shrine.problem.ProblemNotInCodec
+import net.shrine.problem.ProblemNotYetEncoded
 import org.junit.Test
 import net.shrine.util.ShouldMatchersForJUnit
 

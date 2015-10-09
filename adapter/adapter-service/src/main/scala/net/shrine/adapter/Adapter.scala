@@ -1,10 +1,8 @@
 package net.shrine.adapter
 
 import net.shrine.log.Loggable
-import net.shrine.problem.{Problem, ProblemNotInCodec, LoggingProblemHandler, ProblemSources, AbstractProblem}
-import net.shrine.protocol.{ShrineRequest, BroadcastMessage, ErrorResponse, ShrineResponse, BaseShrineResponse, AuthenticationInfo}
-import net.shrine.serialization.XmlMarshaller
-import net.shrine.util.StackTrace
+import net.shrine.problem.{Problem, ProblemNotYetEncoded, LoggingProblemHandler, ProblemSources, AbstractProblem}
+import net.shrine.protocol.{ShrineRequest, BroadcastMessage, ErrorResponse, BaseShrineResponse, AuthenticationInfo}
 
 /**
  * @author Bill Simons
@@ -40,7 +38,7 @@ abstract class Adapter extends Loggable {
 
         val summary = if(message == null) "Unknown problem in Adapter.perform with null BroadcastMessage"
                       else s"Unexpected exception in Adapter"
-        problemToErrorResponse(ProblemNotInCodec(summary,e))
+        problemToErrorResponse(ProblemNotYetEncoded(summary,e))
       }
     }
 

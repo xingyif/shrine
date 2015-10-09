@@ -3,7 +3,7 @@ package net.shrine.aggregation
 import com.sun.mail.iap.ConnectionException
 import net.shrine.broadcaster.CouldNotParseResultsException
 import net.shrine.log.Loggable
-import net.shrine.problem.{ProblemNotInCodec, ProblemSources, AbstractProblem}
+import net.shrine.problem.{ProblemNotYetEncoded, ProblemSources, AbstractProblem}
 
 import scala.concurrent.duration.Duration
 import net.shrine.protocol.ErrorResponse
@@ -60,7 +60,7 @@ abstract class BasicAggregator[T <: BaseShrineResponse: Manifest] extends Aggreg
                 if(cnprx.statusCode >= 400) Error(Option(origin), ErrorResponse(HttpErrorResponseProblem(cnprx)))
                 else Error(Option(origin), ErrorResponse(CouldNotParseResultsProblem(cnprx)))
               }
-              case x => Error(Option(origin), ErrorResponse(ProblemNotInCodec(s"Failure querying node ${origin.name}",x)))
+              case x => Error(Option(origin), ErrorResponse(ProblemNotYetEncoded(s"Failure querying node ${origin.name}",x)))
             }
           }
           case _ => Invalid(None, s"Unexpected response in $getClass:\r\n $result")
