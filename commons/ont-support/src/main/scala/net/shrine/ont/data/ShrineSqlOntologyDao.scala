@@ -1,5 +1,6 @@
 package net.shrine.ont.data
 
+import net.shrine.log.Loggable
 import net.shrine.ont.messaging.Concept
 import scala.io.Source
 import scala.util.matching.Regex
@@ -8,10 +9,10 @@ import java.io.InputStream
 
 /**
  * @author Clint Gilbert
- * @date Feb 8, 2012
+ * @since Feb 8, 2012
  * 
  */
-final class ShrineSqlOntologyDao(val file: InputStream) extends OntologyDao {
+final class ShrineSqlOntologyDao(val file: InputStream) extends OntologyDao with Loggable {
   require(file != null)
   
   override def ontologyEntries: Iterable[Concept] = {
@@ -62,11 +63,8 @@ final class ShrineSqlOntologyDao(val file: InputStream) extends OntologyDao {
     def parseLine(line: String): Option[Concept] = {
       val result = regex.findFirstMatchIn(line).map(parser)
       
-      if(result.isEmpty) {
-        //todo found this scary bit
-        println("Failed to parse line: " + line)
-      }
-      
+      if(result.isEmpty) warn("Failed to parse line: " + line)
+
       result
     }
     
