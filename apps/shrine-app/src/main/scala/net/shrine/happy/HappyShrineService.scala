@@ -192,7 +192,7 @@ final class HappyShrineService(
   }
 
   private def newRunQueryRequest(authn: AuthenticationInfo): RunQueryRequest = {
-    val queryDefinition = QueryDefinition("PDD", OccuranceLimited(1, Term(config.adapterStatusQuery)))
+    val queryDefinition = QueryDefinition("TestQuery", OccuranceLimited(1, Term(config.adapterStatusQuery)))
 
     import scala.concurrent.duration._
 
