@@ -195,7 +195,7 @@ angular
                 ViewConfig: {
                     INDEX: 1,
                     RANGE: 4,
-                    LIMIT: 5
+                    LIMIT: 20
                 },
                 States:     {
                     STATE1: "Pending",
