@@ -20,5 +20,7 @@ final class ProblemDigestTest extends ShouldMatchersForJUnit {
 }
 
 object TestProblem extends AbstractProblem(ProblemSources.Unknown) {
-  override def summary: String = "Test Problem"
+  override def summary: String = "Test problem summary"
+
+  override def description: String = "Test problem description"
 }

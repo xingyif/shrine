@@ -23,12 +23,12 @@ trait Problem {
 
   def stamp:Stamp
 
-  def description = s"${stamp.pretty}"
+  def description:String
 
   //todo stack trace as xml elements? would be easy
   def throwableDetail = throwable.map(x => s"${x.getClass.getName} ${x.getMessage}\n${x.getStackTrace.mkString(sys.props("line.separator"))}")
 
-  def details:String = s"${throwableDetail.getOrElse("")}"
+  def details:String = s"${stamp.pretty}\n${throwableDetail.getOrElse("")}"
 
   def toDigest:ProblemDigest = ProblemDigest(problemName,summary,description,details)
 
@@ -99,8 +99,7 @@ object LoggingProblemHandler extends ProblemHandler with Loggable {
 object ProblemSources{
 
   sealed trait ProblemSource {
-//todo name without $
-    def pretty = getClass.getSimpleName.drop(1)
+    def pretty = getClass.getSimpleName.dropRight(1)
   }
 
   case object Adapter extends ProblemSource
@@ -116,13 +115,13 @@ object ProblemSources{
 case class ProblemNotYetEncoded(summary:String,t:Throwable) extends AbstractProblem(ProblemSources.Unknown){
   override val throwable = Some(t)
 
-  override val description = s"${super.description} . This error is not yet in the codec. Please report the stack trace to the Shrine development team at TODO"
+  override val description = s"This problem has not yet been codified in Shrine. Please report all information including the stack trace to the Shrine development team at TODO"
 }
 
 object ProblemNotYetEncoded {
 
   def apply(summary:String):ProblemNotYetEncoded = {
-      val x = new IllegalStateException(s"$summary , is not yet in the codec.")
+      val x = new IllegalStateException(s"$summary , not yet codified in Shrine.")
       x.fillInStackTrace()
     new ProblemNotYetEncoded(summary,x)
   }

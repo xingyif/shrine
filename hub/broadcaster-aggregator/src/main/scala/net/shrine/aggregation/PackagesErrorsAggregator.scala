@@ -50,5 +50,6 @@ abstract class PackagesErrorsAggregator[T <: ShrineResponse : Manifest](
 
 //todo Problem these two should really propagate problems from the Error or the Invalid result
 case class InvalidResultProblem(invalid:Invalid) extends AbstractProblem(ProblemSources.Hub) {
-  override def summary: String = s"${invalid.errorMessage} on ${invalid.origin.getOrElse("unknown node")}"
+  override def summary: String = s"The hub received an invalid response from ${invalid.origin.getOrElse("an unknown node")}"
+  override def description: String = s"${invalid.errorMessage} from ${invalid.origin.getOrElse("an unknown node")}"
 }

@@ -34,5 +34,7 @@ final case class QueryDefinitions[Req <: AbstractReadQueryDefinitionRequest](dao
 }
 
 case class QueryNotInDatabase(request:AbstractReadQueryDefinitionRequest) extends AbstractProblem(ProblemSources.Hub) {
-  override def summary: String = s"Couldn't find query with network id: ${request.queryId}"
+  //todo on which adapter?
+  override val summary: String = s"Couldn't find query with network id: ${request.queryId}"
+  override val description:String = ""
 }
