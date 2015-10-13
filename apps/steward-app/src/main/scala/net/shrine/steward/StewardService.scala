@@ -43,17 +43,31 @@ trait StewardService extends HttpService with Json4sSupport {
   val userAuthenticator = UserAuthenticator(StewardConfigSource.config)
 
   //don't need to do anything special for unauthorized users, but they do need access to a static form.
-  lazy val route:Route = logRequestResponse(logEntryForRequestResponse _) { //logging is controlled by Akka's config, slf4j, and log4j config
-    gruntWatchCorsSupport{
-      staticResources ~ makeTrouble ~ about ~ qepRoute ~ authenticatedInBrowser
-    }
+  lazy val route:Route = gruntWatchCorsSupport{
+      requestLogRoute ~ fullLogRoute
+  }
+
+  lazy val requestLogRoute = logRequestResponse(logEntryForRequest _) {
+    staticResources ~ makeTrouble ~ about
+  }
+
+  lazy val fullLogRoute = logRequestResponse(logEntryForRequestResponse _) {
+    qepRoute ~ authenticatedInBrowser
   }
 
   // logs just the request method, uri and response at info level
-  def logEntryForRequestResponse(req: HttpRequest): Any => Option[LogEntry] = {
+  //logging is controlled by Akka's config, slf4j, and log4j config
+   def logEntryForRequestResponse(req: HttpRequest): Any => Option[LogEntry] = {
     case res: HttpResponse => {
-//todo delete if the qa test works      Some(LogEntry(s"\n  Request: ${req.method}: ${req.uri} \n  Response: $res", Logging.InfoLevel))
       Some(LogEntry(s"\n  Request: $req \n  Response: $res", Logging.InfoLevel))
+    }
+    case _ => None // other kind of responses
+  }
+
+  // logs just the request method, uri and response status at info level
+  def logEntryForRequest(req: HttpRequest): Any => Option[LogEntry] = {
+    case res: HttpResponse => {
+      Some(LogEntry(s"\n  Request: $req \n  Response status: ${res.status}", Logging.InfoLevel))
     }
     case _ => None // other kind of responses
   }

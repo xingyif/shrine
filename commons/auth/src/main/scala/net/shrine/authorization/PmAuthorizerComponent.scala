@@ -3,7 +3,7 @@ package net.shrine.authorization
 import net.shrine.log.Loggable
 import net.shrine.problem.{LoggingProblemHandler, Problem, ProblemSources, AbstractProblem, ProblemDigest}
 
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 import net.shrine.client.HttpResponse
 import net.shrine.i2b2.protocol.pm.GetUserConfigurationRequest
 import net.shrine.i2b2.protocol.pm.User
@@ -40,13 +40,13 @@ trait PmAuthorizerComponent { self: PmHttpClientComponent with Loggable =>
     def authorize(projectId: String, neededRoles: Set[String], authn: AuthenticationInfo): AuthorizationStatus = {
       val request = GetUserConfigurationRequest(authn)
 
-      val responseAttempt = Try {
+      val responseAttempt: Try[HttpResponse] = Try {
         debug(s"Authorizing with PM cell at ${pmPoster.url}")
 
         pmPoster.post(request.toI2b2String)
       }
 
-      val authStatusAttempt = responseAttempt.flatMap(parsePmResult(authn)).map {
+      val authStatusAttempt: Try[AuthorizationStatus with Product with Serializable] = responseAttempt.flatMap(parsePmResult(authn)).map {
         case Right(user) => {
           val managerUserOption = for {
             roles <- user.rolesByProject.get(projectId)
@@ -64,8 +64,9 @@ trait PmAuthorizerComponent { self: PmHttpClientComponent with Loggable =>
         }
       }
 
-      authStatusAttempt.getOrElse {
-        NotAuthorized(CouldNotReachPmCell(pmPoster.url,authn))
+      authStatusAttempt match {
+        case Success(s) => s
+        case Failure(x) => NotAuthorized(CouldNotReachPmCell(pmPoster.url,authn,x))
       }
     }
   }
@@ -86,15 +87,26 @@ object PmAuthorizerComponent {
 }
 
 case class MissingRequiredRoles(projectId: String, neededRoles: Set[String], authn: AuthenticationInfo) extends AbstractProblem(ProblemSources.Qep) {
-  override val summary: String = s"User ${authn.domain}:${authn.username} does not have all the needed roles: ${neededRoles.map("'" + _ + "'").mkString(", ")} in the project '$projectId'"
+  override val summary: String = s"User ${authn.domain}:${authn.username} is missing roles in project '$projectId'"
+
+  override val description:String = s"User ${authn.domain}:${authn.username} does not have all the needed roles: ${neededRoles.map("'" + _ + "'").mkString(", ")} in the project '$projectId'"
 }
 
-case class CouldNotReachPmCell(pmUrl:String,authn: AuthenticationInfo) extends AbstractProblem(ProblemSources.Qep) {
-  override def summary: String = s"Could not reach PM cell at $pmUrl for ${authn.domain}:${authn.username}"
+case class CouldNotReachPmCell(pmUrl:String,authn: AuthenticationInfo,x:Throwable) extends AbstractProblem(ProblemSources.Qep) {
+  override val throwable = Option(x)
+  override val summary: String = s"Could not reach PM cell at $pmUrl for ${authn.domain}:${authn.username}"
+  override val description:String = s"Shrine encountered ${throwable.get} while attempting to reach the PM cell at $pmUrl for ${authn.domain}:${authn.username}."
 }
 
 case class CouldNotInterpretResponseFromPmCell(pmUrl:String,authn: AuthenticationInfo,httpResponse: HttpResponse,x:Throwable) extends AbstractProblem(ProblemSources.Qep) {
-  override def summary: String = s"Exception while interpreting response from PM cell at ${pmUrl} for ${authn.domain}:${authn.username}: $httpResponse"
+  override val throwable = Some(x)
+  override def summary: String = s"Could not interpret response from PM cell at ${pmUrl} for ${authn.domain}:${authn.username}"
 
-  override def throwable = Some(x)
+  override def description: String = s"Shrine could not interpret the response from the PM cell at ${pmUrl} for ${authn.domain}:${authn.username}: due to ${throwable.get}"
+
+  override val details:String =
+    s"""${stamp.pretty}
+       |Response is $httpResponse
+       |${throwableDetail.getOrElse("")}
+     """.stripMargin
 }

@@ -1,16 +1,10 @@
 package net.shrine.adapter
 
-import net.shrine.problem.ProblemNotInCodec
+import net.shrine.problem.ProblemNotYetEncoded
 import net.shrine.protocol.query.QueryDefinition
 import net.shrine.util.ShouldMatchersForJUnit
-import net.shrine.protocol.BaseShrineResponse
-import net.shrine.protocol.BroadcastMessage
+import net.shrine.protocol.{RunQueryRequest, BaseShrineResponse, BroadcastMessage, DeleteQueryResponse, AuthenticationInfo, Credential, ErrorResponse, DeleteQueryRequest}
 import org.junit.Test
-import net.shrine.protocol.DeleteQueryResponse
-import net.shrine.protocol.AuthenticationInfo
-import net.shrine.protocol.Credential
-import net.shrine.protocol.ErrorResponse
-import net.shrine.protocol.DeleteQueryRequest
 
 /**
  * @author clint
@@ -41,7 +35,7 @@ final class AdapterTest extends ShouldMatchersForJUnit {
 
   @Test
   def testHandlesLockoutCase: Unit = {
-    doErrorResponseTest(new AdapterLockoutException(lockedOutAuthn),classOf[AdapterLockout])
+    doErrorResponseTest(new AdapterLockoutException(lockedOutAuthn,"test.com"),classOf[AdapterLockout])
   }
 
   @Test
@@ -53,12 +47,18 @@ final class AdapterTest extends ShouldMatchersForJUnit {
   
   @Test
   def testHandlesMappingFailureCase: Unit = {
-    doErrorResponseTest(new AdapterMappingException(QueryDefinition("test query",None),"blarg", new Exception),classOf[AdapterMappingProblem])
+
+    val authn = AuthenticationInfo("some-domain", "some-user", Credential("some-password", isToken = false))
+    val projectId = "projectId"
+    val queryDef = QueryDefinition("test query",None)
+    val runQueryRequest = RunQueryRequest(projectId, 1.millisecond, authn, Some("topicId"), Some("Topic Name"), Set.empty, queryDef)
+
+    doErrorResponseTest(new AdapterMappingException(runQueryRequest,"blarg", new Exception),classOf[AdapterMappingProblem])
   }
   
   @Test
   def testHandlesGeneralFailureCase: Unit = {
-    doErrorResponseTest(new Exception("blerg"),classOf[ProblemNotInCodec])
+    doErrorResponseTest(new Exception("blerg"),classOf[ProblemNotYetEncoded])
   }
 
   //noinspection ScalaUnreachableCode,RedundantBlock

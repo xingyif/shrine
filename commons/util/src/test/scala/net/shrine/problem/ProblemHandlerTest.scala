@@ -21,6 +21,8 @@ final class ProblemHandlerTest extends ShouldMatchersForJUnit {
 
       val message = s"TestProblem involving $nodeName"
 
+      val description = summary + message
+
       override def throwable = Some(exception)
     }
 

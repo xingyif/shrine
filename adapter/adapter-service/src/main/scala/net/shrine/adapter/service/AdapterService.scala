@@ -85,6 +85,7 @@ object AdapterService extends Loggable {
 }
 
 case class CouldNotVerifySignature(message: BroadcastMessage) extends AbstractProblem(ProblemSources.Adapter){
-  override def summary: String = s"Incoming message had invalid signature."
-  override def details: String = s"Signature:\n${message.signature}"
+  override val summary: String = s"Incoming message had invalid signature."
+  override val description: String = s"An incoming message from the hub had an invalid signature."
+  override val details: String = s"${super.details}\nSignature:\n${message.signature}"
 }

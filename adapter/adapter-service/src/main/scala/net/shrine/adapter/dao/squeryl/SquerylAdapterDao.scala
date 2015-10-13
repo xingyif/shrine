@@ -159,7 +159,8 @@ final class SquerylAdapterDao(initializer: SquerylInitializer, tables: Tables)(i
       } {
         //todo propagate backwards to teh breakdown failure to create the corect problem
         object BreakdownFailure extends AbstractProblem(ProblemSources.Adapter) {
-          override def summary: String = s"Couldn't retrieve breakdown of type '$failedBreakdownType'"
+          override val summary: String = s"Couldn't retrieve breakdown of type '$failedBreakdownType'"
+          override val description:String = ""
         }
 
         val pd = BreakdownFailure.toDigest

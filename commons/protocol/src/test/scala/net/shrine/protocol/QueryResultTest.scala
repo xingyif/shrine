@@ -453,7 +453,7 @@ final class QueryResultTest extends ShouldMatchersForJUnit with XmlRoundTripper[
   @Test
   def testWithErrorsAndProblemDigest():Unit = {
 
-    case class TestProblem(override val summary: String = "test summary") extends AbstractProblem(ProblemSources.Unknown)
+    case class TestProblem(override val summary: String = "test summary",override val description:String = "test description") extends AbstractProblem(ProblemSources.Unknown)
 
     val testProblem:TestProblem = new TestProblem()
 

@@ -1,7 +1,7 @@
 package net.shrine.protocol
 
 import javax.xml.datatype.XMLGregorianCalendar
-import net.shrine.problem.{Problem, ProblemNotInCodec, ProblemDigest}
+import net.shrine.problem.{ProblemNotYetEncoded, Problem, ProblemDigest}
 import net.shrine.protocol.QueryResult.StatusType
 
 import scala.xml.NodeSeq
@@ -328,7 +328,7 @@ object QueryResult {
 
   def errorResult(description: Option[String], statusMessage: String,problem:Option[Problem] = None):QueryResult = {
 
-    val problemDigest = problem.getOrElse(ProblemNotInCodec(statusMessage)).toDigest
+    val problemDigest = problem.getOrElse(ProblemNotYetEncoded(statusMessage)).toDigest
 
     QueryResult(
       resultId = 0L,

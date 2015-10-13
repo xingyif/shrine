@@ -46,7 +46,7 @@ final case class RunQueryAdapter(
   override protected[adapter] def translateNetworkToLocal(request: RunQueryRequest): RunQueryRequest = {
     try { request.mapQueryDefinition(conceptTranslator.translate) }
     catch {
-      case NonFatal(e) => throw new AdapterMappingException(request.queryDefinition,s"Error mapping query terms from network to local forms. request: ${request.elideAuthenticationInfo}", e)
+      case NonFatal(e) => throw new AdapterMappingException(request,s"Error mapping query terms from network to local forms.", e)
     }
   }
 
@@ -55,7 +55,7 @@ final case class RunQueryAdapter(
     if (collectAdapterAudit) AdapterAuditDb.db.insertQueryReceived(message)
 
     if (isLockedOut(message.networkAuthn)) {
-      throw new AdapterLockoutException(message.networkAuthn)
+      throw new AdapterLockoutException(message.networkAuthn,poster.url)
     }
 
     val runQueryReq = message.request.asInstanceOf[RunQueryRequest]

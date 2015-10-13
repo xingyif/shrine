@@ -42,10 +42,8 @@ trait AdminService extends HttpService with Json4sSupport {
   val userAuthenticator = UserAuthenticator(AdminConfigSource.config)
 
   //don't need to do anything special for unauthorized users, but they do need access to a static form.
-  lazy val route:Route = logRequestResponse(logEntryForRequestResponse _) { //logging is controlled by Akka's config, slf4j, and log4j config
-    gruntWatchCorsSupport{
-      staticResources ~ makeTrouble ~ about ~ authenticatedInBrowser
-    }
+  lazy val route:Route = gruntWatchCorsSupport{
+    staticResources ~ makeTrouble ~ about ~ authenticatedInBrowser
   }
 
   // logs just the request method, uri and response at info level
@@ -56,12 +54,26 @@ trait AdminService extends HttpService with Json4sSupport {
     case _ => None // other kind of responses
   }
 
+  // logs just the request method, uri and response status at info level
+  def logEntryForRequest(req: HttpRequest): Any => Option[LogEntry] = {
+    case res: HttpResponse => {
+      Some(LogEntry(s"\n  Request: $req \n  Response status: ${res.status}", Logging.InfoLevel))
+    }
+    case _ => None // other kind of responses
+  }
+
   //pathPrefixTest shields the QEP code from the redirect.
   def authenticatedInBrowser: Route = pathPrefixTest("user"|"admin") {
-    reportIfFailedToAuthenticate {
+    logRequestResponse(logEntryForRequestResponse _) { //logging is controlled by Akka's config, slf4j, and log4j config
+      reportIfFailedToAuthenticate {
         authenticate(userAuthenticator.basicUserAuthenticator) { user =>
-          pathPrefix("user") {userRoute(user)} ~
-          pathPrefix("admin") {adminRoute(user)}
+          pathPrefix("user") {
+            userRoute(user)
+          } ~
+            pathPrefix("admin") {
+              adminRoute(user)
+            }
+        }
       }
     }
   }
@@ -76,13 +88,15 @@ trait AdminService extends HttpService with Json4sSupport {
   }
 
   lazy val staticResources = pathPrefix("client"){
-      getFromResourceDirectory("client")
-    } ~ pathEnd {
-      redirect("shrine-admin/client/index.html", StatusCodes.PermanentRedirect) //todo pick up the top of the url from context instead of hard-coded "admin"
-    } ~ path( "index.html" ) {
-      redirect("client/index.html", StatusCodes.PermanentRedirect)
-    } ~ pathSingleSlash {
-      redirect("client/index.html", StatusCodes.PermanentRedirect)
+    logRequestResponse(logEntryForRequest _){
+        getFromResourceDirectory("client")
+      } ~ pathEnd {
+        redirect("shrine-admin/client/index.html", StatusCodes.PermanentRedirect) //todo pick up the top of the url from context instead of hard-coded "admin"
+      } ~ path( "index.html" ) {
+        redirect("client/index.html", StatusCodes.PermanentRedirect)
+      } ~ pathSingleSlash {
+        redirect("client/index.html", StatusCodes.PermanentRedirect)
+    }
   }
 
   lazy val about = pathPrefix("about") {

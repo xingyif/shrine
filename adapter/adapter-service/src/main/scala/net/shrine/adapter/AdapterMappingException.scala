@@ -1,6 +1,7 @@
 package net.shrine.adapter
 
-import net.shrine.protocol.query.QueryDefinition
+
+import net.shrine.protocol.RunQueryRequest
 
 /**
  * @author Andrew McMurry
@@ -8,4 +9,5 @@ import net.shrine.protocol.query.QueryDefinition
  * @since ???
  * @since Nov 21, 2012 (Scala port)
  */
-final case class AdapterMappingException(queryDefinition:QueryDefinition, message: String, cause: Throwable) extends AdapterException(message, cause)
+final case class AdapterMappingException(runQueryRequest: RunQueryRequest, message: String, cause: Throwable) extends
+  AdapterException(s"$message for request ${runQueryRequest.elideAuthenticationInfo}", cause)
