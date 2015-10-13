@@ -28,7 +28,7 @@ trait Problem {
   //todo stack trace as xml elements? would be easy
   def throwableDetail = throwable.map(x => s"${x.getClass.getName} ${x.getMessage}\n${x.getStackTrace.mkString(sys.props("line.separator"))}")
 
-  def details:String = s"${stamp.pretty}\n${throwableDetail.getOrElse("")}"
+  def details:String = s"${stamp.pretty}:\n${throwableDetail.getOrElse("")}"
 
   def toDigest:ProblemDigest = ProblemDigest(problemName,summary,description,details)
 
@@ -69,7 +69,7 @@ object ProblemDigest extends XmlUnmarshaller[ProblemDigest] with Loggable {
 }
 
 case class Stamp(host:InetAddress,time:Long,source:ProblemSources.ProblemSource) {
-  def pretty = s"at ${new Date(time)} on $host ${source.pretty}"
+  def pretty = s"${new Date(time)} on $host ${source.pretty}"
 }
 
 object Stamp {

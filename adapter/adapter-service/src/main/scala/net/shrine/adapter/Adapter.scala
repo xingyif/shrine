@@ -68,7 +68,7 @@ case class CrcCouldNotBeInvoked(crcUrl:String,request:ShrineRequest,x:CrcInvocat
 case class AdapterMappingProblem(x:AdapterMappingException) extends AbstractProblem(ProblemSources.Hub) {
 
   override val throwable = Some(x)
-  override val summary: String = s"Error mapping query terms on ${stamp.host}"
+  override val summary: String = s"Could not map query terms on ${stamp.host}"
   override val description = s"The Shrine Adapter on ${stamp.host} cannot map this query to its local terms. Running query ${x.runQueryRequest.queryDefinition} caused ${x.cause}. This error must be corrected at the queried site."
   override val details =
     s"""${stamp.pretty}
