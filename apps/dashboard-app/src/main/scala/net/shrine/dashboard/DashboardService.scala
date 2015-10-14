@@ -90,7 +90,7 @@ trait DashboardService extends HttpService with Json4sSupport {
     logRequestResponse(logEntryForRequest _){
         getFromResourceDirectory("client")
       } ~ pathEnd {
-        redirect("shrine-dashboard/client/index.html", StatusCodes.PermanentRedirect) //todo pick up the top of the url from context instead of hard-coded "shrine-dashboard"
+        redirect("client/index.html", StatusCodes.PermanentRedirect) 
       } ~ path( "index.html" ) {
         redirect("client/index.html", StatusCodes.PermanentRedirect)
       } ~ pathSingleSlash {
