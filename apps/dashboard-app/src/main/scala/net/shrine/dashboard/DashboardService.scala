@@ -90,7 +90,7 @@ trait DashboardService extends HttpService with Json4sSupport {
     logRequestResponse(logEntryForRequest _){
         getFromResourceDirectory("client")
       } ~ pathEnd {
-        redirect("client/index.html", StatusCodes.PermanentRedirect) 
+        redirect("client/index.html", StatusCodes.PermanentRedirect)
       } ~ path( "index.html" ) {
         redirect("client/index.html", StatusCodes.PermanentRedirect)
       } ~ pathSingleSlash {

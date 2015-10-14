@@ -29,7 +29,7 @@ angular
 
         var model    = this,
             absUrl   = $location.$$absUrl,
-            key      = 'shrine-admin',
+            key      = 'shrine-dashboard',
             url      = {
                 base: "http://localhost:8080/dashboard-war/"
             },
@@ -37,7 +37,7 @@ angular
 
         if (absUrl.indexOf('localhost') < 0) {
             urlIdx = absUrl.indexOf(key);
-            url.base    = absUrl.substring(0, urlIdx) + 'shrine-admin/';
+            url.base    = absUrl.substring(0, urlIdx) + 'shrine-dashboard/';
         }
 
         model.verbs  = verbs;
