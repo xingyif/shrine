@@ -31,8 +31,8 @@ trait Problem {
       <name>{x.getClass.getName}</name>
       <message>{x.getMessage}</message>
       <stacktrace>
-        {x.getStackTrace.foreach(line => <line>{line}</line>)}
-        {exceptionXml(Option(x.getCause))}
+        {x.getStackTrace.map(line => <line>{line}</line>)}
+        {exceptionXml(Option(x.getCause)).getOrElse("")}
       </stacktrace>
     </exception>
   }
