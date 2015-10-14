@@ -6,14 +6,14 @@ import net.shrine.protocol.Credential
 import org.json4s.native.JsonMethods.parse
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
-import org.scalatest.{Suite, BeforeAndAfterEach, FlatSpec}
+import org.scalatest.FlatSpec
 import spray.http.BasicHttpCredentials
 
 import spray.testkit.ScalatestRouteTest
 import spray.http.StatusCodes.OK
 
 @RunWith(classOf[JUnitRunner])
-class AdminServiceTest extends FlatSpec with ScalatestRouteTest with AdminService {
+class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with AdminService {
   def actorRefFactory = system
 
   import scala.concurrent.duration._
@@ -25,7 +25,7 @@ class AdminServiceTest extends FlatSpec with ScalatestRouteTest with AdminServic
   /**
    * to run these tests with I2B2
    * add a user named keith, to be the admin
-   * add a Boolean parameter for dave, Admin, true
+   * add a Boolean parameter for keith, Admin, true
    * add all this user to the i2b2 project
    */
   val adminCredentials = BasicHttpCredentials(adminUserName,"shh!")
@@ -43,7 +43,7 @@ class AdminServiceTest extends FlatSpec with ScalatestRouteTest with AdminServic
 
   val adminOutboundUser = OutboundUser.createFromUser(adminUser)
 
-  "AdminService" should  "return an OK and a valid outbound user for a user/whoami request" in {
+  "DashboardService" should  "return an OK and a valid outbound user for a user/whoami request" in {
 
       Get(s"/user/whoami") ~>
         addCredentials(adminCredentials) ~>
@@ -57,7 +57,7 @@ class AdminServiceTest extends FlatSpec with ScalatestRouteTest with AdminServic
       }
     }
 
-  "AdminService" should  "return an OK and a valid outbound user for a user/whoami request and an '' " in {
+  "DashboardService" should  "return an OK and a valid outbound user for a user/whoami request and an '' " in {
 
     Get(s"/user/whoami") ~>
       addCredentials(brokenCredentials) ~>

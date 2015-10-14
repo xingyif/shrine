@@ -6,6 +6,7 @@ import net.shrine.authentication.UserAuthenticator
 
 import net.shrine.authorization.steward.OutboundUser
 import net.shrine.i2b2.protocol.pm.User
+import net.shrine.dashboard.httpclient.HttpClientDirectives.httpRequestWithUnmatchedPath
 import shapeless.HNil
 
 import spray.http.{HttpResponse, HttpRequest, StatusCodes}
@@ -16,8 +17,6 @@ import spray.routing.{AuthenticationFailedRejection, Rejected, RouteConcatenatio
 import org.json4s.{DefaultFormats, Formats}
 
 import scala.concurrent.ExecutionContext.Implicits.global
-
-import net.shrine.dashboard.httpclient.HttpClientDirectives.httpRequestWithUnmatchedPath
 
 // we don't implement our route structure directly in the service actor because
 // we want to be able to test it independently, without having to spin up an actor
