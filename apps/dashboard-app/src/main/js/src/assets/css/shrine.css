@@ -139,13 +139,13 @@ td.error, span.error {
     color: red;
 }
 
-td.error a, td.error a:hover {
+td.error a, td.error a:hover, span.error a, span.error a:hover{
     color: inherit;
     text-decoration: underline !important;
     cursor: pointer;
 }
 
-td.ok {
+td.ok, span.ok {
     color:green;
 }
 
