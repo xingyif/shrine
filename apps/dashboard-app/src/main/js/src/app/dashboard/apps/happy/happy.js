@@ -2,7 +2,7 @@
 angular.module('shrine-happy', ['happy-model', 'ngAnimate', 'ui.bootstrap'])
     .constant("HappyStates", {
         STATE1: "General",
-        STATE2: "Keystore Report",
+        STATE2: "Keystore",
         STATE3: "Hub",
         STATE4: "Adapter"
     })
@@ -12,7 +12,7 @@ angular.module('shrine-happy', ['happy-model', 'ngAnimate', 'ui.bootstrap'])
         $scope.adapter              = {};
         $scope.recentAuditEntries   = {};
         $scope.hiveConfig           = {};
-        $scope.keystoreReport       = {};
+        $scope.keystore             = {};
         $scope.net                  = {};
         $scope.downstreamNodes      = {};
         $scope.recentQueries        = {};
@@ -30,7 +30,7 @@ angular.module('shrine-happy', ['happy-model', 'ngAnimate', 'ui.bootstrap'])
                     $scope.adapter              = data.all.adapter;
                     $scope.downstreamNodes      = data.all.downstreamNodes;
                     $scope.hiveConfig           = data.all.hiveConfig;
-                    $scope.keystoreReport       = data.all.keystoreReport;
+                    $scope.keystore             = data.all.keystore;
                     $scope.net                  = data.all.net;
                     $scope.recentAuditEntries   = data.all.recentAuditEntries;
                     $scope.recentQueries        = data.all.recentQueries;
@@ -58,10 +58,10 @@ angular.module('shrine-happy', ['happy-model', 'ngAnimate', 'ui.bootstrap'])
             replace: true
         };
     })
-    .directive("keystoreReport", function () {
+    .directive("keystore", function () {
         return {
             restrict: "E",
-            templateUrl: "src/app/dashboard/apps/happy/keystore-report/keystore-report.tpl.html",
+            templateUrl: "src/app/dashboard/apps/happy/keystore/keystore.tpl.html",
             replace: true
         };
     })
