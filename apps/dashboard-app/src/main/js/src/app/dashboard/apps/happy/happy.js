@@ -36,7 +36,7 @@ angular.module('shrine-happy', ['happy-model', 'ngAnimate', 'ui.bootstrap'])
                     $scope.recentAuditEntries   = data.all.recentAuditEntries;
                     $scope.recentQueries        = data.all.recentQueries;
                     $scope.versionInfo          = data.all.versionInfo;
-                    $scope.net.isHub            = $scope.net.notAHub === undefined;
+                    $scope.general.isHub        = $scope.net.notAHub === undefined;
                     $scope.general.keystoreOk   = true;
                     $scope.general.adapterOk    = $scope.adapter.result.response.errorResponse === undefined;
                     $scope.net.hasFailures      = Number($scope.net.failureCount) > 0;
