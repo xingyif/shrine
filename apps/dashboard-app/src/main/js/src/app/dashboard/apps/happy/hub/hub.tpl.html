@@ -1,5 +1,5 @@
 <div>    
-    <table class="table table-striped" ng-if="!notAHub">
+    <table class="table table-striped" ng-if="general.isHub === true">
         <thead>
         <tr>
             <td colspan="2">
@@ -55,7 +55,7 @@
         </tbody>
     </table>
 
-    <table class="table table-striped" ng-if="!notAHub">
+    <table class="table table-striped" ng-if="general.isHub === true">
         <thead>
         <tr>
             <td colspan="2">
@@ -99,7 +99,7 @@
         </tbody>
     </table>
 
-    <table class="table table-striped" ng-if="notAHub">
+    <table class="table table-striped" ng-if="general.isHub === false">
         <thead>
         <tr>
             <td colspan="2">

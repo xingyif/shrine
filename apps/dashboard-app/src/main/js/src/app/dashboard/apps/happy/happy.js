@@ -21,7 +21,8 @@ angular.module('shrine-happy', ['happy-model', 'ngAnimate', 'ui.bootstrap'])
         $scope.general = {
             keystoreOk:     true,
             hubOk:          true,
-            adapterOk:      true
+            adapterOk:      true,
+            isHub:          false
         }
 
         $scope.setAll = function () {
@@ -30,12 +31,12 @@ angular.module('shrine-happy', ['happy-model', 'ngAnimate', 'ui.bootstrap'])
                     $scope.adapter              = data.all.adapter;
                     $scope.downstreamNodes      = data.all.downstreamNodes;
                     $scope.hiveConfig           = data.all.hiveConfig;
-                    $scope.keystore             = data.all.keystore;
+                    $scope.keystore             = data.all.keystoreReport;
                     $scope.net                  = data.all.net;
                     $scope.recentAuditEntries   = data.all.recentAuditEntries;
                     $scope.recentQueries        = data.all.recentQueries;
                     $scope.versionInfo          = data.all.versionInfo;
-                    $scope.notAHub              = data.all.notAHub;
+                    $scope.net.isHub            = $scope.net.notAHub === undefined;
                     $scope.general.keystoreOk   = true;
                     $scope.general.adapterOk    = $scope.adapter.result.response.errorResponse === undefined;
                     $scope.net.hasFailures      = Number($scope.net.failureCount) > 0;
