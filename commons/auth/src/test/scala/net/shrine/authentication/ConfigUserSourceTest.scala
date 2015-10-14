@@ -13,7 +13,7 @@ class ConfigUserSourceTest extends ShouldMatchersForJUnit {
   @Test
   def testIsAuthenticated {
 
-    val config = ConfigFactory.load("admin")
+    val config = ConfigFactory.load("dashboard")
 
     val userSource = ConfigUserSource.apply(config)
 

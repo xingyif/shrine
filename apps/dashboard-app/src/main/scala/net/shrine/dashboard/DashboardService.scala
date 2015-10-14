@@ -111,7 +111,7 @@ trait DashboardService extends HttpService with Json4sSupport {
   //todo is this an admin? Does it matter?
   def adminRoute(user:User):Route = get {
     pathPrefix("happy") {
-      val happyBaseUrl = DashboardConfigSource.config.getString("shrine.admin.happyBaseUrl")
+      val happyBaseUrl = DashboardConfigSource.config.getString("shrine.dashboard.happyBaseUrl")
       implicit val system = ActorSystem("sprayServer")
 
       httpRequestWithUnmatchedPath(happyBaseUrl)
@@ -135,7 +135,7 @@ object gruntWatchCorsSupport extends Directive0 with RouteConcatenation {
     `Access-Control-Allow-Headers`("Origin, X-Requested-With, Content-Type, Accept, Accept-Encoding, Accept-Language, Host, Referer, User-Agent, Authorization"),
     `Access-Control-Max-Age`(1728000)) //20 days
 
-  val gruntWatch:Boolean = DashboardConfigSource.config.getBoolean("shrine.admin.gruntWatch")
+  val gruntWatch:Boolean = DashboardConfigSource.config.getBoolean("shrine.dashboard.gruntWatch")
 
   override def happly(f: (HNil) => Route): Route = {
     if(gruntWatch) {
