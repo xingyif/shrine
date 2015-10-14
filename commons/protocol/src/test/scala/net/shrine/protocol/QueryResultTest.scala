@@ -469,6 +469,7 @@ final class QueryResultTest extends ShouldMatchersForJUnit with XmlRoundTripper[
           <description>lakjdalsjd</description>
           <problem>
             <codec>{testProblem.problemName}</codec>
+            <stamp>{testProblem.stamp.pretty}</stamp>
             <summary>{testProblem.summary}</summary>
             <description>{testProblem.description}</description>
             <details>{testProblem.details}</details>
