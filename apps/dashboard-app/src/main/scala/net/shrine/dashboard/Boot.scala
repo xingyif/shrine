@@ -1,4 +1,4 @@
-package net.shrine.admin
+package net.shrine.dashboard
 
 import akka.actor.{Props, ActorSystem}
 import spray.servlet.WebBoot

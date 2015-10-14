@@ -1,4 +1,4 @@
-package net.shrine.admin
+package net.shrine.dashboard
 
 import net.shrine.authorization.steward.OutboundUser
 import net.shrine.i2b2.protocol.pm.User

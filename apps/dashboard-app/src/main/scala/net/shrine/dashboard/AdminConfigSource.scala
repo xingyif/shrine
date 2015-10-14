@@ -1,4 +1,4 @@
-package net.shrine.admin
+package net.shrine.dashboard
 
 import java.util.concurrent.atomic.AtomicReference
 

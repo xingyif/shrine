@@ -1,4 +1,4 @@
-package net.shrine.admin.httpclient
+package net.shrine.dashboard.httpclient
 
 import net.shrine.log.Loggable
 import spray.can.Http

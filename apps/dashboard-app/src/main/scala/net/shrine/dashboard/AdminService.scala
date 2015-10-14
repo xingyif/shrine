@@ -1,4 +1,4 @@
-package net.shrine.admin
+package net.shrine.dashboard
 
 import akka.actor.{ActorSystem, Actor}
 import akka.event.Logging
@@ -17,7 +17,7 @@ import org.json4s.{DefaultFormats, Formats}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-import net.shrine.admin.httpclient.HttpClientDirectives.httpRequestWithUnmatchedPath
+import net.shrine.dashboard.httpclient.HttpClientDirectives.httpRequestWithUnmatchedPath
 
 // we don't implement our route structure directly in the service actor because
 // we want to be able to test it independently, without having to spin up an actor
