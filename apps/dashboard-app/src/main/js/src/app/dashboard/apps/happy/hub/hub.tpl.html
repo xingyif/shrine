@@ -1,9 +1,65 @@
-<div>
-    <table class="table table-striped">
+<div>    
+    <table class="table table-striped" ng-if="!notAHub">
         <thead>
         <tr>
-            <td colspan="5" style="text-align: center">
-                Hub Network
+            <td colspan="2">
+                Network Node Summary
+            </td>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td>
+                <label>Hub Queries Self:</label>
+            </td>
+            <td>
+                {{net.shouldQuerySelf}}
+            </td>
+        </tr>
+        <tr ng-repeat="node in net.downstreamNodes">
+            <td>
+                {{node.name}}
+            </td>
+            <td>
+                {{node.url}}
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+    <table class="table table-striped" ng-if="net.hasFailures.toString() === 'true'">
+        <thead>
+        <tr>
+            <td colspan="2">
+                Node Failure Details
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <label>Origin</label>
+            </td>
+            <td>
+                <label>Description</label>
+            </td>
+        </tr>
+        </thead>
+        <tbody>
+        <tr ng-repeat="failure in net | filter:'failure'">
+            <td>
+                {{failure.origin}}
+            </td>
+            <td>
+                <span class="error">{{failure.description}}</span>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+    <table class="table table-striped" ng-if="!notAHub">
+        <thead>
+        <tr>
+            <td colspan="2">
+                Node Counts
             </td>
         </tr>
         </thead>
@@ -12,7 +68,7 @@
                 <td>
                     <label>Expected Result Count:</label>
                 </td>
-                <td colspan="4">
+                <td>
                     {{net.expectedResultCount}}
                 </td>
             </tr>
@@ -20,7 +76,7 @@
                 <td>
                     <label>Valid Result Count:</label>
                 </td>
-                <td colspan="4">
+                <td>
                     {{net.validResultCount}}
                 </td>
             </tr>
@@ -28,49 +84,35 @@
                 <td>
                     <label>Failure Count:</label>
                 </td>
-                <td colspan="4">
-                    <span  ng-class="{'error': net.hasFailures === true}">{{net.failureCount}}</span>
+                <td>
+                    <span ng-class="{'error': net.hasFailures === true}">{{net.failureCount}}</span>
                 </td>
             </tr>
             <tr>
                 <td>
                     <label>Timeout Count:</label>
                 </td>
-                <td colspan="4">
+                <td>
                     {{net.timeoutCount}}
                 </td>
             </tr>
         </tbody>
-        <tfoot>
+    </table>
+
+    <table class="table table-striped" ng-if="notAHub">
+        <thead>
         <tr>
             <td colspan="2">
-                <span>Nodes:</span>
+                Not A Hub
             </td>
         </tr>
-        <tr ng-show="Boolean(net.shouldQuerySelf) !== false">
-            <td>
-                <span>Should Query Self:</span>
-            </td>
-            <td colspan="4">
-                {{net.shouldQuerySelf}}
-            </td>
-        </tr>
-        <tr>
-            <td>
-                <span>Name: </span>&nbsp;&nbsp;{{net.node.name}}
-            </td>
-            <td>
-                <span>Url:</span>&nbsp;&nbsp;{{net.node.url}}
-            </td>
-        </tr>
-        <tr ng-show="net.hasFailures.toString() === 'true'">
-            <td>
-                <span>Name: </span>&nbsp;&nbsp;{{net.failure.origin}}
-            </td>
-            <td>
-                <span>Url:</span>&nbsp;&nbsp;<span class="error">{{net.failure.description}}</span>
-            </td>
-        </tr>
-        </tfoot>
+        </thead>
+        <tbody>
+            <tr>
+                <td colspan="2">
+                    This node is not a hub.
+                </td>
+            </tr>
+        </tbody>
     </table>
 </div>

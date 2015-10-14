@@ -2,7 +2,7 @@
     <table class="table table-striped">
         <thead>
         <tr>
-            <td colspan="2" style="text-align: center">
+            <td colspan="2">
                 Version Info
             </td>
         </tr>
@@ -11,7 +11,7 @@
         <tbody>
             <tr>
                 <td>
-                    <label>Shrine Version:<?
+                    <label>SHRINE Version:
                 </td>
                 <td>
                     {{versionInfo.shrineVersion}}
@@ -32,7 +32,7 @@
     <table class="table table-striped">
         <thead>
             <tr>
-                <td colspan="2" style="text-align: center">
+                <td colspan="2">
                     <label>System Health</label>
                 </td>
             </tr>
@@ -42,11 +42,11 @@
             <td>
                 <label>Keystore:</label>
             </td>
-            <td ng-show="general.keystoreOk === false" class="error">
+            <td ng-if="general.keystoreOk === false" class="error">
                 Error: <a href="#" ng-click="setStateAndRefresh(states.STATE2)">click
                 here for more details.</a>
             </td>
-            <td ng-show="general.keystoreOk === true" class="ok">
+            <td ng-if="general.keystoreOk === true" class="ok">
                 OK
             </td>
         </tr>
@@ -54,11 +54,11 @@
             <td>
                 <label>Hub:</label>
             </td>
-            <td ng-show="general.hubOk === false" class="error">
+            <td ng-if="general.hubOk === false" class="error">
                 Error: <a href="#" ng-click="setStateAndRefresh(states.STATE3)">click
                 here for more details.</a>
             </td>
-            <td ng-show="general.hubOk === true" class="ok">
+            <td ng-if="general.hubOk === true" class="ok">
                 OK
             </td>
         </tr>
@@ -66,11 +66,11 @@
             <td>
                 <label>Adapter:</label>
             </td>
-            <td ng-show="general.adapterOk === false" class="error">
+            <td ng-if="general.adapterOk === false" class="error">
                 Error: <a href="#" ng-click="setStateAndRefresh(states.STATE4)">click
                 here for more details.</a>
             </td>
-            <td ng-show="general.adapterOk === true" class="ok">
+            <td ng-if="general.adapterOk === true" class="ok">
                 OK
             </td>
         </tr>

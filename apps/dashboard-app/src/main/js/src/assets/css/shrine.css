@@ -32,7 +32,9 @@
 .main-app{
     background-image: url('../img/Background_Shrine.jpg');
     background-size: cover;
-    background-color:transparent;
+    background-color: transparent;
+    min-width: 100%;
+    min-height: 100%;
 }
 
 .shrine-navbar {
@@ -41,11 +43,10 @@
     font-family: "Nexa";
     color: #5d5d5d;
     min-height: 60px;
-    width: 101%
+    width: 100%
 }
 
-
-.shrine-brand{
+.shrine-brand {
     float: left;
     height: 50px;
     padding: 15px 15px;
@@ -53,36 +54,36 @@
     line-height: 24px
 }
 
-.shrine-brand span{
+.shrine-brand span {
     font-family: "Nexa Bold";
     color: #2c5566;
 }
 
-.shrine-navbar img{
-    margin-top: 5px;
-    margin-right: 20px;
+.shrine-navbar img {
+    margin: 5px;
+    margin-left: 0;
     max-height: 80px;
     max-width: 80px;
 }
 
-.shrine-button{
+.shrine-button {
     cursor: pointer !important;
     background-color: transparent;
     border: none;
 }
 
-.shrine-button span{
+.shrine-button span {
     position: relative;
     bottom: 5px;
 
 }
 
-.shrine-btn-default{
+.shrine-btn-default {
     margin-right: 6px;
     border:none;
 }
 
-.shrine-btn-on{
+.shrine-btn-on {
     padding: 12px 12px;
     border-radius: 0;
     font-family: "Roboto Bold" !important;
@@ -92,7 +93,7 @@
     url('../img/bckg_diagonal_lines_no_border.png') !important;
 }
 
-.shrine-btn-off{
+.shrine-btn-off {
     padding: 6px 12px !important;
     border-radius: 4px !important;
     font-family: "Open Sans Semibold" !important;
@@ -101,13 +102,13 @@
 }
 
 
-.shrine-on, .shrine-on a{
+.shrine-on, .shrine-on a {
     font-family: "Roboto Bold" !important;
     color: #FFFFFF !important;
     background: linear-gradient(#048DBE, #025978) !important;
 }
 
-.shrine-off{
+.shrine-off {
     font-family: "Roboto Regular" !important;
     color: #2C5566 !important;
     background-color: #ECEEEE !important;
@@ -119,65 +120,72 @@
     opacity: 0.2 !important;
 }
 
-.shrine-copy-bold{
+.shrine-copy-bold {
     font-family: "Nexa Bold";
     color: #64818e;
 }
 
-.shrine-copy{
+.shrine-copy {
     font-family: "Nexa";
     color: #000000;
 }
 
-td.error, span.error{
+.row {
+    margin-right: 0;
+    margin-left: 0;
+}
+
+td.error, span.error {
     color: red;
 }
 
-td.error a, td.error a:hover{
+td.error a, td.error a:hover {
     color: inherit;
     text-decoration: underline !important;
     cursor: pointer;
 }
 
-td.ok{
+td.ok {
     color:green;
 }
 
-.form-group span{
+.form-group span {
     font-family: "Open Sans Semibold";
     color: #2c5566;
 }
 
-fieldset button{
+fieldset button {
     color: #2E5366;
 }
 
-fieldset button:hover, form a:hover{
+fieldset button:hover, form a:hover {
     color: #008CBA;
     text-decoration: none;
     cursor: pointer;
 }
 
-form a{
+form a {
     font-family: "Open Sans Regular";
     color: #647d8d;
     text-decoration: none;
 }
 
-footer img{
+footer img {
     margin-left: 10px;
 
 }
 
 footer {
     background-color: rgba(50, 62, 74, 0.48);
-    position: absolute;
-    width: 102%;
+    position: fixed;
+    width: 100%;
     bottom: 0px;
+    left: 0;
     min-height: 60px;
+    max-width: 100%;
 }
 
-table{
+table {
     background-image: url('../img/bckg_diagonal_lines_no_border.png');
     border: 1px solid #CCD8DF;
 

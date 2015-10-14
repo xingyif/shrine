@@ -2,45 +2,7 @@
     <table class="table table-striped">
         <thead>
             <tr>
-                <td colspan="2" style="text-align: center">
-                    Adapter
-                </td>
-            </tr>
-        </thead>
-        <tbody>
-        <tr>
-            <td>
-                <label>Description:</label>
-            </td>
-            <td>
-                {{adapter.result.description}}
-            </td>
-        </tr>
-        <tr>
-            <td>
-                <label>Elapsed Time</label>
-            </td>
-            <td>
-                {{adapter.result.elapsed}}
-            </td>
-        </tr>
-        <tr>
-            <td>
-                <label>Responses:</label>
-            </td>
-            <td colspan="2">
-                <span>Error Response: </span>
-                <span class="error">{{adapter.result.response.errorResponse}} </span>
-            </td>
-        </tr>
-        </tbody>
-
-    </table>
-
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <td colspan="2" style="text-align: center">
+                <td colspan="2">
                     Hive Config
                 </td>
             </tr>
@@ -48,7 +10,7 @@
         <tbody>
         <tr>
             <td>
-                <label>CRC Url:</label>
+                <label>CRC URL:</label>
             </td>
             <td>
                 {{hiveConfig.crcUrl}}
@@ -56,21 +18,93 @@
         </tr>
         <tr>
             <td>
-                <label>Ont Url:</label>
+                <label>ONT URL:</label>
             </td>
             <td>
                 {{hiveConfig.ontUrl}}
             </td>
         </tr>
+        </tbody>
+    </table>
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <td colspan="2">
+                    Adapter Query Test
+                </td>
+            </tr>
+        </thead>
+        <tbody>
         <tr>
             <td>
-                <label>PM Url:</label>
+                <label>Node Description:</label>
             </td>
             <td>
-                (needed)
+                {{adapter.result.description}}
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <label>Elapsed Time:</label>
+            </td>
+            <td>
+                {{adapter.result.elapsed}}
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <label>Response Type:</label>
+            </td>
+            <td>
+                <span class="error" ng-if="general.adapterOk === false">{{adapter.result.response.errorResponse}}</span>
+                <span class="ok" ng-if="general.adapterOk === true">Success</span>
             </td>
         </tr>
         </tbody>
+    </table>
 
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <td colspan="2">
+                    Error Details
+                </td>
+            </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td>
+                <label>Error Code:</label>
+            </td>
+            <td>
+                {{adapter.result.response.errorResponse.problem.codec}}
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <label>Error Summary:</label>
+            </td>
+            <td>
+                {{adapter.result.response.errorResponse.problem.summary}}
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <label>Error Description:</label>
+            </td>
+            <td>
+                {{adapter.result.response.errorResponse.problem.description}}
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <label>Technical Details:</label>
+            </td>
+            <td>
+                {{adapter.result.response.errorResponse.problem.details}}
+            </td>
+        </tr>
+        </tbody>
     </table>
 </div>
