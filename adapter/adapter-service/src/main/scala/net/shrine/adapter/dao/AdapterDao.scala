@@ -32,7 +32,7 @@ trait AdapterDao {
   
   def insertBreakdownResults(parentResultIds: Map[ResultOutputType, Seq[Int]], originalBreakdowns: Map[ResultOutputType, I2b2ResultEnvelope], obfuscatedBreakdowns: Map[ResultOutputType, I2b2ResultEnvelope]): Unit
 
-  def insertErrorResult(parentResultId: Int, errorMessage: String, codec:String, summary:String, digestDescription:String,details:String): Unit
+  def insertErrorResult(parentResultId: Int, errorMessage: String, codec:String, stampText:String, summary:String, digestDescription:String,details:String): Unit
   
   def findQueriesByUserAndDomain(domain: String, username: String, howMany: Int): Seq[ShrineQuery]
   

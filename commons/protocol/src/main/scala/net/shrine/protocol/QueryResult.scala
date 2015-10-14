@@ -346,9 +346,9 @@ object QueryResult {
   /**
    * For reconsitituting errorResults from a database
    */
-  def errorResult(description:Option[String], statusMessage:String, codec:String, summary:String, digestDescription:String,details:String): QueryResult = {
+  def errorResult(description:Option[String], statusMessage:String, codec:String,stampText:String, summary:String, digestDescription:String,details:String): QueryResult = {
 
-    val problemDigest = ProblemDigest(codec,summary,digestDescription,details)
+    val problemDigest = ProblemDigest(codec,stampText,summary,digestDescription,details)
 
     QueryResult(
       resultId = 0L,

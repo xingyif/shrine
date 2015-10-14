@@ -537,7 +537,7 @@ final class SquerylAdapterDaoTest extends AbstractSquerylAdapterTest with Should
 
     val pd = TestProblem.toDigest
 
-    dao.insertErrorResult(resultRow.id, message1,pd.codec,pd.summary,pd.description,pd.details)
+    dao.insertErrorResult(resultRow.id, message1,pd.codec,pd.stampText,pd.summary,pd.description,pd.details)
 
     val Seq(errorResultRow) = list(errorResultRows)
 
@@ -546,7 +546,7 @@ final class SquerylAdapterDaoTest extends AbstractSquerylAdapterTest with Should
 
     intercept[Exception] {
       //Should fail due to foreign key constraint
-      dao.insertErrorResult(-12345, "",pd.codec,pd.summary,pd.description,pd.details)
+      dao.insertErrorResult(-12345, "",pd.codec,pd.stampText,pd.summary,pd.description,pd.details)
     }
   }
 
@@ -625,7 +625,7 @@ final class SquerylAdapterDaoTest extends AbstractSquerylAdapterTest with Should
     (resultIdsByType(ERROR) zip Seq(message1, message2)).foreach {
       case (resultId, message) =>
         val pd = TestProblem.toDigest
-        dao.insertErrorResult(resultId, message,pd.codec,pd.summary,pd.description,pd.details)
+        dao.insertErrorResult(resultId, message,pd.codec,pd.stampText,pd.summary,pd.description,pd.details)
     }
   }
 

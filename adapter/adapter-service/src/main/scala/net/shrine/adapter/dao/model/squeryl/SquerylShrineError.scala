@@ -17,6 +17,8 @@ case class SquerylShrineError(
     message: String,
     @Column(name = "CODEC")
     codec:String,
+    @Column(name = "stamp")
+    stamp:String,
     @Column(name = "SUMMARY")
     summary:String,
     @Column(name = "PROBLEM_DESCRIPTION")
@@ -26,7 +28,7 @@ case class SquerylShrineError(
   ) extends KeyedEntity[Int] {
   
   //NB: For Squeryl, ugh :(
-  def this() = this(0, 0, "", "", "", "", "")
+  def this() = this(0, 0, "", "", "", "", "", "")
   
-  def toShrineError = ShrineError(id, resultId, message, codec, summary, digestDescription, details)
+  def toShrineError = ShrineError(id, resultId, message, codec, stamp, summary, digestDescription, details)
 }

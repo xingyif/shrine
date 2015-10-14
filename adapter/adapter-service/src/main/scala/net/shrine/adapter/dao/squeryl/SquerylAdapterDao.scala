@@ -142,6 +142,7 @@ final class SquerylAdapterDao(initializer: SquerylInitializer, tables: Tables)(i
           insertedErrorResultId,
           errorQueryResult.statusMessage.getOrElse("Unknown failure"),
           pd.codec,
+          pd.stampText,
           pd.summary,
           pd.description,
           pd.details
@@ -169,6 +170,7 @@ final class SquerylAdapterDao(initializer: SquerylInitializer, tables: Tables)(i
           resultId,
           s"Couldn't retrieve breakdown of type '$failedBreakdownType'",
           pd.codec,
+          pd.stampText,
           pd.summary,
           pd.description,
           pd.details
@@ -321,10 +323,10 @@ final class SquerylAdapterDao(initializer: SquerylInitializer, tables: Tables)(i
     }
   }
 
-  override def insertErrorResult(parentResultId: Int, errorMessage: String, codec:String, summary:String, digestDescription:String,details:String) {
+  override def insertErrorResult(parentResultId: Int, errorMessage: String, codec:String, stampText:String, summary:String, digestDescription:String,details:String) {
     //NB: Squeryl steers us toward inserting with dummy ids :(
     inTransaction {
-      tables.errorResults.insert(SquerylShrineError(0, parentResultId, errorMessage, codec, summary, digestDescription, details))
+      tables.errorResults.insert(SquerylShrineError(0, parentResultId, errorMessage, codec, stampText, summary, digestDescription, details))
     }
   }
 

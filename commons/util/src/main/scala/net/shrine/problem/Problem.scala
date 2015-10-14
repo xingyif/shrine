@@ -6,7 +6,7 @@ import java.util.Date
 import net.shrine.log.Loggable
 import net.shrine.serialization.{XmlUnmarshaller, XmlMarshaller}
 
-import scala.xml.{Node, NodeSeq}
+import scala.xml.{Elem, Node, NodeSeq}
 
 /**
  * Describes what information we have about a problem at the site in code where we discover it.
@@ -26,18 +26,30 @@ trait Problem {
   def description:String
 
   //todo stack trace as xml elements? would be easy
-  def throwableDetail = throwable.map(x => s"${x.getClass.getName} ${x.getMessage}\n${x.getStackTrace.mkString(sys.props("line.separator"))}")
+  def exceptionXml(exception:Option[Throwable]): Option[Elem] = exception.map{x =>
+    <exception>
+      <name>{x.getClass.getName}</name>
+      <message>{x.getMessage}</message>
+      <stacktrace>
+        {x.getStackTrace.foreach(line => <line>{line}</line>)}
+        {exceptionXml(Option(x.getCause))}
+      </stacktrace>
+    </exception>
+  }
 
-  def details:String = s"${stamp.pretty}:\n${throwableDetail.getOrElse("")}"
+  def throwableDetail = exceptionXml(throwable).map(_.toString())
 
-  def toDigest:ProblemDigest = ProblemDigest(problemName,summary,description,details)
+  def details:String = s"${throwableDetail.getOrElse("")}"
+
+  def toDigest:ProblemDigest = ProblemDigest(problemName,stamp.pretty,summary,description,details)
 
 }
 
-case class ProblemDigest(codec:String,summary:String,description:String,details:String) extends XmlMarshaller {
+case class ProblemDigest(codec:String,stampText:String,summary:String,description:String,details:String) extends XmlMarshaller {
   override def toXml: Node = {
     <problem>
       <codec>{codec}</codec>
+      <stamp>{stampText}</stamp>
       <summary>{summary}</summary>
       <description>{description}</description>
       <details>{details}</details>
@@ -46,12 +58,6 @@ case class ProblemDigest(codec:String,summary:String,description:String,details:
 }
 
 object ProblemDigest extends XmlUnmarshaller[ProblemDigest] with Loggable {
-  def apply(oldMessage:String):ProblemDigest = {
-    val ex = new IllegalStateException(s"'$oldMessage' detected, not in codec. Please report this problem and stack trace to Shrine dev.")
-    ex.fillInStackTrace()
-    warn(ex)
-    ProblemDigest("ProblemNotInCodec",oldMessage,"","")
-  }
 
   override def fromXml(xml: NodeSeq): ProblemDigest = {
     val problemNode = xml \ "problem"
@@ -60,11 +66,12 @@ object ProblemDigest extends XmlUnmarshaller[ProblemDigest] with Loggable {
     def extractText(tagName:String) = (problemNode \ tagName).text
 
     val codec = extractText("codec")
+    val stampText = extractText("stamp")
     val summary = extractText("summary")
     val description = extractText("description")
     val details = extractText("details")
 
-    ProblemDigest(codec,summary,description,details)
+    ProblemDigest(codec,stampText,summary,description,details)
   }
 }
 
@@ -115,7 +122,7 @@ object ProblemSources{
 case class ProblemNotYetEncoded(summary:String,t:Throwable) extends AbstractProblem(ProblemSources.Unknown){
   override val throwable = Some(t)
 
-  override val description = s"This problem has not yet been codified in Shrine. Please report all information including the stack trace to the Shrine development team at TODO"
+  override val description = s"An unexpected problem has occurred. This problem has not yet been codified in Shrine. Users, Please report all information including the stack trace in the details section to your local site or network administer. Administrators, please report this issue to the SHRINE users mailing list with all relevant details."
 }
 
 object ProblemNotYetEncoded {
