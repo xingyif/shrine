@@ -1,20 +1,18 @@
 package net.shrine.dashboard
 
-import java.util.concurrent.atomic.AtomicReference
-
 import com.typesafe.config.{Config, ConfigFactory}
 import net.shrine.config.AtomicConfigSource
 
 /**
- * Source of typesafe config for the data steward app.
+ * Source of typesafe config for the dashboard app.
  *
  * @author david 
  * @since 4/29/15
  */
 
-object AdminConfigSource {
+object DashboardConfigSource {
 
-  val atomicConfig = new AtomicConfigSource(ConfigFactory.load("admin"))
+  val atomicConfig = new AtomicConfigSource(ConfigFactory.load("dashboard"))
 
   def config:Config = {
     atomicConfig.config

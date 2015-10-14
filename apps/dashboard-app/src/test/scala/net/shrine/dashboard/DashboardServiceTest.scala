@@ -13,7 +13,7 @@ import spray.testkit.ScalatestRouteTest
 import spray.http.StatusCodes.OK
 
 @RunWith(classOf[JUnitRunner])
-class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with AdminService {
+class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with DashboardService {
   def actorRefFactory = system
 
   import scala.concurrent.duration._

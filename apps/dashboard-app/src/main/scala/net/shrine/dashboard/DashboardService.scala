@@ -21,7 +21,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 // we don't implement our route structure directly in the service actor because
 // we want to be able to test it independently, without having to spin up an actor
 
-class AdminServiceActor extends Actor with AdminService {
+class DashboardServiceActor extends Actor with DashboardService {
 
   // the HttpService trait defines only one abstract member, which
   // connects the services environment to the enclosing actor or test
@@ -35,10 +35,10 @@ class AdminServiceActor extends Actor with AdminService {
 
 
 // this trait defines our service behavior independently from the service actor
-trait AdminService extends HttpService with Json4sSupport {
+trait DashboardService extends HttpService with Json4sSupport {
   implicit def json4sFormats: Formats = DefaultFormats
 
-  val userAuthenticator = UserAuthenticator(AdminConfigSource.config)
+  val userAuthenticator = UserAuthenticator(DashboardConfigSource.config)
 
   //don't need to do anything special for unauthorized users, but they do need access to a static form.
   lazy val route:Route = gruntWatchCorsSupport{
@@ -90,7 +90,7 @@ trait AdminService extends HttpService with Json4sSupport {
     logRequestResponse(logEntryForRequest _){
         getFromResourceDirectory("client")
       } ~ pathEnd {
-        redirect("shrine-admin/client/index.html", StatusCodes.PermanentRedirect) //todo pick up the top of the url from context instead of hard-coded "admin"
+        redirect("shrine-dashboard/client/index.html", StatusCodes.PermanentRedirect) //todo pick up the top of the url from context instead of hard-coded "shrine-dashboard"
       } ~ path( "index.html" ) {
         redirect("client/index.html", StatusCodes.PermanentRedirect)
       } ~ pathSingleSlash {
@@ -111,7 +111,7 @@ trait AdminService extends HttpService with Json4sSupport {
   //todo is this an admin? Does it matter?
   def adminRoute(user:User):Route = get {
     pathPrefix("happy") {
-      val happyBaseUrl = AdminConfigSource.config.getString("shrine.admin.happyBaseUrl")
+      val happyBaseUrl = DashboardConfigSource.config.getString("shrine.admin.happyBaseUrl")
       implicit val system = ActorSystem("sprayServer")
 
       httpRequestWithUnmatchedPath(happyBaseUrl)
@@ -135,7 +135,7 @@ object gruntWatchCorsSupport extends Directive0 with RouteConcatenation {
     `Access-Control-Allow-Headers`("Origin, X-Requested-With, Content-Type, Accept, Accept-Encoding, Accept-Language, Host, Referer, User-Agent, Authorization"),
     `Access-Control-Max-Age`(1728000)) //20 days
 
-  val gruntWatch:Boolean = AdminConfigSource.config.getBoolean("shrine.admin.gruntWatch")
+  val gruntWatch:Boolean = DashboardConfigSource.config.getBoolean("shrine.admin.gruntWatch")
 
   override def happly(f: (HNil) => Route): Route = {
     if(gruntWatch) {

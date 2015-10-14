@@ -12,6 +12,6 @@ class Boot extends WebBoot {
   val system = ActorSystem("sprayServer")
 
   // the service actor replies to incoming HttpRequests
-  val serviceActor = system.actorOf(Props[AdminServiceActor])
+  val serviceActor = system.actorOf(Props[DashboardServiceActor])
 
 }
