@@ -31,7 +31,7 @@ angular
             absUrl   = $location.$$absUrl,
             key      = 'shrine-admin',
             url      = {
-                base: "http://localhost:8080/admin-war/"
+                base: "http://localhost:8080/dashboard-war/"
             },
             urlIdx;
 
