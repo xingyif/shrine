@@ -10,7 +10,7 @@ import net.shrine.util.ShouldMatchersForJUnit
 final class ProblemDigestTest extends ShouldMatchersForJUnit {
 
   def testRoundTrip() = {
-    val problemDigest = ProblemDigest(getClass.getName,"stampText","Test problem","A problem for testing","We use this problem for testing. Don't worry about it")
+    val problemDigest = ProblemDigest(getClass.getName, "stampText", "Test problem", "A problem for testing", <details>"We use this problem for testing. Don't worry about it"</details>)
 
     val xml = problemDigest.toXml
     val fromXml = ProblemDigest.fromXml(xml)

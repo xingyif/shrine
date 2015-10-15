@@ -104,9 +104,8 @@ case class CouldNotInterpretResponseFromPmCell(pmUrl:String,authn: Authenticatio
 
   override def description: String = s"Shrine could not interpret the response from the PM cell at ${pmUrl} for ${authn.domain}:${authn.username}: due to ${throwable.get}"
 
-  override val details:String =
-    s"""${stamp.pretty}
-       |Response is $httpResponse
-       |${throwableDetail.getOrElse("")}
-     """.stripMargin
+  override val detailsXml = <details>
+                              Response is {httpResponse}
+                              {throwableDetail.getOrElse("")}
+                            </details>
 }

@@ -142,6 +142,12 @@ final class ShrineMessageTest extends ShouldMatchersForJUnit {
 
         val expected = aggReadInstanceResultsResponse.withResults(aggReadInstanceResultsResponse.results.map(_.copy(instanceId = aggReadInstanceResultsResponse.shrineNetworkQueryId)))
 
+        unmarshalledResp.results(0).problemDigest should equal(expected.results(0).problemDigest)
+
+        unmarshalledResp.results(0) should equal(expected.results(0))
+
+        unmarshalledResp.results should equal(expected.results)
+
         unmarshalledResp should equal(expected)
       }
       //NB: Special handling of ReadQueryInstancesResponse because its member QueryInstances are not exactly preserved 

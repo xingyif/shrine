@@ -31,29 +31,51 @@ trait Problem {
       <name>{x.getClass.getName}</name>
       <message>{x.getMessage}</message>
       <stacktrace>
-        {x.getStackTrace.map(line => <line>{line}</line>)}
-        {exceptionXml(Option(x.getCause)).getOrElse("")}
+        {x.getStackTrace.map(line => <line>{line}</line>)}{exceptionXml(Option(x.getCause)).getOrElse("")}
       </stacktrace>
     </exception>
   }
 
-  def throwableDetail = exceptionXml(throwable).map(_.toString())
+  def throwableDetail = exceptionXml(throwable)
 
-  def details:String = s"${throwableDetail.getOrElse("")}"
+  def detailsXml: NodeSeq = NodeSeq.fromSeq(<details>{throwableDetail.getOrElse("")}</details>)
 
-  def toDigest:ProblemDigest = ProblemDigest(problemName,stamp.pretty,summary,description,details)
+  def toDigest:ProblemDigest = ProblemDigest(problemName,stamp.pretty,summary,description,detailsXml)
 
 }
 
-case class ProblemDigest(codec:String,stampText:String,summary:String,description:String,details:String) extends XmlMarshaller {
+case class ProblemDigest(codec: String, stampText: String, summary: String, description: String, detailsXml: NodeSeq) extends XmlMarshaller {
   override def toXml: Node = {
     <problem>
       <codec>{codec}</codec>
       <stamp>{stampText}</stamp>
       <summary>{summary}</summary>
       <description>{description}</description>
-      <details>{details}</details>
+      {detailsXml}
     </problem>
+  }
+
+  /**
+   * Ignores detailXml. equals with scala.xml is impossible. See http://www.scala-lang.org/api/2.10.3/index.html#scala.xml.Equality$
+   */
+  override def equals(other: Any): Boolean =
+    other match {
+
+      case that: ProblemDigest =>
+        (that canEqual this) &&
+          codec == that.codec &&
+          stampText == that.stampText &&
+          summary == that.summary &&
+          description == that.description
+      case _ => false
+    }
+
+  /**
+   * Ignores detailXml
+   */
+  override def hashCode: Int = {
+    val prime = 67
+    codec.hashCode + prime * (stampText.hashCode + prime *(summary.hashCode + prime * description.hashCode))
   }
 }
 
@@ -69,9 +91,9 @@ object ProblemDigest extends XmlUnmarshaller[ProblemDigest] with Loggable {
     val stampText = extractText("stamp")
     val summary = extractText("summary")
     val description = extractText("description")
-    val details = extractText("details")
+    val detailsXml: NodeSeq = problemNode \ "details"
 
-    ProblemDigest(codec,stampText,summary,description,details)
+    ProblemDigest(codec,stampText,summary,description,detailsXml)
   }
 }
 

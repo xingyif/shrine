@@ -61,7 +61,7 @@ final class ShrineQueryResultTest extends ShouldMatchersForJUnit {
 
   private val pd = TestProblem.toDigest
 
-  private val errorRows = Seq(ShrineError(someId, errorQueryResultRow1.id, "foo", pd.codec,pd.stampText,pd.summary,pd.description,pd.details), ShrineError(someId, errorQueryResultRow2.id, "bar", pd.codec,pd.stampText,pd.summary,pd.description,pd.details))
+  private val errorRows = Seq(ShrineError(someId, errorQueryResultRow1.id, "foo", pd.codec,pd.stampText,pd.summary,pd.description,pd.detailsXml), ShrineError(someId, errorQueryResultRow2.id, "bar", pd.codec,pd.stampText,pd.summary,pd.description,pd.detailsXml))
 
   @Test
   def testToQueryResults {

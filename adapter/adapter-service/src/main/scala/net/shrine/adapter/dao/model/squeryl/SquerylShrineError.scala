@@ -4,6 +4,8 @@ import net.shrine.adapter.dao.model.ShrineError
 import org.squeryl.KeyedEntity
 import org.squeryl.annotations.Column
 
+import scala.xml.XML
+
 /**
  * @author clint
  * @since May 28, 2013
@@ -30,5 +32,10 @@ case class SquerylShrineError(
   //NB: For Squeryl, ugh :(
   def this() = this(0, 0, "", "", "", "", "", "")
   
-  def toShrineError = ShrineError(id, resultId, message, codec, stamp, summary, digestDescription, details)
+  def toShrineError = {
+      val detailsXml = if(""!=details) XML.loadString(details)
+                        else <details/>
+
+      ShrineError(id, resultId, message, codec, stamp, summary, digestDescription, detailsXml)
+  }
 }
