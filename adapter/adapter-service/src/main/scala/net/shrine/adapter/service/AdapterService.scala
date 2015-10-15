@@ -1,16 +1,14 @@
 package net.shrine.adapter.service
 
+import java.net.InetAddress
+
 import net.shrine.log.Loggable
 import net.shrine.problem.{ProblemSources, AbstractProblem}
-import net.shrine.protocol.NodeId
-import net.shrine.protocol.Result
-import net.shrine.protocol.BroadcastMessage
-import net.shrine.protocol.ErrorResponse
+import net.shrine.protocol.{Signature, NodeId, Result, BroadcastMessage, ErrorResponse, BaseShrineResponse}
 import net.shrine.adapter.AdapterMap
 import net.shrine.crypto.Verifier
 import scala.concurrent.duration.Duration
 import scala.concurrent.duration._
-import net.shrine.protocol.BaseShrineResponse
 
 /**
  * Heart of the adapter.
@@ -85,11 +83,16 @@ object AdapterService extends Loggable {
 }
 
 case class CouldNotVerifySignature(message: BroadcastMessage) extends AbstractProblem(ProblemSources.Adapter){
-  override val summary: String = s"Incoming message had invalid signature."
-  override val description: String = s"An incoming message from the hub had an invalid signature."
-  override val detailsXml = <details>
-                              Signature is {message.signature}
-                              {throwableDetail.getOrElse("")}
-                            </details>
 
+  val signature: Option[Signature] = message.signature
+
+  override val summary: String = signature.fold("A message was not signed")(sig => s"The trust relationship with ${sig.signedBy} is not properly configured.")
+  override val description: String = signature.fold(s"The Adapter at ${InetAddress.getLocalHost} could not properly validate a request because it had no signature.")(sig => s"The Adapter at ${InetAddress.getLocalHost} could not properly validate the request from ${sig.signedBy}. An incoming message from the hub had an invalid signature.")
+  override val detailsXml = signature.fold(
+    <details/>
+  )(
+      sig =>  <details>
+                Signature is {sig}
+              </details>
+    )
 }

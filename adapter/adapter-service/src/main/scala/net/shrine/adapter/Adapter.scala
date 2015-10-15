@@ -1,5 +1,7 @@
 package net.shrine.adapter
 
+import java.net.InetAddress
+
 import net.shrine.log.Loggable
 import net.shrine.problem.{Problem, ProblemNotYetEncoded, LoggingProblemHandler, ProblemSources, AbstractProblem}
 import net.shrine.protocol.{ShrineRequest, BroadcastMessage, ErrorResponse, BaseShrineResponse, AuthenticationInfo}
@@ -48,14 +50,13 @@ abstract class Adapter extends Loggable {
   def shutdown(): Unit = ()
 }
 
-case class AdapterLockout(authn:AuthenticationInfo,x:AdapterLockoutException) extends AbstractProblem(ProblemSources.Hub) {
+case class AdapterLockout(authn:AuthenticationInfo,x:AdapterLockoutException) extends AbstractProblem(ProblemSources.Adapter) {
   override val throwable = Some(x)
-  override val summary: String = s"User '${authn.domain}:${authn.username}' is locked out"
-  override val description:String = s"User '${authn.domain}:${authn.username}' has run too many queries with the same result at ${x.url}"
-
+  override val summary: String = s"User '${authn.domain}:${authn.username}' is temporarily prevented from running queries at ${x.url}"
+  override val description:String = s"User '${authn.domain}:${authn.username}' has run too many queries that produce the same result the same result at ${x.url}"
 }
 
-case class CrcCouldNotBeInvoked(crcUrl:String,request:ShrineRequest,x:CrcInvocationException) extends AbstractProblem(ProblemSources.Hub) {
+case class CrcCouldNotBeInvoked(crcUrl:String,request:ShrineRequest,x:CrcInvocationException) extends AbstractProblem(ProblemSources.Adapter) {
   override val throwable = Some(x)
   override val summary: String = s"Error invoking the CRC at '$crcUrl' due to ${throwable.get}} ."
   override val description: String = s"Error invoking the CRC at '$crcUrl' with a ${request.getClass.getSimpleName} ."
@@ -65,7 +66,7 @@ case class CrcCouldNotBeInvoked(crcUrl:String,request:ShrineRequest,x:CrcInvocat
                             </details>
 }
 
-case class AdapterMappingProblem(x:AdapterMappingException) extends AbstractProblem(ProblemSources.Hub) {
+case class AdapterMappingProblem(x:AdapterMappingException) extends AbstractProblem(ProblemSources.Adapter) {
 
   override val throwable = Some(x)
   override val summary: String = s"Could not map query terms on ${stamp.host}"
@@ -76,5 +77,3 @@ case class AdapterMappingProblem(x:AdapterMappingException) extends AbstractProb
                               {throwableDetail.getOrElse("")}
                             </details>
 }
-
-case class ExceptionInAdapter()

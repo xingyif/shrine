@@ -144,7 +144,7 @@ object ProblemSources{
 case class ProblemNotYetEncoded(summary:String,t:Throwable) extends AbstractProblem(ProblemSources.Unknown){
   override val throwable = Some(t)
 
-  override val description = s"An unexpected problem has occurred. This problem has not yet been codified in Shrine. Users, Please report all information including the stack trace in the details section to your local site or network administer. Administrators, please report this issue to the SHRINE users mailing list with all relevant details."
+  override val description = s"An unexpected problem has occurred. This problem has not yet been codified in Shrine."
 }
 
 object ProblemNotYetEncoded {
