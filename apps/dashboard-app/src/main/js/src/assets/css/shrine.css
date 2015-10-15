@@ -43,27 +43,27 @@
     font-family: "Nexa";
     color: #5d5d5d;
     min-height: 60px;
-    width: 100%
+    width: 100%;
+    height: 4.8em;
 }
 
 .shrine-brand {
     float: left;
-    height: 50px;
-    padding: 15px 15px;
-    font-size: 24px;
-    line-height: 24px
+    padding: 22px 15px;
+    font-size: 30px;
+    line-height: 30px;
+    height: 30px;
 }
 
-.shrine-brand span {
+.shrine-brand strong {
     font-family: "Nexa Bold";
     color: #2c5566;
 }
 
 .shrine-navbar img {
     margin: 5px;
-    margin-left: 0;
-    max-height: 80px;
-    max-width: 80px;
+    max-height: 4em;
+    max-width: 4em;
 }
 
 .shrine-button {
@@ -251,17 +251,12 @@ body {
 .login-wrapper{
     margin-top: 51px;
     margin-right: 20px;
-    margin-top: 51px;
 }
 
 #page-wrapper {
     background-color: transparent;
-    margin-top: 51px;
+    margin-top: 54px;
     margin-right: 20px;
-}
-
-.navbar-top-links {
-    margin-right: 0;
 }
 
 .navbar-top-links li {
@@ -641,14 +636,12 @@ table.dataTable thead .sorting:after {
     border: none;
 }
 
-
 .shrine-login{
     margin-top: 8%;
     margin-left: 1%;
 }
 
 .shrine-content{
-    height: 75%;
     overflow: auto;
 }
 
@@ -658,12 +651,9 @@ textarea{
 }
 
 
-
 @media (min-width: 768px) {
     .shrine-content {
-        width: 75%;
-        position: absolute;
-        left: 280px;
+        padding: 0;
     }
 }
 
