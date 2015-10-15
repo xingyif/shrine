@@ -678,6 +678,72 @@ i2b2.CRC.ctrlr.QueryStatus.prototype = function() {
             return (i2b2.h.XPath(node, xPathString).length)? i2b2.h.XPath(node, xPathString)[0].firstChild.nodeValue : '';
         }
 
+		/**
+		 *
+		 */
+		function parseErrorException(node) {
+
+			if(node.innerHTML.indexOf('<exception>') == -1){
+				return '';
+			}
+
+			var content, startIdx, endIdx;
+
+			content = node.innerHTML.split('<problem>')
+				.join()
+				.split('</problem>')
+				.join();
+
+			startIdx = content.indexOf('<stacktrace>') + 12;
+			endIdx   = content.indexOf('</stacktrace>');
+
+			content = content.substring(startIdx, endIdx);
+
+			content = content.split('<line>')
+				.join('</br>')
+				.split('</line>')
+				.join()
+
+				.split('<exception>')
+				.join('<br/>')
+				.split('</exception>')
+				.join()
+
+				.split('<stacktrace>')
+				.join('<br/>')
+				.split('</stacktrace>')
+				.join()
+
+			return content;
+
+			/*
+			 var test = i2b2.h.XPath(qriNode, 'descendant-or-self::query_status_type/problem/details')[0]
+
+			 var StrippedString = test.innerHTML.unescapeHTML().replace(/(<([^>]+)>)/ig,"");
+
+
+			 //do not show up in conf messed up version.
+			 i2b2.h.XPath(qriNode, 'descendant-or-self::query_status_type/problem/details/exception/message')[0].firstChild.nodeValue
+
+			 i2b2.h.XPath(qriNode, 'descendant-or-self::query_status_type/problem/details/exception/name')[0].firstChild.nodeValue
+
+			 var test = i2b2.h.XPath(qriNode, 'descendant-or-self::query_status_type/problem/details/exception/stacktrace')[0]
+
+			 test.textContent.length
+
+			 */
+		}
+
+		/**
+		 * TODO:
+		 */
+		function replaceTag(source, openTag, closeTag, replaceWith) {
+			source.split(openTag)
+				.join(replaceWith)
+				.split(closeTag)
+				.join()
+		}
+
 		// switch to status tab
 		i2b2.CRC.view.status.showDisplay();
 
