@@ -33,6 +33,11 @@
     background-image: url('../img/Background_Shrine.jpg');
     background-size: cover;
     background-color: transparent;
+    background-attachment: fixed;
+    width: 100%;
+    height:100%;
+    width: calc(100vw);
+    height: calc(100vh);
     min-width: 100%;
     min-height: 100%;
 }
