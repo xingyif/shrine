@@ -362,10 +362,7 @@ body {
 @media(min-width:768px) {
     .sidebar {
         z-index: 1;
-        position: absolute;
-        width: 250px;
         margin-top: 51px;
-        margin-left: 10%;
     }
 
     .navbar-top-links .dropdown-messages,
