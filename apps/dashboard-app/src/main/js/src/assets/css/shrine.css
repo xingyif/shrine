@@ -197,6 +197,11 @@ table {
 
 }
 
+.table tr>td:first-child {
+  width: 20%;
+  min-width: 140px;
+}
+
 .table-striped>tbody>tr:nth-of-type(odd) {
     background-color: #EFF6F9;
 }
@@ -215,6 +220,8 @@ td{
     max-width: 450px;
     word-wrap: break-word;
 }
+
+
 
 thead tr td, thead tr td label, tfoot tr td span{
     font-family: "Open Sans Semibold";
