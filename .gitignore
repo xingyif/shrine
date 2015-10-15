@@ -19,3 +19,6 @@ target/
 # idea
 .idea/
 *.iml
+
+# osx cruft
+.DS_Store
