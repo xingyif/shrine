@@ -134,7 +134,13 @@ final class ErrorResponseTest extends TestCase with ShouldMatchersForJUnit {
       deserialize(<ns4:request><response_header><result_status><status type="NUH">{ message }</status></result_status></response_header></ns4:request>)
     }
 
-    deserialize(xml) should equal(resp)
+    val deserialized = deserialize(xml)
+
+    deserialized.problemDigest.detailsXml should equal(resp.problemDigest.detailsXml)
+
+    deserialized.problemDigest should equal(resp.problemDigest)
+
+    deserialized should equal(resp)
   }
 
   private def doTestToXml(expected: NodeSeq, serialize: ErrorResponse => NodeSeq) {

@@ -7,7 +7,7 @@ import net.shrine.util.XmlUtil
 import net.shrine.util.XmlDateHelper
 import net.shrine.util.XmlGcEnrichments
 
-import scala.xml.NodeSeq
+import scala.xml.{XML, NodeSeq}
 
 /**
  * @author Bill Simons
@@ -472,7 +472,7 @@ final class QueryResultTest extends ShouldMatchersForJUnit with XmlRoundTripper[
             <stamp>{testProblem.stamp.pretty}</stamp>
             <summary>{testProblem.summary}</summary>
             <description>{testProblem.description}</description>
-            <details>{testProblem.details}</details>
+            {testProblem.detailsXml}
           </problem>
         </query_status_type>
       </query_result_instance>

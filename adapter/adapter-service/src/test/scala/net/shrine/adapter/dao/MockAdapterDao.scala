@@ -8,6 +8,8 @@ import net.shrine.protocol.QueryResult
 import net.shrine.protocol.ResultOutputType
 import net.shrine.protocol.query.QueryDefinition
 
+import scala.xml.NodeSeq
+
 /**
  * @author clint
  * @since Oct 19, 2012
@@ -27,7 +29,7 @@ trait MockAdapterDao extends AdapterDao {
 
   override def insertBreakdownResults(parentResultIds: Map[ResultOutputType, Seq[Int]], originalBreakdowns: Map[ResultOutputType, I2b2ResultEnvelope], obfuscatedBreakdowns: Map[ResultOutputType, I2b2ResultEnvelope]): Unit = ()
 
-  override def insertErrorResult(parentResultId: Int, errorMessage: String, codec:String, stampText:String, summary:String, digestDescription:String,details:String) = ()
+  override def insertErrorResult(parentResultId: Int, errorMessage: String, codec:String, stampText:String, summary:String, digestDescription:String,detailsXml:NodeSeq) = ()
 
   override def findQueryByNetworkId(networkQueryId: Long): Option[ShrineQuery] = None
 

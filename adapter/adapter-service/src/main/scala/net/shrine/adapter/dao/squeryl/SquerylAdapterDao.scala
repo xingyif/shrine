@@ -32,6 +32,8 @@ import scala.util.Try
 import net.shrine.adapter.dao.model.squeryl.SquerylQueryResultRow
 import net.shrine.adapter.dao.model.squeryl.SquerylPrivilegedUser
 
+import scala.xml.NodeSeq
+
 
 /**
  * @author clint
@@ -145,7 +147,7 @@ final class SquerylAdapterDao(initializer: SquerylInitializer, tables: Tables)(i
           pd.stampText,
           pd.summary,
           pd.description,
-          pd.details
+          pd.detailsXml
         )
       }
     }
@@ -173,7 +175,7 @@ final class SquerylAdapterDao(initializer: SquerylInitializer, tables: Tables)(i
           pd.stampText,
           pd.summary,
           pd.description,
-          pd.details
+          pd.detailsXml
         )
       }
     }
@@ -323,10 +325,10 @@ final class SquerylAdapterDao(initializer: SquerylInitializer, tables: Tables)(i
     }
   }
 
-  override def insertErrorResult(parentResultId: Int, errorMessage: String, codec:String, stampText:String, summary:String, digestDescription:String,details:String) {
+  override def insertErrorResult(parentResultId: Int, errorMessage: String, codec:String, stampText:String, summary:String, digestDescription:String,detailsXml:NodeSeq) {
     //NB: Squeryl steers us toward inserting with dummy ids :(
     inTransaction {
-      tables.errorResults.insert(SquerylShrineError(0, parentResultId, errorMessage, codec, stampText, summary, digestDescription, details))
+      tables.errorResults.insert(SquerylShrineError(0, parentResultId, errorMessage, codec, stampText, summary, digestDescription, detailsXml.toString()))
     }
   }
 

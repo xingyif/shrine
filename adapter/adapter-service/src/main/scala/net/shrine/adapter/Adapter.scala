@@ -59,10 +59,10 @@ case class CrcCouldNotBeInvoked(crcUrl:String,request:ShrineRequest,x:CrcInvocat
   override val throwable = Some(x)
   override val summary: String = s"Error invoking the CRC at '$crcUrl' due to ${throwable.get}} ."
   override val description: String = s"Error invoking the CRC at '$crcUrl' with a ${request.getClass.getSimpleName} ."
-  override val details:String =
-    s"""
-       |${super.details}
-     """.stripMargin
+  override val detailsXml = <details>
+                              Request is {request}
+                              {throwableDetail.getOrElse("")}
+                            </details>
 }
 
 case class AdapterMappingProblem(x:AdapterMappingException) extends AbstractProblem(ProblemSources.Hub) {
@@ -70,12 +70,11 @@ case class AdapterMappingProblem(x:AdapterMappingException) extends AbstractProb
   override val throwable = Some(x)
   override val summary: String = s"Could not map query terms on ${stamp.host}"
   override val description = s"The Shrine Adapter on ${stamp.host} cannot map this query to its local terms. Running query ${x.runQueryRequest.queryDefinition} caused ${x.cause}. This error must be corrected at the queried site."
-  override val details =
-    s"""${stamp.pretty}
-       |Query Defitiontion is ${x.runQueryRequest.queryDefinition}
-       |${throwableDetail.getOrElse("")}
-       |RunQueryRequest is ${x.runQueryRequest.elideAuthenticationInfo}
-     """.stripMargin
+  override val detailsXml = <details>
+                              Query Defitiontion is {x.runQueryRequest.queryDefinition}
+                              RunQueryRequest is ${x.runQueryRequest.elideAuthenticationInfo}
+                              {throwableDetail.getOrElse("")}
+                            </details>
 }
 
 case class ExceptionInAdapter()

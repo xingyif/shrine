@@ -344,11 +344,12 @@ object QueryResult {
   }
 
   /**
-   * For reconsitituting errorResults from a database
+   * For reconstituting errorResults from a database
    */
-  def errorResult(description:Option[String], statusMessage:String, codec:String,stampText:String, summary:String, digestDescription:String,details:String): QueryResult = {
+  //todo remove and replace with real Problems
+  def errorResult(description:Option[String], statusMessage:String, codec:String,stampText:String, summary:String, digestDescription:String,detailsXml:NodeSeq): QueryResult = {
 
-    val problemDigest = ProblemDigest(codec,stampText,summary,digestDescription,details)
+    val problemDigest = ProblemDigest(codec,stampText,summary,digestDescription,detailsXml)
 
     QueryResult(
       resultId = 0L,
