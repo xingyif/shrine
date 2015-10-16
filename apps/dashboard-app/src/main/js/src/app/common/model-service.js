@@ -32,6 +32,11 @@ angular
         urlIdx      = absUrl.indexOf(key);
         url.base    = absUrl.substring(0, urlIdx) + key + '/';
 
+        //for local testing.
+        if(absUrl.indexOf('localhost')){
+            url.base = 'http://localhost:8080/dashboard-war/'
+        }
+
         model.verbs  = verbs;
         model.url    = url;
         model.states = states;
