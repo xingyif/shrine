@@ -4,7 +4,7 @@ import net.shrine.protocol.AuthenticationInfo
 import net.shrine.protocol.Credential
 import net.shrine.protocol.BroadcastMessage
 import net.shrine.protocol.DeleteQueryRequest
-import org.junit.Test
+import org.junit.{Ignore, Test}
 import net.shrine.protocol.NodeId
 import net.shrine.adapter.client.InJvmAdapterClient
 import net.shrine.protocol.Result
@@ -36,6 +36,7 @@ import net.shrine.broadcaster.dao.model.HubQueryStatus
  * @author clint
  * @date Dec 15, 2014
  */
+@Ignore
 final class AdapterClientBroadcasterLoggingTest extends AbstractSquerylHubDaoTest with ShouldMatchersForJUnit {
 
   private def makeBroadcaster(nodes: Set[NodeHandle]): AdapterClientBroadcaster = AdapterClientBroadcaster(nodes, dao)
