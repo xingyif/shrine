@@ -234,7 +234,7 @@ $hrine.EnhancedError =
      */
     function grabXmlNodeData(node, xPathString){
         var nodeVal = i2b2.h.XPath(node, xPathString);
-        return (nodeVal.length)? nodeVal[0].firstChild.nodeValue : '';
+        return (nodeVal.length)? nodeVal[0].innerHTML : '';
     }
 
 

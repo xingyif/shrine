@@ -477,6 +477,7 @@ i2b2.CRC.ctrlr.QueryStatus.prototype = function() {
 
             if(qriObj.statusName == "ERROR"){
 				qriObj.problem = $hrine.EnhancedError.parseProblem(qriNode);
+				return qriObj;
             }
 
             qriObj.setSize              =   grabXmlNodeData(qriNode, 'descendant-or-self::set_size');
