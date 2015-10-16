@@ -18,7 +18,7 @@ object QepConfigSource {
     atomicConfig.config
   }
 
-  Log.debug(s"shrine.qep.audit.collectQepAudit is ${config.getBoolean("shrine.qep.audit.collectQepAudit")}")
+  Log.debug(s"shrine.queryEntryPoint.audit.collectQepAudit is ${config.getBoolean("shrine.queryEntryPoint.audit.collectQepAudit")}")
 
   Log.debug(s"config is $config")
 

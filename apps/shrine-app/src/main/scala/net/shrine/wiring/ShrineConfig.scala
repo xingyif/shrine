@@ -40,10 +40,15 @@ object ShrineConfig {
     val configForShrine = config.getConfig("shrine")
     import Keys._
 
+    def getOptionConfiguredIf[T](key:String,constructor: Config => T):Option[T] = {
+      if(configForShrine.getBoolean(s"$key.create")) configForShrine.getOptionConfigured(key,constructor)
+      else None
+    }
+
     ShrineConfig(
-      configForShrine.getOptionConfigured(adapter, AdapterConfig(_)),
+      getOptionConfiguredIf(adapter, AdapterConfig(_)),
       configForShrine.getOptionConfigured(hub, HubConfig(_)),
-      configForShrine.getOptionConfigured(queryEntryPoint, QepConfig(_)),
+      getOptionConfiguredIf(queryEntryPoint, QepConfig(_)),
       configForShrine.getConfigured(hiveCredentials,HiveCredentials(_,HiveCredentials.CRC)),
       configForShrine.getConfigured(hiveCredentials,HiveCredentials(_,HiveCredentials.ONT)),
       configForShrine.getConfigured(pmEndpoint,EndpointConfig(_)),

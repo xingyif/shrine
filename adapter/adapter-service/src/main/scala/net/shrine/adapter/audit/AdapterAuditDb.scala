@@ -183,8 +183,8 @@ case class AdapterAuditSchema(jdbcProfile: JdbcProfile) extends Loggable {
 object AdapterAuditSchema {
 
   val allConfig:Config = AdapterConfigSource.config
-  //todo rename adapter2 to adapter
-  val config:Config = allConfig.getConfig("shrine.adapter2.audit.database")
+
+  val config:Config = allConfig.getConfig("shrine.adapter.audit.database")
 
   val slickProfileClassName = config.getString("slickProfileClassName")
   val slickProfile:JdbcProfile = AdapterConfigSource.objectForName(slickProfileClassName)

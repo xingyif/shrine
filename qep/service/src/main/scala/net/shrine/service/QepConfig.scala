@@ -57,7 +57,7 @@ object QepConfig {
       endpointOption(broadcasterServiceEndpoint,config),
       signingCertAttachmentStrategy(attachSigningCert,config),
     //todo change to shrine.queryEntryPoint...
-      QepConfigSource.config.getBoolean("shrine.qep.audit.collectQepAudit")
+      QepConfigSource.config.getBoolean("shrine.queryEntryPoint.audit.collectQepAudit")
     )
   }
 
