@@ -1,16 +1,15 @@
 {
-  "name": "Data Steward 2.0",
-  "version": 6,
+  "name": "SHRINE Dashboard ",
+  "version": 1,
   "authors": [
     "Ben Carmen <benjamin_carmen@hms.harvard.edu>"
   ],
-  "description": "Angular JS version of Shrine Data Steward",
+  "description": "Frontend diagnostic interface for SHRINE",
   "main": "app.js",
   "keywords": [
     "Harvard",
     "Shrine",
-    "Data",
-    "Steward"
+    "Dashboard"
   ],
   "license": "MIT",
   "ignore": [
