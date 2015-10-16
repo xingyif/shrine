@@ -16,12 +16,20 @@
                 {{net.shouldQuerySelf}}
             </td>
         </tr>
-        <tr ng-repeat="node in net.downstreamNodes.node track by node.name">
+        <tr ng-repeat="node in net.downstreamNodes.node track by $index" ng-if="net.downstreamNodes.node.length > 1">
             <td>
                 <label>{{node.name}}</label>
             </td>
             <td>
                 {{node.url}}
+            </td>
+        </tr>
+        <tr ng-if="net.downstreamNodes.node.length == undefined">
+            <td>
+                <label>{{net.downstreamNodes.node.name}}</label>
+            </td>
+            <td>
+                {{net.downstreamNodes.node.url}}
             </td>
         </tr>
         </tbody>
@@ -44,12 +52,20 @@
         </tr>
         </thead>
         <tbody>
-        <tr ng-repeat="failure in net.failure | filter:'failure' track by failure.origin">
+        <tr ng-repeat="failure in net.failure track by $index" ng-if="net.failure.length > 1">
             <td>
                 {{failure.origin}}
             </td>
             <td>
                 <span class="error">{{failure.description}}</span>
+            </td>
+        </tr>
+        <tr ng-if="net.failure.length == undefined">
+            <td>
+                {{net.failure.origin}}
+            </td>
+            <td>
+                <span class="error">{{net.failure.description}}</span>
             </td>
         </tr>
         </tbody>
