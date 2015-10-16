@@ -1,7 +1,7 @@
 angular.module("st-model", ['model-service'])
     .service("STMdl", ['$http', 'ModelService', '$app', function ($http, mdlSvc, $app) {
         var URLS        = {
-                LOAD_CONFIG: "config/steward.config.json"
+                LOAD_CONFIG: "config/dashboard.config.json"
             };
 
 

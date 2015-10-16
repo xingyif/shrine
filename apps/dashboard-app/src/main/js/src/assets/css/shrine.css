@@ -65,8 +65,18 @@
     color: #2c5566;
 }
 
-.shrine-navbar img {
+.shrine-navbar .shrine-institution-logo {
+    background-image: url('../img/logo_placeholder.png');
+    background-image: url('/static/logo.gif');
+    background-image: url('/static/logo.jpg');
+    background-image: url('/static/logo.png');
+    background-size: contain;
+    background-color: transparent;
+    background-repeat: no-repeat;
+    background-position: right top;
     margin: 5px;
+    width: 4em;
+    height: 4em;
     max-height: 4em;
     max-width: 4em;
 }

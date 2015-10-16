@@ -1,7 +1,7 @@
 {
-  "name": "steward",
+  "name": "dashboard",
   "version": "1.0.0",
-  "description": "hms steward app",
+  "description": "shrine dashboard app",
   "main": "y",
   "dependencies": {
     "grunt": "^0.4.5",
