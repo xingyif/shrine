@@ -1,12 +1,14 @@
 'use strict';
 angular.module('shrine-happy', ['happy-model', 'ngAnimate', 'ui.bootstrap'])
     .constant("HappyStates", {
+        STATE0: "Loading",
         STATE1: "General",
         STATE2: "Keystore",
         STATE3: "Hub",
-        STATE4: "Adapter"
+        STATE4: "Adapter",
+        STATE5: "QEPFailure"
     })
-    .controller('HappyCtrl', ['$rootScope', '$scope', '$location', '$app', 'HappyMdl', 'HappyStates', function ($rootScope, $scope, $location, $app, model, states) {
+    .controller('HappyCtrl', ['$rootScope', '$scope', '$location', '$app', 'HappyMdl', 'HappyStates', '$sce', function ($rootScope, $scope, $location, $app, model, states, $sce) {
         $scope.$app = $app;
         $scope.versionInfo          = {};
         $scope.adapter              = {};
@@ -16,8 +18,9 @@ angular.module('shrine-happy', ['happy-model', 'ngAnimate', 'ui.bootstrap'])
         $scope.net                  = {};
         $scope.downstreamNodes      = {};
         $scope.recentQueries        = {};
+        $scope.QEPError             = "";
         $scope.states               = states;
-        $scope.state                = $scope.states.STATE1;
+        $scope.state                = $scope.states.STATE0;
         $scope.general = {
             keystoreOk:     true,
             hubOk:          true,
@@ -43,14 +46,19 @@ angular.module('shrine-happy', ['happy-model', 'ngAnimate', 'ui.bootstrap'])
                     $scope.net.hasInvalidResults = (Number($scope.net.validResultCount) < Number($scope.net.expectedResultCount));
                     $scope.net.hasTimeouts      = Number($scope.net.timeoutCount);
                     $scope.general.hubOk        = !($scope.net.hasFailures || $scope.net.hasInvalidResults || $scope.net.hasTimeouts)
-                });
+                    $scope.setStateAndRefresh(states.STATE1);
+                },
+                function (data) {
+                    $scope.trustedHtml= $sce.trustAsHtml(data);
+                   $scope.setStateAndRefresh(states.STATE5);
+
+                }
+            );
         };
 
         $scope.setStateAndRefresh = function (state) {
             $scope.state = state;
         }
-
-        $scope.setStateAndRefresh(states.STATE1);
         $scope.setAll();
     }])
     .directive("general", function () {
@@ -78,6 +86,13 @@ angular.module('shrine-happy', ['happy-model', 'ngAnimate', 'ui.bootstrap'])
         return {
             restrict: "E",
             templateUrl: "src/app/dashboard/apps/happy/adapter/adapter.tpl.html",
+            replace: true
+        };
+    })
+    .directive("qepFailure", function () {
+        return {
+            restrict: "E",
+            templateUrl: "src/app/dashboard/apps/happy/qep-failure/qep-failure.tpl.html",
             replace: true
         };
     });
