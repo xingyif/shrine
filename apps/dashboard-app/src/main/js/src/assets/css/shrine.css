@@ -33,6 +33,11 @@
     background-image: url('../img/Background_Shrine.jpg');
     background-size: cover;
     background-color: transparent;
+    background-attachment: fixed;
+    width: 100%;
+    height:100%;
+    width: calc(100vw);
+    height: calc(100vh);
     min-width: 100%;
     min-height: 100%;
 }
@@ -43,27 +48,27 @@
     font-family: "Nexa";
     color: #5d5d5d;
     min-height: 60px;
-    width: 100%
+    width: 100%;
+    height: 4.8em;
 }
 
 .shrine-brand {
     float: left;
-    height: 50px;
-    padding: 15px 15px;
-    font-size: 24px;
-    line-height: 24px
+    padding: 22px 15px;
+    font-size: 30px;
+    line-height: 30px;
+    height: 30px;
 }
 
-.shrine-brand span {
+.shrine-brand strong {
     font-family: "Nexa Bold";
     color: #2c5566;
 }
 
 .shrine-navbar img {
     margin: 5px;
-    margin-left: 0;
-    max-height: 80px;
-    max-width: 80px;
+    max-height: 4em;
+    max-width: 4em;
 }
 
 .shrine-button {
@@ -172,16 +177,17 @@ form a {
 
 footer img {
     margin-left: 10px;
-
+    margin-top: 2px;
 }
 
 footer {
     background-color: rgba(50, 62, 74, 0.48);
     position: fixed;
-    width: 100%;
-    bottom: 0px;
+    bottom: 0;
     left: 0;
-    min-height: 60px;
+    width: 100%;
+    height: 83px;
+    min-height: 83px;
     max-width: 100%;
 }
 
@@ -189,6 +195,11 @@ table {
     background-image: url('../img/bckg_diagonal_lines_no_border.png');
     border: 1px solid #CCD8DF;
 
+}
+
+.table tr>td:first-child {
+  width: 20%;
+  min-width: 140px;
 }
 
 .table-striped>tbody>tr:nth-of-type(odd) {
@@ -209,6 +220,8 @@ td{
     max-width: 450px;
     word-wrap: break-word;
 }
+
+
 
 thead tr td, thead tr td label, tfoot tr td span{
     font-family: "Open Sans Semibold";
@@ -246,22 +259,18 @@ body {
 
 #wrapper {
     width: 100%;
+    margin-bottom: 83px; /* clearance space for footer at bottom of long page */
 }
 
 .login-wrapper{
     margin-top: 51px;
     margin-right: 20px;
-    margin-top: 51px;
 }
 
 #page-wrapper {
     background-color: transparent;
-    margin-top: 51px;
+    margin-top: 54px;
     margin-right: 20px;
-}
-
-.navbar-top-links {
-    margin-right: 0;
 }
 
 .navbar-top-links li {
@@ -367,10 +376,7 @@ body {
 @media(min-width:768px) {
     .sidebar {
         z-index: 1;
-        position: absolute;
-        width: 250px;
         margin-top: 51px;
-        margin-left: 10%;
     }
 
     .navbar-top-links .dropdown-messages,
@@ -641,14 +647,12 @@ table.dataTable thead .sorting:after {
     border: none;
 }
 
-
 .shrine-login{
     margin-top: 8%;
     margin-left: 1%;
 }
 
 .shrine-content{
-    height: 75%;
     overflow: auto;
 }
 
@@ -658,12 +662,9 @@ textarea{
 }
 
 
-
 @media (min-width: 768px) {
     .shrine-content {
-        width: 75%;
-        position: absolute;
-        left: 280px;
+        padding: 0;
     }
 }
 

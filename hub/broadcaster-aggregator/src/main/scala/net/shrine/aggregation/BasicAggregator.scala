@@ -106,12 +106,20 @@ case class CouldNotParseResultsProblem(cnrpx:CouldNotParseResultsException) exte
   override val throwable = Some(cnrpx)
   override val summary: String = s"Caught a ${cnrpx.cause.getClass.getSimpleName} while parsing a response from ${cnrpx.url}"
   override val description = s"While parsing a response from ${cnrpx.url} with http code ${cnrpx.statusCode} caught '${cnrpx.cause}'"
-  override val details = s"${super.details}\n\nMessage body is: \n ${cnrpx.body}"
+  override val detailsXml = <details>
+                              Message body is {cnrpx.body}
+                              {throwableDetail.getOrElse("")}
+                            </details>
+
 }
 
 case class HttpErrorResponseProblem(cnrpx:CouldNotParseResultsException) extends AbstractProblem(ProblemSources.Hub) {
   override val throwable = Some(cnrpx)
   override val summary: String = s"Observed ${cnrpx.statusCode} and caught a ${cnrpx.cause.getClass.getSimpleName} while parsing a response from ${cnrpx.url}"
   override val description = s"Observed http status code ${cnrpx.statusCode} from ${cnrpx.url} and caught '${cnrpx.cause}'"
-  override val details = s"${super.details}\n\nMessage body is: \n ${cnrpx.body}"
+  override val detailsXml = <details>
+                              Message body is {cnrpx.body}
+                              {throwableDetail.getOrElse("")}
+                            </details>
+
 }
