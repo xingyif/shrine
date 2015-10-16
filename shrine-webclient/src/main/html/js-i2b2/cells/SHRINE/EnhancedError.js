@@ -67,14 +67,22 @@ $hrine.EnhancedError =
         addAnchorEvents();
 
         function expandErrorDetailDiv (ev) {
+            var errorDetailDiv = $('errorDetailDiv');
+
+            //error summary and details.
             btnExpand.style.display   = 'none';
             btnContract.style.display = 'inline';
-            $('errorDetailDiv').innerHTML = '<div><b>Name:</b></div><div>' + errorData.summary + '</div><br/>' +
+            errorDetailDiv.innerHTML = '<div><b>Name:</b></div><div>' + errorData.summary + '</div><br/>' +
                 '<div><b>Description:</b></div><div>' + errorData.description + '</div><br/>' +
-                '<div><b>Technical Details:</b></div><pre style="margin-top:0">' + errorData.details + '</pre><br/>' +
-                '<div><b>Stack Trace Name:</b></div><pre style="margin-top:0">' + errorData.exception.name + '</pre><br/>' +
-                '<div><b>Stack Trace Summary:</b></div><pre style="margin-top:0">' + errorData.exception.summary + '</pre><br/>' +
-                '<div><b>Stack Trace Details:</b></div><pre style="margin-top:0">' + errorData.exception.stackTrace + '</pre><br/>' +
+                '<div><b>Technical Details:</b></div><pre style="margin-top:0">' + errorData.details + '</pre><br/>'
+
+            //exception details.
+            errorDetailDiv.innerHTML += '<div><b>Stack Trace Name:</b></div><pre style="margin-top:0">' + errorData.exception.name + '</pre><br/>' +
+                '<div><b>Stack Trace Message:</b></div><pre style="margin-top:0">' + errorData.exception.message + '</pre><br/>' +
+                '<div><b>Stack Trace Details:</b></div><pre style="margin-top:0">' + errorData.exception.stackTrace + '</pre><br/>';
+
+            //wiki codec
+            errorDetailDiv.innerHTML +=
                 '<div><i>For information on troubleshooting and resolution, check' +
                 ' <a href="' + errorData.codec +'" target="_blank">the SHRINE Error' +
                 ' Codex</a>.</i></div>';
@@ -164,7 +172,7 @@ $hrine.EnhancedError =
     }
 
     /**
-     *
+     * Parse problem node.
      * @param qriNode
      * @returns {{exception: {}}}
      */
@@ -187,41 +195,55 @@ $hrine.EnhancedError =
         return problem;
     }
 
+
     /**
-     *
+     * Replace all <line> <message> <exception> and <stacktrace> with <br/> tags.
+     * @param node
+     * @returns {*}
      */
     function parseErrorException(node) {
 
+        //no exception, abandon ship!
         if(node.innerHTML.indexOf('<exception>') == -1){
             return '';
         }
 
         var content, startIdx, endIdx;
 
+        //fish out the problem section.
         content = node.innerHTML.split('<problem>')
             .join()
             .split('</problem>')
             .join();
 
+        //fish out the first stack trace.
         startIdx = content.indexOf('<stacktrace>') + 12;
         endIdx   = content.indexOf('</stacktrace>');
+        content  = content.substring(startIdx, endIdx);
 
-        content = content.substring(startIdx, endIdx);
-
+        //remove all line tags and replace with line break.
         content = content.split('<line>')
             .join('</br>')
             .split('</line>')
             .join()
 
+            //remove all exception tags
             .split('<exception>')
             .join('<br/>')
             .split('</exception>')
             .join()
 
+            //remove all stacktrace tags
             .split('<stacktrace>')
             .join('<br/>')
             .split('</stacktrace>')
             .join()
+
+            //remove all message tags.
+            .split('<message>')
+            .join('<br/>')
+            .split('</message>')
+            .join();
 
         return content;
     }
