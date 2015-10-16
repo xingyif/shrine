@@ -236,8 +236,8 @@ angular
             var i;
 
             for(i = 0; i < potentialUrls.length; i++) {
-                $http.get(url).then(function(response) { // success
-                    src = url;
+                $http.get(potentialUrls[i]).then(function(response) { // success
+                    src = potentialUrls[i];
                     break;
                 }, function(response) { // error
                     continue;
