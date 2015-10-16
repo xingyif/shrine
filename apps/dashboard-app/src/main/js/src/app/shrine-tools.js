@@ -228,25 +228,6 @@ angular
             return ($app.globals.currentUser !== undefined && $app.globals.currentUser.isLoggedIn === true);
         };
 
-        $scope.logoImgFallback = function() {
-            // sorted from highest to lowest priority
-            var potentialUrls = ["/static/logo.png","/static/logo.jpg","/static/logo.gif","src/assets/img/logo_placeholder.png"];
-
-            var src = "src/assets/img/logo_placeholder.png";
-            var i;
-
-            for(i = 0; i < potentialUrls.length; i++) {
-                $http.get(potentialUrls[i]).then(function(response) { // success
-                    src = potentialUrls[i];
-                    break;
-                }, function(response) { // error
-                    continue;
-                }); 
-            };
-            
-            return src;
-        };
-
         $scope.logout = function () {
             $location.path('/login');
         };
