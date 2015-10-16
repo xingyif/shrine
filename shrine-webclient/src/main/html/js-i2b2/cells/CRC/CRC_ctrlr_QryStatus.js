@@ -458,126 +458,9 @@ i2b2.CRC.ctrlr.QueryStatus.prototype = function() {
                 }
             }
 
-			createErrorDialogue(self.dispDIV, errorObjects);
+			$hrine.EnhancedError.createErrorDialogue(self.dispDIV, errorObjects);
 			i2b2.CRC.ctrlr.history.Refresh();
         }
-
-
-		/**
-		 *  Scope for error dialog.
-		 */
-		function createErrorDialogue (container, errorObjects) {
-
-			// -- no errors abandon ship! -- //
-			if(errorObjects.length < 1) {
-				return;
-			}
-
-			var anchors, btnExpand, btnContract, errObjects = errorObjects, errorData;
-
-			//this sets up the events.
-			anchors     = container.getElementsByClassName('query-error-anchor');
-
-			if(anchors.length == 0) {
-				return;
-			}
-
-			addAnchorEvents();
-
-
-			function expandErrorDetailDiv (ev) {
-				btnExpand.style.display   = 'none';
-				btnContract.style.display = 'inline';
-				$('errorDetailDiv').innerHTML = '<div><b>Name:</b></div><div>' + errorData.summary + '</div><br/>' +
-					'<div><b>Description:</b></div><div>' + errorData.description + '</div><br/>' +
-					'<div><b>Technical Details:</b></div><pre style="margin-top:0">' + errorData.details + '</pre><br/>' +
-					'<div><i>For information on troubleshooting and resolution, check' +
-					' <a href="' + errorData.codec +'" target="_blank">the SHRINE Error' +
-					' Codex</a>.</i></div>';
-			}
-
-
-			function retractErrorDetailDiv (ev) {
-				btnExpand.style.display   = 'inline';
-				btnContract.style.display = 'none';
-				$('errorDetailDiv').innerHTML = '<div><b>Name:</b></div><div>' + errorData.summary + '</div><br/>' +
-					'<div><b>Description:</b></div><div>' + errorData.description + '</div>'
-			}
-
-			function onClick(event) {
-
-				event.preventDefault();
-
-				errorData = event.currentTarget.__errorData__;
-
-				btnExpand   = document.getElementById('btnExpandErrorDetail');
-				btnContract = document.getElementById('btnContractErrorDetail');
-
-				// -- add event listeners for expand and contract as well --//
-				btnExpand.addEventListener('click', expandErrorDetailDiv, false);
-				btnContract.addEventListener('click', retractErrorDetailDiv, false);
-
-				showErrorDetail(errorData);
-			}
-
-			function showErrorDetail(detailObj) {
-				var handleCancel = function() {
-					this.cancel();
-					removeAllEvents();
-					retractErrorDetailDiv();
-				};
-
-				var dialogErrorDetail = new YAHOO.widget.SimpleDialog("dialogErrorDetail", {
-					width: "820px",
-					fixedcenter: true,
-					constraintoviewport: true,
-					modal: true,
-					zindex: 700,
-					buttons: [ {
-						text: "Done",
-						handler: handleCancel,
-						isDefault: true
-					}]
-				});
-
-
-				dialogErrorDetail._doClose = function (e) {
-					e.preventDefault();
-					this.cancel();
-					removeAllEvents();
-					retractErrorDetailDiv();
-				}
-
-
-				$('dialogErrorDetail').show();
-				dialogErrorDetail.validate = function(){
-					return true;
-				};
-				dialogErrorDetail.render(document.body);
-
-				// / display the dialoge
-				dialogErrorDetail.center();
-				dialogErrorDetail.show();
-				$('errorDetailDiv').innerHTML = '<div><b>Name:</b></div><div>' + errorData.summary+ '</div><br/>' +
-					'<div><b>Description:</b></div><div>' + errorData.description + '</div>';
-			}
-
-			function addAnchorEvents () {
-				var el, length = anchors.length;
-
-				// -- will need to iterate over these once they are created and add event listeners.
-				for(var i = 0; i < length; i ++) {
-					var el = anchors[i];
-					el.__errorData__ = errorObjects[i];
-					el.addEventListener('click', onClick, false);
-				}
-			}
-
-			function removeAllEvents () {
-				btnExpand.removeEventListener('click', expandErrorDetailDiv);
-				btnContract.removeEventListener('click', retractErrorDetailDiv);
-			}
-		}
 
 
         /**
@@ -593,12 +476,7 @@ i2b2.CRC.ctrlr.QueryStatus.prototype = function() {
             };
 
             if(qriObj.statusName == "ERROR"){
-				qriObj.problem = {};
-				qriObj.problem.codec 		= grabXmlNodeData(qriNode, 'descendant-or-self::query_status_type/problem/codec')
-				qriObj.problem.summary 		= grabXmlNodeData(qriNode, 'descendant-or-self::query_status_type/problem/summary')
-				qriObj.problem.description 	= grabXmlNodeData(qriNode, 'descendant-or-self::query_status_type/problem/description')
-				qriObj.problem.details 		= grabXmlNodeData(qriNode, 'descendant-or-self::query_status_type/problem/details')
-                return qriObj;
+				qriObj.problem = $hrine.EnhancedError.parseProblem(qriNode);
             }
 
             qriObj.setSize              =   grabXmlNodeData(qriNode, 'descendant-or-self::set_size');
@@ -675,74 +553,9 @@ i2b2.CRC.ctrlr.QueryStatus.prototype = function() {
          * @returns {string}
          */
         function grabXmlNodeData(node, xPathString){
-            return (i2b2.h.XPath(node, xPathString).length)? i2b2.h.XPath(node, xPathString)[0].firstChild.nodeValue : '';
+			var nodeVal = i2b2.h.XPath(node, xPathString);
+            return (nodeVal.length)? nodeVal[0].firstChild.nodeValue : '';
         }
-
-		/**
-		 *
-		 */
-		function parseErrorException(node) {
-
-			if(node.innerHTML.indexOf('<exception>') == -1){
-				return '';
-			}
-
-			var content, startIdx, endIdx;
-
-			content = node.innerHTML.split('<problem>')
-				.join()
-				.split('</problem>')
-				.join();
-
-			startIdx = content.indexOf('<stacktrace>') + 12;
-			endIdx   = content.indexOf('</stacktrace>');
-
-			content = content.substring(startIdx, endIdx);
-
-			content = content.split('<line>')
-				.join('</br>')
-				.split('</line>')
-				.join()
-
-				.split('<exception>')
-				.join('<br/>')
-				.split('</exception>')
-				.join()
-
-				.split('<stacktrace>')
-				.join('<br/>')
-				.split('</stacktrace>')
-				.join()
-
-			return content;
-
-			/*
-			 var test = i2b2.h.XPath(qriNode, 'descendant-or-self::query_status_type/problem/details')[0]
-
-			 var StrippedString = test.innerHTML.unescapeHTML().replace(/(<([^>]+)>)/ig,"");
-
-
-			 //do not show up in conf messed up version.
-			 i2b2.h.XPath(qriNode, 'descendant-or-self::query_status_type/problem/details/exception/message')[0].firstChild.nodeValue
-
-			 i2b2.h.XPath(qriNode, 'descendant-or-self::query_status_type/problem/details/exception/name')[0].firstChild.nodeValue
-
-			 var test = i2b2.h.XPath(qriNode, 'descendant-or-self::query_status_type/problem/details/exception/stacktrace')[0]
-
-			 test.textContent.length
-
-			 */
-		}
-
-		/**
-		 * TODO:
-		 */
-		function replaceTag(source, openTag, closeTag, replaceWith) {
-			source.split(openTag)
-				.join(replaceWith)
-				.split(closeTag)
-				.join()
-		}
 
 		// switch to status tab
 		i2b2.CRC.view.status.showDisplay();

@@ -56,8 +56,6 @@ $hrine.EnhancedError =
             errorObjects  = [i2b2Obj.errorObject];
         }
 
-        errObjects = errorObjects;
-
         //this sets up the events.
         anchors     = container.getElementsByClassName('query-error-anchor');
 
@@ -74,6 +72,9 @@ $hrine.EnhancedError =
             $('errorDetailDiv').innerHTML = '<div><b>Name:</b></div><div>' + errorData.summary + '</div><br/>' +
                 '<div><b>Description:</b></div><div>' + errorData.description + '</div><br/>' +
                 '<div><b>Technical Details:</b></div><pre style="margin-top:0">' + errorData.details + '</pre><br/>' +
+                '<div><b>Stack Trace Name:</b></div><pre style="margin-top:0">' + errorData.exception.name + '</pre><br/>' +
+                '<div><b>Stack Trace Summary:</b></div><pre style="margin-top:0">' + errorData.exception.summary + '</pre><br/>' +
+                '<div><b>Stack Trace Details:</b></div><pre style="margin-top:0">' + errorData.exception.stackTrace + '</pre><br/>' +
                 '<div><i>For information on troubleshooting and resolution, check' +
                 ' <a href="' + errorData.codec +'" target="_blank">the SHRINE Error' +
                 ' Codex</a>.</i></div>';
@@ -160,6 +161,80 @@ $hrine.EnhancedError =
             btnExpand.removeEventListener('click', expandErrorDetailDiv);
             btnContract.removeEventListener('click', retractErrorDetailDiv);
         }
+    }
+
+    /**
+     *
+     * @param qriNode
+     * @returns {{exception: {}}}
+     */
+    EnhancedError.parseProblem = function (qriNode) {
+        var problem = {
+            exception: {}
+        };
+
+        problem.codec 		= grabXmlNodeData(qriNode, 'descendant-or-self::query_status_type/problem/codec')
+        problem.summary     = grabXmlNodeData(qriNode, 'descendant-or-self::query_status_type/problem/summary')
+        problem.description = grabXmlNodeData(qriNode, 'descendant-or-self::query_status_type/problem/description')
+
+        //unescape embedded html.
+       problem.details = i2b2.h.XPath(qriNode, 'descendant-or-self::query_status_type/problem/details')[0]
+            .innerHTML.unescapeHTML().replace(/(<([^>]+)>)/ig,"");
+
+        problem.exception.name		= grabXmlNodeData(qriNode, 'descendant-or-self::query_status_type/problem/details/exception/name');
+        problem.exception.message 	= grabXmlNodeData(qriNode, 'descendant-or-self::query_status_type/problem/details/exception/message');
+        problem.exception.stackTrace = parseErrorException(qriNode);
+        return problem;
+    }
+
+    /**
+     *
+     */
+    function parseErrorException(node) {
+
+        if(node.innerHTML.indexOf('<exception>') == -1){
+            return '';
+        }
+
+        var content, startIdx, endIdx;
+
+        content = node.innerHTML.split('<problem>')
+            .join()
+            .split('</problem>')
+            .join();
+
+        startIdx = content.indexOf('<stacktrace>') + 12;
+        endIdx   = content.indexOf('</stacktrace>');
+
+        content = content.substring(startIdx, endIdx);
+
+        content = content.split('<line>')
+            .join('</br>')
+            .split('</line>')
+            .join()
+
+            .split('<exception>')
+            .join('<br/>')
+            .split('</exception>')
+            .join()
+
+            .split('<stacktrace>')
+            .join('<br/>')
+            .split('</stacktrace>')
+            .join()
+
+        return content;
+    }
+
+    /**
+     * Grab data for node, return empty string if none.
+     * @param node
+     * @param xPathString
+     * @returns {string}
+     */
+    function grabXmlNodeData(node, xPathString){
+        var nodeVal = i2b2.h.XPath(node, xPathString);
+        return (nodeVal.length)? nodeVal[0].firstChild.nodeValue : '';
     }
 
 
