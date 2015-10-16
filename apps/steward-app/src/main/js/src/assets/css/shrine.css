@@ -32,7 +32,14 @@
 .main-app{
     background-image: url('../img/Background_Shrine.jpg');
     background-size: cover;
-    background-color:transparent;
+    background-color: transparent;
+    background-attachment: fixed;
+    width: 100%;
+    height:100%;
+    width: calc(100vw);
+    height: calc(100vh);
+    min-width: 100%;
+    min-height: 100%;
 }
 
 .shrine-navbar {
@@ -41,48 +48,55 @@
     font-family: "Nexa";
     color: #5d5d5d;
     min-height: 60px;
-    width: 101%
+    width: 100%;
+    height: 4.8em;
 }
 
-
-.shrine-brand{
+.shrine-brand {
     float: left;
-    height: 50px;
-    padding: 15px 15px;
-    font-size: 24px;
-    line-height: 24px
+    padding: 22px 15px;
+    font-size: 30px;
+    line-height: 30px;
+    height: 30px;
 }
 
-.shrine-brand span{
+.shrine-brand strong {
     font-family: "Nexa Bold";
     color: #2c5566;
 }
 
-.shrine-navbar img{
-    margin-top: 5px;
-    margin-right: 20px;
-    max-height: 80px;
-    max-width: 80px;
+.shrine-navbar .shrine-institution-logo {
+    background-image: url('/static/logo.png');
+    background-size: contain;
+    background-color: transparent;
+    background-color: rgba(255,255,255,0.1);
+    background-repeat: no-repeat;
+    background-position: right top;
+    margin: 5px;
+    width: 4em;
+    height: 4em;
+    max-height: 4em;
+    max-width: 4em;
 }
 
-.shrine-button{
+.shrine-button {
     cursor: pointer !important;
     background-color: transparent;
     border: none;
 }
 
-.shrine-button span{
+.shrine-button span {
     position: relative;
     bottom: 5px;
 
 }
 
-.shrine-btn-default{
+.shrine-btn-default {
     margin-right: 6px;
     border:none;
 }
 
-.shrine-btn-on{
+.shrine-btn-on {
     padding: 12px 12px;
     border-radius: 0;
     font-family: "Roboto Bold" !important;
@@ -92,7 +106,7 @@
     url('../img/bckg_diagonal_lines_no_border.png') !important;
 }
 
-.shrine-btn-off{
+.shrine-btn-off {
     padding: 6px 12px !important;
     border-radius: 4px !important;
     font-family: "Open Sans Semibold" !important;
@@ -101,13 +115,13 @@
 }
 
 
-.shrine-on, .shrine-on a{
+.shrine-on, .shrine-on a {
     font-family: "Roboto Bold" !important;
     color: #FFFFFF !important;
     background: linear-gradient(#048DBE, #025978) !important;
 }
 
-.shrine-off{
+.shrine-off {
     font-family: "Roboto Regular" !important;
     color: #2C5566 !important;
     background-color: #ECEEEE !important;
@@ -119,68 +133,81 @@
     opacity: 0.2 !important;
 }
 
-.shrine-copy-bold{
+.shrine-copy-bold {
     font-family: "Nexa Bold";
     color: #64818e;
 }
 
-.shrine-copy{
+.shrine-copy {
     font-family: "Nexa";
     color: #000000;
 }
 
-td.error, span.error{
+.row {
+    margin-right: 0;
+    margin-left: 0;
+}
+
+td.error, span.error {
     color: red;
 }
 
-td.error a, td.error a:hover{
+td.error a, td.error a:hover, span.error a, span.error a:hover{
     color: inherit;
     text-decoration: underline !important;
     cursor: pointer;
 }
 
-td.ok{
+td.ok, span.ok {
     color:green;
 }
 
-.form-group span{
+.form-group span {
     font-family: "Open Sans Semibold";
     color: #2c5566;
 }
 
-fieldset button{
+fieldset button {
     color: #2E5366;
 }
 
-fieldset button:hover, form a:hover{
+fieldset button:hover, form a:hover {
     color: #008CBA;
     text-decoration: none;
     cursor: pointer;
 }
 
-form a{
+form a {
     font-family: "Open Sans Regular";
     color: #647d8d;
     text-decoration: none;
 }
 
-footer img{
+footer img {
     margin-left: 10px;
-
+    margin-top: 2px;
 }
 
 footer {
     background-color: rgba(50, 62, 74, 0.48);
-    position: absolute;
-    width: 102%;
-    bottom: 0px;
-    min-height: 60px;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 83px;
+    min-height: 83px;
+    max-width: 100%;
 }
 
-table{
+table {
     background-image: url('../img/bckg_diagonal_lines_no_border.png');
     border: 1px solid #CCD8DF;
 
+}
+
+.table tr>td:first-child {
+  width: 20%;
+  min-width: 140px;
 }
 
 .table-striped>tbody>tr:nth-of-type(odd) {
@@ -201,6 +228,8 @@ td{
     max-width: 450px;
     word-wrap: break-word;
 }
+
+
 
 thead tr td, thead tr td label, tfoot tr td span{
     font-family: "Open Sans Semibold";
@@ -238,22 +267,18 @@ body {
 
 #wrapper {
     width: 100%;
+    margin-bottom: 83px; /* clearance space for footer at bottom of long page */
 }
 
 .login-wrapper{
     margin-top: 51px;
     margin-right: 20px;
-    margin-top: 51px;
 }
 
 #page-wrapper {
     background-color: transparent;
-    margin-top: 51px;
+    margin-top: 54px;
     margin-right: 20px;
-}
-
-.navbar-top-links {
-    margin-right: 0;
 }
 
 .navbar-top-links li {
@@ -359,10 +384,7 @@ body {
 @media(min-width:768px) {
     .sidebar {
         z-index: 1;
-        position: absolute;
-        width: 250px;
         margin-top: 51px;
-        margin-left: 10%;
     }
 
     .navbar-top-links .dropdown-messages,
@@ -633,14 +655,12 @@ table.dataTable thead .sorting:after {
     border: none;
 }
 
-
 .shrine-login{
     margin-top: 8%;
     margin-left: 1%;
 }
 
 .shrine-content{
-    height: 75%;
     overflow: auto;
 }
 
@@ -650,12 +670,9 @@ textarea{
 }
 
 
-
 @media (min-width: 768px) {
     .shrine-content {
-        width: 75%;
-        position: absolute;
-        left: 280px;
+        padding: 0;
     }
 }
 
