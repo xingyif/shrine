@@ -242,7 +242,7 @@ angular
                 }, function(response) { // error
                     continue;
                 }); 
-            });
+            };
             
             return src;
         };
