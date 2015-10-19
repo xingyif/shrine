@@ -7,44 +7,52 @@
                 <a href="#"
                    ng-click="sort.currentColumn = 'stewardId'; sort.descending = !sort.descending; refreshHistory()">
                     ID
-                    <span ng-show="sort.currentColumn == 'stewardId' && !sort.descending" class="fa fa-caret-down"></span>
-                    <span ng-show="sort.currentColumn == 'stewardId' && sort.descending" class="fa fa-caret-up"></span>
+                    <i ng-show="sort.currentColumn == 'stewardId' && sort.descending"
+                       class="fa fa-caret-down"></i>
+                    <i ng-show="sort.currentColumn == 'stewardId' && !sort.descending"
+                       class="fa fa-caret-up"></i>
                 </a>
             </td>
             <td>
                 <a href="#"
                    ng-click="sort.currentColumn = 'topicName'; sort.descending = !sort.descending; refreshHistory()">
                     Query Topic
-                    <span ng-show="sort.currentColumn == 'topicName' && !sort.descending" class="fa fa-caret-down"></span>
-                    <span ng-show="sort.currentColumn == 'topicName' && sort.descending" class="fa fa-caret-up"></span>
+                    <i ng-show="sort.currentColumn == 'topicName' && sort.descending"
+                    class="fa fa-caret-down"></i>
+                    <i ng-show="sort.currentColumn == 'topicName' && !sort.descending"
+                       class="fa fa-caret-up"></i>
                 </a>
             </td>
             <td>
                 <a href="#" ng-click="sort.currentColumn = 'researcherId'; sort.descending = !sort.descending; refreshHistory()">
                     Username
-                    <span ng-show="sort.currentColumn == 'researcherId' && !sort.descending" class="fa fa-caret-down"></span>
-                    <span ng-show="sort.currentColumn == 'researcherId' && sort.descending" class="fa fa-caret-up"></span>
+                    <i ng-show="sort.currentColumn == 'researcherId' && sort.descending" class="fa fa-caret-down"></i>
+                    <i ng-show="sort.currentColumn == 'researcherId' && !sort.descending" class="fa fa-caret-up"></i>
                 </a>
             </td>
             <td>
                 <a ng-click="sort.currentColumn = 'name'; sort.descending = !sort.descending; refreshHistory()">
                     Query Text
-                    <span ng-show="sort.currentColumn == 'name' && !sort.descending" class="fa fa-caret-down"></span>
-                    <span ng-show="sort.currentColumn == 'name' && sort.descending" class="fa fa-caret-up"></span>
+                    <i ng-show="sort.currentColumn == 'name' && sort.descending"
+                       class="fa fa-caret-down"><i/>
+                    <i ng-show="sort.currentColumn == 'name' && !sort.descending"
+                       class="fa fa-caret-up"></i>
                 </a>
             </td>
             <td>
                 <a ng-click="sort.currentColumn = 'stewardResponse'; sort.descending = !sort.descending; refreshHistory()">
                     Status
-                    <span ng-show="sort.currentColumn == 'stewardResponse' && !sort.descending" class="fa fa-caret-down"></span>
-                    <span ng-show="sort.currentColumn == 'stewardResponse' && sort.descending" class="fa fa-caret-up"></span>
+                    <i ng-show="sort.currentColumn == 'stewardResponse' && sort.descending" class="fa fa-caret-down"></i>
+                    <i ng-show="sort.currentColumn == 'stewardResponse' && !sort.descending" class="fa fa-caret-up"></i>
                 </a>
             </td>
             <td>
                 <a ng-click="sort.currentColumn = 'date'; sort.descending= !sort.descending; refreshHistory()">
                     Date
-                    <span ng-show="(sort.currentColumn == 'date' && !sort.descending) || !sort" class="fa fa-caret-down"></span>
-                    <span ng-show="sort.currentColumn == 'date' && sort.descending" class="fa fa-caret-up"></span>
+                    <i ng-show="sort.currentColumn == 'date' && sort.descending"
+                       class="fa fa-caret-down"></i>
+                    <i ng-show="sort.currentColumn == 'date' && !sort.descending"
+                       class="fa fa-caret-up"></i>
                 </a>
             </td>
         </tr>
