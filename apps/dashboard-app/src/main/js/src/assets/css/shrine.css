@@ -66,12 +66,10 @@
 }
 
 .shrine-navbar .shrine-institution-logo {
-    background-image: url('../img/logo_placeholder.png');
-    background-image: url('/static/logo.gif');
-    background-image: url('/static/logo.jpg');
     background-image: url('/static/logo.png');
     background-size: contain;
     background-color: transparent;
+    background-color: rgba(255,255,255,0.1);
     background-repeat: no-repeat;
     background-position: right top;
     margin: 5px;

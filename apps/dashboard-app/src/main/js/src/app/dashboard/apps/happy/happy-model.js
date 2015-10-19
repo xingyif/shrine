@@ -1,5 +1,5 @@
 angular.module("happy-model", ['model-service'])
-    .service("HappyMdl", ['$http', 'ModelService', '$app', function ($http, mdlSvc, $app) {
+    .service("HappyMdl", ['$http', '$q', 'ModelService', '$app', function ($http, $q, mdlSvc, $app) {
 
         var URLS        = {
             ALL:        'all',
@@ -24,6 +24,10 @@ angular.module("happy-model", ['model-service'])
         }
 
         function parseResult(result) {
+            if(isQEPError(result.data)) {
+                return $q.reject(result.data);
+            }
+
             return $app.utils.xmlToJson(result.data);
         }
 
@@ -68,6 +72,16 @@ angular.module("happy-model", ['model-service'])
         HappyMdl.prototype.getAudit = function () {
             return hget(URLS.AUDIT);
         };
+
+        /**
+         *
+         * @param resultXML
+         * @returns {boolean}
+         */
+        function isQEPError(resultXML) {
+            var result = resultXML.indexOf('<all>') + resultXML.indexOf('</all>');
+            return result == -2
+        }
 
         return new HappyMdl();
     }]);
