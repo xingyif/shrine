@@ -17,7 +17,7 @@
                                         class="btn btn-default shrine-btn-default"
                                         ng-click="setStateAndRefresh(states.STATE1)"
                                         ng-class="state === states.STATE1 ? 'shrine-btn-on' : 'shrine-btn-off'">
-                                    {{states.STATE1}}
+                                    {{states.STATE1.toUpperCase()}}
 
                                 </button>
                                 <button type="button"
@@ -25,14 +25,14 @@
                                         ng-click="setStateAndRefresh(states.STATE2)"
                                         ng-class="state === states.STATE2 ? 'shrine-btn-on' : 'shrine-btn-off'">
                                     <i class="fa fa-check pull-left"></i>
-                                    {{states.STATE2}}
+                                    {{states.STATE2.toUpperCase()}}
                                 </button>
                                 <button type="button"
                                         class="btn btn-default shrine-btn-default"
                                         ng-click="setStateAndRefresh(states.STATE3)"
                                         ng-class="state === states.STATE3 ? 'shrine-btn-on' : 'shrine-btn-off'">
                                     <i class="fa fa-remove pull-left"></i>
-                                    {{states.STATE3}}
+                                    {{states.STATE3.toUpperCase()}}
                                 </button>
                             </div>
                         </div>
