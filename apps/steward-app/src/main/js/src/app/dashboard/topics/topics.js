@@ -198,9 +198,11 @@ angular.module('stewardApp')
                     $scope.topic        = topic;
                     $scope.tabState     = 'description';
                     $scope.formatDate   = $app.utils.utcToMMDDYYYY;
+                    $scope.loadedState        = $scope.topic.state;
 
 
                     $scope.ok = function (id) {
+                        $scope.topic.state = $scope.state;
                         if ($scope.topic.state === "Pending") {
                             $modalInstance.close($scope.topic);
                             return;
@@ -238,7 +240,7 @@ angular.module('stewardApp')
                     };
 
                     $scope.canViewHistory = function () {
-                        var canView =  ($app.globals.currentUser.roles[0] === $scope.roles.ROLE2 && $scope.topic.state !== "Pending") || ($scope.topic.state === "Approved");
+                        var canView =  ($app.globals.currentUser.roles[0] === $scope.roles.ROLE2 && $scope.loadedState !== "Pending") || ($scope.loadedState === "Approved");
                         return canView;
                     };
                 },
