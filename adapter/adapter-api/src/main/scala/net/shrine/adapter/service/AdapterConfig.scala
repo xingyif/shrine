@@ -35,7 +35,7 @@ object AdapterConfig {
       config.getConfigured(maxSignatureAge,DurationConfigParser(_)),
     //todo put a default in the reference.conf
       config.getOption(immediatelyRunIncomingQueries, _.getBoolean).getOrElse(defaultImmediatelyRunIncomingQueries),
-      AdapterConfigSource.config.getBoolean("shrine.adapter2.audit.collectAdapterAudit")
+      AdapterConfigSource.config.getBoolean("shrine.adapter.audit.collectAdapterAudit")
     )
   }
 }

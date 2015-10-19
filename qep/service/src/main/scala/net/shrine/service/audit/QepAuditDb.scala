@@ -161,7 +161,7 @@ case class QepAuditSchema(jdbcProfile: JdbcProfile) extends Loggable {
 object QepAuditSchema {
 
   val allConfig:Config = QepConfigSource.config
-  val config:Config = allConfig.getConfig("shrine.qep.audit.database")
+  val config:Config = allConfig.getConfig("shrine.queryEntryPoint.audit.database")
 
   val slickProfileClassName = config.getString("slickProfileClassName")
   val slickProfile:JdbcProfile = QepConfigSource.objectForName(slickProfileClassName)
