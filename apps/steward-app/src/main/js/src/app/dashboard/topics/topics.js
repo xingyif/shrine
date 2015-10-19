@@ -79,7 +79,7 @@ angular.module('stewardApp')
         $scope.filterBy = 'topicName';
         $scope.sort = {
             currentColumn: 'changeDate',
-            descending: false
+            descending: true
         };
         $scope.selectedTab = initState;
 
@@ -114,7 +114,7 @@ angular.module('stewardApp')
 
             if ($scope.sort) {
                 $scope.sort.currentColumn = 'changeDate';
-                $scope.sort.descending    = false;
+                $scope.sort.descending    = true;
             }
 
             $scope.refreshTopics();
@@ -122,7 +122,7 @@ angular.module('stewardApp')
 
         $scope.refreshTopics = function () {
 
-            var state, sortBy = 'changeDate', sortDirection = 'ascending';
+            var state, sortBy, sortDirection;
 
             if ($scope.state !== "ALL") {
                 state = $scope.state;

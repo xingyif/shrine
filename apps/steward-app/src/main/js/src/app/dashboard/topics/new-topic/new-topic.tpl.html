@@ -12,7 +12,7 @@
                 </label>
 
 
-                <div class="form-group" ng-class="'has-error': form.topicname.$error.required">
+                <div class="form-group">
                     <label class="pull-right" ng-show="form.topicname.$error.required ||
                                 form.topicdescription.$error.required">
                         *<small>Required Field</small>
@@ -25,7 +25,7 @@
                     <input type="text" ng-model="newTopic.name" name="topicname"
                            id="topicname" class="form-control" required novalidate>
                 </div>
-                <div class="form-group" ng-class="'has-error': form.topicname.$error.required">
+                <div class="form-group">
 
                     <label class="control-label">Please Describe Your Query's Intent
                         <span ng-show="form.topicdescription.$error.required">*</span>
