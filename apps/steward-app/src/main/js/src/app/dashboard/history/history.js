@@ -28,6 +28,10 @@ angular.module('stewardApp')
 
                 $scope.queries      = [];
                 $scope.formatDate   = $app.utils.utcToMMDDYYYY;
+                $scope.sort         = {
+                    currentColumn: 'date',
+                    descending: true
+                }
 
                 $scope.getTopicTitle = function (topic) {
                     return (topic !== undefined)? topic.name + ' Query History' : 'Query History';
@@ -89,10 +93,6 @@ angular.module('stewardApp')
                     if ($scope.sort && $scope.sort.currentColumn !== "") {
                         sortBy          = $scope.sort.currentColumn;
                         sortDirection   = ($scope.sort.descending) ? "descending" : "ascending";
-                    }
-                    else {
-                        sortBy          = 'date';
-                        sortDirection   = 'ascending';
                     }
 
                     $scope.queryRecords = model.getHistory($scope.skip, $scope.limit, sortBy, sortDirection, topicId)
