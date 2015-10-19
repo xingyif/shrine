@@ -678,6 +678,7 @@ textarea{
 
 .shrine-calendar-input{
     margin-right: 1px;
+    max-width:50%;
 }
 
 i.shrine-close{

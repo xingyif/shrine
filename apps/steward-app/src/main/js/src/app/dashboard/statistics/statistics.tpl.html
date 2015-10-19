@@ -1,48 +1,49 @@
 <div>
     <div class="col-sm-12 shrine-modal" style="margin-bottom: 50px;">
             <fieldset>
-                <div class="col-sm-3">
-                    <div class="form-group">
-                        <label>
-                            Start Date:&nbsp;&nbsp;
-                        </label>
-                        <input type="text" class="shrine-calendar-input"
-                               datepicker-popup="{{format}}"
-                               max-date="endDate"
-                               ng-model="startDate"
-                               is-open="startOpened"
-                               ng-required="true"
-                               close-text="Close"/>
-                        <button type="button"
-                                class="shrine-button"
-                                ng-disabled="!validateRange()"
-                                ng-click="openStart($event)">
-                            <i class="glyphicon glyphicon-calendar"></i>
-                        </button>
-                    </div>
+                <div class="col-sm-4">
+                    <label>
+                        Start Date:&nbsp;&nbsp;
+                    </label>
+                    <br/>
+                    <input type="text" class="shrine-calendar-input"
+                           datepicker-popup="{{format}}"
+                           max-date="endDate"
+                           ng-model="startDate"
+                           is-open="startOpened"
+                           ng-required="true"
+                           close-text="Close"/>
+                    <button type="button"
+                            class="shrine-button"
+                            ng-disabled="!validateRange()"
+                            ng-click="openStart($event)">
+                        <i class="glyphicon glyphicon-calendar"></i>
+                    </button>
                 </div>
 
-                <div class="col-sm-3">
-                    <div class="form-group">
-                        <label>
-                            End Date:&nbsp;&nbsp;
-                        </label>
-                        <input type="text" class="shrine-calendar-input"
-                               datepicker-popup="{{format}}"
-                               ng-model="endDate"
-                               min-date="startDate"
-                               is-open="endOpened"
-                               ng-required="true"
-                               close-text="Close"/>
-                        <button type="button"
-                                class="shrine-button"
-                                ng-disabled="!validateRange()"
-                                     ng-click="openEnd($event)">
-                            <i class="glyphicon glyphicon-calendar"></i>
-                        </button>
-                    </div>
+                <div class="col-sm-4">
+
+                    <label>
+                        End Date:&nbsp;&nbsp;
+                    </label>
+                    <br/>
+                    <input type="text" class="shrine-calendar-input"
+                           datepicker-popup="{{format}}"
+                           ng-model="endDate"
+                           min-date="startDate"
+                           is-open="endOpened"
+                           ng-required="true"
+                           close-text="Close"/>
+                    <button type="button"
+                            class="shrine-button"
+                            ng-disabled="!validateRange()"
+                                 ng-click="openEnd($event)">
+                        <i class="glyphicon glyphicon-calendar"></i>
+                    </button>
+
                 </div>
-            <div class="col-sm-3">
+            <div class="col-sm-4">
+                <br/>
                 <button type="submit"
                         class="shrine-button shrine-submit"
                         ng-disabled="!validateRange()"

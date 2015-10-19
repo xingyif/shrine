@@ -206,8 +206,8 @@ table {
 }
 
 .table tr>td:first-child {
-  width: 20%;
-  min-width: 140px;
+    width: 20%;
+    min-width: 140px;
 }
 
 .table-striped>tbody>tr:nth-of-type(odd) {
@@ -678,6 +678,7 @@ textarea{
 
 .shrine-calendar-input{
     margin-right: 1px;
+    max-width:50%;
 }
 
 i.shrine-close{
