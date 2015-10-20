@@ -83,6 +83,7 @@
     http://getbootstrap.com/components/
     -->
     <div class="form-group text-center" ng-show="length > limit">
+
         <pagination boundary-links="true"
                     ng-change="onPageSelected()"
                     total-items="length"
@@ -99,7 +100,7 @@
 
     <script type="text/ng-template" id="myModalContent.html">
         <div class="modal-header">
-            <h3 class="modal-title">I'm a modal!</h3>
+            <h3 class="modal-title"></h3>
         </div>
         <div class="modal-body">
             topic Name: <b>{{ topic.name }}</b>

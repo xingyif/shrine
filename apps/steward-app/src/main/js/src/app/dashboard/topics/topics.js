@@ -99,6 +99,7 @@ angular.module('stewardApp')
         $scope.limit        = $app.globals.ViewConfig.LIMIT;//number of results to show in table at per page.
         $scope.skip         = 0;                            //number of results to skip.
 
+
         /*
          * Handler for when pagination page is changed.
          */
