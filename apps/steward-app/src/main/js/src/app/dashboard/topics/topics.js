@@ -8,34 +8,6 @@
  * https://scotch.io/tutorials/sort-and-filter-a-table-using-angular
  */
 angular.module('stewardApp')
-        .controller("TopicDetailCtrl", function ($scope, $modalInstance, topic, $app, Role2TopicDetailMdl) {
-
-        $scope.roles        = $app.globals.UserRoles;
-        $scope.userRole     = $app.globals.currentUser.roles[0];
-        $scope.topic        = topic;
-        $scope.tabState     = 'description';
-        $scope.formatDate   = $app.utils.utcToMMDDYYYY;
-
-
-        $scope.ok = function (id) {
-            if ($scope.topic.state === "Pending") {
-                $modalInstance.close($scope.topic);
-                return;
-            }
-
-            (($scope.topic.state == "Approved") ?
-                Role2TopicDetailMdl.approveTopic(id) :
-                Role2TopicDetailMdl.rejectTopic(id))
-                .then(function (result) {
-                    $scope.modalCallback();
-                    $modalInstance.close(result);
-                });
-        };
-
-        $scope.cancel = function () {
-            $modalInstance.dismiss('cancel');
-        };
-    })
     .controller("NewTopicCtrl", function ($scope, $modalInstance, model, refreshTopics) {
 
         $scope.newTopic = {name: "", description: ""};
@@ -79,7 +51,7 @@ angular.module('stewardApp')
         $scope.filterBy = 'topicName';
         $scope.sort = {
             currentColumn: 'changeDate',
-            descending: true
+            descending: false
         };
         $scope.selectedTab = initState;
 
@@ -112,12 +84,6 @@ angular.module('stewardApp')
 
         $scope.setStateAndRefresh = function (state) {
             $scope.state =  state;
-
-            if ($scope.sort) {
-                $scope.sort.currentColumn = 'changeDate';
-                $scope.sort.descending    = true;
-            }
-
             $scope.refreshTopics();
         };
 
@@ -199,7 +165,9 @@ angular.module('stewardApp')
                     $scope.topic        = topic;
                     $scope.tabState     = 'description';
                     $scope.formatDate   = $app.utils.utcToMMDDYYYY;
-                    $scope.loadedState        = $scope.topic.state;
+                    $scope.loadedState  = $scope.topic.state;
+                    $scope.topicName    = topic.name;
+                    $scope.topicDescription = topic.description;
 
 
                     $scope.ok = function (id) {
