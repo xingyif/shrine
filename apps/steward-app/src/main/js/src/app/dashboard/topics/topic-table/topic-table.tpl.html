@@ -53,7 +53,7 @@
         </thead>
 
         <tbody>
-        <tr ng-repeat="topic in topics | orderBy:sort.column:sort.descending">
+        <tr ng-repeat="topic in topics">
             <td class="thin-col" restrict="{{app.globals.UserRoles.ROLE2}}">{{topic.id}}</td>
             <td class="big-data">{{topic.name}}</td>
             <td restrict="{{app.globals.UserRoles.ROLE2}}">{{topic.createdBy.userName}}</td>
