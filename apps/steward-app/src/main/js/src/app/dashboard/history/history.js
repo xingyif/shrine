@@ -30,7 +30,7 @@ angular.module('stewardApp')
                 $scope.formatDate   = $app.utils.utcToMMDDYYYY;
                 $scope.sort         = {
                     currentColumn: 'date',
-                    descending: true
+                    descending: false
                 }
 
                 $scope.getTopicTitle = function (topic) {
