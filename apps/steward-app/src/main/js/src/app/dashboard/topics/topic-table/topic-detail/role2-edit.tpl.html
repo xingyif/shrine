@@ -47,10 +47,10 @@
             </select>
             <select ng-model="topic.state"
                     ng-switch-when="false" ng-cloak>
-                <option value="Approved" ng-selected="currentTopic.state === 'Approved'">
+                <option value="Approved" ng-selected="topic.state === 'Approved'">
                     Approved
                 </option>
-                <option value="Rejected" ng-selected="currentTopic.state === 'Rejected'">
+                <option value="Rejected" ng-selected="topic.state === 'Rejected'">
                     Rejected
                 </option>
             </select>
