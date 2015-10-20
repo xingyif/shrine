@@ -33,7 +33,7 @@ angular
         url.base    = absUrl.substring(0, urlIdx) + key + '/';
 
         //for local testing.
-        if(absUrl.indexOf('localhost')){
+        if(absUrl.indexOf('localhost') > -1){
             url.base = 'http://localhost:8080/dashboard-war/'
         }
 
