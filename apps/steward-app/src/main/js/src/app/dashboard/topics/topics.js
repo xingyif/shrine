@@ -168,10 +168,12 @@ angular.module('stewardApp')
                     $scope.loadedState  = $scope.topic.state;
                     $scope.topicName    = topic.name;
                     $scope.topicDescription = topic.description;
+                    $scope.data         = {topicState: topic.state};
+
 
 
                     $scope.ok = function (id) {
-                        $scope.topic.state = $scope.state;
+                        $scope.topic.state = $scope.data.topicState;
                         if ($scope.topic.state === "Pending") {
                             $modalInstance.close($scope.topic);
                             return;
