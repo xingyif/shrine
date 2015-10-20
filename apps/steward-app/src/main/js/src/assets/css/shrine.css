@@ -209,6 +209,10 @@ table {
   width: 20%;
   min-width: 140px;
 }
+.table tr>td.thin-col {
+  width: 6%;
+  min-width: 35px;
+}
 
 .table-striped>tbody>tr:nth-of-type(odd) {
     background-color: #EFF6F9;
