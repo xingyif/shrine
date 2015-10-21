@@ -42,7 +42,7 @@ trait DashboardService extends HttpService with Json4sSupport {
 
   //don't need to do anything special for unauthorized users, but they do need access to a static form.
   lazy val route:Route = gruntWatchCorsSupport{
-    staticResources ~ makeTrouble ~ about ~ authenticatedInBrowser
+    redirectToIndex ~ staticResources ~ makeTrouble ~ about ~ authenticatedInBrowser
   }
 
   // logs just the request method, uri and response at info level
@@ -86,15 +86,21 @@ trait DashboardService extends HttpService with Json4sSupport {
     complete(throw new IllegalStateException("fake trouble"))
   }
 
-  lazy val staticResources = pathPrefix("client"){
-    logRequestResponse(logEntryForRequest _){
-        getFromResourceDirectory("client")
-      } ~ pathEnd {
-        redirect("client/index.html", StatusCodes.PermanentRedirect)
-      } ~ path( "index.html" ) {
-        redirect("client/index.html", StatusCodes.PermanentRedirect)
-      } ~ pathSingleSlash {
-        redirect("client/index.html", StatusCodes.PermanentRedirect)
+  lazy val redirectToIndex = pathEnd {
+    redirect("shrine-dashboard/client/index.html", StatusCodes.PermanentRedirect) //todo pick up "shrine-dashboard" programatically
+  } ~
+    ( path("index.html") | pathSingleSlash) {
+      redirect("client/index.html", StatusCodes.PermanentRedirect)
+    }
+
+  lazy val staticResources = pathPrefix("client") {
+    pathEnd {
+      redirect("client/index.html", StatusCodes.PermanentRedirect)
+    } ~
+      pathSingleSlash {
+        redirect("index.html", StatusCodes.PermanentRedirect)
+      } ~ {
+      getFromResourceDirectory("client")
     }
   }
 

@@ -95,13 +95,19 @@ trait StewardService extends HttpService with Json4sSupport {
     complete(throw new IllegalStateException("fake trouble"))
   }
 
-  lazy val redirectToIndex = (pathEndOrSingleSlash | path("index.html")) {
-    redirect("client/index.html", StatusCodes.PermanentRedirect) //todo pick up the top of the url from context instead of hard-coded "steward"
+  lazy val redirectToIndex = pathEnd {
+    redirect("steward/client/index.html", StatusCodes.PermanentRedirect) //todo pick up "steward" programatically
+  } ~
+  ( path("index.html") | pathSingleSlash) {
+      redirect("client/index.html", StatusCodes.PermanentRedirect)
   }
 
   lazy val staticResources = pathPrefix("client") {
-    pathEndOrSingleSlash {
-      redirect("client/index.html", StatusCodes.PermanentRedirect) //todo pick up the top of the url from context instead of hard-coded "steward"
+    pathEnd {
+      redirect("client/index.html", StatusCodes.PermanentRedirect)
+    } ~
+    pathSingleSlash {
+      redirect("index.html", StatusCodes.PermanentRedirect)
     } ~ {
       getFromResourceDirectory("client")
     }
