@@ -4,23 +4,17 @@
         <thead>
         <tr>
             <td class="thin-col">
-                <a href="#"
-                   ng-click="sort.currentColumn = 'stewardId'; sort.descending = !sort.descending; refreshHistory()">
+                <a href="#" ng-click="sort.currentColumn = 'stewardId'; sort.descending = !sort.descending; refreshHistory()">
                     ID
-                    <i ng-show="sort.currentColumn == 'stewardId' && sort.descending"
-                       class="fa fa-caret-down"></i>
-                    <i ng-show="sort.currentColumn == 'stewardId' && !sort.descending"
-                       class="fa fa-caret-up"></i>
+                    <i ng-show="sort.currentColumn == 'stewardId' && sort.descending" class="fa fa-caret-down"></i>
+                    <i ng-show="sort.currentColumn == 'stewardId' && !sort.descending" class="fa fa-caret-up"></i>
                 </a>
             </td>
             <td>
-                <a href="#"
-                   ng-click="sort.currentColumn = 'topicName'; sort.descending = !sort.descending; refreshHistory()">
+                <a href="#" ng-click="sort.currentColumn = 'topicName'; sort.descending = !sort.descending; refreshHistory()">
                     Query Topic
-                    <i ng-show="sort.currentColumn == 'topicName' && sort.descending"
-                    class="fa fa-caret-down"></i>
-                    <i ng-show="sort.currentColumn == 'topicName' && !sort.descending"
-                       class="fa fa-caret-up"></i>
+                    <i ng-show="sort.currentColumn == 'topicName' && sort.descending" class="fa fa-caret-down"></i>
+                    <i ng-show="sort.currentColumn == 'topicName' && !sort.descending" class="fa fa-caret-up"></i>
                 </a>
             </td>
             <td>
@@ -58,17 +52,220 @@
 
         <tbody>
 
-        <tr ng-repeat="query in queries">
-            <td class="thin-col">{{query.stewardId}}</td>
-            <td class="big-data">{{query.topic.name}}</td>
-            <td>{{query.user.userName}}</td>
+
+        <!-- ngRepeat: query in queries --><tr>
+            <td class="thin-col ng-binding">41</td>
+            <td class="big-data ng-binding">Lungs and Things That Aren't Supposed to be in Them</td>
+            <td class="ng-binding">ben</td>
 
             <td class="big-data">
-                <a href ng-click="showQuery(query)">{{query.name}}</a>
+                <a href="" ng-click="showQuery(query)" class="ng-binding">Unknown@14:44:04</a>
             </td>
-            <td>{{query.stewardResponse}}</td>
-            <td>{{formatDate(query.date)}}</td>
-        </tr>
+            <td class="ng-binding">Approved</td>
+            <td class="ng-binding">9/11/2015</td>
+        </tr><!-- end ngRepeat: query in queries --><tr>
+            <td class="thin-col ng-binding">94</td>
+            <td class="big-data ng-binding">Lungs and Things That Aren't Supposed to be in Them</td>
+            <td class="ng-binding">ben</td>
+
+            <td class="big-data">
+                <a href="" ng-click="showQuery(query)" class="ng-binding">Female@16:54:17</a>
+            </td>
+            <td class="ng-binding">Approved</td>
+            <td class="ng-binding">10/8/2015</td>
+        </tr><!-- end ngRepeat: query in queries --><tr ng-repeat="query in queries" class="ng-scope">
+            <td class="thin-col ng-binding">69</td>
+            <td class="big-data ng-binding">Lungs and Things That Aren't Supposed to be in Them</td>
+            <td class="ng-binding">ben</td>
+
+            <td class="big-data">
+                <a href="" ng-click="showQuery(query)" class="ng-binding">Female@16:36:56</a>
+            </td>
+            <td class="ng-binding">Approved</td>
+            <td class="ng-binding">9/23/2015</td>
+        </tr><!-- end ngRepeat: query in queries --><tr>
+            <td class="thin-col ng-binding">133</td>
+            <td class="big-data ng-binding">Lungs and Things That Aren't Supposed to be in Them</td>
+            <td class="ng-binding">ben</td>
+
+            <td class="big-data">
+                <a href="" ng-click="showQuery(query)" class="ng-binding">Female@16:22:24</a>
+            </td>
+            <td class="ng-binding">Approved</td>
+            <td class="ng-binding">10/19/2015</td>
+        </tr><!-- end ngRepeat: query in queries --><tr>
+            <td class="thin-col ng-binding">93</td>
+            <td class="big-data ng-binding">Lungs and Things That Aren't Supposed to be in Them</td>
+            <td class="ng-binding">ben</td>
+
+            <td class="big-data">
+                <a href="" ng-click="showQuery(query)" class="ng-binding">Female@16:14:21</a>
+            </td>
+            <td class="ng-binding">Approved</td>
+            <td class="ng-binding">10/8/2015</td>
+        </tr><!-- end ngRepeat: query in queries --><tr>
+            <td class="thin-col ng-binding">34</td>
+            <td class="big-data ng-binding">Lungs and Things That Aren't Supposed to be in Them</td>
+            <td class="ng-binding">ben</td>
+
+            <td class="big-data">
+                <a href="" ng-click="showQuery(query)" class="ng-binding">Female@15:53:47</a>
+            </td>
+            <td class="ng-binding">Approved</td>
+            <td class="ng-binding">9/8/2015</td>
+        </tr><!-- end ngRepeat: query in queries --><tr>
+            <td class="thin-col ng-binding">44</td>
+            <td class="big-data ng-binding">Lungs and Things That Aren't Supposed to be in Them</td>
+            <td class="ng-binding">ben</td>
+
+            <td class="big-data">
+                <a href="" ng-click="showQuery(query)" class="ng-binding">Female@15:44:24</a>
+            </td>
+            <td class="ng-binding">Approved</td>
+            <td class="ng-binding">9/11/2015</td>
+        </tr><!-- end ngRepeat: query in queries --><tr>
+            <td class="thin-col ng-binding">136</td>
+            <td class="big-data ng-binding">Lungs and Things That Aren't Supposed to be in Them</td>
+            <td class="ng-binding">ben</td>
+
+            <td class="big-data">
+                <a href="" ng-click="showQuery(query)" class="ng-binding">Female@15:34:39</a>
+            </td>
+            <td class="ng-binding">Approved</td>
+            <td class="ng-binding">10/21/2015</td>
+        </tr><!-- end ngRepeat: query in queries --><tr>
+            <td class="thin-col ng-binding">109</td>
+            <td class="big-data ng-binding">Lungs and Things That Aren't Supposed to be in Them</td>
+            <td class="ng-binding">ben</td>
+
+            <td class="big-data">
+                <a href="" ng-click="showQuery(query)" class="ng-binding">Female@15:30:48</a>
+            </td>
+            <td class="ng-binding">Approved</td>
+            <td class="ng-binding">10/15/2015</td>
+        </tr><!-- end ngRepeat: query in queries --><tr ng-repeat="query in queries" class="ng-scope">
+            <td class="thin-col ng-binding">92</td>
+            <td class="big-data ng-binding">Lungs and Things That Aren't Supposed to be in Them</td>
+            <td class="ng-binding">ben</td>
+
+            <td class="big-data">
+                <a href="" ng-click="showQuery(query)" class="ng-binding">Female@15:16:30</a>
+            </td>
+            <td class="ng-binding">Approved</td>
+            <td class="ng-binding">10/8/2015</td>
+        </tr><!-- end ngRepeat: query in queries --><tr>
+            <td class="thin-col ng-binding">42</td>
+            <td class="big-data ng-binding">Lungs and Things That Aren't Supposed to be in Them</td>
+            <td class="ng-binding">ben</td>
+
+            <td class="big-data">
+                <a href="" ng-click="showQuery(query)" class="ng-binding">Female@15:11:29</a>
+            </td>
+            <td class="ng-binding">Approved</td>
+            <td class="ng-binding">9/11/2015</td>
+        </tr><!-- end ngRepeat: query in queries --><tr>
+            <td class="thin-col ng-binding">33</td>
+            <td class="big-data ng-binding">Lungs and Things That Aren't Supposed to be in Them</td>
+            <td class="ng-binding">ben</td>
+
+            <td class="big-data">
+                <a href="" ng-click="showQuery(query)" class="ng-binding">Female@15:09:24</a>
+            </td>
+            <td class="ng-binding">Approved</td>
+            <td class="ng-binding">9/8/2015</td>
+        </tr><!-- end ngRepeat: query in queries --><tr>
+            <td class="thin-col ng-binding">78</td>
+            <td class="big-data ng-binding">Lungs and Things That Aren't Supposed to be in Them</td>
+            <td class="ng-binding">ben</td>
+
+            <td class="big-data">
+                <a href="" ng-click="showQuery(query)" class="ng-binding">Female@14:53:39</a>
+            </td>
+            <td class="ng-binding">Approved</td>
+            <td class="ng-binding">10/7/2015</td>
+        </tr><!-- end ngRepeat: query in queries --><tr>
+            <td class="thin-col ng-binding">135</td>
+            <td class="big-data ng-binding">Lungs and Things That Aren't Supposed to be in Them</td>
+            <td class="ng-binding">ben</td>
+
+            <td class="big-data">
+                <a href="" ng-click="showQuery(query)" class="ng-binding">Female@14:49:05</a>
+            </td>
+            <td class="ng-binding">Approved</td>
+            <td class="ng-binding">10/21/2015</td>
+        </tr><!-- end ngRepeat: query in queries --><tr>
+            <td class="thin-col ng-binding">77</td>
+            <td class="big-data ng-binding">Lungs and Things That Aren't Supposed to be in Them</td>
+            <td class="ng-binding">ben</td>
+
+            <td class="big-data">
+                <a href="" ng-click="showQuery(query)" class="ng-binding">Female@14:29:49</a>
+            </td>
+            <td class="ng-binding">Approved</td>
+            <td class="ng-binding">10/7/2015</td>
+        </tr><!-- end ngRepeat: query in queries --><tr>
+            <td class="thin-col ng-binding">88</td>
+            <td class="big-data ng-binding">Lungs and Things That Aren't Supposed to be in Them</td>
+            <td class="ng-binding">ben</td>
+
+            <td class="big-data">
+                <a href="" ng-click="showQuery(query)" class="ng-binding">Female@13:47:22</a>
+            </td>
+            <td class="ng-binding">Approved</td>
+            <td class="ng-binding">10/8/2015</td>
+        </tr><!-- end ngRepeat: query in queries --><tr>
+            <td class="thin-col ng-binding">70</td>
+            <td class="big-data ng-binding">Lungs and Things That Aren't Supposed to be in Them</td>
+            <td class="ng-binding">ben</td>
+
+            <td class="big-data">
+                <a href="" ng-click="showQuery(query)" class="ng-binding">Female@13:43:02</a>
+            </td>
+            <td class="ng-binding">Approved</td>
+            <td class="ng-binding">9/25/2015</td>
+        </tr><!-- end ngRepeat: query in queries --><tr>
+            <td class="thin-col ng-binding">38</td>
+            <td class="big-data ng-binding">Lungs and Things That Aren't Supposed to be in Them</td>
+            <td class="ng-binding">ben</td>
+
+            <td class="big-data">
+                <a href="" ng-click="showQuery(query)" class="ng-binding">Female@13:32:02</a>
+            </td>
+            <td class="ng-binding">Approved</td>
+            <td class="ng-binding">9/10/2015</td>
+        </tr><!-- end ngRepeat: query in queries --><tr>
+            <td class="thin-col ng-binding">97</td>
+            <td class="big-data ng-binding">Lungs and Things That Aren't Supposed to be in Them</td>
+            <td class="ng-binding">ben</td>
+
+            <td class="big-data">
+                <a href="" ng-click="showQuery(query)" class="ng-binding">Female@12:56:07</a>
+            </td>
+            <td class="ng-binding">Approved</td>
+            <td class="ng-binding">10/15/2015</td>
+        </tr><!-- end ngRepeat: query in queries --><tr>
+            <td class="thin-col ng-binding">56</td>
+            <td class="big-data ng-binding">Lungs and Things That Aren't Supposed to be in Them</td>
+            <td class="ng-binding">ben</td>
+
+            <td class="big-data">
+                <a href="" ng-click="showQuery(query)" class="ng-binding">Female@12:55:50</a>
+            </td>
+            <td class="ng-binding">Approved</td>
+            <td class="ng-binding">9/15/2015</td>
+        </tr><!-- end ngRepeat: query in queries -->
+
+            <tr ng-repeat="query in queries">
+                <td class="thin-col">{{query.stewardId}}</td>
+                <td class="big-data">{{query.topic.name}}</td>
+                <td>{{query.user.userName}}</td>
+
+                <td class="big-data">
+                    <a href ng-click="showQuery(query)">{{query.name}}</a>
+                </td>
+                <td>{{query.stewardResponse}}</td>
+                <td>{{formatDate(query.date)}}</td>
+            </tr>
         </tbody>
 
     </table>
