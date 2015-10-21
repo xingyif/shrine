@@ -31,12 +31,10 @@
                 </a>
             </td>
             <td>
-                <a ng-click="sort.currentColumn = 'name'; sort.descending = !sort.descending; refreshHistory()">
+                <a href="#" ng-click="sort.currentColumn = 'name'; sort.descending = !sort.descending; refreshHistory()">
                     Query Text
-                    <i ng-show="sort.currentColumn == 'name' && sort.descending"
-                       class="fa fa-caret-down"><i/>
-                    <i ng-show="sort.currentColumn == 'name' && !sort.descending"
-                       class="fa fa-caret-up"></i>
+                    <i ng-show="sort.currentColumn == 'name' && sort.descending" class="fa fa-caret-down"></i>
+                    <i ng-show="sort.currentColumn == 'name' && !sort.descending" class="fa fa-caret-up"></i>
                 </a>
             </td>
             <td>
