@@ -7,6 +7,7 @@
     password_label:"test password:", //Password Label
     clientHelpUrl:'help/pdf/shrine-client-guide.pdf',
     networkHelpUrl:'help/pdf/shrine-network-guide.pdf',
+    wikiBaseUrl:       'need-wiki-url'
     //JIRA|SHRINE-519:Charles McGow
     // -------------------------------------------------------------------------------------------
     // THESE ARE ALL THE DOMAINS A USER CAN LOGIN TO
@@ -15,7 +16,7 @@
         domain: "i2b2demo",
         name: "Harvard",
         debug: true,
-        urlCellPM: "http://shrine-qa1.hms.harvard.edu/i2b2/services/PMService/",
+        urlCellPM: "https://shrine-dev1.catalyst/i2b2/services/PMService/",
         //urlCellPM: "http://192.168.169.131/i2b2/services/PMService/",
         allowAnalysis: true,
         isSHRINE: true

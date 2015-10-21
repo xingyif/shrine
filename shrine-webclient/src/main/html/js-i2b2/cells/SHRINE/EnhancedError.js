@@ -84,7 +84,7 @@ $hrine.EnhancedError =
             //wiki codec
             errorDetailDiv.innerHTML +=
                 '<div><i>For information on troubleshooting and resolution, check' +
-                ' <a href="' + errorData.codec +'" target="_blank">the SHRINE Error' +
+                ' <a href="' + i2b2.hive.cfg.wikiBaseUrl + errorData.codec +'" target="_blank">the SHRINE Error' +
                 ' Codex</a>.</i></div>';
         }
 
