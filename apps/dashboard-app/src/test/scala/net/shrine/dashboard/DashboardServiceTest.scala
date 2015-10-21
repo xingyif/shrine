@@ -10,7 +10,7 @@ import org.scalatest.FlatSpec
 import spray.http.BasicHttpCredentials
 
 import spray.testkit.ScalatestRouteTest
-import spray.http.StatusCodes.OK
+import spray.http.StatusCodes.{OK,PermanentRedirect}
 
 @RunWith(classOf[JUnitRunner])
 class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with DashboardService {
@@ -68,6 +68,43 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
       val response = new String(body.data.toByteArray)
       assertResult(""""AuthenticationFailed"""")(response)
     }
+  }
+
+  "StewardService" should  "redirect several urls to client/index.html" in {
+
+    Get() ~>
+      route ~> check {
+      status === PermanentRedirect
+      header("Location") === "client/index.html"
+    }
+
+    Get("/") ~>
+      route ~> check {
+      status === PermanentRedirect
+      header("Location") === "client/index.html"
+    }
+
+    Get("/index.html") ~>
+      route ~> check {
+
+      status === PermanentRedirect
+      header("Location") === "client/index.html"
+    }
+
+    Get("/client") ~>
+      route ~> check {
+
+      status === PermanentRedirect
+      header("Location") === "client/index.html"
+    }
+
+    Get("/client/") ~>
+      route ~> check {
+
+      status === PermanentRedirect
+      header("Location") === "client/index.html"
+    }
+
   }
 }
 

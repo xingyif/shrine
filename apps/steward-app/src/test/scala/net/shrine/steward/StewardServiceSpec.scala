@@ -12,7 +12,7 @@ import spray.http.BasicHttpCredentials
 import spray.routing.MalformedRequestContentRejection
 
 import spray.testkit.ScalatestRouteTest
-import spray.http.StatusCodes.{OK,UnavailableForLegalReasons,Accepted,Unauthorized,UnprocessableEntity,NotFound,Forbidden,PermanentRedirect,TemporaryRedirect}
+import spray.http.StatusCodes.{OK,UnavailableForLegalReasons,Accepted,Unauthorized,UnprocessableEntity,NotFound,Forbidden,PermanentRedirect}
 
 
 @RunWith(classOf[JUnitRunner])
