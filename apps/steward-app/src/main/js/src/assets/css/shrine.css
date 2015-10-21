@@ -1,32 +1,88 @@
+@font-face {
+    font-family: 'Nexa';
+    src: url('../fnt/nexa/nexa-light-webfont.eot');
+    src: url('../fnt/nexa/nexa-light-webfont.eot?#iefix') format('embedded-opentype'),
+    url('../fnt/nexa/nexa-light-webfont.woff2') format('woff2'),
+    url('../fnt/nexa/nexa-light-webfont.woff') format('woff'),
+    url('../fnt/nexa/nexa-light-webfont.ttf') format('truetype'),
+    url('../fnt/nexa/nexa-light-webfont.svg#nexa_lightregular') format('svg');
+    font-weight: normal;
+    font-style: normal;
+}
+
+
+
 
 @font-face {
-    font-family: "Nexa";
-    src: url('../fnt/nexa/Nexa-Light.otf');
+    font-family: 'Nexa Bold';
+    src: url('../fnt/nexa/nexa-bold-webfont.eot');
+    src: url('../fnt/nexa/nexa-bold-webfont.eot?#iefix') format('embedded-opentype'),
+    url('../fnt/nexa/nexa-bold-webfont.woff2') format('woff2'),
+    url('../fnt/nexa/nexa-bold-webfont.woff') format('woff'),
+    url('../fnt/nexa/nexa-bold-webfont.ttf') format('truetype'),
+    url('../fnt/nexa/nexa-bold-webfont.svg#nexa_boldregular') format('svg');
+    font-weight: normal;
+    font-style: normal;
+
+}
+
+
+@font-face {
+    font-family: 'Open Sans Regular';
+    src: url('../fnt/open-sans/opensans-regular-webfont.eot');
+    src: url('../fnt/open-sans/opensans-regular-webfont.eot?#iefix') format('embedded-opentype'),
+    url('../fnt/open-sans/opensans-regular-webfont.woff2') format('woff2'),
+    url('../fnt/open-sans/opensans-regular-webfont.woff') format('woff'),
+    url('../fnt/open-sans/opensans-regular-webfont.ttf') format('truetype'),
+    url('../fnt/open-sans/opensans-regular-webfont.svg#open_sansregular') format('svg');
+    font-weight: normal;
+    font-style: normal;
+
+}
+
+
+
+
+@font-face {
+    font-family: 'Open Sans Semibold';
+    src: url('../fnt/open-sans/opensans-semibold-webfont.eot');
+    src: url('../fnt/open-sans/opensans-semibold-webfont.eot?#iefix') format('embedded-opentype'),
+    url('../fnt/open-sans/opensans-semibold-webfont.woff2') format('woff2'),
+    url('../fnt/open-sans/opensans-semibold-webfont.woff') format('woff'),
+    url('../fnt/open-sans/opensans-semibold-webfont.ttf') format('truetype'),
+    url('../fnt/open-sans/opensans-semibold-webfont.svg#open_sanssemibold') format('svg');
+    font-weight: normal;
+    font-style: normal;
+
 }
 
 @font-face {
-    font-family: "Nexa Bold";
-    src: url('../fnt/nexa/Nexa-Bold.otf');
+    font-family: 'Roboto Bold';
+    src: url('../fnt/roboto/roboto-bold-webfont.eot');
+    src: url('../fnt/roboto/roboto-bold-webfont.eot?#iefix') format('embedded-opentype'),
+    url('../fnt/roboto/roboto-bold-webfont.woff2') format('woff2'),
+    url('../fnt/roboto/roboto-bold-webfont.woff') format('woff'),
+    url('../fnt/roboto/roboto-bold-webfont.ttf') format('truetype'),
+    url('../fnt/roboto/roboto-bold-webfont.svg#robotobold') format('svg');
+    font-weight: normal;
+    font-style: normal;
+
 }
+
+
+
 
 @font-face {
-    font-family: "Open Sans Semibold";
-    src: url('../fnt/open-sans/OpenSans-Semibold.ttf');
-}
+    font-family: 'Roboto Regular';
+    src: url('../fnt/roboto/roboto-regular-webfont.eot');
+    src: url('../fnt/roboto/roboto-regular-webfont.eot?#iefix') format('embedded-opentype'),
+    url('../fnt/roboto/roboto-regular-webfont.woff2') format('woff2'),
+    url('../fnt/roboto/roboto-regular-webfont.woff') format('woff'),
+    url('../fnt/roboto/roboto-regular-webfont.ttf') format('truetype'),
+    url('../fnt/roboto/roboto-regular-webfont.svg#robotoregular') format('svg');
+    font-weight: normal;
+    font-style: normal;
 
-@font-face {
-    font-family: "Open Sans Regular";
-    src: url('../fnt/open-sans/OpenSans-Regular.ttf');
-}
-
-@font-face{
-    font-family: "Roboto Bold";
-    src: url('../fnt/roboto/Roboto-Bold.ttf');
-}
-
-@font-face{
-    font-family: "Roboto Regular";
-    src: url('../fnt/roboto/Roboto-Regular.ttf');
 }
 
 .main-app{
