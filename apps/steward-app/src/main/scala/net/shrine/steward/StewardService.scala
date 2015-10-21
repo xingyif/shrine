@@ -48,7 +48,7 @@ trait StewardService extends HttpService with Json4sSupport {
   }
 
   lazy val requestLogRoute = logRequestResponse(logEntryForRequest _) {
-    staticResources ~ makeTrouble ~ about
+    redirectToIndex ~ staticResources ~ makeTrouble ~ about
   }
 
   lazy val fullLogRoute = logRequestResponse(logEntryForRequestResponse _) {
@@ -95,14 +95,16 @@ trait StewardService extends HttpService with Json4sSupport {
     complete(throw new IllegalStateException("fake trouble"))
   }
 
-  lazy val staticResources = pathPrefix("client"){
+  lazy val redirectToIndex = (pathEndOrSingleSlash | path("index.html")) {
+    redirect("client/index.html", StatusCodes.PermanentRedirect) //todo pick up the top of the url from context instead of hard-coded "steward"
+  }
+
+  lazy val staticResources = pathPrefix("client") {
+    pathEndOrSingleSlash {
+      redirect("client/index.html", StatusCodes.PermanentRedirect) //todo pick up the top of the url from context instead of hard-coded "steward"
+    } ~ {
       getFromResourceDirectory("client")
-    } ~ pathEnd {
-      redirect("steward/client/index.html", StatusCodes.PermanentRedirect) //todo pick up the top of the url from context instead of hard-coded "steward"
-    } ~ path( "index.html" ) {
-      redirect("client/index.html", StatusCodes.PermanentRedirect)
-    } ~ pathSingleSlash {
-      redirect("client/index.html", StatusCodes.PermanentRedirect)
+    }
   }
 
   lazy val about = pathPrefix("about") {

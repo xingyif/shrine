@@ -1226,7 +1226,6 @@ class StewardServiceTest extends FlatSpec with ScalatestRouteTest with TestWithD
       header("Location") === "client/index.html"
     }
 
-
     Get("/") ~>
       route ~> check {
       status === PermanentRedirect
@@ -1234,6 +1233,20 @@ class StewardServiceTest extends FlatSpec with ScalatestRouteTest with TestWithD
     }
 
     Get("/index.html") ~>
+      route ~> check {
+
+      status === PermanentRedirect
+      header("Location") === "client/index.html"
+    }
+
+    Get("/client") ~>
+      route ~> check {
+
+      status === PermanentRedirect
+      header("Location") === "client/index.html"
+    }
+
+    Get("/client/") ~>
       route ~> check {
 
       status === PermanentRedirect
