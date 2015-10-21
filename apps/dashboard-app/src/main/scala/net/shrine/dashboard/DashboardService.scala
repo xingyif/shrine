@@ -86,7 +86,7 @@ trait DashboardService extends HttpService with Json4sSupport {
     complete(throw new IllegalStateException("fake trouble"))
   }
 
-  lazy val redirectToIndex = (pathEnd ) {
+  lazy val redirectToIndex = pathEnd {
     redirect("shrine-dashboard/client/index.html", StatusCodes.PermanentRedirect) //todo pick up "shrine-dashboard" programatically
   } ~
     ( path("index.html") | pathSingleSlash) {
