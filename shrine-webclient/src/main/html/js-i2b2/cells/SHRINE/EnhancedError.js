@@ -73,27 +73,40 @@ $hrine.EnhancedError =
             btnExpand.style.display   = 'none';
             btnContract.style.display = 'inline';
             errorDetailDiv.innerHTML = '<div><b>Name:</b></div><div>' + errorData.summary + '</div><br/>' +
-                '<div><b>Description:</b></div><div>' + errorData.description + '</div><br/>' +
-                '<div><b>Technical Details:</b></div><pre style="margin-top:0">' + errorData.details + '</pre><br/>'
-
-            //exception details.
-            errorDetailDiv.innerHTML += '<div><b>Stack Trace Name:</b></div><pre style="margin-top:0">' + errorData.exception.name + '</pre><br/>' +
-                '<div><b>Stack Trace Message:</b></div><pre style="margin-top:0">' + errorData.exception.message + '</pre><br/>' +
-                '<div><b>Stack Trace Details:</b></div><pre style="margin-top:0">' + errorData.exception.stackTrace + '</pre><br/>';
+                '<div><b>Description:</b></div><div>' + errorData.description + '</div>';
 
             //wiki codec
             errorDetailDiv.innerHTML +=
                 '<div><i>For information on troubleshooting and resolution, check' +
-                ' <a href="' + i2b2.hive.cfg.wikiBaseUrl + errorData.codec +'" target="_blank">the SHRINE Error' +
+                ' <a href="' + i2b2.hive.cfg.wikiBaseUrl + '/' + errorData.codec +'" target="_blank">the SHRINE Error' +
                 ' Codex</a>.</i></div>';
+
+            //exception details.
+            errorDetailDiv.innerHTML +=
+                '<div><b>Technical Details:</b></div><pre style="margin-top:0">' + errorData.details + '</pre><br/>';
+
+            //more exception details.
+            errorDetailDiv.innerHTML += '<div><b>Stack Trace Name:</b></div><pre style="margin-top:0">' + errorData.exception.name + '</pre><br/>' +
+                '<div><b>Stack Trace Message:</b></div><pre style="margin-top:0">' + errorData.exception.message + '</pre><br/>' +
+                '<div><b>Stack Trace Details:</b></div><pre style="margin-top:0">' + errorData.exception.stackTrace + '</pre><br/>';
+
         }
 
 
         function retractErrorDetailDiv (ev) {
+            var errorDetailDiv = $('errorDetailDiv');
+
             btnExpand.style.display   = 'inline';
             btnContract.style.display = 'none';
-            $('errorDetailDiv').innerHTML = '<div><b>Name:</b></div><div>' + errorData.summary + '</div><br/>' +
-                '<div><b>Description:</b></div><div>' + errorData.description + '</div>'
+
+            errorDetailDiv.innerHTML = '<div><b>Name:</b></div><div>' + errorData.summary + '</div><br/>' +
+                '<div><b>Description:</b></div><div>' + errorData.description + '</div>';
+
+            //wiki codec
+            errorDetailDiv.innerHTML +=
+                '<div><i>For information on troubleshooting and resolution, check' +
+                ' <a href="' + i2b2.hive.cfg.wikiBaseUrl + '/' + errorData.codec +'" target="_blank">the SHRINE Error' +
+                ' Codex</a>.</i></div>';        
         }
 
         function onClick(event) {
@@ -150,8 +163,18 @@ $hrine.EnhancedError =
             // / display the dialoge
             dialogErrorDetail.center();
             dialogErrorDetail.show();
-            $('errorDetailDiv').innerHTML = '<div><b>Name:</b></div><div>' + errorData.summary+ '</div><br/>' +
+
+            var errorDetailDiv = $('errorDetailDiv');
+
+            errorDetailDiv.innerHTML = '<div><b>Name:</b></div><div>' + errorData.summary + '</div><br/>' +
                 '<div><b>Description:</b></div><div>' + errorData.description + '</div>';
+
+            //wiki codec
+            errorDetailDiv.innerHTML +=
+                '<div><i>For information on troubleshooting and resolution, check' +
+                ' <a href="' + i2b2.hive.cfg.wikiBaseUrl + '/' + errorData.codec +'" target="_blank">the SHRINE Error' +
+                ' Codex</a>.</i></div>';        
+
         }
 
         function addAnchorEvents () {
