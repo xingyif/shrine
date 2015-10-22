@@ -25,7 +25,6 @@ trait Problem {
 
   def description:String
 
-  //todo stack trace as xml elements? would be easy
   def exceptionXml(exception:Option[Throwable]): Option[Elem] = exception.map{x =>
     <exception>
       <name>{x.getClass.getName}</name>
@@ -98,7 +97,7 @@ object ProblemDigest extends XmlUnmarshaller[ProblemDigest] with Loggable {
 }
 
 case class Stamp(host:InetAddress,time:Long,source:ProblemSources.ProblemSource) {
-  def pretty = s"${new Date(time)} on $host ${source.pretty}"
+  def pretty = s"${new Date(time)} on ${host.getHostName} ${source.pretty}"
 }
 
 object Stamp {

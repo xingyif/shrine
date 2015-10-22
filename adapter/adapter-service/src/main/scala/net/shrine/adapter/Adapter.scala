@@ -1,7 +1,5 @@
 package net.shrine.adapter
 
-import java.net.InetAddress
-
 import net.shrine.log.Loggable
 import net.shrine.problem.{Problem, ProblemNotYetEncoded, LoggingProblemHandler, ProblemSources, AbstractProblem}
 import net.shrine.protocol.{ShrineRequest, BroadcastMessage, ErrorResponse, BaseShrineResponse, AuthenticationInfo}
@@ -70,7 +68,7 @@ case class AdapterMappingProblem(x:AdapterMappingException) extends AbstractProb
 
   override val throwable = Some(x)
   override val summary: String = "Could not map query term(s)."
-  override val description = s"The Shrine Adapter on ${stamp.host} cannot map this query to its local terms."
+  override val description = s"The Shrine Adapter on ${stamp.host.getHostName} cannot map this query to its local terms."
   override val detailsXml = <details>
                               Query Defitiontion is {x.runQueryRequest.queryDefinition}
                               RunQueryRequest is ${x.runQueryRequest.elideAuthenticationInfo}
