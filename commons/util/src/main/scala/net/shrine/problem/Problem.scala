@@ -140,11 +140,20 @@ object ProblemSources{
   def problemSources = Set(Adapter,Hub,Qep,Dsa,Unknown)
 }
 
+case class ProblemNotYetEncoded(internalSummary:String,t:Throwable) extends AbstractProblem(ProblemSources.Unknown){
+  override val summary = "An unanticipated problem encountered."
 
-case class ProblemNotYetEncoded(summary:String,t:Throwable) extends AbstractProblem(ProblemSources.Unknown){
   override val throwable = Some(t)
 
-  override val description = s"An unexpected problem has occurred. This problem has not yet been codified in Shrine."
+  override val description = "This problem is not yet classified in Shrine source code. Please report the details to the Shrine dev team."
+
+  override val detailsXml: NodeSeq = NodeSeq.fromSeq(
+    <details>
+      {internalSummary}
+      {throwableDetail.getOrElse("")}
+    </details>
+  )
+
 }
 
 object ProblemNotYetEncoded {

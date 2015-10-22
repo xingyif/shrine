@@ -211,7 +211,7 @@ angular.module('stewardApp')
                     };
 
                     $scope.canViewHistory = function () {
-                        var canView =  ($app.globals.currentUser.roles[0] === $scope.roles.ROLE2 && $scope.loadedState !== "Pending") || ($scope.loadedState === "Approved");
+                        var canView =  (($app.globals.currentUser.roles[0] === $scope.roles.ROLE2 && $scope.loadedState !== "Pending") || ($scope.loadedState === "Approved")) && $scope.tabState != 'edit';
                         return canView;
                     };
                 },

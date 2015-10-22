@@ -8,14 +8,14 @@
             <button type="button"
                     class="btn btn-default shrine-btn-default"
                     ng-click="tabState = 'description'"
-                    ng-class="tabState === 'description' ? 'shrine-btn-on' : 'shrine-btn-off'">
+                    ng-class="tabState !== 'history' ? 'shrine-btn-on' : 'shrine-btn-off'">
                 Description
             </button>
             <button type="button"
                     class="btn btn-default shrine-btn-default"
                     ng-click="tabState = 'history'"
                     ng-disabled="!canViewHistory()"
-                    ng-class="tabState !== 'description' ? 'shrine-btn-on' : 'shrine-btn-off'">
+                    ng-class="tabState === 'history' ? 'shrine-btn-on' : 'shrine-btn-off'">
                 Query History
             </button>
         </div>

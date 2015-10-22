@@ -4,23 +4,17 @@
         <thead>
         <tr>
             <td class="thin-col">
-                <a href="#"
-                   ng-click="sort.currentColumn = 'stewardId'; sort.descending = !sort.descending; refreshHistory()">
+                <a href="#" ng-click="sort.currentColumn = 'stewardId'; sort.descending = !sort.descending; refreshHistory()">
                     ID
-                    <i ng-show="sort.currentColumn == 'stewardId' && sort.descending"
-                       class="fa fa-caret-down"></i>
-                    <i ng-show="sort.currentColumn == 'stewardId' && !sort.descending"
-                       class="fa fa-caret-up"></i>
+                    <i ng-show="sort.currentColumn == 'stewardId' && sort.descending" class="fa fa-caret-down"></i>
+                    <i ng-show="sort.currentColumn == 'stewardId' && !sort.descending" class="fa fa-caret-up"></i>
                 </a>
             </td>
             <td>
-                <a href="#"
-                   ng-click="sort.currentColumn = 'topicName'; sort.descending = !sort.descending; refreshHistory()">
+                <a href="#" ng-click="sort.currentColumn = 'topicName'; sort.descending = !sort.descending; refreshHistory()">
                     Query Topic
-                    <i ng-show="sort.currentColumn == 'topicName' && sort.descending"
-                    class="fa fa-caret-down"></i>
-                    <i ng-show="sort.currentColumn == 'topicName' && !sort.descending"
-                       class="fa fa-caret-up"></i>
+                    <i ng-show="sort.currentColumn == 'topicName' && sort.descending" class="fa fa-caret-down"></i>
+                    <i ng-show="sort.currentColumn == 'topicName' && !sort.descending" class="fa fa-caret-up"></i>
                 </a>
             </td>
             <td>
@@ -57,18 +51,17 @@
         </thead>
 
         <tbody>
+            <tr ng-repeat="query in queries">
+                <td class="thin-col">{{query.stewardId}}</td>
+                <td class="big-data">{{query.topic.name}}</td>
+                <td>{{query.user.userName}}</td>
 
-        <tr ng-repeat="query in queries">
-            <td class="thin-col">{{query.stewardId}}</td>
-            <td class="big-data">{{query.topic.name}}</td>
-            <td>{{query.user.userName}}</td>
-
-            <td class="big-data">
-                <a href ng-click="showQuery(query)">{{query.name}}</a>
-            </td>
-            <td>{{query.stewardResponse}}</td>
-            <td>{{formatDate(query.date)}}</td>
-        </tr>
+                <td class="big-data">
+                    <a href ng-click="showQuery(query)">{{query.name}}</a>
+                </td>
+                <td>{{query.stewardResponse}}</td>
+                <td>{{formatDate(query.date)}}</td>
+            </tr>
         </tbody>
 
     </table>

@@ -292,7 +292,7 @@ abstract class AbstractReadQueryResultAdapter[Req <: BaseShrineRequest, Rsp <: S
 }
 
 case class QueryNotFound(queryId:Long) extends AbstractProblem(ProblemSources.Adapter) {
-  override def summary: String = s"Query with id '$queryId' not found"
+  override def summary: String = s"Query not found"
   override def description:String = s"No query with id $queryId found on ${stamp.host}"
 }
 
