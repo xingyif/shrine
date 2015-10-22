@@ -105,9 +105,9 @@ object RemoteAdapterClient {
 }
 
 case class HttpErrorCodeFromAdapter(url:String,statusCode:Int,responseBody:String) extends AbstractProblem(ProblemSources.Adapter) {
-  override def summary: String = s"Hub received error code $statusCode"
+  override def summary: String = s"Hub received a fatal error response"
 
-  override def description: String = s"Hub received error code $statusCode from $url"
+  override def description: String = s"Hub received error code $statusCode from the adapter at $url"
 
   override def detailsXml:NodeSeq = <details>{s"Http response body was $responseBody"}</details>
 }
@@ -116,7 +116,7 @@ case class CouldNotParseXmlFromAdapter(url:String,statusCode:Int,responseBody:St
 
   override def throwable = Some(saxx)
 
-  override def summary: String = s"Hub could not parse xml from adapter"
+  override def summary: String = s"Hub could not parse response from adapter"
 
   override def description: String = s"Hub could not parse xml from $url due to ${saxx.toString}"
 
