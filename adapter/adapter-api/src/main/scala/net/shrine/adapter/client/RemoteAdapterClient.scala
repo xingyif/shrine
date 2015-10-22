@@ -105,7 +105,7 @@ object RemoteAdapterClient {
 }
 
 case class HttpErrorCodeFromAdapter(url:String,statusCode:Int,responseBody:String) extends AbstractProblem(ProblemSources.Adapter) {
-  override def summary: String = s"Hub received a fatal error response"
+  override def summary: String = "Hub received a fatal error response"
 
   override def description: String = s"Hub received error code $statusCode from the adapter at $url"
 

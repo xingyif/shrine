@@ -98,13 +98,13 @@ object BasicAggregator {
 
 case class CouldNotConnectToAdapter(origin:NodeId,cx:ConnectException) extends AbstractProblem(ProblemSources.Hub) {
   override val throwable = Some(cx)
-  override val summary: String = s"Shrine could not connect to the adapter."
-  override val description: String = s"Shrine could not connect to the adapter at ${origin.name} due to ${throwable.get}"
+  override val summary: String = "Shrine could not connect to the adapter."
+  override val description: String = s"Shrine could not connect to the adapter at ${origin.name} due to ${throwable.get}."
 }
 
 case class CouldNotParseResultsProblem(cnrpx:CouldNotParseResultsException) extends AbstractProblem(ProblemSources.Hub) {
   override val throwable = Some(cnrpx)
-  override val summary: String = s"Could not parse response."
+  override val summary: String = "Could not parse response."
   override val description = s"While parsing a response from ${cnrpx.url} with http code ${cnrpx.statusCode} caught '${cnrpx.cause}'"
   override val detailsXml = <details>
                               Message body is {cnrpx.body}
@@ -115,9 +115,8 @@ case class CouldNotParseResultsProblem(cnrpx:CouldNotParseResultsException) exte
 
 case class HttpErrorResponseProblem(cnrpx:CouldNotParseResultsException) extends AbstractProblem(ProblemSources.Hub) {
   override val throwable = Some(cnrpx)
-//  override val summary: String = s"Observed ${cnrpx.statusCode} and caught a ${cnrpx.cause.getClass.getSimpleName} while parsing a response from ${cnrpx.url}"
-  override val summary: String = s"Adapter error"
-  override val description = s"Observed http status code ${cnrpx.statusCode} from ${cnrpx.url} and caught '${cnrpx.cause}'"
+  override val summary: String = "Adapter error."
+  override val description = s"Observed http status code ${cnrpx.statusCode} from ${cnrpx.url} and caught ${cnrpx.cause}."
   override val detailsXml = <details>
                               Message body is {cnrpx.body}
                               {throwableDetail.getOrElse("")}

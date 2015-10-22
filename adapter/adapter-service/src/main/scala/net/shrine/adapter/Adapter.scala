@@ -52,8 +52,8 @@ abstract class Adapter extends Loggable {
 
 case class AdapterLockout(authn:AuthenticationInfo,x:AdapterLockoutException) extends AbstractProblem(ProblemSources.Adapter) {
   override val throwable = Some(x)
-  override val summary: String = s"User '${authn.domain}:${authn.username}' locked out"
-  override val description:String = s"User '${authn.domain}:${authn.username}' has run too many queries that produce the same result at ${x.url}"
+  override val summary: String = s"User '${authn.domain}:${authn.username}' locked out."
+  override val description:String = s"User '${authn.domain}:${authn.username}' has run too many queries that produce the same result at ${x.url} ."
 }
 
 case class CrcCouldNotBeInvoked(crcUrl:String,request:ShrineRequest,x:CrcInvocationException) extends AbstractProblem(ProblemSources.Adapter) {
@@ -69,7 +69,7 @@ case class CrcCouldNotBeInvoked(crcUrl:String,request:ShrineRequest,x:CrcInvocat
 case class AdapterMappingProblem(x:AdapterMappingException) extends AbstractProblem(ProblemSources.Adapter) {
 
   override val throwable = Some(x)
-  override val summary: String = s"Could not map query term(s)."
+  override val summary: String = "Could not map query term(s)."
   override val description = s"The Shrine Adapter on ${stamp.host} cannot map this query to its local terms."
   override val detailsXml = <details>
                               Query Defitiontion is {x.runQueryRequest.queryDefinition}
