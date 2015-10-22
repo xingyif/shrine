@@ -83,6 +83,7 @@ angular
         };
 
         TopicsMdl.prototype.requestNewTopic =  function (topic) {
+            topic.name = topic.name;
             return svc.requestNewTopic(this.role, topic);
         };
 
@@ -120,7 +121,7 @@ angular
         model.updateTopic = function (id, name, description) {
             var url = mdlSvc.url.base + URLS.UPDATE_TOPIC + id;
             return $http.post(url, {
-                name:        name,
+                name:        name.substring(0,254),
                 description: description
             });
         };
