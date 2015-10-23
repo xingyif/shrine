@@ -73,13 +73,13 @@ $hrine.EnhancedError =
             btnExpand.style.display   = 'none';
             btnContract.style.display = 'inline';
             errorDetailDiv.innerHTML = '<div><b>Name:</b></div><div>' + errorData.summary + '</div><br/>' +
-                '<div><b>Description:</b></div><div>' + errorData.description + '</div>';
+                '<div><b>Description:</b></div><div>' + errorData.description + '</div><br/>';
 
             //wiki codec
             errorDetailDiv.innerHTML +=
                 '<div><i>For information on troubleshooting and resolution, check' +
                 ' <a href="' + i2b2.hive.cfg.wikiBaseUrl + '/' + errorData.codec +'" target="_blank">the SHRINE Error' +
-                ' Codex</a>.</i></div>';
+                ' Codex</a>.</i></div><br/>';
 
             //exception details.
             errorDetailDiv.innerHTML +=
@@ -100,7 +100,7 @@ $hrine.EnhancedError =
             btnContract.style.display = 'none';
 
             errorDetailDiv.innerHTML = '<div><b>Name:</b></div><div>' + errorData.summary + '</div><br/>' +
-                '<div><b>Description:</b></div><div>' + errorData.description + '</div>';
+                '<div><b>Description:</b></div><div>' + errorData.description + '</div><br/>';
 
             //wiki codec
             errorDetailDiv.innerHTML +=
@@ -167,7 +167,7 @@ $hrine.EnhancedError =
             var errorDetailDiv = $('errorDetailDiv');
 
             errorDetailDiv.innerHTML = '<div><b>Name:</b></div><div>' + errorData.summary + '</div><br/>' +
-                '<div><b>Description:</b></div><div>' + errorData.description + '</div>';
+                '<div><b>Description:</b></div><div>' + errorData.description + '</div><br/>';
 
             //wiki codec
             errorDetailDiv.innerHTML +=
