@@ -4,14 +4,12 @@ import net.shrine.protocol.AuthenticationInfo
 import net.shrine.protocol.Credential
 import net.shrine.protocol.BroadcastMessage
 import net.shrine.protocol.DeleteQueryRequest
-import org.junit.{Ignore, Test}
+import org.junit.Test
 import net.shrine.protocol.NodeId
-import net.shrine.adapter.client.InJvmAdapterClient
 import net.shrine.protocol.Result
 import scala.concurrent.Future
 import net.shrine.adapter.client.AdapterClient
 import net.shrine.protocol.DeleteQueryResponse
-import net.shrine.aggregation.DeleteQueryAggregator
 import net.shrine.util.ShouldMatchersForJUnit
 import scala.concurrent.Await
 import net.shrine.dao.squeryl.SquerylEntryPoint
@@ -23,20 +21,16 @@ import net.shrine.protocol.query.QueryDefinition
 import net.shrine.protocol.RunQueryResponse
 import net.shrine.protocol.QueryResult
 import net.shrine.util.XmlDateHelper
-import net.shrine.aggregation.RunQueryAggregator
-import net.shrine.protocol.AggregatedRunQueryResponse
-import net.shrine.protocol.AggregatedRunQueryResponse
 import net.shrine.protocol.ShrineResponse
 import net.shrine.protocol.ErrorResponse
-import net.shrine.broadcaster.dao.model.squeryl.SquerylHubQueryResultRow
 import net.shrine.broadcaster.dao.model.HubQueryResultRow
 import net.shrine.broadcaster.dao.model.HubQueryStatus
 
 /**
  * @author clint
- * @date Dec 15, 2014
+ * @since Dec 15, 2014
  */
-@Ignore
+//noinspection UnitMethodIsParameterless,NameBooleanParameters,ScalaUnnecessaryParentheses
 final class AdapterClientBroadcasterLoggingTest extends AbstractSquerylHubDaoTest with ShouldMatchersForJUnit {
 
   private def makeBroadcaster(nodes: Set[NodeHandle]): AdapterClientBroadcaster = AdapterClientBroadcaster(nodes, dao)
@@ -66,8 +60,6 @@ final class AdapterClientBroadcasterLoggingTest extends AbstractSquerylHubDaoTes
   private val broadcastMessageRunQuery = {
     BroadcastMessage(authn, RunQueryRequest("projectId", 12345.milliseconds, authn, None, None, Set(PATIENT_COUNT_XML), queryDef))
   }
-  
-  private val deleteQueryAggregator = new DeleteQueryAggregator
 
   import SquerylEntryPoint._
   
