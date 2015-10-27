@@ -286,7 +286,7 @@ td{
     border-right: 1px solid #CCD8DF;
     overflow: hidden;
     max-width: 450px;
-    word-wrap: break-word;
+    word-break: break-all;
 }
 
 
