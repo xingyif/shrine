@@ -53,7 +53,6 @@ abstract class BasicAggregator[T <: BaseShrineResponse: Manifest] extends Aggreg
           case Result(origin, _, errorResponse: ErrorResponse) => Error(Option(origin), errorResponse)
           case Result(origin, elapsed, response: T) if isAggregatable(response) => Valid(origin, elapsed, response)
           case Timeout(origin) => Error(Option(origin), ErrorResponse(s"Timed out querying node '${origin.name}'"))
-            //todo failure becomes an ErrorResponse and Error status type here. And the stack trace gets eaten.
           case Failure(origin, cause) => {
             cause match {
               case cx: ConnectException => Error(Option(origin), ErrorResponse(CouldNotConnectToAdapter(origin, cx)))
