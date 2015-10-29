@@ -123,8 +123,7 @@ $hrine.EnhancedError =
         function getExpandedHtml () {
             var expandedHtml  = getRetractedHtml() +
                 '<br/>' +
-                '<div><b><i>Copy the text below and e-mail it to your' +
-                ' site administrator for fastest response.</i></b></div>' +
+                '<div><b><i>Copy the text below and paste it in an email to your site administrator for a faster response.</i></b></div>' +
                 '<br/>' +
                 '<div><b>Technical Details:</b></div><pre style="margin-top:0">' + errorData.details + '</pre><br/>' +
                 '<div><b>Codec:</b></div><pre style="margin-top:0">' + errorData.codec + '</pre><br/>' +
