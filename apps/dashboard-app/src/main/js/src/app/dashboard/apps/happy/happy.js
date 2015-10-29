@@ -92,7 +92,7 @@ angular.module('shrine-happy', ['happy-model', 'ngAnimate', 'ui.bootstrap'])
     .directive("fatalFailure", function () {
         return {
             restrict: "E",
-            templateUrl: "src/app/dashboard/apps/happy/fatal-failure/qep-failure.tpl.html",
+            templateUrl: "src/app/dashboard/apps/happy/fatal-failure/fatal-failure.tpl.html",
             replace: true
         };
     });
