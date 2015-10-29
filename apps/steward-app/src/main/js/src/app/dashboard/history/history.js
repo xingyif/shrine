@@ -112,6 +112,23 @@ angular.module('stewardApp')
                     $scope.refreshHistory($scope.skip, $scope.limit);
                 };
 
+                /**
+                 *
+                 * @param columnId
+                 */
+                $scope.setSort = function (columnId) {
+
+                    //change direction if same column is clicked.
+                    if($scope.sort.currentColumn == columnId) {
+                        $scope.sort.descending = !$scope.sort.descending;
+                        return;
+                    }
+
+                    //start out the sorting as ascending.
+                    $scope.sort.descending = false;
+                    $scope.sort.currentColumn = columnId;
+                }
+
 
                 /**
                  *
