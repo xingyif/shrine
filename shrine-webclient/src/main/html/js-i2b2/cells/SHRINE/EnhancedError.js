@@ -105,12 +105,14 @@ $hrine.EnhancedError =
          * @returns {string}
          */
         function getRetractedHtml () {
+
+            var wikiBaseUrl = (i2b2.hive.cfg.wikiBaseUrl || 'https://open.med.harvard.edu/wiki/display/SHRINE/');
             var retractedHtml = '<div><b>Summary:</b></div>'+
                 '<div>' + errorData.summary + '</div><br/>' +
                 '<div><b>Description:</b></div>'+
                 '<div>' + errorData.description + '</div><br/>' +
                 '<div><i>For information on troubleshooting and resolution, check' +
-                ' <a href="' + i2b2.hive.cfg.wikiBaseUrl + '/' + errorData.codec +'" target="_blank">the SHRINE Error' +
+                ' <a href="' + wikiBaseUrl + errorData.codec +'" target="_blank">the SHRINE Error' +
                 ' Codex</a>.</i></div>';
             return retractedHtml;
         }
