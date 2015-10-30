@@ -766,3 +766,9 @@ i.shrine-close:hover{
     content: "×";
 }
 
+
+.ng-tpl{
+    overflow: hidden;
+}
+
+
