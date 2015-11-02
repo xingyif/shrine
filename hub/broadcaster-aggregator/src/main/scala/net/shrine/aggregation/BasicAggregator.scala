@@ -1,6 +1,7 @@
 package net.shrine.aggregation
 
-import java.net.ConnectException
+import java.io.IOException
+import java.net.{UnknownHostException, ConnectException}
 
 import net.shrine.broadcaster.CouldNotParseResultsException
 import net.shrine.log.Loggable
@@ -56,6 +57,7 @@ abstract class BasicAggregator[T <: BaseShrineResponse: Manifest] extends Aggreg
           case Failure(origin, cause) => {
             cause match {
               case cx: ConnectException => Error(Option(origin), ErrorResponse(CouldNotConnectToAdapter(origin, cx)))
+              case uhx: UnknownHostException => Error(Option(origin), ErrorResponse(CouldNotConnectToAdapter(origin, uhx)))
               case cnprx:CouldNotParseResultsException => {
                 if(cnprx.statusCode >= 400) Error(Option(origin), ErrorResponse(HttpErrorResponseProblem(cnprx)))
                 else Error(Option(origin), ErrorResponse(CouldNotParseResultsProblem(cnprx)))
@@ -95,7 +97,7 @@ object BasicAggregator {
   private[aggregation] final case class Invalid(origin: Option[NodeId], errorMessage: String) extends ParsedResult[Nothing]
 }
 
-case class CouldNotConnectToAdapter(origin:NodeId,cx:ConnectException) extends AbstractProblem(ProblemSources.Hub) {
+case class CouldNotConnectToAdapter(origin:NodeId,cx: IOException) extends AbstractProblem(ProblemSources.Hub) {
   override val throwable = Some(cx)
   override val summary: String = "Shrine could not connect to the adapter."
   override val description: String = s"Shrine could not connect to the adapter at ${origin.name} due to ${throwable.get}."

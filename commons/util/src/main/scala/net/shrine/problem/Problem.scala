@@ -143,8 +143,8 @@ case class ProblemNotYetEncoded(internalSummary:String,t:Option[Throwable] = Non
   override val summary = "An unanticipated problem encountered."
 
   override val throwable = {
-    val rx = t.fold(new IllegalStateException(s"$summary , not yet codified in Shrine."))(
-      new IllegalStateException(s"$summary , not yet codified in Shrine.",_)
+    val rx = t.fold(new IllegalStateException(s"$summary"))(
+      new IllegalStateException(s"$summary",_)
       )
     rx.fillInStackTrace()
     Some(rx)
