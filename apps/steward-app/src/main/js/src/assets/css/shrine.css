@@ -765,8 +765,3 @@ i.shrine-close:hover{
 .shrine-close:before {
     content: "×";
 }
-
-.ng-tpl{
-    overflow: hidden;
-}
-
