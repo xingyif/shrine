@@ -139,10 +139,18 @@ object ProblemSources{
   def problemSources = Set(Adapter,Hub,Qep,Dsa,Unknown)
 }
 
-case class ProblemNotYetEncoded(internalSummary:String,t:Throwable) extends AbstractProblem(ProblemSources.Unknown){
+case class ProblemNotYetEncoded(internalSummary:String,t:Option[Throwable] = None) extends AbstractProblem(ProblemSources.Unknown){
   override val summary = "An unanticipated problem encountered."
 
-  override val throwable = Some(t)
+  override val throwable = {
+    val rx = t.fold(new IllegalStateException(s"$summary , not yet codified in Shrine."))(
+      new IllegalStateException(s"$summary , not yet codified in Shrine.",_)
+      )
+    rx.fillInStackTrace()
+    Some(rx)
+  }
+
+  val reportedAtStackTrace = new IllegalStateException("Capture reporting stack trace.")
 
   override val description = "This problem is not yet classified in Shrine source code. Please report the details to the Shrine dev team."
 
@@ -152,14 +160,8 @@ case class ProblemNotYetEncoded(internalSummary:String,t:Throwable) extends Abst
       {throwableDetail.getOrElse("")}
     </details>
   )
-
 }
 
 object ProblemNotYetEncoded {
-
-  def apply(summary:String):ProblemNotYetEncoded = {
-      val x = new IllegalStateException(s"$summary , not yet codified in Shrine.")
-      x.fillInStackTrace()
-    new ProblemNotYetEncoded(summary,x)
-  }
+  def apply(summary:String,x:Throwable):ProblemNotYetEncoded = ProblemNotYetEncoded(summary,Some(x))
 }
