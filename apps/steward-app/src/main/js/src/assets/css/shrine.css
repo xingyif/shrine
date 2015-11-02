@@ -327,7 +327,7 @@ body {
 
 #wrapper {
     width: 100%;
-    margin-bottom: 83px; /* clearance space for footer at bottom of long page */
+    padding-bottom: 83px; /* clearance space for footer at bottom of long page */
 }
 
 .login-wrapper{
