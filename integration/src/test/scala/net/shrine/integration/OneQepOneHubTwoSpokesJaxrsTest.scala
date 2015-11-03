@@ -1,18 +1,14 @@
 package net.shrine.integration
 
 import net.shrine.util.ShouldMatchersForJUnit
-import net.shrine.protocol.DeleteQueryRequest
+import net.shrine.protocol.{NodeId, DeleteQueryRequest, RequestType, Result, DeleteQueryResponse, ShrineRequestHandler, FlagQueryResponse, FlagQueryRequest, UnFlagQueryResponse, UnFlagQueryRequest, ResultOutputType, RunQueryRequest, RunQueryResponse, DefaultBreakdownResultOutputTypes}
 import org.junit.After
 import org.junit.Before
 import net.shrine.client.JerseyShrineClient
 import net.shrine.crypto.TrustParam
-import net.shrine.protocol.RequestType
-import net.shrine.protocol.Result
 import org.junit.Test
-import net.shrine.protocol.DeleteQueryResponse
 import net.shrine.broadcaster.service.BroadcasterMultiplexerRequestHandler
 import net.shrine.adapter.service.JerseyTestComponent
-import net.shrine.protocol.ShrineRequestHandler
 import net.shrine.broadcaster.service.BroadcasterMultiplexerService
 import net.shrine.broadcaster.service.BroadcasterMultiplexerResource
 import net.shrine.broadcaster.NodeHandle
@@ -24,19 +20,11 @@ import net.shrine.broadcaster.InJvmBroadcasterClient
 import net.shrine.service.ShrineService
 import net.shrine.service.ShrineResource
 import net.shrine.broadcaster.PosterBroadcasterClient
-import net.shrine.protocol.FlagQueryResponse
-import net.shrine.protocol.FlagQueryRequest
-import net.shrine.protocol.UnFlagQueryResponse
-import net.shrine.protocol.UnFlagQueryRequest
-import net.shrine.protocol.ResultOutputType
 import net.shrine.protocol.query.Term
 import net.shrine.protocol.query.Or
 import net.shrine.protocol.query.Modifiers
 import net.shrine.protocol.query.QueryDefinition
-import net.shrine.protocol.RunQueryRequest
-import net.shrine.protocol.RunQueryResponse
 import net.shrine.protocol.query.Constrained
-import net.shrine.protocol.DefaultBreakdownResultOutputTypes
 import net.shrine.protocol.query.ValueConstraint
 
 /**
@@ -244,7 +232,7 @@ final class OneQepOneHubTwoSpokesJaxrsTest extends AbstractHubAndSpokesTest with
     
     lazy val broadcaster: InspectableDelegatingBroadcaster = {
       val destinations: Set[NodeHandle] = spokes.map { spoke =>
-        val client = RemoteAdapterClient(posterFor(spoke), DefaultBreakdownResultOutputTypes.toSet)
+        val client = RemoteAdapterClient(NodeId.Unknown,posterFor(spoke), DefaultBreakdownResultOutputTypes.toSet)
         
         NodeHandle(spoke.nodeId, client)
       }

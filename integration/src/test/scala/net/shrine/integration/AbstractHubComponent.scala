@@ -1,7 +1,7 @@
 package net.shrine.integration
 
 import net.shrine.adapter.service.JerseyTestComponent
-import net.shrine.protocol.ShrineRequestHandler
+import net.shrine.protocol.{NodeId, ShrineRequestHandler, AuthenticationInfo, DefaultBreakdownResultOutputTypes}
 import net.shrine.broadcaster.NodeHandle
 import net.shrine.adapter.client.RemoteAdapterClient
 import net.shrine.broadcaster.AdapterClientBroadcaster
@@ -9,15 +9,13 @@ import net.shrine.service.ShrineService
 import net.shrine.broadcaster.SigningBroadcastAndAggregationService
 import net.shrine.broadcaster.InJvmBroadcasterClient
 import net.shrine.client.ShrineClient
-import net.shrine.protocol.AuthenticationInfo
 import net.shrine.broadcaster.BroadcasterClient
 import net.shrine.broadcaster.PosterBroadcasterClient
-import net.shrine.protocol.DefaultBreakdownResultOutputTypes
 import net.shrine.crypto.SigningCertStrategy
 
 /**
  * @author clint
- * @date Jun 23, 2014
+ * @since Jun 23, 2014
  */
 abstract class AbstractHubComponent[H <: AnyRef](
     enclosingTest: AbstractHubAndSpokesTest, 
@@ -28,7 +26,7 @@ abstract class AbstractHubComponent[H <: AnyRef](
     import enclosingTest.{ spokes, posterFor }
 
     val destinations: Set[NodeHandle] = spokes.map { spoke =>
-      val client = RemoteAdapterClient(posterFor(spoke), DefaultBreakdownResultOutputTypes.toSet)
+      val client = RemoteAdapterClient(NodeId.Unknown,posterFor(spoke), DefaultBreakdownResultOutputTypes.toSet)
 
       NodeHandle(spoke.nodeId, client)
     }

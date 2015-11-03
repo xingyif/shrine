@@ -8,7 +8,7 @@ import scala.xml.NodeSeq
 
 /**
  * @author clint
- * @date Nov 1, 2013
+ * @since Nov 1, 2013
  */
 final case class NodeId(name: String) extends XmlMarshaller {
   override def toXml = XmlUtil.stripWhitespace {

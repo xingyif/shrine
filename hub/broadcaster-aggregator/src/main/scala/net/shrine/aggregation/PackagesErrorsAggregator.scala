@@ -22,7 +22,7 @@ import net.shrine.protocol.QueryResult
 abstract class PackagesErrorsAggregator[T <: ShrineResponse : Manifest](
     errorMessage: Option[String] = None, 
     invalidMessage: Option[String] = None) extends BasicAggregator[T] {
-  
+
   private[aggregation] def makeErrorResult(error: Error): QueryResult = { 
     val Error(originOption, errorResponse) = error
 
@@ -31,7 +31,7 @@ abstract class PackagesErrorsAggregator[T <: ShrineResponse : Manifest](
 
     QueryResult.errorResult(desc, errorMessage.getOrElse(errorResponse.errorMessage),errorResponse.problemDigest)
   }
-  
+
   private[aggregation] def makeInvalidResult(invalid: Invalid): QueryResult = {
     val Invalid(originOption, errorMessage) = invalid 
     
