@@ -31,7 +31,7 @@ import net.shrine.protocol.SingleNodeResult
 
 /**
  * @author clint
- * @date Mar 6, 2013
+ * @since Mar 6, 2013
  */
 final class ScannerModule(args: Seq[String]) {
   val commandLineProps = CommandLineScannerConfigParser(args)
@@ -53,7 +53,7 @@ final class ScannerModule(args: Seq[String]) {
       
       val poster = Poster(config.shrineUrl, JerseyHttpClient(AcceptAllCerts, adapterTimeout))
       
-      val destinations = Set(NodeHandle(NodeId(config.shrineUrl), RemoteAdapterClient(poster, config.breakdownTypes)))
+      val destinations = Set(NodeHandle(NodeId(config.shrineUrl), RemoteAdapterClient(NodeId(config.shrineUrl),poster, config.breakdownTypes)))
 
       val certCollection = KeyStoreCertCollection.fromFile(config.keystoreDescriptor)
       

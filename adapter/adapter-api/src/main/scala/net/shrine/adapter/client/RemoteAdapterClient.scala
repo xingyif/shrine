@@ -26,7 +26,7 @@ import net.shrine.protocol.ResultOutputType
  * 
  * 
  */
-final class RemoteAdapterClient private (val poster: Poster, val breakdownTypes: Set[ResultOutputType]) extends AdapterClient {
+final class RemoteAdapterClient private (nodeId:NodeId,val poster: Poster, val breakdownTypes: Set[ResultOutputType]) extends AdapterClient {
   import RemoteAdapterClient._
   
   //NB: Overriding apply in the companion object screws up case-class code generation for some reason, so
@@ -71,26 +71,26 @@ final class RemoteAdapterClient private (val poster: Poster, val breakdownTypes:
             case sx: SAXParseException => ErrorResponse(CouldNotParseXmlFromAdapter(poster.url,response.statusCode,responseXml,sx))
             case _ => ErrorResponse(ProblemNotYetEncoded(s"Couldn't understand response from adapter at '${poster.url}': $responseXml", x))
           }
-          Result(NodeId.Unknown, 0.milliseconds, errorResponse)
+          Result(nodeId, 0.milliseconds, errorResponse)
         }
       }
     }
     else {
-      Result(NodeId.Unknown,0.milliseconds,ErrorResponse(HttpErrorCodeFromAdapter(poster.url,response.statusCode,response.body)))
+      Result(nodeId,0.milliseconds,ErrorResponse(HttpErrorCodeFromAdapter(poster.url,response.statusCode,response.body)))
     }
   }
 }
 
 object RemoteAdapterClient {
   
-  def apply(poster: Poster, breakdownTypes: Set[ResultOutputType]): RemoteAdapterClient = {
+  def apply(nodeId:NodeId,poster: Poster, breakdownTypes: Set[ResultOutputType]): RemoteAdapterClient = {
     //NB: Replicate URL-munging that used to be performed by JerseyAdapterClient
     val posterToUse = {
       if(poster.url.endsWith("requests")) { poster }
       else { poster.mapUrl(_ + "/requests") }
     }
     
-    new RemoteAdapterClient(posterToUse, breakdownTypes)
+    new RemoteAdapterClient(nodeId,posterToUse, breakdownTypes)
   }
   
   def isTimeout(e: Throwable): Boolean = e match {

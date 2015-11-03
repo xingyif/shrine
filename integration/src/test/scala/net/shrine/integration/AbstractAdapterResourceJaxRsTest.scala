@@ -11,10 +11,8 @@ import net.shrine.adapter.service.JerseyTestComponent
 import net.shrine.client.JerseyHttpClient
 import net.shrine.client.Poster
 import net.shrine.crypto.TrustParam.AcceptAllCerts
-import net.shrine.protocol.AuthenticationInfo
-import net.shrine.protocol.Credential
+import net.shrine.protocol.{NodeId, AuthenticationInfo, Credential, DefaultBreakdownResultOutputTypes}
 import net.shrine.adapter.client.AdapterClient
-import net.shrine.protocol.DefaultBreakdownResultOutputTypes
 
 /**
  * @author clint
@@ -28,7 +26,7 @@ abstract class AbstractAdapterResourceJaxRsTest extends JerseyTestComponent[Adap
   
   protected val breakdownTypes = DefaultBreakdownResultOutputTypes.toSet 
   
-  protected lazy val client: AdapterClient = RemoteAdapterClient(Poster(resourceUrl, new JerseyHttpClient(AcceptAllCerts, 1.minute)), breakdownTypes)
+  protected lazy val client: AdapterClient = RemoteAdapterClient(NodeId.Unknown,Poster(resourceUrl, new JerseyHttpClient(AcceptAllCerts, 1.minute)), breakdownTypes)
   
   override val basePath = "adapter"
 

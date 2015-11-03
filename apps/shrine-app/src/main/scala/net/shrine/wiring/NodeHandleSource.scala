@@ -14,7 +14,7 @@ import net.shrine.protocol.ResultOutputType
 
 /**
  * @author clint
- * @date Dec 11, 2013
+ * @since Dec 11, 2013
  */
 object NodeHandleSource {
   
@@ -32,7 +32,7 @@ object NodeHandleSource {
     val downstream = nodes.map { case IdAndUrl(nodeId, url) =>
       val poster = Poster(url.toString, httpClient)
       
-      NodeHandle(nodeId, RemoteAdapterClient(poster, breakdownTypes))
+      NodeHandle(nodeId, RemoteAdapterClient(nodeId, poster, breakdownTypes))
     }.toSet
     
     val handleToThisNodeOption: Option[NodeHandle] = {

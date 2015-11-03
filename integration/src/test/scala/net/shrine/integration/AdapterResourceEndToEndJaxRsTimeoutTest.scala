@@ -10,9 +10,7 @@ import net.shrine.client.TimeoutException
 import net.shrine.crypto.DefaultSignerVerifier
 import net.shrine.crypto.TestKeystore
 import net.shrine.crypto.TrustParam.AcceptAllCerts
-import net.shrine.protocol.BroadcastMessage
-import net.shrine.protocol.DeleteQueryRequest
-import net.shrine.protocol.DefaultBreakdownResultOutputTypes
+import net.shrine.protocol.{NodeId, BroadcastMessage, DeleteQueryRequest, DefaultBreakdownResultOutputTypes}
 import net.shrine.crypto.SigningCertStrategy
 
 /**
@@ -26,7 +24,7 @@ final class AdapterResourceEndToEndJaxRsTimeoutTest extends AbstractAdapterResou
   override def makeHandler = TimesOutAdapterRequestHandler(1.minute)
   
   override protected lazy val client: AdapterClient = {
-    RemoteAdapterClient(Poster(resourceUrl, JerseyHttpClient(AcceptAllCerts, 100.milliseconds)), DefaultBreakdownResultOutputTypes.toSet)
+    RemoteAdapterClient(NodeId.Unknown,Poster(resourceUrl, JerseyHttpClient(AcceptAllCerts, 100.milliseconds)), DefaultBreakdownResultOutputTypes.toSet)
   }
   
   @Test

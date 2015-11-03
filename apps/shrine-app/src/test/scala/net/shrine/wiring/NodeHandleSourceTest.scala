@@ -19,7 +19,7 @@ import net.shrine.protocol.DefaultBreakdownResultOutputTypes
 
 /**
  * @author clint
- * @date Dec 11, 2013
+ * @since Dec 11, 2013
  */
 final class NodeHandleSourceTest extends ShouldMatchersForJUnit {
   @Test
@@ -48,8 +48,8 @@ final class NodeHandleSourceTest extends ShouldMatchersForJUnit {
 
       handles should equal {
         Set(
-          NodeHandle(xId, RemoteAdapterClient(Poster(xUrl, JerseyHttpClient(trustParam, timeout, MediaType.APPLICATION_XML)), breakdownTypes)),
-          NodeHandle(yId, RemoteAdapterClient(Poster(yUrl + "/requests", JerseyHttpClient(trustParam, timeout, MediaType.APPLICATION_XML)), breakdownTypes)))
+          NodeHandle(xId, RemoteAdapterClient(xId,Poster(xUrl, JerseyHttpClient(trustParam, timeout, MediaType.APPLICATION_XML)), breakdownTypes)),
+          NodeHandle(yId, RemoteAdapterClient(yId,Poster(yUrl + "/requests", JerseyHttpClient(trustParam, timeout, MediaType.APPLICATION_XML)), breakdownTypes)))
       }
     }
     
@@ -62,8 +62,8 @@ final class NodeHandleSourceTest extends ShouldMatchersForJUnit {
 
       handles should equal {
         Set(
-          NodeHandle(xId, RemoteAdapterClient(Poster(xUrl, JerseyHttpClient(trustParam, timeout, MediaType.APPLICATION_XML)), breakdownTypes)),
-          NodeHandle(yId, RemoteAdapterClient(Poster(yUrl + "/requests", JerseyHttpClient(trustParam, timeout, MediaType.APPLICATION_XML)), breakdownTypes)),
+          NodeHandle(xId, RemoteAdapterClient(xId,Poster(xUrl, JerseyHttpClient(trustParam, timeout, MediaType.APPLICATION_XML)), breakdownTypes)),
+          NodeHandle(yId, RemoteAdapterClient(yId,Poster(yUrl + "/requests", JerseyHttpClient(trustParam, timeout, MediaType.APPLICATION_XML)), breakdownTypes)),
           NodeHandle(myId, new InJvmAdapterClient(mockAdapter)))
       }
     }
