@@ -32,20 +32,30 @@ angular.module('shrine-happy', ['happy-model', 'ngAnimate', 'ui.bootstrap'])
             model.getAll()
                 .then(function (data) {
                     $scope.adapter              = data.all.adapter;
-                    $scope.downstreamNodes      = data.all.downstreamNodes;
                     $scope.hiveConfig           = data.all.hiveConfig;
                     $scope.keystore             = data.all.keystoreReport;
-                    $scope.net                  = data.all.net;
+
+                    //setting for net.
                     $scope.recentAuditEntries   = data.all.recentAuditEntries;
                     $scope.recentQueries        = data.all.recentQueries;
                     $scope.versionInfo          = data.all.versionInfo;
-                    $scope.general.isHub        = $scope.net.notAHub === undefined;
                     $scope.general.keystoreOk   = true;
                     $scope.general.adapterOk    = $scope.adapter.result.response.errorResponse === undefined;
-                    $scope.net.hasFailures      = Number($scope.net.failureCount) > 0;
-                    $scope.net.hasInvalidResults = (Number($scope.net.validResultCount) < Number($scope.net.expectedResultCount));
-                    $scope.net.hasTimeouts      = Number($scope.net.timeoutCount);
-                    $scope.general.hubOk        = !($scope.net.hasFailures || $scope.net.hasInvalidResults || $scope.net.hasTimeouts)
+
+                    // - if not a hub, then can we assume that 'net' will not be an
+                    // element on the data object?
+                    $scope.general.isHub        = data.all.notAHub === undefined;
+
+                    if($scope.general.isHub === true) {
+                        $scope.net                      = data.all.net;
+                        $scope.downstreamNodes      = data.all.downstreamNodes;
+                        $scope.net.hasFailures          = Number($scope.net.failureCount) > 0;
+                        $scope.net.hasInvalidResults    = (Number($scope.net.validResultCount) < Number($scope.net.expectedResultCount));
+                        $scope.net.hasTimeouts          = Number($scope.net.timeoutCount);
+                    }
+
+                    $scope.general.hubOk = !$scope.general.isHub ||
+                        !($scope.net.hasFailures || $scope.net.hasInvalidResults || $scope.net.hasTimeouts)
                     $scope.setStateAndRefresh(states.STATE1);
                 },
                 function (data) {
