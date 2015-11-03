@@ -35,6 +35,7 @@ final case class QueryResult(
   breakdowns: Map[ResultOutputType,I2b2ResultEnvelope] = Map.empty
 ) extends XmlMarshaller with I2b2Marshaller {
 
+  //only used in tests
   def this(
             resultId: Long,
             instanceId: Long,

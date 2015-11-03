@@ -141,7 +141,8 @@ angular.module('stewardApp')
                         templateUrl: 'src/app/dashboard/history/history-table/query-detail.tpl.html',
                         controller: function ($scope, $modalInstance, query) {
 
-                            $scope.query = query;
+                            $scope.displayName  = (query.name.length > 50)? (query.name.substring(0, 50) + '...') : query.name;
+                            $scope.query        = query;
 
                             $scope.prettify = function (queryData) {
 

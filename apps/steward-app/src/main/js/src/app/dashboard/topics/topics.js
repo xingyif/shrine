@@ -85,6 +85,9 @@ angular.module('stewardApp')
         $scope.setStateAndRefresh = function (state) {
             $scope.state =  state;
             $scope.refreshTopics();
+            $scope.sort.currentColumn = 'changeDate';
+            $scope.sort.descending    =  false;
+
         };
 
         /**
