@@ -48,7 +48,7 @@ angular.module('shrine-happy', ['happy-model', 'ngAnimate', 'ui.bootstrap'])
 
                     if($scope.general.isHub === true) {
                         $scope.net                      = data.all.net;
-                        $scope.downstreamNodes      = data.all.downstreamNodes;
+                        $scope.downstreamNodes          = data.all.downstreamNodes;
                         $scope.net.hasFailures          = Number($scope.net.failureCount) > 0;
                         $scope.net.hasInvalidResults    = (Number($scope.net.validResultCount) < Number($scope.net.expectedResultCount));
                         $scope.net.hasTimeouts          = Number($scope.net.timeoutCount);
