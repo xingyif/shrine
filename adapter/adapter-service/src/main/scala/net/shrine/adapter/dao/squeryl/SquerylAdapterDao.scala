@@ -230,11 +230,13 @@ final class SquerylAdapterDao(initializer: SquerylInitializer, tables: Tables)(i
 
       val overrideDate: XMLGregorianCalendar = privilegedUserOption.map(_.toPrivilegedUser).flatMap(_.overrideDate).getOrElse(thirtyDaysInThePast)
 
+      //sorted instead of just finding max
       val counts: Seq[Long] = Queries.repeatedResults(authn.domain, authn.username, overrideDate).toSeq.sorted
 
+      //and then grabbing the last, highest value in the sorted sequence
       val repeatedResultCount: Long = counts.lastOption.getOrElse(0L)
 
-      val result = repeatedResultCount > threshold
+      val result = repeatedResultCount >= threshold
 
       debug(s"User ${authn.domain}:${authn.username} locked out? $result")
 
@@ -384,9 +386,9 @@ final class SquerylAdapterDao(initializer: SquerylInitializer, tables: Tables)(i
           on(queryRow.id === resultRow.queryId, resultRow.id === countRow.resultId)
       }
 
-      //Filter for result counts > 1
+      //Filter for result counts > 0
       from(counts) { cnt =>
-        where(cnt.measures gt 1).select(cnt.measures)
+        where(cnt.measures gt 0).select(cnt.measures)
       }
     }
 
