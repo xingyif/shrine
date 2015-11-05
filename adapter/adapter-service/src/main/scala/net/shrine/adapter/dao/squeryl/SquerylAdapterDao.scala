@@ -236,7 +236,7 @@ final class SquerylAdapterDao(initializer: SquerylInitializer, tables: Tables)(i
       //and then grabbing the last, highest value in the sorted sequence
       val repeatedResultCount: Long = counts.lastOption.getOrElse(0L)
 
-      val result = repeatedResultCount >= threshold
+      val result = repeatedResultCount > threshold
 
       debug(s"User ${authn.domain}:${authn.username} locked out? $result")
 
@@ -386,9 +386,10 @@ final class SquerylAdapterDao(initializer: SquerylInitializer, tables: Tables)(i
           on(queryRow.id === resultRow.queryId, resultRow.id === countRow.resultId)
       }
 
-      //Filter for result counts > 0
+      //todo this ignores result counts of 1 wrt lockout. See Shrine-1230
+      //Filter for result counts > 1
       from(counts) { cnt =>
-        where(cnt.measures gt 0).select(cnt.measures)
+        where(cnt.measures gt 1).select(cnt.measures)
       }
     }
 
