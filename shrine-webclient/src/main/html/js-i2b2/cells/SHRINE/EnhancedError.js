@@ -214,9 +214,10 @@ $hrine.EnhancedError =
             exception: {}
         };
 
-        problem.codec 		= grabXmlNodeData(qriNode, 'descendant-or-self::query_status_type/problem/codec')
-        problem.summary     = grabXmlNodeData(qriNode, 'descendant-or-self::query_status_type/problem/summary')
-        problem.description = grabXmlNodeData(qriNode, 'descendant-or-self::query_status_type/problem/description')
+        problem.codec 		= grabXmlNodeData(qriNode, 'descendant-or-self::query_status_type/problem/codec');
+        problem.summary     = grabXmlNodeData(qriNode, 'descendant-or-self::query_status_type/problem/summary');
+        problem.description = grabXmlNodeData(qriNode, 'descendant-or-self::query_status_type/problem/description');
+        problem.stamp       = grabXmlNodeData(qriNode, 'descendant-or-self::query_status_type/problem/stamp');
 
         //unescape embedded html.
        problem.details = i2b2.h.XPath(qriNode, 'descendant-or-self::query_status_type/problem/details')[0]
