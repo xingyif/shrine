@@ -1,5 +1,6 @@
 package net.shrine.broadcaster
 
+import net.shrine.log.Loggable
 import net.shrine.protocol.AuthenticationInfo
 import net.shrine.protocol.Credential
 import net.shrine.protocol.BroadcastMessage
@@ -31,7 +32,7 @@ import net.shrine.broadcaster.dao.model.HubQueryStatus
  * @since Dec 15, 2014
  */
 //noinspection UnitMethodIsParameterless,NameBooleanParameters,ScalaUnnecessaryParentheses
-final class AdapterClientBroadcasterLoggingTest extends AbstractSquerylHubDaoTest with ShouldMatchersForJUnit {
+final class AdapterClientBroadcasterLoggingTest extends AbstractSquerylHubDaoTest with ShouldMatchersForJUnit with Loggable {
 
   private def makeBroadcaster(nodes: Set[NodeHandle]): AdapterClientBroadcaster = AdapterClientBroadcaster(nodes, dao)
 
@@ -141,8 +142,14 @@ final class AdapterClientBroadcasterLoggingTest extends AbstractSquerylHubDaoTes
     queryRow.username should be(authn.username)
     queryRow.time should not be(null)
 
-    val resultRows @ Seq(resultRow1, resultRow2) = list(queryResultRows).map(_.toHubQueryResultRow)
-    
+    val resultRows: Seq[HubQueryResultRow] = list(queryResultRows).map(_.toHubQueryResultRow)
+
+    debug(s"resultRows are $resultRows")
+    resultRows.size should be(2)
+
+    val resultRow1 = resultRows.head
+    val resultRow2 = resultRows.tail.head
+
     resultRow1.networkQueryId should be(broadcastMessageRunQuery.requestId)
     resultRow2.networkQueryId should be(broadcastMessageRunQuery.requestId)
     
