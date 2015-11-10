@@ -1,5 +1,7 @@
 package net.shrine.protocol
 
+import java.util.UUID
+
 import scala.xml.NodeSeq
 import net.shrine.serialization.XmlMarshaller
 import net.shrine.serialization.XmlUnmarshaller
@@ -9,8 +11,8 @@ import net.shrine.util.NodeSeqEnrichments
 
 /**
  * @author Bill Simons
- * @date 4/5/11
- * @link http://cbmi.med.harvard.edu
+ * @since 4/5/11
+ * @see http://cbmi.med.harvard.edu
  */
 final case class BroadcastMessage(
     requestId: Long, 
@@ -44,7 +46,10 @@ object BroadcastMessage extends XmlUnmarshaller[Try[BroadcastMessage]] {
   object Ids {
     private val random = new java.util.Random
 
-    def next: Long = random.nextLong.abs
+    def next: Long = {
+      val uuid = UUID.randomUUID()
+      (uuid.getMostSignificantBits ^ uuid.getLeastSignificantBits).abs
+    }
   }
 
   override def fromXml(xml: NodeSeq): Try[BroadcastMessage] = {
