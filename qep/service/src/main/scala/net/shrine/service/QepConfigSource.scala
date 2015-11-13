@@ -20,8 +20,6 @@ object QepConfigSource {
 
   Log.debug(s"shrine.queryEntryPoint.audit.collectQepAudit is ${config.getBoolean("shrine.queryEntryPoint.audit.collectQepAudit")}")
 
-  Log.debug(s"config is $config")
-
   def configForBlock[T](key:String,value:AnyRef,origin:String)(block: => T):T = {
     atomicConfig.configForBlock(key,value,origin)(block)
   }
