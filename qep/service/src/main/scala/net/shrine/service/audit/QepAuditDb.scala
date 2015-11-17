@@ -31,12 +31,7 @@ case class QepAuditDb(schemaDef:QepAuditSchema,dataSource: DataSource) extends L
   import schemaDef._
   import jdbcProfile.api._
 
-  debug("Start constructing QepAuditDb")
-
   val database = Database.forDataSource(dataSource)
-
-  debug("While constructing QepAuditDb, construct database (should be finished)")
-
 
   def createTables() = schemaDef.createTables(database)
 
