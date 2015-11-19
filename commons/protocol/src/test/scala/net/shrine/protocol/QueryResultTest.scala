@@ -1,6 +1,6 @@
 package net.shrine.protocol
 
-import net.shrine.problem.{ProblemSources, AbstractProblem}
+import net.shrine.problem.{TestProblem, ProblemSources, AbstractProblem}
 import net.shrine.util.ShouldMatchersForJUnit
 import org.junit.Test
 import net.shrine.util.XmlUtil
@@ -394,7 +394,7 @@ final class QueryResultTest extends ShouldMatchersForJUnit with XmlRoundTripper[
 
   @Test
   def testFromI2b2WithErrors() {
-    val errorResult = QueryResult.errorResult(Some(description), statusMessage)
+    val errorResult = QueryResult.errorResult(Some(description), statusMessage,TestProblem)
 
     val actual = QueryResult.fromI2b2(breakdownTypes.toSet)(loadString(expectedI2b2ErrorXml))
 
@@ -447,7 +447,7 @@ final class QueryResultTest extends ShouldMatchersForJUnit with XmlRoundTripper[
 
   @Test
   def testToI2b2WithErrors(): Unit = {
-    QueryResult.errorResult(Some(description), statusMessage).toI2b2String
+    QueryResult.errorResult(Some(description), statusMessage, TestProblem).toI2b2String
   }
 
   @Test
@@ -480,7 +480,7 @@ final class QueryResultTest extends ShouldMatchersForJUnit with XmlRoundTripper[
     val actual = QueryResult.errorResult(
       Some(description),
       statusMessage,
-      Option(testProblem))
+      testProblem)
 
     val i2b2Xml: NodeSeq = actual.toI2b2
 

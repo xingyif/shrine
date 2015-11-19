@@ -327,9 +327,9 @@ object QueryResult {
       problemDigest = Option(problemDigest))
   }
 
-  def errorResult(description: Option[String], statusMessage: String,problem:Option[Problem] = None):QueryResult = {
+  def errorResult(description: Option[String], statusMessage: String,problem:Problem):QueryResult = {
 
-    val problemDigest = problem.getOrElse(ProblemNotYetEncoded(statusMessage)).toDigest
+    val problemDigest = problem.toDigest
 
     QueryResult(
       resultId = 0L,

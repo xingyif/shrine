@@ -1,5 +1,7 @@
 package net.shrine.adapter
 
+import net.shrine.problem.TestProblem
+
 import scala.concurrent.duration.DurationInt
 import org.junit.Test
 import net.shrine.util.ShouldMatchersForJUnit
@@ -635,7 +637,7 @@ final class RunQueryAdapterTest extends AbstractSquerylAdapterTest with ShouldMa
 
   @Test
   def testRegularCountQueryComesBackError = afterCreatingTables {
-    val errorQueryResult = QueryResult.errorResult(Some("some-description"), "some-status-message")
+    val errorQueryResult = QueryResult.errorResult(Some("some-description"), "some-status-message",TestProblem)
 
     val outputTypes = justCounts
 

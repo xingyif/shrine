@@ -1,5 +1,7 @@
 package net.shrine.adapter.service
 
+import net.shrine.problem.TestProblem
+
 import scala.xml.XML
 import org.junit.Test
 import net.shrine.util.ShouldMatchersForJUnit
@@ -199,7 +201,7 @@ object I2b2AdminResourceJaxrsTest {
     override def runHeldQuery(request: RunHeldQueryRequest, shouldBroadcast: Boolean): ShrineResponse = {
       lock.synchronized { _runHeldQueryParam = request }
       
-      RunQueryResponse(request.networkQueryId, XmlDateHelper.now, request.authn.username, request.projectId, QueryDefinition("bogus", Term("placeholder")), 12345L, QueryResult.errorResult(Some("foo"), "not actually an error"))
+      RunQueryResponse(request.networkQueryId, XmlDateHelper.now, request.authn.username, request.projectId, QueryDefinition("bogus", Term("placeholder")), 12345L, QueryResult.errorResult(Some("foo"), "not actually an error",TestProblem))
     }
     
     private def setShouldBroadcastAndThen(shouldBroadcast: Boolean)(f: => ShrineResponse): ShrineResponse = {

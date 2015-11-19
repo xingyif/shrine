@@ -1,5 +1,6 @@
 package net.shrine.protocol
 
+import net.shrine.problem.TestProblem
 import net.shrine.serialization.XmlMarshaller
 import net.shrine.serialization.XmlUnmarshaller
 import net.shrine.util.ShouldMatchersForJUnit
@@ -46,7 +47,7 @@ final class ShrineMessageTest extends ShouldMatchersForJUnit {
     val shrineNetworkQueryId = 1287698235L
     val start = Some(XmlDateHelper.now)
     val end = Some(XmlDateHelper.now)
-    val singleNodeResult1 = QueryResult.errorResult(Some("blarg"), "glarg")
+    val singleNodeResult1 = QueryResult.errorResult(Some("blarg"), "glarg",TestProblem)
     val singleNodeResult2 = QueryResult(
       42L,
       99L,
