@@ -6,12 +6,8 @@ import org.xml.sax.SAXParseException
 import scala.xml.NodeSeq
 import scala.xml.XML
 import net.shrine.protocol.{HiveCredentials, AuthenticationInfo, BroadcastMessage, Credential, ShrineRequest, ShrineResponse, TranslatableRequest, BaseShrineRequest, ErrorResponse, BaseShrineResponse}
-import net.shrine.serialization.XmlMarshaller
-import net.shrine.client.HttpClient
 import net.shrine.util.XmlDateHelper
 import net.shrine.client.Poster
-import net.shrine.util.XmlUtil
-import net.shrine.client.HttpResponse
 import scala.util.Try
 import scala.util.control.NonFatal
 
@@ -78,14 +74,6 @@ abstract class CrcAdapter[T <: ShrineRequest, V <: ShrineResponse](
   }
 
   protected def callCrc(request: ShrineRequest): String = {
-    def prettyPrintXmlString(reqXml: String): Try[String] = Try {
-      XmlUtil.prettyPrint(XML.loadString(reqXml))
-    }
-
-    def prettyPrintResponse(resp: HttpResponse): Try[HttpResponse] = {
-      prettyPrintXmlString(resp.body).map(prettyPrintedXml => resp.copy(body = s"\r\n$prettyPrintedXml"))
-    }
-
     debug(s"Sending Shrine-formatted request to the CRC at '${poster.url}': $request")
 
     val crcRequest = request.toI2b2String
@@ -102,10 +90,11 @@ abstract class CrcAdapter[T <: ShrineRequest, V <: ShrineResponse](
   }
 
   private[adapter] def translateRequest(request: BaseShrineRequest): ShrineRequest = request match {
-    case transReq: TranslatableRequest[T] => {
+    case transReq: TranslatableRequest[T] => //noinspection RedundantBlock
+    {
       val HiveCredentials(domain, username, password, project) = hiveCredentials
 
-      val authInfo = AuthenticationInfo(domain, username, Credential(password, false))
+      val authInfo = AuthenticationInfo(domain, username, Credential(password, isToken = false))
 
       translateNetworkToLocal(transReq.withAuthn(authInfo).withProject(project).asRequest)
     }
