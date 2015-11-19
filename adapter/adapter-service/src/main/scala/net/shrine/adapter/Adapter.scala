@@ -83,6 +83,6 @@ case class AdapterMappingProblem(x:AdapterMappingException) extends AbstractProb
 case class AdapterDatabaseProblem(x:SQLSyntaxErrorException) extends AbstractProblem(ProblemSources.Adapter) {
 
   override val throwable = Some(x)
-  override val summary: String = "Problem in an adapter database."
-  override val description = s"The Shrine Adapter on encountered a problem with a database."
+  override val summary: String = "Problem in Adapter database."
+  override val description = "The Shrine Adapter on encountered a problem with a database."
 }
