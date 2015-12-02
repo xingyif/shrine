@@ -60,6 +60,7 @@ import net.shrine.service.ShrineResource
 import net.shrine.service.ShrineService
 import net.shrine.crypto.TrustParam
 import javax.sql.DataSource
+import net.shrine.status.StatusJaxrs
 import org.squeryl.internals.DatabaseAdapter
 import net.shrine.dao.squeryl.SquerylInitializer
 import net.shrine.ont.data.OntologyMetadata
@@ -83,7 +84,7 @@ class ManuallyWiredShrineJaxrsResources(authStrategy: AuthStrategy = AuthStrateg
   import NodeHandleSource.makeNodeHandles
 
   override def resources: Iterable[AnyRef] = {
-    Seq(happyResource) ++ shrineResource ++ i2b2BroadcastResource ++ adapterResource ++ i2b2AdminResource ++ broadcasterMultiplexerResource
+    Seq(happyResource,statusJaxrs) ++ shrineResource ++ i2b2BroadcastResource ++ adapterResource ++ i2b2AdminResource ++ broadcasterMultiplexerResource
   }
   
   //Load config from file on the classpath called "shrine.conf"
@@ -322,6 +323,8 @@ class ManuallyWiredShrineJaxrsResources(authStrategy: AuthStrategy = AuthStrateg
   }
 
   protected lazy val happyResource: HappyShrineResource = new HappyShrineResource(happyService)
+
+  protected lazy val statusJaxrs: StatusJaxrs = StatusJaxrs()
 
   protected lazy val shrineResource: Option[ShrineResource] = shrineService.map(ShrineResource(_))
 
