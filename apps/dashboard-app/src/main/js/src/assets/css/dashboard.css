@@ -1,0 +1,9 @@
+/*css for dashboard elements*/
+
+/*
+ Shrine Happy.
+*/
+.keystore th td{
+    border-bottom:none;
+    vertical-align: middle;
+}

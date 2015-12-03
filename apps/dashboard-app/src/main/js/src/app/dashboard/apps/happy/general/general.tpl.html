@@ -1,0 +1,79 @@
+<div>
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            <td colspan="2">
+                Version Info
+            </td>
+        </tr>
+        </thead>
+
+        <tbody>
+            <tr>
+                <td>
+                    <label>SHRINE Version:
+                </td>
+                <td>
+                    {{versionInfo.shrineVersion}}
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label>Build Date:</label>
+                </td>
+                <td>
+                    {{versionInfo.buildDate}}
+                </td>
+            </tr>
+        </tbody>
+
+    </table>
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <td colspan="2">
+                    <label>System Health</label>
+                </td>
+            </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td>
+                <label>Keystore:</label>
+            </td>
+            <td ng-if="general.keystoreOk === false" class="error">
+                Error: <a href="#" ng-click="setStateAndRefresh(states.STATE2)">click
+                here for more details.</a>
+            </td>
+            <td ng-if="general.keystoreOk === true" class="ok">
+                OK
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <label>Hub:</label>
+            </td>
+            <td ng-if="general.hubOk === false" class="error">
+                Error: <a href="#" ng-click="setStateAndRefresh(states.STATE3)">click
+                here for more details.</a>
+            </td>
+            <td ng-if="general.hubOk === true" class="ok">
+                OK
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <label>Adapter:</label>
+            </td>
+            <td ng-if="general.adapterOk === false" class="error">
+                Error: <a href="#" ng-click="setStateAndRefresh(states.STATE4)">click
+                here for more details.</a>
+            </td>
+            <td ng-if="general.adapterOk === true" class="ok">
+                OK
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>

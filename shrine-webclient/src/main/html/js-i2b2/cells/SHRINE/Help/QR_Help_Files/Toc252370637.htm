@@ -1,0 +1,185 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html xml:lang="en" xmlns="http://www.w3.org/1999/xhtml" lang="en">
+
+<head>
+
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<link rel="stylesheet" type="text/css" href="../shrinestyle.css" />
+
+
+<title>SHRINE Query Quick Reference</title>
+
+<style>
+
+#guide	{font-family:"Arial", Arial, sans-serif;
+	 font-size:120%;
+	 text-align:center;
+	 padding-top:15px;
+	 padding-bottom:15px;
+	 color:white;
+	} 
+
+#footer	{font-family:"Arial", Arial, sans-serif;
+	 text-align:center;
+	 padding-top:1px;
+	 padding-bottom:1px;
+	 background-color:#D9ECF0;
+</style>
+
+</head>
+
+<body>
+
+
+<div>
+    <div id="guide">
+        
+            SHRINE Query Quick Reference
+    </div>
+
+
+<table border="0" bgcolor="white" cellpadding="3"width="100%">
+<tr>
+<td valign="top" width="25%" bgcolor="#D9ECF0"> 
+
+<!-- Navigation -->
+
+    <p>
+        <a href="index.htm">Contents</a> 
+    </p>
+
+
+    <p>
+        <a href="Toc252370633.htm">Query Topics</a></p>
+    <ul>
+    <li>
+
+         <a href="Toc252370633.htm">Data Steward</a>
+    </li>
+    <li>
+        <a href="Toc252370634.htm">Guidelines for Query Topics</a>
+    </li>
+    <li>
+        <a href="Toc252370635.htm">Sample Query Topic</a>
+    </li>
+  </ul>
+
+    <p>
+        <a href="Toc252370637.htm"><strong><em>Query Construction</em></strong></a></p>
+    <ul>
+    <li>
+        <a href="Toc252370637.htm"><strong><em>Tool Logic</em></strong></a>
+    </li>
+    <li>
+        <a href="Toc252370638.htm">Constraints</a>
+    </li>
+    <li>
+        <a href="Toc252370639.htm">Term Values</a>
+    </li>
+    <li>
+        <a href="Toc252370640.htm">Query Optimization</a>
+    </li>
+  </ul>
+
+    <p>
+        <a href="Toc252370641.htm">Results: Query Status View</a>
+    </p>
+
+    <p>
+        &#91; <a href="../index.htm">SHRINE Help Main Menu</a> &#93;
+    </p>
+
+</td>
+<td valign="top">
+
+
+<!-- Content -->
+
+
+    <h1>
+        <a name="_Toc252370637">Query Construction</a>
+    </h1>
+    <p>
+        Two icons at the top-right corner of the Query Tool view provide the following options:
+    </p>
+    <ul>
+	<li>
+        Show Options icon &#8211; Click this icon at the top-right corner of the view to Select the Maximum Time to Wait for XML Response (in seconds). This value is the length of time that SHRINE will continue to process a query. <br />
+If a query does not process completely within period, only those results that completed processing within an institution are returned.
+
+	</li>
+	<li>
+        Toggle Zoom icon &#8211; Click the Toggle Zoom icon at the top-right corner of the view to toggle between expanded and compressed view sizes.
+	</li>
+    </ul>
+    <h2>
+        <a name="_Toc252370637">Tool Logic</a>
+    </h2>
+    <p>
+        You can add terms within a Group to apply OR logic, and use multiple Groups to define your selection by using AND logic. Tool options function as follows:
+    </p>
+    <ul>
+    <li>
+        Query Name &#8211; This field remains blank. You cannot edit this field.
+    </li>
+    <li>
+        Group columns &#8211; Query groups represent a set of patients defined by the terms within the group and any constraints applied to that group.
+        Drag terms into one or more Group fields to narrow the patient cohort for which you are querying.
+    </li>
+    <li>
+        Constrain group options &#8211; Define criteria by which you can limit all terms within a group:
+    <ul>
+	<li>
+        Dates &#8211; Set a date range within which the terms associated with patients must fall.
+	</li>
+	<li>
+        Occurs &gt; 0x &#8211; Set the number of occurrences for which patients within the query group must be associated with a term.
+	</li>
+	<li>
+        Exclude &#8211; Exclude all patients that meet the criteria of the query group.
+	</li>
+     </ul>
+        Click the constraint a second time to remove it.
+    <br />
+        <strong>Note</strong>: Not all terms accept all constraints.
+    </li>
+    <li>
+        Term right-click menu &#8211; Right-click a term to set a specific value by which to query a term, or to delete the term from the query group.
+    </li>
+    <li>
+        Select a Topic pull-down list &#8211; Select the query topic to which this query relates, as approved by the Data Steward.
+    </li>
+    <li>
+        Info button &#8211; View the description of that topic as provided to the Data Steward.
+    </li>
+    <li>
+        Request New Topic button &#8211; Access the Data Steward in a new window.
+    </li>
+        <li>
+            Run Query button &#8211; Start the query process.
+        </li>
+    <li>
+        New Query button &#8211; Clear the Query Tool fields and settings and start a new query.
+    </li>
+    <li>
+        New Group button &#8211; Add additional terms and values to your query if needed.
+    </li>
+    <li>
+        Group page controls &#8211; Navigate to additional groups if you add new groups.
+    </li>
+   </ul>
+</td>
+</tr>
+</table>
+
+</div>
+
+
+    <div id="footer">
+
+<p>Please use our <a href="http://cbmi.catalyst.harvard.edu/formsJsf/shrine_feedback.jsf" target=_BLANK>Feedback</a> form to contact the SHRINE team or to request assistance.</p>
+    </div>
+
+</body>
+
+</html>

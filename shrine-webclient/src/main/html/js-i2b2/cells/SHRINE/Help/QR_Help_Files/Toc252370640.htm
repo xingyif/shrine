@@ -1,0 +1,137 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html xml:lang="en" xmlns="http://www.w3.org/1999/xhtml" lang="en">
+
+<head>
+
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<link rel="stylesheet" type="text/css" href="../shrinestyle.css" />
+
+
+<title>SHRINE Query Quick Reference</title>
+
+<style>
+
+#guide	{font-family:"Arial", Arial, sans-serif;
+	 font-size:120%;
+	 text-align:center;
+	 padding-top:15px;
+	 padding-bottom:15px;
+	 color:white;
+	} 
+
+#footer	{font-family:"Arial", Arial, sans-serif;
+	 text-align:center;
+	 padding-top:1px;
+	 padding-bottom:1px;
+	 background-color:#D9ECF0;
+
+</style>
+
+</head>
+
+<body>
+
+
+<div>
+    <div id="guide">
+        
+            SHRINE Query Quick Reference
+    </div>
+
+
+<table border="0" bgcolor="white" cellpadding="3" width="100%">
+<tr>
+<td valign="top" width="25%" bgcolor="#D9ECF0"> 
+
+<!-- Navigation -->
+
+    <p>
+        <a href="index.htm">Contents</a> 
+    </p>
+
+
+    <p>
+        <a href="Toc252370633.htm">Query Topics</a></p>
+    <ul>
+    <li>
+
+         <a href="Toc252370633.htm">Data Steward</a>
+    </li>
+    <li>
+        <a href="Toc252370634.htm">Guidelines for Query Topics</a>
+    </li>
+    <li>
+        <a href="Toc252370635.htm">Sample Query Topic</a>
+    </li>
+  </ul>
+
+    <p>
+        <a href="Toc252370637.htm">Query Construction</a></p>
+    <ul>
+    <li>
+        <a href="Toc252370637.htm">Tool Logic</a>
+    </li>
+    <li>
+        <a href="Toc252370638.htm">Constraints</a>
+    </li>
+    <li>
+        <a href="Toc252370639.htm">Term Values</a>
+    </li>
+    <li>
+        <a href="Toc252370640.htm"><strong><em>Query Optimization</em></strong></a>
+    </li>
+  </ul>
+
+    <p>
+        <a href="Toc252370641.htm">Results: Query Status View</a>
+    </p>
+
+    <p>
+        &#91; <a href="../index.htm">SHRINE Help Main Menu</a> &#93;
+    </p>
+
+</td>
+<td valign="top">
+
+
+<!-- Content -->
+
+
+    <h2>
+        <a name="_Toc252370640">Query Optimization</a>
+    </h2>
+    <p>
+        Tips for optimizing your query include the following:
+    </p>
+    <ul>
+        <li>
+            Select the most-limiting terms first.
+            <br/>
+            For example, demographic data is broader in scope than diagnoses or lab values. Therefore, if you select your diagnoses or lab value terms first
+            and then select your demographic terms, SHRINE returns your query results more quickly.
+        </li>
+        <li>
+        Queries that include lab values require a longer processing time that diagnoses or medications.
+	<br /> 
+	Consider including either diagnoses or medication
+        terms in your first groups before adding a lab test term to your query.
+        </li>
+	<li>
+When a term category maps to more than 120 specific terms, there are too many values to process and you cannot use the full category in your query. This is an indication that broader terms and multiple terms process more slowly than narrow or fewer terms. You might consider running multiple queries with simpler criteria in place of one complex query.
+	</li>
+    </ul>
+</td>
+</tr>
+</table>
+
+</div>
+
+
+    <div id="footer">
+
+<p>Please use our <a href="http://cbmi.catalyst.harvard.edu/formsJsf/shrine_feedback.jsf" target=_BLANK>Feedback</a> form to contact the SHRINE team or to request assistance.</p>
+    </div>
+
+</body>
+
+</html>

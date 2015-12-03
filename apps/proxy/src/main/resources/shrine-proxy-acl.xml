@@ -1,0 +1,19 @@
+<lists>
+<whitelist>
+
+	<host>http://127.0.0.1:7070/axis2/rest/</host>
+	<host>http://localhost:7070/axis2/rest/</host>
+	<host>http://webservices.i2b2.org/</host>
+	<host>https://</host>
+	
+	
+	<!-- This enables connections from any host. Please delete to secure your proxy  -->
+	<host>http://</host>
+
+</whitelist>
+
+<blacklist>
+	<host>http://127.0.0.1/test</host>
+</blacklist>
+
+</lists>

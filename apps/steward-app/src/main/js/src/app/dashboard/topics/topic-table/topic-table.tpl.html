@@ -1,0 +1,109 @@
+<div>
+    <table class="table table-striped thin-col">
+
+        <thead>
+        <tr>
+            <td restrict="{{app.globals.UserRoles.ROLE2}}" class="thin-col">
+                <a ng-click="setSort('id'); refreshTopics();">
+                    ID
+                    <span ng-show="sort.currentColumn == 'id' && sort.descending" class="fa fa-caret-down"></span>
+                    <span ng-show="sort.currentColumn == 'id' && !sort.descending" class="fa fa-caret-up"></span>
+                </a>
+            </td>
+            <td>
+                <a ng-click="setSort('name'); refreshTopics();">
+                    Topic Name
+                    <span ng-show="sort.currentColumn == 'name' && sort.descending" class="fa fa-caret-down"></span>
+                    <span ng-show="sort.currentColumn == 'name' && !sort.descending" class="fa fa-caret-up"></span>
+                </a>
+            </td>
+            <td restrict="{{app.globals.UserRoles.ROLE2}}">
+                <a ng-click="setSort('createdBy'); refreshTopics();">
+                    Username
+                    <span ng-show="sort.currentColumn == 'createdBy' && sort.descending" class="fa fa-caret-down"></span>
+                    <span ng-show="sort.currentColumn == 'createdBy' && !sort.descending" class="fa fa-caret-up"></span>
+                </a>
+            </td>
+            <td>
+                <a ng-click="setSort('createDate'); refreshTopics()">
+                    Date Created
+                    <span ng-show="sort.currentColumn == 'createDate' && sort.descending" class="fa fa-caret-down"></span>
+                    <span ng-show="sort.currentColumn == 'createDate' && !sort.descending" class="fa fa-caret-up"></span>
+                </a>
+            </td>
+            <td>
+                <a ng-click="setSort('changeDate'); refreshTopics();">
+                    Last Updated
+                    <span ng-show="sort.currentColumn == 'changeDate' && sort.descending" class="fa fa-caret-down"></span>
+                    <span ng-show="sort.currentColumn == 'changeDate' && !sort.descending" class="fa fa-caret-up"></span>
+                </a>
+            </td>
+            <td>
+                <a ng-click="setSort('state'); refreshTopics();">
+                    State
+                    <span ng-show="sort.currentColumn == 'state' && sort.descending" class="fa fa-caret-down"></span>
+                    <span ng-show="sort.currentColumn == 'state' && !sort.descending" class="fa fa-caret-up"></span>
+                </a>
+            </td>
+        </tr>
+        </thead>
+
+        <tbody>
+        <tr ng-repeat="topic in topics">
+            <td class="thin-col" restrict="{{app.globals.UserRoles.ROLE2}}">{{topic.id}}</td>
+            <td class="big-data">{{topic.name}}</td>
+            <td restrict="{{app.globals.UserRoles.ROLE2}}">{{topic.createdBy.userName}}</td>
+            <td>{{formatDate(topic.createDate)}}</td>
+            <td>{{formatDate(topic.changeDate)}}</td>
+            <td>{{topic.state}}</td>
+            <td><a ng-click="open(topic)">view</a></td>
+        </tr>
+        </tbody>
+        <tfoot restrict="{{app.globals.UserRoles.ROLE1}}">
+            <tr>
+                <td colspan="7">
+                    <fieldset>
+                        <button type=button"
+                                class="shrine-button pull-right"
+                                ng-click="createTopic()">
+                            <span>NEW</span>
+                            <i class="fa fa-chevron-right fa-2x"></i>
+                        </button>
+                    </fieldset>
+                </td>
+            </tr>
+        </tfoot>
+    </table>
+    <!--
+    https://angular-ui.github.io/bootstrap/
+    http://getbootstrap.com/components/
+    -->
+    <div class="form-group text-center" ng-show="length > limit">
+
+        <pagination boundary-links="true"
+                    ng-change="onPageSelected()"
+                    total-items="length"
+                    ng-model="pageIndex"
+                    class="pagination-sm"
+                    items-per-page="limit"
+                    previous-text="&lsaquo;"
+                    next-text="&rsaquo;"
+                    first-text="&laquo;"
+                    last-text="&raquo;">
+        </pagination>
+    </div>
+
+    <script type="text/ng-template" id="myModalContent.html">
+        <div class="modal-header">
+            <h3 class="modal-title"></h3>
+        </div>
+        <div class="modal-body">
+            topic Name: <b>{{ topic.name }}</b>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-primary" ng-click="ok()">OK</button>
+            <button class="btn btn-warning" ng-click="cancel()">Cancel</button>
+        </div>
+    </script>
+</div>
+

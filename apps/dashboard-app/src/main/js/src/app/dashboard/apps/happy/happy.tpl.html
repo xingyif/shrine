@@ -1,0 +1,49 @@
+<div ng-cloak>
+    <div class="col-sm-12">
+        <div class="btn-group" role="group" aria-label="...">
+            <button type="button"
+                    ng-disabled="state===states.STATE5 || state===states.STATE0"
+                    class="btn btn-default shrine-btn-default"
+                    ng-click="setStateAndRefresh(states.STATE1)"
+                    ng-class="state === states.STATE1 ? 'shrine-btn-on' : 'shrine-btn-off'">
+                General
+            </button>
+            <button type="button"
+                    ng-disabled="state===states.STATE5 || state===states.STATE0"
+                    class="btn btn-default shrine-btn-default"
+                    ng-click="setStateAndRefresh(states.STATE2)"
+                    ng-class="state === states.STATE2 ? 'shrine-btn-on' : 'shrine-btn-off'">
+                Keystore
+            </button>
+            <button type="button"
+                    class="btn btn-default shrine-btn-default"
+                    ng-disabled="state===states.STATE5 || state===states.STATE0"
+                    ng-click="setStateAndRefresh(states.STATE3)"
+                    ng-class="state === states.STATE3 ? 'shrine-btn-on' : 'shrine-btn-off'">
+                Hub
+            </button>
+            <button type="button"
+                    ng-disabled="state===states.STATE5 || state===states.STATE0"
+                    class="btn btn-default shrine-btn-default"
+                    ng-click="setStateAndRefresh(states.STATE4)"
+                    ng-class="state === states.STATE4 ? 'shrine-btn-on' : 'shrine-btn-off'">
+                Adapter
+            </button>
+        </div>
+        <div>
+            <div ng-switch on="state">
+                <general ng-switch-when="General">
+                </general>
+                <keystore ng-switch-when="Keystore">
+                </keystore>
+                <hub ng-switch-when="Hub">
+                </hub>
+                <adapter ng-switch-when="Adapter">
+                </adapter>
+                <fatal-failure ng-switch-when="QEPFailure">
+                </fatal-failure>
+            </div>
+
+        </div>
+    </div>
+</div>

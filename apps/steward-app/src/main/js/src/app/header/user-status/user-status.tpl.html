@@ -1,0 +1,30 @@
+<ul class="nav navbar-top-links navbar-right" ng-show="isUserLoggedIn()"
+    style="margin-top: 8px"
+    ng-cloak>
+    <li>
+        <span style="color:#1a1a1a;
+                        text-transform: capitalize; margin-right: 10px" ng-cloak>
+                        Hello,
+                        {{getUsername()}}</span>
+    </li>
+    <li class="dropdown">
+        <a class="dropdown-toggle" data-toggle="dropdown">
+            <i class="fa fa-user fa-fw"></i>  <i class="fa fa-caret-down"></i>
+        </a>
+        <ul class="dropdown-menu dropdown-user">
+            <li style="text-align: center">
+                {{getRole()}}
+            </li>
+            <li class="divider"></li>
+            <li><a href="{{helpUrl}}"
+                   target="_blank" ng-cloak>
+            <i class="fa fa-file fa-fw"></i> Help</a></li>
+
+            <li><a href="#" ng-click="logout()" ng-cloak><i
+                    class="fa fa-sign-out fa-fw"></i> Logout</a>
+            </li>
+        </ul>
+        <!-- /.dropdown-user -->
+    </li>
+</ul>
+

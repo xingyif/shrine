@@ -1,0 +1,134 @@
+<div>    
+    <table class="table table-striped" ng-if="general.isHub.toString() === 'true'">
+        <thead>
+        <tr>
+            <td colspan="2">
+                Network Node Summary
+            </td>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td>
+                <label>Hub Queries Self:</label>
+            </td>
+            <td>
+                {{net.shouldQuerySelf}}
+            </td>
+        </tr>
+        <tr ng-repeat="node in net.downstreamNodes.node track by $index" ng-if="net.downstreamNodes.node.length > 1">
+            <td>
+                <label>{{node.name}}</label>
+            </td>
+            <td>
+                {{node.url}}
+            </td>
+        </tr>
+        <tr ng-if="net.downstreamNodes.node.length == undefined">
+            <td>
+                <label>{{net.downstreamNodes.node.name}}</label>
+            </td>
+            <td>
+                {{net.downstreamNodes.node.url}}
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+    <table class="table table-striped" ng-if="net.hasFailures.toString() === 'true'">
+        <thead>
+        <tr>
+            <td colspan="2">
+                Node Failure Details
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <label>Origin</label>
+            </td>
+            <td>
+                <label>Description</label>
+            </td>
+        </tr>
+        </thead>
+        <tbody>
+        <tr ng-repeat="failure in net.failure track by $index" ng-if="net.failure.length > 1">
+            <td>
+                {{failure.origin}}
+            </td>
+            <td>
+                <span class="error">{{failure.description}}</span>
+            </td>
+        </tr>
+        <tr ng-if="net.failure.length == undefined">
+            <td>
+                {{net.failure.origin}}
+            </td>
+            <td>
+                <span class="error">{{net.failure.description}}</span>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+    <table class="table table-striped" ng-if="general.isHub.toString() === 'true'">
+        <thead>
+        <tr>
+            <td colspan="2">
+                Node Counts
+            </td>
+        </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>
+                    <label>Expected Result Count:</label>
+                </td>
+                <td>
+                    {{net.expectedResultCount}}
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label>Valid Result Count:</label>
+                </td>
+                <td>
+                    {{net.validResultCount}}
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label>Failure Count:</label>
+                </td>
+                <td>
+                    <span ng-class="{'error': net.hasFailures === true}">{{net.failureCount}}</span>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label>Timeout Count:</label>
+                </td>
+                <td>
+                    {{net.timeoutCount}}
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <table class="table table-striped" ng-if="general.isHub.toString() === 'false'">
+        <thead>
+        <tr>
+            <td colspan="2">
+                Not A Hub
+            </td>
+        </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td colspan="2">
+                    This node is not a hub.
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
