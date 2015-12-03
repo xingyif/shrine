@@ -1,6 +1,6 @@
 package net.shrine.wiring
 
-import com.typesafe.config.ConfigFactory
+import com.typesafe.config.{Config, ConfigFactory}
 import net.shrine.adapter.Adapter
 import net.shrine.adapter.AdapterMap
 import net.shrine.adapter.DeleteQueryAdapter
@@ -88,8 +88,9 @@ class ManuallyWiredShrineJaxrsResources(authStrategy: AuthStrategy = AuthStrateg
   }
   
   //Load config from file on the classpath called "shrine.conf"
-  protected lazy val shrineConfig: ShrineConfig = ShrineConfig(ConfigFactory.load("shrine"))
-  
+  protected lazy val config: Config = ConfigFactory.load("shrine")
+  protected lazy val shrineConfig: ShrineConfig = ShrineConfig(config)
+
   protected lazy val nodeId: NodeId = NodeId(shrineConfig.humanReadableNodeName)
 
   //TODO: Don't assume keystore lives on the filesystem, could come from classpath, etc
@@ -324,7 +325,7 @@ class ManuallyWiredShrineJaxrsResources(authStrategy: AuthStrategy = AuthStrateg
 
   protected lazy val happyResource: HappyShrineResource = new HappyShrineResource(happyService)
 
-  protected lazy val statusJaxrs: StatusJaxrs = StatusJaxrs()
+  protected lazy val statusJaxrs: StatusJaxrs = StatusJaxrs(config)
 
   protected lazy val shrineResource: Option[ShrineResource] = shrineService.map(ShrineResource(_))
 

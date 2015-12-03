@@ -13,7 +13,7 @@ import javax.ws.rs.core.MediaType
 
 /**
  * @author clint
- * @date Jan 7, 2014
+ * @since Jan 7, 2014
  */
 final class ManuallyWiredShrineJaxrsResourcesTest extends ShouldMatchersForJUnit {
   @Test
