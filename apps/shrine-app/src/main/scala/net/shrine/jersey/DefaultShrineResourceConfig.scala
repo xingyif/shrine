@@ -8,4 +8,4 @@ import net.shrine.wiring.ManuallyWiredShrineJaxrsResources
  * 
  * Default (non-HMS) Shrine "entry point" for Jersey.
  */
-final class DefaultShrineResourceConfig extends ShrineResourceConfig(new ManuallyWiredShrineJaxrsResources)
+final class DefaultShrineResourceConfig extends ShrineResourceConfig(ManuallyWiredShrineJaxrsResources)

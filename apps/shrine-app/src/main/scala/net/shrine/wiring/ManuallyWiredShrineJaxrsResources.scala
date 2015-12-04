@@ -42,8 +42,7 @@ import org.squeryl.internals.DatabaseAdapter
  *
  * among other links mentioning val overrides, early initializers, etc. -Clint
  */
-class ManuallyWiredShrineJaxrsResources() extends ShrineJaxrsResources with Loggable {
-  import ManuallyWiredShrineJaxrsResources._
+object ManuallyWiredShrineJaxrsResources extends ShrineJaxrsResources with Loggable {
   import NodeHandleSource.makeNodeHandles
 
   override def resources: Iterable[AnyRef] = {
@@ -171,9 +170,9 @@ class ManuallyWiredShrineJaxrsResources() extends ShrineJaxrsResources with Logg
         adapterMappings)
   })
 
-  private val localAdapterServiceOption: Option[AdapterRequestHandler] = shrineConfig.hubConfig.flatMap(hubConfig => makeAdapterServiceOption(hubConfig.shouldQuerySelf, adapterService))
+  private lazy val localAdapterServiceOption: Option[AdapterRequestHandler] = shrineConfig.hubConfig.flatMap(hubConfig => makeAdapterServiceOption(hubConfig.shouldQuerySelf, adapterService))
   
-  private val broadcastDestinations: Option[Set[NodeHandle]] = shrineConfig.hubConfig.map(hubConfig => makeNodeHandles(keystoreTrustParam, hubConfig.maxQueryWaitTime, hubConfig.downstreamNodes, nodeId, localAdapterServiceOption, breakdownTypes))
+  private lazy val broadcastDestinations: Option[Set[NodeHandle]] = shrineConfig.hubConfig.map(hubConfig => makeNodeHandles(keystoreTrustParam, hubConfig.maxQueryWaitTime, hubConfig.downstreamNodes, nodeId, localAdapterServiceOption, breakdownTypes))
   
   protected lazy val (shrineService, i2b2Service, auditDao) = queryEntryPointComponentsToTuple(shrineConfig.queryEntryPointConfig.map { queryEntryPointConfig =>
 
@@ -299,9 +298,7 @@ class ManuallyWiredShrineJaxrsResources() extends ShrineJaxrsResources with Logg
   protected lazy val i2b2AdminResource: Option[I2b2AdminResource] = i2b2AdminService.map(I2b2AdminResource(_, breakdownTypes))
   
   protected lazy val broadcasterMultiplexerResource: Option[BroadcasterMultiplexerResource] = broadcasterMultiplexerService.map(BroadcasterMultiplexerResource(_))
-}
 
-object ManuallyWiredShrineJaxrsResources {
   def makeAdapterServiceOption(isQueryable: Boolean, adapterRequestHandler: Option[AdapterRequestHandler]): Option[AdapterRequestHandler] = {
     if (isQueryable) {
       require(adapterRequestHandler.isDefined, "Self-querying requested, but this node is not configured to be an adapter")
