@@ -4,7 +4,7 @@ import javax.ws.rs.{WebApplicationException, GET, Path, Produces}
 import javax.ws.rs.core.{Response, MediaType}
 
 import com.sun.jersey.spi.container.{ContainerRequest, ContainerRequestFilter}
-import com.typesafe.config.{Config => TsConfig, ConfigValue}
+import com.typesafe.config.{Config => TsConfig}
 import org.json4s.{DefaultFormats, Formats}
 import org.json4s.native.Serialization
 
@@ -23,7 +23,7 @@ import net.shrine.config.ConfigExtensions
   */
 @Path("/status")
 @Produces(Array(MediaType.APPLICATION_JSON))
-case class StatusJaxrs(shrineConfig:TsConfig) extends Loggable with ContainerRequestFilter {
+case class StatusJaxrs(shrineConfig:TsConfig) extends Loggable {
 
   implicit def json4sFormats: Formats = DefaultFormats
 
@@ -40,16 +40,6 @@ case class StatusJaxrs(shrineConfig:TsConfig) extends Loggable with ContainerReq
   def config: String = {
     //todo probably better to reach out and grab the config from ManuallyWiredShrineJaxrsResources once it is a singleton
     Serialization.write(Json4sConfig(shrineConfig))
-  }
-
-  override def filter(requestContext: ContainerRequest): ContainerRequest = {
-    val hostOfOrigin = requestContext.getBaseUri.getHost
-    val permittedHostOfOrigin:String = shrineConfig.getOption("shrine.status.permittedHostOfOrigin",_.getString).getOrElse(java.net.InetAddress.getLocalHost.getHostName)
-    if(hostOfOrigin == permittedHostOfOrigin) requestContext
-    else {
-      val response = Response.status(Response.Status.UNAUTHORIZED).entity(s"Only available from $permittedHostOfOrigin").build()
-      throw new WebApplicationException(response)
-    }
   }
 }
 
@@ -72,4 +62,21 @@ object Json4sConfig{
     val sortedMap: Map[String, String] = entries.toMap
     Json4sConfig(sortedMap)
   }
+}
+
+class PermittedHostOnly(shrineConfig:TsConfig) extends ContainerRequestFilter {
+
+  //todo generalize for happy, too
+  //todo for tomcat 8 see https://jersey.java.net/documentation/latest/filters-and-interceptors.html for a cleaner version
+  //code from http://stackoverflow.com/questions/17143514/how-to-add-custom-response-and-abort-request-in-jersey-1-11-filters
+  override def filter(requestContext: ContainerRequest): ContainerRequest = {
+    val hostOfOrigin = requestContext.getBaseUri.getHost
+    val permittedHostOfOrigin:String = shrineConfig.getOption("shrine.status.permittedHostOfOrigin",_.getString).getOrElse(java.net.InetAddress.getLocalHost.getHostName)
+    if(hostOfOrigin == permittedHostOfOrigin) requestContext
+    else {
+      val response = Response.status(Response.Status.UNAUTHORIZED).entity(s"Only available from $permittedHostOfOrigin").build()
+      throw new WebApplicationException(response)
+    }
+  }
+
 }
