@@ -69,6 +69,8 @@ class PermittedHostOnly(shrineConfig:TsConfig) extends ContainerRequestFilter {
   //todo generalize for happy, too
   //todo for tomcat 8 see https://jersey.java.net/documentation/latest/filters-and-interceptors.html for a cleaner version
   //code from http://stackoverflow.com/questions/17143514/how-to-add-custom-response-and-abort-request-in-jersey-1-11-filters
+
+  //how to apply in http://stackoverflow.com/questions/4358213/how-does-one-intercept-a-request-during-the-jersey-lifecycle
   override def filter(requestContext: ContainerRequest): ContainerRequest = {
     val hostOfOrigin = requestContext.getBaseUri.getHost
     val permittedHostOfOrigin:String = shrineConfig.getOption("shrine.status.permittedHostOfOrigin",_.getString).getOrElse(java.net.InetAddress.getLocalHost.getHostName)

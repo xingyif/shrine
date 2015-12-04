@@ -1,71 +1,34 @@
 package net.shrine.wiring
 
+import javax.sql.DataSource
+
 import com.typesafe.config.{Config, ConfigFactory}
-import net.shrine.adapter.Adapter
-import net.shrine.adapter.AdapterMap
-import net.shrine.adapter.DeleteQueryAdapter
-import net.shrine.adapter.FlagQueryAdapter
-import net.shrine.adapter.ReadInstanceResultsAdapter
-import net.shrine.adapter.ReadPreviousQueriesAdapter
-import net.shrine.adapter.ReadQueryDefinitionAdapter
-import net.shrine.adapter.ReadQueryResultAdapter
-import net.shrine.adapter.ReadTranslatedQueryDefinitionAdapter
-import net.shrine.adapter.RenameQueryAdapter
-import net.shrine.adapter.RunQueryAdapter
-import net.shrine.adapter.UnFlagQueryAdapter
-import net.shrine.adapter.dao.AdapterDao
-import net.shrine.adapter.dao.I2b2AdminDao
-import net.shrine.adapter.dao.squeryl.SquerylAdapterDao
-import net.shrine.adapter.dao.squeryl.SquerylI2b2AdminDao
+import net.shrine.adapter.{Adapter, AdapterMap, DeleteQueryAdapter, FlagQueryAdapter, ReadInstanceResultsAdapter, ReadPreviousQueriesAdapter, ReadQueryDefinitionAdapter, ReadQueryResultAdapter, ReadTranslatedQueryDefinitionAdapter, RenameQueryAdapter, RunQueryAdapter, UnFlagQueryAdapter}
+import net.shrine.adapter.dao.{AdapterDao, I2b2AdminDao}
+import net.shrine.adapter.dao.squeryl.{SquerylAdapterDao, SquerylI2b2AdminDao}
 import net.shrine.adapter.dao.squeryl.tables.{Tables => AdapterTables}
-import net.shrine.adapter.service.AdapterRequestHandler
-import net.shrine.adapter.service.AdapterResource
-import net.shrine.adapter.service.AdapterService
-import net.shrine.adapter.service.I2b2AdminResource
-import net.shrine.adapter.service.I2b2AdminService
-import net.shrine.adapter.translators.ExpressionTranslator
-import net.shrine.adapter.translators.QueryDefinitionTranslator
+import net.shrine.adapter.service.{AdapterRequestHandler, AdapterResource, AdapterService, I2b2AdminResource, I2b2AdminService}
+import net.shrine.adapter.translators.{ExpressionTranslator, QueryDefinitionTranslator}
 import net.shrine.authentication.Authenticator
 import net.shrine.authorization.QueryAuthorizationService
-import net.shrine.broadcaster.AdapterClientBroadcaster
-import net.shrine.broadcaster.BroadcastAndAggregationService
-import net.shrine.broadcaster.BroadcasterClient
-import net.shrine.broadcaster.InJvmBroadcasterClient
-import net.shrine.broadcaster.NodeHandle
-import net.shrine.broadcaster.PosterBroadcasterClient
-import net.shrine.broadcaster.SigningBroadcastAndAggregationService
+import net.shrine.broadcaster.{AdapterClientBroadcaster, BroadcastAndAggregationService, BroadcasterClient, InJvmBroadcasterClient, NodeHandle, PosterBroadcasterClient, SigningBroadcastAndAggregationService}
+import net.shrine.broadcaster.dao.HubDao
+import net.shrine.broadcaster.dao.squeryl.SquerylHubDao
+import net.shrine.broadcaster.service.{BroadcasterMultiplexerResource, BroadcasterMultiplexerService}
+import net.shrine.client.{EndpointConfig, HttpClient, JerseyHttpClient, OntClient, Poster, PosterOntClient}
+import net.shrine.config.mappings.{AdapterMappings, AdapterMappingsSource, ClasspathFormatDetectingAdapterMappingsSource}
+import net.shrine.crypto.{DefaultSignerVerifier, KeyStoreCertCollection, TrustParam}
+import net.shrine.dao.squeryl.{DataSourceSquerylInitializer, SquerylDbAdapterSelecter, SquerylInitializer}
+import net.shrine.happy.{HappyShrineResource, HappyShrineService}
 import net.shrine.log.Loggable
+import net.shrine.ont.data.{OntClientOntologyMetadata, OntologyMetadata}
+import net.shrine.protocol.{NodeId, RequestType, ResultOutputType}
+import net.shrine.service.{I2b2BroadcastResource, I2b2BroadcastService, ShrineResource, ShrineService}
 import net.shrine.service.dao.AuditDao
 import net.shrine.service.dao.squeryl.SquerylAuditDao
 import net.shrine.service.dao.squeryl.tables.{Tables => HubTables}
-import net.shrine.broadcaster.service.BroadcasterMultiplexerResource
-import net.shrine.broadcaster.service.BroadcasterMultiplexerService
-import net.shrine.client.{EndpointConfig, HttpClient, JerseyHttpClient, OntClient, Poster, PosterOntClient}
-import net.shrine.config.mappings.AdapterMappings
-import net.shrine.config.mappings.AdapterMappingsSource
-import net.shrine.config.mappings.ClasspathFormatDetectingAdapterMappingsSource
-import net.shrine.crypto.DefaultSignerVerifier
-import net.shrine.crypto.KeyStoreCertCollection
-import net.shrine.dao.squeryl.DataSourceSquerylInitializer
-import net.shrine.dao.squeryl.SquerylDbAdapterSelecter
-import net.shrine.ont.data.OntClientOntologyMetadata
-import net.shrine.protocol.NodeId
-import net.shrine.protocol.RequestType
-import net.shrine.protocol.ResultOutputType
-import net.shrine.happy.HappyShrineResource
-import net.shrine.happy.HappyShrineService
-import net.shrine.service.I2b2BroadcastResource
-import net.shrine.service.I2b2BroadcastService
-import net.shrine.service.ShrineResource
-import net.shrine.service.ShrineService
-import net.shrine.crypto.TrustParam
-import javax.sql.DataSource
 import net.shrine.status.StatusJaxrs
 import org.squeryl.internals.DatabaseAdapter
-import net.shrine.dao.squeryl.SquerylInitializer
-import net.shrine.ont.data.OntologyMetadata
-import net.shrine.broadcaster.dao.HubDao
-import net.shrine.broadcaster.dao.squeryl.SquerylHubDao
 
 /**
  * @author clint
@@ -79,7 +42,7 @@ import net.shrine.broadcaster.dao.squeryl.SquerylHubDao
  *
  * among other links mentioning val overrides, early initializers, etc. -Clint
  */
-class ManuallyWiredShrineJaxrsResources(authStrategy: AuthStrategy = AuthStrategy.Default) extends ShrineJaxrsResources with Loggable {
+class ManuallyWiredShrineJaxrsResources() extends ShrineJaxrsResources with Loggable {
   import ManuallyWiredShrineJaxrsResources._
   import NodeHandleSource.makeNodeHandles
 
@@ -246,9 +209,9 @@ class ManuallyWiredShrineJaxrsResources(authStrategy: AuthStrategy = AuthStrateg
  
       val authorizationType = queryEntryPointConfig.authorizationType
 
-      val authenticator: Authenticator = authStrategy.determineAuthenticator(authenticationType, pmPoster)
+      val authenticator: Authenticator = AuthStrategy.determineAuthenticator(authenticationType, pmPoster)
       
-      val authorizationService: QueryAuthorizationService = authStrategy.determineQueryAuthorizationService(authorizationType, shrineConfig, authenticator)
+      val authorizationService: QueryAuthorizationService = AuthStrategy.determineQueryAuthorizationService(authorizationType, shrineConfig, authenticator)
 
       debug(s"authorizationService set to $authorizationService")
 
@@ -348,7 +311,7 @@ object ManuallyWiredShrineJaxrsResources {
   }
 
   def makeHttpClient(keystoreCertCollection: KeyStoreCertCollection, endpoint: EndpointConfig): HttpClient = {
-    import TrustParam.{ AcceptAllCerts, SomeKeyStore }
+    import TrustParam.{AcceptAllCerts, SomeKeyStore}
 
     val trustParam = if (endpoint.acceptAllCerts) AcceptAllCerts else SomeKeyStore(keystoreCertCollection)
 
