@@ -213,7 +213,8 @@ $hrine.EnhancedError =
             var details,
                 problem = {
                     exception: {}
-                };
+                },
+                innerHTML;
 
             problem.codec       = grabXmlNodeData(qriNode, 'descendant-or-self::query_status_type/problem/codec');
             problem.summary     = grabXmlNodeData(qriNode, 'descendant-or-self::query_status_type/problem/summary');
@@ -230,7 +231,9 @@ $hrine.EnhancedError =
             }
             //error format as expected.
             else{
-                problem.details                 = details[0].innerHTML.unescapeHTML().replace(/(<([^>]+)>)/ig,"");
+                var innerHTML                   = (details[0].xml !== undefined)?
+                    details[0].xml : details[0].innerHTML;
+                problem.details                 = innerHTML.unescapeHTML().replace(/(<([^>]+)>)/ig,"");
                 problem.exception.name          = grabXmlNodeData(qriNode, 'descendant-or-self::query_status_type/problem/details/exception/name');
                 problem.exception.message       = grabXmlNodeData(qriNode, 'descendant-or-self::query_status_type/problem/details/exception/message');
                 problem.exception.stackTrace    = parseErrorException(qriNode);
@@ -300,7 +303,7 @@ $hrine.EnhancedError =
          */
         function grabXmlNodeData(node, xPathString){
             var nodeVal = i2b2.h.XPath(node, xPathString);
-            return (nodeVal.length)? nodeVal[0].innerHTML : '';
+            return (nodeVal.length)? nodeVal[0].firstChild.nodeValue : '';
         }
 
 
