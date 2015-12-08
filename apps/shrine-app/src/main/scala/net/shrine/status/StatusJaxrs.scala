@@ -22,7 +22,7 @@ import net.shrine.config.ConfigExtensions
   * @author david 
   * @since 12/2/15
   */
-@Path("/status")
+@Path("/internalstatus")
 @Produces(Array(MediaType.APPLICATION_JSON))
 case class StatusJaxrs(shrineConfig:TsConfig) extends Loggable {
 
@@ -76,11 +76,15 @@ class PermittedHostOnly extends ContainerRequestFilter {
     val hostOfOrigin = requestContext.getBaseUri.getHost
     val shrineConfig:TsConfig = ManuallyWiredShrineJaxrsResources.config
     val permittedHostOfOrigin:String = shrineConfig.getOption("shrine.status.permittedHostOfOrigin",_.getString).getOrElse(java.net.InetAddress.getLocalHost.getHostName)
-    if(hostOfOrigin == permittedHostOfOrigin) requestContext
-    else {
-      val response = Response.status(Response.Status.UNAUTHORIZED).entity(s"Only available from $permittedHostOfOrigin").build()
+
+    val path = requestContext.getPath
+
+    //happy and internalstatus API calls must come from the same host as tomcat is running on (hopefully the dashboard servlet).
+    if ((path.contains("happy") || path.contains("internalstatus")) && (hostOfOrigin != permittedHostOfOrigin)) {
+      val response = Response.status(Response.Status.UNAUTHORIZED).entity(s"Only available from $permittedHostOfOrigin, not $hostOfOrigin, controlled by shrine.status.permittedHostOfOrigin in shrine.conf").build()
       throw new WebApplicationException(response)
     }
+    else requestContext
   }
 
 }
