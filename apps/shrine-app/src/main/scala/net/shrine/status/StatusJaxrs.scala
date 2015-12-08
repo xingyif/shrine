@@ -5,6 +5,7 @@ import javax.ws.rs.core.{Response, MediaType}
 
 import com.sun.jersey.spi.container.{ContainerRequest, ContainerRequestFilter}
 import com.typesafe.config.{Config => TsConfig}
+import net.shrine.wiring.ManuallyWiredShrineJaxrsResources
 import org.json4s.{DefaultFormats, Formats}
 import org.json4s.native.Serialization
 
@@ -64,15 +65,16 @@ object Json4sConfig{
   }
 }
 
-class PermittedHostOnly(shrineConfig:TsConfig) extends ContainerRequestFilter {
+class PermittedHostOnly extends ContainerRequestFilter {
 
   //todo generalize for happy, too
   //todo for tomcat 8 see https://jersey.java.net/documentation/latest/filters-and-interceptors.html for a cleaner version
-  //code from http://stackoverflow.com/questions/17143514/how-to-add-custom-response-and-abort-request-in-jersey-1-11-filters
+  //shell code from http://stackoverflow.com/questions/17143514/how-to-add-custom-response-and-abort-request-in-jersey-1-11-filters
 
   //how to apply in http://stackoverflow.com/questions/4358213/how-does-one-intercept-a-request-during-the-jersey-lifecycle
   override def filter(requestContext: ContainerRequest): ContainerRequest = {
     val hostOfOrigin = requestContext.getBaseUri.getHost
+    val shrineConfig:TsConfig = ManuallyWiredShrineJaxrsResources.config
     val permittedHostOfOrigin:String = shrineConfig.getOption("shrine.status.permittedHostOfOrigin",_.getString).getOrElse(java.net.InetAddress.getLocalHost.getHostName)
     if(hostOfOrigin == permittedHostOfOrigin) requestContext
     else {

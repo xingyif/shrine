@@ -50,7 +50,7 @@ object ManuallyWiredShrineJaxrsResources extends ShrineJaxrsResources with Logga
   }
   
   //Load config from file on the classpath called "shrine.conf"
-  protected lazy val config: Config = ConfigFactory.load("shrine")
+  lazy val config: Config = ConfigFactory.load("shrine")
   protected lazy val shrineConfig: ShrineConfig = ShrineConfig(config)
 
   protected lazy val nodeId: NodeId = NodeId(shrineConfig.humanReadableNodeName)
