@@ -213,8 +213,7 @@ $hrine.EnhancedError =
             var details,
                 problem = {
                     exception: {}
-                },
-                innerHTML;
+                };
 
             problem.codec       = grabXmlNodeData(qriNode, 'descendant-or-self::query_status_type/problem/codec');
             problem.summary     = grabXmlNodeData(qriNode, 'descendant-or-self::query_status_type/problem/summary');
