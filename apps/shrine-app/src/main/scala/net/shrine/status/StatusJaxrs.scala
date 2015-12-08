@@ -75,7 +75,7 @@ class PermittedHostOnly extends ContainerRequestFilter {
   override def filter(requestContext: ContainerRequest): ContainerRequest = {
     val hostOfOrigin = requestContext.getBaseUri.getHost
     val shrineConfig:TsConfig = ManuallyWiredShrineJaxrsResources.config
-    val permittedHostOfOrigin:String = shrineConfig.getOption("shrine.status.permittedHostOfOrigin",_.getString).getOrElse(java.net.InetAddress.getLocalHost.getHostName)
+    val permittedHostOfOrigin:String = shrineConfig.getOption("shrine.status.permittedHostOfOrigin",_.getString).getOrElse("localhost")
 
     val path = requestContext.getPath
 
