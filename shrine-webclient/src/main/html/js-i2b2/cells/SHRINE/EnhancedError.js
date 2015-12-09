@@ -93,8 +93,8 @@ $hrine.EnhancedError =
                 btnContract = document.getElementById('btnContractErrorDetail');
 
                 // -- add event listeners for expand and contract as well --//
-                btnExpand.addEventListener('click', expandErrorDetailDiv, false);
-                btnContract.addEventListener('click', retractErrorDetailDiv, false);
+                addEventListener(btnExpand, 'click', expandErrorDetailDiv, false);
+                addEventListener(btnContract,'click', retractErrorDetailDiv, false);
 
                 showErrorDetail(errorData);
             }
@@ -194,13 +194,13 @@ $hrine.EnhancedError =
                 for(var i = 0; i < length; i ++) {
                     var el = anchors[i];
                     el.__errorData__ = errorObjects[i];
-                    el.addEventListener('click', onClick, false);
+                    addEventListener(el, 'click', onClick, false);
                 }
             }
 
             function removeAllEvents () {
-                btnExpand.removeEventListener('click', expandErrorDetailDiv);
-                btnContract.removeEventListener('click', retractErrorDetailDiv);
+                removeEventListener(btnExpand, 'click', expandErrorDetailDiv);
+                removeEventListener(btnContract, 'click', retractErrorDetailDiv);
             }
         }
 
@@ -305,6 +305,35 @@ $hrine.EnhancedError =
         function grabXmlNodeData(node, xPathString){
             var nodeVal = i2b2.h.XPath(node, xPathString);
             return (nodeVal.length)? nodeVal[0].firstChild.nodeValue : '';
+        }
+
+        /**
+         *
+         * @param el
+         * @param event
+         * @param callback
+         */
+        function addEventListener(el, event, callback) {
+
+            if(el.addEventListener !== undefined) {
+                el.addEventListener(event, callback, false);
+            } else {
+                el['on' + event] = callback;
+            }
+        }
+
+        /**
+         *
+         * @param el
+         * @param event
+         * @param callback
+         */
+        function removeEventListener(el, event, callback) {
+            if(el.removeEventListener !== undefined) {
+                el.removeEventListener(event, callback);
+            } else {
+                el['on' + event] = null;
+            }
         }
 
 
