@@ -168,7 +168,6 @@ $hrine.EnhancedError =
                 });
 
                 dialogErrorDetail._doClose = function (e) {
-                    e.preventDefault();
                     this.cancel();
                     removeAllEvents();
                     retractErrorDetailDiv();
