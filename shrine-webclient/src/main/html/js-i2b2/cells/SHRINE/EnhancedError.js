@@ -85,10 +85,11 @@ $hrine.EnhancedError =
                 errorDetailDiv.innerHTML    = getRetractedHtml();
             }
 
-            function onClick(event) {
-                event.preventDefault();
-
-                errorData   = event.currentTarget.__errorData__;
+            function onClick(evt) {
+                //ie logic.
+                var currentTarget = (evt !== undefined)?
+                    evt.currentTarget : window.event.srcElement.parentElement.parentElement;
+                errorData   = currentTarget.__errorData__;
                 btnExpand   = document.getElementById('btnExpandErrorDetail');
                 btnContract = document.getElementById('btnContractErrorDetail');
 
@@ -318,7 +319,7 @@ $hrine.EnhancedError =
             if(el.addEventListener !== undefined) {
                 el.addEventListener(event, callback, false);
             } else {
-                el['on' + event] = callback;
+                el.attachEvent('on' + event, callback)
             }
         }
 
@@ -332,7 +333,7 @@ $hrine.EnhancedError =
             if(el.removeEventListener !== undefined) {
                 el.removeEventListener(event, callback);
             } else {
-                el['on' + event] = null;
+                el.detachEvent('on' + event, callback);
             }
         }
 
