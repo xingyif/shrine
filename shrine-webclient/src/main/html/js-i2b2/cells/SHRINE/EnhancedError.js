@@ -249,15 +249,17 @@ $hrine.EnhancedError =
          */
         function parseErrorException(node) {
 
+            var innerHTML = (node.xml !== undefined)? node.xml : node.innerHTML;
+
             //no exception, abandon ship!
-            if(node.innerHTML.indexOf('<exception>') == -1){
+            if(innerHTML.indexOf('<exception>') == -1){
                 return '';
             }
 
             var content, startIdx, endIdx;
 
             //fish out the problem section.
-            content = node.innerHTML.split('<problem>')
+            content = innerHTML.split('<problem>')
                 .join()
                 .split('</problem>')
                 .join();
