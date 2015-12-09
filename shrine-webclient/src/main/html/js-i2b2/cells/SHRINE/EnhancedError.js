@@ -87,8 +87,8 @@ $hrine.EnhancedError =
 
             function onClick(evt) {
                 //ie logic.
-                var currentTarget = (evt !== undefined)?
-                    evt.currentTarget : window.event.srcElement.parentElement.parentElement;
+                var currentTarget = (evt.currentTarget !== undefined)?
+                    evt.currentTarget : evt.srcElement.parentElement.parentElement;
                 errorData   = currentTarget.__errorData__;
                 btnExpand   = document.getElementById('btnExpandErrorDetail');
                 btnContract = document.getElementById('btnContractErrorDetail');
