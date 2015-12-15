@@ -386,10 +386,9 @@ final class SquerylAdapterDao(initializer: SquerylInitializer, tables: Tables)(i
           on(queryRow.id === resultRow.queryId, resultRow.id === countRow.resultId)
       }
 
-      //todo this ignores result counts of 1 wrt lockout. See Shrine-1230
       //Filter for result counts > 1
       from(counts) { cnt =>
-        where(cnt.measures gt 1).select(cnt.measures)
+        where(cnt.measures gt 0).select(cnt.measures)
       }
     }
 
