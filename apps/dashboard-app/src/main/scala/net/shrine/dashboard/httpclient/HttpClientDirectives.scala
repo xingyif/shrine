@@ -1,15 +1,19 @@
 package net.shrine.dashboard.httpclient
 
+import java.io.InputStream
+
 import net.shrine.log.Loggable
 import spray.can.Http
 import akka.io.IO
 import akka.actor.{ActorRef, ActorSystem}
-import spray.http.{HttpResponse, HttpRequest, Uri}
-import spray.routing.{Route, RequestContext}
+import spray.http.{HttpRequest, Uri}
+import spray.routing.Route
 import akka.pattern.ask
 
+import scala.concurrent.{Await, Future, blocking}
+
 import scala.concurrent.duration.DurationInt
-import scala.util.Try
+import scala.language.postfixOps
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -22,45 +26,75 @@ import scala.concurrent.ExecutionContext.Implicits.global
  */
 trait HttpClientDirectives extends Loggable {
 
-  private def sending(f: RequestContext ⇒ HttpRequest)(implicit system: ActorSystem): Route = {
-    val transport: ActorRef = IO(Http)(system)
-    ctx ⇒ {
-      val request = f(ctx)
-      debug(s"Forwarding request to happy service $request")
-      import scala.concurrent.blocking
-      blocking {
-        transport.ask(request)(10 seconds).onComplete { tryAny: Try[Any] =>
-//todo replace with fold when try gets it in scala 2.12
-          val any = tryAny.get
-          any match {
-            case response: HttpResponse => ctx.complete(response.entity)
-          }
-        }
+  /**
+    * Proxy the request to the specified base uri appended with the unmatched path.
+    *
+    */
+  def forwardUnmatchedPath(baseUri: Uri)(implicit system: ActorSystem): Route = {
+    def completeWithString(string:String):Route = {
+      ctx ⇒ {
+        ctx.complete(string)
       }
     }
+    requestWithUnmatchedPath(baseUri,completeWithString)
   }
 
   /**
-   * proxy the request to the specified uri
-   *
-   */
-  def httpRequest(uri: Uri)(implicit system: ActorSystem): Route = {
-    sending { ctx =>
-      HttpRequest(ctx.request.method,
-        uri.withPath(uri.path.++(ctx.unmatchedPath)))
+    * Make the request to the specified base uri appended with the unmatched path, then use the returned entity (as a string) to complete the route.
+    *
+    */
+  def requestWithUnmatchedPath(baseUri:Uri, route:String => Route)(implicit system: ActorSystem): Route = {
+    ctx => {
+      val resourceUri = baseUri.withPath(baseUri.path.++(ctx.unmatchedPath))
+
+      val string =  if(resourceUri.scheme == "classpath") ResourceClient.loadFromResource(resourceUri.path.toString())
+                    else HttpClient.webApiCall(HttpRequest(ctx.request.method,resourceUri))
+      route(string)(ctx)
     }
   }
 
   /**
-   * proxy the request to the specified uri with the unmatched path
-   *
-   */
-  def httpRequestWithUnmatchedPath(uri: Uri)(implicit system: ActorSystem): Route = {
-    sending { ctx ⇒
-      HttpRequest(ctx.request.method,
-                  uri.withPath(uri.path.++(ctx.unmatchedPath)))
+    * proxy the request to the specified uri with the unmatched path, then use the returned entity (as a string) to complete the route.
+    *
+    */
+  def requestThenRoute(resourceUri:Uri, route:String => Route)(implicit system: ActorSystem): Route = {
+    //todo start here. Refactor and mix with previous after you see it work.
+
+    ctx => {
+      val string =  if(resourceUri.scheme == "classpath") ResourceClient.loadFromResource(resourceUri.path.toString())
+      else HttpClient.webApiCall(HttpRequest(ctx.request.method,resourceUri))
+      route(string)(ctx)
+    }
+  }
+
+}
+
+object HttpClientDirectives extends HttpClientDirectives
+
+object HttpClient extends Loggable {
+
+  def webApiCall(request:HttpRequest)(implicit system: ActorSystem): String = {
+    val transport: ActorRef = IO(Http)(system)
+
+    debug(s"Requesting $request")
+    blocking {
+      val future:Future[String] = for {
+        string <- transport.ask(request)(10 seconds).mapTo[String]
+      } yield string
+      Await.result(future,10 seconds)
     }
   }
 }
 
-object HttpClientDirectives extends HttpClientDirectives
+object ResourceClient {
+
+  def loadFromResource(resourceName:String):String = {
+    blocking {
+      val cleanResourceName = if (resourceName.startsWith ("/") ) resourceName.drop(1)
+                              else resourceName
+      val classLoader = getClass.getClassLoader
+      val is: InputStream = classLoader.getResourceAsStream (cleanResourceName)
+      scala.io.Source.fromInputStream (is).mkString
+    }
+  }
+}

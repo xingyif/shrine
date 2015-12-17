@@ -6,7 +6,8 @@ import net.shrine.authentication.UserAuthenticator
 
 import net.shrine.authorization.steward.OutboundUser
 import net.shrine.i2b2.protocol.pm.User
-import net.shrine.dashboard.httpclient.HttpClientDirectives.httpRequestWithUnmatchedPath
+import net.shrine.dashboard.httpclient.HttpClientDirectives.forwardUnmatchedPath
+import net.shrine.log.Loggable
 import shapeless.HNil
 
 import spray.http.{HttpResponse, HttpRequest, StatusCodes}
@@ -35,7 +36,7 @@ class DashboardServiceActor extends Actor with DashboardService {
 
 
 // this trait defines our service behavior independently from the service actor
-trait DashboardService extends HttpService with Json4sSupport {
+trait DashboardService extends HttpService with Json4sSupport with Loggable {
   implicit def json4sFormats: Formats = DefaultFormats
 
   val userAuthenticator = UserAuthenticator(DashboardConfigSource.config)
@@ -117,10 +118,10 @@ trait DashboardService extends HttpService with Json4sSupport {
   //todo is this an admin? Does it matter?
   def adminRoute(user:User):Route = get {
     pathPrefix("happy") {
-      val happyBaseUrl = DashboardConfigSource.config.getString("shrine.dashboard.happyBaseUrl")
-      implicit val system = ActorSystem("sprayServer")
+      val happyBaseUrl: String = DashboardConfigSource.config.getString("shrine.dashboard.happyBaseUrl")
 
-      httpRequestWithUnmatchedPath(happyBaseUrl)
+      implicit val system = ActorSystem("sprayServer")
+      forwardUnmatchedPath(happyBaseUrl)
     }
   }
 

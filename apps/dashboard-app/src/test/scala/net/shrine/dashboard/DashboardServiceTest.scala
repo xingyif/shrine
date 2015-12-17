@@ -70,7 +70,7 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
     }
   }
 
-  "StewardService" should  "redirect several urls to client/index.html" in {
+  "DashboardService" should  "redirect several urls to client/index.html" in {
 
     Get() ~>
       route ~> check {
@@ -106,5 +106,21 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
     }
 
   }
+
+  "DashboardService" should  "return an OK and the right version string for an admin/happy/version test" in {
+
+    Get(s"/admin/happy/version") ~>
+      addCredentials(adminCredentials) ~>
+      route ~> check {
+
+      assertResult(OK)(status)
+
+      val versionString = new String(body.data.toByteArray)
+      //todo test it to see if it's right
+      println(versionString)
+    }
+  }
+
+
 }
 
