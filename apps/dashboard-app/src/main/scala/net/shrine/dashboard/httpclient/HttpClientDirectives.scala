@@ -6,7 +6,7 @@ import net.shrine.log.Loggable
 import spray.can.Http
 import akka.io.IO
 import akka.actor.{ActorRef, ActorSystem}
-import spray.http.{HttpRequest, Uri}
+import spray.http.{HttpResponse, HttpRequest, Uri}
 import spray.routing.Route
 import akka.pattern.ask
 
@@ -57,9 +57,7 @@ trait HttpClientDirectives extends Loggable {
     * proxy the request to the specified uri with the unmatched path, then use the returned entity (as a string) to complete the route.
     *
     */
-  def requestThenRoute(resourceUri:Uri, route:String => Route)(implicit system: ActorSystem): Route = {
-    //todo start here. Refactor and mix with previous after you see it work.
-
+  def requestUriThenRoute(resourceUri:Uri, route:String => Route)(implicit system: ActorSystem): Route = {
     ctx => {
       val string =  if(resourceUri.scheme == "classpath") ResourceClient.loadFromResource(resourceUri.path.toString())
       else HttpClient.webApiCall(HttpRequest(ctx.request.method,resourceUri))
@@ -79,8 +77,8 @@ object HttpClient extends Loggable {
     debug(s"Requesting $request")
     blocking {
       val future:Future[String] = for {
-        string <- transport.ask(request)(10 seconds).mapTo[String]
-      } yield string
+        response <- transport.ask(request)(10 seconds).mapTo[HttpResponse]
+      } yield response.entity.asString
       Await.result(future,10 seconds)
     }
   }
