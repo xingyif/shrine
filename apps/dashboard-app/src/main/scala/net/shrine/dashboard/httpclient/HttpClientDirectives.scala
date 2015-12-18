@@ -36,7 +36,7 @@ trait HttpClientDirectives extends Loggable {
         ctx.complete(httpResponse.entity.asString)
       }
     }
-    requestWithUnmatchedPath(baseUri,handleCommonErrorsOrRoute(completeWithEntityAsString))
+    requestWithUnmatchedPath(baseUri,completeWithEntityAsString)
   }
 
   /**
@@ -57,7 +57,7 @@ trait HttpClientDirectives extends Loggable {
   def requestUriThenRoute(resourceUri:Uri, route:(HttpResponse,Uri) => Route)(implicit system: ActorSystem): Route = {
     ctx => {
       val httpResponse = httpResponseForUri(resourceUri,ctx)
-      route(httpResponse,resourceUri)(ctx)
+      handleCommonErrorsOrRoute(route)(httpResponse,resourceUri)(ctx)
     }
   }
 
