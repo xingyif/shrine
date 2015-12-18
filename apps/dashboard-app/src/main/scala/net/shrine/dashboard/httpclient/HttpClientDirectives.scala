@@ -6,8 +6,8 @@ import net.shrine.log.Loggable
 import spray.can.Http
 import akka.io.IO
 import akka.actor.{ActorRef, ActorSystem}
-import spray.http.{HttpResponse, HttpRequest, Uri}
-import spray.routing.Route
+import spray.http.{HttpEntity, StatusCodes, HttpRequest, HttpResponse, Uri}
+import spray.routing.{RequestContext, Route}
 import akka.pattern.ask
 
 import scala.concurrent.{Await, Future, blocking}
@@ -31,25 +31,25 @@ trait HttpClientDirectives extends Loggable {
     *
     */
   def forwardUnmatchedPath(baseUri: Uri)(implicit system: ActorSystem): Route = {
-    def completeWithString(string:String):Route = {
-      ctx ⇒ {
-        ctx.complete(string)
+    def completeWithEntityAsString(httpResponse:HttpResponse,uri:Uri):Route = {
+      ctx => {
+        ctx.complete(httpResponse.entity.asString)
       }
     }
-    requestWithUnmatchedPath(baseUri,completeWithString)
+    requestWithUnmatchedPath(baseUri,handleCommonErrorsOrRoute(completeWithEntityAsString))
   }
 
   /**
     * Make the request to the specified base uri appended with the unmatched path, then use the returned entity (as a string) to complete the route.
     *
     */
-  def requestWithUnmatchedPath(baseUri:Uri, route:String => Route)(implicit system: ActorSystem): Route = {
+  def requestWithUnmatchedPath(baseUri:Uri, route:(HttpResponse,Uri) => Route)(implicit system: ActorSystem): Route = {
     ctx => {
       val resourceUri = baseUri.withPath(baseUri.path.++(ctx.unmatchedPath))
 
-      val string =  if(resourceUri.scheme == "classpath") ResourceClient.loadFromResource(resourceUri.path.toString())
-                    else HttpClient.webApiCall(HttpRequest(ctx.request.method,resourceUri))
-      route(string)(ctx)
+      val httpResponse =  if(resourceUri.scheme == "classpath") ClasspathResourceHttpClient.loadFromResource(resourceUri.path.toString())
+                          else HttpClient.webApiCall(HttpRequest(ctx.request.method,resourceUri))
+      route(httpResponse,resourceUri)(ctx)
     }
   }
 
@@ -57,11 +57,22 @@ trait HttpClientDirectives extends Loggable {
     * proxy the request to the specified uri with the unmatched path, then use the returned entity (as a string) to complete the route.
     *
     */
-  def requestUriThenRoute(resourceUri:Uri, route:String => Route)(implicit system: ActorSystem): Route = {
+  def requestUriThenRoute(resourceUri:Uri, route:(HttpResponse,Uri) => Route)(implicit system: ActorSystem): Route = {
     ctx => {
-      val string =  if(resourceUri.scheme == "classpath") ResourceClient.loadFromResource(resourceUri.path.toString())
+      val httpResponse =  if(resourceUri.scheme == "classpath") ClasspathResourceHttpClient.loadFromResource(resourceUri.path.toString())
       else HttpClient.webApiCall(HttpRequest(ctx.request.method,resourceUri))
-      route(string)(ctx)
+      route(httpResponse,resourceUri)(ctx)
+    }
+  }
+
+  def handleCommonErrorsOrRoute(route:(HttpResponse,Uri) => Route)(httpResponse: HttpResponse,uri:Uri): Route = {
+    ctx => {
+      if(httpResponse.status != StatusCodes.OK) {
+        //todo create and report a problem
+        val ctxCopy: RequestContext = ctx.withHttpResponseMapped(_.copy(status = httpResponse.status))
+        ctxCopy.complete(s"$uri replied with $httpResponse")
+      }
+      else route(httpResponse,uri)(ctx)
     }
   }
 
@@ -69,30 +80,38 @@ trait HttpClientDirectives extends Loggable {
 
 object HttpClientDirectives extends HttpClientDirectives
 
+
+/**
+  * A simple HttpClient to use inside the HttpDirectives
+  */
 object HttpClient extends Loggable {
 
-  def webApiCall(request:HttpRequest)(implicit system: ActorSystem): String = {
+  def webApiCall(request:HttpRequest)(implicit system: ActorSystem): HttpResponse = {
     val transport: ActorRef = IO(Http)(system)
 
     debug(s"Requesting $request")
     blocking {
-      val future:Future[String] = for {
+      val future:Future[HttpResponse] = for {
         response <- transport.ask(request)(10 seconds).mapTo[HttpResponse]
-      } yield response.entity.asString
+      } yield response
       Await.result(future,10 seconds)
     }
   }
 }
 
-object ResourceClient {
+/**
+  * For testing, get an HttpResponse for a classpath resource
+  */
+object ClasspathResourceHttpClient {
 
-  def loadFromResource(resourceName:String):String = {
+  def loadFromResource(resourceName:String):HttpResponse = {
     blocking {
       val cleanResourceName = if (resourceName.startsWith ("/") ) resourceName.drop(1)
                               else resourceName
       val classLoader = getClass.getClassLoader
       val is: InputStream = classLoader.getResourceAsStream (cleanResourceName)
-      scala.io.Source.fromInputStream (is).mkString
+      val string:String = scala.io.Source.fromInputStream (is).mkString
+      HttpResponse(entity = HttpEntity(string))
     }
   }
 }
