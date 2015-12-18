@@ -46,10 +46,7 @@ trait HttpClientDirectives extends Loggable {
   def requestWithUnmatchedPath(baseUri:Uri, route:(HttpResponse,Uri) => Route)(implicit system: ActorSystem): Route = {
     ctx => {
       val resourceUri = baseUri.withPath(baseUri.path.++(ctx.unmatchedPath))
-
-      val httpResponse =  if(resourceUri.scheme == "classpath") ClasspathResourceHttpClient.loadFromResource(resourceUri.path.toString())
-                          else HttpClient.webApiCall(HttpRequest(ctx.request.method,resourceUri))
-      route(httpResponse,resourceUri)(ctx)
+      requestUriThenRoute(resourceUri,route)(system)(ctx)
     }
   }
 
@@ -59,10 +56,14 @@ trait HttpClientDirectives extends Loggable {
     */
   def requestUriThenRoute(resourceUri:Uri, route:(HttpResponse,Uri) => Route)(implicit system: ActorSystem): Route = {
     ctx => {
-      val httpResponse =  if(resourceUri.scheme == "classpath") ClasspathResourceHttpClient.loadFromResource(resourceUri.path.toString())
-      else HttpClient.webApiCall(HttpRequest(ctx.request.method,resourceUri))
+      val httpResponse = httpResponseForUri(resourceUri,ctx)
       route(httpResponse,resourceUri)(ctx)
     }
+  }
+
+  private def httpResponseForUri(resourceUri:Uri,ctx: RequestContext)(implicit system: ActorSystem):HttpResponse = {
+    if(resourceUri.scheme == "classpath") ClasspathResourceHttpClient.loadFromResource(resourceUri.path.toString())
+    else HttpClient.webApiCall(HttpRequest(ctx.request.method,resourceUri))
   }
 
   def handleCommonErrorsOrRoute(route:(HttpResponse,Uri) => Route)(httpResponse: HttpResponse,uri:Uri): Route = {
