@@ -10,12 +10,13 @@ import spray.http.{HttpEntity, StatusCodes, HttpRequest, HttpResponse, Uri}
 import spray.routing.{RequestContext, Route}
 import akka.pattern.ask
 
-import scala.concurrent.{Await, Future, blocking}
+import scala.concurrent.{TimeoutException, Await, Future, blocking}
 
 import scala.concurrent.duration.DurationInt
 import scala.language.postfixOps
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.util.control.NonFatal
 
 /**
  * From https://github.com/bthuillier/spray/commit/d31fc1b5e1415e1b908fe7d1f01f364a727e2593 with extra bits from http://www.cakesolutions.net/teamblogs/http-proxy-with-spray .
@@ -95,7 +96,17 @@ object HttpClient extends Loggable {
       val future:Future[HttpResponse] = for {
         response <- transport.ask(request)(10 seconds).mapTo[HttpResponse]
       } yield response
-      Await.result(future,10 seconds)
+      try {
+        Await.result(future, 10 seconds)
+      }
+      catch {
+        case x:TimeoutException => HttpResponse(status = StatusCodes.RequestTimeout,entity = HttpEntity(s"${request.uri} timed out after 10 seconds. ${x.getMessage}"))
+          //todo is there a better message? What comes up in real life?
+        case NonFatal(x) => {
+          info(s"${request.uri} failed with ${x.getMessage}",x)
+          HttpResponse(status = StatusCodes.InternalServerError,entity = HttpEntity(s"${request.uri} failed with ${x.getMessage}"))
+        }
+      }
     }
   }
 }
@@ -103,16 +114,24 @@ object HttpClient extends Loggable {
 /**
   * For testing, get an HttpResponse for a classpath resource
   */
-object ClasspathResourceHttpClient {
+object ClasspathResourceHttpClient extends Loggable {
 
   def loadFromResource(resourceName:String):HttpResponse = {
     blocking {
       val cleanResourceName = if (resourceName.startsWith ("/") ) resourceName.drop(1)
                               else resourceName
       val classLoader = getClass.getClassLoader
-      val is: InputStream = classLoader.getResourceAsStream (cleanResourceName)
-      val string:String = scala.io.Source.fromInputStream (is).mkString
-      HttpResponse(entity = HttpEntity(string))
+      try {
+        val is: InputStream = classLoader.getResourceAsStream (cleanResourceName)
+        val string:String = scala.io.Source.fromInputStream (is).mkString
+        HttpResponse(entity = HttpEntity(string))
+      }
+      catch{
+        case NonFatal(x) => {
+          info(s"Could not load $resourceName",x)
+          HttpResponse(status = StatusCodes.NotFound,entity = HttpEntity(s"Could not load $resourceName due to ${x.getMessage}"))
+        }
+      }
     }
   }
 }
