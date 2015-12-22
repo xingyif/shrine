@@ -5,6 +5,7 @@ import akka.event.Logging
 import net.shrine.authentication.UserAuthenticator
 
 import net.shrine.authorization.steward.OutboundUser
+import net.shrine.dashboard.jwtauth.ShrineJwtAuthenticator
 import net.shrine.i2b2.protocol.pm.User
 import net.shrine.dashboard.httpclient.HttpClientDirectives.forwardUnmatchedPath
 import net.shrine.log.Loggable
@@ -43,7 +44,7 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
 
   //don't need to do anything special for unauthorized users, but they do need access to a static form.
   lazy val route:Route = gruntWatchCorsSupport{
-    redirectToIndex ~ staticResources ~ makeTrouble ~ about ~ authenticatedInBrowser
+    redirectToIndex ~ staticResources ~ makeTrouble ~ about ~ authenticatedInBrowser ~ authenticateRemoteDashboard
   }
 
   // logs just the request method, uri and response at info level
@@ -81,6 +82,14 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
   val reportIfFailedToAuthenticate = routeRouteResponse {
     case Rejected(List(AuthenticationFailedRejection(_,_))) =>
       complete("AuthenticationFailed")
+  }
+
+  def authenticateRemoteDashboard:Route = pathPrefix("remoteDashboard") {
+    logRequestResponse(logEntryForRequestResponse _) { //logging is controlled by Akka's config, slf4j, and log4j config
+      authenticate(ShrineJwtAuthenticator.theAuthenticator) { user =>
+        adminRoute(user)
+      }
+    }
   }
 
   def makeTrouble = pathPrefix("makeTrouble") {
@@ -122,7 +131,8 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
 
       implicit val system = ActorSystem("sprayServer")
       forwardUnmatchedPath(happyBaseUrl)
-    }
+    } ~
+    pathPrefix("ping") { complete("pong")}
   }
 
 }
