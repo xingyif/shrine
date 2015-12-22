@@ -3,9 +3,9 @@ package net.shrine.dashboard.jwtauth
 import net.shrine.i2b2.protocol.pm.User
 import net.shrine.log.Loggable
 import net.shrine.protocol.Credential
-import spray.http.HttpHeaders.`WWW-Authenticate`
-import spray.http.HttpChallenge
-import spray.routing.AuthenticationFailedRejection.CredentialsRejected
+import spray.http.HttpHeaders.{Authorization, `WWW-Authenticate`}
+import spray.http.{HttpHeader, HttpChallenge}
+import spray.routing.AuthenticationFailedRejection.{CredentialsMissing, CredentialsRejected}
 import spray.routing.AuthenticationFailedRejection
 import spray.routing.authentication._
 
@@ -24,17 +24,26 @@ object ShrineJwtAuthenticator extends Loggable{
   //from https://groups.google.com/forum/#!topic/spray-user/5DBEZUXbjtw
   def theAuthenticator(implicit ec: ExecutionContext): ContextAuthenticator[User] = { ctx =>
 
-    val user = User(fullName = "fake dashboard",
-      username = "fake dashboard",
-      domain = "domain",
-      credential = Credential("fake dashboard credentail",isToken = false),
-      params = Map(),
-      rolesByProject = Map()
-    )
+    Future {
 
-    Future(Right(user))
+      val noAuthHeader: Authentication[User] = Left(AuthenticationFailedRejection(CredentialsMissing, List(challengeHeader)))
+      ctx.request.headers.filter(_.name.equals(Authorization.name)).headOption.fold(noAuthHeader) { (header: HttpHeader) =>
 
-    Future(Left(AuthenticationFailedRejection(CredentialsRejected,List(challengeHeader))))
+        info(s"header is $header")
+
+        val user = User(fullName = "fake dashboard",
+          username = "fake dashboard",
+          domain = "domain",
+          credential = Credential("fake dashboard credentail", isToken = false),
+          params = Map(),
+          rolesByProject = Map()
+        )
+
+//        Left(AuthenticationFailedRejection(CredentialsRejected,List(challengeHeader)))
+
+        Right(user)
+      }
+    }
   }
 
 }

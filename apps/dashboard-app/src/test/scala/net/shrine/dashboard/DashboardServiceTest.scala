@@ -121,6 +121,20 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
     }
   }
 
+  "DashboardService" should  "return an OK and pong for remoteDashboard/ping" in {
+
+    Get(s"/remoteDashboard/ping") ~>
+      addCredentials(adminCredentials) ~>
+      route ~> check {
+
+      assertResult(OK)(status)
+
+      val string = new String(body.data.toByteArray)
+      //todo test it to see if it's right
+      println(string)
+    }
+  }
+
 
 }
 
