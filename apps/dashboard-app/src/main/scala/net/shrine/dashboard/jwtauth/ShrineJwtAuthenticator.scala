@@ -19,17 +19,19 @@ import scala.concurrent.{Future, ExecutionContext}
   */
 object ShrineJwtAuthenticator extends Loggable{
 
-  val challengeHeader:`WWW-Authenticate` = `WWW-Authenticate`(HttpChallenge("ShrineAuth0", "Not Relevant"))
+  val ShrineJwtAuth0 = "ShrineJwtAuth0"
+  val challengeHeader:`WWW-Authenticate` = `WWW-Authenticate`(HttpChallenge(ShrineJwtAuth0, "Not Relevant")) //todo hostname for cert
+
 
   //from https://groups.google.com/forum/#!topic/spray-user/5DBEZUXbjtw
   def theAuthenticator(implicit ec: ExecutionContext): ContextAuthenticator[User] = { ctx =>
 
     Future {
-
       val noAuthHeader: Authentication[User] = Left(AuthenticationFailedRejection(CredentialsMissing, List(challengeHeader)))
-      ctx.request.headers.filter(_.name.equals(Authorization.name)).headOption.fold(noAuthHeader) { (header: HttpHeader) =>
+      ctx.request.headers.find(_.name.equals(Authorization.name)).fold(noAuthHeader) { (header: HttpHeader) =>
 
-        info(s"header is $header")
+      println(s"header is $header")
+      if (header.value.startsWith(s"$ShrineJwtAuth0: ")) {
 
         val user = User(fullName = "fake dashboard",
           username = "fake dashboard",
@@ -38,10 +40,10 @@ object ShrineJwtAuthenticator extends Loggable{
           params = Map(),
           rolesByProject = Map()
         )
-
-//        Left(AuthenticationFailedRejection(CredentialsRejected,List(challengeHeader)))
-
         Right(user)
+      }
+      else noAuthHeader
+//        Left(AuthenticationFailedRejection(CredentialsRejected,List(challengeHeader)))
       }
     }
   }

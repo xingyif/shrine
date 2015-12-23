@@ -1,16 +1,18 @@
 package net.shrine.dashboard
 
 import net.shrine.authorization.steward.OutboundUser
+import net.shrine.dashboard.jwtauth.ShrineJwtAuthenticator
 import net.shrine.i2b2.protocol.pm.User
 import net.shrine.protocol.Credential
 import org.json4s.native.JsonMethods.parse
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.FlatSpec
-import spray.http.BasicHttpCredentials
+import spray.http.HttpHeaders.Authorization
+import spray.http.{HttpHeader, BasicHttpCredentials}
 
 import spray.testkit.ScalatestRouteTest
-import spray.http.StatusCodes.{OK,PermanentRedirect}
+import spray.http.StatusCodes.{OK,PermanentRedirect,Unauthorized}
 
 @RunWith(classOf[JUnitRunner])
 class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with DashboardService {
@@ -121,10 +123,12 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
     }
   }
 
+  val dashboardCredentials = BasicHttpCredentials(adminUserName,"shh!")
+
   "DashboardService" should  "return an OK and pong for remoteDashboard/ping" in {
 
     Get(s"/remoteDashboard/ping") ~>
-      addCredentials(adminCredentials) ~>
+      addHeader(Authorization.name,s"${ShrineJwtAuthenticator.ShrineJwtAuth0}: ") ~>
       route ~> check {
 
       assertResult(OK)(status)
@@ -135,6 +139,23 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
     }
   }
 
+  "DashboardService" should  "reject a remoteDashboard/ping with no Authorization header" in {
 
+    Get(s"/remoteDashboard/ping") ~>
+      sealRoute(route) ~> check {
+
+      assertResult(Unauthorized)(status)
+    }
+  }
+
+  "DashboardService" should  "reject a remoteDashboard/ping with no Authorization header for the wrong authorization spec" in {
+
+    Get(s"/remoteDashboard/ping") ~>
+      addCredentials(adminCredentials) ~>
+      sealRoute(route) ~> check {
+
+      assertResult(Unauthorized)(status)
+    }
+  }
 }
 
