@@ -36,7 +36,7 @@ final case class KeyStoreCertCollection(keystore: KeyStore, descriptor: KeyStore
   override lazy val caCerts: Map[Principal, X509Certificate] = {
     caCertAliases.flatMap(getX509Cert).map(cert => CertCollection.getIssuer(cert) -> cert).toMap
   }
-  
+
   override lazy val myCert: Option[X509Certificate] = descriptor.privateKeyAlias.flatMap(getX509Cert)
   
   override lazy val myCertId: Option[CertId] = myCert.map(toCertId)
@@ -75,7 +75,7 @@ final case class KeyStoreCertCollection(keystore: KeyStore, descriptor: KeyStore
       privateKey <- getPrivateKey(privateKeyAlias)
     } yield KeyPair(cert.getPublicKey, privateKey)
     
-    require(keyPairOption.isDefined, "Private key alias must be defined, and indentify a cert with a private key component, or exactly one cert with a private key component must be present in the keystore")
+    require(keyPairOption.isDefined, "Private key alias must be defined, and identify a cert with a private key component, or exactly one cert with a private key component must be present in the keystore")
     
     keyPairOption.get
   }

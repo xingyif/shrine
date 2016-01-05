@@ -42,6 +42,7 @@ import org.squeryl.internals.DatabaseAdapter
  *
  * among other links mentioning val overrides, early initializers, etc. -Clint
  */
+//todo this is Shrine. Rename it when things are clean and calm.
 object ManuallyWiredShrineJaxrsResources extends ShrineJaxrsResources with Loggable {
   import NodeHandleSource.makeNodeHandles
 

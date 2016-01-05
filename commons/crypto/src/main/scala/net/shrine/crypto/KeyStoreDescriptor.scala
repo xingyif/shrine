@@ -1,11 +1,11 @@
 package net.shrine.crypto
 
-import java.io.File
-
 /**
  * @author clint
- * @date Nov 22, 2013
+ * @since Nov 22, 2013
  */
+
+//todo consolidate with KeyStoreParser, maybe combine the whole works into KeyStoreCertCollection's collection
 final case class KeyStoreDescriptor(
     file: String, 
     password: String, 

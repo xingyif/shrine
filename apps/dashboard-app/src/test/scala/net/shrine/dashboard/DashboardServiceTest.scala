@@ -1,6 +1,12 @@
 package net.shrine.dashboard
 
+import java.security.PrivateKey
+import javax.crypto.SecretKey
+
+import io.jsonwebtoken.{SignatureAlgorithm, Jwts}
+import io.jsonwebtoken.impl.crypto.MacProvider
 import net.shrine.authorization.steward.OutboundUser
+import net.shrine.crypto.{KeyStoreDescriptorParser, KeyStoreCertCollection}
 import net.shrine.dashboard.jwtauth.ShrineJwtAuthenticator
 import net.shrine.i2b2.protocol.pm.User
 import net.shrine.protocol.Credential
@@ -127,8 +133,16 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
 
   "DashboardService" should  "return an OK and pong for remoteDashboard/ping" in {
 
+    //todo how to generate one from a cert? Maybe?
+    val config = DashboardConfigSource.config
+    val shrineCertCollection: KeyStoreCertCollection = KeyStoreCertCollection.fromClassPathResource(KeyStoreDescriptorParser(config.getConfig("shrine.keystore")))
+
+    val signerSerialNumber = shrineCertCollection.myCertId.get.serial
+    val key: PrivateKey = shrineCertCollection.myKeyPair.privateKey
+    val jwtsString = Jwts.builder().setSubject("Joe").signWith(SignatureAlgorithm.RS512, key).compact()
+
     Get(s"/remoteDashboard/ping") ~>
-      addHeader(Authorization.name,s"${ShrineJwtAuthenticator.ShrineJwtAuth0}: ") ~>
+      addHeader(Authorization.name,s"${ShrineJwtAuthenticator.ShrineJwtAuth0}: $signerSerialNumber: $jwtsString") ~>
       route ~> check {
 
       assertResult(OK)(status)
@@ -157,5 +171,6 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
       assertResult(Unauthorized)(status)
     }
   }
+  
 }
 
