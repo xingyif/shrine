@@ -148,7 +148,7 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
 
       requestUriThenRoute(happyBaseUrl+"/version",pullClasspathFromConfig)
     } ~
-    pathPrefix("ping") { complete("pong")}
+    pathPrefix("ping") {complete("pong")}
   }
 
 }

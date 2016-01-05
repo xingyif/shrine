@@ -143,11 +143,10 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
     }
   }
 
-  val dashboardCredentials = BasicHttpCredentials(adminUserName,"shh!")
+//  val dashboardCredentials = BasicHttpCredentials(adminUserName,"shh!")
 
   "DashboardService" should  "return an OK and pong for remoteDashboard/ping" in {
 
-    //todo how to generate one from a cert? Maybe?
     val config = DashboardConfigSource.config
     val shrineCertCollection: KeyStoreCertCollection = KeyStoreCertCollection.fromClassPathResource(KeyStoreDescriptorParser(config.getConfig("shrine.keystore")))
 
@@ -162,10 +161,63 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
       assertResult(OK)(status)
 
       val string = new String(body.data.toByteArray)
-      //todo test it to see if it's right
+
       assertResult(""""pong"""")(string)
     }
   }
+
+  "DashboardService" should  "reject a remoteDashboard/ping with a bad serial number in the Authorization header" in {
+
+    val config = DashboardConfigSource.config
+    val shrineCertCollection: KeyStoreCertCollection = KeyStoreCertCollection.fromClassPathResource(KeyStoreDescriptorParser(config.getConfig("shrine.keystore")))
+
+    val signerSerialNumber = shrineCertCollection.myCertId.get.serial
+    val key: PrivateKey = shrineCertCollection.myKeyPair.privateKey
+    val jwtsString = Jwts.builder().setSubject("Joe").signWith(SignatureAlgorithm.RS512, key).compact()
+
+    Get(s"/remoteDashboard/ping") ~>
+      addHeader(Authorization.name,s"${ShrineJwtAuthenticator.ShrineJwtAuth0}: Not a number: $jwtsString") ~>
+      sealRoute(route) ~> check {
+
+      assertResult(Unauthorized)(status)
+    }
+  }
+
+  "DashboardService" should  "reject a remoteDashboard/ping with an unavailable serial number in the Authorization header" in {
+
+    val config = DashboardConfigSource.config
+    val shrineCertCollection: KeyStoreCertCollection = KeyStoreCertCollection.fromClassPathResource(KeyStoreDescriptorParser(config.getConfig("shrine.keystore")))
+
+    val signerSerialNumber = shrineCertCollection.myCertId.get.serial
+    val key: PrivateKey = shrineCertCollection.myKeyPair.privateKey
+    val jwtsString = Jwts.builder().setSubject("Joe").signWith(SignatureAlgorithm.RS512, key).compact()
+
+    Get(s"/remoteDashboard/ping") ~>
+      addHeader(Authorization.name,s"${ShrineJwtAuthenticator.ShrineJwtAuth0}: -5: $jwtsString") ~>
+      sealRoute(route) ~> check {
+
+      assertResult(Unauthorized)(status)
+    }
+  }
+
+  "DashboardService" should  "reject a remoteDashboard/ping with a short Authorization header" in {
+
+    val config = DashboardConfigSource.config
+    val shrineCertCollection: KeyStoreCertCollection = KeyStoreCertCollection.fromClassPathResource(KeyStoreDescriptorParser(config.getConfig("shrine.keystore")))
+
+    val signerSerialNumber = shrineCertCollection.myCertId.get.serial
+    val key: PrivateKey = shrineCertCollection.myKeyPair.privateKey
+    val jwtsString = Jwts.builder().setSubject("Joe").signWith(SignatureAlgorithm.RS512, key).compact()
+
+    Get(s"/remoteDashboard/ping") ~>
+      addHeader(Authorization.name,s"${ShrineJwtAuthenticator.ShrineJwtAuth0}: $signerSerialNumber") ~>
+      sealRoute(route) ~> check {
+
+      assertResult(Unauthorized)(status)
+    }
+  }
+
+
 
   "DashboardService" should  "reject a remoteDashboard/ping with no Authorization header" in {
 
