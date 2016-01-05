@@ -129,6 +129,20 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
     }
   }
 
+  "DashboardService" should  "return an OK and mess with the right version string for an admin/messWithHappyVersion test" in {
+
+    Get(s"/admin/messWithHappyVersion") ~>
+      addCredentials(adminCredentials) ~>
+      route ~> check {
+
+      assertResult(OK)(status)
+
+      val versionString = new String(body.data.toByteArray)
+      //todo test it to see if it's right
+      println(versionString)
+    }
+  }
+
   val dashboardCredentials = BasicHttpCredentials(adminUserName,"shh!")
 
   "DashboardService" should  "return an OK and pong for remoteDashboard/ping" in {
@@ -149,7 +163,7 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
 
       val string = new String(body.data.toByteArray)
       //todo test it to see if it's right
-      println(string)
+      assertResult(""""pong"""")(string)
     }
   }
 
@@ -171,6 +185,6 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
       assertResult(Unauthorized)(status)
     }
   }
-  
+
 }
 

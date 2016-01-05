@@ -7,11 +7,11 @@ import net.shrine.authentication.UserAuthenticator
 import net.shrine.authorization.steward.OutboundUser
 import net.shrine.dashboard.jwtauth.ShrineJwtAuthenticator
 import net.shrine.i2b2.protocol.pm.User
-import net.shrine.dashboard.httpclient.HttpClientDirectives.forwardUnmatchedPath
+import net.shrine.dashboard.httpclient.HttpClientDirectives.{forwardUnmatchedPath,requestUriThenRoute}
 import net.shrine.log.Loggable
 import shapeless.HNil
 
-import spray.http.{HttpResponse, HttpRequest, StatusCodes}
+import spray.http.{Uri, HttpResponse, HttpRequest, StatusCodes}
 import spray.httpx.Json4sSupport
 import spray.routing.directives.LogEntry
 import spray.routing.{AuthenticationFailedRejection, Rejected, RouteConcatenation, Directive0, Route, HttpService}
@@ -133,6 +133,20 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
 
       implicit val system = ActorSystem("sprayServer")
       forwardUnmatchedPath(happyBaseUrl)
+    } ~
+    pathPrefix("messWithHappyVersion") {
+      val happyBaseUrl: String = DashboardConfigSource.config.getString("shrine.dashboard.happyBaseUrl")
+
+      implicit val system = ActorSystem("sprayServer")
+
+      def pullClasspathFromConfig(httpResponse:HttpResponse,uri:Uri):Route = {
+        ctx => {
+          val result = httpResponse.entity.asString
+          ctx.complete(s"Got '$result' from $uri")
+        }
+      }
+
+      requestUriThenRoute(happyBaseUrl+"/version",pullClasspathFromConfig)
     } ~
     pathPrefix("ping") { complete("pong")}
   }

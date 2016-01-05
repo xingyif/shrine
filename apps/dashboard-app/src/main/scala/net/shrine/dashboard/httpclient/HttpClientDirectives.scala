@@ -57,12 +57,13 @@ trait HttpClientDirectives extends Loggable {
     */
   def requestUriThenRoute(resourceUri:Uri, route:(HttpResponse,Uri) => Route)(implicit system: ActorSystem): Route = {
     ctx => {
-      val httpResponse = httpResponseForUri(resourceUri,ctx)
+      val httpResponse = httpResponseForUri(resourceUri,ctx)(system)
       handleCommonErrorsOrRoute(route)(httpResponse,resourceUri)(ctx)
     }
   }
 
   private def httpResponseForUri(resourceUri:Uri,ctx: RequestContext)(implicit system: ActorSystem):HttpResponse = {
+
     if(resourceUri.scheme == "classpath") ClasspathResourceHttpClient.loadFromResource(resourceUri.path.toString())
     else HttpClient.webApiCall(HttpRequest(ctx.request.method,resourceUri))
   }

@@ -1,7 +1,6 @@
 package net.shrine.dashboard.jwtauth
 
 import java.security.PublicKey
-import java.security.cert.X509Certificate
 
 import io.jsonwebtoken.Jwts
 import net.shrine.crypto.{KeyStoreDescriptorParser, KeyStoreCertCollection}
@@ -36,12 +35,9 @@ object ShrineJwtAuthenticator extends Loggable{
       ctx.request.headers.find(_.name.equals(Authorization.name)).fold(noAuthHeader) { (header: HttpHeader) =>
 
         //header should be "$ShrineJwtAuth0: $SignerSerialNumber: $JwtsString
-        println(s"header value is ${header.value}")
 
         val splitHeaderValue: Array[String] = header.value.split(": ")
-        println(splitHeaderValue.mkString(" !!!!! "))
         //todo check length and reject if not == 3
-
 
         if (splitHeaderValue(0)==ShrineJwtAuth0) {
           //todo read the string and validate the user
@@ -50,8 +46,6 @@ object ShrineJwtAuthenticator extends Loggable{
           val config = DashboardConfigSource.config
 
           val shrineCertCollection: KeyStoreCertCollection = KeyStoreCertCollection.fromFileRecoverWithClassPath(KeyStoreDescriptorParser(config.getConfig("shrine.keystore")))
-
-          println(s"serial number is is $certSerialNumber")
 
           val key: PublicKey = shrineCertCollection.get(CertId(certSerialNumber.bigInteger)).get.getPublicKey //todo getOrElse
           Jwts.parser().setSigningKey(key).parseClaimsJws(splitHeaderValue(2))
