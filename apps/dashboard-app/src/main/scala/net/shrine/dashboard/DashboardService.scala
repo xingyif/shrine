@@ -156,11 +156,15 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
   def toDashboardRoute(user:User):Route = get {
     implicit val system = ActorSystem("sprayServer")
 
-    val baseUrl = "localhost" //todo from a param??
+    pathPrefix(Segment) { dnsName =>
+      val remoteDashboardProtocol = DashboardConfigSource.config.getString("shrine.dashboard.remoteDashboard.protocol")
+      val remoteDashboardPort = DashboardConfigSource.config.getString("shrine.dashboard.remoteDashboard.port")
 
-    forwardUnmatchedPath(baseUrl)
+      val baseUrl = s"$remoteDashboardProtocol$dnsName:$remoteDashboardPort"
+
+      forwardUnmatchedPath(baseUrl,Some(ShrineJwtAuthenticator.createAuthHeader))
+    }
   }
-
 }
 
 //adapted from https://gist.github.com/joseraya/176821d856b43b1cfe19
