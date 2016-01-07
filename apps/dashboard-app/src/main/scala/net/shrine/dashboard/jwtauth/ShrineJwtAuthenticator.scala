@@ -3,7 +3,7 @@ package net.shrine.dashboard.jwtauth
 import java.security.cert.{CertificateNotYetValidException, CertificateExpiredException, X509Certificate}
 import java.util.Date
 
-import io.jsonwebtoken.{Claims, Jwts}
+import io.jsonwebtoken.{ExpiredJwtException, Claims, Jwts}
 import net.shrine.crypto.{KeyStoreDescriptorParser, KeyStoreCertCollection}
 import net.shrine.dashboard.DashboardConfigSource
 import net.shrine.i2b2.protocol.pm.User
@@ -96,6 +96,10 @@ object ShrineJwtAuthenticator extends Loggable{
               }
               case x:CertificateNotYetValidException => {
                 info(s"Cert ${splitHeaderValue(1)} not yet valid.",x)
+                rejectedCredentials
+              }
+              case x:ExpiredJwtException => {
+                info(s"Jwt from ${splitHeaderValue(1)} expired.",x)
                 rejectedCredentials
               }
             }
