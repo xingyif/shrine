@@ -1,6 +1,6 @@
 package net.shrine.dashboard.jwtauth
 
-import java.security.PublicKey
+import java.security.cert.X509Certificate
 
 import io.jsonwebtoken.Jwts
 import net.shrine.crypto.{KeyStoreDescriptorParser, KeyStoreCertCollection}
@@ -31,36 +31,59 @@ object ShrineJwtAuthenticator extends Loggable{
   def theAuthenticator(implicit ec: ExecutionContext): ContextAuthenticator[User] = { ctx =>
 
     Future {
-      val noAuthHeader: Authentication[User] = Left(AuthenticationFailedRejection(CredentialsMissing, List(challengeHeader)))
-      ctx.request.headers.find(_.name.equals(Authorization.name)).fold(noAuthHeader) { (header: HttpHeader) =>
+      val missingCredentials: Authentication[User] = Left(AuthenticationFailedRejection(CredentialsMissing, List(challengeHeader)))
+      val rejectedCredentials: Authentication[User] =  Left(AuthenticationFailedRejection(CredentialsRejected,List(challengeHeader)))
+
+      ctx.request.headers.find(_.name.equals(Authorization.name)).fold(missingCredentials) { (header: HttpHeader) =>
 
         //header should be "$ShrineJwtAuth0: $SignerSerialNumber: $JwtsString
 
         val splitHeaderValue: Array[String] = header.value.split(": ")
-        //todo check length and reject if not == 3
+        if (splitHeaderValue.length == 3) {
 
-        if (splitHeaderValue(0)==ShrineJwtAuth0) {
-          //todo read the string and validate the user
-          val certSerialNumber: BigInt = BigInt(splitHeaderValue(1)) //todo error if not a big int
+          if (splitHeaderValue(0) == ShrineJwtAuth0) {
+            //todo read the string and validate the user
+            try {
+              val certSerialNumber: BigInt = BigInt(splitHeaderValue(1))
 
-          val config = DashboardConfigSource.config
+              val config = DashboardConfigSource.config
 
-          val shrineCertCollection: KeyStoreCertCollection = KeyStoreCertCollection.fromFileRecoverWithClassPath(KeyStoreDescriptorParser(config.getConfig("shrine.keystore")))
+              val shrineCertCollection: KeyStoreCertCollection = KeyStoreCertCollection.fromFileRecoverWithClassPath(KeyStoreDescriptorParser(config.getConfig("shrine.keystore")))
 
-          val key: PublicKey = shrineCertCollection.get(CertId(certSerialNumber.bigInteger)).get.getPublicKey //todo getOrElse
-          Jwts.parser().setSigningKey(key).parseClaimsJws(splitHeaderValue(2))
+              shrineCertCollection.get(CertId(certSerialNumber.bigInteger)).fold{
+                info(s"Cert serial number ${certSerialNumber.bigInteger} could not be found in the KeyStore.")
+                rejectedCredentials
+              } { (certificate: X509Certificate) =>
 
-          val user = User(fullName = s"$certSerialNumber dashboard", //todo get and check DN or CN, use that here
-            username = certSerialNumber.toString(), //todo get the request origin and use that here
-            domain = "dashboard-to-dashboard",
-            credential = Credential("fake dashboard credential", isToken = false),
-            params = Map(),
-            rolesByProject = Map()
-          )
-          Right(user)
+                val key = certificate.getPublicKey
+                Jwts.parser().setSigningKey(key).parseClaimsJws(splitHeaderValue(2))
+
+                val user = User(
+                  fullName = certificate.getIssuerDN.getName, //todo maybe get something out of jwts
+                  username = certificate.getSubjectDN.getName,
+                  domain = "dashboard-to-dashboard",
+                  credential = Credential("Dashboard credential", isToken = false),
+                  params = Map(),
+                  rolesByProject = Map()
+                )
+                Right(user)
+              }
+            } catch {
+              case x:NumberFormatException => {
+                info(s"Cert serial number could not be read as a BigInteger.",x)
+                missingCredentials
+              }
+            }
+          }
+          else {
+            info(s"Header did not start with $ShrineJwtAuth0 .")
+            missingCredentials
+          }
         }
-        else noAuthHeader
-  //        Left(AuthenticationFailedRejection(CredentialsRejected,List(challengeHeader)))
+        else {
+          info(s"Header had ${splitHeaderValue.length} :-delimited segments, not 3. ")
+          missingCredentials
+        }
       }
     }
   }
