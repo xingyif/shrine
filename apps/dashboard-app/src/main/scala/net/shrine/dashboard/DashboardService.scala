@@ -87,7 +87,7 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
   def authenticateRemoteDashboard:Route = pathPrefix("remoteDashboard") {
     logRequestResponse(logEntryForRequestResponse _) { //logging is controlled by Akka's config, slf4j, and log4j config
       get { //all remote dashboard calls are gets.
-        authenticate(ShrineJwtAuthenticator.theAuthenticator) { user =>
+        authenticate(ShrineJwtAuthenticator.authemticate) { user =>
           adminRoute(user)
         }
       }
