@@ -1,15 +1,16 @@
 package net.shrine.dashboard.jwtauth
 
+import java.security.PrivateKey
 import java.security.cert.{CertificateNotYetValidException, CertificateExpiredException, X509Certificate}
 import java.util.Date
 
-import io.jsonwebtoken.{ExpiredJwtException, Claims, Jwts}
+import io.jsonwebtoken.{SignatureAlgorithm, ExpiredJwtException, Claims, Jwts}
 import net.shrine.crypto.{KeyStoreDescriptorParser, KeyStoreCertCollection}
 import net.shrine.dashboard.DashboardConfigSource
 import net.shrine.i2b2.protocol.pm.User
 import net.shrine.log.Loggable
 import net.shrine.protocol.{CertId, Credential}
-import spray.http.HttpHeaders.{Authorization, `WWW-Authenticate`}
+import spray.http.HttpHeaders.{RawHeader, Authorization, `WWW-Authenticate`}
 import spray.http.{HttpHeader, HttpChallenge}
 import spray.routing.AuthenticationFailedRejection.{CredentialsMissing, CredentialsRejected}
 import spray.routing.AuthenticationFailedRejection
@@ -27,10 +28,10 @@ import scala.concurrent.{Future, ExecutionContext}
 object ShrineJwtAuthenticator extends Loggable{
 
   val ShrineJwtAuth0 = "ShrineJwtAuth0" //We can't use Authorization: Bearer because we have to know which public key to use to decrypt, and we want the caller to authenticate via PGP from the start
-  val challengeHeader:`WWW-Authenticate` = `WWW-Authenticate`(HttpChallenge(ShrineJwtAuth0, "dashboard-to-dashboard")) //todo hostname for cert
+  val challengeHeader:`WWW-Authenticate` = `WWW-Authenticate`(HttpChallenge(ShrineJwtAuth0, "dashboard-to-dashboard"))
 
   //from https://groups.google.com/forum/#!topic/spray-user/5DBEZUXbjtw
-  def authemticate(implicit ec: ExecutionContext): ContextAuthenticator[User] = { ctx =>
+  def authenticate(implicit ec: ExecutionContext): ContextAuthenticator[User] = { ctx =>
 
     Future {
       val missingCredentials: Authentication[User] = Left(AuthenticationFailedRejection(CredentialsMissing, List(challengeHeader)))
@@ -39,7 +40,6 @@ object ShrineJwtAuthenticator extends Loggable{
       ctx.request.headers.find(_.name.equals(Authorization.name)).fold(missingCredentials) { (header: HttpHeader) =>
 
         //header should be "$ShrineJwtAuth0: $SignerSerialNumber: $JwtsString
-
         val splitHeaderValue: Array[String] = header.value.split(": ")
         if (splitHeaderValue.length == 3) {
 
@@ -115,6 +115,22 @@ object ShrineJwtAuthenticator extends Loggable{
         }
       }
     }
+  }
+
+  def createAuthHeader:HttpHeader = {
+    val config = DashboardConfigSource.config
+    val shrineCertCollection: KeyStoreCertCollection = KeyStoreCertCollection.fromClassPathResource(KeyStoreDescriptorParser(config.getConfig("shrine.keystore")))
+
+    val signerSerialNumber = shrineCertCollection.myCertId.get.serial
+    val key: PrivateKey = shrineCertCollection.myKeyPair.privateKey
+    val expiration:Date = new Date(System.currentTimeMillis() + 30 * 1000) //good for 30 seconds
+    val jwtsString = Jwts.builder().
+                            setIssuer(signerSerialNumber.toString()).
+                            setSubject(java.net.InetAddress.getLocalHost.getHostName).
+                            setExpiration(expiration).
+                          signWith(SignatureAlgorithm.RS512, key).
+                          compact()
+    RawHeader(Authorization.name,s"$ShrineJwtAuth0: $signerSerialNumber: $jwtsString")
   }
 
 }
