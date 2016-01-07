@@ -147,9 +147,9 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
 
 //  val dashboardCredentials = BasicHttpCredentials(adminUserName,"shh!")
 
-  "DashboardService" should  "return an OK and pong for remoteDashboard/ping" in {
+  "DashboardService" should  "return an OK and pong for fromDashboard/ping" in {
 
-    Get(s"/remoteDashboard/ping") ~>
+    Get(s"/fromDashboard/ping") ~>
       addHeader(ShrineJwtAuthenticator.createAuthHeader) ~>
       route ~> check {
 
@@ -161,7 +161,7 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
     }
   }
 
-  "DashboardService" should  "reject a remoteDashboard/ping with an expired jwts header" in {
+  "DashboardService" should  "reject a fromDashboard/ping with an expired jwts header" in {
 
     val config = DashboardConfigSource.config
     val shrineCertCollection: KeyStoreCertCollection = KeyStoreCertCollection.fromClassPathResource(KeyStoreDescriptorParser(config.getConfig("shrine.keystore")))
@@ -176,7 +176,7 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
         signWith(SignatureAlgorithm.RS512, key).
         compact()
 
-    Get(s"/remoteDashboard/ping") ~>
+    Get(s"/fromDashboard/ping") ~>
       addHeader(Authorization.name,s"${ShrineJwtAuthenticator.ShrineJwtAuth0}: $signerSerialNumber: $jwtsString") ~>
       sealRoute(route) ~> check {
 
@@ -184,7 +184,7 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
     }
   }
 
-  "DashboardService" should  "reject a remoteDashboard/ping with an issuer different from its serial number" in {
+  "DashboardService" should  "reject a fromDashboard/ping with an issuer different from its serial number" in {
 
     val config = DashboardConfigSource.config
     val shrineCertCollection: KeyStoreCertCollection = KeyStoreCertCollection.fromClassPathResource(KeyStoreDescriptorParser(config.getConfig("shrine.keystore")))
@@ -199,7 +199,7 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
         signWith(SignatureAlgorithm.RS512, key).
         compact()
 
-    Get(s"/remoteDashboard/ping") ~>
+    Get(s"/fromDashboard/ping") ~>
       addHeader(Authorization.name,s"${ShrineJwtAuthenticator.ShrineJwtAuth0}: $signerSerialNumber: $jwtsString") ~>
       sealRoute(route) ~> check {
 
@@ -207,7 +207,7 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
     }
   }
 
-  "DashboardService" should  "reject a remoteDashboard/ping with a bad serial number in the Authorization header" in {
+  "DashboardService" should  "reject a fromDashboard/ping with a bad serial number in the Authorization header" in {
 
     val config = DashboardConfigSource.config
     val shrineCertCollection: KeyStoreCertCollection = KeyStoreCertCollection.fromClassPathResource(KeyStoreDescriptorParser(config.getConfig("shrine.keystore")))
@@ -222,7 +222,7 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
         signWith(SignatureAlgorithm.RS512, key).
         compact()
 
-    Get(s"/remoteDashboard/ping") ~>
+    Get(s"/fromDashboard/ping") ~>
       addHeader(Authorization.name,s"${ShrineJwtAuthenticator.ShrineJwtAuth0}: Not a number: $jwtsString") ~>
       sealRoute(route) ~> check {
 
@@ -230,7 +230,7 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
     }
   }
 
-  "DashboardService" should  "reject a remoteDashboard/ping with an unavailable serial number in the Authorization header" in {
+  "DashboardService" should  "reject a fromDashboard/ping with an unavailable serial number in the Authorization header" in {
 
     val config = DashboardConfigSource.config
     val shrineCertCollection: KeyStoreCertCollection = KeyStoreCertCollection.fromClassPathResource(KeyStoreDescriptorParser(config.getConfig("shrine.keystore")))
@@ -245,7 +245,7 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
         signWith(SignatureAlgorithm.RS512, key).
         compact()
 
-    Get(s"/remoteDashboard/ping") ~>
+    Get(s"/fromDashboard/ping") ~>
       addHeader(Authorization.name,s"${ShrineJwtAuthenticator.ShrineJwtAuth0}: -5: $jwtsString") ~>
       sealRoute(route) ~> check {
 
@@ -253,7 +253,7 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
     }
   }
 
-  "DashboardService" should  "reject a remoteDashboard/ping with a short Authorization header" in {
+  "DashboardService" should  "reject a fromDashboard/ping with a short Authorization header" in {
 
     val config = DashboardConfigSource.config
     val shrineCertCollection: KeyStoreCertCollection = KeyStoreCertCollection.fromClassPathResource(KeyStoreDescriptorParser(config.getConfig("shrine.keystore")))
@@ -261,7 +261,7 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
     val signerSerialNumber = shrineCertCollection.myCertId.get.serial
     val key: PrivateKey = shrineCertCollection.myKeyPair.privateKey
 
-    Get(s"/remoteDashboard/ping") ~>
+    Get(s"/fromDashboard/ping") ~>
       addHeader(Authorization.name,s"${ShrineJwtAuthenticator.ShrineJwtAuth0}: $signerSerialNumber") ~>
       sealRoute(route) ~> check {
 
@@ -269,18 +269,18 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
     }
   }
 
-  "DashboardService" should  "reject a remoteDashboard/ping with no Authorization header" in {
+  "DashboardService" should  "reject a fromDashboard/ping with no Authorization header" in {
 
-    Get(s"/remoteDashboard/ping") ~>
+    Get(s"/fromDashboard/ping") ~>
       sealRoute(route) ~> check {
 
       assertResult(Unauthorized)(status)
     }
   }
 
-  "DashboardService" should  "reject a remoteDashboard/ping with an Authorization header for the wrong authorization spec" in {
+  "DashboardService" should  "reject a fromDashboard/ping with an Authorization header for the wrong authorization spec" in {
 
-    Get(s"/remoteDashboard/ping") ~>
+    Get(s"/fromDashboard/ping") ~>
       addCredentials(adminCredentials) ~>
       sealRoute(route) ~> check {
 
