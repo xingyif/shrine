@@ -119,7 +119,7 @@ object ShrineJwtAuthenticator extends Loggable{
 
   def createAuthHeader:HttpHeader = {
     val config = DashboardConfigSource.config
-    val shrineCertCollection: KeyStoreCertCollection = KeyStoreCertCollection.fromClassPathResource(KeyStoreDescriptorParser(config.getConfig("shrine.keystore")))
+    val shrineCertCollection: KeyStoreCertCollection = KeyStoreCertCollection.fromFileRecoverWithClassPath(KeyStoreDescriptorParser(config.getConfig("shrine.keystore")))
 
     val signerSerialNumber = shrineCertCollection.myCertId.get.serial
     val key: PrivateKey = shrineCertCollection.myKeyPair.privateKey
