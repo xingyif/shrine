@@ -39,8 +39,8 @@ object ShrineJwtAuthenticator extends Loggable{
 
       ctx.request.headers.find(_.name.equals(Authorization.name)).fold(missingCredentials) { (header: HttpHeader) =>
 
-        //header should be "$ShrineJwtAuth0: $SignerSerialNumber: $JwtsString
-        val splitHeaderValue: Array[String] = header.value.split(": ")
+        //header should be "$ShrineJwtAuth0 $SignerSerialNumber $JwtsString
+        val splitHeaderValue: Array[String] = header.value.split(" ")
         if (splitHeaderValue.length == 3) {
 
           if (splitHeaderValue(0) == ShrineJwtAuth0) {
@@ -130,7 +130,7 @@ object ShrineJwtAuthenticator extends Loggable{
                             setExpiration(expiration).
                           signWith(SignatureAlgorithm.RS512, key).
                           compact()
-    RawHeader(Authorization.name,s"$ShrineJwtAuth0: $signerSerialNumber: $jwtsString")
+    RawHeader(Authorization.name,s"$ShrineJwtAuth0 $signerSerialNumber $jwtsString")
   }
 
 }
