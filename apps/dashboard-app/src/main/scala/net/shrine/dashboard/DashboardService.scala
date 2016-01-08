@@ -64,7 +64,7 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
   }
 
   //pathPrefixTest shields the QEP code from the redirect.
-  def authenticatedInBrowser: Route = pathPrefixTest("user"|"admin") {
+  def authenticatedInBrowser: Route = pathPrefixTest("user"|"admin"|"toDashboard") {
     logRequestResponse(logEntryForRequestResponse _) { //logging is controlled by Akka's config, slf4j, and log4j config
       reportIfFailedToAuthenticate {
         authenticate(userAuthenticator.basicUserAuthenticator) { user =>

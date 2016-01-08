@@ -18,7 +18,7 @@ import spray.http.HttpHeaders.Authorization
 import spray.http.BasicHttpCredentials
 
 import spray.testkit.ScalatestRouteTest
-import spray.http.StatusCodes.{OK,PermanentRedirect,Unauthorized}
+import spray.http.StatusCodes.{OK,PermanentRedirect,Unauthorized,NotFound}
 
 import scala.language.postfixOps
 
@@ -288,5 +288,16 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
     }
   }
 
+  "DashboardService" should  "kinda fall over without a web service to talk to" in {
+
+    Get(s"/toDashboard/test") ~>
+      addCredentials(adminCredentials) ~>
+      sealRoute(route) ~> check {
+
+      val string = new String(body.data.toByteArray)
+
+      assertResult(NotFound)(status)
+    }
+  }
 }
 

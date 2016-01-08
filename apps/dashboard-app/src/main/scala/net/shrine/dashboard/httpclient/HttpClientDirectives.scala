@@ -6,6 +6,7 @@ import net.shrine.log.Loggable
 import spray.can.Http
 import akka.io.IO
 import akka.actor.{ActorRef, ActorSystem}
+import spray.can.Http.ConnectionAttemptFailedException
 import spray.http.{HttpHeader, HttpEntity, StatusCodes, HttpRequest, HttpResponse, Uri}
 import spray.routing.{RequestContext, Route}
 import akka.pattern.ask
@@ -58,11 +59,15 @@ trait HttpClientDirectives extends Loggable {
   def requestUriThenRoute(resourceUri:Uri, route:(HttpResponse,Uri) => Route,header:Option[HttpHeader] = None)(implicit system: ActorSystem): Route = {
     ctx => {
       val httpResponse = httpResponseForUri(resourceUri,ctx,header)(system)
+      info(s"Got $httpResponse for $resourceUri")
+
       handleCommonErrorsOrRoute(route)(httpResponse,resourceUri)(ctx)
     }
   }
 
   private def httpResponseForUri(resourceUri:Uri,ctx: RequestContext,header:Option[HttpHeader] = None)(implicit system: ActorSystem):HttpResponse = {
+
+    info(s"Requesting $resourceUri")
 
     if(resourceUri.scheme == "classpath") ClasspathResourceHttpClient.loadFromResource(resourceUri.path.toString())
     else HttpClient.webApiCall(HttpRequest(ctx.request.method,resourceUri,header.to[List]))
@@ -89,6 +94,7 @@ object HttpClientDirectives extends HttpClientDirectives
   */
 object HttpClient extends Loggable {
 
+  //todo hand back a Try, Failures with custom exceptions instead of a crappy response
   def webApiCall(request:HttpRequest)(implicit system: ActorSystem): HttpResponse = {
     val transport: ActorRef = IO(Http)(system)
 
@@ -103,6 +109,11 @@ object HttpClient extends Loggable {
       catch {
         case x:TimeoutException => HttpResponse(status = StatusCodes.RequestTimeout,entity = HttpEntity(s"${request.uri} timed out after 10 seconds. ${x.getMessage}"))
           //todo is there a better message? What comes up in real life?
+        case x:ConnectionAttemptFailedException => {
+          //no web service is there to respond
+          info(s"${request.uri} failed with ${x.getMessage}",x)
+          HttpResponse(status = StatusCodes.NotFound,entity = HttpEntity(s"${request.uri} failed with ${x.getMessage}"))
+        }
         case NonFatal(x) => {
           info(s"${request.uri} failed with ${x.getMessage}",x)
           HttpResponse(status = StatusCodes.InternalServerError,entity = HttpEntity(s"${request.uri} failed with ${x.getMessage}"))
