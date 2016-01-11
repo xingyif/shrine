@@ -39,83 +39,90 @@ object ShrineJwtAuthenticator extends Loggable{
 
       ctx.request.headers.find(_.name.equals(Authorization.name)).fold(missingCredentials) { (header: HttpHeader) =>
 
-        //header should be $ShrineJwtAuth0 "$SignerSerialNumber $JwtsString"
+        //header should be "$ShrineJwtAuth0 $SignerSerialNumber,$JwtsString
         val splitHeaderValue: Array[String] = header.value.split(" ")
-        if (splitHeaderValue.length == 3) {
-          //todo check for leading "
-          val serialNumberString = splitHeaderValue(1).drop(1)
-          //todo check for following "
-          val jwtsString = splitHeaderValue(2).dropRight(1)
+        if (splitHeaderValue.length == 2) {
 
-          if (splitHeaderValue(0) == ShrineJwtAuth0) {
-            try {
+          val authScheme = splitHeaderValue(0)
+          val serialNumberAndJwts = splitHeaderValue(1).split(",")
 
-              val certSerialNumber: BigInt = BigInt(serialNumberString)
+          if (serialNumberAndJwts.length == 2) {
+            val serialNumberString = serialNumberAndJwts(0)
+            val jwtsString = serialNumberAndJwts(1)
 
-              val config = DashboardConfigSource.config
+            if (authScheme == ShrineJwtAuth0) {
+              try {
+                val certSerialNumber: BigInt = BigInt(serialNumberString)
 
-              val shrineCertCollection: KeyStoreCertCollection = KeyStoreCertCollection.fromFileRecoverWithClassPath(KeyStoreDescriptorParser(config.getConfig("shrine.keystore")))
+                val config = DashboardConfigSource.config
 
-              shrineCertCollection.get(CertId(certSerialNumber.bigInteger)).fold{
-                info(s"Cert serial number ${certSerialNumber.bigInteger} could not be found in the KeyStore.")
-                rejectedCredentials
-              } { (certificate: X509Certificate) =>
+                val shrineCertCollection: KeyStoreCertCollection = KeyStoreCertCollection.fromFileRecoverWithClassPath(KeyStoreDescriptorParser(config.getConfig("shrine.keystore")))
 
-                val now = new Date()
-                //check date on cert vs time. throws CertificateExpiredException or CertificateNotYetValidException for problems
-//todo skip this until you rebuild the certs used for testing                certificate.checkValidity(now)
+                shrineCertCollection.get(CertId(certSerialNumber.bigInteger)).fold {
+                  info(s"Cert serial number ${certSerialNumber.bigInteger} could not be found in the KeyStore.")
+                  rejectedCredentials
+                } { (certificate: X509Certificate) =>
 
-                val key = certificate.getPublicKey
-                val jwtsClaims: Claims = Jwts.parser().setSigningKey(key).parseClaimsJws(jwtsString).getBody
+                  val now = new Date()
+                  //check date on cert vs time. throws CertificateExpiredException or CertificateNotYetValidException for problems
+                  //todo skip this until you rebuild the certs used for testing                certificate.checkValidity(now)
 
-                //todo check serial number vs jwts iss
-                if(jwtsClaims.getIssuer != serialNumberString) {
-                  info(s"jwts issuer ${jwtsClaims.getIssuer} does not match signing cert serial number ${serialNumberString}")
+                  val key = certificate.getPublicKey
+                  val jwtsClaims: Claims = Jwts.parser().setSigningKey(key).parseClaimsJws(jwtsString).getBody
+
+                  //todo check serial number vs jwts iss
+                  if (jwtsClaims.getIssuer != serialNumberString) {
+                    info(s"jwts issuer ${jwtsClaims.getIssuer} does not match signing cert serial number ${serialNumberString}")
+                    rejectedCredentials
+                  }
+                  //todo check exp vs time
+                  else if (jwtsClaims.getExpiration.before(now)) {
+                    info(s"jwts experation ${jwtsClaims.getExpiration} expired before now $now")
+                    rejectedCredentials
+                  }
+                  else {
+                    val user = User(
+                      fullName = certificate.getSubjectDN.getName,
+                      username = jwtsClaims.getSubject,
+                      domain = "dashboard-to-dashboard",
+                      credential = Credential("Dashboard credential", isToken = false),
+                      params = Map(),
+                      rolesByProject = Map()
+                    )
+                    Right(user)
+                  }
+                }
+              } catch {
+                case x: NumberFormatException => {
+                  info(s"Cert serial number ${serialNumberString} could not be read as a BigInteger.", x)
+                  missingCredentials
+                }
+                case x: CertificateExpiredException => {
+                  info(s"Cert ${serialNumberString} expired.", x)
                   rejectedCredentials
                 }
-                //todo check exp vs time
-                else if (jwtsClaims.getExpiration.before(now)) {
-                  info(s"jwts experation ${jwtsClaims.getExpiration} expired before now $now")
+                case x: CertificateNotYetValidException => {
+                  info(s"Cert ${serialNumberString} not yet valid.", x)
                   rejectedCredentials
                 }
-                else {
-                  val user = User(
-                    fullName = certificate.getSubjectDN.getName,
-                    username = jwtsClaims.getSubject,
-                    domain = "dashboard-to-dashboard",
-                    credential = Credential("Dashboard credential", isToken = false),
-                    params = Map(),
-                    rolesByProject = Map()
-                  )
-                  Right(user)
+                case x: ExpiredJwtException => {
+                  info(s"Jwt from ${serialNumberString} expired.", x)
+                  rejectedCredentials
                 }
               }
-            } catch {
-              case x:NumberFormatException => {
-                info(s"Cert serial number ${serialNumberString} could not be read as a BigInteger.",x)
-                missingCredentials
-              }
-              case x:CertificateExpiredException => {
-                info(s"Cert ${serialNumberString} expired.",x)
-                rejectedCredentials
-              }
-              case x:CertificateNotYetValidException => {
-                info(s"Cert ${serialNumberString} not yet valid.",x)
-                rejectedCredentials
-              }
-              case x:ExpiredJwtException => {
-                info(s"Jwt from ${serialNumberString} expired.",x)
-                rejectedCredentials
-              }
+            }
+            else {
+              info(s"Header did not start with $ShrineJwtAuth0 .")
+              missingCredentials
             }
           }
           else {
-            info(s"Header did not start with $ShrineJwtAuth0 .")
+            info(s"Header had ${serialNumberAndJwts.length} ,-delimited segments, not 2. ")
             missingCredentials
           }
         }
         else {
-          info(s"Header had ${splitHeaderValue.length} :-delimited segments, not 3. ")
+          info(s"Header had ${splitHeaderValue.length} space-delimited segments, not 2. ")
           missingCredentials
         }
       }
@@ -136,7 +143,7 @@ object ShrineJwtAuthenticator extends Loggable{
                           signWith(SignatureAlgorithm.RS512, key).
                           compact()
     //todo start here. investigate raw header problems.
-    RawHeader(Authorization.name,s"""$ShrineJwtAuth0 "$signerSerialNumber $jwtsString"""")
+    RawHeader(Authorization.name,s"$ShrineJwtAuth0 $signerSerialNumber,$jwtsString")
   }
 
 }

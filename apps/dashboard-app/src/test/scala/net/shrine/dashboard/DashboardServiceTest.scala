@@ -177,7 +177,7 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
         compact()
 
     Get(s"/fromDashboard/ping") ~>
-      addHeader(Authorization.name,s"""${ShrineJwtAuthenticator.ShrineJwtAuth0}: "$signerSerialNumber: $jwtsString"""") ~>
+      addHeader(Authorization.name,s"${ShrineJwtAuthenticator.ShrineJwtAuth0}: $signerSerialNumber,$jwtsString") ~>
       sealRoute(route) ~> check {
 
       assertResult(Unauthorized)(status)
@@ -200,7 +200,7 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
         compact()
 
     Get(s"/fromDashboard/ping") ~>
-      addHeader(Authorization.name,s"""${ShrineJwtAuthenticator.ShrineJwtAuth0}: "$signerSerialNumber: $jwtsString"""") ~>
+      addHeader(Authorization.name,s"${ShrineJwtAuthenticator.ShrineJwtAuth0}: $signerSerialNumber,$jwtsString") ~>
       sealRoute(route) ~> check {
 
       assertResult(Unauthorized)(status)
@@ -223,7 +223,7 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
         compact()
 
     Get(s"/fromDashboard/ping") ~>
-      addHeader(Authorization.name,s"""${ShrineJwtAuthenticator.ShrineJwtAuth0}: "NotANumber: $jwtsString"""") ~>
+      addHeader(Authorization.name,s"${ShrineJwtAuthenticator.ShrineJwtAuth0}: Not a number,$jwtsString") ~>
       sealRoute(route) ~> check {
 
       assertResult(Unauthorized)(status)
@@ -246,7 +246,7 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
         compact()
 
     Get(s"/fromDashboard/ping") ~>
-      addHeader(Authorization.name,s"""${ShrineJwtAuthenticator.ShrineJwtAuth0}: "-5: $jwtsString"""") ~>
+      addHeader(Authorization.name,s"${ShrineJwtAuthenticator.ShrineJwtAuth0}: -5: $jwtsString") ~>
       sealRoute(route) ~> check {
 
       assertResult(Unauthorized)(status)
@@ -262,7 +262,7 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
     val key: PrivateKey = shrineCertCollection.myKeyPair.privateKey
 
     Get(s"/fromDashboard/ping") ~>
-      addHeader(Authorization.name,s"""${ShrineJwtAuthenticator.ShrineJwtAuth0}: "$signerSerialNumber""") ~>
+      addHeader(Authorization.name,s"${ShrineJwtAuthenticator.ShrineJwtAuth0}: $signerSerialNumber") ~>
       sealRoute(route) ~> check {
 
       assertResult(Unauthorized)(status)
