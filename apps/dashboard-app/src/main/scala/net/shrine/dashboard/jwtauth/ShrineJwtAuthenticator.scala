@@ -39,13 +39,18 @@ object ShrineJwtAuthenticator extends Loggable{
 
       ctx.request.headers.find(_.name.equals(Authorization.name)).fold(missingCredentials) { (header: HttpHeader) =>
 
-        //header should be "$ShrineJwtAuth0 $SignerSerialNumber $JwtsString
+        //header should be $ShrineJwtAuth0 "$SignerSerialNumber $JwtsString"
         val splitHeaderValue: Array[String] = header.value.split(" ")
         if (splitHeaderValue.length == 3) {
+          //todo check for leading "
+          val serialNumberString = splitHeaderValue(1).drop(1)
+          //todo check for following "
+          val jwtsString = splitHeaderValue(2).dropRight(1)
 
           if (splitHeaderValue(0) == ShrineJwtAuth0) {
             try {
-              val certSerialNumber: BigInt = BigInt(splitHeaderValue(1))
+
+              val certSerialNumber: BigInt = BigInt(serialNumberString)
 
               val config = DashboardConfigSource.config
 
@@ -61,11 +66,11 @@ object ShrineJwtAuthenticator extends Loggable{
 //todo skip this until you rebuild the certs used for testing                certificate.checkValidity(now)
 
                 val key = certificate.getPublicKey
-                val jwtsClaims: Claims = Jwts.parser().setSigningKey(key).parseClaimsJws(splitHeaderValue(2)).getBody
+                val jwtsClaims: Claims = Jwts.parser().setSigningKey(key).parseClaimsJws(jwtsString).getBody
 
                 //todo check serial number vs jwts iss
-                if(jwtsClaims.getIssuer != splitHeaderValue(1)) {
-                  info(s"jwts issuer ${jwtsClaims.getIssuer} does not match signing cert serial number ${splitHeaderValue(1)}")
+                if(jwtsClaims.getIssuer != serialNumberString) {
+                  info(s"jwts issuer ${jwtsClaims.getIssuer} does not match signing cert serial number ${serialNumberString}")
                   rejectedCredentials
                 }
                 //todo check exp vs time
@@ -87,19 +92,19 @@ object ShrineJwtAuthenticator extends Loggable{
               }
             } catch {
               case x:NumberFormatException => {
-                info(s"Cert serial number ${splitHeaderValue(1)} could not be read as a BigInteger.",x)
+                info(s"Cert serial number ${serialNumberString} could not be read as a BigInteger.",x)
                 missingCredentials
               }
               case x:CertificateExpiredException => {
-                info(s"Cert ${splitHeaderValue(1)} expired.",x)
+                info(s"Cert ${serialNumberString} expired.",x)
                 rejectedCredentials
               }
               case x:CertificateNotYetValidException => {
-                info(s"Cert ${splitHeaderValue(1)} not yet valid.",x)
+                info(s"Cert ${serialNumberString} not yet valid.",x)
                 rejectedCredentials
               }
               case x:ExpiredJwtException => {
-                info(s"Jwt from ${splitHeaderValue(1)} expired.",x)
+                info(s"Jwt from ${serialNumberString} expired.",x)
                 rejectedCredentials
               }
             }
@@ -130,7 +135,8 @@ object ShrineJwtAuthenticator extends Loggable{
                             setExpiration(expiration).
                           signWith(SignatureAlgorithm.RS512, key).
                           compact()
-    RawHeader(Authorization.name,s"$ShrineJwtAuth0 $signerSerialNumber $jwtsString")
+    //todo start here. investigate raw header problems.
+    RawHeader(Authorization.name,s"""$ShrineJwtAuth0 "$signerSerialNumber $jwtsString"""")
   }
 
 }

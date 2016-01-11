@@ -15,7 +15,7 @@ import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.FlatSpec
 import spray.http.HttpHeaders.Authorization
-import spray.http.BasicHttpCredentials
+import spray.http.{HttpHeaders, BasicHttpCredentials}
 
 import spray.testkit.ScalatestRouteTest
 import spray.http.StatusCodes.{OK,PermanentRedirect,Unauthorized,NotFound}
@@ -177,7 +177,7 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
         compact()
 
     Get(s"/fromDashboard/ping") ~>
-      addHeader(Authorization.name,s"${ShrineJwtAuthenticator.ShrineJwtAuth0}: $signerSerialNumber: $jwtsString") ~>
+      addHeader(Authorization.name,s"""${ShrineJwtAuthenticator.ShrineJwtAuth0}: "$signerSerialNumber: $jwtsString"""") ~>
       sealRoute(route) ~> check {
 
       assertResult(Unauthorized)(status)
@@ -200,7 +200,7 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
         compact()
 
     Get(s"/fromDashboard/ping") ~>
-      addHeader(Authorization.name,s"${ShrineJwtAuthenticator.ShrineJwtAuth0}: $signerSerialNumber: $jwtsString") ~>
+      addHeader(Authorization.name,s"""${ShrineJwtAuthenticator.ShrineJwtAuth0}: "$signerSerialNumber: $jwtsString"""") ~>
       sealRoute(route) ~> check {
 
       assertResult(Unauthorized)(status)
@@ -223,7 +223,7 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
         compact()
 
     Get(s"/fromDashboard/ping") ~>
-      addHeader(Authorization.name,s"${ShrineJwtAuthenticator.ShrineJwtAuth0}: Not a number: $jwtsString") ~>
+      addHeader(Authorization.name,s"""${ShrineJwtAuthenticator.ShrineJwtAuth0}: "NotANumber: $jwtsString"""") ~>
       sealRoute(route) ~> check {
 
       assertResult(Unauthorized)(status)
@@ -246,7 +246,7 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
         compact()
 
     Get(s"/fromDashboard/ping") ~>
-      addHeader(Authorization.name,s"${ShrineJwtAuthenticator.ShrineJwtAuth0}: -5: $jwtsString") ~>
+      addHeader(Authorization.name,s"""${ShrineJwtAuthenticator.ShrineJwtAuth0}: "-5: $jwtsString"""") ~>
       sealRoute(route) ~> check {
 
       assertResult(Unauthorized)(status)
@@ -262,7 +262,7 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
     val key: PrivateKey = shrineCertCollection.myKeyPair.privateKey
 
     Get(s"/fromDashboard/ping") ~>
-      addHeader(Authorization.name,s"${ShrineJwtAuthenticator.ShrineJwtAuth0}: $signerSerialNumber") ~>
+      addHeader(Authorization.name,s"""${ShrineJwtAuthenticator.ShrineJwtAuth0}: "$signerSerialNumber""") ~>
       sealRoute(route) ~> check {
 
       assertResult(Unauthorized)(status)
@@ -289,6 +289,8 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
   }
 
   "DashboardService" should  "kinda fall over without a web service to talk to" in {
+
+    println(HttpHeaders.Authorization(adminCredentials))
 
     Get(s"/toDashboard/test") ~>
       addCredentials(adminCredentials) ~>
