@@ -3,6 +3,7 @@ package net.shrine.dashboard
 import akka.actor.{ActorSystem, Actor}
 import akka.event.Logging
 import net.shrine.authentication.UserAuthenticator
+import net.shrine.authorization.AuthorizationType
 
 import net.shrine.authorization.steward.OutboundUser
 import net.shrine.dashboard.jwtauth.ShrineJwtAuthenticator
@@ -148,10 +149,163 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
 
       requestUriThenRoute(happyBaseUrl+"/version",pullClasspathFromConfig)
     } ~
-    pathPrefix("ping") {complete("pong")}
+    pathPrefix("ping") {complete("pong")}~
+    pathPrefix("status"){statusRoute(user)}
   }
 
+  def statusRoute(user:User):Route = get {
+    pathPrefix("config"){getConfig}~
+    pathPrefix("classpath"){getClasspath}
+  }
+
+  lazy val getConfig:Route = {
+    val statusBaseUrl: String = DashboardConfigSource.config.getString("shrine" +
+      ".dashboard.statusBaseUrl")
+    implicit val system = ActorSystem("sprayServer")
+    forwardUnmatchedPath(statusBaseUrl)
+  }
+
+  lazy val getClasspath:Route = {
+    val statusBaseUrl: String = DashboardConfigSource.config.getString("shrine" +
+      ".dashboard" +
+      ".statusBaseUrl")
+
+    implicit val system = ActorSystem("sprayServer")
+    def pullClasspathFromConfig(httpResponse:HttpResponse,uri:Uri):Route = {
+      ctx => {
+        import org.json4s.native.JsonMethods.parse
+        val result = httpResponse.entity.asString
+        val config = parse(result).extract[net.shrine.status.protocol.Config].keyValues.filterKeys(_.toLowerCase.startsWith("shrine"))
+        val shrineConfig = ShrineConfig(config)
+        //for((k, v) <- config.filterKeys(_.startsWith("shrine.queryEntryPoint")))
+          //println (k + "<--" + v)
+
+        val audit = Audit(config)
+        println(audit)
+        ctx.complete(shrineConfig)
+      }
+    }
+
+    requestUriThenRoute(statusBaseUrl,pullClasspathFromConfig)
+  }
 }
+
+case class ShrineConfig(isHub:Boolean, hub:Hub, pmEndpoint:Endpoint,
+                        ontEndpoint:Endpoint, hiveCredentials: HiveCredentials)
+object ShrineConfig{
+  def apply(configMap:Map[String, String]):ShrineConfig = {
+    val hub = Hub(configMap)
+    val isHub = hub.create == true
+    val pmEndpoint = Endpoint(configMap, "pm")
+    val ontEndpoint = Endpoint(configMap, "ont")
+    val hiveCredentials = HiveCredentials(configMap)
+
+    ShrineConfig(isHub, hub, pmEndpoint, ontEndpoint, hiveCredentials)
+  }
+}
+
+
+case class Endpoint(acceptAllCerts:Boolean, url:String, timeoutSeconds:Int)
+object Endpoint{
+  def apply(configMap:Map[String, String], endpointType:String):Endpoint = {
+    val prefix = "shrine." + endpointType.toLowerCase + "Endpoint."
+
+    val acceptAllCerts  = configMap.getOrElse(prefix + "acceptAllCerts", "") == "true"
+    val url = configMap.getOrElse(prefix + "url", "")
+    val timeoutSeconds = configMap.getOrElse(prefix + "timeout.seconds", "").toInt
+
+
+    Endpoint(acceptAllCerts, url, timeoutSeconds)
+  }
+}
+
+case class HiveCredentials(domain:String, username:String, password:String,
+                           crcProjectId:String, ontProjectId:String)
+object HiveCredentials{
+  def apply(configMap:Map[String, String]):HiveCredentials = {
+    val key = "shrine.hiveCredentials."
+    val domain = configMap.getOrElse(key + "domain", "")
+    val username = configMap.getOrElse(key + "username", "")
+    val password = "REDACTED"
+    val crcProjectId = configMap.getOrElse(key + "crcProjectId", "")
+    val ontProjectId = configMap.getOrElse(key + "ontProjectId", "")
+    HiveCredentials(domain, username, password, crcProjectId, ontProjectId)
+  }
+}
+
+// -- hub only -- //
+case class Hub(shouldQuerySelf:Boolean, create:Boolean, downstreamNodes:Map[String,String])
+object Hub{
+  def apply(configMap:Map[String,String]):Hub = {
+    //@todo: use missing istead of "" for 'Else'
+    val shouldQuerySelf = configMap.getOrElse("shrine.hub.shouldQuerySelf", "") == "true"
+    val create = configMap.getOrElse("shrine.hub.create", "") == "true"
+    val downstreamNodes = for((k,v) <- configMap.filterKeys(_.toLowerCase.startsWith
+      ("shrine.hub.downstreamnodes"))) yield (k.split('.').last, v)
+    Hub(shouldQuerySelf, create, downstreamNodes)
+  }
+}
+
+
+// -- if needed -- //
+case class TimeoutInfo (timeUnit:String, description:String)
+
+
+case class DatabaseInfo(createTablesOnStart:Boolean, dataSourceFrom:String,
+                        jndiDataSourceName:String, slickProfileClassName:String)
+case class Audit(database:DatabaseInfo, collectQepAudit:Boolean)
+object Audit{
+  def apply(configMap:Map[String, String]):Audit = {
+    val key = "shrine.queryEntryPoint.audit."
+    val createTablesOnStart = configMap.getOrElse(key + "database.createTablesOnStart", "") == "true"
+    val dataSourceFrom  = configMap.getOrElse(key + "database.dataSourceFrom", "")
+    val jndiDataSourceName  = configMap.getOrElse(key + "database.jndiDataSourceName", "")
+    val slickProfileClassName  = configMap.getOrElse(key + "database.slickProfileClassName", "")
+    val collectQepAudit = configMap.getOrElse(key + "collectQepAudit", "") == "true"
+    val database = DatabaseInfo(createTablesOnStart, dataSourceFrom, jndiDataSourceName, slickProfileClassName)
+    Audit(database, collectQepAudit)
+  }
+}
+case class QEP(maxQueryWaitTimeMinutes:Int, create:Boolean,attachSigningCert:Boolean,
+               authorizationType:String, includeAggregateResults:Boolean, authenticationType:String, audit:Audit)
+object QEP{
+  def apply(configMap:Map[String, String]):QEP = {
+    val key = "shrine.queryEntryPoint."
+    val sheriffUsername = configMap.getOrElse(key + "sheriffCredentials.username", "")
+    val maxQueryWaitTimeMinutes = configMap.getOrElse(key + "maxQueryWaitTime.minutes", "").toInt
+    val create = configMap.getOrElse(key + "create", "") == "true"
+    val attachSigningCert = configMap.getOrElse(key + "attachSigningCert", "") == "true"
+    val authorizationType = configMap.getOrElse(key + "authorizationType", "")
+    val includeAggregateResults = configMap.getOrElse(key + "includeAggregateResults", "") == "true"
+    val authenticationType = configMap.getOrElse(key + "authenticationType", "")
+    val audit = Audit(configMap)
+    val sheriffServiceEndpoint = Endpoint(configMap, "queryEntryPoint.sheriff")
+    val broadcasterServiceEndpoint = Endpoint(configMap, "queryEntryPoint.broadcasterService")
+
+    QEP(maxQueryWaitTimeMinutes, create, attachSigningCert, authorizationType, includeAggregateResults, authenticationType, audit)
+  }
+}
+
+
+
+/*
+
+
+  val shrineConfig = keyValues.filterKeys(_.toLowerCase.startsWith("shrine"))
+
+  def getHub = {
+    val shouldQuerySelf = shrineConfig.getOrElse("shrine.hub.shouldQuerySelf", "")
+    val create = shrineConfig.getOrElse("shrine.hub.create", "")
+    val downstreamNodes = for((k,v) <- shrineConfig.filterKeys(_.toLowerCase.startsWith
+      ("shrine" +
+      ".hub.downstreamnodes"))) yield (k.split('.').last, v)
+
+    case class Hub(shouldQuerySelf:String, create:String, downstreamNodes:Map[String,
+      String])
+
+    Hub(shouldQuerySelf, create, downstreamNodes)
+  }
+ */
 
 //adapted from https://gist.github.com/joseraya/176821d856b43b1cfe19
 object gruntWatchCorsSupport extends Directive0 with RouteConcatenation {
