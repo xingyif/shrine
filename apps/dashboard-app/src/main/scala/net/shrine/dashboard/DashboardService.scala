@@ -151,7 +151,8 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
 
       requestUriThenRoute(happyBaseUrl+"/version",pullClasspathFromConfig)
     } ~
-    pathPrefix("ping") {complete("pong")} //ping test
+    pathPrefix("ping") {complete("pong")}~
+    pathPrefix("status"){statusRoute(user)}
   }
 
   def toDashboardRoute(user:User):Route = get {
