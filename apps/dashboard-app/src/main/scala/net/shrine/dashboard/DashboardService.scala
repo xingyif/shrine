@@ -45,7 +45,7 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
 
   //don't need to do anything special for unauthorized users, but they do need access to a static form.
   lazy val route:Route = gruntWatchCorsSupport{
-    redirectToIndex ~ staticResources ~ makeTrouble ~ about ~ authenticatedInBrowser ~ authenticateRemoteDashboard
+    redirectToIndex ~ staticResources ~ makeTrouble ~ about ~ authenticatedInBrowser ~ authenticatedDashboard
   }
 
   // logs just the request method, uri and response at info level
@@ -65,16 +65,19 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
   }
 
   //pathPrefixTest shields the QEP code from the redirect.
-  def authenticatedInBrowser: Route = pathPrefixTest("user"|"admin") {
+  def authenticatedInBrowser: Route = pathPrefixTest("user"|"admin"|"toDashboard") {
     logRequestResponse(logEntryForRequestResponse _) { //logging is controlled by Akka's config, slf4j, and log4j config
       reportIfFailedToAuthenticate {
         authenticate(userAuthenticator.basicUserAuthenticator) { user =>
           pathPrefix("user") {
             userRoute(user)
           } ~
-            pathPrefix("admin") {
-              adminRoute(user)
-            }
+          pathPrefix("admin") {
+            adminRoute(user)
+          } ~
+          pathPrefix("toDashboard") {
+            toDashboardRoute(user)
+          }
         }
       }
     }
@@ -85,10 +88,10 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
       complete("AuthenticationFailed")
   }
 
-  def authenticateRemoteDashboard:Route = pathPrefix("remoteDashboard") {
+  def authenticatedDashboard:Route = pathPrefix("fromDashboard") {
     logRequestResponse(logEntryForRequestResponse _) { //logging is controlled by Akka's config, slf4j, and log4j config
       get { //all remote dashboard calls are gets.
-        authenticate(ShrineJwtAuthenticator.theAuthenticator) { user =>
+        authenticate(ShrineJwtAuthenticator.authenticate) { user =>
           adminRoute(user)
         }
       }
@@ -101,10 +104,10 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
 
   lazy val redirectToIndex = pathEnd {
     redirect("shrine-dashboard/client/index.html", StatusCodes.PermanentRedirect) //todo pick up "shrine-dashboard" programatically
-  } ~
+    } ~
     ( path("index.html") | pathSingleSlash) {
       redirect("client/index.html", StatusCodes.PermanentRedirect)
-    }
+  }
 
   lazy val staticResources = pathPrefix("client") {
     pathEnd {
@@ -129,16 +132,15 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
 
   //todo is this an admin? Does it matter?
   def adminRoute(user:User):Route = get {
+    implicit val system = ActorSystem("sprayServer")
+
     pathPrefix("happy") {
       val happyBaseUrl: String = DashboardConfigSource.config.getString("shrine.dashboard.happyBaseUrl")
 
-      implicit val system = ActorSystem("sprayServer")
       forwardUnmatchedPath(happyBaseUrl)
     } ~
     pathPrefix("messWithHappyVersion") {
       val happyBaseUrl: String = DashboardConfigSource.config.getString("shrine.dashboard.happyBaseUrl")
-
-      implicit val system = ActorSystem("sprayServer")
 
       def pullClasspathFromConfig(httpResponse:HttpResponse,uri:Uri):Route = {
         ctx => {
@@ -149,10 +151,21 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
 
       requestUriThenRoute(happyBaseUrl+"/version",pullClasspathFromConfig)
     } ~
-    pathPrefix("ping") {complete("pong")}~
-    pathPrefix("status"){statusRoute(user)}
+    pathPrefix("ping") {complete("pong")} //ping test
   }
 
+  def toDashboardRoute(user:User):Route = get {
+    implicit val system = ActorSystem("sprayServer")
+
+    pathPrefix(Segment) { dnsName =>
+      val remoteDashboardProtocol = DashboardConfigSource.config.getString("shrine.dashboard.remoteDashboard.protocol")
+      val remoteDashboardPort = DashboardConfigSource.config.getString("shrine.dashboard.remoteDashboard.port")
+
+      val baseUrl = s"$remoteDashboardProtocol$dnsName$remoteDashboardPort"
+
+      forwardUnmatchedPath(baseUrl,Some(ShrineJwtAuthenticator.createAuthHeader))
+    }
+  }
   def statusRoute(user:User):Route = get {
     pathPrefix("config"){getConfig}~
     pathPrefix("classpath"){getClasspath}

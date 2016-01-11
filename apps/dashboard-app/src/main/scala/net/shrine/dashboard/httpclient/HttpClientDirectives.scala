@@ -6,7 +6,8 @@ import net.shrine.log.Loggable
 import spray.can.Http
 import akka.io.IO
 import akka.actor.{ActorRef, ActorSystem}
-import spray.http.{HttpEntity, StatusCodes, HttpRequest, HttpResponse, Uri}
+import spray.can.Http.ConnectionAttemptFailedException
+import spray.http.{HttpHeader, HttpEntity, StatusCodes, HttpRequest, HttpResponse, Uri}
 import spray.routing.{RequestContext, Route}
 import akka.pattern.ask
 
@@ -31,23 +32,23 @@ trait HttpClientDirectives extends Loggable {
     * Proxy the request to the specified base uri appended with the unmatched path.
     *
     */
-  def forwardUnmatchedPath(baseUri: Uri)(implicit system: ActorSystem): Route = {
+  def forwardUnmatchedPath(baseUri: Uri,header:Option[HttpHeader] = None)(implicit system: ActorSystem): Route = {
     def completeWithEntityAsString(httpResponse:HttpResponse,uri:Uri):Route = {
       ctx => {
         ctx.complete(httpResponse.entity.asString)
       }
     }
-    requestWithUnmatchedPath(baseUri,completeWithEntityAsString)
+    requestWithUnmatchedPath(baseUri,completeWithEntityAsString,header)
   }
 
   /**
     * Make the request to the specified base uri appended with the unmatched path, then use the returned entity (as a string) to complete the route.
     *
     */
-  def requestWithUnmatchedPath(baseUri:Uri, route:(HttpResponse,Uri) => Route)(implicit system: ActorSystem): Route = {
+  def requestWithUnmatchedPath(baseUri:Uri, route:(HttpResponse,Uri) => Route,header:Option[HttpHeader] = None)(implicit system: ActorSystem): Route = {
     ctx => {
       val resourceUri = baseUri.withPath(baseUri.path.++(ctx.unmatchedPath))
-      requestUriThenRoute(resourceUri,route)(system)(ctx)
+      requestUriThenRoute(resourceUri,route,header)(system)(ctx)
     }
   }
 
@@ -55,17 +56,21 @@ trait HttpClientDirectives extends Loggable {
     * proxy the request to the specified uri with the unmatched path, then use the returned entity (as a string) to complete the route.
     *
     */
-  def requestUriThenRoute(resourceUri:Uri, route:(HttpResponse,Uri) => Route)(implicit system: ActorSystem): Route = {
+  def requestUriThenRoute(resourceUri:Uri, route:(HttpResponse,Uri) => Route,header:Option[HttpHeader] = None)(implicit system: ActorSystem): Route = {
     ctx => {
-      val httpResponse = httpResponseForUri(resourceUri,ctx)(system)
+      val httpResponse = httpResponseForUri(resourceUri,ctx,header)(system)
+      info(s"Got $httpResponse for $resourceUri")
+
       handleCommonErrorsOrRoute(route)(httpResponse,resourceUri)(ctx)
     }
   }
 
-  private def httpResponseForUri(resourceUri:Uri,ctx: RequestContext)(implicit system: ActorSystem):HttpResponse = {
+  private def httpResponseForUri(resourceUri:Uri,ctx: RequestContext,header:Option[HttpHeader] = None)(implicit system: ActorSystem):HttpResponse = {
+
+    info(s"Requesting $resourceUri")
 
     if(resourceUri.scheme == "classpath") ClasspathResourceHttpClient.loadFromResource(resourceUri.path.toString())
-    else HttpClient.webApiCall(HttpRequest(ctx.request.method,resourceUri))
+    else HttpClient.webApiCall(HttpRequest(ctx.request.method,resourceUri,header.to[List]))
   }
 
   def handleCommonErrorsOrRoute(route:(HttpResponse,Uri) => Route)(httpResponse: HttpResponse,uri:Uri): Route = {
@@ -89,13 +94,14 @@ object HttpClientDirectives extends HttpClientDirectives
   */
 object HttpClient extends Loggable {
 
+  //todo hand back a Try, Failures with custom exceptions instead of a crappy response
   def webApiCall(request:HttpRequest)(implicit system: ActorSystem): HttpResponse = {
     val transport: ActorRef = IO(Http)(system)
 
     debug(s"Requesting $request")
     blocking {
       val future:Future[HttpResponse] = for {
-        response <- transport.ask(request)(10 seconds).mapTo[HttpResponse]
+        response <- transport.ask(request)(10 seconds).mapTo[HttpResponse] //todo make this timeout configurable
       } yield response
       try {
         Await.result(future, 10 seconds)
@@ -103,6 +109,11 @@ object HttpClient extends Loggable {
       catch {
         case x:TimeoutException => HttpResponse(status = StatusCodes.RequestTimeout,entity = HttpEntity(s"${request.uri} timed out after 10 seconds. ${x.getMessage}"))
           //todo is there a better message? What comes up in real life?
+        case x:ConnectionAttemptFailedException => {
+          //no web service is there to respond
+          info(s"${request.uri} failed with ${x.getMessage}",x)
+          HttpResponse(status = StatusCodes.NotFound,entity = HttpEntity(s"${request.uri} failed with ${x.getMessage}"))
+        }
         case NonFatal(x) => {
           info(s"${request.uri} failed with ${x.getMessage}",x)
           HttpResponse(status = StatusCodes.InternalServerError,entity = HttpEntity(s"${request.uri} failed with ${x.getMessage}"))
