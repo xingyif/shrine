@@ -1,13 +1,16 @@
 package net.shrine.dashboard.httpclient
 
 import java.io.InputStream
+import java.security.cert.X509Certificate
+import javax.net.ssl.{X509TrustManager, SSLContext}
 
 import net.shrine.log.Loggable
 import spray.can.Http
 import akka.io.IO
 import akka.actor.{ActorRef, ActorSystem}
-import spray.can.Http.ConnectionAttemptFailedException
+import spray.can.Http.{HostConnectorSetup, ConnectionAttemptFailedException}
 import spray.http.{HttpHeader, HttpEntity, StatusCodes, HttpRequest, HttpResponse, Uri}
+import spray.io.ClientSSLEngineProvider
 import spray.routing.{RequestContext, Route}
 import akka.pattern.ask
 
@@ -98,13 +101,14 @@ object HttpClient extends Loggable {
   def webApiCall(request:HttpRequest)(implicit system: ActorSystem): HttpResponse = {
     val transport: ActorRef = IO(Http)(system)
 
-    debug(s"Requesting $request")
+    debug(s"Requesting $request uri is ${request.uri} path is ${request.uri.path}")
     blocking {
       val future:Future[HttpResponse] = for {
-        response <- transport.ask(request)(10 seconds).mapTo[HttpResponse] //todo make this timeout configurable
+        Http.HostConnectorInfo(connector, _) <- transport.ask(createTransport(request))(10 seconds) //todo make this timeout configurable
+        response <- connector.ask(request)(10 seconds).mapTo[HttpResponse] //todo make this timeout configurable
       } yield response
       try {
-        Await.result(future, 10 seconds)
+        Await.result(future, 10 seconds)  //todo make this timeout configurable
       }
       catch {
         case x:TimeoutException => HttpResponse(status = StatusCodes.RequestTimeout,entity = HttpEntity(s"${request.uri} timed out after 10 seconds. ${x.getMessage}"))
@@ -121,6 +125,42 @@ object HttpClient extends Loggable {
       }
     }
   }
+
+//from https://github.com/TimothyKlim/spray-ssl-poc/blob/master/src/main/scala/Main.scala
+//trust all SSL contexts. We just want encrypted comms.
+  implicit val trustfulSslContext: SSLContext = {
+
+    class IgnoreX509TrustManager extends X509TrustManager {
+      def checkClientTrusted(chain: Array[X509Certificate], authType: String) {}
+
+      def checkServerTrusted(chain: Array[X509Certificate], authType: String) {}
+
+      def getAcceptedIssuers = null
+    }
+
+    val context = SSLContext.getInstance("TLS")
+    context.init(null, Array(new IgnoreX509TrustManager), null)
+    info("trustfulSslContex initialized")
+    context
+  }
+
+  implicit val clientSSLEngineProvider =
+  //todo lookup this constructor
+    ClientSSLEngineProvider {
+      _ =>
+        val engine = trustfulSslContext.createSSLEngine()
+        engine.setUseClientMode(true)
+        engine
+    }
+
+  def createTransport(request: HttpRequest) = {
+    val connector = new HostConnectorSetup(host = request.uri.authority.host.toString,
+                                            port = request.uri.effectivePort,
+                                            sslEncryption = request.uri.scheme == "https",
+                                            defaultHeaders = request.headers)
+    connector
+  }
+
 }
 
 /**
