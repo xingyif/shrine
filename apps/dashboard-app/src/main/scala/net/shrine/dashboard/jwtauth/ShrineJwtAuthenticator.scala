@@ -1,15 +1,17 @@
 package net.shrine.dashboard.jwtauth
 
-import java.security.PrivateKey
-import java.security.cert.{CertificateNotYetValidException, CertificateExpiredException, X509Certificate}
+import java.io.ByteArrayInputStream
+import java.security.{Key, PrivateKey}
+import java.security.cert.{CertificateFactory, CertificateNotYetValidException, CertificateExpiredException, X509Certificate}
 import java.util.Date
 
-import io.jsonwebtoken.{SignatureAlgorithm, ExpiredJwtException, Claims, Jwts}
+import io.jsonwebtoken.impl.TextCodec
+import io.jsonwebtoken.{Claims, JwsHeader, SigningKeyResolverAdapter, SignatureAlgorithm, ExpiredJwtException, Jwts}
 import net.shrine.crypto.{KeyStoreDescriptorParser, KeyStoreCertCollection}
 import net.shrine.dashboard.DashboardConfigSource
 import net.shrine.i2b2.protocol.pm.User
 import net.shrine.log.Loggable
-import net.shrine.protocol.{CertId, Credential}
+import net.shrine.protocol.{CertData, CertId, Credential}
 import spray.http.HttpHeaders.{RawHeader, Authorization, `WWW-Authenticate`}
 import spray.http.{HttpHeader, HttpChallenge}
 import spray.routing.AuthenticationFailedRejection.{CredentialsMissing, CredentialsRejected}
@@ -52,16 +54,24 @@ object ShrineJwtAuthenticator extends Loggable{
 
             if (authScheme == ShrineJwtAuth0) {
               try {
-                val certSerialNumber: BigInt = BigInt(serialNumberString)
+//                val certSerialNumber: BigInt = BigInt(serialNumberString)
 
                 val config = DashboardConfigSource.config
 
                 val shrineCertCollection: KeyStoreCertCollection = KeyStoreCertCollection.fromFileRecoverWithClassPath(KeyStoreDescriptorParser(config.getConfig("shrine.keystore")))
 
-                shrineCertCollection.get(CertId(certSerialNumber.bigInteger)).fold {
-                  info(s"Cert serial number ${certSerialNumber.bigInteger} could not be found in the KeyStore.")
-                  rejectedCredentials
-                } { (certificate: X509Certificate) =>
+                //todo instead decrypt with the cert from the header via something like obtainAndValidateSigningCert()
+                val certBytes = TextCodec.BASE64URL.decode(serialNumberString)
+
+                val inputStream = new ByteArrayInputStream(certBytes)
+
+                val certificate = try { CertificateFactory.getInstance("X.509").generateCertificate(inputStream).asInstanceOf[X509Certificate] }
+                finally { inputStream.close() }
+
+                //                shrineCertCollection.get(CertId(certSerialNumber.bigInteger)).fold {
+//                info(s"Cert serial number ${certSerialNumber.bigInteger} could not be found in the KeyStore.")
+//                  rejectedCredentials
+//                } { (certificate: X509Certificate) =>
 
                   val now = new Date()
                   //check date on cert vs time. throws CertificateExpiredException or CertificateNotYetValidException for problems
@@ -71,12 +81,13 @@ object ShrineJwtAuthenticator extends Loggable{
                   val jwtsClaims: Claims = Jwts.parser().setSigningKey(key).parseClaimsJws(jwtsString).getBody
 
                   //todo check serial number vs jwts iss
-                  if (jwtsClaims.getIssuer != serialNumberString) {
-                    info(s"jwts issuer ${jwtsClaims.getIssuer} does not match signing cert serial number ${serialNumberString}")
-                    rejectedCredentials
-                  }
+ //                 if (jwtsClaims.getIssuer != serialNumberString) {
+ //                   info(s"jwts issuer ${jwtsClaims.getIssuer} does not match signing cert serial number ${serialNumberString}")
+ //                   rejectedCredentials
+ //                 }
                   //todo check exp vs time
-                  else if (jwtsClaims.getExpiration.before(now)) {
+                //  else
+                  if (jwtsClaims.getExpiration.before(now)) {
                     info(s"jwts experation ${jwtsClaims.getExpiration} expired before now $now")
                     rejectedCredentials
                   }
@@ -91,7 +102,7 @@ object ShrineJwtAuthenticator extends Loggable{
                     )
                     Right(user)
                   }
-                }
+//                }
               } catch {
                 case x: NumberFormatException => {
                   info(s"Cert serial number ${serialNumberString} could not be read as a BigInteger.", x)
@@ -133,7 +144,12 @@ object ShrineJwtAuthenticator extends Loggable{
     val config = DashboardConfigSource.config
     val shrineCertCollection: KeyStoreCertCollection = KeyStoreCertCollection.fromFileRecoverWithClassPath(KeyStoreDescriptorParser(config.getConfig("shrine.keystore")))
 
+    //todo instead use shrineCertCollection.myCert.getEncoded as a Base64 byte array. Use that as the prefix
+
     val signerSerialNumber = shrineCertCollection.myCertId.get.serial
+
+    val base64Cert = new String(TextCodec.BASE64URL.encode(shrineCertCollection.myCert.get.getEncoded))
+
     val key: PrivateKey = shrineCertCollection.myKeyPair.privateKey
     val expiration:Date = new Date(System.currentTimeMillis() + 30 * 1000) //good for 30 seconds
     val jwtsString = Jwts.builder().
@@ -143,7 +159,16 @@ object ShrineJwtAuthenticator extends Loggable{
                           signWith(SignatureAlgorithm.RS512, key).
                           compact()
     //todo start here. investigate raw header problems.
-    RawHeader(Authorization.name,s"$ShrineJwtAuth0 $signerSerialNumber,$jwtsString")
+    RawHeader(Authorization.name,s"$ShrineJwtAuth0 $base64Cert,$jwtsString")
   }
+/* todo try a different jwt library at some point to use this feature of jwt
+  object ShrineSigningKeyResolver extends SigningKeyResolverAdapter {
+    def resolveSigningKey(header: JwsHeader, claims: Claims):Key = {
+      val keyId = header.getKeyId
 
+      println(s"keyId is $keyId")
+      throw new UnsupportedOperationException("Haven't finished this yet")
+    }
+  }
+*/
 }

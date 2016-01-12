@@ -160,7 +160,7 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
       assertResult(""""pong"""")(string)
     }
   }
-
+/*
   "DashboardService" should  "reject a fromDashboard/ping with an expired jwts header" in {
 
     val config = DashboardConfigSource.config
@@ -301,5 +301,6 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
       assertResult(NotFound)(status)
     }
   }
+  */
 }
 
