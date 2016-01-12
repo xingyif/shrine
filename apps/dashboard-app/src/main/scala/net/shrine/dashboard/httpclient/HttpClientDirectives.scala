@@ -104,7 +104,7 @@ object HttpClient extends Loggable {
     debug(s"Requesting $request uri is ${request.uri} path is ${request.uri.path}")
     blocking {
       val future:Future[HttpResponse] = for {
-        Http.HostConnectorInfo(connector, _) <- transport.ask(createTransport(request))(10 seconds) //todo make this timeout configurable
+        Http.HostConnectorInfo(connector, _) <- transport.ask(createConnector(request))(10 seconds) //todo make this timeout configurable
         response <- connector.ask(request)(10 seconds).mapTo[HttpResponse] //todo make this timeout configurable
       } yield response
       try {
@@ -153,7 +153,8 @@ object HttpClient extends Loggable {
         engine
     }
 
-  def createTransport(request: HttpRequest) = {
+  def createConnector(request: HttpRequest) = {
+
     val connector = new HostConnectorSetup(host = request.uri.authority.host.toString,
                                             port = request.uri.effectivePort,
                                             sslEncryption = request.uri.scheme == "https",

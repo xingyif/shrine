@@ -85,7 +85,8 @@ object ShrineJwtAuthenticator extends Loggable{
                   val key = certificate.getPublicKey
                   info(s"got key $key")
 
-                  val jwtsClaims: Claims = Jwts.parser().setSigningKey(key).parseClaimsJws(jwtsString).getBody
+//                val jwtsClaims: Claims = Jwts.parser().setSigningKey(key).parseClaimsJws(jwtsString).getBody
+                val jwtsClaims: Claims = Jwts.parser().setSigningKeyResolver(new SigningKeyResolverBridge()).parseClaimsJws(jwtsString).getBody
 
                   info(s"got claims $jwtsClaims")
 
@@ -162,6 +163,7 @@ object ShrineJwtAuthenticator extends Loggable{
     val key: PrivateKey = shrineCertCollection.myKeyPair.privateKey
     val expiration:Date = new Date(System.currentTimeMillis() + 30 * 1000) //good for 30 seconds
     val jwtsString = Jwts.builder().
+                            setHeaderParam("kid",base64Cert).
                             setIssuer(signerSerialNumber.toString()).
                             setSubject(java.net.InetAddress.getLocalHost.getHostName).
                             setExpiration(expiration).
@@ -173,14 +175,32 @@ object ShrineJwtAuthenticator extends Loggable{
 
     header
   }
-/* todo try a different jwt library at some point to use this feature of jwt
-  object ShrineSigningKeyResolver extends SigningKeyResolverAdapter {
-    def resolveSigningKey(header: JwsHeader, claims: Claims):Key = {
-      val keyId = header.getKeyId
 
-      println(s"keyId is $keyId")
-      throw new UnsupportedOperationException("Haven't finished this yet")
-    }
+}
+
+class KeySource{}
+object KeySource extends Loggable {
+
+  def keyForString(string:String):Key = {
+    //todo instead decrypt with the cert from the header via something like obtainAndValidateSigningCert()
+    val certBytes = TextCodec.BASE64URL.decode(string)
+
+    info(s"Got cert bytes $string")
+
+    val inputStream = new ByteArrayInputStream(certBytes)
+
+    val certificate = try { CertificateFactory.getInstance("X.509").generateCertificate(inputStream).asInstanceOf[X509Certificate] }
+    finally { inputStream.close() }
+    //todo validate cert
+
+    info(s"Created cert $certificate")
+
+    val now = new Date()
+    //check date on cert vs time. throws CertificateExpiredException or CertificateNotYetValidException for problems
+    //todo skip this until you rebuild the certs used for testing                certificate.checkValidity(now)
+
+    val key = certificate.getPublicKey
+    info(s"got key $key")
+    key
   }
-*/
 }
