@@ -54,56 +54,18 @@ object ShrineJwtAuthenticator extends Loggable{
 
             if (authScheme == ShrineJwtAuth0) {
               try {
-//                val certSerialNumber: BigInt = BigInt(serialNumberString)
-
-                val config = DashboardConfigSource.config
-
-                val shrineCertCollection: KeyStoreCertCollection = KeyStoreCertCollection.fromFileRecoverWithClassPath(KeyStoreDescriptorParser(config.getConfig("shrine.keystore")))
-
-                //todo instead decrypt with the cert from the header via something like obtainAndValidateSigningCert()
-                val certBytes = TextCodec.BASE64URL.decode(serialNumberString)
-
-                info(s"Got cert bytes $serialNumberString")
-
-                val inputStream = new ByteArrayInputStream(certBytes)
-
-                val certificate = try { CertificateFactory.getInstance("X.509").generateCertificate(inputStream).asInstanceOf[X509Certificate] }
-                finally { inputStream.close() }
-                //todo validate cert
-
-                info(s"Created cert $certificate")
-
-                //                shrineCertCollection.get(CertId(certSerialNumber.bigInteger)).fold {
-//                info(s"Cert serial number ${certSerialNumber.bigInteger} could not be found in the KeyStore.")
-//                  rejectedCredentials
-//                } { (certificate: X509Certificate) =>
 
                   val now = new Date()
-                  //check date on cert vs time. throws CertificateExpiredException or CertificateNotYetValidException for problems
-                  //todo skip this until you rebuild the certs used for testing                certificate.checkValidity(now)
-
-                  val key = certificate.getPublicKey
-                  info(s"got key $key")
-
-//                val jwtsClaims: Claims = Jwts.parser().setSigningKey(key).parseClaimsJws(jwtsString).getBody
                 val jwtsClaims: Claims = Jwts.parser().setSigningKeyResolver(new SigningKeyResolverBridge()).parseClaimsJws(jwtsString).getBody
 
                   info(s"got claims $jwtsClaims")
-
-                  //todo check serial number vs jwts iss
- //                 if (jwtsClaims.getIssuer != serialNumberString) {
- //                   info(s"jwts issuer ${jwtsClaims.getIssuer} does not match signing cert serial number ${serialNumberString}")
- //                   rejectedCredentials
- //                 }
-                  //todo check exp vs time
-                //  else
                   if (jwtsClaims.getExpiration.before(now)) {
                     info(s"jwts experation ${jwtsClaims.getExpiration} expired before now $now")
                     rejectedCredentials
                   }
                   else {
                     val user = User(
-                      fullName = certificate.getSubjectDN.getName,
+                      fullName = jwtsClaims.getSubject,//todo fill in with something useful like certificate.getSubjectDN.getName,
                       username = jwtsClaims.getSubject,
                       domain = "dashboard-to-dashboard",
                       credential = Credential("Dashboard credential", isToken = false),
