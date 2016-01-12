@@ -63,10 +63,15 @@ object ShrineJwtAuthenticator extends Loggable{
                 //todo instead decrypt with the cert from the header via something like obtainAndValidateSigningCert()
                 val certBytes = TextCodec.BASE64URL.decode(serialNumberString)
 
+                info(s"Got cert bytes $serialNumberString")
+
                 val inputStream = new ByteArrayInputStream(certBytes)
 
                 val certificate = try { CertificateFactory.getInstance("X.509").generateCertificate(inputStream).asInstanceOf[X509Certificate] }
                 finally { inputStream.close() }
+                //todo validate cert
+
+                info(s"Created cert $certificate")
 
                 //                shrineCertCollection.get(CertId(certSerialNumber.bigInteger)).fold {
 //                info(s"Cert serial number ${certSerialNumber.bigInteger} could not be found in the KeyStore.")
@@ -78,7 +83,11 @@ object ShrineJwtAuthenticator extends Loggable{
                   //todo skip this until you rebuild the certs used for testing                certificate.checkValidity(now)
 
                   val key = certificate.getPublicKey
+                  info(s"got key $key")
+
                   val jwtsClaims: Claims = Jwts.parser().setSigningKey(key).parseClaimsJws(jwtsString).getBody
+
+                  info(s"got claims $jwtsClaims")
 
                   //todo check serial number vs jwts iss
  //                 if (jwtsClaims.getIssuer != serialNumberString) {
@@ -159,7 +168,10 @@ object ShrineJwtAuthenticator extends Loggable{
                           signWith(SignatureAlgorithm.RS512, key).
                           compact()
     //todo start here. investigate raw header problems.
-    RawHeader(Authorization.name,s"$ShrineJwtAuth0 $base64Cert,$jwtsString")
+    val header = RawHeader(Authorization.name,s"$ShrineJwtAuth0 $base64Cert,$jwtsString")
+    info(s"header is $header")
+
+    header
   }
 /* todo try a different jwt library at some point to use this feature of jwt
   object ShrineSigningKeyResolver extends SigningKeyResolverAdapter {
