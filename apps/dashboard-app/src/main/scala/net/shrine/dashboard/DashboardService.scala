@@ -3,7 +3,6 @@ package net.shrine.dashboard
 import akka.actor.{ActorSystem, Actor}
 import akka.event.Logging
 import net.shrine.authentication.UserAuthenticator
-import net.shrine.authorization.AuthorizationType
 
 import net.shrine.authorization.steward.OutboundUser
 import net.shrine.dashboard.jwtauth.ShrineJwtAuthenticator
@@ -167,6 +166,7 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
       forwardUnmatchedPath(baseUrl,Some(ShrineJwtAuthenticator.createOAuthCredentials))
     }
   }
+
   def statusRoute(user:User):Route = get {
     pathPrefix("config"){getConfig}~
     pathPrefix("classpath"){getClasspath}

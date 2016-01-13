@@ -1,13 +1,13 @@
 package net.shrine.dashboard.jwtauth
 
 import java.io.ByteArrayInputStream
-import java.security.{Key, PrivateKey}
+import java.security.{PublicKey, Key, PrivateKey}
 import java.security.cert.{CertificateFactory, X509Certificate}
 import java.util.Date
 
 import io.jsonwebtoken.impl.TextCodec
 import io.jsonwebtoken.{Claims, SignatureAlgorithm, ExpiredJwtException, Jwts}
-import net.shrine.crypto.{KeyStoreDescriptorParser, KeyStoreCertCollection}
+import net.shrine.crypto.{CertCollection, KeyStoreDescriptorParser, KeyStoreCertCollection}
 import net.shrine.dashboard.DashboardConfigSource
 import net.shrine.i2b2.protocol.pm.User
 import net.shrine.log.Loggable
@@ -19,6 +19,7 @@ import spray.routing.AuthenticationFailedRejection
 import spray.routing.authentication._
 
 import scala.concurrent.{Future, ExecutionContext}
+import scala.util.Try
 
 /**
   * An Authenticator that uses Jwt in a ShrineJwt1 header to authenticate. See http://jwt.io/introduction/ for what this is all about,
@@ -29,8 +30,8 @@ import scala.concurrent.{Future, ExecutionContext}
   */
 object ShrineJwtAuthenticator extends Loggable {
 
-  val BearerAuthScheme = "Bearer"
-  val challengeHeader: `WWW-Authenticate` = `WWW-Authenticate`(HttpChallenge(BearerAuthScheme, "dashboard-to-dashboard"))
+  val config = DashboardConfigSource.config
+  val certCollection: KeyStoreCertCollection = KeyStoreCertCollection.fromFileRecoverWithClassPath(KeyStoreDescriptorParser(config.getConfig("shrine.keystore")))
 
   //from https://groups.google.com/forum/#!topic/spray-user/5DBEZUXbjtw
   def authenticate(implicit ec: ExecutionContext): ContextAuthenticator[User] = { ctx =>
@@ -62,20 +63,30 @@ object ShrineJwtAuthenticator extends Loggable {
               else {
                 val cert = KeySource.certForString(Jwts.parser().setSigningKeyResolver(new SigningKeyResolverBridge()).parseClaimsJws(jwtsString).getHeader.getKeyId)
 
-                if (jwtsClaims.getSubject == null) {
-                  info(s"jwts from ${cert.getSubjectDN.getName} subject is null")
+                certCollection.caCerts.get(CertCollection.getIssuer(cert)).fold{
+                  info(s"Could not find a CA certificate with issuer DN ${cert.getIssuerDN}. Known CA cert aliases are ${certCollection.caCertAliases.mkString(",")}")
                   rejectedCredentials
-                }
-                else {
-                  val user = User(
-                    fullName = cert.getSubjectDN.getName,
-                    username = jwtsClaims.getSubject,
-                    domain = "dashboard-to-dashboard",
-                    credential = Credential("Dashboard credential", isToken = false),
-                    params = Map(),
-                    rolesByProject = Map()
-                  )
-                  Right(user)
+                } { signerCert =>
+                  def isSignedBy(cert: X509Certificate)(caPubKey: PublicKey): Boolean = Try { cert.verify(caPubKey); true }.getOrElse(false)
+                  if(!isSignedBy(cert)(signerCert.getPublicKey)) {
+                    info(s"cert $cert was not signed by $signerCert as claimed.")
+                    rejectedCredentials
+                  }
+                  else if (jwtsClaims.getSubject == null) {
+                    info(s"jwts from ${cert.getSubjectDN.getName} subject is null")
+                    rejectedCredentials
+                  }
+                  else {
+                    val user = User(
+                      fullName = cert.getSubjectDN.getName,
+                      username = jwtsClaims.getSubject,
+                      domain = "dashboard-to-dashboard",
+                      credential = Credential("Dashboard credential", isToken = false),
+                      params = Map(),
+                      rolesByProject = Map()
+                    )
+                    Right(user)
+                  }
                 }
               }
             } catch {
@@ -109,12 +120,10 @@ object ShrineJwtAuthenticator extends Loggable {
   }
 
   def createOAuthCredentials: OAuth2BearerToken = {
-    val config = DashboardConfigSource.config
-    val shrineCertCollection: KeyStoreCertCollection = KeyStoreCertCollection.fromFileRecoverWithClassPath(KeyStoreDescriptorParser(config.getConfig("shrine.keystore")))
 
-    val base64Cert = new String(TextCodec.BASE64URL.encode(shrineCertCollection.myCert.get.getEncoded))
+    val base64Cert = new String(TextCodec.BASE64URL.encode(certCollection.myCert.get.getEncoded))
 
-    val key: PrivateKey = shrineCertCollection.myKeyPair.privateKey
+    val key: PrivateKey = certCollection.myKeyPair.privateKey
     val expiration: Date = new Date(System.currentTimeMillis() + 30 * 1000) //good for 30 seconds
     val jwtsString = Jwts.builder().
         setHeaderParam("kid", base64Cert).
@@ -129,6 +138,8 @@ object ShrineJwtAuthenticator extends Loggable {
     token
   }
 
+  val BearerAuthScheme = "Bearer"
+  val challengeHeader: `WWW-Authenticate` = `WWW-Authenticate`(HttpChallenge(BearerAuthScheme, "dashboard-to-dashboard"))
 }
 
 class KeySource {}

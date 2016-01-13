@@ -214,8 +214,6 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
     }
   }
 
-//todo how to tell if the key is from a valid cert?
-
   "DashboardService" should  "reject a fromDashboard/ping with no subject" in {
 
     val config = DashboardConfigSource.config
