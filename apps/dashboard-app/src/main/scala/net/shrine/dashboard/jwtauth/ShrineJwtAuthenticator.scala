@@ -29,9 +29,8 @@ import scala.concurrent.{Future, ExecutionContext}
   */
 object ShrineJwtAuthenticator extends Loggable {
 
-  val ShrineJwtAuth0 = "ShrineJwtAuth0"
-  //We can't use Authorization: Bearer because we have to know which public key to use to decrypt, and we want the caller to authenticate via PGP from the start
-  val challengeHeader: `WWW-Authenticate` = `WWW-Authenticate`(HttpChallenge(ShrineJwtAuth0, "dashboard-to-dashboard"))
+  val BearerAuthScheme = "Bearer"
+  val challengeHeader: `WWW-Authenticate` = `WWW-Authenticate`(HttpChallenge(BearerAuthScheme, "dashboard-to-dashboard"))
 
   //from https://groups.google.com/forum/#!topic/spray-user/5DBEZUXbjtw
   def authenticate(implicit ec: ExecutionContext): ContextAuthenticator[User] = { ctx =>
@@ -40,6 +39,7 @@ object ShrineJwtAuthenticator extends Loggable {
       val missingCredentials: Authentication[User] = Left(AuthenticationFailedRejection(CredentialsMissing, List(challengeHeader)))
       val rejectedCredentials: Authentication[User] = Left(AuthenticationFailedRejection(CredentialsRejected, List(challengeHeader)))
 
+      //noinspection ComparingUnrelatedTypes
       ctx.request.headers.find(_.name.equals(Authorization.name)).fold(missingCredentials) { (header: HttpHeader) =>
 
         //header should be "$ShrineJwtAuth0 $SignerSerialNumber,$JwtsString
@@ -49,20 +49,21 @@ object ShrineJwtAuthenticator extends Loggable {
           val authScheme = splitHeaderValue(0)
           val jwtsString = splitHeaderValue(1)
 
-          if (authScheme == ShrineJwtAuth0) {
+          if (authScheme == BearerAuthScheme) {
             try {
+              val jwtsClaims: Claims = Jwts.parser().setSigningKeyResolver(new SigningKeyResolverBridge()).parseClaimsJws(jwtsString).getBody
+              info(s"got claims $jwtsClaims")
 
               val now = new Date()
-              val jwtsClaims: Claims = Jwts.parser().setSigningKeyResolver(new SigningKeyResolverBridge()).parseClaimsJws(jwtsString).getBody
-
-              info(s"got claims $jwtsClaims")
               if (jwtsClaims.getExpiration.before(now)) {
-                info(s"jwts experation ${jwtsClaims.getExpiration} expired before now $now")
+                info(s"jwts ${jwtsClaims.getExpiration} expired before now $now")
                 rejectedCredentials
               }
               else {
+                val cert = KeySource.certForString(Jwts.parser().setSigningKeyResolver(new SigningKeyResolverBridge()).parseClaimsJws(jwtsString).getHeader.getKeyId)
+
                 val user = User(
-                  fullName = jwtsClaims.getSubject, //todo fill in with something useful like certificate.getSubjectDN.getName,
+                  fullName = cert.getSubjectDN.getName,
                   username = jwtsClaims.getSubject,
                   domain = "dashboard-to-dashboard",
                   credential = Credential("Dashboard credential", isToken = false),
@@ -72,6 +73,7 @@ object ShrineJwtAuthenticator extends Loggable {
                 Right(user)
               }
             } catch {
+              /*
               case x: CertificateExpiredException => {
                 //todo will these even be thrown here? Get some identification here
                 info(s"Cert expired.", x)
@@ -81,14 +83,14 @@ object ShrineJwtAuthenticator extends Loggable {
                 info(s"Cert not yet valid.", x)
                 rejectedCredentials
               }
-              case x: ExpiredJwtException => {
+              */
+              case x: ExpiredJwtException =>
                 info(s"Jwt for todo expired.", x) //todo get some identification in here
                 rejectedCredentials
-              }
             }
           }
           else {
-            info(s"Header did not start with $ShrineJwtAuth0 .")
+            info(s"Header did not start with $BearerAuthScheme .")
             missingCredentials
           }
         }
@@ -104,8 +106,6 @@ object ShrineJwtAuthenticator extends Loggable {
     val config = DashboardConfigSource.config
     val shrineCertCollection: KeyStoreCertCollection = KeyStoreCertCollection.fromFileRecoverWithClassPath(KeyStoreDescriptorParser(config.getConfig("shrine.keystore")))
 
-    //todo instead use shrineCertCollection.myCert.getEncoded as a Base64 byte array. Use that as the prefix
-
     val signerSerialNumber = shrineCertCollection.myCertId.get.serial
 
     val base64Cert = new String(TextCodec.BASE64URL.encode(shrineCertCollection.myCert.get.getEncoded))
@@ -119,8 +119,9 @@ object ShrineJwtAuthenticator extends Loggable {
         setExpiration(expiration).
         signWith(SignatureAlgorithm.RS512, key).
         compact()
+
     //todo start here. investigate raw header problems.
-    val header = RawHeader(Authorization.name, s"$ShrineJwtAuth0 $jwtsString")
+    val header = RawHeader(Authorization.name, s"$BearerAuthScheme $jwtsString")
     info(s"header is $header")
 
     header
@@ -133,7 +134,21 @@ class KeySource {}
 object KeySource extends Loggable {
 
   def keyForString(string: String): Key = {
-    //todo instead decrypt with the cert from the header via something like obtainAndValidateSigningCert()
+    val certificate =certForString(string)
+    //todo validate cert with something like obtainAndValidateSigningCert
+
+    info(s"Created cert $certificate")
+
+    val now = new Date()
+    //check date on cert vs time. throws CertificateExpiredException or CertificateNotYetValidException for problems
+    //todo skip this until you rebuild the certs used for testing                certificate.checkValidity(now)
+
+    val key = certificate.getPublicKey
+    info(s"got key $key")
+    key
+  }
+
+  def certForString(string: String): X509Certificate = {
     val certBytes = TextCodec.BASE64URL.decode(string)
 
     info(s"Got cert bytes $string")
@@ -146,16 +161,6 @@ object KeySource extends Loggable {
     finally {
       inputStream.close()
     }
-    //todo validate cert
-
-    info(s"Created cert $certificate")
-
-    val now = new Date()
-    //check date on cert vs time. throws CertificateExpiredException or CertificateNotYetValidException for problems
-    //todo skip this until you rebuild the certs used for testing                certificate.checkValidity(now)
-
-    val key = certificate.getPublicKey
-    info(s"got key $key")
-    key
+    certificate
   }
 }
