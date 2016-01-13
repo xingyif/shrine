@@ -128,7 +128,6 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
 
       val versionString = new String(body.data.toByteArray)
       //todo test it to see if it's right
-      println(versionString)
     }
   }
 
@@ -142,7 +141,6 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
 
       val versionString = new String(body.data.toByteArray)
       //todo test it to see if it's right
-      println(versionString)
     }
   }
 
@@ -156,7 +154,6 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
 
         val statusString = new String(body.data.toByteArray)
         //todo test it to see if it's right
-        //println(statusString)
       }
   }
 
@@ -257,8 +254,6 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
   }
 
   "DashboardService" should  "not find a bogus web service to talk to" in {
-
-    println(HttpHeaders.Authorization(adminCredentials))
 
     Get(s"/toDashboard/test") ~>
       addCredentials(adminCredentials) ~>
