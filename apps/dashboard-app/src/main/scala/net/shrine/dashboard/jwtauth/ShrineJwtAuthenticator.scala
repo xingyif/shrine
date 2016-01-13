@@ -2,7 +2,7 @@ package net.shrine.dashboard.jwtauth
 
 import java.io.ByteArrayInputStream
 import java.security.{Key, PrivateKey}
-import java.security.cert.{CertificateFactory, CertificateNotYetValidException, CertificateExpiredException, X509Certificate}
+import java.security.cert.{CertificateFactory, X509Certificate}
 import java.util.Date
 
 import io.jsonwebtoken.impl.TextCodec
@@ -12,8 +12,8 @@ import net.shrine.dashboard.DashboardConfigSource
 import net.shrine.i2b2.protocol.pm.User
 import net.shrine.log.Loggable
 import net.shrine.protocol.Credential
-import spray.http.HttpHeaders.{RawHeader, Authorization, `WWW-Authenticate`}
-import spray.http.{HttpHeader, HttpChallenge}
+import spray.http.HttpHeaders.{Authorization, `WWW-Authenticate`}
+import spray.http.{OAuth2BearerToken, HttpHeader, HttpChallenge}
 import spray.routing.AuthenticationFailedRejection.{CredentialsMissing, CredentialsRejected}
 import spray.routing.AuthenticationFailedRejection
 import spray.routing.authentication._
@@ -102,7 +102,7 @@ object ShrineJwtAuthenticator extends Loggable {
     }
   }
 
-  def createAuthHeader: HttpHeader = {
+  def createOAuthCredentials: OAuth2BearerToken = {
     val config = DashboardConfigSource.config
     val shrineCertCollection: KeyStoreCertCollection = KeyStoreCertCollection.fromFileRecoverWithClassPath(KeyStoreDescriptorParser(config.getConfig("shrine.keystore")))
 
@@ -120,11 +120,10 @@ object ShrineJwtAuthenticator extends Loggable {
         signWith(SignatureAlgorithm.RS512, key).
         compact()
 
-    //todo start here. investigate raw header problems.
-    val header = RawHeader(Authorization.name, s"$BearerAuthScheme $jwtsString")
-    info(s"header is $header")
+    val token = OAuth2BearerToken(jwtsString)
+    info(s"header is $token")
 
-    header
+    token
   }
 
 }
@@ -139,7 +138,6 @@ object KeySource extends Loggable {
 
     info(s"Created cert $certificate")
 
-    val now = new Date()
     //check date on cert vs time. throws CertificateExpiredException or CertificateNotYetValidException for problems
     //todo skip this until you rebuild the certs used for testing                certificate.checkValidity(now)
 

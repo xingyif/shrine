@@ -164,7 +164,7 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
 
       val baseUrl = s"$remoteDashboardProtocol$dnsName$remoteDashboardPort"
 
-      forwardUnmatchedPath(baseUrl,Some(ShrineJwtAuthenticator.createAuthHeader))
+      forwardUnmatchedPath(baseUrl,Some(ShrineJwtAuthenticator.createOAuthCredentials))
     }
   }
   def statusRoute(user:User):Route = get {
