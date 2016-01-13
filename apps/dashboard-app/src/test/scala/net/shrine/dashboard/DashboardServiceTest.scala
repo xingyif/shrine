@@ -4,6 +4,7 @@ import java.math.BigInteger
 import java.security.PrivateKey
 import java.util.Date
 
+import io.jsonwebtoken.impl.TextCodec
 import io.jsonwebtoken.{SignatureAlgorithm, Jwts}
 import net.shrine.authorization.steward.OutboundUser
 import net.shrine.crypto.{KeyStoreDescriptorParser, KeyStoreCertCollection}
@@ -15,7 +16,7 @@ import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.FlatSpec
 import spray.http.HttpHeaders.Authorization
-import spray.http.{HttpHeaders, BasicHttpCredentials}
+import spray.http.{OAuth2BearerToken, HttpHeaders, BasicHttpCredentials}
 
 import spray.testkit.ScalatestRouteTest
 import spray.http.StatusCodes.{OK,PermanentRedirect,Unauthorized,NotFound}
@@ -174,7 +175,6 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
   }
 
   val dashboardCredentials = BasicHttpCredentials(adminUserName,"shh!")
-//  val dashboardCredentials = BasicHttpCredentials(adminUserName,"shh!")
 
   "DashboardService" should  "return an OK and pong for fromDashboard/ping" in {
 
@@ -189,109 +189,50 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
       assertResult(""""pong"""")(string)
     }
   }
-/*
+
   "DashboardService" should  "reject a fromDashboard/ping with an expired jwts header" in {
 
     val config = DashboardConfigSource.config
-    val shrineCertCollection: KeyStoreCertCollection = KeyStoreCertCollection.fromClassPathResource(KeyStoreDescriptorParser(config.getConfig("shrine.keystore")))
+    val shrineCertCollection: KeyStoreCertCollection = KeyStoreCertCollection.fromFileRecoverWithClassPath(KeyStoreDescriptorParser(config.getConfig("shrine.keystore")))
 
-    val signerSerialNumber = shrineCertCollection.myCertId.get.serial
+    val base64Cert = new String(TextCodec.BASE64URL.encode(shrineCertCollection.myCert.get.getEncoded))
+
     val key: PrivateKey = shrineCertCollection.myKeyPair.privateKey
-    val expiration:Date = new Date(System.currentTimeMillis() - 300 * 1000) //bad after five minutes ago
+    val expiration: Date = new Date(System.currentTimeMillis() - 300 * 1000) //bad for 5 minutes
     val jwtsString = Jwts.builder().
-        setIssuer(signerSerialNumber.toString()).
+        setHeaderParam("kid", base64Cert).
         setSubject(java.net.InetAddress.getLocalHost.getHostName).
         setExpiration(expiration).
         signWith(SignatureAlgorithm.RS512, key).
         compact()
 
     Get(s"/fromDashboard/ping") ~>
-      addHeader(Authorization.name,s"${ShrineJwtAuthenticator.ShrineJwtAuth0}: $signerSerialNumber,$jwtsString") ~>
+      addCredentials(OAuth2BearerToken(jwtsString)) ~>
       sealRoute(route) ~> check {
 
       assertResult(Unauthorized)(status)
     }
   }
 
-  "DashboardService" should  "reject a fromDashboard/ping with an issuer different from its serial number" in {
+//todo how to tell if the key is from a valid cert?
+
+  "DashboardService" should  "reject a fromDashboard/ping with no subject" in {
 
     val config = DashboardConfigSource.config
     val shrineCertCollection: KeyStoreCertCollection = KeyStoreCertCollection.fromClassPathResource(KeyStoreDescriptorParser(config.getConfig("shrine.keystore")))
 
-    val signerSerialNumber: BigInteger = shrineCertCollection.myCertId.get.serial
+    val base64Cert = new String(TextCodec.BASE64URL.encode(shrineCertCollection.myCert.get.getEncoded))
+
     val key: PrivateKey = shrineCertCollection.myKeyPair.privateKey
-    val expiration:Date = new Date(System.currentTimeMillis() + 30 * 1000) //good for 30 seconds
+    val expiration: Date = new Date(System.currentTimeMillis() + 30 * 1000)
     val jwtsString = Jwts.builder().
-        setIssuer(signerSerialNumber.subtract(new BigInteger("5")).toString()).
-        setSubject(java.net.InetAddress.getLocalHost.getHostName).
+        setHeaderParam("kid", base64Cert).
         setExpiration(expiration).
         signWith(SignatureAlgorithm.RS512, key).
         compact()
 
     Get(s"/fromDashboard/ping") ~>
-      addHeader(Authorization.name,s"${ShrineJwtAuthenticator.ShrineJwtAuth0}: $signerSerialNumber,$jwtsString") ~>
-      sealRoute(route) ~> check {
-
-      assertResult(Unauthorized)(status)
-    }
-  }
-
-  "DashboardService" should  "reject a fromDashboard/ping with a bad serial number in the Authorization header" in {
-
-    val config = DashboardConfigSource.config
-    val shrineCertCollection: KeyStoreCertCollection = KeyStoreCertCollection.fromClassPathResource(KeyStoreDescriptorParser(config.getConfig("shrine.keystore")))
-
-    val signerSerialNumber = shrineCertCollection.myCertId.get.serial
-    val key: PrivateKey = shrineCertCollection.myKeyPair.privateKey
-    val expiration:Date = new Date(System.currentTimeMillis() + 30 * 1000) //good for 30 seconds
-    val jwtsString = Jwts.builder().
-        setIssuer(signerSerialNumber.toString()).
-        setSubject(java.net.InetAddress.getLocalHost.getHostName).
-        setExpiration(expiration).
-        signWith(SignatureAlgorithm.RS512, key).
-        compact()
-
-    Get(s"/fromDashboard/ping") ~>
-      addHeader(Authorization.name,s"${ShrineJwtAuthenticator.ShrineJwtAuth0}: Not a number,$jwtsString") ~>
-      sealRoute(route) ~> check {
-
-      assertResult(Unauthorized)(status)
-    }
-  }
-
-  "DashboardService" should  "reject a fromDashboard/ping with an unavailable serial number in the Authorization header" in {
-
-    val config = DashboardConfigSource.config
-    val shrineCertCollection: KeyStoreCertCollection = KeyStoreCertCollection.fromClassPathResource(KeyStoreDescriptorParser(config.getConfig("shrine.keystore")))
-
-    val signerSerialNumber = shrineCertCollection.myCertId.get.serial
-    val key: PrivateKey = shrineCertCollection.myKeyPair.privateKey
-    val expiration:Date = new Date(System.currentTimeMillis() + 30 * 1000) //good for 30 seconds
-    val jwtsString = Jwts.builder().
-        setIssuer(signerSerialNumber.toString()).
-        setSubject(java.net.InetAddress.getLocalHost.getHostName).
-        setExpiration(expiration).
-        signWith(SignatureAlgorithm.RS512, key).
-        compact()
-
-    Get(s"/fromDashboard/ping") ~>
-      addHeader(Authorization.name,s"${ShrineJwtAuthenticator.ShrineJwtAuth0}: -5: $jwtsString") ~>
-      sealRoute(route) ~> check {
-
-      assertResult(Unauthorized)(status)
-    }
-  }
-
-  "DashboardService" should  "reject a fromDashboard/ping with a short Authorization header" in {
-
-    val config = DashboardConfigSource.config
-    val shrineCertCollection: KeyStoreCertCollection = KeyStoreCertCollection.fromClassPathResource(KeyStoreDescriptorParser(config.getConfig("shrine.keystore")))
-
-    val signerSerialNumber = shrineCertCollection.myCertId.get.serial
-    val key: PrivateKey = shrineCertCollection.myKeyPair.privateKey
-
-    Get(s"/fromDashboard/ping") ~>
-      addHeader(Authorization.name,s"${ShrineJwtAuthenticator.ShrineJwtAuth0}: $signerSerialNumber") ~>
+      addCredentials(OAuth2BearerToken(jwtsString)) ~>
       sealRoute(route) ~> check {
 
       assertResult(Unauthorized)(status)
@@ -317,7 +258,7 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
     }
   }
 
-  "DashboardService" should  "kinda fall over without a web service to talk to" in {
+  "DashboardService" should  "not find a bogus web service to talk to" in {
 
     println(HttpHeaders.Authorization(adminCredentials))
 
@@ -330,6 +271,6 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
       assertResult(NotFound)(status)
     }
   }
-  */
+
 }
 

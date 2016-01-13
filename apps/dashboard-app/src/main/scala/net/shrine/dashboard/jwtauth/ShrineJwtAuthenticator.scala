@@ -62,15 +62,21 @@ object ShrineJwtAuthenticator extends Loggable {
               else {
                 val cert = KeySource.certForString(Jwts.parser().setSigningKeyResolver(new SigningKeyResolverBridge()).parseClaimsJws(jwtsString).getHeader.getKeyId)
 
-                val user = User(
-                  fullName = cert.getSubjectDN.getName,
-                  username = jwtsClaims.getSubject,
-                  domain = "dashboard-to-dashboard",
-                  credential = Credential("Dashboard credential", isToken = false),
-                  params = Map(),
-                  rolesByProject = Map()
-                )
-                Right(user)
+                if (jwtsClaims.getSubject == null) {
+                  info(s"jwts from ${cert.getSubjectDN.getName} subject is null")
+                  rejectedCredentials
+                }
+                else {
+                  val user = User(
+                    fullName = cert.getSubjectDN.getName,
+                    username = jwtsClaims.getSubject,
+                    domain = "dashboard-to-dashboard",
+                    credential = Credential("Dashboard credential", isToken = false),
+                    params = Map(),
+                    rolesByProject = Map()
+                  )
+                  Right(user)
+                }
               }
             } catch {
               /*
@@ -106,22 +112,19 @@ object ShrineJwtAuthenticator extends Loggable {
     val config = DashboardConfigSource.config
     val shrineCertCollection: KeyStoreCertCollection = KeyStoreCertCollection.fromFileRecoverWithClassPath(KeyStoreDescriptorParser(config.getConfig("shrine.keystore")))
 
-    val signerSerialNumber = shrineCertCollection.myCertId.get.serial
-
     val base64Cert = new String(TextCodec.BASE64URL.encode(shrineCertCollection.myCert.get.getEncoded))
 
     val key: PrivateKey = shrineCertCollection.myKeyPair.privateKey
     val expiration: Date = new Date(System.currentTimeMillis() + 30 * 1000) //good for 30 seconds
     val jwtsString = Jwts.builder().
         setHeaderParam("kid", base64Cert).
-        setIssuer(signerSerialNumber.toString()).
         setSubject(java.net.InetAddress.getLocalHost.getHostName).
         setExpiration(expiration).
         signWith(SignatureAlgorithm.RS512, key).
         compact()
 
     val token = OAuth2BearerToken(jwtsString)
-    info(s"header is $token")
+    info(s"token is $token")
 
     token
   }
