@@ -79,7 +79,7 @@ trait HttpClientDirectives extends Loggable {
         val headers: List[HttpHeader] = basicRequest.headers :+ HttpHeaders.Authorization(credentials)
         basicRequest.copy(headers = headers)
       }
-      HttpClient.webApiCall(HttpRequest(ctx.request.method,resourceUri))
+      HttpClient.webApiCall(request)
     }
   }
 
