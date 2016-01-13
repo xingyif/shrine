@@ -14,13 +14,10 @@ final class FileSystemFormatDetectingAdapterMappingsSourceCanLoadARealFileTest e
 
   private val adapterMappingsXml = Path("src", "test", "resources", "AdapterMappings.xml")
   
-  private val pcoriXmlFile = Path("src", "test", "resources", "PCORI_AdapterMappings.xml")
-  
   private val pcoriCsvFile = Path("src", "test", "resources", "PCORI_AdapterMappings.csv")
   
   override protected def sourcesThatShouldWork = Seq(
     () => FileSystemFormatDetectingAdapterMappingsSource(adapterMappingsXml),
-    () => FileSystemFormatDetectingAdapterMappingsSource(pcoriXmlFile),
     () => FileSystemFormatDetectingAdapterMappingsSource(pcoriCsvFile))
 
   override protected def doTestLoad(source: AdapterMappingsSource): Unit = {
@@ -31,7 +28,7 @@ final class FileSystemFormatDetectingAdapterMappingsSourceCanLoadARealFileTest e
     //TODO: Expedient Hack :(
     //test differently depending on which file we're considering
     source match {
-      case FileSystemFormatDetectingAdapterMappingsSource(p) if p == pcoriXmlFile || p == pcoriCsvFile => {
+      case FileSystemFormatDetectingAdapterMappingsSource(p) if p == pcoriCsvFile => {
         //TODO: make this less brittle; ideally this test shouldn't fail if Philip adds or removes one entry to the 
         //relevant file.  We could copy that file to src/test/resources, but it's 10s of MB big.  Perhaps that's ok?
         mappings.size should be(314934)

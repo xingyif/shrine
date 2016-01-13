@@ -1,13 +1,16 @@
 package net.shrine.dashboard.httpclient
 
 import java.io.InputStream
+import java.security.cert.X509Certificate
+import javax.net.ssl.{X509TrustManager, SSLContext}
 
 import net.shrine.log.Loggable
 import spray.can.Http
 import akka.io.IO
 import akka.actor.{ActorRef, ActorSystem}
-import spray.can.Http.ConnectionAttemptFailedException
-import spray.http.{HttpHeader, HttpEntity, StatusCodes, HttpRequest, HttpResponse, Uri}
+import spray.can.Http.{HostConnectorSetup, ConnectionAttemptFailedException}
+import spray.http.{HttpCredentials, HttpHeaders, HttpHeader, HttpEntity, StatusCodes, HttpRequest, HttpResponse, Uri}
+import spray.io.ClientSSLEngineProvider
 import spray.routing.{RequestContext, Route}
 import akka.pattern.ask
 
@@ -32,23 +35,23 @@ trait HttpClientDirectives extends Loggable {
     * Proxy the request to the specified base uri appended with the unmatched path.
     *
     */
-  def forwardUnmatchedPath(baseUri: Uri,header:Option[HttpHeader] = None)(implicit system: ActorSystem): Route = {
+  def forwardUnmatchedPath(baseUri: Uri,maybeCredentials:Option[HttpCredentials] = None)(implicit system: ActorSystem): Route = {
     def completeWithEntityAsString(httpResponse:HttpResponse,uri:Uri):Route = {
       ctx => {
         ctx.complete(httpResponse.entity.asString)
       }
     }
-    requestWithUnmatchedPath(baseUri,completeWithEntityAsString,header)
+    requestWithUnmatchedPath(baseUri,completeWithEntityAsString,maybeCredentials)
   }
 
   /**
     * Make the request to the specified base uri appended with the unmatched path, then use the returned entity (as a string) to complete the route.
     *
     */
-  def requestWithUnmatchedPath(baseUri:Uri, route:(HttpResponse,Uri) => Route,header:Option[HttpHeader] = None)(implicit system: ActorSystem): Route = {
+  def requestWithUnmatchedPath(baseUri:Uri, route:(HttpResponse,Uri) => Route,maybeCredentials:Option[HttpCredentials] = None)(implicit system: ActorSystem): Route = {
     ctx => {
       val resourceUri = baseUri.withPath(baseUri.path.++(ctx.unmatchedPath))
-      requestUriThenRoute(resourceUri,route,header)(system)(ctx)
+      requestUriThenRoute(resourceUri,route,maybeCredentials)(system)(ctx)
     }
   }
 
@@ -56,21 +59,28 @@ trait HttpClientDirectives extends Loggable {
     * proxy the request to the specified uri with the unmatched path, then use the returned entity (as a string) to complete the route.
     *
     */
-  def requestUriThenRoute(resourceUri:Uri, route:(HttpResponse,Uri) => Route,header:Option[HttpHeader] = None)(implicit system: ActorSystem): Route = {
+  def requestUriThenRoute(resourceUri:Uri, route:(HttpResponse,Uri) => Route,maybeCredentials:Option[HttpCredentials] = None)(implicit system: ActorSystem): Route = {
     ctx => {
-      val httpResponse = httpResponseForUri(resourceUri,ctx,header)(system)
+      val httpResponse = httpResponseForUri(resourceUri,ctx,maybeCredentials)(system)
       info(s"Got $httpResponse for $resourceUri")
 
       handleCommonErrorsOrRoute(route)(httpResponse,resourceUri)(ctx)
     }
   }
 
-  private def httpResponseForUri(resourceUri:Uri,ctx: RequestContext,header:Option[HttpHeader] = None)(implicit system: ActorSystem):HttpResponse = {
+  private def httpResponseForUri(resourceUri:Uri,ctx: RequestContext,maybeCredentials:Option[HttpCredentials] = None)(implicit system: ActorSystem):HttpResponse = {
 
     info(s"Requesting $resourceUri")
 
     if(resourceUri.scheme == "classpath") ClasspathResourceHttpClient.loadFromResource(resourceUri.path.toString())
-    else HttpClient.webApiCall(HttpRequest(ctx.request.method,resourceUri,header.to[List]))
+    else {
+      val basicRequest = HttpRequest(ctx.request.method,resourceUri)
+      val request = maybeCredentials.fold(basicRequest){ (credentials: HttpCredentials) =>
+        val headers: List[HttpHeader] = basicRequest.headers :+ HttpHeaders.Authorization(credentials)
+        basicRequest.copy(headers = headers)
+      }
+      HttpClient.webApiCall(request)
+    }
   }
 
   def handleCommonErrorsOrRoute(route:(HttpResponse,Uri) => Route)(httpResponse: HttpResponse,uri:Uri): Route = {
@@ -98,13 +108,14 @@ object HttpClient extends Loggable {
   def webApiCall(request:HttpRequest)(implicit system: ActorSystem): HttpResponse = {
     val transport: ActorRef = IO(Http)(system)
 
-    debug(s"Requesting $request")
+    debug(s"Requesting $request uri is ${request.uri} path is ${request.uri.path}")
     blocking {
       val future:Future[HttpResponse] = for {
-        response <- transport.ask(request)(10 seconds).mapTo[HttpResponse] //todo make this timeout configurable
+        Http.HostConnectorInfo(connector, _) <- transport.ask(createConnector(request))(10 seconds) //todo make this timeout configurable
+        response <- connector.ask(request)(10 seconds).mapTo[HttpResponse] //todo make this timeout configurable
       } yield response
       try {
-        Await.result(future, 10 seconds)
+        Await.result(future, 10 seconds)  //todo make this timeout configurable
       }
       catch {
         case x:TimeoutException => HttpResponse(status = StatusCodes.RequestTimeout,entity = HttpEntity(s"${request.uri} timed out after 10 seconds. ${x.getMessage}"))
@@ -121,6 +132,43 @@ object HttpClient extends Loggable {
       }
     }
   }
+
+//from https://github.com/TimothyKlim/spray-ssl-poc/blob/master/src/main/scala/Main.scala
+//trust all SSL contexts. We just want encrypted comms.
+  implicit val trustfulSslContext: SSLContext = {
+
+    class IgnoreX509TrustManager extends X509TrustManager {
+      def checkClientTrusted(chain: Array[X509Certificate], authType: String) {}
+
+      def checkServerTrusted(chain: Array[X509Certificate], authType: String) {}
+
+      def getAcceptedIssuers = null
+    }
+
+    val context = SSLContext.getInstance("TLS")
+    context.init(null, Array(new IgnoreX509TrustManager), null)
+    info("trustfulSslContex initialized")
+    context
+  }
+
+  implicit val clientSSLEngineProvider =
+  //todo lookup this constructor
+    ClientSSLEngineProvider {
+      _ =>
+        val engine = trustfulSslContext.createSSLEngine()
+        engine.setUseClientMode(true)
+        engine
+    }
+
+  def createConnector(request: HttpRequest) = {
+
+    val connector = new HostConnectorSetup(host = request.uri.authority.host.toString,
+                                            port = request.uri.effectivePort,
+                                            sslEncryption = request.uri.scheme == "https",
+                                            defaultHeaders = request.headers)
+    connector
+  }
+
 }
 
 /**
