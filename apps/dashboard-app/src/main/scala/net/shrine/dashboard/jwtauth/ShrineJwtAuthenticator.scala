@@ -6,12 +6,12 @@ import java.security.cert.{CertificateFactory, CertificateNotYetValidException, 
 import java.util.Date
 
 import io.jsonwebtoken.impl.TextCodec
-import io.jsonwebtoken.{Claims, JwsHeader, SigningKeyResolverAdapter, SignatureAlgorithm, ExpiredJwtException, Jwts}
+import io.jsonwebtoken.{Claims, SignatureAlgorithm, ExpiredJwtException, Jwts}
 import net.shrine.crypto.{KeyStoreDescriptorParser, KeyStoreCertCollection}
 import net.shrine.dashboard.DashboardConfigSource
 import net.shrine.i2b2.protocol.pm.User
 import net.shrine.log.Loggable
-import net.shrine.protocol.{CertData, CertId, Credential}
+import net.shrine.protocol.Credential
 import spray.http.HttpHeaders.{RawHeader, Authorization, `WWW-Authenticate`}
 import spray.http.{HttpHeader, HttpChallenge}
 import spray.routing.AuthenticationFailedRejection.{CredentialsMissing, CredentialsRejected}
@@ -46,11 +46,7 @@ object ShrineJwtAuthenticator extends Loggable{
         if (splitHeaderValue.length == 2) {
 
           val authScheme = splitHeaderValue(0)
-          val serialNumberAndJwts = splitHeaderValue(1).split(",")
-
-          if (serialNumberAndJwts.length == 2) {
-            val serialNumberString = serialNumberAndJwts(0)
-            val jwtsString = serialNumberAndJwts(1)
+          val jwtsString = splitHeaderValue(1)
 
             if (authScheme == ShrineJwtAuth0) {
               try {
@@ -74,22 +70,17 @@ object ShrineJwtAuthenticator extends Loggable{
                     )
                     Right(user)
                   }
-//                }
               } catch {
-                case x: NumberFormatException => {
-                  info(s"Cert serial number ${serialNumberString} could not be read as a BigInteger.", x)
-                  missingCredentials
-                }
-                case x: CertificateExpiredException => {
-                  info(s"Cert ${serialNumberString} expired.", x)
+                case x: CertificateExpiredException => { //todo will these even be thrown here? Get some identification here
+                  info(s"Cert expired.", x)
                   rejectedCredentials
                 }
                 case x: CertificateNotYetValidException => {
-                  info(s"Cert ${serialNumberString} not yet valid.", x)
+                  info(s"Cert not yet valid.", x)
                   rejectedCredentials
                 }
                 case x: ExpiredJwtException => {
-                  info(s"Jwt from ${serialNumberString} expired.", x)
+                  info(s"Jwt for todo expired.", x) //todo get some identification in here
                   rejectedCredentials
                 }
               }
@@ -98,11 +89,6 @@ object ShrineJwtAuthenticator extends Loggable{
               info(s"Header did not start with $ShrineJwtAuth0 .")
               missingCredentials
             }
-          }
-          else {
-            info(s"Header had ${serialNumberAndJwts.length} ,-delimited segments, not 2. ")
-            missingCredentials
-          }
         }
         else {
           info(s"Header had ${splitHeaderValue.length} space-delimited segments, not 2. ")
@@ -132,7 +118,7 @@ object ShrineJwtAuthenticator extends Loggable{
                           signWith(SignatureAlgorithm.RS512, key).
                           compact()
     //todo start here. investigate raw header problems.
-    val header = RawHeader(Authorization.name,s"$ShrineJwtAuth0 $base64Cert,$jwtsString")
+    val header = RawHeader(Authorization.name,s"$ShrineJwtAuth0 $jwtsString")
     info(s"header is $header")
 
     header
