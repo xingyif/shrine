@@ -1,13 +1,13 @@
 package net.shrine.dashboard.jwtauth
 
 import java.io.ByteArrayInputStream
-import java.security.{Principal, PublicKey, Key, PrivateKey}
+import java.security.{Principal, Key, PrivateKey}
 import java.security.cert.{CertificateFactory, X509Certificate}
 import java.util.Date
 
 import io.jsonwebtoken.impl.TextCodec
-import io.jsonwebtoken.{Jws, Header, ClaimJwtException, Claims, SignatureAlgorithm, ExpiredJwtException, Jwts}
-import net.shrine.crypto.{CertCollection, KeyStoreDescriptorParser, KeyStoreCertCollection}
+import io.jsonwebtoken.{Jws, ClaimJwtException, Claims, SignatureAlgorithm, Jwts}
+import net.shrine.crypto.{KeyStoreDescriptorParser, KeyStoreCertCollection}
 import net.shrine.dashboard.DashboardConfigSource
 import net.shrine.i2b2.protocol.pm.User
 import net.shrine.log.Loggable
@@ -32,6 +32,64 @@ object ShrineJwtAuthenticator extends Loggable {
 
   val config = DashboardConfigSource.config
   val certCollection: KeyStoreCertCollection = KeyStoreCertCollection.fromFileRecoverWithClassPath(KeyStoreDescriptorParser(config.getConfig("shrine.keystore")))
+
+  //from https://groups.google.com/forum/#!topic/spray-user/5DBEZUXbjtw
+  def authenticate(implicit ec: ExecutionContext): ContextAuthenticator[User] = { ctx =>
+
+    Future {
+
+      val attempt: Try[Authentication[User]] = for {
+        header:HttpHeader <- extractAuthorizationHeader(ctx.request)
+        jwtsString:String <- extractJwtsStringAndCheckScheme(header)
+        jwtsClaims <- extractJwtsClaims(jwtsString)
+        cert: X509Certificate <- extractAndCheckCert(jwtsClaims)
+        jwtsBody:Claims <- Try{jwtsClaims.getBody}
+        jwtsSubject <- failIfNull(jwtsBody.getSubject,MissingRequiredJwtsClaim("subject",cert.getSubjectDN))
+        jwtsIssuer <- failIfNull(jwtsBody.getSubject,MissingRequiredJwtsClaim("issuer",cert.getSubjectDN))
+      } yield {
+        val user = User(
+          fullName = cert.getSubjectDN.getName,
+          username = jwtsSubject,
+          domain = jwtsIssuer,
+          credential = Credential(jwtsIssuer, isToken = false),
+          params = Map(),
+          rolesByProject = Map()
+        )
+        Right(user)
+      }
+      //todo use a fold() in Scala 2.12
+      attempt match {
+        case Success(rightUser) => rightUser
+        case Failure(x) =>  x match
+        {
+          case anticipated: ShrineJwtException =>
+            info(s"Failed to authenticate due to ${anticipated.toString}",anticipated)
+            anticipated.rejection
+
+          case fromJwts: ClaimJwtException =>
+            info(s"Failed to authenticate due to ${fromJwts.toString} while authenticating ${ctx.request}",fromJwts)
+            rejectedCredentials
+
+            /*
+          case x: CertificateExpiredException => {
+            //todo will these even be thrown here? Get some identification here
+            info(s"Cert expired.", x)
+            rejectedCredentials
+          }
+          case x: CertificateNotYetValidException => {
+            info(s"Cert not yet valid.", x)
+            rejectedCredentials
+          }
+*/
+          case unanticipated =>
+            warn(s"Unanticipated ${unanticipated.toString} while authenticating ${ctx.request}",unanticipated)
+            rejectedCredentials
+
+        }
+      }
+    }
+  }
+
 
   def createOAuthCredentials(user:User): OAuth2BearerToken = {
 
@@ -63,7 +121,7 @@ object ShrineJwtAuthenticator extends Loggable {
       throw new WrongNumberOfSegmentsException(httpHeader)
     }
     else if(splitHeaderValue(0) != BearerAuthScheme) {
-      case class NotBearerAuthException(httpHeader: HttpHeader) extends ShrineJwtException(s"Expected ${BearerAuthScheme}, not ${splitHeaderValue(0)} in $httpHeader.",missingCredentials)
+      case class NotBearerAuthException(httpHeader: HttpHeader) extends ShrineJwtException(s"Expected $BearerAuthScheme, not ${splitHeaderValue(0)} in $httpHeader.",missingCredentials)
       throw new NotBearerAuthException(httpHeader)
     }
     else splitHeaderValue(1)
@@ -98,63 +156,6 @@ object ShrineJwtAuthenticator extends Loggable {
   }
 
   case class MissingRequiredJwtsClaim(field:String,principal: Principal) extends ShrineJwtException(s"$field is null from ${principal.getName}")
-
-  //from https://groups.google.com/forum/#!topic/spray-user/5DBEZUXbjtw
-  def authenticate(implicit ec: ExecutionContext): ContextAuthenticator[User] = { ctx =>
-
-    Future {
-
-      val attempt: Try[Authentication[User]] = for {
-        header:HttpHeader <- extractAuthorizationHeader(ctx.request)
-        jwtsString:String <- extractJwtsStringAndCheckScheme(header)
-        jwtsClaims <- extractJwtsClaims(jwtsString)
-        cert: X509Certificate <- extractAndCheckCert(jwtsClaims)
-        jwtsBody:Claims <- Try{jwtsClaims.getBody}
-        jwtsSubject <- failIfNull(jwtsBody.getSubject,MissingRequiredJwtsClaim("subject",cert.getSubjectDN))
-        jwtsIssuer <- failIfNull(jwtsBody.getSubject,MissingRequiredJwtsClaim("issuer",cert.getSubjectDN))
-      } yield {
-        val user = User(
-          fullName = cert.getSubjectDN.getName,
-          username = jwtsSubject,
-          domain = jwtsIssuer,
-          credential = Credential(jwtsIssuer, isToken = false),
-          params = Map(),
-          rolesByProject = Map()
-        )
-        Right(user)
-      }
-      //todo use a fold() in Scala 2.12
-      attempt match {
-        case Success(rightUser) => rightUser
-        case Failure(x) =>  x match
-        {
-          case anticipated: ShrineJwtException => {
-            info(s"Failed to authenticate due to ${anticipated.toString}",anticipated)
-            anticipated.rejection
-          }
-          case fromJwts: ClaimJwtException => {
-            info(s"Failed to authenticate due to ${fromJwts.toString} while authenticating ${ctx.request}",fromJwts)
-            rejectedCredentials
-          }
-            /*
-          case x: CertificateExpiredException => {
-            //todo will these even be thrown here? Get some identification here
-            info(s"Cert expired.", x)
-            rejectedCredentials
-          }
-          case x: CertificateNotYetValidException => {
-            info(s"Cert not yet valid.", x)
-            rejectedCredentials
-          }
-*/
-          case unanticipated => {
-            warn(s"Unanticipated ${unanticipated.toString} while authenticating ${ctx.request}",unanticipated)
-            rejectedCredentials
-          }
-        }
-      }
-    }
-  }
 
   val BearerAuthScheme = "Bearer"
   val challengeHeader: `WWW-Authenticate` = `WWW-Authenticate`(HttpChallenge(BearerAuthScheme, "dashboard-to-dashboard"))
