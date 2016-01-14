@@ -13,16 +13,16 @@ import net.shrine.i2b2.protocol.pm.User
 import net.shrine.log.Loggable
 import net.shrine.protocol.Credential
 import spray.http.HttpHeaders.{Authorization, `WWW-Authenticate`}
-import spray.http.{OAuth2BearerToken, HttpHeader, HttpChallenge}
+import spray.http.{HttpRequest, OAuth2BearerToken, HttpHeader, HttpChallenge}
 import spray.routing.AuthenticationFailedRejection.{CredentialsMissing, CredentialsRejected}
 import spray.routing.AuthenticationFailedRejection
 import spray.routing.authentication._
 
 import scala.concurrent.{Future, ExecutionContext}
-import scala.util.Try
+import scala.util.{Success, Failure, Try}
 
 /**
-  * An Authenticator that uses Jwt in a ShrineJwt1 header to authenticate. See http://jwt.io/introduction/ for what this is all about,
+  * An Authenticator that uses Jwt in a Bearer header to authenticate. See http://jwt.io/introduction/ for what this is all about,
   * https://tools.ietf.org/html/rfc7519 for what it might include for claims.
   *
   * @author david 
@@ -33,15 +33,41 @@ object ShrineJwtAuthenticator extends Loggable {
   val config = DashboardConfigSource.config
   val certCollection: KeyStoreCertCollection = KeyStoreCertCollection.fromFileRecoverWithClassPath(KeyStoreDescriptorParser(config.getConfig("shrine.keystore")))
 
+  def createOAuthCredentials(user:User): OAuth2BearerToken = {
+
+    val base64Cert = new String(TextCodec.BASE64URL.encode(certCollection.myCert.get.getEncoded))
+
+    val key: PrivateKey = certCollection.myKeyPair.privateKey
+    val expiration: Date = new Date(System.currentTimeMillis() + 30 * 1000) //good for 30 seconds
+    val jwtsString = Jwts.builder().
+        setHeaderParam("kid", base64Cert).
+        setSubject(s"${user.username} at ${user.domain}").
+        setIssuer(java.net.InetAddress.getLocalHost.getHostName).
+        setExpiration(expiration).
+        signWith(SignatureAlgorithm.RS512, key).
+        compact()
+
+    val token = OAuth2BearerToken(jwtsString)
+    info(s"token is $token")
+
+    token
+  }
+
+  def extractAuthorizationHeader(request: HttpRequest):Try[HttpHeader] = Try {
+    case class NoAuthorizationHeader(request: HttpRequest) extends ShrineJwtException(s"No ${Authorization.name} header found in $request",missingCredentials)
+    //noinspection ComparingUnrelatedTypes
+    request.headers.find(_.name.equals(Authorization.name)).getOrElse{throw NoAuthorizationHeader(request)}
+  }
+
   //from https://groups.google.com/forum/#!topic/spray-user/5DBEZUXbjtw
   def authenticate(implicit ec: ExecutionContext): ContextAuthenticator[User] = { ctx =>
 
     Future {
 
-      //noinspection ComparingUnrelatedTypes
-      ctx.request.headers.find(_.name.equals(Authorization.name)).fold(missingCredentials) { (header: HttpHeader) =>
-
-        //header should be "$ShrineJwtAuth0 $SignerSerialNumber,$JwtsString
+      val attempt: Try[Authentication[User]] = for {
+        header <- extractAuthorizationHeader(ctx.request)
+      } yield {
+        //header should be "$ShrineJwtAuth0 $JwtsString
         val splitHeaderValue: Array[String] = header.value.split(" ")
         if (splitHeaderValue.length == 2) {
 
@@ -118,27 +144,22 @@ object ShrineJwtAuthenticator extends Loggable {
           missingCredentials
         }
       }
+      //todo use a fold() in Scala 2.12
+      attempt match {
+        case Success(rightUser) => rightUser
+        case Failure(x) =>  x match
+        {
+          case anticipated: ShrineJwtException => {
+            info(s"Failed to authenticate due to ${anticipated.toString}",anticipated)
+            anticipated.rejection
+          }
+          case unanticipated => {
+            warn(s"Unanticipated ${unanticipated.toString} while authenticating ${ctx.request}",unanticipated)
+            rejectedCredentials
+          }
+        }
+      }
     }
-  }
-
-  def createOAuthCredentials(user:User): OAuth2BearerToken = {
-
-    val base64Cert = new String(TextCodec.BASE64URL.encode(certCollection.myCert.get.getEncoded))
-
-    val key: PrivateKey = certCollection.myKeyPair.privateKey
-    val expiration: Date = new Date(System.currentTimeMillis() + 30 * 1000) //good for 30 seconds
-    val jwtsString = Jwts.builder().
-        setHeaderParam("kid", base64Cert).
-        setSubject(s"${user.username} at ${user.domain}").
-        setIssuer(java.net.InetAddress.getLocalHost.getHostName).
-        setExpiration(expiration).
-        signWith(SignatureAlgorithm.RS512, key).
-        compact()
-
-    val token = OAuth2BearerToken(jwtsString)
-    info(s"token is $token")
-
-    token
   }
 
   val BearerAuthScheme = "Bearer"
@@ -182,3 +203,7 @@ object KeySource extends Loggable {
     certificate
   }
 }
+
+abstract class ShrineJwtException(message:String,
+                                  val rejection:Authentication[User] = ShrineJwtAuthenticator.rejectedCredentials,
+                                  cause:Throwable = null) extends RuntimeException(message,cause)
