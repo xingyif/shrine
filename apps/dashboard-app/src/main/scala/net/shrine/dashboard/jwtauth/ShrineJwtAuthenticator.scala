@@ -92,6 +92,13 @@ object ShrineJwtAuthenticator extends Loggable {
     cert
   }
 
+  def failIfNull[E](e:E,t:Throwable):Try[E] = Try {
+    if(e == null) throw t
+    else e
+  }
+
+  case class MissingRequiredJwtsClaim(field:String,principal: Principal) extends ShrineJwtException(s"$field is null from ${principal.getName}")
+
   //from https://groups.google.com/forum/#!topic/spray-user/5DBEZUXbjtw
   def authenticate(implicit ec: ExecutionContext): ContextAuthenticator[User] = { ctx =>
 
@@ -103,28 +110,18 @@ object ShrineJwtAuthenticator extends Loggable {
         jwtsClaims <- extractJwtsClaims(jwtsString)
         cert: X509Certificate <- extractAndCheckCert(jwtsClaims)
         jwtsBody:Claims <- Try{jwtsClaims.getBody}
+        jwtsSubject <- failIfNull(jwtsBody.getSubject,MissingRequiredJwtsClaim("subject",cert.getSubjectDN))
+        jwtsIssuer <- failIfNull(jwtsBody.getSubject,MissingRequiredJwtsClaim("issuer",cert.getSubjectDN))
       } yield {
-
-                  if (jwtsBody.getSubject == null) {
-                    info(s"jwts from ${cert.getSubjectDN.getName} subject is null")
-                    rejectedCredentials
-                  }
-                  else if (jwtsBody.getIssuer == null) {
-                    info(s"jwts from ${cert.getSubjectDN.getName} issuer is null")
-                    rejectedCredentials
-                  }
-                  else {
-                    val user = User(
-                      fullName = cert.getSubjectDN.getName,
-                      username = jwtsBody.getSubject,
-                      domain = jwtsBody.getIssuer,
-                      credential = Credential(jwtsBody.getIssuer, isToken = false),
-                      params = Map(),
-                      rolesByProject = Map()
-                    )
-                    Right(user)
-                  }
-
+        val user = User(
+          fullName = cert.getSubjectDN.getName,
+          username = jwtsSubject,
+          domain = jwtsIssuer,
+          credential = Credential(jwtsIssuer, isToken = false),
+          params = Map(),
+          rolesByProject = Map()
+        )
+        Right(user)
       }
       //todo use a fold() in Scala 2.12
       attempt match {
