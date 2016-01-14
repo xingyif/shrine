@@ -37,8 +37,6 @@ object ShrineJwtAuthenticator extends Loggable {
   def authenticate(implicit ec: ExecutionContext): ContextAuthenticator[User] = { ctx =>
 
     Future {
-      val missingCredentials: Authentication[User] = Left(AuthenticationFailedRejection(CredentialsMissing, List(challengeHeader)))
-      val rejectedCredentials: Authentication[User] = Left(AuthenticationFailedRejection(CredentialsRejected, List(challengeHeader)))
 
       //noinspection ComparingUnrelatedTypes
       ctx.request.headers.find(_.name.equals(Authorization.name)).fold(missingCredentials) { (header: HttpHeader) =>
@@ -80,8 +78,8 @@ object ShrineJwtAuthenticator extends Loggable {
                     val user = User(
                       fullName = cert.getSubjectDN.getName,
                       username = jwtsClaims.getSubject,
-                      domain = "dashboard-to-dashboard",
-                      credential = Credential("Dashboard credential", isToken = false),
+                      domain = jwtsClaims.getIssuer,
+                      credential = Credential(jwtsClaims.getIssuer, isToken = false),
                       params = Map(),
                       rolesByProject = Map()
                     )
@@ -119,7 +117,7 @@ object ShrineJwtAuthenticator extends Loggable {
     }
   }
 
-  def createOAuthCredentials: OAuth2BearerToken = {
+  def createOAuthCredentials(user:User): OAuth2BearerToken = {
 
     val base64Cert = new String(TextCodec.BASE64URL.encode(certCollection.myCert.get.getEncoded))
 
@@ -127,7 +125,8 @@ object ShrineJwtAuthenticator extends Loggable {
     val expiration: Date = new Date(System.currentTimeMillis() + 30 * 1000) //good for 30 seconds
     val jwtsString = Jwts.builder().
         setHeaderParam("kid", base64Cert).
-        setSubject(java.net.InetAddress.getLocalHost.getHostName).
+        setSubject(s"${user.username} at ${user.domain}").
+        setIssuer(java.net.InetAddress.getLocalHost.getHostName).
         setExpiration(expiration).
         signWith(SignatureAlgorithm.RS512, key).
         compact()
@@ -140,6 +139,9 @@ object ShrineJwtAuthenticator extends Loggable {
 
   val BearerAuthScheme = "Bearer"
   val challengeHeader: `WWW-Authenticate` = `WWW-Authenticate`(HttpChallenge(BearerAuthScheme, "dashboard-to-dashboard"))
+  val missingCredentials: Authentication[User] = Left(AuthenticationFailedRejection(CredentialsMissing, List(challengeHeader)))
+  val rejectedCredentials: Authentication[User] = Left(AuthenticationFailedRejection(CredentialsRejected, List(challengeHeader)))
+
 }
 
 class KeySource {}
