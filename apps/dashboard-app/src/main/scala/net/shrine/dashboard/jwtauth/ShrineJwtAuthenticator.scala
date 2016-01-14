@@ -6,7 +6,7 @@ import java.security.cert.{CertificateFactory, X509Certificate}
 import java.util.Date
 
 import io.jsonwebtoken.impl.TextCodec
-import io.jsonwebtoken.{ClaimJwtException, Claims, SignatureAlgorithm, ExpiredJwtException, Jwts}
+import io.jsonwebtoken.{Jws, Header, ClaimJwtException, Claims, SignatureAlgorithm, ExpiredJwtException, Jwts}
 import net.shrine.crypto.{CertCollection, KeyStoreDescriptorParser, KeyStoreCertCollection}
 import net.shrine.dashboard.DashboardConfigSource
 import net.shrine.i2b2.protocol.pm.User
@@ -69,9 +69,12 @@ object ShrineJwtAuthenticator extends Loggable {
     else splitHeaderValue(1)
   }
 
-  def extractJwtsClaims(jwtsString:String):Try[Claims] = Try {
-    val jwtsClaims: Claims = Jwts.parser().setSigningKeyResolver(new SigningKeyResolverBridge()).parseClaimsJws(jwtsString).getBody
-    jwtsClaims
+  def extractJwtsClaims(jwtsString:String): Try[Jws[Claims]] = Try {
+    Jwts.parser().setSigningKeyResolver(new SigningKeyResolverBridge()).parseClaimsJws(jwtsString)
+  }
+
+  def extractCert(jwtsClaims:Jws[Claims]): Try[X509Certificate] = Try {
+    KeySource.certForString(jwtsClaims.getHeader.getKeyId)
   }
 
   //from https://groups.google.com/forum/#!topic/spray-user/5DBEZUXbjtw
@@ -82,16 +85,10 @@ object ShrineJwtAuthenticator extends Loggable {
       val attempt: Try[Authentication[User]] = for {
         header:HttpHeader <- extractAuthorizationHeader(ctx.request)
         jwtsString:String <- extractJwtsStringAndCheckScheme(header)
-        jwtsClaims:Claims <- extractJwtsClaims(jwtsString)
+        jwtsClaims <- extractJwtsClaims(jwtsString)
+        cert <- extractCert(jwtsClaims)
+        jwtsBody:Claims <- Try{jwtsClaims.getBody}
       } yield {
-
-              val now = new Date()
-              if (jwtsClaims.getExpiration.before(now)) {
-                info(s"jwts ${jwtsClaims.getExpiration} expired before now $now")
-                rejectedCredentials
-              }
-              else {
-                val cert = KeySource.certForString(Jwts.parser().setSigningKeyResolver(new SigningKeyResolverBridge()).parseClaimsJws(jwtsString).getHeader.getKeyId)
 
                 certCollection.caCerts.get(CertCollection.getIssuer(cert)).fold{
                   info(s"Could not find a CA certificate with issuer DN ${cert.getIssuerDN}. Known CA cert aliases are ${certCollection.caCertAliases.mkString(",")}")
@@ -102,27 +99,27 @@ object ShrineJwtAuthenticator extends Loggable {
                     info(s"cert $cert was not signed by $signerCert as claimed.")
                     rejectedCredentials
                   }
-                  else if (jwtsClaims.getSubject == null) {
+                  else if (jwtsBody.getSubject == null) {
                     info(s"jwts from ${cert.getSubjectDN.getName} subject is null")
                     rejectedCredentials
                   }
-                  else if (jwtsClaims.getIssuer == null) {
+                  else if (jwtsBody.getIssuer == null) {
                     info(s"jwts from ${cert.getSubjectDN.getName} issuer is null")
                     rejectedCredentials
                   }
                   else {
                     val user = User(
                       fullName = cert.getSubjectDN.getName,
-                      username = jwtsClaims.getSubject,
-                      domain = jwtsClaims.getIssuer,
-                      credential = Credential(jwtsClaims.getIssuer, isToken = false),
+                      username = jwtsBody.getSubject,
+                      domain = jwtsBody.getIssuer,
+                      credential = Credential(jwtsBody.getIssuer, isToken = false),
                       params = Map(),
                       rolesByProject = Map()
                     )
                     Right(user)
                   }
                 }
-              }
+
       }
       //todo use a fold() in Scala 2.12
       attempt match {
@@ -134,7 +131,7 @@ object ShrineJwtAuthenticator extends Loggable {
             anticipated.rejection
           }
           case fromJwts: ClaimJwtException => {
-            info(s"Failed to authenticate due to ${fromJwts.toString}",fromJwts)
+            info(s"Failed to authenticate due to ${fromJwts.toString} while authenticating ${ctx.request}",fromJwts)
             rejectedCredentials
           }
             /*
