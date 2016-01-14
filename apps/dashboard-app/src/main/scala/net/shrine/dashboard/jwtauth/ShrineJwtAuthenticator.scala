@@ -1,7 +1,7 @@
 package net.shrine.dashboard.jwtauth
 
 import java.io.ByteArrayInputStream
-import java.security.{PublicKey, Key, PrivateKey}
+import java.security.{Principal, PublicKey, Key, PrivateKey}
 import java.security.cert.{CertificateFactory, X509Certificate}
 import java.util.Date
 
@@ -42,7 +42,7 @@ object ShrineJwtAuthenticator extends Loggable {
     val jwtsString = Jwts.builder().
         setHeaderParam("kid", base64Cert).
         setSubject(s"${user.username} at ${user.domain}").
-        setIssuer(java.net.InetAddress.getLocalHost.getHostName).
+        setIssuer(java.net.InetAddress.getLocalHost.getHostName). //todo is it OK for me to use issuer this way?
         setExpiration(expiration).
         signWith(SignatureAlgorithm.RS512, key).
         compact()
@@ -73,8 +73,23 @@ object ShrineJwtAuthenticator extends Loggable {
     Jwts.parser().setSigningKeyResolver(new SigningKeyResolverBridge()).parseClaimsJws(jwtsString)
   }
 
-  def extractCert(jwtsClaims:Jws[Claims]): Try[X509Certificate] = Try {
-    KeySource.certForString(jwtsClaims.getHeader.getKeyId)
+  def extractAndCheckCert(jwtsClaims:Jws[Claims]): Try[X509Certificate] = Try {
+    val cert = KeySource.certForString(jwtsClaims.getHeader.getKeyId)
+
+    val issuingSite = jwtsClaims.getBody.getIssuer
+
+    //check that the issuer is available
+    val issuer: Principal = cert.getIssuerX500Principal
+    case class CertIssuerNotInCollectionException(issuingSite:String,issuer: Principal) extends ShrineJwtException(s"Could not find a CA certificate with issuer DN $issuer. Known CA cert aliases are ${certCollection.caCertAliases.mkString(",")}")
+    val signingCert = certCollection.caCerts.getOrElse(issuer,{throw CertIssuerNotInCollectionException(issuingSite,issuer)})
+
+    //verify that the cert was signed using the signingCert
+    //todo this can throw CertificateException, NoSuchAlgorithmException, InvalidKeyException, NoSuchProviderException, SignatureException
+    cert.verify(signingCert.getPublicKey)
+
+    //todo has cert expired?
+
+    cert
   }
 
   //from https://groups.google.com/forum/#!topic/spray-user/5DBEZUXbjtw
@@ -86,20 +101,11 @@ object ShrineJwtAuthenticator extends Loggable {
         header:HttpHeader <- extractAuthorizationHeader(ctx.request)
         jwtsString:String <- extractJwtsStringAndCheckScheme(header)
         jwtsClaims <- extractJwtsClaims(jwtsString)
-        cert <- extractCert(jwtsClaims)
+        cert: X509Certificate <- extractAndCheckCert(jwtsClaims)
         jwtsBody:Claims <- Try{jwtsClaims.getBody}
       } yield {
 
-                certCollection.caCerts.get(CertCollection.getIssuer(cert)).fold{
-                  info(s"Could not find a CA certificate with issuer DN ${cert.getIssuerDN}. Known CA cert aliases are ${certCollection.caCertAliases.mkString(",")}")
-                  rejectedCredentials
-                } { signerCert =>
-                  def isSignedBy(cert: X509Certificate)(caPubKey: PublicKey): Boolean = Try { cert.verify(caPubKey); true }.getOrElse(false)
-                  if(!isSignedBy(cert)(signerCert.getPublicKey)) {
-                    info(s"cert $cert was not signed by $signerCert as claimed.")
-                    rejectedCredentials
-                  }
-                  else if (jwtsBody.getSubject == null) {
+                  if (jwtsBody.getSubject == null) {
                     info(s"jwts from ${cert.getSubjectDN.getName} subject is null")
                     rejectedCredentials
                   }
@@ -118,7 +124,6 @@ object ShrineJwtAuthenticator extends Loggable {
                     )
                     Right(user)
                   }
-                }
 
       }
       //todo use a fold() in Scala 2.12
