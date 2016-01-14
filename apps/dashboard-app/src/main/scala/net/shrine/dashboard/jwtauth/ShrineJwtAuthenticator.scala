@@ -74,6 +74,10 @@ object ShrineJwtAuthenticator extends Loggable {
                     info(s"jwts from ${cert.getSubjectDN.getName} subject is null")
                     rejectedCredentials
                   }
+                  else if (jwtsClaims.getIssuer == null) {
+                    info(s"jwts from ${cert.getSubjectDN.getName} issuer is null")
+                    rejectedCredentials
+                  }
                   else {
                     val user = User(
                       fullName = cert.getSubjectDN.getName,
