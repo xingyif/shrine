@@ -6,7 +6,7 @@ import java.security.cert.{CertificateFactory, X509Certificate}
 import java.util.Date
 
 import io.jsonwebtoken.impl.TextCodec
-import io.jsonwebtoken.{Claims, SignatureAlgorithm, ExpiredJwtException, Jwts}
+import io.jsonwebtoken.{ClaimJwtException, Claims, SignatureAlgorithm, ExpiredJwtException, Jwts}
 import net.shrine.crypto.{CertCollection, KeyStoreDescriptorParser, KeyStoreCertCollection}
 import net.shrine.dashboard.DashboardConfigSource
 import net.shrine.i2b2.protocol.pm.User
@@ -47,16 +47,31 @@ object ShrineJwtAuthenticator extends Loggable {
         signWith(SignatureAlgorithm.RS512, key).
         compact()
 
-    val token = OAuth2BearerToken(jwtsString)
-    info(s"token is $token")
-
-    token
+    OAuth2BearerToken(jwtsString)
   }
 
   def extractAuthorizationHeader(request: HttpRequest):Try[HttpHeader] = Try {
-    case class NoAuthorizationHeader(request: HttpRequest) extends ShrineJwtException(s"No ${Authorization.name} header found in $request",missingCredentials)
+    case class NoAuthorizationHeaderException(request: HttpRequest) extends ShrineJwtException(s"No ${Authorization.name} header found in $request",missingCredentials)
     //noinspection ComparingUnrelatedTypes
-    request.headers.find(_.name.equals(Authorization.name)).getOrElse{throw NoAuthorizationHeader(request)}
+    request.headers.find(_.name.equals(Authorization.name)).getOrElse{throw NoAuthorizationHeaderException(request)}
+  }
+
+  def extractJwtsStringAndCheckScheme(httpHeader: HttpHeader) = Try {
+    val splitHeaderValue: Array[String] = httpHeader.value.trim.split(" ")
+    if (splitHeaderValue.length != 2) {
+      case class WrongNumberOfSegmentsException(httpHeader: HttpHeader) extends ShrineJwtException(s"Header had ${splitHeaderValue.length} space-delimited segments, not 2, in $httpHeader.",missingCredentials)
+      throw new WrongNumberOfSegmentsException(httpHeader)
+    }
+    else if(splitHeaderValue(0) != BearerAuthScheme) {
+      case class NotBearerAuthException(httpHeader: HttpHeader) extends ShrineJwtException(s"Expected ${BearerAuthScheme}, not ${splitHeaderValue(0)} in $httpHeader.",missingCredentials)
+      throw new NotBearerAuthException(httpHeader)
+    }
+    else splitHeaderValue(1)
+  }
+
+  def extractJwtsClaims(jwtsString:String):Try[Claims] = Try {
+    val jwtsClaims: Claims = Jwts.parser().setSigningKeyResolver(new SigningKeyResolverBridge()).parseClaimsJws(jwtsString).getBody
+    jwtsClaims
   }
 
   //from https://groups.google.com/forum/#!topic/spray-user/5DBEZUXbjtw
@@ -65,19 +80,10 @@ object ShrineJwtAuthenticator extends Loggable {
     Future {
 
       val attempt: Try[Authentication[User]] = for {
-        header <- extractAuthorizationHeader(ctx.request)
+        header:HttpHeader <- extractAuthorizationHeader(ctx.request)
+        jwtsString:String <- extractJwtsStringAndCheckScheme(header)
+        jwtsClaims:Claims <- extractJwtsClaims(jwtsString)
       } yield {
-        //header should be "$ShrineJwtAuth0 $JwtsString
-        val splitHeaderValue: Array[String] = header.value.split(" ")
-        if (splitHeaderValue.length == 2) {
-
-          val authScheme = splitHeaderValue(0)
-          val jwtsString = splitHeaderValue(1)
-
-          if (authScheme == BearerAuthScheme) {
-            try {
-              val jwtsClaims: Claims = Jwts.parser().setSigningKeyResolver(new SigningKeyResolverBridge()).parseClaimsJws(jwtsString).getBody
-              info(s"got claims $jwtsClaims")
 
               val now = new Date()
               if (jwtsClaims.getExpiration.before(now)) {
@@ -117,32 +123,6 @@ object ShrineJwtAuthenticator extends Loggable {
                   }
                 }
               }
-            } catch {
-              /*
-              case x: CertificateExpiredException => {
-                //todo will these even be thrown here? Get some identification here
-                info(s"Cert expired.", x)
-                rejectedCredentials
-              }
-              case x: CertificateNotYetValidException => {
-                info(s"Cert not yet valid.", x)
-                rejectedCredentials
-              }
-              */
-              case x: ExpiredJwtException =>
-                info(s"Jwt for todo expired.", x) //todo get some identification in here
-                rejectedCredentials
-            }
-          }
-          else {
-            info(s"Header did not start with $BearerAuthScheme .")
-            missingCredentials
-          }
-        }
-        else {
-          info(s"Header had ${splitHeaderValue.length} space-delimited segments, not 2. ")
-          missingCredentials
-        }
       }
       //todo use a fold() in Scala 2.12
       attempt match {
@@ -153,6 +133,21 @@ object ShrineJwtAuthenticator extends Loggable {
             info(s"Failed to authenticate due to ${anticipated.toString}",anticipated)
             anticipated.rejection
           }
+          case fromJwts: ClaimJwtException => {
+            info(s"Failed to authenticate due to ${fromJwts.toString}",fromJwts)
+            rejectedCredentials
+          }
+            /*
+          case x: CertificateExpiredException => {
+            //todo will these even be thrown here? Get some identification here
+            info(s"Cert expired.", x)
+            rejectedCredentials
+          }
+          case x: CertificateNotYetValidException => {
+            info(s"Cert not yet valid.", x)
+            rejectedCredentials
+          }
+*/
           case unanticipated => {
             warn(s"Unanticipated ${unanticipated.toString} while authenticating ${ctx.request}",unanticipated)
             rejectedCredentials
@@ -177,23 +172,16 @@ object KeySource extends Loggable {
     val certificate =certForString(string)
     //todo validate cert with something like obtainAndValidateSigningCert
 
-    info(s"Created cert $certificate")
-
     //check date on cert vs time. throws CertificateExpiredException or CertificateNotYetValidException for problems
     //todo skip this until you rebuild the certs used for testing                certificate.checkValidity(now)
 
-    val key = certificate.getPublicKey
-    info(s"got key $key")
-    key
+    certificate.getPublicKey
   }
 
   def certForString(string: String): X509Certificate = {
     val certBytes = TextCodec.BASE64URL.decode(string)
 
-    info(s"Got cert bytes $string")
-
     val inputStream = new ByteArrayInputStream(certBytes)
-
     val certificate = try {
       CertificateFactory.getInstance("X.509").generateCertificate(inputStream).asInstanceOf[X509Certificate]
     }
