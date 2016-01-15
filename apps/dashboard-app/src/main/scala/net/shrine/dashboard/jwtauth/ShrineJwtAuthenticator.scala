@@ -84,12 +84,10 @@ object ShrineJwtAuthenticator extends Loggable {
           case unanticipated =>
             warn(s"Unanticipated ${unanticipated.toString} while authenticating ${ctx.request}",unanticipated)
             rejectedCredentials
-
         }
       }
     }
   }
-
 
   def createOAuthCredentials(user:User): OAuth2BearerToken = {
 
@@ -100,7 +98,7 @@ object ShrineJwtAuthenticator extends Loggable {
     val jwtsString = Jwts.builder().
         setHeaderParam("kid", base64Cert).
         setSubject(s"${user.username} at ${user.domain}").
-        setIssuer(java.net.InetAddress.getLocalHost.getHostName). //todo is it OK for me to use issuer this way?
+        setIssuer(java.net.InetAddress.getLocalHost.getHostName). //todo is it OK for me to use issuer this way or should I use my own claim?
         setExpiration(expiration).
         signWith(SignatureAlgorithm.RS512, key).
         compact()

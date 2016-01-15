@@ -49,17 +49,13 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
 
   // logs just the request method, uri and response at info level
   def logEntryForRequestResponse(req: HttpRequest): Any => Option[LogEntry] = {
-    case res: HttpResponse => {
-      Some(LogEntry(s"\n  Request: $req \n  Response: $res", Logging.InfoLevel))
-    }
+    case res: HttpResponse => Some(LogEntry(s"\n  Request: $req\n  Response: $res", Logging.InfoLevel))
     case _ => None // other kind of responses
   }
 
   // logs just the request method, uri and response status at info level
   def logEntryForRequest(req: HttpRequest): Any => Option[LogEntry] = {
-    case res: HttpResponse => {
-      Some(LogEntry(s"\n  Request: $req \n  Response status: ${res.status}", Logging.InfoLevel))
-    }
+    case res: HttpResponse => Some(LogEntry(s"\n  Request: $req\n  Response status: ${res.status}", Logging.InfoLevel))
     case _ => None // other kind of responses
   }
 
@@ -209,7 +205,7 @@ case class ShrineConfig(isHub:Boolean, hub:Hub, pmEndpoint:Endpoint,
 object ShrineConfig{
   def apply(configMap:Map[String, String]):ShrineConfig = {
     val hub = Hub(configMap)
-    val isHub = hub.create == true
+    val isHub = hub.create
     val pmEndpoint = Endpoint(configMap, "pm")
     val ontEndpoint = Endpoint(configMap, "ont")
     val hiveCredentials = HiveCredentials(configMap)
