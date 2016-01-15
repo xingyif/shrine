@@ -35,7 +35,6 @@ class DashboardServiceActor extends Actor with DashboardService {
   def receive = runRoute(route)
 }
 
-
 // this trait defines our service behavior independently from the service actor
 trait DashboardService extends HttpService with Json4sSupport with Loggable {
   implicit def json4sFormats: Formats = DefaultFormats
@@ -150,14 +149,17 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
     pathPrefix("status"){statusRoute(user)}
   }
 
+  //Manually test this by running a curl command
+  //curl -k -w "\n%{response_code}\n" -u dave:kablam "https://shrine-dev1.catalyst:6443/shrine-dashboard/toDashboard/shrine-dev2.catalyst/shrine-dashboard/fromDashboard/ping"
   def toDashboardRoute(user:User):Route = get {
     implicit val system = ActorSystem("sprayServer")
 
     pathPrefix(Segment) { dnsName =>
       val remoteDashboardProtocol = DashboardConfigSource.config.getString("shrine.dashboard.remoteDashboard.protocol")
       val remoteDashboardPort = DashboardConfigSource.config.getString("shrine.dashboard.remoteDashboard.port")
+      val remoteDashboardPathPrefix = DashboardConfigSource.config.getString("shrine.dashboard.remoteDashboard.pathPrefix")
 
-      val baseUrl = s"$remoteDashboardProtocol$dnsName$remoteDashboardPort"
+      val baseUrl = s"$remoteDashboardProtocol$dnsName$remoteDashboardPort/$remoteDashboardPathPrefix"
 
       forwardUnmatchedPath(baseUrl,Some(ShrineJwtAuthenticator.createOAuthCredentials(user)))
     }
