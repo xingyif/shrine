@@ -44,21 +44,28 @@ case class QepQueryDb(schemaDef:QepQuerySchema,dataSource: DataSource) extends L
     }
   }
 
-/*
-  def insertQepQuery(runQueryRequest:RunQueryRequest,commonName:String):Unit = {
+  def insertQepQuery(runQueryRequest: RunQueryRequest):Unit = {
     debug(s"insertQepQuery $runQueryRequest")
 
-    insertQepQuery(QepQueryAuditData.fromRunQueryRequest(runQueryRequest,commonName))
+    insertQepQuery(QepQuery(runQueryRequest))
   }
 
-  def insertQepQuery(qepQueryAuditData: QepQueryAuditData):Unit = {
-    dbRun(allQepQueryQuery += qepQueryAuditData)
+  def insertQepQuery(qepQuery: QepQuery):Unit = {
+    dbRun(allQepQueryQuery += qepQuery)
   }
 
-  def selectAllQepQueries:Seq[QepQueryAuditData] = {
-    dbRun(allQepQueryQuery.result)
-  }
-*/
+  /*
+    def insertQepQuery(runQueryRequest:RunQueryRequest,commonName:String):Unit = {
+      debug(s"insertQepQuery $runQueryRequest")
+
+      insertQepQuery(QepQueryAuditData.fromRunQueryRequest(runQueryRequest,commonName))
+    }
+
+
+    def selectAllQepQueries:Seq[QepQueryAuditData] = {
+      dbRun(allQepQueryQuery.result)
+    }
+  */
 }
 
 object QepQueryDb extends Loggable {
@@ -165,7 +172,6 @@ case class QepQuerySchema(jdbcProfile: JdbcProfile) extends Loggable {
     */
 
   class QepQueries(tag:Tag) extends Table[QepQuery](tag,"queries") {
-    def id = column[QueryId]("id",O.PrimaryKey)
     def networkId = column[NetworkQueryId]("networkId")
     def userName = column[UserName]("userName")
     def userDomain = column[String]("domain")
@@ -178,7 +184,7 @@ case class QepQuerySchema(jdbcProfile: JdbcProfile) extends Loggable {
     def queryXml = column[String]("queryXml")
 
 
-    def * = (id,networkId,userName,userDomain,queryName,expression,dateCreated,hasBeenRun,flagged,flagMessage,queryXml) <> (QepQuery.tupled,QepQuery.unapply)
+    def * = (networkId,userName,userDomain,queryName,expression,dateCreated,hasBeenRun,flagged,flagMessage,queryXml) <> (QepQuery.tupled,QepQuery.unapply)
 
   }
   val allQepQueryQuery = TableQuery[QepQueries]
@@ -196,11 +202,10 @@ object QepQuerySchema {
 }
 
 case class QepQuery(
-                     id:QueryId,
                      networId:NetworkQueryId,
                      userName: UserName,
                      userDomain: String,
-                     queyrName: QueryName,
+                     queryName: QueryName,
                      expression: String,
                      dateCreated: Time,
                      hasBeenRun: Boolean,
@@ -208,3 +213,20 @@ case class QepQuery(
                      flagMessage: String,
                      queryXml:String
                    )
+
+object QepQuery extends ((NetworkQueryId,UserName,String,QueryName,String,Time,Boolean,Boolean,String,String) => QepQuery) {
+  def apply(runQueryRequest: RunQueryRequest):QepQuery = {
+    new QepQuery(
+      runQueryRequest.networkQueryId,
+      runQueryRequest.authn.username,
+      runQueryRequest.authn.domain,
+      runQueryRequest.queryDefinition.name,
+      runQueryRequest.queryDefinition.expr.getOrElse("No Expression").toString,
+      System.currentTimeMillis(),
+      false,
+      false, //todo flagged??
+      "", //todo flagMessage
+      runQueryRequest.toXmlString
+    )
+  }
+}
