@@ -54,18 +54,10 @@ case class QepQueryDb(schemaDef:QepQuerySchema,dataSource: DataSource) extends L
     dbRun(allQepQueryQuery += qepQuery)
   }
 
-  /*
-    def insertQepQuery(runQueryRequest:RunQueryRequest,commonName:String):Unit = {
-      debug(s"insertQepQuery $runQueryRequest")
+  def selectAllQepQueries:Seq[QepQuery] = {
+    dbRun(allQepQueryQuery.result)
+  }
 
-      insertQepQuery(QepQueryAuditData.fromRunQueryRequest(runQueryRequest,commonName))
-    }
-
-
-    def selectAllQepQueries:Seq[QepQueryAuditData] = {
-      dbRun(allQepQueryQuery.result)
-    }
-  */
 }
 
 object QepQueryDb extends Loggable {
@@ -202,7 +194,7 @@ object QepQuerySchema {
 }
 
 case class QepQuery(
-                     networId:NetworkQueryId,
+                     networkId:NetworkQueryId,
                      userName: UserName,
                      userDomain: String,
                      queryName: QueryName,
