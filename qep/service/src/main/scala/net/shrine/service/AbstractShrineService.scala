@@ -6,6 +6,7 @@ import net.shrine.service.dao.AuditDao
 import net.shrine.authentication.Authenticator
 import net.shrine.authorization.QueryAuthorizationService
 import net.shrine.broadcaster.BroadcastAndAggregationService
+import net.shrine.service.queries.QepQueryDb
 import scala.concurrent.duration.Duration
 import net.shrine.util.XmlDateHelper
 import scala.concurrent.Future
@@ -50,7 +51,7 @@ import net.shrine.protocol.ResultOutputType
  * @since Feb 19, 2014
  */
 
-//todo rename? This is the heart of the QEP.
+//todo rename to QEP? This is the heart of the QEP.
 trait AbstractShrineService[BaseResp <: BaseShrineResponse] extends Loggable {
   val commonName:String
   val auditDao: AuditDao
@@ -83,6 +84,8 @@ trait AbstractShrineService[BaseResp <: BaseShrineResponse] extends Loggable {
   
   protected def doRunQuery(request: RunQueryRequest, shouldBroadcast: Boolean): BaseResp = {
     info(s"doRunQuery($request,$shouldBroadcast) with $runQueryAggregatorFor")
+
+    //store the query in the qep's database
 
     doBroadcastQuery(request, runQueryAggregatorFor(request), shouldBroadcast)
   }
@@ -159,8 +162,8 @@ trait AbstractShrineService[BaseResp <: BaseShrineResponse] extends Loggable {
             debug(s"doBroadcastQuery authorizedRequest is $authorizedRequest")
 
             // tuck the ACT audit metrics data into a database here
-            //todo network id is -1 !
             if (collectQepAudit) QepAuditDb.db.insertQepQuery(authorizedRequest,commonName)
+            QepQueryDb.db.insertQepQuery(authorizedRequest)
 
             doSynchronousQuery(networkAuthn,authorizedRequest,aggregator,shouldBroadcast)
           }
