@@ -122,6 +122,8 @@ trait AbstractShrineService[BaseResp <: BaseShrineResponse] extends Loggable {
   }
 
   protected def doReadPreviousQueries(request: ReadPreviousQueriesRequest, shouldBroadcast: Boolean): BaseResp = {
+    //todo instead pull results from the local database.
+
     doBroadcastQuery(request, new ReadPreviousQueriesAggregator, shouldBroadcast)
   }
 
@@ -135,7 +137,6 @@ trait AbstractShrineService[BaseResp <: BaseShrineResponse] extends Loggable {
 
   protected def doReadApprovedQueryTopics(request: ReadApprovedQueryTopicsRequest, shouldBroadcast: Boolean): BaseResp = authenticateAndThen(request) { _ =>
     info(s"doReadApprovedQueryTopics($request)")
-    //TODO: Is authenticating necessary?
     //TODO: XXX: HACK: Would like to remove the cast
     authorizationService.readApprovedEntries(request) match {
       case Left(errorResponse) => errorResponse.asInstanceOf[BaseResp]

@@ -34,10 +34,12 @@ final class ReadPreviousQueriesAggregator extends IgnoresErrorsAggregator[ReadPr
     
     val result = ReadPreviousQueriesResponse(sortedMasters)
     
-    //debug("Previous queries: ")
+    debug("Previous queries: ")
     
-    //sortedMasters.foreach(debug(_))
-    
+    sortedMasters.foreach(debug(_))
+
+    debug(s"Previous queries result: $result")
+
     result
   }
 }
