@@ -163,7 +163,7 @@ case class QepQuerySchema(jdbcProfile: JdbcProfile) extends Loggable {
 +------------------+--------------+------+-----+-------------------+----------------+
     */
 
-  class QepQueries(tag:Tag) extends Table[QepQuery](tag,"queries") {
+  class QepQueries(tag:Tag) extends Table[QepQuery](tag,"previousQueries") {
     def networkId = column[NetworkQueryId]("networkId")
     def userName = column[UserName]("userName")
     def userDomain = column[String]("domain")
@@ -175,7 +175,6 @@ case class QepQuerySchema(jdbcProfile: JdbcProfile) extends Loggable {
     def flagMessage = column[String]("flagMessage")
     def queryXml = column[String]("queryXml")
 
-
     def * = (networkId,userName,userDomain,queryName,expression,dateCreated,hasBeenRun,flagged,flagMessage,queryXml) <> (QepQuery.tupled,QepQuery.unapply)
 
   }
@@ -185,7 +184,7 @@ case class QepQuerySchema(jdbcProfile: JdbcProfile) extends Loggable {
 object QepQuerySchema {
 
   val allConfig:Config = QepConfigSource.config
-  val config:Config = allConfig.getConfig("shrine.queryEntryPoint.queries.database")
+  val config:Config = allConfig.getConfig("shrine.queryEntryPoint.audit.database")
 
   val slickProfileClassName = config.getString("slickProfileClassName")
   val slickProfile:JdbcProfile = QepConfigSource.objectForName(slickProfileClassName)
