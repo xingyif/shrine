@@ -2,13 +2,15 @@ package net.shrine.service.queries
 
 import java.io.PrintWriter
 import java.sql.{DriverManager, Connection, SQLException}
+import java.util.GregorianCalendar
 import java.util.logging.Logger
 import javax.naming.InitialContext
 import javax.sql.DataSource
+import javax.xml.datatype.{DatatypeFactory}
 
 import com.typesafe.config.Config
 import net.shrine.log.Loggable
-import net.shrine.protocol.RunQueryRequest
+import net.shrine.protocol.{QueryMaster, ReadPreviousQueriesResponse, ReadPreviousQueriesRequest, RunQueryRequest}
 import net.shrine.audit.{Time, QueryName, NetworkQueryId, UserName}
 import net.shrine.service.QepConfigSource
 
@@ -58,6 +60,15 @@ case class QepQueryDb(schemaDef:QepQuerySchema,dataSource: DataSource) extends L
     dbRun(allQepQueryQuery.result)
   }
 
+  def selectPreviousQueries(request: ReadPreviousQueriesRequest):ReadPreviousQueriesResponse = {
+    val previousQueries: Seq[QepQuery] = selectPreviousQueriesByUserAndDomain(request.authn.username,request.authn.domain)
+
+    ReadPreviousQueriesResponse(previousQueries.map(_.toQueryMaster))
+  }
+
+  def selectPreviousQueriesByUserAndDomain(userName: UserName,domain: String):Seq[QepQuery] = {
+    dbRun(allQepQueryQuery.filter(_.userName === userName).filter(_.userDomain === domain).result)
+  }
 }
 
 object QepQueryDb extends Loggable {
@@ -203,7 +214,26 @@ case class QepQuery(
                      flagged: Boolean,
                      flagMessage: String,
                      queryXml:String
-                   )
+                   ){
+
+  def toQueryMaster:QueryMaster = {
+
+    val gregorianCalendar = new GregorianCalendar()
+    gregorianCalendar.setTimeInMillis(dateCreated)
+    val xmlGregorianCalendar = DatatypeFactory.newInstance().newXMLGregorianCalendar(gregorianCalendar)
+    QueryMaster(
+      queryMasterId = "?", //todo what is this from?
+      networkQueryId = networkId,
+      name = queryName,
+      userId = userName,
+      groupId = userDomain,
+      createDate = xmlGregorianCalendar,
+      held = None, //todo if a query is held at the adapter, how will we know? do we care?
+      flagged = Some(flagged), //todo flagged is boolean, this is tri-state. When is it None vs false
+      flagMessage = Some(flagMessage) //todo this always has a flaggedMessage (empty). When should it be None?
+    )
+  }
+}
 
 object QepQuery extends ((NetworkQueryId,UserName,String,QueryName,String,Time,Boolean,Boolean,String,String) => QepQuery) {
   def apply(runQueryRequest: RunQueryRequest):QepQuery = {

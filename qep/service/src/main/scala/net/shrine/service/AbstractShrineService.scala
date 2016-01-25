@@ -11,40 +11,20 @@ import scala.concurrent.duration.Duration
 import net.shrine.util.XmlDateHelper
 import scala.concurrent.Future
 import scala.concurrent.Await
-import net.shrine.protocol.RunQueryRequest
+import net.shrine.protocol.{ReadPreviousQueriesResponse, RunQueryRequest, BaseShrineRequest, AuthenticationInfo, Credential, BaseShrineResponse, ReadQueryInstancesRequest, QueryInstance, ReadQueryInstancesResponse, ReadQueryDefinitionRequest, DeleteQueryRequest, ReadApprovedQueryTopicsRequest, ReadInstanceResultsRequest, ReadPreviousQueriesRequest, RenameQueryRequest, ReadPdoRequest, FlagQueryRequest, UnFlagQueryRequest, ReadResultOutputTypesRequest, ReadResultOutputTypesResponse, ResultOutputType}
 import net.shrine.authorization.AuthorizationResult.{Authorized, NotAuthorized}
-import net.shrine.protocol.BaseShrineRequest
-import net.shrine.protocol.AuthenticationInfo
-import net.shrine.protocol.Credential
 import net.shrine.authentication.AuthenticationResult
 import net.shrine.authentication.NotAuthenticatedException
 import net.shrine.aggregation.RunQueryAggregator
 import net.shrine.aggregation.Aggregators
-import net.shrine.protocol.BaseShrineResponse
 import net.shrine.aggregation.Aggregator
-import net.shrine.protocol.ReadQueryInstancesRequest
-import net.shrine.protocol.QueryInstance
-import net.shrine.protocol.ReadQueryInstancesResponse
-import net.shrine.protocol.ReadQueryDefinitionRequest
 import net.shrine.aggregation.ReadQueryDefinitionAggregator
-import net.shrine.protocol.DeleteQueryRequest
-import net.shrine.aggregation.ReadPreviousQueriesAggregator
 import net.shrine.aggregation.DeleteQueryAggregator
 import net.shrine.aggregation.ReadPdoResponseAggregator
 import net.shrine.aggregation.RenameQueryAggregator
 import net.shrine.aggregation.ReadInstanceResultsAggregator
-import net.shrine.protocol.ReadApprovedQueryTopicsRequest
-import net.shrine.protocol.ReadInstanceResultsRequest
-import net.shrine.protocol.ReadPreviousQueriesRequest
-import net.shrine.protocol.RenameQueryRequest
-import net.shrine.protocol.ReadPdoRequest
-import net.shrine.protocol.FlagQueryRequest
 import net.shrine.aggregation.FlagQueryAggregator
-import net.shrine.protocol.UnFlagQueryRequest
 import net.shrine.aggregation.UnFlagQueryAggregator
-import net.shrine.protocol.ReadResultOutputTypesRequest
-import net.shrine.protocol.ReadResultOutputTypesResponse
-import net.shrine.protocol.ResultOutputType
 
 /**
  * @author clint
@@ -121,10 +101,12 @@ trait AbstractShrineService[BaseResp <: BaseShrineResponse] extends Loggable {
     }
   }
 
-  protected def doReadPreviousQueries(request: ReadPreviousQueriesRequest, shouldBroadcast: Boolean): BaseResp = {
-    //todo instead pull results from the local database.
+  protected def doReadPreviousQueries(request: ReadPreviousQueriesRequest, shouldBroadcast: Boolean): ReadPreviousQueriesResponse = {
+    //pull results from the local database.
 
-    doBroadcastQuery(request, new ReadPreviousQueriesAggregator, shouldBroadcast)
+    //todo delete at end of local/local effort
+    // doBroadcastQuery(request, new ReadPreviousQueriesAggregator, shouldBroadcast).asInstanceOf[ReadPreviousQueriesResponse]
+    QepQueryDb.db.selectPreviousQueries(request)
   }
 
   protected def doRenameQuery(request: RenameQueryRequest, shouldBroadcast: Boolean): BaseResp = {
