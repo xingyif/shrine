@@ -222,7 +222,7 @@ case class QepQuery(
     gregorianCalendar.setTimeInMillis(dateCreated)
     val xmlGregorianCalendar = DatatypeFactory.newInstance().newXMLGregorianCalendar(gregorianCalendar)
     QueryMaster(
-      queryMasterId = "?", //todo what is this from?
+      queryMasterId = networkId.toString, //todo what is this from?
       networkQueryId = networkId,
       name = queryName,
       userId = userName,
