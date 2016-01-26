@@ -17,8 +17,8 @@ import net.shrine.client.Poster
 import net.shrine.client.JerseyHttpClient
 import net.shrine.broadcaster.AdapterClientBroadcaster
 import net.shrine.broadcaster.InJvmBroadcasterClient
-import net.shrine.service.ShrineService
-import net.shrine.service.ShrineResource
+import net.shrine.qep.ShrineService
+import net.shrine.qep.ShrineResource
 import net.shrine.broadcaster.PosterBroadcasterClient
 import net.shrine.protocol.query.Term
 import net.shrine.protocol.query.Or

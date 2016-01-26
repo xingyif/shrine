@@ -7,7 +7,7 @@ import net.shrine.client.EndpointConfig
 import net.shrine.config.{ConfigExtensions, Keys}
 import net.shrine.crypto.{KeyStoreDescriptorParser, KeyStoreDescriptor}
 import net.shrine.protocol.{ResultOutputTypes, HiveCredentials, ResultOutputType}
-import net.shrine.service.QepConfig
+import net.shrine.qep.QepConfig
 
 /**
  * @author clint

@@ -6,7 +6,7 @@ import org.junit.Test
 import net.shrine.client.{EndpointConfig, Poster}
 import net.shrine.authentication.{AuthenticationType, PmAuthenticator, Authenticator}
 import net.shrine.hms.authentication.EcommonsPmAuthenticator
-import net.shrine.service.{QepConfig, AllowsAllAuthenticator}
+import net.shrine.qep.{QepConfig, AllowsAllAuthenticator}
 import net.shrine.authorization.{AuthorizationType, AllowsAllAuthorizationService}
 import net.shrine.hms.authorization.HmsDataStewardAuthorizationService
 import java.net.URL

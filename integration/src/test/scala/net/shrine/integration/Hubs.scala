@@ -1,11 +1,11 @@
 package net.shrine.integration
 
-import net.shrine.service.ShrineResource
+import net.shrine.qep.ShrineResource
 import net.shrine.protocol.ShrineRequestHandler
-import net.shrine.service.I2b2BroadcastResource
+import net.shrine.qep.I2b2BroadcastResource
 import net.shrine.protocol.I2b2RequestHandler
-import net.shrine.service.ShrineService
-import net.shrine.service.I2b2BroadcastService
+import net.shrine.qep.ShrineService
+import net.shrine.qep.I2b2BroadcastService
 import net.shrine.client.ShrineClient
 import net.shrine.client.JerseyShrineClient
 import net.shrine.protocol.AuthenticationInfo

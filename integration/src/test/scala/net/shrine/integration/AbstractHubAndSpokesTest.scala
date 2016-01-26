@@ -18,8 +18,8 @@ import net.shrine.protocol.CertId
 import net.shrine.protocol.Credential
 import net.shrine.protocol.NodeId
 import net.shrine.protocol.ShrineRequestHandler
-import net.shrine.service.ShrineResource
-import net.shrine.service.ShrineService
+import net.shrine.qep.ShrineResource
+import net.shrine.qep.ShrineService
 import org.junit.Before
 import org.junit.After
 import net.shrine.protocol.DefaultBreakdownResultOutputTypes

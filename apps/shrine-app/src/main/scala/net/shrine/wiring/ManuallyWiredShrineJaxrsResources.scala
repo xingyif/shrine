@@ -23,10 +23,10 @@ import net.shrine.happy.{HappyShrineResource, HappyShrineService}
 import net.shrine.log.Loggable
 import net.shrine.ont.data.{OntClientOntologyMetadata, OntologyMetadata}
 import net.shrine.protocol.{NodeId, RequestType, ResultOutputType}
-import net.shrine.service.{I2b2BroadcastResource, I2b2BroadcastService, ShrineResource, ShrineService}
-import net.shrine.service.dao.AuditDao
-import net.shrine.service.dao.squeryl.SquerylAuditDao
-import net.shrine.service.dao.squeryl.tables.{Tables => HubTables}
+import net.shrine.qep.{I2b2BroadcastResource, I2b2BroadcastService, ShrineResource, ShrineService}
+import net.shrine.qep.dao.AuditDao
+import net.shrine.qep.dao.squeryl.SquerylAuditDao
+import net.shrine.qep.dao.squeryl.tables.{Tables => HubTables}
 import net.shrine.status.StatusJaxrs
 import org.squeryl.internals.DatabaseAdapter
 

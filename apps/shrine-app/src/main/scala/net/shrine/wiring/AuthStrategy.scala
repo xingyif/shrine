@@ -4,7 +4,7 @@ import net.shrine.authorization.steward.StewardConfig
 import net.shrine.config.Keys
 import net.shrine.authentication.{AuthenticationType, Authenticator, PmAuthenticator}
 import net.shrine.authorization.{AuthorizationType, StewardQueryAuthorizationService, QueryAuthorizationService, AllowsAllAuthorizationService}
-import net.shrine.service.AllowsAllAuthenticator
+import net.shrine.qep.AllowsAllAuthenticator
 import net.shrine.client.Poster
 import net.shrine.hms.authorization.HmsDataStewardAuthorizationService
 import net.shrine.hms.authentication.EcommonsPmAuthenticator

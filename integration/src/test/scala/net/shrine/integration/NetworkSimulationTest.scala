@@ -17,7 +17,7 @@ import net.shrine.broadcaster.NodeHandle
 import net.shrine.crypto.DefaultSignerVerifier
 import net.shrine.crypto.TestKeystore
 import net.shrine.protocol.{HiveCredentials, AuthenticationInfo, BroadcastMessage, Credential, DeleteQueryRequest, DeleteQueryResponse, NodeId, Result, RunQueryRequest, CertId, RequestType, FlagQueryRequest, FlagQueryResponse, RawCrcRunQueryResponse, ResultOutputType, QueryResult, RunQueryResponse, AggregatedRunQueryResponse, UnFlagQueryRequest, UnFlagQueryResponse, DefaultBreakdownResultOutputTypes}
-import net.shrine.service.ShrineService
+import net.shrine.qep.ShrineService
 import net.shrine.broadcaster.SigningBroadcastAndAggregationService
 import net.shrine.broadcaster.InJvmBroadcasterClient
 import net.shrine.adapter.FlagQueryAdapter

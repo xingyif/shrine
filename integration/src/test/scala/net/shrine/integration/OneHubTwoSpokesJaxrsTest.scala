@@ -24,8 +24,8 @@ import net.shrine.protocol.NodeId
 import net.shrine.protocol.RequestType
 import net.shrine.protocol.Result
 import net.shrine.protocol.ShrineRequestHandler
-import net.shrine.service.ShrineResource
-import net.shrine.service.ShrineService
+import net.shrine.qep.ShrineResource
+import net.shrine.qep.ShrineService
 import net.shrine.protocol.CertId
 import net.shrine.broadcaster.InJvmBroadcasterClient
 

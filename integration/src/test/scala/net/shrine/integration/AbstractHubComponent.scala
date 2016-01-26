@@ -5,7 +5,7 @@ import net.shrine.protocol.{NodeId, ShrineRequestHandler, AuthenticationInfo, De
 import net.shrine.broadcaster.NodeHandle
 import net.shrine.adapter.client.RemoteAdapterClient
 import net.shrine.broadcaster.AdapterClientBroadcaster
-import net.shrine.service.ShrineService
+import net.shrine.qep.ShrineService
 import net.shrine.broadcaster.SigningBroadcastAndAggregationService
 import net.shrine.broadcaster.InJvmBroadcasterClient
 import net.shrine.client.ShrineClient
