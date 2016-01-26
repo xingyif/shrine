@@ -176,9 +176,7 @@ trait AbstractQepService[BaseResp <: BaseShrineResponse] extends Loggable {
 
       val authorizedRequest = authorizationService.authorizeRunQueryRequest(request) match {
         case na: NotAuthorized => throw na.toException
-        case authorized: Authorized => {
-          request.copy(topicName = authorized.topicIdAndName.map(x => x._2))
-        }
+        case authorized: Authorized => request.copy(topicName = authorized.topicIdAndName.map(x => x._2))
       }
 
       body(authorizedRequest)

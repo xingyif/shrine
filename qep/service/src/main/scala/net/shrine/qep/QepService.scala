@@ -1,6 +1,5 @@
 package net.shrine.qep
 
-import com.typesafe.config.Config
 import net.shrine.aggregation.{ReadQueryResultAggregator, ReadTranslatedQueryDefinitionAggregator}
 import net.shrine.authentication.Authenticator
 import net.shrine.authorization.QueryAuthorizationService

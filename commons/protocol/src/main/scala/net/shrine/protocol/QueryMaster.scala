@@ -13,7 +13,7 @@ import javax.xml.datatype.XMLGregorianCalendar
  * @see http://www.gnu.org/licenses/lgpl.html
  */
 final case class QueryMaster (
-                               queryMasterId: String, //Outside of tests, this is the networkQueryId as a string
+                               queryMasterId: String, //Outside of tests, this is always the networkQueryId as a string
                                networkQueryId: Long,
                                name: String,
                                userId: String,
