@@ -25,16 +25,37 @@ class QepQueryDbTest extends ShouldMatchersForJUnit {// with TestWithDatabase {
     queryXml = "testXML"
   )
 
+  val secondQepQuery = QepQuery(
+    networkId = 2L,
+    userName = "dave",
+    userDomain = "testDomain",
+    queryName = "testQuery",
+    expression = "testExpression",
+    dateCreated = System.currentTimeMillis(),
+    hasBeenRun = false,
+    flagged = false,
+    flagMessage = "",
+    queryXml = "testXML"
+  )
+
   @Test
-  def testApply() {
+  def testInsert() {
 
-    QepConfigSource.configForBlock("shrine.qep.audit.useQepAudit","true",this.getClass.getSimpleName){
+    QepQueryDb.db.insertQepQuery(qepQuery)
+    QepQueryDb.db.insertQepQuery(secondQepQuery)
 
-      QepQueryDb.db.insertQepQuery(qepQuery)
+    val results = QepQueryDb.db.selectAllQepQueries
+    results should equal(Seq(qepQuery,secondQepQuery))
+  }
 
-      val results = QepQueryDb.db.selectAllQepQueries
-      results should equal(Seq(qepQuery))
-    }
+  @Test
+  def testSelectForUser() {
+
+    QepQueryDb.db.insertQepQuery(qepQuery)
+    QepQueryDb.db.insertQepQuery(secondQepQuery)
+
+    val results = QepQueryDb.db.selectPreviousQueriesByUserAndDomain("ben","testDomain")
+    results should equal(Seq(qepQuery))
   }
 
   @Before

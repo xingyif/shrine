@@ -6,7 +6,7 @@ import java.util.GregorianCalendar
 import java.util.logging.Logger
 import javax.naming.InitialContext
 import javax.sql.DataSource
-import javax.xml.datatype.{DatatypeFactory}
+import javax.xml.datatype.DatatypeFactory
 
 import com.typesafe.config.Config
 import net.shrine.log.Loggable
@@ -222,7 +222,7 @@ case class QepQuery(
     gregorianCalendar.setTimeInMillis(dateCreated)
     val xmlGregorianCalendar = DatatypeFactory.newInstance().newXMLGregorianCalendar(gregorianCalendar)
     QueryMaster(
-      queryMasterId = networkId.toString, //todo what is this from?
+      queryMasterId = networkId.toString,
       networkQueryId = networkId,
       name = queryName,
       userId = userName,
@@ -238,16 +238,16 @@ case class QepQuery(
 object QepQuery extends ((NetworkQueryId,UserName,String,QueryName,String,Time,Boolean,Boolean,String,String) => QepQuery) {
   def apply(runQueryRequest: RunQueryRequest):QepQuery = {
     new QepQuery(
-      runQueryRequest.networkQueryId,
-      runQueryRequest.authn.username,
-      runQueryRequest.authn.domain,
-      runQueryRequest.queryDefinition.name,
-      runQueryRequest.queryDefinition.expr.getOrElse("No Expression").toString,
-      System.currentTimeMillis(),
-      false,
-      false, //todo flagged??
-      "", //todo flagMessage
-      runQueryRequest.toXmlString
+      networkId = runQueryRequest.networkQueryId,
+      userName = runQueryRequest.authn.username,
+      userDomain = runQueryRequest.authn.domain,
+      queryName = runQueryRequest.queryDefinition.name,
+      expression = runQueryRequest.queryDefinition.expr.getOrElse("No Expression").toString,
+      dateCreated = System.currentTimeMillis(),
+      hasBeenRun = false,  //todo ??
+      flagged = false, //todo flagged??
+      flagMessage = "", //todo flagMessage
+      queryXml = runQueryRequest.toXmlString
     )
   }
 }
