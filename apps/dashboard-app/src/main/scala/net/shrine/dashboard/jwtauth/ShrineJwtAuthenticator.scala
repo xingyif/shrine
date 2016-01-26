@@ -134,18 +134,22 @@ object ShrineJwtAuthenticator extends Loggable {
 
     val issuingSite = jwtsClaims.getBody.getIssuer
 
-    //check that the issuer is available
-    val issuer: Principal = cert.getIssuerX500Principal
-    case class CertIssuerNotInCollectionException(issuingSite:String,issuer: Principal) extends ShrineJwtException(s"Could not find a CA certificate with issuer DN $issuer. Known CA cert aliases are ${certCollection.caCertAliases.mkString(",")}")
-    val signingCert = certCollection.caCerts.getOrElse(issuer,{throw CertIssuerNotInCollectionException(issuingSite,issuer)})
+    certCollection.caCerts.get(cert.getSubjectX500Principal).fold{
+      //if not, check that the issuer is available
+      val issuer: Principal = cert.getIssuerX500Principal
+      case class CertIssuerNotInCollectionException(issuingSite:String,issuer: Principal) extends ShrineJwtException(s"Could not find a CA certificate with issuer DN $issuer. Known CA cert aliases are ${certCollection.caCertAliases.mkString(",")}")
+      val signingCert = certCollection.caCerts.getOrElse(issuer,{throw CertIssuerNotInCollectionException(issuingSite,issuer)})
 
-    //verify that the cert was signed using the signingCert
-    //todo this can throw CertificateException, NoSuchAlgorithmException, InvalidKeyException, NoSuchProviderException, SignatureException
-    cert.verify(signingCert.getPublicKey)
-
-    //todo has cert expired?
-
-    cert
+      //verify that the cert was signed using the signingCert
+      //todo this can throw CertificateException, NoSuchAlgorithmException, InvalidKeyException, NoSuchProviderException, SignatureException
+      cert.verify(signingCert.getPublicKey)
+      //todo has cert expired?
+      info(s"${cert.getSubjectX500Principal} verified using $issuer from the KeyStore")
+      cert
+    }{ principal => //if the cert is in the certCollection then all is well
+      info(s"$principal is in the KeyStore")
+      cert
+    }
   }
 
   def failIfNull[E](e:E,t:Throwable):Try[E] = Try {

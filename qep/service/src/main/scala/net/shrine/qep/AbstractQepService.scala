@@ -102,9 +102,6 @@ trait AbstractQepService[BaseResp <: BaseShrineResponse] extends Loggable {
 
   protected def doReadPreviousQueries(request: ReadPreviousQueriesRequest, shouldBroadcast: Boolean): ReadPreviousQueriesResponse = {
     //pull results from the local database.
-
-    //todo delete at end of local/local effort
-    // doBroadcastQuery(request, new ReadPreviousQueriesAggregator, shouldBroadcast).asInstanceOf[ReadPreviousQueriesResponse]
     QepQueryDb.db.selectPreviousQueries(request)
   }
 
