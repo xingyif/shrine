@@ -31,8 +31,7 @@ import net.shrine.aggregation.UnFlagQueryAggregator
  * @since Feb 19, 2014
  */
 
-//todo rename to QEP? This is the heart of the QEP.
-trait AbstractShrineService[BaseResp <: BaseShrineResponse] extends Loggable {
+trait AbstractQepService[BaseResp <: BaseShrineResponse] extends Loggable {
   val commonName:String
   val auditDao: AuditDao
   val authenticator: Authenticator

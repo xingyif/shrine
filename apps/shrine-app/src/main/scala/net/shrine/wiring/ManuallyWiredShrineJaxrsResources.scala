@@ -23,7 +23,7 @@ import net.shrine.happy.{HappyShrineResource, HappyShrineService}
 import net.shrine.log.Loggable
 import net.shrine.ont.data.{OntClientOntologyMetadata, OntologyMetadata}
 import net.shrine.protocol.{NodeId, RequestType, ResultOutputType}
-import net.shrine.qep.{I2b2BroadcastResource, I2b2BroadcastService, ShrineResource, ShrineService}
+import net.shrine.qep.{I2b2BroadcastResource, I2b2QepService, ShrineResource, QepService}
 import net.shrine.qep.dao.AuditDao
 import net.shrine.qep.dao.squeryl.SquerylAuditDao
 import net.shrine.qep.dao.squeryl.tables.{Tables => HubTables}
@@ -216,7 +216,7 @@ object ManuallyWiredShrineJaxrsResources extends ShrineJaxrsResources with Logga
       debug(s"authorizationService set to $authorizationService")
 
       QueryEntryPointComponents(
-        ShrineService(
+        QepService(
           commonName,
           auditDao,
           authenticator,
@@ -227,7 +227,7 @@ object ManuallyWiredShrineJaxrsResources extends ShrineJaxrsResources with Logga
           breakdownTypes,
           queryEntryPointConfig.collectQepAudit
         ),
-        I2b2BroadcastService(
+        I2b2QepService(
           commonName,
           auditDao,
           authenticator,
@@ -318,7 +318,7 @@ object ManuallyWiredShrineJaxrsResources extends ShrineJaxrsResources with Logga
 
   private final case class AdapterComponents(adapterService: AdapterService, i2b2AdminService: I2b2AdminService, adapterDao: AdapterDao, adapterMappings: AdapterMappings)
 
-  private final case class QueryEntryPointComponents(shrineService: ShrineService, i2b2Service: I2b2BroadcastService, auditDao: AuditDao)
+  private final case class QueryEntryPointComponents(shrineService: QepService, i2b2Service: I2b2QepService, auditDao: AuditDao)
 
   private final case class HubComponents(broadcaster: AdapterClientBroadcaster)
 
@@ -329,7 +329,7 @@ object ManuallyWiredShrineJaxrsResources extends ShrineJaxrsResources with Logga
   }
   
   //TODO: TEST
-  private def queryEntryPointComponentsToTuple(option: Option[QueryEntryPointComponents]): (Option[ShrineService], Option[I2b2BroadcastService], Option[AuditDao]) = option match {
+  private def queryEntryPointComponentsToTuple(option: Option[QueryEntryPointComponents]): (Option[QepService], Option[I2b2QepService], Option[AuditDao]) = option match {
     case None => (None, None, None)
     case Some(QueryEntryPointComponents(a, b, c)) => (Option(a), Option(b), Option(c))
   }

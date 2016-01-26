@@ -1,17 +1,11 @@
 package net.shrine.integration
 
-import net.shrine.adapter.service.JerseyTestComponent
-import net.shrine.protocol.{NodeId, ShrineRequestHandler, AuthenticationInfo, DefaultBreakdownResultOutputTypes}
-import net.shrine.broadcaster.NodeHandle
 import net.shrine.adapter.client.RemoteAdapterClient
-import net.shrine.broadcaster.AdapterClientBroadcaster
-import net.shrine.qep.ShrineService
-import net.shrine.broadcaster.SigningBroadcastAndAggregationService
-import net.shrine.broadcaster.InJvmBroadcasterClient
+import net.shrine.adapter.service.JerseyTestComponent
+import net.shrine.broadcaster.{AdapterClientBroadcaster, BroadcasterClient, InJvmBroadcasterClient, NodeHandle, PosterBroadcasterClient, SigningBroadcastAndAggregationService}
 import net.shrine.client.ShrineClient
-import net.shrine.broadcaster.BroadcasterClient
-import net.shrine.broadcaster.PosterBroadcasterClient
 import net.shrine.crypto.SigningCertStrategy
+import net.shrine.protocol.{AuthenticationInfo, DefaultBreakdownResultOutputTypes, NodeId}
 
 /**
  * @author clint
@@ -23,7 +17,7 @@ abstract class AbstractHubComponent[H <: AnyRef](
     override val port: Int) extends JerseyTestComponent[H] {
   
   lazy val broadcaster: InspectableDelegatingBroadcaster = {
-    import enclosingTest.{ spokes, posterFor }
+    import enclosingTest.{posterFor, spokes}
 
     val destinations: Set[NodeHandle] = spokes.map { spoke =>
       val client = RemoteAdapterClient(NodeId.Unknown,posterFor(spoke), DefaultBreakdownResultOutputTypes.toSet)

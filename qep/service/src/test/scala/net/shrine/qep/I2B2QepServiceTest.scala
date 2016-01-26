@@ -15,7 +15,7 @@ import net.shrine.protocol.DefaultBreakdownResultOutputTypes
  * @author clint
  * @since Oct 23, 2014
  */
-final class I2b2BroadcastServiceTest extends ShouldMatchersForJUnit {
+final class I2B2QepServiceTest extends ShouldMatchersForJUnit {
 
   private val knownUsername = "some-user"
   private val unknownUsername = "some-unknown-user"
@@ -36,7 +36,7 @@ final class I2b2BroadcastServiceTest extends ShouldMatchersForJUnit {
     
     val breakdownResultOutputTypes = DefaultBreakdownResultOutputTypes.toSet
 
-    val service = I2b2BroadcastService("example.com",null, authenticator, null, includeAggregateResult = true, null, 1.day, breakdownResultOutputTypes,false)
+    val service = I2b2QepService("example.com",null, authenticator, null, includeAggregateResult = true, null, 1.day, breakdownResultOutputTypes,false)
 
     {
       val req = ReadResultOutputTypesRequest("project-id", 1.minute, AuthenticationInfo("d", knownUsername, Credential("foo", isToken = false)))

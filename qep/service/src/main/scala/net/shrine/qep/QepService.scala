@@ -20,7 +20,7 @@ import scala.concurrent.duration.Duration
  *       licensed as Lgpl Open Source
  * @see http://www.gnu.org/licenses/lgpl.html
  */
-final case class ShrineService(
+final case class QepService(
     commonName:String,
     auditDao: AuditDao,
     authenticator: Authenticator,
@@ -29,7 +29,7 @@ final case class ShrineService(
     broadcastAndAggregationService: BroadcastAndAggregationService,
     queryTimeout: Duration,
     breakdownTypes: Set[ResultOutputType],
-    collectQepAudit:Boolean) extends AbstractShrineService[BaseShrineResponse] with ShrineRequestHandler {
+    collectQepAudit:Boolean) extends AbstractQepService[BaseShrineResponse] with ShrineRequestHandler {
 
   debug(s"ShrineService collectQepAudit is $collectQepAudit")
 

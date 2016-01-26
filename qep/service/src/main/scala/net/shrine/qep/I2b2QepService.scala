@@ -25,7 +25,7 @@ import net.shrine.protocol.ResultOutputType
  * @author clint
  * @since Feb 19, 2014
  */
-final case class I2b2BroadcastService(
+final case class I2b2QepService(
     commonName:String,
     auditDao: AuditDao,
     authenticator: Authenticator,
@@ -34,7 +34,7 @@ final case class I2b2BroadcastService(
     broadcastAndAggregationService: BroadcastAndAggregationService,
     queryTimeout: Duration,
     breakdownTypes: Set[ResultOutputType],
-    collectQepAudit:Boolean) extends AbstractShrineService[ShrineResponse] with I2b2RequestHandler {
+    collectQepAudit:Boolean) extends AbstractQepService[ShrineResponse] with I2b2RequestHandler {
 
   override def readResultOutputTypes(request: ReadResultOutputTypesRequest): ShrineResponse = doReadResultOutputTypes(request)
   

@@ -30,7 +30,7 @@ import net.shrine.protocol.ErrorResponse
  *       licensed as Lgpl Open Source
  * @see http://www.gnu.org/licenses/lgpl.html
  */
-final class ShrineServiceTest extends AbstractAuditDaoTest with EasyMockSugar {
+final class QepServiceTest extends AbstractAuditDaoTest with EasyMockSugar {
 
   import scala.concurrent.duration._
   
@@ -42,7 +42,7 @@ final class ShrineServiceTest extends AbstractAuditDaoTest with EasyMockSugar {
     
     val req = ReadQueryInstancesRequest(projectId, 1.millisecond, authn, queryId)
 
-    val service = ShrineService("example.com",null, AllowsAllAuthenticator, null, includeAggregateResult = true, null, null, Set.empty,collectQepAudit = false)
+    val service = QepService("example.com",null, AllowsAllAuthenticator, null, includeAggregateResult = true, null, null, Set.empty,collectQepAudit = false)
 
     val response = service.readQueryInstances(req).asInstanceOf[ReadQueryInstancesResponse]
 
@@ -71,7 +71,7 @@ final class ShrineServiceTest extends AbstractAuditDaoTest with EasyMockSugar {
   def testRunQueryAggregatorFor() {
 
     def doTestRunQueryAggregatorFor(addAggregatedResult: Boolean) {
-      val service = ShrineService("example.com",null, null, null, addAggregatedResult, null, null, Set.empty,collectQepAudit = false)
+      val service = QepService("example.com",null, null, null, addAggregatedResult, null, null, Set.empty,collectQepAudit = false)
 
       val aggregator = service.runQueryAggregatorFor(request)
 
@@ -91,7 +91,7 @@ final class ShrineServiceTest extends AbstractAuditDaoTest with EasyMockSugar {
   @Test
   def testAuditTransactionally() = afterMakingTables {
     def doTestAuditTransactionally(shouldThrow: Boolean) {
-      val service = ShrineService("example.com",auditDao, null, null, includeAggregateResult = true, null, null, Set.empty,collectQepAudit = false)
+      val service = QepService("example.com",auditDao, null, null, includeAggregateResult = true, null, null, Set.empty,collectQepAudit = false)
 
       if (shouldThrow) {
         intercept[Exception] {
@@ -120,12 +120,12 @@ final class ShrineServiceTest extends AbstractAuditDaoTest with EasyMockSugar {
     doTestAuditTransactionally(true)
   }
 
-  import ShrineServiceTest._
+  import QepServiceTest._
 
   @Test
   def testAfterAuthenticating() {
     def doTestAfterAuthenticating(shouldAuthenticate: Boolean) {
-      val service = ShrineService("example.com",auditDao, new MockAuthenticator(shouldAuthenticate), new MockAuthService(true), includeAggregateResult = true, null, null, Set.empty,collectQepAudit = false)
+      val service = QepService("example.com",auditDao, new MockAuthenticator(shouldAuthenticate), new MockAuthService(true), includeAggregateResult = true, null, null, Set.empty,collectQepAudit = false)
 
       if (shouldAuthenticate) {
         var foo = false
@@ -150,7 +150,7 @@ final class ShrineServiceTest extends AbstractAuditDaoTest with EasyMockSugar {
   def testAfterAuditingAndAuthorizing() = afterMakingTables {
 
     def doAfterAuditingAndAuthorizing(shouldBeAuthorized: Boolean, shouldThrow: Boolean) {
-      val service = ShrineService("example.com",auditDao, AllowsAllAuthenticator, new MockAuthService(shouldBeAuthorized), includeAggregateResult = true, null, null, Set.empty,collectQepAudit = false)
+      val service = QepService("example.com",auditDao, AllowsAllAuthenticator, new MockAuthService(shouldBeAuthorized), includeAggregateResult = true, null, null, Set.empty,collectQepAudit = false)
 
       if (shouldThrow || !shouldBeAuthorized) {
         intercept[Exception] {
@@ -182,7 +182,7 @@ final class ShrineServiceTest extends AbstractAuditDaoTest with EasyMockSugar {
   }
 }
 
-object ShrineServiceTest {
+object QepServiceTest {
   final class MockAuthenticator(shouldAuthenticate: Boolean) extends Authenticator {
     override def authenticate(authn: AuthenticationInfo): AuthenticationResult = {
       if (shouldAuthenticate) { AuthenticationResult.Authenticated(authn.domain, authn.username) }
