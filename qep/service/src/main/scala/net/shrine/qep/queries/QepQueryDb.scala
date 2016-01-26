@@ -1,27 +1,21 @@
 package net.shrine.qep.queries
 
-import java.io.PrintWriter
-import java.sql.{DriverManager, Connection, SQLException}
+import java.sql.SQLException
 import java.util.GregorianCalendar
-import java.util.logging.Logger
-import javax.naming.InitialContext
 import javax.sql.DataSource
 import javax.xml.datatype.DatatypeFactory
 
 import com.typesafe.config.Config
+import net.shrine.audit.{NetworkQueryId, QueryName, Time, UserName}
 import net.shrine.log.Loggable
-import net.shrine.protocol.{QueryMaster, ReadPreviousQueriesResponse, ReadPreviousQueriesRequest, RunQueryRequest}
-import net.shrine.audit.{Time, QueryName, NetworkQueryId, UserName}
+import net.shrine.protocol.{QueryMaster, ReadPreviousQueriesRequest, ReadPreviousQueriesResponse, RunQueryRequest}
 import net.shrine.qep.QepConfigSource
-
+import net.shrine.slick.TestableDataSourceCreator
 import slick.driver.JdbcProfile
-import scala.concurrent.{Future, Await}
-import scala.concurrent.duration.{Duration,DurationInt}
+
+import scala.concurrent.duration.{Duration, DurationInt}
+import scala.concurrent.{Await, Future, blocking}
 import scala.language.postfixOps
-
-import scala.concurrent.ExecutionContext.Implicits.global
-
-import scala.concurrent.blocking
 
 /**
   * DB code for the QEP's query instances and query results.
@@ -73,48 +67,7 @@ case class QepQueryDb(schemaDef:QepQuerySchema,dataSource: DataSource) extends L
 
 object QepQueryDb extends Loggable {
 
-  val dataSource:DataSource = {
-
-    val dataSourceFrom = QepQuerySchema.config.getString("dataSourceFrom")
-    if(dataSourceFrom == "JNDI") {
-      val jndiDataSourceName = QepQuerySchema.config.getString("jndiDataSourceName")
-      val initialContext:InitialContext = new InitialContext()
-
-      initialContext.lookup(jndiDataSourceName).asInstanceOf[DataSource]
-
-    }
-    else if (dataSourceFrom == "testDataSource") {
-
-      val testDataSourceConfig = QepQuerySchema.config.getConfig("testDataSource")
-      val driverClassName = testDataSourceConfig.getString("driverClassName")
-      val url = testDataSourceConfig.getString("url")
-
-      //Creating an instance of the driver register it. (!) From a previous epoch, but it works.
-      Class.forName(driverClassName).newInstance()
-
-      object TestDataSource extends DataSource {
-        override def getConnection: Connection = {
-          DriverManager.getConnection(url)
-        }
-
-        override def getConnection(username: String, password: String): Connection = {
-          DriverManager.getConnection(url, username, password)
-        }
-
-        //unused methods
-        override def unwrap[T](iface: Class[T]): T = ???
-        override def isWrapperFor(iface: Class[_]): Boolean = ???
-        override def setLogWriter(out: PrintWriter): Unit = ???
-        override def getLoginTimeout: Int = ???
-        override def setLoginTimeout(seconds: Int): Unit = ???
-        override def getParentLogger: Logger = ???
-        override def getLogWriter: PrintWriter = ???
-      }
-
-      TestDataSource
-    }
-    else throw new IllegalArgumentException(s"shrine.steward.database.dataSourceFrom must be either JNDI or testDataSource, not $dataSourceFrom")
-  }
+  val dataSource:DataSource = TestableDataSourceCreator.dataSource(QepQuerySchema.config)
 
   val db = QepQueryDb(QepQuerySchema.schema,dataSource)
 

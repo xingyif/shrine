@@ -134,7 +134,9 @@ object ShrineJwtAuthenticator extends Loggable {
 
     val issuingSite = jwtsClaims.getBody.getIssuer
 
-    //todo is this the right way to find a cert is in the certCollection? 
+    //todo is this the right way to find a cert in the certCollection?
+
+    debug(s"certCollection.caCerts.contains(${cert.getSubjectX500Principal}) is ${certCollection.caCerts.contains(cert.getSubjectX500Principal)}")
     certCollection.caCerts.get(cert.getSubjectX500Principal).fold{
       //if not in the keystore, check that the issuer is available
       val issuer: Principal = cert.getIssuerX500Principal

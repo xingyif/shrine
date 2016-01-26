@@ -1,23 +1,19 @@
 package net.shrine.adapter.audit
 
-import java.io.PrintWriter
-import java.sql.{DriverManager, Connection, SQLException}
-import java.util.logging.Logger
-import javax.naming.InitialContext
+import java.sql.SQLException
 import javax.sql.DataSource
 
 import com.typesafe.config.Config
 import net.shrine.adapter.service.AdapterConfigSource
+import net.shrine.audit.{NetworkQueryId, QueryName, QueryTopicId, QueryTopicName, ShrineNodeId, Time, UserName}
 import net.shrine.crypto.KeyStoreCertCollection
 import net.shrine.log.Loggable
-import net.shrine.audit.{QueryTopicName, QueryTopicId, Time, QueryName, NetworkQueryId, UserName, ShrineNodeId}
 import net.shrine.protocol.{BroadcastMessage, RunQueryRequest, RunQueryResponse, ShrineResponse}
-
+import net.shrine.slick.TestableDataSourceCreator
 import slick.driver.JdbcProfile
-import scala.concurrent.{Future, Await}
-import scala.concurrent.duration.{Duration,DurationInt}
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.blocking
+
+import scala.concurrent.duration.{Duration, DurationInt}
+import scala.concurrent.{Await, Future, blocking}
 import scala.language.postfixOps
 
 /**
@@ -194,48 +190,7 @@ object AdapterAuditSchema {
 
 object AdapterAuditDb {
 
-  val dataSource:DataSource = {
-
-    val dataSourceFrom = AdapterAuditSchema.config.getString("dataSourceFrom")
-    if(dataSourceFrom == "JNDI") {
-      val jndiDataSourceName = AdapterAuditSchema.config.getString("jndiDataSourceName")
-      val initialContext:InitialContext = new InitialContext()
-
-      initialContext.lookup(jndiDataSourceName).asInstanceOf[DataSource]
-
-    }
-    else if (dataSourceFrom == "testDataSource") {
-
-      val testDataSourceConfig = AdapterAuditSchema.config.getConfig("testDataSource")
-      val driverClassName = testDataSourceConfig.getString("driverClassName")
-      val url = testDataSourceConfig.getString("url")
-
-      //Creating an instance of the driver register it. (!) From a previous epoch, but it works.
-      Class.forName(driverClassName).newInstance()
-
-      object TestDataSource extends DataSource {
-        override def getConnection: Connection = {
-          DriverManager.getConnection(url)
-        }
-
-        override def getConnection(username: String, password: String): Connection = {
-          DriverManager.getConnection(url, username, password)
-        }
-
-        //unused methods
-        override def unwrap[T](iface: Class[T]): T = ???
-        override def isWrapperFor(iface: Class[_]): Boolean = ???
-        override def setLogWriter(out: PrintWriter): Unit = ???
-        override def getLoginTimeout: Int = ???
-        override def setLoginTimeout(seconds: Int): Unit = ???
-        override def getParentLogger: Logger = ???
-        override def getLogWriter: PrintWriter = ???
-      }
-
-      TestDataSource
-    }
-    else throw new IllegalArgumentException(s"shrine.steward.database.dataSourceFrom must be either JNDI or testDataSource, not $dataSourceFrom")
-  }
+  val dataSource:DataSource = TestableDataSourceCreator.dataSource(AdapterAuditSchema.config)
 
   val db = AdapterAuditDb(AdapterAuditSchema.schema,dataSource)
 

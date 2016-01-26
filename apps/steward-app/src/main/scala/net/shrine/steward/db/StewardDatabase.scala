@@ -1,28 +1,23 @@
 package net.shrine.steward.db
 
-import java.io.PrintWriter
-import java.sql.{DriverManager, Connection, SQLException}
+import java.sql.SQLException
 import java.util.concurrent.atomic.AtomicInteger
-import java.util.logging.Logger
-import javax.naming.InitialContext
 import javax.sql.DataSource
 
 import com.typesafe.config.Config
-import net.shrine.authorization.steward.{TopicIdAndName, TopicsPerState, QueriesPerUser, OutboundUser, TopicStateName, StewardQueryId, InboundTopicRequest, InboundShrineQuery, QueryHistory, StewardsTopics, ResearchersTopics, OutboundShrineQuery, TopicState, OutboundTopic, UserName, Date, QueryContents, ExternalQueryId, TopicId, researcherRole, stewardRole}
+import net.shrine.authorization.steward.{Date, ExternalQueryId, InboundShrineQuery, InboundTopicRequest, OutboundShrineQuery, OutboundTopic, OutboundUser, QueriesPerUser, QueryContents, QueryHistory, ResearchersTopics, StewardQueryId, StewardsTopics, TopicId, TopicIdAndName, TopicState, TopicStateName, TopicsPerState, UserName, researcherRole, stewardRole}
 import net.shrine.i2b2.protocol.pm.User
 import net.shrine.log.Loggable
+import net.shrine.slick.TestableDataSourceCreator
 import net.shrine.steward.{CreateTopicsMode, StewardConfigSource}
 import slick.dbio.Effect.Read
-
 import slick.driver.JdbcProfile
-import scala.concurrent.{Future, Await}
-import scala.concurrent.duration.{Duration,DurationInt}
-import scala.language.postfixOps
-import scala.util.Try
 
 import scala.concurrent.ExecutionContext.Implicits.global
-
-import scala.concurrent.blocking
+import scala.concurrent.duration.{Duration, DurationInt}
+import scala.concurrent.{Await, Future, blocking}
+import scala.language.postfixOps
+import scala.util.Try
 /**
  * Database access code for the data steward service.
  *
@@ -209,10 +204,9 @@ case class StewardDatabase(schemaDef:StewardSchema,dataSource: DataSource) exten
     val topicIdAndName:Option[TopicIdAndName] = (topicId,topicName) match {
       case (Some(id),Some(name)) => Option(TopicIdAndName(id.toString,name))
       case (None,None) => None
-      case (Some(id),None) => {
+      case (Some(id),None) =>
         if(state == TopicState.unknownForUser) None
         else throw new IllegalStateException(s"How did you get here for $userId with $id and $state for $shrineQuery")
-      }
     }
     (state,topicIdAndName)
   }
@@ -254,10 +248,9 @@ case class StewardDatabase(schemaDef:StewardSchema,dataSource: DataSource) exten
     //    val orderByQuery = queryParameters.sortByOption.fold(limitFilter)(
     //      columnName => limitFilter.sortBy(x => queryParameters.sortOrder.orderForColumn(allQueryTable.columnForName(columnName))))
     val orderByQuery = queryParameters.sortByOption.fold(countQuery) {
-      case "topicName" => {
+      case "topicName" =>
         val joined = countQuery.join(mostRecentTopicQuery).on(_.topicId === _.id)
         joined.sortBy(x => queryParameters.sortOrder.orderForColumn(x._2.name)).map(x => x._1)
-      }
       case columnName => countQuery.sortBy(x => queryParameters.sortOrder.orderForColumn(columnName match {
         case "stewardId" => x.stewardId
         case "externalId" => x.externalId
@@ -507,48 +500,7 @@ object StewardSchema {
 
 object StewardDatabase {
 
-  val dataSource:DataSource = {
-
-    val dataSourceFrom = StewardSchema.config.getString("dataSourceFrom")
-    if(dataSourceFrom == "JNDI") {
-      val jndiDataSourceName = StewardSchema.config.getString("jndiDataSourceName")
-      val initialContext:InitialContext = new InitialContext()
-
-      initialContext.lookup(jndiDataSourceName).asInstanceOf[DataSource]
-
-    }
-    else if (dataSourceFrom == "testDataSource") {
-
-      val testDataSourceConfig = StewardSchema.config.getConfig("testDataSource")
-      val driverClassName = testDataSourceConfig.getString("driverClassName")
-      val url = testDataSourceConfig.getString("url")
-
-      //Creating an instance of the driver register it. (!) From a previous epoch, but it works.
-      Class.forName(driverClassName).newInstance()
-
-      object TestDataSource extends DataSource {
-        override def getConnection: Connection = {
-          DriverManager.getConnection(url)
-        }
-
-        override def getConnection(username: String, password: String): Connection = {
-          DriverManager.getConnection(url, username, password)
-        }
-
-        //unused methods
-        override def unwrap[T](iface: Class[T]): T = ???
-        override def isWrapperFor(iface: Class[_]): Boolean = ???
-        override def setLogWriter(out: PrintWriter): Unit = ???
-        override def getLoginTimeout: Int = ???
-        override def setLoginTimeout(seconds: Int): Unit = ???
-        override def getParentLogger: Logger = ???
-        override def getLogWriter: PrintWriter = ???
-      }
-
-      TestDataSource
-    }
-    else throw new IllegalArgumentException(s"shrine.steward.database.dataSourceFrom must be either JNDI or testDataSource, not $dataSourceFrom")
-  }
+  val dataSource:DataSource = TestableDataSourceCreator.dataSource(StewardSchema.config)
 
   val db = StewardDatabase(StewardSchema.schema,dataSource)
 
@@ -574,7 +526,7 @@ object SortOrder {
 
   val sortOrders = Seq(ascending,descending)
 
-  val namesToSortOrders = sortOrders.map(x => (x.name -> x)).toMap
+  val namesToSortOrders = sortOrders.map(x => (x.name,x)).toMap
 
   def sortOrderForStringOption(option:Option[String]) = option.fold(ascending)(namesToSortOrders(_))
 }
