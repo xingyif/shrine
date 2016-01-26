@@ -2,15 +2,6 @@ package net.shrine.service
 
 import net.shrine.protocol.I2b2RequestHandler
 import net.shrine.protocol.DeleteQueryRequest
-import net.shrine.aggregation.ReadPreviousQueriesAggregator
-import net.shrine.aggregation.DeleteQueryAggregator
-import net.shrine.aggregation.ReadTranslatedQueryDefinitionAggregator
-import net.shrine.aggregation.ReadQueryResultAggregator
-import net.shrine.aggregation.ReadPdoResponseAggregator
-import net.shrine.aggregation.ReadQueryDefinitionAggregator
-import net.shrine.aggregation.RenameQueryAggregator
-import net.shrine.aggregation.ReadInstanceResultsAggregator
-import net.shrine.protocol.BaseShrineResponse
 import net.shrine.protocol.ReadApprovedQueryTopicsRequest
 import net.shrine.protocol.ReadInstanceResultsRequest
 import net.shrine.protocol.ReadPreviousQueriesRequest
@@ -19,7 +10,6 @@ import net.shrine.protocol.RunQueryRequest
 import net.shrine.protocol.ReadPdoRequest
 import net.shrine.protocol.ReadQueryDefinitionRequest
 import net.shrine.protocol.ReadQueryInstancesRequest
-import net.shrine.protocol.ReadQueryResultRequest
 import net.shrine.protocol.ShrineResponse
 import net.shrine.service.dao.AuditDao
 import net.shrine.authentication.Authenticator
@@ -27,7 +17,6 @@ import net.shrine.authorization.QueryAuthorizationService
 import net.shrine.broadcaster.BroadcastAndAggregationService
 import scala.concurrent.duration.Duration
 import net.shrine.protocol.FlagQueryRequest
-import net.shrine.aggregation.FlagQueryAggregator
 import net.shrine.protocol.UnFlagQueryRequest
 import net.shrine.protocol.ReadResultOutputTypesRequest
 import net.shrine.protocol.ResultOutputType

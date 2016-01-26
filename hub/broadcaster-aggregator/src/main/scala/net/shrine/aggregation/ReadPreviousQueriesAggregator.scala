@@ -15,6 +15,7 @@ import net.shrine.protocol.{QueryMaster, ShrineResponse, ReadPreviousQueriesResp
  *       licensed as Lgpl Open Source
  * @link http://www.gnu.org/licenses/lgpl.html
  */
+//todo remove - likely not used after local/local is in place
 final class ReadPreviousQueriesAggregator extends IgnoresErrorsAggregator[ReadPreviousQueriesResponse] with Loggable {
 
   private[aggregation] def newestToOldest(x: QueryMaster, y: QueryMaster) = x.createDate.compare(y.createDate) > 0
