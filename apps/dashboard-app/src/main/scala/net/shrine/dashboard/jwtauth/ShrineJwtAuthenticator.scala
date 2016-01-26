@@ -134,8 +134,9 @@ object ShrineJwtAuthenticator extends Loggable {
 
     val issuingSite = jwtsClaims.getBody.getIssuer
 
+    //todo is this the right way to find a cert is in the certCollection? 
     certCollection.caCerts.get(cert.getSubjectX500Principal).fold{
-      //if not, check that the issuer is available
+      //if not in the keystore, check that the issuer is available
       val issuer: Principal = cert.getIssuerX500Principal
       case class CertIssuerNotInCollectionException(issuingSite:String,issuer: Principal) extends ShrineJwtException(s"Could not find a CA certificate with issuer DN $issuer. Known CA cert aliases are ${certCollection.caCertAliases.mkString(",")}")
       val signingCert = certCollection.caCerts.getOrElse(issuer,{throw CertIssuerNotInCollectionException(issuingSite,issuer)})
