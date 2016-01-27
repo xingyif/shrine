@@ -54,6 +54,8 @@ trait AbstractQepService[BaseResp <: BaseShrineResponse] extends Loggable {
   }
   
   protected def doFlagQuery(request: FlagQueryRequest, shouldBroadcast: Boolean = true): BaseResp = {
+    info(s"Flag request is $request")
+
     QepQueryDb.db.insertQepQueryFlag(request)
     doBroadcastQuery(request, new FlagQueryAggregator, shouldBroadcast)
   }

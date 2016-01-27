@@ -255,7 +255,7 @@ object QepQueryFlag extends ((NetworkQueryId,Boolean,String,Long) => QepQueryFla
   def apply(unflagQueryRequest: UnFlagQueryRequest):QepQueryFlag = {
     QepQueryFlag(
       networkQueryId = unflagQueryRequest.networkQueryId,
-      flagged = true,
+      flagged = false,
       flagMessage = "",
       changeDate = System.currentTimeMillis()
     )
