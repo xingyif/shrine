@@ -31,8 +31,15 @@ class QepQueryDbTest extends ShouldMatchersForJUnit {// with TestWithDatabase {
     queryXml = "testXML"
   )
 
+  val flag = QepQueryFlag(
+    networkQueryId = 1L,
+    flagged = true,
+    flagMessage = "This query is flagged",
+    changeDate = System.currentTimeMillis()
+  )
+
   @Test
-  def testInsert() {
+  def testInsertQepQuery() {
 
     QepQueryDb.db.insertQepQuery(qepQuery)
     QepQueryDb.db.insertQepQuery(secondQepQuery)
@@ -42,7 +49,7 @@ class QepQueryDbTest extends ShouldMatchersForJUnit {// with TestWithDatabase {
   }
 
   @Test
-  def testSelectForUser() {
+  def testSelectQepQueriesForUser() {
 
     QepQueryDb.db.insertQepQuery(qepQuery)
     QepQueryDb.db.insertQepQuery(secondQepQuery)
@@ -50,6 +57,20 @@ class QepQueryDbTest extends ShouldMatchersForJUnit {// with TestWithDatabase {
     val results = QepQueryDb.db.selectPreviousQueriesByUserAndDomain("ben","testDomain")
     results should equal(Seq(qepQuery))
   }
+
+  @Test
+  def testSelectQueryFlags() {
+
+    val results1 = QepQueryDb.db.selectMostRecentQepQueryFlagsFor(Set(1L,2L))
+    results1 should equal(Map.empty)
+
+    QepQueryDb.db.insertQepQueryFlag(flag)
+
+    val results2 = QepQueryDb.db.selectMostRecentQepQueryFlagsFor(Set(1L,2L))
+    results2 should equal(Map(1L -> flag))
+
+  }
+
 
   @Before
   def beforeEach() = {
