@@ -8,7 +8,7 @@ import javax.xml.datatype.DatatypeFactory
 import com.typesafe.config.Config
 import net.shrine.audit.{NetworkQueryId, QueryName, Time, UserName}
 import net.shrine.log.Loggable
-import net.shrine.protocol.{QueryMaster, ReadPreviousQueriesRequest, ReadPreviousQueriesResponse, RunQueryRequest}
+import net.shrine.protocol.{UnFlagQueryRequest, FlagQueryRequest, QueryMaster, ReadPreviousQueriesRequest, ReadPreviousQueriesResponse, RunQueryRequest}
 import net.shrine.qep.QepConfigSource
 import net.shrine.slick.TestableDataSourceCreator
 import slick.driver.JdbcProfile
@@ -64,6 +64,14 @@ case class QepQueryDb(schemaDef:QepQuerySchema,dataSource: DataSource) extends L
 
   def selectPreviousQueriesByUserAndDomain(userName: UserName,domain: String):Seq[QepQuery] = {
     dbRun(allQepQueryQuery.filter(_.userName === userName).filter(_.userDomain === domain).result)
+  }
+
+  def insertQepQueryFlag(flagQueryRequest: FlagQueryRequest):Unit = {
+    insertQepQueryFlag(QepQueryFlag(flagQueryRequest))
+  }
+
+  def insertQepQueryFlag(unflagQueryRequest: UnFlagQueryRequest):Unit = {
+    insertQepQueryFlag(QepQueryFlag(unflagQueryRequest))
   }
 
   def insertQepQueryFlag(qepQueryFlag: QepQueryFlag):Unit = {
@@ -233,4 +241,25 @@ case class QepQueryFlag(
                        flagMessage:String,
                        changeDate:Long
                        )
+
+object QepQueryFlag extends ((NetworkQueryId,Boolean,String,Long) => QepQueryFlag) {
+  def apply(flagQueryRequest: FlagQueryRequest):QepQueryFlag = {
+    QepQueryFlag(
+      networkQueryId = flagQueryRequest.networkQueryId,
+      flagged = true,
+      flagMessage = flagQueryRequest.message.getOrElse(""),
+      changeDate = System.currentTimeMillis()
+    )
+  }
+
+  def apply(unflagQueryRequest: UnFlagQueryRequest):QepQueryFlag = {
+    QepQueryFlag(
+      networkQueryId = unflagQueryRequest.networkQueryId,
+      flagged = true,
+      flagMessage = "",
+      changeDate = System.currentTimeMillis()
+    )
+  }
+
+}
 
