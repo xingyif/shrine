@@ -1,8 +1,5 @@
 package net.shrine.qep.queries
 
-import net.shrine.qep.QepConfigSource
-import net.shrine.qep.QepConfigSource
-import net.shrine.util.ShouldMatchersForJUnit
 import net.shrine.util.ShouldMatchersForJUnit
 import org.junit.{After, Before, Test}
 
@@ -20,8 +17,6 @@ class QepQueryDbTest extends ShouldMatchersForJUnit {// with TestWithDatabase {
     expression = "testExpression",
     dateCreated = System.currentTimeMillis(),
     hasBeenRun = false,
-    flagged = false,
-    flagMessage = "",
     queryXml = "testXML"
   )
 
@@ -33,8 +28,6 @@ class QepQueryDbTest extends ShouldMatchersForJUnit {// with TestWithDatabase {
     expression = "testExpression",
     dateCreated = System.currentTimeMillis(),
     hasBeenRun = false,
-    flagged = false,
-    flagMessage = "",
     queryXml = "testXML"
   )
 

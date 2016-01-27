@@ -56,12 +56,25 @@ case class QepQueryDb(schemaDef:QepQuerySchema,dataSource: DataSource) extends L
 
   def selectPreviousQueries(request: ReadPreviousQueriesRequest):ReadPreviousQueriesResponse = {
     val previousQueries: Seq[QepQuery] = selectPreviousQueriesByUserAndDomain(request.authn.username,request.authn.domain)
+    val flags:Map[NetworkQueryId,QepQueryFlag] = selectMostRecentQepQueryFlagsFor(previousQueries.map(_.networkId).to[Set])
+    val queriesAndFlags = previousQueries.map(x => (x,flags.get(x.networkId)))
 
-    ReadPreviousQueriesResponse(previousQueries.map(_.toQueryMaster))
+    ReadPreviousQueriesResponse(queriesAndFlags.map(x => x._1.toQueryMaster(x._2)))
   }
 
   def selectPreviousQueriesByUserAndDomain(userName: UserName,domain: String):Seq[QepQuery] = {
     dbRun(allQepQueryQuery.filter(_.userName === userName).filter(_.userDomain === domain).result)
+  }
+
+  def insertQepQueryFlag(qepQueryFlag: QepQueryFlag):Unit = {
+    debug(s"insertQepQueryFlag $qepQueryFlag")
+    dbRun(allQepQueryFlags += qepQueryFlag)
+  }
+
+  def selectMostRecentQepQueryFlagsFor(networkIds:Set[NetworkQueryId]):Map[NetworkQueryId,QepQueryFlag] = {
+    val flags:Seq[QepQueryFlag] = dbRun(mostRecentQueryFlags.filter(_.networkId inSet networkIds).result)
+
+    flags.map(x => x.networkQueryId -> x).toMap
   }
 }
 
@@ -84,8 +97,8 @@ object QepQueryDb extends Loggable {
 case class QepQuerySchema(jdbcProfile: JdbcProfile) extends Loggable {
   import jdbcProfile.api._
 
-  def ddlForAllTables = {
-    allQepQueryQuery.schema
+  def ddlForAllTables: jdbcProfile.DDL = {
+    allQepQueryQuery.schema ++ allQepQueryFlags.schema
   }
 
   //to get the schema, use the REPL
@@ -135,14 +148,27 @@ case class QepQuerySchema(jdbcProfile: JdbcProfile) extends Loggable {
     def expression = column[String]("expression")
     def dateCreated = column[Time]("dateCreated")
     def hasBeenRun = column[Boolean]("hasBeenRun")
-    def flagged = column[Boolean]("flagged")
-    def flagMessage = column[String]("flagMessage")
     def queryXml = column[String]("queryXml")
 
-    def * = (networkId,userName,userDomain,queryName,expression,dateCreated,hasBeenRun,flagged,flagMessage,queryXml) <> (QepQuery.tupled,QepQuery.unapply)
+    def * = (networkId,userName,userDomain,queryName,expression,dateCreated,hasBeenRun,queryXml) <> (QepQuery.tupled,QepQuery.unapply)
 
   }
+
   val allQepQueryQuery = TableQuery[QepQueries]
+
+  class QepQueryFlags(tag:Tag) extends Table[QepQueryFlag](tag,"queryFlags") {
+    def networkId = column[NetworkQueryId]("networkId")
+    def flagged = column[Boolean]("flagged")
+    def flagMessage = column[String]("flagMessage")
+    def changeDate = column[Long]("changeDate")
+
+    def * = (networkId,flagged,flagMessage,changeDate) <> (QepQueryFlag.tupled,QepQueryFlag.unapply)
+  }
+
+  val allQepQueryFlags = TableQuery[QepQueryFlags]
+  val mostRecentQueryFlags: Query[QepQueryFlags, QepQueryFlag, Seq] = for(
+    queryFlags <- allQepQueryFlags if !allQepQueryFlags.filter(_.networkId === queryFlags.networkId).filter(_.changeDate > queryFlags.changeDate).exists
+  ) yield queryFlags
 }
 
 object QepQuerySchema {
@@ -164,12 +190,10 @@ case class QepQuery(
                      expression: String,
                      dateCreated: Time,
                      hasBeenRun: Boolean,
-                     flagged: Boolean,
-                     flagMessage: String,
                      queryXml:String
                    ){
 
-  def toQueryMaster:QueryMaster = {
+  def toQueryMaster(qepQueryFlag:Option[QepQueryFlag]):QueryMaster = {
 
     val gregorianCalendar = new GregorianCalendar()
     gregorianCalendar.setTimeInMillis(dateCreated)
@@ -182,13 +206,13 @@ case class QepQuery(
       groupId = userDomain,
       createDate = xmlGregorianCalendar,
       held = None, //todo if a query is held at the adapter, how will we know? do we care?
-      flagged = Some(flagged), //todo flagged is boolean, this is tri-state. When is it None vs false
-      flagMessage = Some(flagMessage) //todo this always has a flaggedMessage (empty). When should it be None?
+      flagged = qepQueryFlag.map(_.flagged),
+      flagMessage = qepQueryFlag.map(_.flagMessage)
     )
   }
 }
 
-object QepQuery extends ((NetworkQueryId,UserName,String,QueryName,String,Time,Boolean,Boolean,String,String) => QepQuery) {
+object QepQuery extends ((NetworkQueryId,UserName,String,QueryName,String,Time,Boolean,String) => QepQuery) {
   def apply(runQueryRequest: RunQueryRequest):QepQuery = {
     new QepQuery(
       networkId = runQueryRequest.networkQueryId,
@@ -198,9 +222,15 @@ object QepQuery extends ((NetworkQueryId,UserName,String,QueryName,String,Time,B
       expression = runQueryRequest.queryDefinition.expr.getOrElse("No Expression").toString,
       dateCreated = System.currentTimeMillis(),
       hasBeenRun = false,  //todo ??
-      flagged = false, //todo flagged??
-      flagMessage = "", //todo flagMessage
       queryXml = runQueryRequest.toXmlString
     )
   }
 }
+
+case class QepQueryFlag(
+                       networkQueryId: NetworkQueryId,
+                       flagged:Boolean,
+                       flagMessage:String,
+                       changeDate:Long
+                       )
+
