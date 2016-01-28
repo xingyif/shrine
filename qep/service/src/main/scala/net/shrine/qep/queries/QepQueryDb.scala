@@ -129,6 +129,8 @@ case class QepQuerySchema(jdbcProfile: JdbcProfile) extends Loggable {
   }
 
   /**
+    * The adapter's query table looks like this:
+    *
   mysql> describe SHRINE_QUERY;
 +------------------+--------------+------+-----+-------------------+----------------+
 | Field            | Type         | Null | Key | Default           | Extra          |
@@ -155,10 +157,9 @@ case class QepQuerySchema(jdbcProfile: JdbcProfile) extends Loggable {
     def queryName = column[QueryName]("queryName")
     def expression = column[String]("expression")
     def dateCreated = column[Time]("dateCreated")
-    def hasBeenRun = column[Boolean]("hasBeenRun")
     def queryXml = column[String]("queryXml")
 
-    def * = (networkId,userName,userDomain,queryName,expression,dateCreated,hasBeenRun,queryXml) <> (QepQuery.tupled,QepQuery.unapply)
+    def * = (networkId,userName,userDomain,queryName,expression,dateCreated,queryXml) <> (QepQuery.tupled,QepQuery.unapply)
 
   }
 
@@ -197,7 +198,6 @@ case class QepQuery(
                      queryName: QueryName,
                      expression: String,
                      dateCreated: Time,
-                     hasBeenRun: Boolean,
                      queryXml:String
                    ){
 
@@ -213,14 +213,14 @@ case class QepQuery(
       userId = userName,
       groupId = userDomain,
       createDate = xmlGregorianCalendar,
-      held = None, //todo if a query is held at the adapter, how will we know? do we care?
+      held = None, //todo if a query is held at the adapter, how will we know? do we care? Question out to Bill and leadership
       flagged = qepQueryFlag.map(_.flagged),
       flagMessage = qepQueryFlag.map(_.flagMessage)
     )
   }
 }
 
-object QepQuery extends ((NetworkQueryId,UserName,String,QueryName,String,Time,Boolean,String) => QepQuery) {
+object QepQuery extends ((NetworkQueryId,UserName,String,QueryName,String,Time,String) => QepQuery) {
   def apply(runQueryRequest: RunQueryRequest):QepQuery = {
     new QepQuery(
       networkId = runQueryRequest.networkQueryId,
@@ -229,7 +229,6 @@ object QepQuery extends ((NetworkQueryId,UserName,String,QueryName,String,Time,B
       queryName = runQueryRequest.queryDefinition.name,
       expression = runQueryRequest.queryDefinition.expr.getOrElse("No Expression").toString,
       dateCreated = System.currentTimeMillis(),
-      hasBeenRun = false,  //todo ??
       queryXml = runQueryRequest.toXmlString
     )
   }

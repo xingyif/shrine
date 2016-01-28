@@ -59,8 +59,6 @@ final case class ShrineResource(shrineRequestHandler: ShrineRequestHandler) exte
     @HeaderParam("shouldBroadcast") shouldBroadcast: Boolean,
     flagMessage: String): String = {
 
-    info(s"flagMessage string is $flagMessage")
-
     val flagMessageOption: Option[String] = Option(flagMessage).filter(!_.trim.isEmpty)
     
     //TODO: What should we return, if anything?

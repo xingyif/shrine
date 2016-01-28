@@ -16,7 +16,6 @@ class QepQueryDbTest extends ShouldMatchersForJUnit {// with TestWithDatabase {
     queryName = "testQuery",
     expression = "testExpression",
     dateCreated = System.currentTimeMillis(),
-    hasBeenRun = false,
     queryXml = "testXML"
   )
 
@@ -27,7 +26,6 @@ class QepQueryDbTest extends ShouldMatchersForJUnit {// with TestWithDatabase {
     queryName = "testQuery",
     expression = "testExpression",
     dateCreated = System.currentTimeMillis(),
-    hasBeenRun = false,
     queryXml = "testXML"
   )
 

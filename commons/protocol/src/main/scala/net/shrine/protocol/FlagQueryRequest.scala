@@ -81,7 +81,7 @@ object FlagQueryRequest extends I2b2XmlUnmarshaller[FlagQueryRequest] with Shrin
       message = (xml \ "message").headOption.map(_.text)
     } yield {
       info(s"FlagQueryRequest fromXML $message from $xml")
-      
+
       FlagQueryRequest(projectId, waitTimeMs, authn, networkQueryId, message)
     }
   }
