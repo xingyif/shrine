@@ -126,7 +126,6 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
 
   //todo is this an admin? Does it matter?
   def adminRoute(user:User):Route = get {
-    implicit val system = ActorSystem("sprayServer")
 
     pathPrefix("happy") {
       val happyBaseUrl: String = DashboardConfigSource.config.getString("shrine.dashboard.happyBaseUrl")
@@ -152,7 +151,6 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
   //Manually test this by running a curl command
   //curl -k -w "\n%{response_code}\n" -u dave:kablam "https://shrine-dev1.catalyst:6443/shrine-dashboard/toDashboard/shrine-dev2.catalyst/shrine-dashboard/fromDashboard/ping"
   def toDashboardRoute(user:User):Route = get {
-    implicit val system = ActorSystem("sprayServer")
 
     pathPrefix(Segment) { dnsName =>
       val remoteDashboardProtocol = DashboardConfigSource.config.getString("shrine.dashboard.remoteDashboard.protocol")
@@ -173,7 +171,6 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
   lazy val getConfig:Route = {
     val statusBaseUrl: String = DashboardConfigSource.config.getString("shrine" +
       ".dashboard.statusBaseUrl")
-    implicit val system = ActorSystem("sprayServer")
     forwardUnmatchedPath(statusBaseUrl)
   }
 
@@ -182,7 +179,6 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
       ".dashboard" +
       ".statusBaseUrl")
 
-    implicit val system = ActorSystem("sprayServer")
     def pullClasspathFromConfig(httpResponse:HttpResponse,uri:Uri):Route = {
       ctx => {
         import org.json4s.native.JsonMethods.parse

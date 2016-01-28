@@ -4,6 +4,7 @@ import java.io.InputStream
 import java.security.cert.X509Certificate
 import javax.net.ssl.{X509TrustManager, SSLContext}
 
+import net.shrine.dashboard.DashboardConfigSource
 import net.shrine.log.Loggable
 import spray.can.Http
 import akka.io.IO
@@ -30,13 +31,14 @@ import scala.util.control.NonFatal
  * @since 9/14/15
  */
 trait HttpClientDirectives extends Loggable {
+  implicit val system = ActorSystem("dashboardServer",DashboardConfigSource.config)
 
   /**
     * Proxy the request to the specified base uri appended with the unmatched path.
     *
     */
   //todo these implicits don't buy that much . Consider ditching them.
-  def forwardUnmatchedPath(baseUri: Uri,maybeCredentials:Option[HttpCredentials] = None)(implicit system: ActorSystem): Route = {
+  def forwardUnmatchedPath(baseUri: Uri,maybeCredentials:Option[HttpCredentials] = None): Route = {
     def completeWithEntityAsString(httpResponse:HttpResponse,uri:Uri):Route = {
       ctx => {
         ctx.complete(httpResponse.entity.asString)
@@ -49,10 +51,10 @@ trait HttpClientDirectives extends Loggable {
     * Make the request to the specified base uri appended with the unmatched path, then use the returned entity (as a string) to complete the route.
     *
     */
-  def requestWithUnmatchedPath(baseUri:Uri, route:(HttpResponse,Uri) => Route,maybeCredentials:Option[HttpCredentials] = None)(implicit system: ActorSystem): Route = {
+  def requestWithUnmatchedPath(baseUri:Uri, route:(HttpResponse,Uri) => Route,maybeCredentials:Option[HttpCredentials] = None): Route = {
     ctx => {
       val resourceUri = baseUri.withPath(baseUri.path.++(ctx.unmatchedPath))
-      requestUriThenRoute(resourceUri,route,maybeCredentials)(system)(ctx)
+      requestUriThenRoute(resourceUri,route,maybeCredentials)(ctx)
     }
   }
 
@@ -60,16 +62,16 @@ trait HttpClientDirectives extends Loggable {
     * proxy the request to the specified uri with the unmatched path, then use the returned entity (as a string) to complete the route.
     *
     */
-  def requestUriThenRoute(resourceUri:Uri, route:(HttpResponse,Uri) => Route,maybeCredentials:Option[HttpCredentials] = None)(implicit system: ActorSystem): Route = {
+  def requestUriThenRoute(resourceUri:Uri, route:(HttpResponse,Uri) => Route,maybeCredentials:Option[HttpCredentials] = None): Route = {
     ctx => {
-      val httpResponse = httpResponseForUri(resourceUri,ctx,maybeCredentials)(system)
+      val httpResponse = httpResponseForUri(resourceUri,ctx,maybeCredentials)
       info(s"Got $httpResponse for $resourceUri")
 
       handleCommonErrorsOrRoute(route)(httpResponse,resourceUri)(ctx)
     }
   }
 
-  private def httpResponseForUri(resourceUri:Uri,ctx: RequestContext,maybeCredentials:Option[HttpCredentials] = None)(implicit system: ActorSystem):HttpResponse = {
+  private def httpResponseForUri(resourceUri:Uri,ctx: RequestContext,maybeCredentials:Option[HttpCredentials] = None):HttpResponse = {
 
     info(s"Requesting $resourceUri")
 
