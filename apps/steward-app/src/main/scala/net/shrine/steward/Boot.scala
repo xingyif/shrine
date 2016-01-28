@@ -9,7 +9,7 @@ import spray.servlet.WebBoot
 class Boot extends WebBoot {
 
   // we need an ActorSystem to host our application in
-  val system = ActorSystem("sprayServer")
+  val system = ActorSystem("sprayServer",StewardConfigSource.config)
 
   // the service actor replies to incoming HttpRequests
   val serviceActor = system.actorOf(Props[StewardServiceActor])
