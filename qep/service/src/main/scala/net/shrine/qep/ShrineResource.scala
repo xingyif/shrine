@@ -61,7 +61,7 @@ final case class ShrineResource(shrineRequestHandler: ShrineRequestHandler) exte
 
     info(s"flagMessage string is $flagMessage")
 
-    val flagMessageOption = Option(flagMessage).filter(!_.trim.isEmpty)
+    val flagMessageOption: Option[String] = Option(flagMessage).filter(!_.trim.isEmpty)
     
     //TODO: What should we return, if anything?
     performAndSerialize(_.flagQuery(FlagQueryRequest(projectId, waitTime, authorization, networkQueryId, flagMessageOption), shouldBroadcast))

@@ -1,5 +1,7 @@
 package net.shrine.protocol
 
+import net.shrine.log.Loggable
+
 import scala.concurrent.duration.Duration
 import scala.util.Try
 import scala.xml.NodeSeq
@@ -62,7 +64,7 @@ final case class FlagQueryRequest(
   }
 }
 
-object FlagQueryRequest extends I2b2XmlUnmarshaller[FlagQueryRequest] with ShrineXmlUnmarshaller[FlagQueryRequest] with ShrineRequestUnmarshaller with I2b2UnmarshallingHelpers with HasRootTagName {
+object FlagQueryRequest extends I2b2XmlUnmarshaller[FlagQueryRequest] with ShrineXmlUnmarshaller[FlagQueryRequest] with ShrineRequestUnmarshaller with I2b2UnmarshallingHelpers with HasRootTagName with Loggable {
 
   override val rootTagName = "flagQuery"
 
@@ -78,6 +80,8 @@ object FlagQueryRequest extends I2b2XmlUnmarshaller[FlagQueryRequest] with Shrin
       networkQueryId <- xml.withChild("networkQueryId").map(_.text.toLong)
       message = (xml \ "message").headOption.map(_.text)
     } yield {
+      info(s"FlagQueryRequest fromXML $message from $xml")
+      
       FlagQueryRequest(projectId, waitTimeMs, authn, networkQueryId, message)
     }
   }
@@ -92,6 +96,8 @@ object FlagQueryRequest extends I2b2XmlUnmarshaller[FlagQueryRequest] with Shrin
       networkQueryId <- (xml withChild "message_body" withChild "request" withChild rootTagName withChild "networkQueryId").map(_.text.toLong)
       message = (xml \ "message_body" \ "request" \ rootTagName \ "message").headOption.map(_.text)
     } yield {
+      info(s"FlagQueryRequest fromI2b2 $message from $xml")
+
       FlagQueryRequest(projectId, waitTime, authn, networkQueryId, message)
     }
   }
