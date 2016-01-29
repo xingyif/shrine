@@ -1,11 +1,11 @@
 package net.shrine.integration
 
-import net.shrine.service.ShrineResource
+import net.shrine.qep.ShrineResource
 import net.shrine.protocol.ShrineRequestHandler
-import net.shrine.service.I2b2BroadcastResource
+import net.shrine.qep.I2b2BroadcastResource
 import net.shrine.protocol.I2b2RequestHandler
-import net.shrine.service.ShrineService
-import net.shrine.service.I2b2BroadcastService
+import net.shrine.qep.QepService
+import net.shrine.qep.I2b2QepService
 import net.shrine.client.ShrineClient
 import net.shrine.client.JerseyShrineClient
 import net.shrine.protocol.AuthenticationInfo
@@ -31,7 +31,7 @@ object Hubs {
     override lazy val makeHandler: ShrineRequestHandler = {
       import scala.concurrent.duration._
       
-      ShrineService(
+      QepService(
           "example.com",
           MockAuditDao,
           MockAuthenticator,
@@ -57,7 +57,7 @@ object Hubs {
     import scala.concurrent.duration._
     
     override lazy val makeHandler: I2b2RequestHandler = {
-      I2b2BroadcastService(
+      I2b2QepService(
           "example.com",
           MockAuditDao,
           MockAuthenticator,

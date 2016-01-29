@@ -190,7 +190,7 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
   "DashboardService" should  "return an OK and pong for fromDashboard/ping" in {
 
     Get(s"/fromDashboard/ping") ~>
-      addCredentials(ShrineJwtAuthenticator.createOAuthCredentials) ~>
+      addCredentials(ShrineJwtAuthenticator.createOAuthCredentials(adminUser)) ~>
       route ~> check {
 
       assertResult(OK)(status)
@@ -269,7 +269,7 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
 
   "DashboardService" should  "not find a bogus web service to talk to" in {
 
-    Get(s"/toDashboard/test") ~>
+    Get(s"/toDashboard/bogus.harvard.edu/ping") ~>
       addCredentials(adminCredentials) ~>
       sealRoute(route) ~> check {
 
@@ -278,6 +278,7 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
       assertResult(NotFound)(status)
     }
   }
+
 
 }
 

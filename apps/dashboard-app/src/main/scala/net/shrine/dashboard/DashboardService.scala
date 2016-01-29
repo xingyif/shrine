@@ -51,17 +51,13 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
 
   // logs just the request method, uri and response at info level
   def logEntryForRequestResponse(req: HttpRequest): Any => Option[LogEntry] = {
-    case res: HttpResponse => {
-      Some(LogEntry(s"\n  Request: $req \n  Response: $res", Logging.InfoLevel))
-    }
+    case res: HttpResponse => Some(LogEntry(s"\n  Request: $req\n  Response: $res", Logging.InfoLevel))
     case _ => None // other kind of responses
   }
 
   // logs just the request method, uri and response status at info level
   def logEntryForRequest(req: HttpRequest): Any => Option[LogEntry] = {
-    case res: HttpResponse => {
-      Some(LogEntry(s"\n  Request: $req \n  Response status: ${res.status}", Logging.InfoLevel))
-    }
+    case res: HttpResponse => Some(LogEntry(s"\n  Request: $req\n  Response status: ${res.status}", Logging.InfoLevel))
     case _ => None // other kind of responses
   }
 
@@ -133,7 +129,6 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
 
   //todo is this an admin? Does it matter?
   def adminRoute(user:User):Route = get {
-    implicit val system = ActorSystem("sprayServer")
 
     pathPrefix("happy") {
       val happyBaseUrl: String = DashboardConfigSource.config.getString("shrine.dashboard.happyBaseUrl")
@@ -156,16 +151,18 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
     pathPrefix("status"){statusRoute(user)}
   }
 
+  //Manually test this by running a curl command
+  //curl -k -w "\n%{response_code}\n" -u dave:kablam "https://shrine-dev1.catalyst:6443/shrine-dashboard/toDashboard/shrine-dev2.catalyst/shrine-dashboard/fromDashboard/ping"
   def toDashboardRoute(user:User):Route = get {
-    implicit val system = ActorSystem("sprayServer")
 
     pathPrefix(Segment) { dnsName =>
       val remoteDashboardProtocol = DashboardConfigSource.config.getString("shrine.dashboard.remoteDashboard.protocol")
       val remoteDashboardPort = DashboardConfigSource.config.getString("shrine.dashboard.remoteDashboard.port")
+      val remoteDashboardPathPrefix = DashboardConfigSource.config.getString("shrine.dashboard.remoteDashboard.pathPrefix")
 
-      val baseUrl = s"$remoteDashboardProtocol$dnsName$remoteDashboardPort"
+      val baseUrl = s"$remoteDashboardProtocol$dnsName$remoteDashboardPort/$remoteDashboardPathPrefix"
 
-      forwardUnmatchedPath(baseUrl,Some(ShrineJwtAuthenticator.createOAuthCredentials))
+      forwardUnmatchedPath(baseUrl,Some(ShrineJwtAuthenticator.createOAuthCredentials(user)))
     }
   }
 
@@ -178,7 +175,6 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
   lazy val getConfig:Route = {
     val statusBaseUrl: String = DashboardConfigSource.config.getString("shrine" +
       ".dashboard.statusBaseUrl")
-    implicit val system = ActorSystem("sprayServer")
     forwardUnmatchedPath(statusBaseUrl)
   }
 

@@ -1,31 +1,13 @@
 package net.shrine.integration
 
-import net.shrine.util.ShouldMatchersForJUnit
-import net.shrine.protocol.{NodeId, DeleteQueryRequest, RequestType, Result, DeleteQueryResponse, ShrineRequestHandler, FlagQueryResponse, FlagQueryRequest, UnFlagQueryResponse, UnFlagQueryRequest, ResultOutputType, RunQueryRequest, RunQueryResponse, DefaultBreakdownResultOutputTypes}
-import org.junit.After
-import org.junit.Before
-import net.shrine.client.JerseyShrineClient
-import net.shrine.crypto.TrustParam
-import org.junit.Test
-import net.shrine.broadcaster.service.BroadcasterMultiplexerRequestHandler
-import net.shrine.adapter.service.JerseyTestComponent
-import net.shrine.broadcaster.service.BroadcasterMultiplexerService
-import net.shrine.broadcaster.service.BroadcasterMultiplexerResource
-import net.shrine.broadcaster.NodeHandle
 import net.shrine.adapter.client.RemoteAdapterClient
-import net.shrine.client.Poster
-import net.shrine.client.JerseyHttpClient
-import net.shrine.broadcaster.AdapterClientBroadcaster
-import net.shrine.broadcaster.InJvmBroadcasterClient
-import net.shrine.service.ShrineService
-import net.shrine.service.ShrineResource
-import net.shrine.broadcaster.PosterBroadcasterClient
-import net.shrine.protocol.query.Term
-import net.shrine.protocol.query.Or
-import net.shrine.protocol.query.Modifiers
-import net.shrine.protocol.query.QueryDefinition
-import net.shrine.protocol.query.Constrained
-import net.shrine.protocol.query.ValueConstraint
+import net.shrine.adapter.service.JerseyTestComponent
+import net.shrine.broadcaster.{AdapterClientBroadcaster, NodeHandle, PosterBroadcasterClient}
+import net.shrine.broadcaster.service.{BroadcasterMultiplexerRequestHandler, BroadcasterMultiplexerResource, BroadcasterMultiplexerService}
+import net.shrine.protocol.query.{Constrained, Modifiers, Or, QueryDefinition, Term, ValueConstraint}
+import net.shrine.protocol.{DefaultBreakdownResultOutputTypes, DeleteQueryRequest, DeleteQueryResponse, FlagQueryRequest, FlagQueryResponse, NodeId, RequestType, Result, ResultOutputType, RunQueryRequest, RunQueryResponse, UnFlagQueryRequest, UnFlagQueryResponse}
+import net.shrine.util.ShouldMatchersForJUnit
+import org.junit.{After, Before, Test}
 
 /**
  * @author clint
