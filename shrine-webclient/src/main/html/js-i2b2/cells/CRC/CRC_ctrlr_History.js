@@ -148,7 +148,8 @@ i2b2.CRC.ctrlr.history = {
 
         // fire the AJAX call
         var options = {
-            network_query_id: flagQueryDto.queryId
+            network_query_id: flagQueryDto.queryId,
+			message:          flagQueryDto.message
         };
 
         i2b2.CRC.ajax.flagQueryMaster("CRC:History", options, scopeCB);
