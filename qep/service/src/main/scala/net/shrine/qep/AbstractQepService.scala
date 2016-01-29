@@ -54,8 +54,6 @@ trait AbstractQepService[BaseResp <: BaseShrineResponse] extends Loggable {
   }
   
   protected def doFlagQuery(request: FlagQueryRequest, shouldBroadcast: Boolean = true): BaseResp = {
-    info(s"Flag request is $request")
-
     QepQueryDb.db.insertQepQueryFlag(request)
     doBroadcastQuery(request, new FlagQueryAggregator, shouldBroadcast)
   }
@@ -74,19 +72,23 @@ trait AbstractQepService[BaseResp <: BaseShrineResponse] extends Loggable {
   }
 
   protected def doReadQueryDefinition(request: ReadQueryDefinitionRequest, shouldBroadcast: Boolean): BaseResp = {
+    info(s"doReadQueryDefinition($request,$shouldBroadcast)")
+
     doBroadcastQuery(request, new ReadQueryDefinitionAggregator, shouldBroadcast)
   }
 
   protected def doReadPdo(request: ReadPdoRequest, shouldBroadcast: Boolean): BaseResp = {
+    info(s"doReadPdo($request,$shouldBroadcast)")
     doBroadcastQuery(request, new ReadPdoResponseAggregator, shouldBroadcast)
   }
 
   protected def doReadInstanceResults(request: ReadInstanceResultsRequest, shouldBroadcast: Boolean): BaseResp = {
+    info(s"doReadInstanceResults($request,$shouldBroadcast)")
     doBroadcastQuery(request, new ReadInstanceResultsAggregator(request.shrineNetworkQueryId, false), shouldBroadcast)
   }
 
   protected def doReadQueryInstances(request: ReadQueryInstancesRequest, shouldBroadcast: Boolean): BaseResp = {
-    info(s"doReadQueryInstances($request)")
+    info(s"doReadQueryInstances($request,$shouldBroadcast)")
     authenticateAndThen(request) { authResult =>
       val now = XmlDateHelper.now
       val networkQueryId = request.queryId
@@ -105,20 +107,23 @@ trait AbstractQepService[BaseResp <: BaseShrineResponse] extends Loggable {
   }
 
   protected def doReadPreviousQueries(request: ReadPreviousQueriesRequest, shouldBroadcast: Boolean): ReadPreviousQueriesResponse = {
+    info(s"doReadPreviousQueries($request,$shouldBroadcast)")
     //pull results from the local database.
     QepQueryDb.db.selectPreviousQueries(request)
   }
 
   protected def doRenameQuery(request: RenameQueryRequest, shouldBroadcast: Boolean): BaseResp = {
+    info(s"doRenameQuery($request,$shouldBroadcast)")
     doBroadcastQuery(request, new RenameQueryAggregator, shouldBroadcast)
   }
 
   protected def doDeleteQuery(request: DeleteQueryRequest, shouldBroadcast: Boolean): BaseResp = {
+    info(s"doDeleteQuery($request,$shouldBroadcast)")
     doBroadcastQuery(request, new DeleteQueryAggregator, shouldBroadcast)
   }
 
   protected def doReadApprovedQueryTopics(request: ReadApprovedQueryTopicsRequest, shouldBroadcast: Boolean): BaseResp = authenticateAndThen(request) { _ =>
-    info(s"doReadApprovedQueryTopics($request)")
+    info(s"doReadApprovedQueryTopics($request,$shouldBroadcast)")
     //TODO: XXX: HACK: Would like to remove the cast
     authorizationService.readApprovedEntries(request) match {
       case Left(errorResponse) => errorResponse.asInstanceOf[BaseResp]

@@ -1,6 +1,6 @@
 package net.shrine.dashboard
 
-import akka.actor.{ActorSystem, Actor}
+import akka.actor.Actor
 import akka.event.Logging
 import net.shrine.authentication.UserAuthenticator
 
