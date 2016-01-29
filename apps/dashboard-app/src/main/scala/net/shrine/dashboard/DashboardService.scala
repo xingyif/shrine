@@ -37,7 +37,6 @@ class DashboardServiceActor extends Actor with DashboardService {
   def receive = runRoute(route)
 }
 
-
 // this trait defines our service behavior independently from the service actor
 trait DashboardService extends HttpService with Json4sSupport with Loggable {
   implicit def json4sFormats: Formats = DefaultFormats
@@ -194,9 +193,9 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
         // -- vars -- //
         val result        = httpResponse.entity.asString
         val config        = parse(result)
-                            .extract[net.shrine.status.protocol.Config]
-                            .keyValues
-                            .filterKeys(_.toLowerCase.startsWith("shrine"))
+          .extract[net.shrine.status.protocol.Config]
+          .keyValues
+          .filterKeys(_.toLowerCase.startsWith("shrine"))
         val shrineConfig  = ShrineConfig(config)
         val audit         = Audit(config)
 
@@ -241,7 +240,7 @@ object ShrineParser{
 
   // -- @todo: need to make sure this is initialized. -- //
   private var shrineMap:Map[String, String]
-              = Map(""->"")
+  = Map(""->"")
   private val trueVal = "true"
   private val rootKey = "shrine"
 
@@ -251,7 +250,7 @@ object ShrineParser{
 
   // -- @todo: where should this live ? -- //
   def parseShrineFromConfig(resultStr:String) = {
-    
+
     // -- needed to use json4s parse -- //
     implicit def json4sFormats: Formats = DefaultFormats
 
@@ -267,30 +266,38 @@ object ShrineParser{
   private def Parser =
     this.shrineMap
 
+  private def getOrElse(key:String, elseVal:String) =
+    Parser.getOrElse(rootKey + key, elseVal).split("\"").mkString("")
+
   // -- -- //
-  def IsHub = 
-    Parser.getOrElse(rootKey + ".hub.create", "")
+  def IsHub =
+    getOrElse(rootKey + ".hub.create", "")
       .toLowerCase == trueVal
-  
+
   // -- -- //
-  def StewardEnabled = 
+  def StewardEnabled =
     Parser.keySet
       .contains(rootKey + ".queryEntryPoint.shrineSteward")
-  
+
   // -- -- //
-  def ShouldQuerySelf = 
-    Parser.getOrElse(rootKey + ".hub.shouldQuerySelf", "")
+  def ShouldQuerySelf =
+    getOrElse(rootKey + ".hub.shouldQuerySelf", "")
       .toLowerCase == trueVal
-  
- // -- -- //
-  def DownstreamNodes = 
+
+  // -- -- //
+  def DownstreamNodes =
     for((k,v) <- Parser.filterKeys(_.toLowerCase.startsWith
-      ("shrine.hub.downstreamnodes"))) yield (k.split('.').last, v)
-  
+      ("shrine.hub.downstreamnodes"))) yield (DownstreamNode(k.split('.').last,
+      v.split("\"").mkString("")))
+
+}
+
+case class DownstreamNode(name:String, url:String){
+
 }
 
 case class Options(isHub:Boolean, stewardEnabled:Boolean, shouldQuerySelf:Boolean,
-                  downstreamNodes:Map[String,String])
+                   downstreamNodes:Iterable[DownstreamNode])
 object Options{
   def apply(configMap:Map[String, String]):Options ={
     val isHub           = ShrineParser.IsHub
@@ -314,7 +321,6 @@ object ShrineConfig{
     ShrineConfig(isHub, hub, pmEndpoint, ontEndpoint, hiveCredentials)
   }
 }
-
 
 case class Endpoint(acceptAllCerts:Boolean, url:String, timeoutSeconds:Int)
 object Endpoint{
@@ -398,6 +404,25 @@ object QEP{
 }
 
 
+
+/*
+
+
+  val shrineConfig = keyValues.filterKeys(_.toLowerCase.startsWith("shrine"))
+
+  def getHub = {
+    val shouldQuerySelf = shrineConfig.getOrElse("shrine.hub.shouldQuerySelf", "")
+    val create = shrineConfig.getOrElse("shrine.hub.create", "")
+    val downstreamNodes = for((k,v) <- shrineConfig.filterKeys(_.toLowerCase.startsWith
+      ("shrine" +
+      ".hub.downstreamnodes"))) yield (k.split('.').last, v)
+
+    case class Hub(shouldQuerySelf:String, create:String, downstreamNodes:Map[String,
+      String])
+
+    Hub(shouldQuerySelf, create, downstreamNodes)
+  }
+ */
 
 //adapted from https://gist.github.com/joseraya/176821d856b43b1cfe19
 object gruntWatchCorsSupport extends Directive0 with RouteConcatenation {
