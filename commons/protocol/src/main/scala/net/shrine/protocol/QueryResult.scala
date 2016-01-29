@@ -1,7 +1,7 @@
 package net.shrine.protocol
 
 import javax.xml.datatype.XMLGregorianCalendar
-import net.shrine.problem.{ProblemNotYetEncoded, Problem, ProblemDigest}
+import net.shrine.problem.{Problem, ProblemDigest}
 import net.shrine.protocol.QueryResult.StatusType
 
 import scala.xml.NodeSeq

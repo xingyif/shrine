@@ -128,28 +128,6 @@ case class QepQuerySchema(jdbcProfile: JdbcProfile) extends Loggable {
     Await.result(future,Duration.Inf)
   }
 
-  /**
-    * The adapter's query table looks like this:
-    *
-  mysql> describe SHRINE_QUERY;
-+------------------+--------------+------+-----+-------------------+----------------+
-| Field            | Type         | Null | Key | Default           | Extra          |
-+------------------+--------------+------+-----+-------------------+----------------+
-| id               | int(11)      | NO   | PRI | NULL              | auto_increment |
-| local_id         | varchar(255) | NO   | MUL | NULL              |                |
-| network_id       | bigint(20)   | NO   | MUL | NULL              |                |
-| username         | varchar(255) | NO   | MUL | NULL              |                |
-| domain           | varchar(255) | NO   |     | NULL              |                |
-| query_name       | varchar(255) | NO   |     | NULL              |                |
-| query_expression | text         | YES  |     | NULL              |                |
-| date_created     | timestamp    | NO   |     | CURRENT_TIMESTAMP |                |
-| has_been_run     | tinyint(1)   | NO   |     | 0                 |                |
-| flagged          | tinyint(1)   | NO   |     | 0                 |                |
-| flag_message     | varchar(255) | YES  |     | NULL              |                |
-| query_xml        | text         | YES  |     | NULL              |                |
-+------------------+--------------+------+-----+-------------------+----------------+
-    */
-
   class QepQueries(tag:Tag) extends Table[QepQuery](tag,"previousQueries") {
     def networkId = column[NetworkQueryId]("networkId")
     def userName = column[UserName]("userName")
@@ -178,6 +156,66 @@ case class QepQuerySchema(jdbcProfile: JdbcProfile) extends Loggable {
   val mostRecentQueryFlags: Query[QepQueryFlags, QepQueryFlag, Seq] = for(
     queryFlags <- allQepQueryFlags if !allQepQueryFlags.filter(_.networkId === queryFlags.networkId).filter(_.changeDate > queryFlags.changeDate).exists
   ) yield queryFlags
+
+  /**
+    * The adapter's QUERY_RESULTS table looks like this:
+    *
+    * mysql> describe QUERY_RESULT;
++--------------+------------------------------------------------------------------------------------------------------------------------------------------------------------+------+-----+-------------------+----------------+
+| Field        | Type                                                                                                                                                       | Null | Key | Default           | Extra          |
++--------------+------------------------------------------------------------------------------------------------------------------------------------------------------------+------+-----+-------------------+----------------+
+| id           | int(11)                                                                                                                                                    | NO   | PRI | NULL              | auto_increment |
+| local_id     | varchar(255)                                                                                                                                               | NO   |     | NULL              |                |
+| query_id     | int(11)                                                                                                                                                    | NO   | MUL | NULL              |                |
+| type         | enum('PATIENTSET','PATIENT_COUNT_XML','PATIENT_AGE_COUNT_XML','PATIENT_RACE_COUNT_XML','PATIENT_VITALSTATUS_COUNT_XML','PATIENT_GENDER_COUNT_XML','ERROR') | NO   |     | NULL              |                |
+| status       | enum('FINISHED','ERROR','PROCESSING','QUEUED')                                                                                                             | NO   |     | NULL              |                |
+| time_elapsed | int(11)                                                                                                                                                    | YES  |     | NULL              |                |
+| last_updated | timestamp                                                                                                                                                  | NO   |     | CURRENT_TIMESTAMP |                |
++--------------+------------------------------------------------------------------------------------------------------------------------------------------------------------+------+-----+-------------------+----------------+
+
+    with some other aux tables to hold specifics:
+
+    mysql> describe COUNT_RESULT;
++------------------+-----------+------+-----+-------------------+----------------+
+| Field            | Type      | Null | Key | Default           | Extra          |
++------------------+-----------+------+-----+-------------------+----------------+
+| id               | int(11)   | NO   | PRI | NULL              | auto_increment |
+| result_id        | int(11)   | NO   | MUL | NULL              |                |
+| original_count   | int(11)   | NO   |     | NULL              |                |
+| obfuscated_count | int(11)   | NO   |     | NULL              |                |
+| date_created     | timestamp | NO   |     | CURRENT_TIMESTAMP |                |
++------------------+-----------+------+-----+-------------------+----------------+
+
+    mysql> describe BREAKDOWN_RESULT;
++------------------+--------------+------+-----+---------+----------------+
+| Field            | Type         | Null | Key | Default | Extra          |
++------------------+--------------+------+-----+---------+----------------+
+| id               | int(11)      | NO   | PRI | NULL    | auto_increment |
+| result_id        | int(11)      | NO   | MUL | NULL    |                |
+| data_key         | varchar(255) | NO   |     | NULL    |                |
+| original_value   | int(11)      | NO   |     | NULL    |                |
+| obfuscated_value | int(11)      | NO   |     | NULL    |                |
++------------------+--------------+------+-----+---------+----------------+
+
+    mysql> describe ERROR_RESULT;
++---------------------+--------------+------+-----+--------------------------+----------------+
+| Field               | Type         | Null | Key | Default                  | Extra          |
++---------------------+--------------+------+-----+--------------------------+----------------+
+| id                  | int(11)      | NO   | PRI | NULL                     | auto_increment |
+| result_id           | int(11)      | NO   | MUL | NULL                     |                |
+| message             | varchar(255) | NO   |     | NULL                     |                |
+| CODEC               | varchar(256) | NO   |     | Pre-1.20 Error           |                |
+| SUMMARY             | text         | NO   |     | NULL                     |                |
+| DESCRIPTION         | text         | NO   |     | NULL                     |                |
+| PROBLEM_DESCRIPTION | text         | NO   |     | NULL                     |                |
+| DETAILS             | text         | NO   |     | NULL                     |                |
+| STAMP               | varchar(256) | NO   |     | Unknown time and machine |                |
++---------------------+--------------+------+-----+--------------------------+----------------+
+
+    */
+
+
+
 }
 
 object QepQuerySchema {

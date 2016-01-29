@@ -84,6 +84,9 @@ trait AbstractQepService[BaseResp <: BaseShrineResponse] extends Loggable {
 
   protected def doReadInstanceResults(request: ReadInstanceResultsRequest, shouldBroadcast: Boolean): BaseResp = {
     info(s"doReadInstanceResults($request,$shouldBroadcast)")
+
+    //todo try reading directly from the QEP database code here
+
     doBroadcastQuery(request, new ReadInstanceResultsAggregator(request.shrineNetworkQueryId, false), shouldBroadcast)
   }
 
@@ -108,7 +111,10 @@ trait AbstractQepService[BaseResp <: BaseShrineResponse] extends Loggable {
 
   protected def doReadPreviousQueries(request: ReadPreviousQueriesRequest, shouldBroadcast: Boolean): ReadPreviousQueriesResponse = {
     info(s"doReadPreviousQueries($request,$shouldBroadcast)")
-    //pull results from the local database.
+
+    //check results. If any results are in one of many pending states, go ahead and request them. (Maybe go async)
+
+    //pull queries from the local database.
     QepQueryDb.db.selectPreviousQueries(request)
   }
 
