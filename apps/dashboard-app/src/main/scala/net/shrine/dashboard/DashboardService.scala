@@ -7,6 +7,7 @@ import net.shrine.authentication.UserAuthenticator
 import net.shrine.authorization.steward.OutboundUser
 import net.shrine.dashboard.jwtauth.ShrineJwtAuthenticator
 import net.shrine.i2b2.protocol.pm.User
+import net.shrine.status.protocol.{Config => StatusProtocolConfig}
 import net.shrine.dashboard.httpclient.HttpClientDirectives.{forwardUnmatchedPath,requestUriThenRoute}
 import net.shrine.log.Loggable
 import shapeless.HNil
@@ -17,6 +18,7 @@ import spray.routing.directives.LogEntry
 import spray.routing.{AuthenticationFailedRejection, Rejected, RouteConcatenation, Directive0, Route, HttpService}
 
 import org.json4s.{DefaultFormats, Formats}
+import org.json4s.native.JsonMethods.{parse => json4sParse}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -165,7 +167,8 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
 
   def statusRoute(user:User):Route = get {
     pathPrefix("config"){getConfig}~
-    pathPrefix("classpath"){getClasspath}
+    pathPrefix("classpath"){getClasspath}~
+    pathPrefix("summary"){getSummary}
   }
 
   lazy val getConfig:Route = {
@@ -179,22 +182,130 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
       ".dashboard" +
       ".statusBaseUrl")
 
+
+    implicit val system = ActorSystem("sprayServer")
+
     def pullClasspathFromConfig(httpResponse:HttpResponse,uri:Uri):Route = {
       ctx => {
+        // -- import parser -- //
         import org.json4s.native.JsonMethods.parse
-        val result = httpResponse.entity.asString
-        val config = parse(result).extract[net.shrine.status.protocol.Config].keyValues.filterKeys(_.toLowerCase.startsWith("shrine"))
-        val shrineConfig = ShrineConfig(config)
-        //for((k, v) <- config.filterKeys(_.startsWith("shrine.queryEntryPoint")))
-          //println (k + "<--" + v)
 
-        val audit = Audit(config)
-        println(audit)
+        // -- vars -- //
+        val result        = httpResponse.entity.asString
+        val config        = parse(result)
+          .extract[net.shrine.status.protocol.Config]
+          .keyValues
+          .filterKeys(_.toLowerCase.startsWith("shrine"))
+        val shrineConfig  = ShrineConfig(config)
+        val audit         = Audit(config)
+
+        // -- complete route -- //
         ctx.complete(shrineConfig)
       }
     }
 
+    // -- init request -- //
     requestUriThenRoute(statusBaseUrl,pullClasspathFromConfig)
+  }
+
+
+
+
+  lazy val getSummary:Route = {
+
+    // -- vars -- //
+    val urlKey                = "shrine.dashboard.statusBaseUrl"
+    val statusBaseUrl: String = DashboardConfigSource.config.getString(urlKey)
+    implicit val system       = ActorSystem("sprayServer")
+
+    def completeSummaryRoute(httpResponse:HttpResponse,uri:Uri):Route = {
+      ctx => {
+        val config =  ShrineParser.parseShrineFromConfig(httpResponse.entity.asString)
+
+        ctx.complete(
+          Options(config)
+        )
+      }
+    }
+
+    requestUriThenRoute(statusBaseUrl, completeSummaryRoute)
+  }
+}
+
+/**
+ * Centralized parsing logic for map of shrine.conf
+ * the class literal `T.class` in Java.
+ */
+object ShrineParser{
+
+  // -- @todo: need to make sure this is initialized. -- //
+  private var shrineMap:Map[String, String]
+  = Map(""->"")
+  private val trueVal = "true"
+  private val rootKey = "shrine"
+
+  private def isInit =
+    this.shrineMap.contains(rootKey)
+
+
+  // -- @todo: where should this live ? -- //
+  def parseShrineFromConfig(resultStr:String) = {
+
+    // -- needed to use json4s parse -- //
+    implicit def json4sFormats: Formats = DefaultFormats
+
+
+    // -- extract map of shrine subset of config file -- //
+    this.shrineMap = json4sParse(resultStr).extract[StatusProtocolConfig].keyValues
+      .filterKeys(_.toLowerCase.startsWith("shrine"))
+
+    this.shrineMap
+  }
+
+  // --  @todo throw exception in else? -- //
+  private def Parser =
+    this.shrineMap
+
+  private def getOrElse(key:String, elseVal:String) =
+    Parser.getOrElse(rootKey + key, elseVal).split("\"").mkString("")
+
+  // -- -- //
+  def IsHub =
+    getOrElse(rootKey + ".hub.create", "")
+      .toLowerCase == trueVal
+
+  // -- -- //
+  def StewardEnabled =
+    Parser.keySet
+      .contains(rootKey + ".queryEntryPoint.shrineSteward")
+
+  // -- -- //
+  def ShouldQuerySelf =
+    getOrElse(rootKey + ".hub.shouldQuerySelf", "")
+      .toLowerCase == trueVal
+
+  // -- -- //
+  def DownstreamNodes =
+    for((k,v) <- Parser.filterKeys(_.toLowerCase.startsWith
+      ("shrine.hub.downstreamnodes"))) yield (DownstreamNode(k.split('.').last,
+      v.split("\"").mkString("")))
+
+}
+
+case class DownstreamNode(name:String, url:String){
+
+}
+
+case class Options(isHub:Boolean, stewardEnabled:Boolean, shouldQuerySelf:Boolean,
+                   downstreamNodes:Iterable[DownstreamNode])
+object Options{
+  def apply(configMap:Map[String, String]):Options ={
+    val isHub           = ShrineParser.IsHub
+    val stewardEnabled  = ShrineParser.StewardEnabled
+    val shouldQuerySelf = ShrineParser.ShouldQuerySelf
+    val downstreamNodes = ShrineParser.DownstreamNodes
+
+    Options(isHub, stewardEnabled, shouldQuerySelf, downstreamNodes)
   }
 }
 
@@ -202,16 +313,14 @@ case class ShrineConfig(isHub:Boolean, hub:Hub, pmEndpoint:Endpoint,
                         ontEndpoint:Endpoint, hiveCredentials: HiveCredentials)
 object ShrineConfig{
   def apply(configMap:Map[String, String]):ShrineConfig = {
-    val hub = Hub(configMap)
-    val isHub = hub.create
-    val pmEndpoint = Endpoint(configMap, "pm")
-    val ontEndpoint = Endpoint(configMap, "ont")
+    val hub             = Hub(configMap)
+    val isHub           = hub.create == true
+    val pmEndpoint      = Endpoint(configMap, "pm")
+    val ontEndpoint     = Endpoint(configMap, "ont")
     val hiveCredentials = HiveCredentials(configMap)
-
     ShrineConfig(isHub, hub, pmEndpoint, ontEndpoint, hiveCredentials)
   }
 }
-
 
 case class Endpoint(acceptAllCerts:Boolean, url:String, timeoutSeconds:Int)
 object Endpoint{
