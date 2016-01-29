@@ -182,9 +182,6 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
       ".dashboard" +
       ".statusBaseUrl")
 
-
-    implicit val system = ActorSystem("sprayServer")
-
     def pullClasspathFromConfig(httpResponse:HttpResponse,uri:Uri):Route = {
       ctx => {
         // -- import parser -- //
@@ -216,7 +213,6 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
     // -- vars -- //
     val urlKey                = "shrine.dashboard.statusBaseUrl"
     val statusBaseUrl: String = DashboardConfigSource.config.getString(urlKey)
-    implicit val system       = ActorSystem("sprayServer")
 
     def completeSummaryRoute(httpResponse:HttpResponse,uri:Uri):Route = {
       ctx => {
