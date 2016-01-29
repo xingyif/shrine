@@ -11,7 +11,7 @@ import scala.concurrent.duration.Duration
 import net.shrine.util.XmlDateHelper
 import scala.concurrent.Future
 import scala.concurrent.Await
-import net.shrine.protocol.{ReadPreviousQueriesResponse, RunQueryRequest, BaseShrineRequest, AuthenticationInfo, Credential, BaseShrineResponse, ReadQueryInstancesRequest, QueryInstance, ReadQueryInstancesResponse, ReadQueryDefinitionRequest, DeleteQueryRequest, ReadApprovedQueryTopicsRequest, ReadInstanceResultsRequest, ReadPreviousQueriesRequest, RenameQueryRequest, ReadPdoRequest, FlagQueryRequest, UnFlagQueryRequest, ReadResultOutputTypesRequest, ReadResultOutputTypesResponse, ResultOutputType}
+import net.shrine.protocol.{ReadPreviousQueriesResponse, RunQueryRequest, BaseShrineRequest, AuthenticationInfo, Credential, BaseShrineResponse, ReadQueryInstancesRequest, QueryInstance, ReadQueryInstancesResponse, ReadQueryDefinitionRequest, DeleteQueryRequest, ReadApprovedQueryTopicsRequest, ReadInstanceResultsRequest, ReadPreviousQueriesRequest, RenameQueryRequest, FlagQueryRequest, UnFlagQueryRequest, ReadResultOutputTypesRequest, ReadResultOutputTypesResponse, ResultOutputType}
 import net.shrine.authorization.AuthorizationResult.{Authorized, NotAuthorized}
 import net.shrine.authentication.AuthenticationResult
 import net.shrine.authentication.NotAuthenticatedException
@@ -75,11 +75,6 @@ trait AbstractQepService[BaseResp <: BaseShrineResponse] extends Loggable {
     info(s"doReadQueryDefinition($request,$shouldBroadcast)")
 
     doBroadcastQuery(request, new ReadQueryDefinitionAggregator, shouldBroadcast)
-  }
-
-  protected def doReadPdo(request: ReadPdoRequest, shouldBroadcast: Boolean): BaseResp = {
-    info(s"doReadPdo($request,$shouldBroadcast)")
-    doBroadcastQuery(request, new ReadPdoResponseAggregator, shouldBroadcast)
   }
 
   protected def doReadInstanceResults(request: ReadInstanceResultsRequest, shouldBroadcast: Boolean): BaseResp = {

@@ -17,7 +17,6 @@ import net.shrine.protocol.DeleteQueryRequest
 import net.shrine.protocol.OutputTypeSet
 import net.shrine.protocol.ReadApprovedQueryTopicsRequest
 import net.shrine.protocol.ReadInstanceResultsRequest
-import net.shrine.protocol.ReadPdoRequest
 import net.shrine.protocol.ReadPreviousQueriesRequest
 import net.shrine.protocol.ReadQueryDefinitionRequest
 import net.shrine.protocol.ReadQueryInstancesRequest
@@ -159,6 +158,7 @@ final case class ShrineResource(shrineRequestHandler: ShrineRequestHandler) exte
     performAndSerialize(_.readInstanceResults(ReadInstanceResultsRequest(projectId, waitTime, authorization, instanceId), shouldBroadcast))
   }
 
+  /*
   @POST //This must be POST, since we're sending content in the request body
   @Path("/patient-set/{patientSetCollId}")
   @Consumes(Array(MediaType.APPLICATION_XML))
@@ -174,7 +174,7 @@ final case class ShrineResource(shrineRequestHandler: ShrineRequestHandler) exte
 
     performAndSerialize(_.readPdo(ReadPdoRequest(projectId, waitTime, authorization, patientSetCollId, loadString(optionsXml)), shouldBroadcast))
   }
-
+*/
   @GET
   @Path("/queries/{queryId}")
   def readQueryDefinition(

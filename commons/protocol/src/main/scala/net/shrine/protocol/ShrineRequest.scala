@@ -89,7 +89,6 @@ object ShrineRequest {
     "deleteQuery" -> DeleteQueryRequest.fromXml _,
     "readApprovedQueryTopics" -> ReadApprovedQueryTopicsRequest.fromXml _,
     "readInstanceResults" -> ReadInstanceResultsRequest.fromXml _,
-    "readPdo" -> ReadPdoRequest.fromXml _,
     "readPreviousQueries" -> ReadPreviousQueriesRequest.fromXml _,
     "readQueryDefinition" -> ReadQueryDefinitionRequest.fromXml _,
     "readQueryInstances" -> ReadQueryInstancesRequest.fromXml _,
