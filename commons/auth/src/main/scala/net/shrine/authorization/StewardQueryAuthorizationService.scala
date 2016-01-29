@@ -46,7 +46,7 @@ final case class StewardQueryAuthorizationService(qepUserName:String,
                                                   defaultTimeout:FiniteDuration = 10 seconds) extends QueryAuthorizationService with Loggable with Json4sSupport {
 
   import system.dispatcher // execution context for futures
-  implicit val system = ActorSystem("AuthorizationService",ConfigFactory.load("shrine")) //todo use shrine's config
+  implicit val system = ActorSystem("AuthorizationServiceActors",ConfigFactory.load("shrine")) //todo use shrine's config
 
   implicit val timeout:Timeout = Timeout.durationToTimeout(defaultTimeout)//10 seconds
 
