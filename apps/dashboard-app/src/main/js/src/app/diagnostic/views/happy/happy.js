@@ -69,7 +69,7 @@ angular.module('shrine-happy', ['happy-model', 'ngAnimate', 'ui.bootstrap'])
         $scope.setStateAndRefresh = function (state) {
             $scope.state = state;
         }
-        $scope.setAll();
+        //$scope.setAll();
     }])
     .directive("general", function () {
         return {
