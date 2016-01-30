@@ -1,69 +1,22 @@
 package net.shrine.qep
 
-import org.junit.Test
-import net.shrine.util.ShouldMatchersForJUnit
 import com.sun.jersey.api.client.UniformInterfaceException
-import com.sun.jersey.test.framework.JerseyTest
 import net.shrine.client.JerseyShrineClient
 import net.shrine.crypto.TrustParam.AcceptAllCerts
-import net.shrine.protocol.AggregatedReadInstanceResultsResponse
-import net.shrine.protocol.AggregatedReadQueryResultResponse
-import net.shrine.protocol.AggregatedRunQueryResponse
-import net.shrine.protocol.ApprovedTopic
-import net.shrine.protocol.AuthenticationInfo
-import net.shrine.protocol.Credential
-import net.shrine.protocol.DeleteQueryRequest
-import net.shrine.protocol.DeleteQueryResponse
-import net.shrine.protocol.EventResponse
-import net.shrine.protocol.ObservationResponse
-import net.shrine.protocol.ParamResponse
-import net.shrine.protocol.PatientResponse
-import net.shrine.protocol.QueryResult
-import net.shrine.protocol.ReadApprovedQueryTopicsRequest
-import net.shrine.protocol.ReadApprovedQueryTopicsResponse
-import net.shrine.protocol.ReadInstanceResultsRequest
-import net.shrine.protocol.ReadPdoRequest
-import net.shrine.protocol.ReadPdoResponse
-import net.shrine.protocol.ReadPreviousQueriesRequest
-import net.shrine.protocol.ReadPreviousQueriesResponse
-import net.shrine.protocol.ReadQueryDefinitionRequest
-import net.shrine.protocol.ReadQueryDefinitionResponse
-import net.shrine.protocol.ReadQueryInstancesRequest
-import net.shrine.protocol.ReadQueryInstancesResponse
-import net.shrine.protocol.ReadQueryResultRequest
-import net.shrine.protocol.RenameQueryRequest
-import net.shrine.protocol.RenameQueryResponse
-import net.shrine.protocol.RequestType
-import net.shrine.protocol.ResultOutputType
-import net.shrine.protocol.RunQueryRequest
-import net.shrine.protocol.ShrineRequest
-import net.shrine.protocol.ShrineRequestHandler
-import net.shrine.protocol.ShrineResponse
-import net.shrine.protocol.query.QueryDefinition
-import net.shrine.protocol.query.Term
-import net.shrine.util.JerseyAppDescriptor
-import net.shrine.util.XmlDateHelper
-import net.shrine.protocol.BaseShrineResponse
-import net.shrine.protocol.ReadTranslatedQueryDefinitionRequest
-import net.shrine.protocol.AggregatedReadTranslatedQueryDefinitionResponse
-import net.shrine.protocol.FlagQueryRequest
-import net.shrine.protocol.FlagQueryResponse
-import net.shrine.protocol.UnFlagQueryRequest
-import net.shrine.protocol.UnFlagQueryResponse
-import org.junit.Before
-import org.junit.After
-import net.shrine.util.AbstractPortSearchingJerseyTest
-import net.shrine.protocol.DefaultBreakdownResultOutputTypes
+import net.shrine.protocol.{AggregatedReadInstanceResultsResponse, AggregatedReadQueryResultResponse, AggregatedReadTranslatedQueryDefinitionResponse, AggregatedRunQueryResponse, ApprovedTopic, AuthenticationInfo, BaseShrineResponse, Credential, DefaultBreakdownResultOutputTypes, DeleteQueryRequest, DeleteQueryResponse, FlagQueryRequest, FlagQueryResponse, QueryResult, ReadApprovedQueryTopicsRequest, ReadApprovedQueryTopicsResponse, ReadInstanceResultsRequest, ReadPreviousQueriesRequest, ReadPreviousQueriesResponse, ReadQueryDefinitionRequest, ReadQueryDefinitionResponse, ReadQueryInstancesRequest, ReadQueryInstancesResponse, ReadQueryResultRequest, ReadTranslatedQueryDefinitionRequest, RenameQueryRequest, RenameQueryResponse, RequestType, ResultOutputType, RunQueryRequest, ShrineRequest, ShrineRequestHandler, UnFlagQueryRequest, UnFlagQueryResponse}
+import net.shrine.protocol.query.{QueryDefinition, Term}
+import net.shrine.util.{AbstractPortSearchingJerseyTest, JerseyAppDescriptor, ShouldMatchersForJUnit, XmlDateHelper}
+import org.junit.{After, Before, Test}
 
 /**
  *
  * @author Clint Gilbert
- * @date Sep 14, 2011
+ * @since Sep 14, 2011
  *
- * @link http://cbmi.med.harvard.edu
+ * @see http://cbmi.med.harvard.edu
  *
  * This software is licensed under the LGPL
- * @link http://www.gnu.org/licenses/lgpl.html
+ * @see http://www.gnu.org/licenses/lgpl.html
  *
  * Starts a ShrineResource in an embedded HTTP server, sends requests to it, then verifies that the requests don't fail,
  * and that the parameters made it from the client to the ShrineResource successfully.  Uses a mock ShrineRequestHandler, so
@@ -102,7 +55,6 @@ final class ShrineResourceJaxrsTest extends AbstractPortSearchingJerseyTest with
     MockShrineRequestHandler.runQueryParam should be(null)
     MockShrineRequestHandler.readQueryInstancesParam should be(null)
     MockShrineRequestHandler.readInstanceResultsParam should be(null)
-    MockShrineRequestHandler.readPdoParam should be(null)
     MockShrineRequestHandler.readQueryDefinitionParam should be(null)
     MockShrineRequestHandler.deleteQueryParam should be(null)
     MockShrineRequestHandler.renameQueryParam should be(null)
@@ -127,7 +79,6 @@ final class ShrineResourceJaxrsTest extends AbstractPortSearchingJerseyTest with
     MockShrineRequestHandler.runQueryParam should be(null)
     MockShrineRequestHandler.readQueryInstancesParam should be(null)
     MockShrineRequestHandler.readInstanceResultsParam should be(null)
-    MockShrineRequestHandler.readPdoParam should be(null)
     MockShrineRequestHandler.readQueryDefinitionParam should be(null)
     MockShrineRequestHandler.deleteQueryParam should be(null)
     MockShrineRequestHandler.renameQueryParam should be(null)
@@ -151,7 +102,6 @@ final class ShrineResourceJaxrsTest extends AbstractPortSearchingJerseyTest with
     MockShrineRequestHandler.runQueryParam should be(null)
     MockShrineRequestHandler.readQueryInstancesParam should be(null)
     MockShrineRequestHandler.readInstanceResultsParam should be(null)
-    MockShrineRequestHandler.readPdoParam should be(null)
     MockShrineRequestHandler.readQueryDefinitionParam should be(null)
     MockShrineRequestHandler.deleteQueryParam should be(null)
     MockShrineRequestHandler.renameQueryParam should be(null)
@@ -172,7 +122,6 @@ final class ShrineResourceJaxrsTest extends AbstractPortSearchingJerseyTest with
       MockShrineRequestHandler.readPreviousQueriesParam should be(null)
       MockShrineRequestHandler.readQueryInstancesParam should be(null)
       MockShrineRequestHandler.readInstanceResultsParam should be(null)
-      MockShrineRequestHandler.readPdoParam should be(null)
       MockShrineRequestHandler.readQueryDefinitionParam should be(null)
       MockShrineRequestHandler.deleteQueryParam should be(null)
       MockShrineRequestHandler.renameQueryParam should be(null)
@@ -215,7 +164,6 @@ final class ShrineResourceJaxrsTest extends AbstractPortSearchingJerseyTest with
     MockShrineRequestHandler.readPreviousQueriesParam should be(null)
     MockShrineRequestHandler.runQueryParam should be(null)
     MockShrineRequestHandler.readInstanceResultsParam should be(null)
-    MockShrineRequestHandler.readPdoParam should be(null)
     MockShrineRequestHandler.readQueryDefinitionParam should be(null)
     MockShrineRequestHandler.deleteQueryParam should be(null)
     MockShrineRequestHandler.renameQueryParam should be(null)
@@ -240,7 +188,6 @@ final class ShrineResourceJaxrsTest extends AbstractPortSearchingJerseyTest with
     MockShrineRequestHandler.readPreviousQueriesParam should be(null)
     MockShrineRequestHandler.runQueryParam should be(null)
     MockShrineRequestHandler.readQueryInstancesParam should be(null)
-    MockShrineRequestHandler.readPdoParam should be(null)
     MockShrineRequestHandler.readQueryDefinitionParam should be(null)
     MockShrineRequestHandler.deleteQueryParam should be(null)
     MockShrineRequestHandler.renameQueryParam should be(null)
@@ -251,34 +198,6 @@ final class ShrineResourceJaxrsTest extends AbstractPortSearchingJerseyTest with
     validateCachedParam(param, RequestType.InstanceRequest)
 
     param.shrineNetworkQueryId should equal(shrineNetworkQueryId)
-  }
-
-  @Test
-  def testReadPdo = resetMockThen {
-    val patientSetId = "patientSetId"
-    val optionsXml = <foo><bar/></foo>
-
-    val response = shrineClient.readPdo(patientSetId, optionsXml)
-
-    response should not(be(null))
-
-    MockShrineRequestHandler.readApprovedQueryTopicsParam should be(null)
-    MockShrineRequestHandler.readPreviousQueriesParam should be(null)
-    MockShrineRequestHandler.runQueryParam should be(null)
-    MockShrineRequestHandler.readQueryInstancesParam should be(null)
-    MockShrineRequestHandler.readInstanceResultsParam should be(null)
-    MockShrineRequestHandler.readQueryDefinitionParam should be(null)
-    MockShrineRequestHandler.deleteQueryParam should be(null)
-    MockShrineRequestHandler.renameQueryParam should be(null)
-    MockShrineRequestHandler.readQueryResultParam should be(null)
-
-    val param = MockShrineRequestHandler.readPdoParam
-
-    validateCachedParam(param, RequestType.GetPDOFromInputListRequest)
-
-    param.patientSetCollId should equal(patientSetId)
-    //Turn NodeSeqs to Strings for reliable comparisons
-    param.optionsXml.toString should equal(optionsXml.toString)
   }
 
   @Test
@@ -293,7 +212,6 @@ final class ShrineResourceJaxrsTest extends AbstractPortSearchingJerseyTest with
     MockShrineRequestHandler.readPreviousQueriesParam should be(null)
     MockShrineRequestHandler.runQueryParam should be(null)
     MockShrineRequestHandler.readQueryInstancesParam should be(null)
-    MockShrineRequestHandler.readPdoParam should be(null)
     MockShrineRequestHandler.readInstanceResultsParam should be(null)
     MockShrineRequestHandler.deleteQueryParam should be(null)
     MockShrineRequestHandler.renameQueryParam should be(null)
@@ -318,7 +236,6 @@ final class ShrineResourceJaxrsTest extends AbstractPortSearchingJerseyTest with
     MockShrineRequestHandler.readPreviousQueriesParam should be(null)
     MockShrineRequestHandler.runQueryParam should be(null)
     MockShrineRequestHandler.readQueryInstancesParam should be(null)
-    MockShrineRequestHandler.readPdoParam should be(null)
     MockShrineRequestHandler.readInstanceResultsParam should be(null)
     MockShrineRequestHandler.renameQueryParam should be(null)
     MockShrineRequestHandler.readQueryResultParam should be(null)
@@ -343,7 +260,6 @@ final class ShrineResourceJaxrsTest extends AbstractPortSearchingJerseyTest with
     MockShrineRequestHandler.readPreviousQueriesParam should be(null)
     MockShrineRequestHandler.runQueryParam should be(null)
     MockShrineRequestHandler.readQueryInstancesParam should be(null)
-    MockShrineRequestHandler.readPdoParam should be(null)
     MockShrineRequestHandler.readInstanceResultsParam should be(null)
     MockShrineRequestHandler.deleteQueryParam should be(null)
     MockShrineRequestHandler.readQueryResultParam should be(null)
@@ -368,7 +284,6 @@ final class ShrineResourceJaxrsTest extends AbstractPortSearchingJerseyTest with
     MockShrineRequestHandler.readPreviousQueriesParam should be(null)
     MockShrineRequestHandler.runQueryParam should be(null)
     MockShrineRequestHandler.readQueryInstancesParam should be(null)
-    MockShrineRequestHandler.readPdoParam should be(null)
     MockShrineRequestHandler.readInstanceResultsParam should be(null)
     MockShrineRequestHandler.deleteQueryParam should be(null)
     MockShrineRequestHandler.renameQueryParam should be(null)
@@ -397,7 +312,6 @@ final class ShrineResourceJaxrsTest extends AbstractPortSearchingJerseyTest with
     MockShrineRequestHandler.readPreviousQueriesParam should be(null)
     MockShrineRequestHandler.runQueryParam should be(null)
     MockShrineRequestHandler.readQueryInstancesParam should be(null)
-    MockShrineRequestHandler.readPdoParam should be(null)
     MockShrineRequestHandler.readInstanceResultsParam should be(null)
     MockShrineRequestHandler.deleteQueryParam should be(null)
     MockShrineRequestHandler.renameQueryParam should be(null)
@@ -425,7 +339,6 @@ final class ShrineResourceJaxrsTest extends AbstractPortSearchingJerseyTest with
     MockShrineRequestHandler.readPreviousQueriesParam should be(null)
     MockShrineRequestHandler.runQueryParam should be(null)
     MockShrineRequestHandler.readQueryInstancesParam should be(null)
-    MockShrineRequestHandler.readPdoParam should be(null)
     MockShrineRequestHandler.readInstanceResultsParam should be(null)
     MockShrineRequestHandler.deleteQueryParam should be(null)
     MockShrineRequestHandler.renameQueryParam should be(null)
@@ -456,7 +369,6 @@ final class ShrineResourceJaxrsTest extends AbstractPortSearchingJerseyTest with
     MockShrineRequestHandler.readPreviousQueriesParam should be(null)
     MockShrineRequestHandler.runQueryParam should be(null)
     MockShrineRequestHandler.readQueryInstancesParam should be(null)
-    MockShrineRequestHandler.readPdoParam should be(null)
     MockShrineRequestHandler.readInstanceResultsParam should be(null)
     MockShrineRequestHandler.deleteQueryParam should be(null)
     MockShrineRequestHandler.renameQueryParam should be(null)
@@ -493,7 +405,6 @@ final class ShrineResourceJaxrsTest extends AbstractPortSearchingJerseyTest with
     MockShrineRequestHandler.runQueryParam should be(null)
     MockShrineRequestHandler.readQueryInstancesParam should be(null)
     MockShrineRequestHandler.readInstanceResultsParam should be(null)
-    MockShrineRequestHandler.readPdoParam should be(null)
     MockShrineRequestHandler.readQueryDefinitionParam should be(null)
     MockShrineRequestHandler.deleteQueryParam should be(null)
     MockShrineRequestHandler.renameQueryParam should be(null)
@@ -517,7 +428,6 @@ final class ShrineResourceJaxrsTest extends AbstractPortSearchingJerseyTest with
     var runQueryParam: RunQueryRequest = _
     var readQueryInstancesParam: ReadQueryInstancesRequest = _
     var readInstanceResultsParam: ReadInstanceResultsRequest = _
-    var readPdoParam: ReadPdoRequest = _
     var readQueryDefinitionParam: ReadQueryDefinitionRequest = _
     var deleteQueryParam: DeleteQueryRequest = _
     var renameQueryParam: RenameQueryRequest = _
@@ -533,7 +443,6 @@ final class ShrineResourceJaxrsTest extends AbstractPortSearchingJerseyTest with
       runQueryParam = null
       readQueryInstancesParam = null
       readInstanceResultsParam = null
-      readPdoParam = null
       readQueryDefinitionParam = null
       deleteQueryParam = null
       renameQueryParam = null
@@ -573,16 +482,6 @@ final class ShrineResourceJaxrsTest extends AbstractPortSearchingJerseyTest with
       readInstanceResultsParam = request
 
       AggregatedReadInstanceResultsResponse(1337L, Seq(new QueryResult(123L, 1337L, Some(ResultOutputType.PATIENT_COUNT_XML), 789L, None, None, Some("description"), QueryResult.StatusType.Finished, Some("statusMessage"))))
-    }
-
-    override def readPdo(request: ReadPdoRequest, shouldBroadcast: Boolean): BaseShrineResponse = setShouldBroadcastAndThen(shouldBroadcast) {
-      readPdoParam = request
-
-      def randomString = java.util.UUID.randomUUID.toString
-
-      def paramResponse = new ParamResponse(randomString, randomString, randomString)
-
-      ReadPdoResponse(Seq(new EventResponse("event", "patient", None, None, Seq.empty)), Seq(new PatientResponse("patientId", Seq(paramResponse))), Seq(new ObservationResponse(None, "eventId", None, "patientId", None, None, None, "observerCode", "startDate", None, "valueTypeCode", None, None, None, None, None, None, None, Seq(paramResponse))))
     }
 
     override def readQueryDefinition(request: ReadQueryDefinitionRequest, shouldBroadcast: Boolean): BaseShrineResponse = setShouldBroadcastAndThen(shouldBroadcast) {

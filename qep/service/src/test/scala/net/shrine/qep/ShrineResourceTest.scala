@@ -147,25 +147,6 @@ final class ShrineResourceTest extends ShouldMatchersForJUnit with EasyMockSugar
       resource.readInstanceResults(projectId, authenticationInfo, instanceId, shouldBroadcast)
     }
   }
-
-  @Test
-  def testReadPdo {
-    val patientSetCollId = "123456789L"
-    val optionsXml = <foo><bar/></foo>
-    
-    def paramResponse = ParamResponse("foo", "bar", "baz")
-      
-    val expectedRequest = ReadPdoRequest(projectId, waitTime, authenticationInfo, patientSetCollId, optionsXml)
-    val expectedResponse = ReadPdoResponse(Seq(EventResponse("event", "patient", None, None, Seq.empty)), Seq(PatientResponse("patientId", Seq(paramResponse))),
-      Seq(ObservationResponse(None, "eventId", None, "patientId", None, None, None, "observerCode", "startDate", None, "valueTypeCode",None,None,None,None,None,None,None, Seq(paramResponse))))
-    
-    setExpectations(_.readPdo, expectedRequest, expectedResponse)
-    
-    execute {
-      resource.readPdo(projectId, authenticationInfo, patientSetCollId, optionsXml.toString, shouldBroadcast)
-    }
-  }
-
   @Test
   def testReadQueryDefinition {
     val queryId = 123456789L

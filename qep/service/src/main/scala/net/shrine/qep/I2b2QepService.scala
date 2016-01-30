@@ -7,7 +7,6 @@ import net.shrine.protocol.ReadInstanceResultsRequest
 import net.shrine.protocol.ReadPreviousQueriesRequest
 import net.shrine.protocol.RenameQueryRequest
 import net.shrine.protocol.RunQueryRequest
-import net.shrine.protocol.ReadPdoRequest
 import net.shrine.protocol.ReadQueryDefinitionRequest
 import net.shrine.protocol.ReadQueryInstancesRequest
 import net.shrine.protocol.ShrineResponse
@@ -41,8 +40,6 @@ final case class I2b2QepService(
   override def runQuery(request: RunQueryRequest, shouldBroadcast: Boolean): ShrineResponse = doRunQuery(request, shouldBroadcast)
 
   override def readQueryDefinition(request: ReadQueryDefinitionRequest, shouldBroadcast: Boolean) = doReadQueryDefinition(request, shouldBroadcast)
-
-  override def readPdo(request: ReadPdoRequest, shouldBroadcast: Boolean) = doReadPdo(request, shouldBroadcast)
 
   override def readInstanceResults(request: ReadInstanceResultsRequest, shouldBroadcast: Boolean) = doReadInstanceResults(request, shouldBroadcast)
 

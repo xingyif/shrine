@@ -81,7 +81,6 @@ final class ShrineMessageTest extends ShouldMatchersForJUnit {
     doMarshallingRoundTrip(DeleteQueryRequest(projectId, waitTime, authn, queryId))
     doMarshallingRoundTrip(ReadApprovedQueryTopicsRequest(projectId, waitTime, authn, userId))
     doMarshallingRoundTrip(ReadInstanceResultsRequest(projectId, waitTime, authn, queryId))
-    doMarshallingRoundTrip(ReadPdoRequest(projectId, waitTime, authn, patientSetCollId, optionsXml))
     doMarshallingRoundTrip(ReadPreviousQueriesRequest(projectId, waitTime, authn, userId, fetchSize))
     doMarshallingRoundTrip(ReadQueryDefinitionRequest(projectId, waitTime, authn, queryId))
     doMarshallingRoundTrip(ReadQueryInstancesRequest(projectId, waitTime, authn, queryId))
@@ -115,19 +114,7 @@ final class ShrineMessageTest extends ShouldMatchersForJUnit {
     val unmarshalled = ShrineMessage.fromXml(DefaultBreakdownResultOutputTypes.toSet)(xml).get
 
     message match {
-      //NB: Special handling of ReadPdoRequest due to fiddly serialization and equality issues with its 
-      //NodeSeq field. :( :(
-      case readPdoRequest: ReadPdoRequest => {
-        val unmarshalledReadPdoRequest = unmarshalled.asInstanceOf[ReadPdoRequest]
-
-        readPdoRequest.projectId should equal(unmarshalledReadPdoRequest.projectId)
-        readPdoRequest.waitTime should equal(unmarshalledReadPdoRequest.waitTime)
-        readPdoRequest.authn should equal(unmarshalledReadPdoRequest.authn)
-        readPdoRequest.patientSetCollId should equal(unmarshalledReadPdoRequest.patientSetCollId)
-        //NB: Ugh :(
-        readPdoRequest.optionsXml.toString should equal(unmarshalledReadPdoRequest.optionsXml.toString)
-      }
-      //NB: Special handling of ReadInstanceResultsResponse because its member QueryRequests are munged 
+      //NB: Special handling of ReadInstanceResultsResponse because its member QueryRequests are munged
       //before serialization
       case readInstanceResultsResponse: ReadInstanceResultsResponse => {
         val unmarshalledResp = unmarshalled.asInstanceOf[ReadInstanceResultsResponse]

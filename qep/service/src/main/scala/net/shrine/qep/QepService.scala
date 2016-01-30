@@ -4,7 +4,7 @@ import net.shrine.aggregation.{ReadQueryResultAggregator, ReadTranslatedQueryDef
 import net.shrine.authentication.Authenticator
 import net.shrine.authorization.QueryAuthorizationService
 import net.shrine.broadcaster.BroadcastAndAggregationService
-import net.shrine.protocol.{BaseShrineResponse, DeleteQueryRequest, FlagQueryRequest, ReadApprovedQueryTopicsRequest, ReadInstanceResultsRequest, ReadPdoRequest, ReadPreviousQueriesRequest, ReadQueryDefinitionRequest, ReadQueryInstancesRequest, ReadQueryResultRequest, ReadTranslatedQueryDefinitionRequest, RenameQueryRequest, ResultOutputType, RunQueryRequest, ShrineRequestHandler, UnFlagQueryRequest}
+import net.shrine.protocol.{BaseShrineResponse, DeleteQueryRequest, FlagQueryRequest, ReadApprovedQueryTopicsRequest, ReadInstanceResultsRequest, ReadPreviousQueriesRequest, ReadQueryDefinitionRequest, ReadQueryInstancesRequest, ReadQueryResultRequest, ReadTranslatedQueryDefinitionRequest, RenameQueryRequest, ResultOutputType, RunQueryRequest, ShrineRequestHandler, UnFlagQueryRequest}
 import net.shrine.qep.dao.AuditDao
 
 import scala.concurrent.duration.Duration
@@ -43,8 +43,6 @@ final case class QepService(
   override def runQuery(request: RunQueryRequest, shouldBroadcast: Boolean) = doRunQuery(request, shouldBroadcast)
 
   override def readQueryDefinition(request: ReadQueryDefinitionRequest, shouldBroadcast: Boolean) = doReadQueryDefinition(request, shouldBroadcast)
-
-  override def readPdo(request: ReadPdoRequest, shouldBroadcast: Boolean) = doReadPdo(request, shouldBroadcast)
 
   override def readInstanceResults(request: ReadInstanceResultsRequest, shouldBroadcast: Boolean) = doReadInstanceResults(request, shouldBroadcast)
 

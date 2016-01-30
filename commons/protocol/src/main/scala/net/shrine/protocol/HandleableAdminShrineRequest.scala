@@ -41,13 +41,4 @@ object HandleableAdminShrineRequest extends AbstractI2b2UnmarshallerCompanion[Sh
   
   protected def isRunHeldQueryRequest(requestXml: NodeSeq): Boolean = hasMessageBodySubElement(requestXml, "runHeldQuery")
 
-  private def parsePdoRequest(breakdownTypes: Set[ResultOutputType])(requestXml: NodeSeq): Try[ReadPdoRequest] = {
-    import NodeSeqEnrichments.Strictness._
-    
-    for {
-      requestTypeText <- (requestXml withChild "message_body" withChild "pdoheader" withChild "request_type").map(_.text)
-      if requestTypeText == GetPDOFromInputListRequestType.i2b2RequestType 
-      req <- ReadPdoRequest.fromI2b2(breakdownTypes)(requestXml)
-    } yield req
-  }
 }
