@@ -6,13 +6,12 @@ import net.shrine.protocol.AggregatedReadQueryResultResponse
 import net.shrine.protocol.HasQueryResults
 import net.shrine.protocol.QueryResult
 import net.shrine.protocol.ResultOutputType
-import net.shrine.protocol.ResultOutputType.PATIENTSET
 import net.shrine.protocol.ShrineResponse
 import net.shrine.aggregation.StoredResultsAggregator.Aggregated
 
 /**
  * @author clint
- * @date Nov 9, 2012
+ * @since Nov 9, 2012
  * 
  * NB: Aggregated trait and companion object implements the typeclass pattern:
  * http://www.casualmiracles.com/2012/05/03/a-small-example-of-the-typeclass-pattern-in-scala/
@@ -61,7 +60,7 @@ abstract class StoredResultsAggregator[R <: ShrineResponse with HasQueryResults 
 object StoredResultsAggregator {
   /**
    * @author clint
-   * @date Nov 9, 2012
+   * @since Nov 9, 2012
    */
   trait Aggregated[R] {
     def apply(shrineNetworkQueryId: Long, queryResults: Iterable[QueryResult]): R

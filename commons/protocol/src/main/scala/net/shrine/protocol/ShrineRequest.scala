@@ -2,22 +2,20 @@ package net.shrine.protocol
 
 import scala.concurrent.duration.Duration
 import scala.util.Try
-import scala.xml.NodeBuffer
 import scala.xml.NodeSeq
 
 import net.shrine.serialization.I2b2Marshaller
-import net.shrine.serialization.XmlUnmarshaller
 import net.shrine.util.XmlUtil
 
 /**
  * @author Bill Simons
- * @date 3/9/11
- * @link http://cbmi.med.harvard.edu
- * @link http://chip.org
+ * @since 3/9/11
+ * @see http://cbmi.med.harvard.edu
+ * @see http://chip.org
  *       <p/>
  *       NOTICE: This software comes with NO guarantees whatsoever and is
  *       licensed as Lgpl Open Source
- * @link http://www.gnu.org/licenses/lgpl.html
+ * @see http://www.gnu.org/licenses/lgpl.html
  */
 abstract class ShrineRequest(
     override val projectId: String, 

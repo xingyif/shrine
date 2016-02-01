@@ -1,10 +1,7 @@
 package net.shrine.protocol
 
-import net.shrine.serialization.I2b2Unmarshaller
 import scala.xml.NodeSeq
-import CrcRequestType._
 import scala.util.Try
-import net.shrine.util.NodeSeqEnrichments
 
 /**
  * @author clint

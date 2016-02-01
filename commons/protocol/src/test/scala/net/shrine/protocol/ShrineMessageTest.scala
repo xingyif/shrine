@@ -1,11 +1,8 @@
 package net.shrine.protocol
 
 import net.shrine.problem.TestProblem
-import net.shrine.serialization.XmlMarshaller
-import net.shrine.serialization.XmlUnmarshaller
 import net.shrine.util.ShouldMatchersForJUnit
 import org.junit.Test
-import scala.util.Try
 import scala.xml.NodeSeq
 import net.shrine.protocol.query.QueryDefinition
 import net.shrine.protocol.query.Term

@@ -3,11 +3,10 @@ package net.shrine.protocol
 import CrcRequestType._
 import scala.xml.NodeSeq
 import scala.util.Try
-import net.shrine.util.NodeSeqEnrichments
 
 /**
  * @author clint
- * @date Apr 17, 2013
+ * @since Apr 17, 2013
  */
 trait HandleableAdminShrineRequest {self: ShrineRequest =>
   def handleAdmin(handler: I2b2AdminRequestHandler, shouldBroadcast: Boolean): ShrineResponse
