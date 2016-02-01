@@ -174,7 +174,7 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
   lazy val getConfig:Route = {
     val statusBaseUrl: String = DashboardConfigSource.config.getString("shrine" +
       ".dashboard.statusBaseUrl")
-    forwardUnmatchedPath(statusBaseUrl)
+    forwardUnmatchedPath(statusBaseUrl + "/config")
   }
 
   lazy val getClasspath:Route = {
@@ -202,7 +202,7 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
     }
 
     // -- init request -- //
-    requestUriThenRoute(statusBaseUrl,pullClasspathFromConfig)
+    requestUriThenRoute(statusBaseUrl + "/config",pullClasspathFromConfig)
   }
 
 
@@ -224,7 +224,7 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
       }
     }
 
-    requestUriThenRoute(statusBaseUrl, completeSummaryRoute)
+    requestUriThenRoute(statusBaseUrl + "/config", completeSummaryRoute)
   }
 }
 
