@@ -90,6 +90,10 @@ case class QepQueryDb(schemaDef:QepQuerySchema,dataSource: DataSource) extends L
     dbRun(allQueryResultRows += qepQueryRow)
   }
 
+  def insertQueryResult(result:QueryResult) = {
+//todo     insertQepResultRow(QueryResultRow(result))
+  }
+
   def selectMostRecentQepResultRowsFor(networkId:NetworkQueryId): Seq[QueryResultRow] = {
     dbRun(mostRecentQueryResultRows.filter(_.networkQueryId === networkId).result)
   }
@@ -200,17 +204,22 @@ case class QepQuerySchema(jdbcProfile: JdbcProfile) extends Loggable {
     name => QueryResult.StatusType.valueOf(name).getOrElse(throw new IllegalStateException(s"$name is not one of ${QueryResult.StatusType.values.map(_.name).mkString(", ")}"))
   })
 
+  //todo what of these actually get used?
   class QepQueryResults(tag:Tag) extends Table[QueryResultRow](tag,"queryResults") {
-    def id = column[Long]("id")
+    def resultId = column[Long]("resultId")
     def localId = column[String]("localId")
     def networkQueryId = column[NetworkQueryId]("networkQueryId")
     def adapterNode = column[String]("adapterNode")
     def resultType = column[ResultOutputType]("resultType")
+    def setSize = column[Long]("size")
+    def startDate = column[Option[Long]]("startDate")
+    def endDate = column[Option[Long]]("endDate")
+    def description = column[Option[String]]("description")
     def status = column[QueryResult.StatusType]("status")
-    def timeInI2b2 = column[Long]("timeInI2b2")
+    def statusMessage = column[Option[String]]("statusMessage")
     def changeDate = column[Long]("changeDate")
 
-    def * = (id,localId,networkQueryId,adapterNode,resultType,status,timeInI2b2,changeDate) <> (QueryResultRow.tupled,QueryResultRow.unapply)
+    def * = (resultId,localId,networkQueryId,adapterNode,resultType,setSize,startDate,endDate,description,status,statusMessage,changeDate) <> (QueryResultRow.tupled,QueryResultRow.unapply)
   }
 
   val allQueryResultRows = TableQuery[QepQueryResults]
@@ -349,13 +358,49 @@ object QepQueryFlag extends ((NetworkQueryId,Boolean,String,Long) => QepQueryFla
 
 }
 
-case class QueryResultRow(id:Long,
+/*
+  resultId: Long,
+  instanceId: Long,
+  resultType: Option[ResultOutputType],
+  setSize: Long,
+  startDate: Option[XMLGregorianCalendar],
+  endDate: Option[XMLGregorianCalendar],
+  description: Option[String],
+  statusType: StatusType,
+  statusMessage: Option[String],
+
+  //todo problemDigest in a separate table
+  problemDigest: Option[ProblemDigest] = None,
+
+  //todo breakdowns in a separate table
+  breakdowns: Map[ResultOutputType,I2b2ResultEnvelope] = Map.empty
+ */
+
+case class QueryResultRow(
+                          resultId:Long,
                           localId:String,
-                          networkQueryId:NetworkQueryId,
+                          networkQueryId:NetworkQueryId, //the query's instanceId //todo verify
                           adapterNode:String,
                           resultType:ResultOutputType,
+                          setSize:Long,
+                          startDate:Option[Long],
+                          endDate:Option[Long],
+                          description:Option[String],
                           status:QueryResult.StatusType,
-                          timeInI2b2:Long,
-                          changeDate:Long) {
+                          statusMessage:Option[String],
+                          changeDate:Long
+                         ) {
 
 }
+
+/*
+object QueryResultRow {
+
+  def apply(result:QueryResult):QueryResultRow = {
+    QueryResultRow(
+
+    )
+  }
+
+}
+*/

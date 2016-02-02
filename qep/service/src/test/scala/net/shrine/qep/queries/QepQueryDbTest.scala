@@ -70,14 +70,33 @@ class QepQueryDbTest extends ShouldMatchersForJUnit {
 
   }
 
+  /*
+                            resultId:Long,
+                          localId:String,
+                          networkQueryId:NetworkQueryId, //the query's instanceId //todo verify
+                          adapterNode:String,
+                          resultType:ResultOutputType,
+                          setSize:Long,
+                          startDate:Option[Long],
+                          endDate:Option[Long],
+                          description:Option[String],
+                          status:QueryResult.StatusType,
+                          statusMessage:Option[String],
+                          changeDate:Long
+
+   */
   val qepResultRowFromExampleCom = QueryResultRow(
-    id = 10L,
-    localId = "Local Id",
+    resultId = 10L,
+    localId = "Don't care",
     networkQueryId = 1L,
     adapterNode = "example.com",
     resultType = ResultOutputType.PATIENT_COUNT_XML,
+    setSize = 30L,
+    startDate = Some(System.currentTimeMillis() - 60),
+    endDate = Some(System.currentTimeMillis() - 30),
+    description = None,
     status = QueryResult.StatusType.Finished,
-    timeInI2b2 = 30L,
+    statusMessage = None,
     changeDate = System.currentTimeMillis()
   )
 
@@ -91,24 +110,32 @@ class QepQueryDbTest extends ShouldMatchersForJUnit {
   }
 
   val qepResultRowFromExampleComInThePast = QueryResultRow(
-    id = 10L,
-    localId = "Local Id",
+    resultId = 8L,
+    localId = "Don't care",
     networkQueryId = 1L,
     adapterNode = "example.com",
     resultType = ResultOutputType.PATIENT_COUNT_XML,
+    setSize = 0L,
+    startDate = qepResultRowFromExampleCom.startDate,
+    endDate = None,
+    description = None,
     status = QueryResult.StatusType.Processing,
-    timeInI2b2 = 30L,
-    changeDate = qepResultRowFromExampleCom.changeDate - 5000
+    statusMessage = None,
+    changeDate = qepResultRowFromExampleCom.changeDate - 40
   )
 
   val qepResultRowFromGeneralHospital = QueryResultRow(
-    id = 14L,
-    localId = "Different Local Id",
+    resultId = 100L,
+    localId = "Don't care",
     networkQueryId = 1L,
-    adapterNode = "generalhospital.com",
+    adapterNode = "generalhospital.org",
     resultType = ResultOutputType.PATIENT_COUNT_XML,
+    setSize = 100L,
+    startDate = Some(System.currentTimeMillis() - 60),
+    endDate = Some(System.currentTimeMillis() - 30),
+    description = None,
     status = QueryResult.StatusType.Finished,
-    timeInI2b2 = 30L,
+    statusMessage = None,
     changeDate = System.currentTimeMillis()
   )
 
