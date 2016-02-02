@@ -213,12 +213,11 @@ case class QepQuerySchema(jdbcProfile: JdbcProfile) extends Loggable {
     def size = column[Long]("size")
     def startDate = column[Option[Long]]("startDate")
     def endDate = column[Option[Long]]("endDate")
-    def description = column[Option[String]]("description")
     def status = column[QueryResult.StatusType]("status")
     def statusMessage = column[Option[String]]("statusMessage")
     def changeDate = column[Long]("changeDate")
 
-    def * = (resultId,networkQueryId,adapterNode,resultType,size,startDate,endDate,description,status,statusMessage,changeDate) <> (QueryResultRow.tupled,QueryResultRow.unapply)
+    def * = (resultId,networkQueryId,adapterNode,resultType,size,startDate,endDate,status,statusMessage,changeDate) <> (QueryResultRow.tupled,QueryResultRow.unapply)
   }
 
   val allQueryResultRows = TableQuery[QepQueryResults]
@@ -374,7 +373,6 @@ case class QueryResultRow(
                            size:Long,
                            startDate:Option[Long],
                            endDate:Option[Long],
-                           description:Option[String],
                            status:QueryResult.StatusType,
                            statusMessage:Option[String],
                            changeDate:Long
@@ -382,19 +380,18 @@ case class QueryResultRow(
 
 }
 
-object QueryResultRow extends ((Long,NetworkQueryId,String,ResultOutputType,Long,Option[Long],Option[Long],Option[String],QueryResult.StatusType,Option[String],Long) => QueryResultRow)
+object QueryResultRow extends ((Long,NetworkQueryId,String,ResultOutputType,Long,Option[Long],Option[Long],QueryResult.StatusType,Option[String],Long) => QueryResultRow)
 {
 
   def apply(result:QueryResult):QueryResultRow = {
     new QueryResultRow(
       resultId = result.resultId,
       networkQueryId = result.instanceId,
-      adapterNode = "todo.com", //todo find this somewhere
+      adapterNode = result.description.getOrElse(s"$result has None in its description field, not a name of an adapter node."),
       resultType = result.resultType.getOrElse(ResultOutputType.PATIENT_COUNT_XML), //todo how is this optional??
       size = result.setSize,
       startDate = result.startDate.map(_.toGregorianCalendar.getTimeInMillis),
       endDate = result.endDate.map(_.toGregorianCalendar.getTimeInMillis),
-      description = result.description,
       status = result.statusType,
       statusMessage = result.statusMessage,
       changeDate = System.currentTimeMillis()

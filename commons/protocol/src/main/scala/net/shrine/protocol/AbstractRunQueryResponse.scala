@@ -6,13 +6,12 @@ import scala.xml.NodeSeq
 import javax.xml.datatype.XMLGregorianCalendar
 import net.shrine.protocol.query.QueryDefinition
 import net.shrine.util.XmlUtil
-import net.shrine.serialization.{ I2b2Unmarshaller, XmlUnmarshaller }
 import scala.util.Try
 import net.shrine.util.XmlDateHelper
 
 /**
  * @author clint
- * @date Nov 29, 2012
+ * @since Nov 29, 2012
  */
 abstract class AbstractRunQueryResponse(
   rootTagName: String,
@@ -22,12 +21,6 @@ abstract class AbstractRunQueryResponse(
   val groupId: String,
   val requestXml: QueryDefinition,
   val queryInstanceId: Long) extends ShrineResponse with HasQueryResults {
-
-  type ActualResponseType <: AbstractRunQueryResponse
-
-  def withId(id: Long): ActualResponseType
-
-  def withInstanceId(id: Long): ActualResponseType
 
   final def queryName = requestXml.name
 

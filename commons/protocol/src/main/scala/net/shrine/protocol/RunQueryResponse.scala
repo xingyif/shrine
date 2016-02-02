@@ -19,12 +19,6 @@ final case class RunQueryResponse(
     override val queryInstanceId: Long,
     val singleNodeResult: QueryResult) extends AbstractRunQueryResponse("runQueryResponse", queryId, createDate, userId, groupId, requestXml, queryInstanceId) {
 
-  override type ActualResponseType = RunQueryResponse
-  
-  override def withId(id: Long) = this.copy(queryId = id)
-
-  override def withInstanceId(id: Long) = this.copy(queryInstanceId = id)
-
   override val results = Seq(singleNodeResult)
   
   def withResult(res: QueryResult): RunQueryResponse = this.copy(singleNodeResult = res)

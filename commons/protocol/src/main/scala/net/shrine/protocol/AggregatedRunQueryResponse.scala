@@ -16,12 +16,6 @@ final case class AggregatedRunQueryResponse(
     override val queryInstanceId: Long,
     override val results: Seq[QueryResult]) extends AbstractRunQueryResponse("aggregatedRunQueryResponse", queryId, createDate, userId, groupId, requestXml, queryInstanceId) {
 
-  override type ActualResponseType = AggregatedRunQueryResponse
-  
-  override def withId(id: Long) = this.copy(queryId = id)
-
-  override def withInstanceId(id: Long) = this.copy(queryInstanceId = id)
-
   def withResults(seq: Seq[QueryResult]) = this.copy(results = seq)
   
   def resultsPartitioned = results.partition(!_.isError)

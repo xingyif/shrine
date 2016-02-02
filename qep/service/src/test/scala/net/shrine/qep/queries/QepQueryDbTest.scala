@@ -78,7 +78,6 @@ class QepQueryDbTest extends ShouldMatchersForJUnit {
     size = 30L,
     startDate = Some(System.currentTimeMillis() - 60),
     endDate = Some(System.currentTimeMillis() - 30),
-    description = None,
     status = QueryResult.StatusType.Finished,
     statusMessage = None,
     changeDate = System.currentTimeMillis()
@@ -101,7 +100,6 @@ class QepQueryDbTest extends ShouldMatchersForJUnit {
     size = 0L,
     startDate = qepResultRowFromExampleCom.startDate,
     endDate = None,
-    description = None,
     status = QueryResult.StatusType.Processing,
     statusMessage = None,
     changeDate = qepResultRowFromExampleCom.changeDate - 40
@@ -115,7 +113,6 @@ class QepQueryDbTest extends ShouldMatchersForJUnit {
     size = 100L,
     startDate = Some(System.currentTimeMillis() - 60),
     endDate = Some(System.currentTimeMillis() - 30),
-    description = None,
     status = QueryResult.StatusType.Finished,
     statusMessage = None,
     changeDate = System.currentTimeMillis()
