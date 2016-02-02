@@ -73,6 +73,7 @@ class QepQueryDbTest extends ShouldMatchersForJUnit {
   val qepResultRowFromExampleCom = QueryResultRow(
     resultId = 10L,
     networkQueryId = 1L,
+    instanceId = 100L,
     adapterNode = "example.com",
     resultType = ResultOutputType.PATIENT_COUNT_XML,
     size = 30L,
@@ -95,6 +96,7 @@ class QepQueryDbTest extends ShouldMatchersForJUnit {
   val qepResultRowFromExampleComInThePast = QueryResultRow(
     resultId = 8L,
     networkQueryId = 1L,
+    instanceId = 100L,
     adapterNode = "example.com",
     resultType = ResultOutputType.PATIENT_COUNT_XML,
     size = 0L,
@@ -108,6 +110,7 @@ class QepQueryDbTest extends ShouldMatchersForJUnit {
   val qepResultRowFromGeneralHospital = QueryResultRow(
     resultId = 100L,
     networkQueryId = 1L,
+    instanceId = 100L,
     adapterNode = "generalhospital.org",
     resultType = ResultOutputType.PATIENT_COUNT_XML,
     size = 100L,

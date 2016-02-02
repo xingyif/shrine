@@ -90,8 +90,8 @@ case class QepQueryDb(schemaDef:QepQuerySchema,dataSource: DataSource) extends L
     dbRun(allQueryResultRows += qepQueryRow)
   }
 
-  def insertQueryResult(result:QueryResult) = {
-     insertQepResultRow(QueryResultRow(result))
+  def insertQueryResult(networkQueryId:NetworkQueryId,result:QueryResult) = {
+     insertQepResultRow(QueryResultRow(networkQueryId,result))
   }
 
   def selectMostRecentQepResultRowsFor(networkId:NetworkQueryId): Seq[QueryResultRow] = {
@@ -208,6 +208,7 @@ case class QepQuerySchema(jdbcProfile: JdbcProfile) extends Loggable {
   class QepQueryResults(tag:Tag) extends Table[QueryResultRow](tag,"queryResults") {
     def resultId = column[Long]("resultId")
     def networkQueryId = column[NetworkQueryId]("networkQueryId")
+    def instanceId = column[Long]("instanceId")
     def adapterNode = column[String]("adapterNode")
     def resultType = column[ResultOutputType]("resultType")
     def size = column[Long]("size")
@@ -217,7 +218,7 @@ case class QepQuerySchema(jdbcProfile: JdbcProfile) extends Loggable {
     def statusMessage = column[Option[String]]("statusMessage")
     def changeDate = column[Long]("changeDate")
 
-    def * = (resultId,networkQueryId,adapterNode,resultType,size,startDate,endDate,status,statusMessage,changeDate) <> (QueryResultRow.tupled,QueryResultRow.unapply)
+    def * = (resultId,networkQueryId,instanceId,adapterNode,resultType,size,startDate,endDate,status,statusMessage,changeDate) <> (QueryResultRow.tupled,QueryResultRow.unapply)
   }
 
   val allQueryResultRows = TableQuery[QepQueryResults]
@@ -367,7 +368,8 @@ object QepQueryFlag extends ((NetworkQueryId,Boolean,String,Long) => QepQueryFla
 
 case class QueryResultRow(
                            resultId:Long,
-                           networkQueryId:NetworkQueryId, //the query's instanceId //todo verify
+                           networkQueryId:NetworkQueryId,
+                           instanceId:Long,
                            adapterNode:String,
                            resultType:ResultOutputType,
                            size:Long,
@@ -380,13 +382,14 @@ case class QueryResultRow(
 
 }
 
-object QueryResultRow extends ((Long,NetworkQueryId,String,ResultOutputType,Long,Option[Long],Option[Long],QueryResult.StatusType,Option[String],Long) => QueryResultRow)
+object QueryResultRow extends ((Long,NetworkQueryId,Long,String,ResultOutputType,Long,Option[Long],Option[Long],QueryResult.StatusType,Option[String],Long) => QueryResultRow)
 {
 
-  def apply(result:QueryResult):QueryResultRow = {
+  def apply(networkQueryId:NetworkQueryId,result:QueryResult):QueryResultRow = {
     new QueryResultRow(
       resultId = result.resultId,
-      networkQueryId = result.instanceId,
+      networkQueryId = networkQueryId,
+      instanceId = result.instanceId,
       adapterNode = result.description.getOrElse(s"$result has None in its description field, not a name of an adapter node."),
       resultType = result.resultType.getOrElse(ResultOutputType.PATIENT_COUNT_XML), //todo how is this optional??
       size = result.setSize,

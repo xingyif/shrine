@@ -8,7 +8,7 @@ import net.shrine.protocol.query.QueryDefinition
  * @since Nov 30, 2012
  */
 final case class AggregatedRunQueryResponse(
-    override val queryId: Long,
+    override val queryId: Long, //the network query id
     override val createDate: XMLGregorianCalendar,
     override val userId: String,
     override val groupId: String,

@@ -80,6 +80,7 @@ object AbstractRunQueryResponse {
   //A typeclass is used here in place of an abstract method with multiple concrete implementations,
   //or another similar strategy. -Clint
 
+  //But why? Why would you swing that big a hammer for code this simple? - Dave todo unwind this and just use an intermediate case class
   private trait Creatable[T] {
     def apply(queryId: Long, createDate: XMLGregorianCalendar, userId: String, groupId: String, requestXml: QueryDefinition, queryInstanceId: Long, results: Seq[QueryResult]): T
   }
