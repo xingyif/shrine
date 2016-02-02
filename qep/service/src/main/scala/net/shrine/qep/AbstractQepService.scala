@@ -136,14 +136,20 @@ trait AbstractQepService[BaseResp <: BaseShrineResponse] extends Loggable {
       request match {
         case runQueryRequest: RunQueryRequest =>
           // inject modified, authorized runQueryRequest
+//todo might make more sense to put this whole if block in the aggregator as well.
           auditAuthorizeAndThen(runQueryRequest) { authorizedRequest =>
             debug(s"doBroadcastQuery authorizedRequest is $authorizedRequest")
 
             // tuck the ACT audit metrics data into a database here
             if (collectQepAudit) QepAuditDb.db.insertQepQuery(authorizedRequest,commonName)
+
+            //todo maybe put this in the aggregator if we can figure out what that is, and also store results there
+
+            debug(s"aggregator is $aggregator")
             QepQueryDb.db.insertQepQuery(authorizedRequest)
 
-            doSynchronousQuery(networkAuthn,authorizedRequest,aggregator,shouldBroadcast)
+            val response = doSynchronousQuery(networkAuthn,authorizedRequest,aggregator,shouldBroadcast)
+            response
           }
         case _ => doSynchronousQuery(networkAuthn,request,aggregator,shouldBroadcast)
       }
