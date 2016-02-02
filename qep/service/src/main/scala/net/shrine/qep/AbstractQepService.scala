@@ -6,7 +6,7 @@ import net.shrine.authorization.AuthorizationResult.{Authorized, NotAuthorized}
 import net.shrine.authorization.QueryAuthorizationService
 import net.shrine.broadcaster.BroadcastAndAggregationService
 import net.shrine.log.Loggable
-import net.shrine.protocol.{AuthenticationInfo, BaseShrineRequest, BaseShrineResponse, Credential, DeleteQueryRequest, FlagQueryRequest, QueryInstance, ReadApprovedQueryTopicsRequest, ReadInstanceResultsRequest, ReadPreviousQueriesRequest, ReadPreviousQueriesResponse, ReadQueryDefinitionRequest, ReadQueryInstancesRequest, ReadQueryInstancesResponse, ReadResultOutputTypesRequest, ReadResultOutputTypesResponse, RenameQueryRequest, ResultOutputType, RunQueryRequest, UnFlagQueryRequest}
+import net.shrine.protocol.{AggregatedRunQueryResponse, AuthenticationInfo, BaseShrineRequest, BaseShrineResponse, Credential, DeleteQueryRequest, FlagQueryRequest, QueryInstance, ReadApprovedQueryTopicsRequest, ReadInstanceResultsRequest, ReadPreviousQueriesRequest, ReadPreviousQueriesResponse, ReadQueryDefinitionRequest, ReadQueryInstancesRequest, ReadQueryInstancesResponse, ReadResultOutputTypesRequest, ReadResultOutputTypesResponse, RenameQueryRequest, ResultOutputType, RunQueryRequest, UnFlagQueryRequest}
 import net.shrine.qep.audit.QepAuditDb
 import net.shrine.qep.dao.AuditDao
 import net.shrine.qep.queries.QepQueryDb
@@ -136,6 +136,7 @@ trait AbstractQepService[BaseResp <: BaseShrineResponse] extends Loggable {
       request match {
         case runQueryRequest: RunQueryRequest =>
           // inject modified, authorized runQueryRequest
+//although it might make more sense to put this whole if block in the aggregator, the RunQueryAggregator lives in the hub, far from this DB code
           auditAuthorizeAndThen(runQueryRequest) { authorizedRequest =>
             debug(s"doBroadcastQuery authorizedRequest is $authorizedRequest")
 
@@ -143,7 +144,14 @@ trait AbstractQepService[BaseResp <: BaseShrineResponse] extends Loggable {
             if (collectQepAudit) QepAuditDb.db.insertQepQuery(authorizedRequest,commonName)
             QepQueryDb.db.insertQepQuery(authorizedRequest)
 
-            doSynchronousQuery(networkAuthn,authorizedRequest,aggregator,shouldBroadcast)
+            val response: BaseResp = doSynchronousQuery(networkAuthn,authorizedRequest,aggregator,shouldBroadcast)
+
+            response match {
+              case aggregated:AggregatedRunQueryResponse => aggregated.results.map(QepQueryDb.db.insertQueryResult)
+              case _ => debug(s"Unanticipated response type $response")
+            }
+
+            response
           }
         case _ => doSynchronousQuery(networkAuthn,request,aggregator,shouldBroadcast)
       }

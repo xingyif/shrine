@@ -2,12 +2,10 @@ package net.shrine.protocol
 
 import javax.xml.datatype.XMLGregorianCalendar
 import net.shrine.protocol.query.QueryDefinition
-import net.shrine.serialization.{I2b2Unmarshaller, XmlUnmarshaller}
-import scala.xml.NodeSeq
 
 /**
  * @author clint
- * @date Nov 30, 2012
+ * @since Nov 30, 2012
  */
 final case class AggregatedRunQueryResponse(
     override val queryId: Long,
