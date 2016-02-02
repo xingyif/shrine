@@ -70,28 +70,12 @@ class QepQueryDbTest extends ShouldMatchersForJUnit {
 
   }
 
-  /*
-                            resultId:Long,
-                          localId:String,
-                          networkQueryId:NetworkQueryId, //the query's instanceId //todo verify
-                          adapterNode:String,
-                          resultType:ResultOutputType,
-                          setSize:Long,
-                          startDate:Option[Long],
-                          endDate:Option[Long],
-                          description:Option[String],
-                          status:QueryResult.StatusType,
-                          statusMessage:Option[String],
-                          changeDate:Long
-
-   */
   val qepResultRowFromExampleCom = QueryResultRow(
     resultId = 10L,
-    localId = "Don't care",
     networkQueryId = 1L,
     adapterNode = "example.com",
     resultType = ResultOutputType.PATIENT_COUNT_XML,
-    setSize = 30L,
+    size = 30L,
     startDate = Some(System.currentTimeMillis() - 60),
     endDate = Some(System.currentTimeMillis() - 30),
     description = None,
@@ -111,11 +95,10 @@ class QepQueryDbTest extends ShouldMatchersForJUnit {
 
   val qepResultRowFromExampleComInThePast = QueryResultRow(
     resultId = 8L,
-    localId = "Don't care",
     networkQueryId = 1L,
     adapterNode = "example.com",
     resultType = ResultOutputType.PATIENT_COUNT_XML,
-    setSize = 0L,
+    size = 0L,
     startDate = qepResultRowFromExampleCom.startDate,
     endDate = None,
     description = None,
@@ -126,11 +109,10 @@ class QepQueryDbTest extends ShouldMatchersForJUnit {
 
   val qepResultRowFromGeneralHospital = QueryResultRow(
     resultId = 100L,
-    localId = "Don't care",
     networkQueryId = 1L,
     adapterNode = "generalhospital.org",
     resultType = ResultOutputType.PATIENT_COUNT_XML,
-    setSize = 100L,
+    size = 100L,
     startDate = Some(System.currentTimeMillis() - 60),
     endDate = Some(System.currentTimeMillis() - 30),
     description = None,

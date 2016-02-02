@@ -91,7 +91,7 @@ case class QepQueryDb(schemaDef:QepQuerySchema,dataSource: DataSource) extends L
   }
 
   def insertQueryResult(result:QueryResult) = {
-//todo     insertQepResultRow(QueryResultRow(result))
+     insertQepResultRow(QueryResultRow(result))
   }
 
   def selectMostRecentQepResultRowsFor(networkId:NetworkQueryId): Seq[QueryResultRow] = {
@@ -207,11 +207,10 @@ case class QepQuerySchema(jdbcProfile: JdbcProfile) extends Loggable {
   //todo what of these actually get used?
   class QepQueryResults(tag:Tag) extends Table[QueryResultRow](tag,"queryResults") {
     def resultId = column[Long]("resultId")
-    def localId = column[String]("localId")
     def networkQueryId = column[NetworkQueryId]("networkQueryId")
     def adapterNode = column[String]("adapterNode")
     def resultType = column[ResultOutputType]("resultType")
-    def setSize = column[Long]("size")
+    def size = column[Long]("size")
     def startDate = column[Option[Long]]("startDate")
     def endDate = column[Option[Long]]("endDate")
     def description = column[Option[String]]("description")
@@ -219,7 +218,7 @@ case class QepQuerySchema(jdbcProfile: JdbcProfile) extends Loggable {
     def statusMessage = column[Option[String]]("statusMessage")
     def changeDate = column[Long]("changeDate")
 
-    def * = (resultId,localId,networkQueryId,adapterNode,resultType,setSize,startDate,endDate,description,status,statusMessage,changeDate) <> (QueryResultRow.tupled,QueryResultRow.unapply)
+    def * = (resultId,networkQueryId,adapterNode,resultType,size,startDate,endDate,description,status,statusMessage,changeDate) <> (QueryResultRow.tupled,QueryResultRow.unapply)
   }
 
   val allQueryResultRows = TableQuery[QepQueryResults]
@@ -359,15 +358,6 @@ object QepQueryFlag extends ((NetworkQueryId,Boolean,String,Long) => QepQueryFla
 }
 
 /*
-  resultId: Long,
-  instanceId: Long,
-  resultType: Option[ResultOutputType],
-  setSize: Long,
-  startDate: Option[XMLGregorianCalendar],
-  endDate: Option[XMLGregorianCalendar],
-  description: Option[String],
-  statusType: StatusType,
-  statusMessage: Option[String],
 
   //todo problemDigest in a separate table
   problemDigest: Option[ProblemDigest] = None,
@@ -377,30 +367,38 @@ object QepQueryFlag extends ((NetworkQueryId,Boolean,String,Long) => QepQueryFla
  */
 
 case class QueryResultRow(
-                          resultId:Long,
-                          localId:String,
-                          networkQueryId:NetworkQueryId, //the query's instanceId //todo verify
-                          adapterNode:String,
-                          resultType:ResultOutputType,
-                          setSize:Long,
-                          startDate:Option[Long],
-                          endDate:Option[Long],
-                          description:Option[String],
-                          status:QueryResult.StatusType,
-                          statusMessage:Option[String],
-                          changeDate:Long
+                           resultId:Long,
+                           networkQueryId:NetworkQueryId, //the query's instanceId //todo verify
+                           adapterNode:String,
+                           resultType:ResultOutputType,
+                           size:Long,
+                           startDate:Option[Long],
+                           endDate:Option[Long],
+                           description:Option[String],
+                           status:QueryResult.StatusType,
+                           statusMessage:Option[String],
+                           changeDate:Long
                          ) {
 
 }
 
-/*
-object QueryResultRow {
+object QueryResultRow extends ((Long,NetworkQueryId,String,ResultOutputType,Long,Option[Long],Option[Long],Option[String],QueryResult.StatusType,Option[String],Long) => QueryResultRow)
+{
 
   def apply(result:QueryResult):QueryResultRow = {
-    QueryResultRow(
-
+    new QueryResultRow(
+      resultId = result.resultId,
+      networkQueryId = result.instanceId,
+      adapterNode = "todo.com", //todo find this somewhere
+      resultType = result.resultType.getOrElse(ResultOutputType.PATIENT_COUNT_XML), //todo how is this optional??
+      size = result.setSize,
+      startDate = result.startDate.map(_.toGregorianCalendar.getTimeInMillis),
+      endDate = result.endDate.map(_.toGregorianCalendar.getTimeInMillis),
+      description = result.description,
+      status = result.statusType,
+      statusMessage = result.statusMessage,
+      changeDate = System.currentTimeMillis()
     )
   }
 
 }
-*/

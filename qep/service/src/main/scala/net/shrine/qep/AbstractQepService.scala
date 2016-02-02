@@ -147,9 +147,8 @@ trait AbstractQepService[BaseResp <: BaseShrineResponse] extends Loggable {
             val response: BaseResp = doSynchronousQuery(networkAuthn,authorizedRequest,aggregator,shouldBroadcast)
 
             response match {
-              case aggregated:AggregatedRunQueryResponse => {
-               //todo start here aggregated.results.map(r => QepAuditDb.db.insert)
-              }
+              case aggregated:AggregatedRunQueryResponse => aggregated.results.map(QepQueryDb.db.insertQueryResult)
+              case _ => debug(s"Unanticipated response type $response")
             }
 
             response
