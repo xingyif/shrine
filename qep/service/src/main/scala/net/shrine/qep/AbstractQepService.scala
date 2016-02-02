@@ -69,7 +69,7 @@ trait AbstractQepService[BaseResp <: BaseShrineResponse] extends Loggable {
   protected def doReadInstanceResults(request: ReadInstanceResultsRequest, shouldBroadcast: Boolean): BaseResp = {
     info(s"doReadInstanceResults($request,$shouldBroadcast)")
 
-    //todo try reading directly from the QEP database code here
+    //todo read directly from the QEP database code here. Only broadcast if some result is in some sketchy state
 
     doBroadcastQuery(request, new ReadInstanceResultsAggregator(request.shrineNetworkQueryId, false), shouldBroadcast)
   }
@@ -96,18 +96,20 @@ trait AbstractQepService[BaseResp <: BaseShrineResponse] extends Loggable {
   protected def doReadPreviousQueries(request: ReadPreviousQueriesRequest, shouldBroadcast: Boolean): ReadPreviousQueriesResponse = {
     info(s"doReadPreviousQueries($request,$shouldBroadcast)")
 
-    //check results. If any results are in one of many pending states, go ahead and request them. (Maybe go async)
+    //todo check results. If any results are in one of many pending states, go ahead and request them. (Maybe go async)
 
     //pull queries from the local database.
     QepQueryDb.db.selectPreviousQueries(request)
   }
 
   protected def doRenameQuery(request: RenameQueryRequest, shouldBroadcast: Boolean): BaseResp = {
+    //todo handle with local/local
     info(s"doRenameQuery($request,$shouldBroadcast)")
     doBroadcastQuery(request, new RenameQueryAggregator, shouldBroadcast)
   }
 
   protected def doDeleteQuery(request: DeleteQueryRequest, shouldBroadcast: Boolean): BaseResp = {
+    //todo handle with local/local
     info(s"doDeleteQuery($request,$shouldBroadcast)")
     doBroadcastQuery(request, new DeleteQueryAggregator, shouldBroadcast)
   }
@@ -147,7 +149,7 @@ trait AbstractQepService[BaseResp <: BaseShrineResponse] extends Loggable {
             val response: BaseResp = doSynchronousQuery(networkAuthn,authorizedRequest,aggregator,shouldBroadcast)
 
             response match {
-              case aggregated:AggregatedRunQueryResponse => aggregated.results.map(QepQueryDb.db.insertQueryResult(aggregated.queryId,_))
+              case aggregated:AggregatedRunQueryResponse => aggregated.results.map(QepQueryDb.db.insertQueryResult(runQueryRequest.networkQueryId,_))
               case _ => debug(s"Unanticipated response type $response")
             }
 
