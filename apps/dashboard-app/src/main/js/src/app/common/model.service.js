@@ -13,11 +13,11 @@
     }
 
     var params = {
-        SKIP:     "skip={$SKIP$}",
-        LIMIT:    "limit={$LIMIT$}",
-        STATE:    "state={$STATE$}",
-        DIRECTION:      "sortDirection={$DIRECTION$}",
-        SORT_BY:  "sortBy={$SORT_BY$}",
+        SKIP:       "skip={$SKIP$}",
+        LIMIT:      "limit={$LIMIT$}",
+        STATE:      "state={$STATE$}",
+        DIRECTION:  "sortDirection={$DIRECTION$}",
+        SORT_BY:    "sortBy={$SORT_BY$}",
         MIN_DATE:   "minDate={$MIN_DATE$}",
         MAX_DATE:   "maxDate={$MAX_DATE$}"
     }
@@ -120,6 +120,7 @@
                 urlIdx   = absUrl.indexOf(key);
                 url.base = absUrl.substring(0, urlIdx) + key + '/';
 
+                //https://localhost:6443/shrine/rest/internalstatus/config
                 // -- for local testing --//
                 if (absUrl.indexOf('localhost') > -1) {
                     url.base = 'http://localhost:8080/dashboard-war/'

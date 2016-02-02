@@ -14,11 +14,6 @@ angular.module("login", ['hms-authentication'])
             }
 
             function onLoginFail(response) {
-
-                // -- workaround for login not working -- //
-                return onLoginSuccess ({roles: ['steward'] });
-
-
                 HMSAuthenticationService.ClearCredentials();
                 $scope.loginFail = true;
                 $scope.username = $scope.password = '';
