@@ -8,7 +8,7 @@ import javax.xml.datatype.DatatypeFactory
 import com.typesafe.config.Config
 import net.shrine.audit.{NetworkQueryId, QueryName, Time, UserName}
 import net.shrine.log.Loggable
-import net.shrine.protocol.{UnFlagQueryRequest, FlagQueryRequest, QueryMaster, ReadPreviousQueriesRequest, ReadPreviousQueriesResponse, RunQueryRequest}
+import net.shrine.protocol.{QueryResult, ResultOutputType, DefaultBreakdownResultOutputTypes, UnFlagQueryRequest, FlagQueryRequest, QueryMaster, ReadPreviousQueriesRequest, ReadPreviousQueriesResponse, RunQueryRequest}
 import net.shrine.qep.QepConfigSource
 import net.shrine.slick.TestableDataSourceCreator
 import slick.driver.JdbcProfile
@@ -54,6 +54,7 @@ case class QepQueryDb(schemaDef:QepQuerySchema,dataSource: DataSource) extends L
     dbRun(allQepQueryQuery.result)
   }
 
+  //todo order
   def selectPreviousQueries(request: ReadPreviousQueriesRequest):ReadPreviousQueriesResponse = {
     val previousQueries: Seq[QepQuery] = selectPreviousQueriesByUserAndDomain(request.authn.username,request.authn.domain)
     val flags:Map[NetworkQueryId,QepQueryFlag] = selectMostRecentQepQueryFlagsFor(previousQueries.map(_.networkId).to[Set])
@@ -62,6 +63,7 @@ case class QepQueryDb(schemaDef:QepQuerySchema,dataSource: DataSource) extends L
     ReadPreviousQueriesResponse(queriesAndFlags.map(x => x._1.toQueryMaster(x._2)))
   }
 
+  //todo order
   def selectPreviousQueriesByUserAndDomain(userName: UserName,domain: String):Seq[QepQuery] = {
     dbRun(allQepQueryQuery.filter(_.userName === userName).filter(_.userDomain === domain).result)
   }
@@ -75,7 +77,6 @@ case class QepQueryDb(schemaDef:QepQuerySchema,dataSource: DataSource) extends L
   }
 
   def insertQepQueryFlag(qepQueryFlag: QepQueryFlag):Unit = {
-    debug(s"insertQepQueryFlag $qepQueryFlag")
     dbRun(allQepQueryFlags += qepQueryFlag)
   }
 
@@ -83,6 +84,14 @@ case class QepQueryDb(schemaDef:QepQuerySchema,dataSource: DataSource) extends L
     val flags:Seq[QepQueryFlag] = dbRun(mostRecentQueryFlags.filter(_.networkId inSet networkIds).result)
 
     flags.map(x => x.networkQueryId -> x).toMap
+  }
+
+  def insertQepResultRow(qepQueryRow:QueryResultRow) = {
+    dbRun(allQueryResultRows += qepQueryRow)
+  }
+
+  def selectMostRecentQepResultRowsFor(networkId:NetworkQueryId): Seq[QueryResultRow] = {
+    dbRun(mostRecentQueryResultRows.filter(_.networkQueryId === networkId).result)
   }
 }
 
@@ -106,7 +115,7 @@ case class QepQuerySchema(jdbcProfile: JdbcProfile) extends Loggable {
   import jdbcProfile.api._
 
   def ddlForAllTables: jdbcProfile.DDL = {
-    allQepQueryQuery.schema ++ allQepQueryFlags.schema
+    allQepQueryQuery.schema ++ allQepQueryFlags.schema ++ allQueryResultRows.schema
   }
 
   //to get the schema, use the REPL
@@ -173,6 +182,46 @@ case class QepQuerySchema(jdbcProfile: JdbcProfile) extends Loggable {
 | last_updated | timestamp                                                                                                                                                  | NO   |     | CURRENT_TIMESTAMP |                |
 +--------------+------------------------------------------------------------------------------------------------------------------------------------------------------------+------+-----+-------------------+----------------+
 
+    */
+
+  val qepQueryResultTypes = DefaultBreakdownResultOutputTypes.toSet ++ ResultOutputType.values
+  val stringsToQueryResultTypes: Map[String, ResultOutputType] = qepQueryResultTypes.map(x => (x.name,x)).toMap
+  val queryResultTypesToString: Map[ResultOutputType, String] = stringsToQueryResultTypes.map(_.swap)
+
+  implicit val qepQueryResultTypesColumnType = MappedColumnType.base[ResultOutputType,String] ({
+    (resultType: ResultOutputType) => queryResultTypesToString(resultType)
+  },{
+    (string: String) => stringsToQueryResultTypes(string)
+  })
+
+  implicit val queryStatusColumnType = MappedColumnType.base[QueryResult.StatusType,String] ({
+    statusType => statusType.name
+  },{
+    name => QueryResult.StatusType.valueOf(name).getOrElse(throw new IllegalStateException(s"$name is not one of ${QueryResult.StatusType.values.map(_.name).mkString(", ")}"))
+  })
+
+  class QepQueryResults(tag:Tag) extends Table[QueryResultRow](tag,"queryResults") {
+    def id = column[Long]("id")
+    def localId = column[String]("localId")
+    def networkQueryId = column[NetworkQueryId]("networkQueryId")
+    def adapterNode = column[String]("adapterNode")
+    def resultType = column[ResultOutputType]("resultType")
+    def status = column[QueryResult.StatusType]("status")
+    def timeInI2b2 = column[Long]("timeInI2b2")
+    def changeDate = column[Long]("changeDate")
+
+    def * = (id,localId,networkQueryId,adapterNode,resultType,status,timeInI2b2,changeDate) <> (QueryResultRow.tupled,QueryResultRow.unapply)
+  }
+
+  val allQueryResultRows = TableQuery[QepQueryResults]
+
+  //Most recent query result rows for each queryId from each adapter
+  val mostRecentQueryResultRows: Query[QepQueryResults, QueryResultRow, Seq] = for(
+    queryResultRows <- allQueryResultRows if !allQueryResultRows.filter(_.networkQueryId === queryResultRows.networkQueryId).filter(_.adapterNode === queryResultRows.adapterNode).filter(_.changeDate > queryResultRows.changeDate).exists
+  ) yield queryResultRows
+
+
+  /*
     with some other aux tables to hold specifics:
 
     mysql> describe COUNT_RESULT;
@@ -300,3 +349,13 @@ object QepQueryFlag extends ((NetworkQueryId,Boolean,String,Long) => QepQueryFla
 
 }
 
+case class QueryResultRow(id:Long,
+                          localId:String,
+                          networkQueryId:NetworkQueryId,
+                          adapterNode:String,
+                          resultType:ResultOutputType,
+                          status:QueryResult.StatusType,
+                          timeInI2b2:Long,
+                          changeDate:Long) {
+
+}

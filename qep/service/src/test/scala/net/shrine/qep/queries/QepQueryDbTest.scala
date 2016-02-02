@@ -1,5 +1,6 @@
 package net.shrine.qep.queries
 
+import net.shrine.protocol.{QueryResult, ResultOutputType}
 import net.shrine.util.ShouldMatchersForJUnit
 import org.junit.{After, Before, Test}
 
@@ -7,7 +8,7 @@ import org.junit.{After, Before, Test}
   * @author david 
   * @since 1/20/16
   */
-class QepQueryDbTest extends ShouldMatchersForJUnit {// with TestWithDatabase {
+class QepQueryDbTest extends ShouldMatchersForJUnit {
 
   val qepQuery = QepQuery(
     networkId = 1L,
@@ -67,6 +68,60 @@ class QepQueryDbTest extends ShouldMatchersForJUnit {// with TestWithDatabase {
     val results2 = QepQueryDb.db.selectMostRecentQepQueryFlagsFor(Set(1L,2L))
     results2 should equal(Map(1L -> flag))
 
+  }
+
+  val qepResultRowFromExampleCom = QueryResultRow(
+    id = 10L,
+    localId = "Local Id",
+    networkQueryId = 1L,
+    adapterNode = "example.com",
+    resultType = ResultOutputType.PATIENT_COUNT_XML,
+    status = QueryResult.StatusType.Finished,
+    timeInI2b2 = 30L,
+    changeDate = System.currentTimeMillis()
+  )
+
+  @Test
+  def testInsertQueryResultRow() {
+
+    QepQueryDb.db.insertQepResultRow(qepResultRowFromExampleCom)
+
+    val results = QepQueryDb.db.selectMostRecentQepResultRowsFor(1L)
+    results should equal(Seq(qepResultRowFromExampleCom))
+  }
+
+  val qepResultRowFromExampleComInThePast = QueryResultRow(
+    id = 10L,
+    localId = "Local Id",
+    networkQueryId = 1L,
+    adapterNode = "example.com",
+    resultType = ResultOutputType.PATIENT_COUNT_XML,
+    status = QueryResult.StatusType.Processing,
+    timeInI2b2 = 30L,
+    changeDate = qepResultRowFromExampleCom.changeDate - 5000
+  )
+
+  val qepResultRowFromGeneralHospital = QueryResultRow(
+    id = 14L,
+    localId = "Different Local Id",
+    networkQueryId = 1L,
+    adapterNode = "generalhospital.com",
+    resultType = ResultOutputType.PATIENT_COUNT_XML,
+    status = QueryResult.StatusType.Finished,
+    timeInI2b2 = 30L,
+    changeDate = System.currentTimeMillis()
+  )
+
+
+  @Test
+  def testGetMostRecentResultRows() {
+
+    QepQueryDb.db.insertQepResultRow(qepResultRowFromExampleComInThePast)
+    QepQueryDb.db.insertQepResultRow(qepResultRowFromGeneralHospital)
+    QepQueryDb.db.insertQepResultRow(qepResultRowFromExampleCom)
+
+    val results = QepQueryDb.db.selectMostRecentQepResultRowsFor(1L)
+    results.to[Set] should equal(Set(qepResultRowFromExampleCom,qepResultRowFromGeneralHospital))
   }
 
 

@@ -215,7 +215,7 @@ object QueryResult {
     */
     val Finished = StatusType("FINISHED", isDone = true, Some(3))
     //TODO: Can we use the same <status_type_id> for Queued, Processing, and Incomplete?
-    val Processing = StatusType("PROCESSING", isDone = false, Some(2))
+    val Processing = StatusType("PROCESSING", isDone = false, Some(2))  //todo only used in tests
     val Queued = StatusType("QUEUED", isDone = false, Some(2))
     val Incomplete = StatusType("INCOMPLETE", isDone = false, Some(2))
     //TODO: What <status_type_id>s should these have?  Does anyone care?
