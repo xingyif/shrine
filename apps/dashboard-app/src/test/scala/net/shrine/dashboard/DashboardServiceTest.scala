@@ -152,8 +152,8 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
 
         assertResult(OK)(status)
 
-        val statusString = new String(body.data.toByteArray)
-        //todo test it to see if it's right
+        val configString = new String(body.data.toByteArray)
+        println(configString)
       }
   }
 
@@ -166,22 +166,18 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
       assertResult(OK)(status)
 
       val classpathString = new String(body.data.toByteArray)
-      //todo test it to see if it's right
-      //println(classpathString)
     }
   }
 
-  "DashboardService" should  "return an OK for admin/status/summary" in {
+  "DashboardService" should  "return an OK for admin/status/options" in {
 
-    Get(s"/admin/status/summary") ~>
+    Get(s"/admin/status/options") ~>
       addCredentials(adminCredentials) ~>
       route ~> check {
 
       assertResult(OK)(status)
 
-      val summary = new String(body.data.toByteArray)
-      //todo test it to see if it's right
-      println("Sumary " + summary)
+      val options = new String(body.data.toByteArray)
     }
   }
 
