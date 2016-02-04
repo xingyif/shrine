@@ -17,6 +17,8 @@ import scala.concurrent.duration.{Duration, DurationInt}
 import scala.concurrent.{Await, Future, blocking}
 import scala.language.postfixOps
 
+import scala.concurrent.ExecutionContext.Implicits.global
+
 /**
   * DB code for the QEP's query instances and query results.
   *
@@ -95,10 +97,12 @@ case class QepQueryDb(schemaDef:QepQuerySchema,dataSource: DataSource) extends L
     val queryResultRow = QueryResultRow(networkQueryId,result)
     val breakdowns: Iterable[QepQueryBreakdownResultsRow] = result.breakdowns.flatMap(QepQueryBreakdownResultsRow.breakdownRowsFor(networkQueryId,result.resultId,_))
 
-    dbRun{
-      allQueryResultRows += queryResultRow
-//      allBreakdownResultsRows ++= breakdowns
-    }
+    dbRun(
+      for {
+      _ <- allQueryResultRows += queryResultRow
+      _ <- allBreakdownResultsRows ++= breakdowns
+      } yield ()
+    )
   }
 
   def selectMostRecentQepResultRowsFor(networkId:NetworkQueryId): Seq[QueryResultRow] = {
@@ -106,7 +110,16 @@ case class QepQueryDb(schemaDef:QepQuerySchema,dataSource: DataSource) extends L
   }
 
   def selectMostRecentQepResultsFor(networkId:NetworkQueryId): Seq[QueryResult] = {
-    dbRun(mostRecentQueryResultRows.filter(_.networkQueryId === networkId).result).map(_.toQueryResult)
+
+    val (queryResults, breakdowns) = dbRun(
+      for {
+        queryResults <- mostRecentQueryResultRows.filter(_.networkQueryId === networkId).result
+        breakdowns <- allBreakdownResultsRows.filter(_.networkQueryId === networkId).result
+      } yield (queryResults, breakdowns)
+    )
+    val resultIdsToI2b2ResultEnvelopes: Map[Long, Map[ResultOutputType, I2b2ResultEnvelope]] = breakdowns.groupBy(_.resultId).map(rIdToB => rIdToB._1 -> QepQueryBreakdownResultsRow.resultEnvelopesFrom(rIdToB._2))
+
+    queryResults.map(r => r.toQueryResult(resultIdsToI2b2ResultEnvelopes.getOrElse(r.resultId,Map.empty)))
   }
 
   def insertQueryBreakdown(breakdownResultsRow:QepQueryBreakdownResultsRow) = {
@@ -363,19 +376,18 @@ case class QueryResultRow(
                            changeDate:Long
                          ) {
 
-  def toQueryResult:QueryResult = {
-    QueryResult(
-      resultId = resultId,
-      instanceId = instanceId,
-      resultType = Some(resultType),
-      setSize = size,
-      startDate = startDate.map(XmlDateHelper.toXmlGregorianCalendar),
-      endDate = endDate.map(XmlDateHelper.toXmlGregorianCalendar),
-      description = Some(adapterNode),
-      status,
-      statusMessage
-    )
-  }
+  def toQueryResult(breakdowns:Map[ResultOutputType,I2b2ResultEnvelope]) = QueryResult(
+    resultId = resultId,
+    instanceId = instanceId,
+    resultType = Some(resultType),
+    setSize = size,
+    startDate = startDate.map(XmlDateHelper.toXmlGregorianCalendar),
+    endDate = endDate.map(XmlDateHelper.toXmlGregorianCalendar),
+    description = Some(adapterNode),
+    statusType = status,
+    statusMessage = statusMessage,
+    breakdowns = breakdowns
+  )
 
 }
 
@@ -416,4 +428,12 @@ object QepQueryBreakdownResultsRow extends ((NetworkQueryId,Long,ResultOutputTyp
     breakdown._2.data.map(b => QepQueryBreakdownResultsRow(networkQueryId,resultId,breakdown._1,b._1,b._2))
   }
 
+  def resultEnvelopesFrom(breakdowns:Seq[QepQueryBreakdownResultsRow]): Map[ResultOutputType, I2b2ResultEnvelope] = {
+    def resultEnvelopeFrom(resultType:ResultOutputType,breakdowns:Seq[QepQueryBreakdownResultsRow]):I2b2ResultEnvelope = {
+      val data = breakdowns.map(b => b.dataKey -> b.value).toMap
+      I2b2ResultEnvelope(resultType,data)
+    }
+
+    breakdowns.groupBy(_.resultType).map(r => r._1 -> resultEnvelopeFrom(r._1,r._2))
+  }
 }
