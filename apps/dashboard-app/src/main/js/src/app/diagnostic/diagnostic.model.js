@@ -1,22 +1,27 @@
 (function (){
     'use strict';
 
-    // -- scope constant  -- //
-    var URLS = {
-        base: 'test/admin/status/summary.json'
-    };
 
     // -- angular module -- //
     angular.module('shrine-tools')
-        .factory('DiagnosticModel', DiagnosticModel);
+        .factory('DiagnosticModel', DiagnosticModel)
 
     // -- minifaction proof injection -- //
-    DiagnosticModel.$inject = ['$http', '$q'];
-    function DiagnosticModel (h, q) {
+    DiagnosticModel.$inject = ['$http', '$q', 'UrlGetter'];
+    function DiagnosticModel (h, q, urlGetter) {
+
+        var getUrl = {};
+
+        // -- private const -- //
+        var Config = {
+            OptionsEndpoint: 'admin/status/options',
+            ConfigEndpoint:  'admin/status/config'
+        };
+
 
         // -- public -- //
         return {
-            getSummary: getSummary
+            getOptions: getOptions
         };
 
         /**
@@ -42,8 +47,8 @@
          * @param verb
          * @returns {*}
          */
-        function getSummary(verb) {
-            var url = URLS.base;
+        function getOptions() {
+            var url = urlGetter(Config.OptionsEndpoint)
             return h.get(url)
                 .then(parseResult, onFail);
         }

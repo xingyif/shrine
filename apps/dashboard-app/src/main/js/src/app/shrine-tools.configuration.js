@@ -9,9 +9,9 @@
             'login': {
                 name:'login',
                 files:[
-                    'src/app/common/authentication/authentication-model.js',
-                    'src/app/common/authentication/authentication.js',
-                    'src/app/login/LoginCtrl.js'
+                    'src/app/common/authentication/authentication.module.js',
+                    'src/app/common/authentication/authentication.service.js',
+                    'src/app/login/login.controller.js'
                 ]
             },
 
@@ -48,7 +48,8 @@
         $stateProvider
             .state('login',{
                 url:'/login',
-                controller: 'LoginCtrl',
+                controller: 'LoginController',
+                controllerAs: 'vm',
                 templateUrl:'src/app/login/login.tpl.html',
                 resolve: {
                     loadFiles:function($ocLazyLoad) {
@@ -78,29 +79,36 @@
             .state('diagnostic.i2b2-connections',{
                 url:'/i2b2-connections',
                 templateUrl:'src/app/diagnostic/views/i2b2-connections.tpl.html'
+                //@todo: load files
             })
             .state('diagnostic.keystore',{
                 url:'/keystore',
                 templateUrl:'src/app/diagnostic/views/keystore.tpl.html'
+                //@todo: load files
             })
             .state('diagnostic.hub',{
                 url:'/hub',
                 templateUrl:'src/app/diagnostic/views/hub.tpl.html'
+                //@todo: load files
             })
             .state('diagnostic.adapter',{
                 url:'/adapter',
                 templateUrl:'src/app/diagnostic/views/adapter.tpl.html'
+                //@todo: load files
             })
             .state('diagnostic.qep',{
                 url:'/qep',
                 templateUrl:'src/app/diagnostic/views/qep.tpl.html'
+                //@todo: load files
             })
             .state('diagnostic.config',{
                 url:'/config',
                 templateUrl:'src/app/diagnostic/views/config.tpl.html'
+                //@todo: load files
             })
             .state('diagnostic.downstream-nodes',{
                 url:'/downstream-nodes'
+                //@todo: load files
             });
     }
 

@@ -20,7 +20,7 @@
       controller:   SidebarController,
       controllerAs: 'sbVM',
       scope: {
-        summary: '='
+        options: '='
       }
     };
 
@@ -37,7 +37,7 @@
 
     // -- scope --//
     var _sbVM = this;
-    _sbVM.summary = $scope.summary;
+    _sbVM.options = $scope.options;
   }
 
   /**

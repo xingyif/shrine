@@ -1,5 +1,5 @@
-angular.module("happy-model", ['model-service'])
-    .service("HappyMdl", ['$http', '$q', 'ModelService', '$app', function ($http, $q, mdlSvc, $app) {
+angular.module("happy-model", ['shrine.common'])
+    .service("HappyMdl", ['$http', '$q', 'UtilsService', '$app', function ($http, $q, mdlSvc, $app) {
 
         var URLS        = {
             ALL:        'all',
@@ -32,7 +32,7 @@ angular.module("happy-model", ['model-service'])
         }
 
         function hget(verb) {
-            var url = mdlSvc.url.base + base + verb;
+            var url = mdlSvc.getUrl() + base + verb;
             return $http.get(url)
                 .then(parseResult, onFail);
         }

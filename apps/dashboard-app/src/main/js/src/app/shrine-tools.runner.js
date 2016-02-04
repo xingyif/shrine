@@ -6,7 +6,7 @@
      */
     angular
         .module('shrine-tools')
-        .run(function ($rootScope, $location, AppUtilsService, $app) {
+        .run(function ($rootScope, $location, $app) {
 
             $rootScope.$on( "$locationChangeStart", function (event, next, current) {
                 // redirect to login page if not logged in

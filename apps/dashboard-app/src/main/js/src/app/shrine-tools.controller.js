@@ -30,11 +30,11 @@
                 $location.path('/login');
             };
 
-            $app.model.getSummary()
-                .then(setSummary);
+            $app.model.getOptions()
+                .then(setOptions);
 
-            function setSummary(data) {
-                $scope.summary = data;
+            function setOptions(data) {
+                $scope.options = data;
             }
 
         }
