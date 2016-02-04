@@ -1,7 +1,8 @@
 package net.shrine.qep.queries
 
-import net.shrine.protocol.{QueryResult, ResultOutputType}
-import net.shrine.util.ShouldMatchersForJUnit
+import net.shrine.protocol.QueryResult.StatusType
+import net.shrine.protocol.{DefaultBreakdownResultOutputTypes, QueryResult, ResultOutputType}
+import net.shrine.util.{XmlDateHelper, ShouldMatchersForJUnit}
 import org.junit.{After, Before, Test}
 
 /**
@@ -93,6 +94,27 @@ class QepQueryDbTest extends ShouldMatchersForJUnit {
     results should equal(Seq(qepResultRowFromExampleCom))
   }
 
+  val queryResult = QueryResult(
+    resultId = 20L,
+    instanceId = 200L,
+    resultType = Some(ResultOutputType.PATIENT_COUNT_XML),
+    setSize = 2000L,
+    startDate = Some(XmlDateHelper.now),
+    endDate = Some(XmlDateHelper.now),
+    description = Some("example.com"),
+    statusType = StatusType.Finished,
+    statusMessage = None
+  )
+
+  @Test
+  def testInsertQueryResult(): Unit = {
+    QepQueryDb.db.insertQueryResult(2L,queryResult)
+
+    val results = QepQueryDb.db.selectMostRecentQepResultsFor(2L)
+
+    results should equal(Seq(queryResult))
+  }
+
   val qepResultRowFromExampleComInThePast = QueryResultRow(
     resultId = 8L,
     networkQueryId = 1L,
@@ -131,6 +153,40 @@ class QepQueryDbTest extends ShouldMatchersForJUnit {
 
     val results = QepQueryDb.db.selectMostRecentQepResultRowsFor(1L)
     results.to[Set] should equal(Set(qepResultRowFromExampleCom,qepResultRowFromGeneralHospital))
+  }
+
+  val maleRow = QepQueryBreakdownResultsRow(
+    networkQueryId = 1L,
+    resultId = 100L,
+    resultType = DefaultBreakdownResultOutputTypes.PATIENT_GENDER_COUNT_XML,
+    dataKey = "male",
+    value = 388
+  )
+
+  val femaleRow = QepQueryBreakdownResultsRow(
+    networkQueryId = 1L,
+    resultId = 100L,
+    resultType = DefaultBreakdownResultOutputTypes.PATIENT_GENDER_COUNT_XML,
+    dataKey = "female",
+    value = 390
+  )
+
+  val unknownRow = QepQueryBreakdownResultsRow(
+    networkQueryId = 1L,
+    resultId = 100L,
+    resultType = DefaultBreakdownResultOutputTypes.PATIENT_GENDER_COUNT_XML,
+    dataKey = "unknown",
+    value = 4
+  )
+
+  @Test
+  def testInsertBreakdownRows(): Unit = {
+    QepQueryDb.db.insertQueryBreakdown(maleRow)
+    QepQueryDb.db.insertQueryBreakdown(femaleRow)
+    QepQueryDb.db.insertQueryBreakdown(unknownRow)
+
+    val results = QepQueryDb.db.selectAllBreakdownResultsRows
+    results.to[Set] should equal(Set(maleRow,femaleRow,unknownRow))
   }
 
 

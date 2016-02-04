@@ -5,7 +5,7 @@ import scala.concurrent.duration.Duration
 
 /**
  * @author clint
- * @date Dec 21, 2012
+ * @since Dec 21, 2012
  */
 object XmlGcEnrichments {
   final implicit class EnrichedXmlGc(val xmlGc: XMLGregorianCalendar) extends AnyVal {

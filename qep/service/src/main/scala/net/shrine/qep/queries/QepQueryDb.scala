@@ -1,18 +1,18 @@
 package net.shrine.qep.queries
 
 import java.sql.SQLException
-import java.util.GregorianCalendar
 import javax.sql.DataSource
-import javax.xml.datatype.DatatypeFactory
 
 import com.typesafe.config.Config
 import net.shrine.audit.{NetworkQueryId, QueryName, Time, UserName}
 import net.shrine.log.Loggable
-import net.shrine.protocol.{QueryResult, ResultOutputType, DefaultBreakdownResultOutputTypes, UnFlagQueryRequest, FlagQueryRequest, QueryMaster, ReadPreviousQueriesRequest, ReadPreviousQueriesResponse, RunQueryRequest}
+import net.shrine.protocol.{I2b2ResultEnvelope, QueryResult, ResultOutputType, DefaultBreakdownResultOutputTypes, UnFlagQueryRequest, FlagQueryRequest, QueryMaster, ReadPreviousQueriesRequest, ReadPreviousQueriesResponse, RunQueryRequest}
 import net.shrine.qep.QepConfigSource
 import net.shrine.slick.TestableDataSourceCreator
+import net.shrine.util.XmlDateHelper
 import slick.driver.JdbcProfile
 
+import scala.collection.immutable.Iterable
 import scala.concurrent.duration.{Duration, DurationInt}
 import scala.concurrent.{Await, Future, blocking}
 import scala.language.postfixOps
@@ -91,11 +91,30 @@ case class QepQueryDb(schemaDef:QepQuerySchema,dataSource: DataSource) extends L
   }
 
   def insertQueryResult(networkQueryId:NetworkQueryId,result:QueryResult) = {
-     insertQepResultRow(QueryResultRow(networkQueryId,result))
+
+    val queryResultRow = QueryResultRow(networkQueryId,result)
+    val breakdowns: Iterable[QepQueryBreakdownResultsRow] = result.breakdowns.flatMap(QepQueryBreakdownResultsRow.breakdownRowsFor(networkQueryId,result.resultId,_))
+
+    dbRun{
+      allQueryResultRows += queryResultRow
+//      allBreakdownResultsRows ++= breakdowns
+    }
   }
 
   def selectMostRecentQepResultRowsFor(networkId:NetworkQueryId): Seq[QueryResultRow] = {
     dbRun(mostRecentQueryResultRows.filter(_.networkQueryId === networkId).result)
+  }
+
+  def selectMostRecentQepResultsFor(networkId:NetworkQueryId): Seq[QueryResult] = {
+    dbRun(mostRecentQueryResultRows.filter(_.networkQueryId === networkId).result).map(_.toQueryResult)
+  }
+
+  def insertQueryBreakdown(breakdownResultsRow:QepQueryBreakdownResultsRow) = {
+    dbRun(allBreakdownResultsRows += breakdownResultsRow)
+  }
+
+  def selectAllBreakdownResultsRows: Seq[QepQueryBreakdownResultsRow] = {
+    dbRun(allBreakdownResultsRows.result)
   }
 }
 
@@ -119,7 +138,7 @@ case class QepQuerySchema(jdbcProfile: JdbcProfile) extends Loggable {
   import jdbcProfile.api._
 
   def ddlForAllTables: jdbcProfile.DDL = {
-    allQepQueryQuery.schema ++ allQepQueryFlags.schema ++ allQueryResultRows.schema
+    allQepQueryQuery.schema ++ allQepQueryFlags.schema ++ allQueryResultRows.schema ++ allBreakdownResultsRows.schema
   }
 
   //to get the schema, use the REPL
@@ -170,24 +189,6 @@ case class QepQuerySchema(jdbcProfile: JdbcProfile) extends Loggable {
     queryFlags <- allQepQueryFlags if !allQepQueryFlags.filter(_.networkId === queryFlags.networkId).filter(_.changeDate > queryFlags.changeDate).exists
   ) yield queryFlags
 
-  /**
-    * The adapter's QUERY_RESULTS table looks like this:
-    *
-    * mysql> describe QUERY_RESULT;
-+--------------+------------------------------------------------------------------------------------------------------------------------------------------------------------+------+-----+-------------------+----------------+
-| Field        | Type                                                                                                                                                       | Null | Key | Default           | Extra          |
-+--------------+------------------------------------------------------------------------------------------------------------------------------------------------------------+------+-----+-------------------+----------------+
-| id           | int(11)                                                                                                                                                    | NO   | PRI | NULL              | auto_increment |
-| local_id     | varchar(255)                                                                                                                                               | NO   |     | NULL              |                |
-| query_id     | int(11)                                                                                                                                                    | NO   | MUL | NULL              |                |
-| type         | enum('PATIENTSET','PATIENT_COUNT_XML','PATIENT_AGE_COUNT_XML','PATIENT_RACE_COUNT_XML','PATIENT_VITALSTATUS_COUNT_XML','PATIENT_GENDER_COUNT_XML','ERROR') | NO   |     | NULL              |                |
-| status       | enum('FINISHED','ERROR','PROCESSING','QUEUED')                                                                                                             | NO   |     | NULL              |                |
-| time_elapsed | int(11)                                                                                                                                                    | YES  |     | NULL              |                |
-| last_updated | timestamp                                                                                                                                                  | NO   |     | CURRENT_TIMESTAMP |                |
-+--------------+------------------------------------------------------------------------------------------------------------------------------------------------------------+------+-----+-------------------+----------------+
-
-    */
-
   val qepQueryResultTypes = DefaultBreakdownResultOutputTypes.toSet ++ ResultOutputType.values
   val stringsToQueryResultTypes: Map[String, ResultOutputType] = qepQueryResultTypes.map(x => (x.name,x)).toMap
   val queryResultTypesToString: Map[ResultOutputType, String] = stringsToQueryResultTypes.map(_.swap)
@@ -204,7 +205,6 @@ case class QepQuerySchema(jdbcProfile: JdbcProfile) extends Loggable {
     name => QueryResult.StatusType.valueOf(name).getOrElse(throw new IllegalStateException(s"$name is not one of ${QueryResult.StatusType.values.map(_.name).mkString(", ")}"))
   })
 
-  //todo what of these actually get used?
   class QepQueryResults(tag:Tag) extends Table[QueryResultRow](tag,"queryResults") {
     def resultId = column[Long]("resultId")
     def networkQueryId = column[NetworkQueryId]("networkQueryId")
@@ -228,32 +228,19 @@ case class QepQuerySchema(jdbcProfile: JdbcProfile) extends Loggable {
     queryResultRows <- allQueryResultRows if !allQueryResultRows.filter(_.networkQueryId === queryResultRows.networkQueryId).filter(_.adapterNode === queryResultRows.adapterNode).filter(_.changeDate > queryResultRows.changeDate).exists
   ) yield queryResultRows
 
+  class QepQueryBreakdownResults(tag:Tag) extends Table[QepQueryBreakdownResultsRow](tag,"queryBreakdownResults") {
+    def networkQueryId = column[NetworkQueryId]("networkQueryId")
+    def resultId = column[Long]("resultId")
+    def resultType = column[ResultOutputType]("resultType")
+    def dataKey = column[String]("dataKey")
+    def value = column[Long]("value")
 
-  /*
-    with some other aux tables to hold specifics:
+    def * = (networkQueryId,resultId,resultType,dataKey,value) <> (QepQueryBreakdownResultsRow.tupled,QepQueryBreakdownResultsRow.unapply)
+  }
 
-    mysql> describe COUNT_RESULT;
-+------------------+-----------+------+-----+-------------------+----------------+
-| Field            | Type      | Null | Key | Default           | Extra          |
-+------------------+-----------+------+-----+-------------------+----------------+
-| id               | int(11)   | NO   | PRI | NULL              | auto_increment |
-| result_id        | int(11)   | NO   | MUL | NULL              |                |
-| original_count   | int(11)   | NO   |     | NULL              |                |
-| obfuscated_count | int(11)   | NO   |     | NULL              |                |
-| date_created     | timestamp | NO   |     | CURRENT_TIMESTAMP |                |
-+------------------+-----------+------+-----+-------------------+----------------+
+  val allBreakdownResultsRows = TableQuery[QepQueryBreakdownResults]
 
-    mysql> describe BREAKDOWN_RESULT;
-+------------------+--------------+------+-----+---------+----------------+
-| Field            | Type         | Null | Key | Default | Extra          |
-+------------------+--------------+------+-----+---------+----------------+
-| id               | int(11)      | NO   | PRI | NULL    | auto_increment |
-| result_id        | int(11)      | NO   | MUL | NULL    |                |
-| data_key         | varchar(255) | NO   |     | NULL    |                |
-| original_value   | int(11)      | NO   |     | NULL    |                |
-| obfuscated_value | int(11)      | NO   |     | NULL    |                |
-+------------------+--------------+------+-----+---------+----------------+
-
+/*
     mysql> describe ERROR_RESULT;
 +---------------------+--------------+------+-----+--------------------------+----------------+
 | Field               | Type         | Null | Key | Default                  | Extra          |
@@ -270,9 +257,6 @@ case class QepQuerySchema(jdbcProfile: JdbcProfile) extends Loggable {
 +---------------------+--------------+------+-----+--------------------------+----------------+
 
     */
-
-
-
 }
 
 object QepQuerySchema {
@@ -286,6 +270,8 @@ object QepQuerySchema {
   val schema = QepQuerySchema(slickProfile)
 }
 
+
+
 case class QepQuery(
                      networkId:NetworkQueryId,
                      userName: UserName,
@@ -298,16 +284,13 @@ case class QepQuery(
 
   def toQueryMaster(qepQueryFlag:Option[QepQueryFlag]):QueryMaster = {
 
-    val gregorianCalendar = new GregorianCalendar()
-    gregorianCalendar.setTimeInMillis(dateCreated)
-    val xmlGregorianCalendar = DatatypeFactory.newInstance().newXMLGregorianCalendar(gregorianCalendar)
     QueryMaster(
       queryMasterId = networkId.toString,
       networkQueryId = networkId,
       name = queryName,
       userId = userName,
       groupId = userDomain,
-      createDate = xmlGregorianCalendar,
+      createDate = XmlDateHelper.toXmlGregorianCalendar(dateCreated),
       held = None, //todo if a query is held at the adapter, how will we know? do we care? Question out to Bill and leadership
       flagged = qepQueryFlag.map(_.flagged),
       flagMessage = qepQueryFlag.map(_.flagMessage)
@@ -380,6 +363,20 @@ case class QueryResultRow(
                            changeDate:Long
                          ) {
 
+  def toQueryResult:QueryResult = {
+    QueryResult(
+      resultId = resultId,
+      instanceId = instanceId,
+      resultType = Some(resultType),
+      setSize = size,
+      startDate = startDate.map(XmlDateHelper.toXmlGregorianCalendar),
+      endDate = endDate.map(XmlDateHelper.toXmlGregorianCalendar),
+      description = Some(adapterNode),
+      status,
+      statusMessage
+    )
+  }
+
 }
 
 object QueryResultRow extends ((Long,NetworkQueryId,Long,String,ResultOutputType,Long,Option[Long],Option[Long],QueryResult.StatusType,Option[String],Long) => QueryResultRow)
@@ -399,6 +396,24 @@ object QueryResultRow extends ((Long,NetworkQueryId,Long,String,ResultOutputType
       statusMessage = result.statusMessage,
       changeDate = System.currentTimeMillis()
     )
+  }
+
+}
+
+case class QepQueryBreakdownResultsRow(
+                                        networkQueryId: NetworkQueryId,
+                                        resultId:Long,
+                                        resultType: ResultOutputType,
+                                        dataKey:String,
+                                        value:Long
+                                      )
+
+object QepQueryBreakdownResultsRow extends ((NetworkQueryId,Long,ResultOutputType,String,Long) => QepQueryBreakdownResultsRow){
+
+  def breakdownRowsFor(networkQueryId:NetworkQueryId,
+                       resultId:Long,
+                       breakdown:(ResultOutputType,I2b2ResultEnvelope)): Iterable[QepQueryBreakdownResultsRow] = {
+    breakdown._2.data.map(b => QepQueryBreakdownResultsRow(networkQueryId,resultId,breakdown._1,b._1,b._2))
   }
 
 }
