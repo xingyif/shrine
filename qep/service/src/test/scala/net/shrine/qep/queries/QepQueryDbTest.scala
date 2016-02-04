@@ -1,6 +1,6 @@
 package net.shrine.qep.queries
 
-import net.shrine.protocol.{QueryResult, ResultOutputType}
+import net.shrine.protocol.{DefaultBreakdownResultOutputTypes, QueryResult, ResultOutputType}
 import net.shrine.util.ShouldMatchersForJUnit
 import org.junit.{After, Before, Test}
 
@@ -131,6 +131,40 @@ class QepQueryDbTest extends ShouldMatchersForJUnit {
 
     val results = QepQueryDb.db.selectMostRecentQepResultRowsFor(1L)
     results.to[Set] should equal(Set(qepResultRowFromExampleCom,qepResultRowFromGeneralHospital))
+  }
+
+  val maleRow = QepQueryBreakdownResultsRow(
+    networkQueryId = 1L,
+    resultId = 100L,
+    resultType = DefaultBreakdownResultOutputTypes.PATIENT_GENDER_COUNT_XML,
+    dataKey = "male",
+    value = 388
+  )
+
+  val femaleRow = QepQueryBreakdownResultsRow(
+    networkQueryId = 1L,
+    resultId = 100L,
+    resultType = DefaultBreakdownResultOutputTypes.PATIENT_GENDER_COUNT_XML,
+    dataKey = "female",
+    value = 390
+  )
+
+  val unknownRow = QepQueryBreakdownResultsRow(
+    networkQueryId = 1L,
+    resultId = 100L,
+    resultType = DefaultBreakdownResultOutputTypes.PATIENT_GENDER_COUNT_XML,
+    dataKey = "unknown",
+    value = 4
+  )
+
+  @Test
+  def testInsertBreakdownRows(): Unit = {
+    QepQueryDb.db.insertQueryBreakdown(maleRow)
+    QepQueryDb.db.insertQueryBreakdown(femaleRow)
+    QepQueryDb.db.insertQueryBreakdown(unknownRow)
+
+    val results = QepQueryDb.db.selectAllBreakdownResultsRows
+    results.to[Set] should equal(Set(maleRow,femaleRow,unknownRow))
   }
 
 
