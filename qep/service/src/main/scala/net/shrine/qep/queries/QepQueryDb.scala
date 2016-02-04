@@ -1,18 +1,18 @@
 package net.shrine.qep.queries
 
 import java.sql.SQLException
-import java.util.GregorianCalendar
 import javax.sql.DataSource
-import javax.xml.datatype.DatatypeFactory
 
 import com.typesafe.config.Config
 import net.shrine.audit.{NetworkQueryId, QueryName, Time, UserName}
 import net.shrine.log.Loggable
-import net.shrine.protocol.{QueryResult, ResultOutputType, DefaultBreakdownResultOutputTypes, UnFlagQueryRequest, FlagQueryRequest, QueryMaster, ReadPreviousQueriesRequest, ReadPreviousQueriesResponse, RunQueryRequest}
+import net.shrine.protocol.{I2b2ResultEnvelope, QueryResult, ResultOutputType, DefaultBreakdownResultOutputTypes, UnFlagQueryRequest, FlagQueryRequest, QueryMaster, ReadPreviousQueriesRequest, ReadPreviousQueriesResponse, RunQueryRequest}
 import net.shrine.qep.QepConfigSource
 import net.shrine.slick.TestableDataSourceCreator
+import net.shrine.util.XmlDateHelper
 import slick.driver.JdbcProfile
 
+import scala.collection.immutable.Iterable
 import scala.concurrent.duration.{Duration, DurationInt}
 import scala.concurrent.{Await, Future, blocking}
 import scala.language.postfixOps
@@ -91,11 +91,22 @@ case class QepQueryDb(schemaDef:QepQuerySchema,dataSource: DataSource) extends L
   }
 
   def insertQueryResult(networkQueryId:NetworkQueryId,result:QueryResult) = {
-     insertQepResultRow(QueryResultRow(networkQueryId,result))
+
+    val queryResultRow = QueryResultRow(networkQueryId,result)
+    val breakdowns: Iterable[QepQueryBreakdownResultsRow] = result.breakdowns.flatMap(QepQueryBreakdownResultsRow.breakdownRowsFor(networkQueryId,result.resultId,_))
+
+    dbRun{
+      allQueryResultRows += queryResultRow
+//      allBreakdownResultsRows ++= breakdowns
+    }
   }
 
   def selectMostRecentQepResultRowsFor(networkId:NetworkQueryId): Seq[QueryResultRow] = {
     dbRun(mostRecentQueryResultRows.filter(_.networkQueryId === networkId).result)
+  }
+
+  def selectMostRecentQepResultsFor(networkId:NetworkQueryId): Seq[QueryResult] = {
+    dbRun(mostRecentQueryResultRows.filter(_.networkQueryId === networkId).result).map(_.toQueryResult)
   }
 
   def insertQueryBreakdown(breakdownResultsRow:QepQueryBreakdownResultsRow) = {
@@ -259,6 +270,8 @@ object QepQuerySchema {
   val schema = QepQuerySchema(slickProfile)
 }
 
+
+
 case class QepQuery(
                      networkId:NetworkQueryId,
                      userName: UserName,
@@ -271,16 +284,13 @@ case class QepQuery(
 
   def toQueryMaster(qepQueryFlag:Option[QepQueryFlag]):QueryMaster = {
 
-    val gregorianCalendar = new GregorianCalendar()
-    gregorianCalendar.setTimeInMillis(dateCreated)
-    val xmlGregorianCalendar = DatatypeFactory.newInstance().newXMLGregorianCalendar(gregorianCalendar)
     QueryMaster(
       queryMasterId = networkId.toString,
       networkQueryId = networkId,
       name = queryName,
       userId = userName,
       groupId = userDomain,
-      createDate = xmlGregorianCalendar,
+      createDate = XmlDateHelper.toXmlGregorianCalendar(dateCreated),
       held = None, //todo if a query is held at the adapter, how will we know? do we care? Question out to Bill and leadership
       flagged = qepQueryFlag.map(_.flagged),
       flagMessage = qepQueryFlag.map(_.flagMessage)
@@ -353,6 +363,20 @@ case class QueryResultRow(
                            changeDate:Long
                          ) {
 
+  def toQueryResult:QueryResult = {
+    QueryResult(
+      resultId = resultId,
+      instanceId = instanceId,
+      resultType = Some(resultType),
+      setSize = size,
+      startDate = startDate.map(XmlDateHelper.toXmlGregorianCalendar),
+      endDate = endDate.map(XmlDateHelper.toXmlGregorianCalendar),
+      description = Some(adapterNode),
+      status,
+      statusMessage
+    )
+  }
+
 }
 
 object QueryResultRow extends ((Long,NetworkQueryId,Long,String,ResultOutputType,Long,Option[Long],Option[Long],QueryResult.StatusType,Option[String],Long) => QueryResultRow)
@@ -384,3 +408,12 @@ case class QepQueryBreakdownResultsRow(
                                         value:Long
                                       )
 
+object QepQueryBreakdownResultsRow extends ((NetworkQueryId,Long,ResultOutputType,String,Long) => QepQueryBreakdownResultsRow){
+
+  def breakdownRowsFor(networkQueryId:NetworkQueryId,
+                       resultId:Long,
+                       breakdown:(ResultOutputType,I2b2ResultEnvelope)): Iterable[QepQueryBreakdownResultsRow] = {
+    breakdown._2.data.map(b => QepQueryBreakdownResultsRow(networkQueryId,resultId,breakdown._1,b._1,b._2))
+  }
+
+}

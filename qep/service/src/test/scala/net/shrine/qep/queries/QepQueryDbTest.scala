@@ -1,7 +1,8 @@
 package net.shrine.qep.queries
 
+import net.shrine.protocol.QueryResult.StatusType
 import net.shrine.protocol.{DefaultBreakdownResultOutputTypes, QueryResult, ResultOutputType}
-import net.shrine.util.ShouldMatchersForJUnit
+import net.shrine.util.{XmlDateHelper, ShouldMatchersForJUnit}
 import org.junit.{After, Before, Test}
 
 /**
@@ -91,6 +92,27 @@ class QepQueryDbTest extends ShouldMatchersForJUnit {
 
     val results = QepQueryDb.db.selectMostRecentQepResultRowsFor(1L)
     results should equal(Seq(qepResultRowFromExampleCom))
+  }
+
+  val queryResult = QueryResult(
+    resultId = 20L,
+    instanceId = 200L,
+    resultType = Some(ResultOutputType.PATIENT_COUNT_XML),
+    setSize = 2000L,
+    startDate = Some(XmlDateHelper.now),
+    endDate = Some(XmlDateHelper.now),
+    description = Some("example.com"),
+    statusType = StatusType.Finished,
+    statusMessage = None
+  )
+
+  @Test
+  def testInsertQueryResult(): Unit = {
+    QepQueryDb.db.insertQueryResult(2L,queryResult)
+
+    val results = QepQueryDb.db.selectMostRecentQepResultsFor(2L)
+
+    results should equal(Seq(queryResult))
   }
 
   val qepResultRowFromExampleComInThePast = QueryResultRow(
