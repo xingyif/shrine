@@ -4,6 +4,7 @@ import net.shrine.protocol.QueryResult.StatusType
 import net.shrine.protocol.{I2b2ResultEnvelope, DefaultBreakdownResultOutputTypes, QueryResult, ResultOutputType}
 import net.shrine.util.{XmlDateHelper, ShouldMatchersForJUnit}
 import org.junit.{After, Before, Test}
+import net.shrine.problem.TestProblem
 
 /**
   * @author david 
@@ -202,7 +203,16 @@ class QepQueryDbTest extends ShouldMatchersForJUnit {
     results should equal(Seq(queryResultWithBreakdowns))
   }
 
+  @Test
+  def testInsertQueryResultWithProblem(): Unit = {
+    val queryResultWithProblem = queryResult.copy(statusType = StatusType.Error,problemDigest = Some(TestProblem.toDigest))
 
+    QepQueryDb.db.insertQueryResult(2L,queryResultWithProblem)
+
+    val results = QepQueryDb.db.selectMostRecentQepResultsFor(2L)
+
+    results should equal(Seq(queryResultWithProblem))
+  }
 
   @Before
   def beforeEach() = {
