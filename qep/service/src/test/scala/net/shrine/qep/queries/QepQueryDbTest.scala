@@ -1,7 +1,7 @@
 package net.shrine.qep.queries
 
 import net.shrine.protocol.QueryResult.StatusType
-import net.shrine.protocol.{DefaultBreakdownResultOutputTypes, QueryResult, ResultOutputType}
+import net.shrine.protocol.{I2b2ResultEnvelope, DefaultBreakdownResultOutputTypes, QueryResult, ResultOutputType}
 import net.shrine.util.{XmlDateHelper, ShouldMatchersForJUnit}
 import org.junit.{After, Before, Test}
 
@@ -188,6 +188,20 @@ class QepQueryDbTest extends ShouldMatchersForJUnit {
     val results = QepQueryDb.db.selectAllBreakdownResultsRows
     results.to[Set] should equal(Set(maleRow,femaleRow,unknownRow))
   }
+
+  val breakdowns = Map(DefaultBreakdownResultOutputTypes.PATIENT_GENDER_COUNT_XML -> I2b2ResultEnvelope(DefaultBreakdownResultOutputTypes.PATIENT_GENDER_COUNT_XML,Map("male" -> 3000,"female" -> 4000,"unknown" -> 234)))
+
+  @Test
+  def testInsertQueryResultWithBreakdowns(): Unit = {
+    val queryResultWithBreakdowns = queryResult.copy(breakdowns = breakdowns)
+
+    QepQueryDb.db.insertQueryResult(2L,queryResultWithBreakdowns)
+
+    val results = QepQueryDb.db.selectMostRecentQepResultsFor(2L)
+
+    results should equal(Seq(queryResultWithBreakdowns))
+  }
+
 
 
   @Before
