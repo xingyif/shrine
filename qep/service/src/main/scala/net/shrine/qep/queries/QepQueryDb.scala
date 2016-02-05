@@ -6,6 +6,7 @@ import javax.sql.DataSource
 import com.typesafe.config.Config
 import net.shrine.audit.{NetworkQueryId, QueryName, Time, UserName}
 import net.shrine.log.Loggable
+import net.shrine.problem.ProblemDigest
 import net.shrine.protocol.{I2b2ResultEnvelope, QueryResult, ResultOutputType, DefaultBreakdownResultOutputTypes, UnFlagQueryRequest, FlagQueryRequest, QueryMaster, ReadPreviousQueriesRequest, ReadPreviousQueriesResponse, RunQueryRequest}
 import net.shrine.qep.QepConfigSource
 import net.shrine.slick.TestableDataSourceCreator
@@ -18,6 +19,7 @@ import scala.concurrent.{Await, Future, blocking}
 import scala.language.postfixOps
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.xml.XML
 
 /**
   * DB code for the QEP's query instances and query results.
@@ -96,11 +98,13 @@ case class QepQueryDb(schemaDef:QepQuerySchema,dataSource: DataSource) extends L
 
     val queryResultRow = QueryResultRow(networkQueryId,result)
     val breakdowns: Iterable[QepQueryBreakdownResultsRow] = result.breakdowns.flatMap(QepQueryBreakdownResultsRow.breakdownRowsFor(networkQueryId,result.resultId,_))
+    val problem: Seq[QepProblemDigestRow] = result.problemDigest.map(p => QepProblemDigestRow(networkQueryId,result.resultId,p.codec,p.stampText,p.summary,p.description,p.detailsXml.toString)).to[Seq]
 
     dbRun(
       for {
       _ <- allQueryResultRows += queryResultRow
       _ <- allBreakdownResultsRows ++= breakdowns
+      _ <- allProblemDigestRows ++= problem
       } yield ()
     )
   }
@@ -111,15 +115,26 @@ case class QepQueryDb(schemaDef:QepQuerySchema,dataSource: DataSource) extends L
 
   def selectMostRecentQepResultsFor(networkId:NetworkQueryId): Seq[QueryResult] = {
 
-    val (queryResults, breakdowns) = dbRun(
+    val (queryResults, breakdowns,problems) = dbRun(
       for {
         queryResults <- mostRecentQueryResultRows.filter(_.networkQueryId === networkId).result
         breakdowns <- allBreakdownResultsRows.filter(_.networkQueryId === networkId).result
-      } yield (queryResults, breakdowns)
+        problems <- allProblemDigestRows.filter(_.networkQueryId === networkId).result
+      } yield (queryResults, breakdowns, problems)
     )
     val resultIdsToI2b2ResultEnvelopes: Map[Long, Map[ResultOutputType, I2b2ResultEnvelope]] = breakdowns.groupBy(_.resultId).map(rIdToB => rIdToB._1 -> QepQueryBreakdownResultsRow.resultEnvelopesFrom(rIdToB._2))
 
-    queryResults.map(r => r.toQueryResult(resultIdsToI2b2ResultEnvelopes.getOrElse(r.resultId,Map.empty)))
+    def seqOfOneProblemRowToProblemDigest(problemSeq:Seq[QepProblemDigestRow]):ProblemDigest = {
+      if(problemSeq.size == 1) problemSeq.head.toProblemDigest
+      else throw new IllegalStateException(s"problemSeq size was not 1. $problemSeq")
+    }
+
+    val resultIdsToProblemDigests: Map[Long, ProblemDigest] = problems.groupBy(_.resultId).map(rIdToP => rIdToP._1 -> seqOfOneProblemRowToProblemDigest(rIdToP._2) )
+
+    queryResults.map(r => r.toQueryResult(
+      resultIdsToI2b2ResultEnvelopes.getOrElse(r.resultId,Map.empty),
+      resultIdsToProblemDigests.get(r.resultId)
+    ))
   }
 
   def insertQueryBreakdown(breakdownResultsRow:QepQueryBreakdownResultsRow) = {
@@ -151,7 +166,7 @@ case class QepQuerySchema(jdbcProfile: JdbcProfile) extends Loggable {
   import jdbcProfile.api._
 
   def ddlForAllTables: jdbcProfile.DDL = {
-    allQepQueryQuery.schema ++ allQepQueryFlags.schema ++ allQueryResultRows.schema ++ allBreakdownResultsRows.schema
+    allQepQueryQuery.schema ++ allQepQueryFlags.schema ++ allQueryResultRows.schema ++ allBreakdownResultsRows.schema ++ allProblemDigestRows.schema
   }
 
   //to get the schema, use the REPL
@@ -254,22 +269,22 @@ case class QepQuerySchema(jdbcProfile: JdbcProfile) extends Loggable {
   val allBreakdownResultsRows = TableQuery[QepQueryBreakdownResults]
 
 /*
-    mysql> describe ERROR_RESULT;
-+---------------------+--------------+------+-----+--------------------------+----------------+
-| Field               | Type         | Null | Key | Default                  | Extra          |
-+---------------------+--------------+------+-----+--------------------------+----------------+
-| id                  | int(11)      | NO   | PRI | NULL                     | auto_increment |
-| result_id           | int(11)      | NO   | MUL | NULL                     |                |
-| message             | varchar(255) | NO   |     | NULL                     |                |
-| CODEC               | varchar(256) | NO   |     | Pre-1.20 Error           |                |
-| SUMMARY             | text         | NO   |     | NULL                     |                |
-| DESCRIPTION         | text         | NO   |     | NULL                     |                |
-| PROBLEM_DESCRIPTION | text         | NO   |     | NULL                     |                |
-| DETAILS             | text         | NO   |     | NULL                     |                |
-| STAMP               | varchar(256) | NO   |     | Unknown time and machine |                |
-+---------------------+--------------+------+-----+--------------------------+----------------+
-
+case class ProblemDigest(codec: String, stampText: String, summary: String, description: String, detailsXml: NodeSeq) extends XmlMarshaller {
     */
+  class QepResultProblemDigests(tag:Tag) extends Table [QepProblemDigestRow](tag,"queryResultProblemDigests") {
+    def networkQueryId = column[NetworkQueryId]("networkQueryId")
+    def resultId = column[Long]("resultId")
+    def codec = column[String]("codec")
+    def stamp = column[String]("stamp")
+    def summary = column[String]("summary")
+    def description = column[String]("description")
+    def details = column[String]("details")
+
+    def * = (networkQueryId,resultId,codec,stamp,summary,description,details) <> (QepProblemDigestRow.tupled,QepProblemDigestRow.unapply)
+  }
+
+  val allProblemDigestRows = TableQuery[QepResultProblemDigests]
+
 }
 
 object QepQuerySchema {
@@ -376,7 +391,7 @@ case class QueryResultRow(
                            changeDate:Long
                          ) {
 
-  def toQueryResult(breakdowns:Map[ResultOutputType,I2b2ResultEnvelope]) = QueryResult(
+  def toQueryResult(breakdowns:Map[ResultOutputType,I2b2ResultEnvelope],problemDigest:Option[ProblemDigest]) = QueryResult(
     resultId = resultId,
     instanceId = instanceId,
     resultType = Some(resultType),
@@ -386,7 +401,8 @@ case class QueryResultRow(
     description = Some(adapterNode),
     statusType = status,
     statusMessage = statusMessage,
-    breakdowns = breakdowns
+    breakdowns = breakdowns,
+    problemDigest = problemDigest
   )
 
 }
@@ -435,5 +451,26 @@ object QepQueryBreakdownResultsRow extends ((NetworkQueryId,Long,ResultOutputTyp
     }
 
     breakdowns.groupBy(_.resultType).map(r => r._1 -> resultEnvelopeFrom(r._1,r._2))
+  }
+}
+
+case class QepProblemDigestRow(
+                                networkQueryId: NetworkQueryId,
+                                resultId: Long,
+                                codec: String,
+                                stampText: String,
+                                summary: String,
+                                description: String,
+                                details: String
+                              ){
+  def toProblemDigest = {
+    ProblemDigest(
+      codec,
+      stampText,
+      summary,
+      description,
+      if(!details.isEmpty) XML.loadString(details)
+      else <details/>
+    )
   }
 }
