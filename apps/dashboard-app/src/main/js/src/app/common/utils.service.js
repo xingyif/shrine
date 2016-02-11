@@ -32,7 +32,7 @@
 
 
         //this is a test of a named url vs. using localhost:6443/
-        return 'https://shrine-dev1.catalyst:6443/shrine-dashboard/';
+        return 'https://shrine-dev1.catalyst:6443/shrine-dashboard/' + endpoint;
     }
 
 
