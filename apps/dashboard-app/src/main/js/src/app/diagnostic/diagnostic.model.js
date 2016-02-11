@@ -6,26 +6,31 @@
     angular.module('shrine-tools')
         .factory('DiagnosticModel', DiagnosticModel)
 
-    // -- minifaction proof injection -- //
+
     DiagnosticModel.$inject = ['$http', '$q', 'UrlGetter'];
     function DiagnosticModel (h, q, urlGetter) {
 
-        var getUrl = {};
+
+        var cache = {};
 
         // -- private const -- //
         var Config = {
             OptionsEndpoint: 'admin/status/options',
-            ConfigEndpoint:  'admin/status/config'
+            ConfigEndpoint:  'admin/status/config',
+            SummaryEndpoint: 'admin/status/summary'
         };
 
 
         // -- public -- //
         return {
-            getOptions: getOptions
+            getOptions: getOptions,
+            getConfig:  getConfig,
+            getSummary: getSummary,
+            cache:      cache
         };
 
         /**
-         *
+         * Method for Handling a failed rest call.
          * @param failedResult
          * @returns {*}
          */
@@ -33,8 +38,9 @@
             return failedResult;
         }
 
+
         /***
-         *
+         * Method for handling a successful rest call.
          * @param result
          * @returns {*}
          */
@@ -42,8 +48,9 @@
             return result.data;
         }
 
+
         /**
-         *
+         * Get View Options, initial call from diagnostic.
          * @param verb
          * @returns {*}
          */
@@ -52,6 +59,22 @@
             return h.get(url)
                 .then(parseResult, onFail);
         }
-    }
 
+
+        /**
+         * Returns the Shrine Configuration object.
+         * @returns {*}
+         */
+        function getConfig () {
+            var url = urlGetter(Config.ConfigEndpoint)
+            return h.get(url)
+                .then(parseResult, onFail);
+        }
+
+        function getSummary () {
+            var url = urlGetter(Config.SummaryEndpoint)
+            return h.get(url)
+                .then(parseResult, onFail);
+        }
+    }
 })();

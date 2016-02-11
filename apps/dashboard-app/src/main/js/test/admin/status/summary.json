@@ -1,1 +1,1 @@
-{"isHub":true,"stewardEnabled":false,"shouldQuerySelf":false, "downstreamNodes":[{"name":"PHS","url":"http://example.com/phs"},{"name":"\"some hospital\"","url":"http://example.com/foo"},{"name":"CHB","url":"http://example.com/chb"}]}
+{"isHub":true,"shrineVersion":"1.20.1-SNAPSHOT","shrineBuildDate":"2015-12-09 17:38:13","ontologyVersion":"UNKNOWN","ontologyTerm":"\\\\i2b2_DEMO\\i2b2\\Demographics\\Gender\\Male\\","adapterOk":true,"keystoreOk":true,"hubOk":true,"qepOk":true}

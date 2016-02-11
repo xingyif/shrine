@@ -28,8 +28,19 @@
             'diagnostic.summary': {
                 name:'diagnostic.summary',
                 files:[
-                    'src/app/diagnostic/views/happy/happy-model.js',
-                    'src/app/diagnostic/views/happy/happy.js'
+                    'src/app/diagnostic/views/summary.controller.js'
+                ]
+            },
+            'diagnostic.i2b2-connections': {
+                name:'diagnostic.i2b2-connections',
+                files:[
+                    'src/app/diagnostic/views/i2b2-connections.controller.js'
+                ]
+            },
+            'diagnostic.config': {
+                name: 'diagnostic.config',
+                files: [
+                    'src/app/diagnostic/views/config.controller.js'
                 ]
             }
         };
@@ -47,10 +58,10 @@
 
         $stateProvider
             .state('login',{
-                url:'/login',
-                controller: 'LoginController',
+                url:          '/login',
+                controller:   'LoginController',
                 controllerAs: 'vm',
-                templateUrl:'src/app/login/login.tpl.html',
+                templateUrl:  'src/app/login/login.tpl.html',
                 resolve: {
                     loadFiles:function($ocLazyLoad) {
                         return $ocLazyLoad.load(stateConfig['login']);
@@ -58,9 +69,9 @@
                 }
             })
             .state('diagnostic', {
-                url:'/diagnostic',
-                controller: 'STCtrl',
-                templateUrl: 'src/app/diagnostic/diagnostic.tpl.html',
+                url:          '/diagnostic',
+                controller:   'STCtrl',
+                templateUrl:  'src/app/diagnostic/diagnostic.tpl.html',
                 resolve: {
                     loadFiles:function($ocLazyLoad){
                         return $ocLazyLoad.load(stateConfig['diagnostic'])
@@ -68,8 +79,10 @@
                 }
             })
             .state('diagnostic.summary',{
-                url:'/summary',
-                templateUrl:'src/app/diagnostic/views/summary.tpl.html',
+                url:          '/summary',
+                controller:   'SummaryController',
+                controllerAs: 'vm',
+                templateUrl:  'src/app/diagnostic/views/summary.tpl.html',
                 resolve: {
                     loadMyFiles:function($ocLazyLoad) {
                         return $ocLazyLoad.load(stateConfig['diagnostic.summary']);
@@ -77,34 +90,46 @@
                 }
             })
             .state('diagnostic.i2b2-connections',{
-                url:'/i2b2-connections',
-                templateUrl:'src/app/diagnostic/views/i2b2-connections.tpl.html'
-                //@todo: load files
+                url:          '/i2b2-connections',
+                controller:   'I2B2ConnectionsController',
+                controllerAs: 'vm',
+                templateUrl:  'src/app/diagnostic/views/i2b2-connections.tpl.html',
+                resolve: {
+                    loadMyFiles:function($ocLazyLoad) {
+                        return $ocLazyLoad.load(stateConfig['diagnostic.i2b2-connections']);
+                    }
+                }
             })
             .state('diagnostic.keystore',{
-                url:'/keystore',
-                templateUrl:'src/app/diagnostic/views/keystore.tpl.html'
+                url:          '/keystore',
+                templateUrl:  'src/app/diagnostic/views/keystore.tpl.html'
                 //@todo: load files
             })
             .state('diagnostic.hub',{
                 url:'/hub',
-                templateUrl:'src/app/diagnostic/views/hub.tpl.html'
+                templateUrl:  'src/app/diagnostic/views/hub.tpl.html'
                 //@todo: load files
             })
             .state('diagnostic.adapter',{
-                url:'/adapter',
-                templateUrl:'src/app/diagnostic/views/adapter.tpl.html'
+                url:          '/adapter',
+                templateUrl:  'src/app/diagnostic/views/adapter.tpl.html'
                 //@todo: load files
             })
             .state('diagnostic.qep',{
-                url:'/qep',
-                templateUrl:'src/app/diagnostic/views/qep.tpl.html'
+                url:          '/qep',
+                templateUrl:  'src/app/diagnostic/views/qep.tpl.html'
                 //@todo: load files
             })
             .state('diagnostic.config',{
-                url:'/config',
-                templateUrl:'src/app/diagnostic/views/config.tpl.html'
-                //@todo: load files
+                url:           '/config',
+                controller:    'ShrineConfigurationController',
+                controllerAs:  'vm',
+                templateUrl:   'src/app/diagnostic/views/config.tpl.html',
+                resolve: {
+                    loadFiles: function ($ocLazyLoad) {
+                        return $ocLazyLoad.load(stateConfig['diagnostic.config']);
+                    }
+                }
             })
             .state('diagnostic.downstream-nodes',{
                 url:'/downstream-nodes'

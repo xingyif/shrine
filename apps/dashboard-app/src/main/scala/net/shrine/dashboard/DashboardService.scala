@@ -21,6 +21,7 @@ import org.json4s.{DefaultFormats, Formats}
 import org.json4s.native.JsonMethods.{parse => json4sParse}
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.xml.Elem
 
 // we don't implement our route structure directly in the service actor because
 // we want to be able to test it independently, without having to spin up an actor
@@ -168,7 +169,8 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
   def statusRoute(user:User):Route = get {
     pathPrefix("config"){getConfig}~
     pathPrefix("classpath"){getClasspath}~
-    pathPrefix("options"){getOptions}
+    pathPrefix("options"){getOptions}~
+    pathPrefix("summary"){getSummary}
   }
 
   lazy val getConfig:Route = {
@@ -191,12 +193,6 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
     requestUriThenRoute(statusBaseUrl + "/config", completeSummaryRoute)
   }
 
-  lazy val getConfigOld:Route = {
-    val statusBaseUrl: String = DashboardConfigSource.config.getString("shrine" +
-      ".dashboard.statusBaseUrl")
-    forwardUnmatchedPath(statusBaseUrl + "/config")
-  }
-
   lazy val getClasspath:Route = {
     val statusBaseUrl: String = DashboardConfigSource.config.getString("shrine" +
       ".dashboard" +
@@ -214,7 +210,6 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
           .keyValues
           .filterKeys(_.toLowerCase.startsWith("shrine"))
         val shrineConfig  = ShrineConfig(config)
-        val audit         = Audit(config)
 
         // -- complete route -- //
         ctx.complete(shrineConfig)
@@ -246,10 +241,53 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
 
     requestUriThenRoute(statusBaseUrl + "/config", completeSummaryRoute)
   }
+
+
+  lazy val getSummary:Route = {
+
+    val happyBaseUrl: String = DashboardConfigSource.config.getString("shrine.dashboard.happyBaseUrl")
+
+    def pullSummaryFromHappy(httpResponse:HttpResponse,uri:Uri):Route = {
+      ctx => {
+        val result = scala.xml.XML.loadString(httpResponse.entity.asString)
+        val isHub = (result \\ "notAHub").text.length == 0
+        val shrineVersion =   (result \\ "versionInfo" \ "shrineVersion").text
+        val shrineBuildDate = (result \\ "versionInfo" \ "buildDate").text
+        val ontologyVersion = (result \\ "versionInfo" \ "ontologyVersion").text
+        val ontologyTerm = (result \\ "adapter" \\ "queryDefinition" \\ "term").text
+
+
+
+        def isHubOk:Boolean = {
+          if(!isHub) true
+          else {
+            val hasFailures = (result \\ "net" \ "failureCount").text.toInt > 0
+            val hasInvalidResults = (result \\ "net" \ "validResultCount").text.toInt != (result \\ "net" \ "expectedResultCount").text.toInt
+            val hasTimeouts = (result \\ "net" \ "timeoutCount").text.toInt > 0
+            !hasFailures && !hasInvalidResults && !hasTimeouts
+          }
+        }
+
+        val hubOk = isHubOk
+        val adapterOk = (result \\ "adapter" \\ "errorResponse").length == 0
+        val keystoreOk = true
+        val qepOk = true
+
+        val summary = Summary(isHub, shrineVersion, shrineBuildDate, ontologyVersion, ontologyTerm, adapterOk, keystoreOk, hubOk, qepOk)
+
+        ctx.complete(summary)
+      }
+    }
+
+    requestUriThenRoute(happyBaseUrl+"/all", pullSummaryFromHappy)
+  }
 }
 
 
+case class Summary(isHub:Boolean, shrineVersion:String, shrineBuildDate:String, ontologyVersion:String,
+                   ontologyTerm:String, adapterOk:Boolean, keystoreOk:Boolean, hubOk:Boolean, qepOk:Boolean) {
 
+}
 
 
 
@@ -331,21 +369,23 @@ object Options{
 }
 
 case class ShrineConfig(isHub:Boolean, hub:Hub, pmEndpoint:Endpoint,
-                        ontEndpoint:Endpoint, hiveCredentials: HiveCredentials)
+                        ontEndpoint:Endpoint, hiveCredentials: HiveCredentials, adapter: Adapter, queryEntryPoint:QEP)
 object ShrineConfig{
   def apply(configMap:Map[String, String]):ShrineConfig = {
-    val hub             = Hub(configMap)
-    val isHub           = ShrineParser.IsHub
-    val pmEndpoint      = Endpoint(configMap, "pm")
-    val ontEndpoint     = Endpoint(configMap, "ont")
-    val hiveCredentials = HiveCredentials()
-    ShrineConfig(isHub, hub, pmEndpoint, ontEndpoint, hiveCredentials)
+    val hub               = Hub(configMap)
+    val isHub             = ShrineParser.IsHub
+    val pmEndpoint        = Endpoint("pm")
+    val ontEndpoint       = Endpoint("ont")
+    val hiveCredentials   = HiveCredentials()
+    val adapter           = Adapter()
+    val queryEntryPoint   = QEP()
+    ShrineConfig(isHub, hub, pmEndpoint, ontEndpoint, hiveCredentials, adapter, queryEntryPoint)
   }
 }
 
 case class Endpoint(acceptAllCerts:Boolean, url:String, timeoutSeconds:Int)
 object Endpoint{
-  def apply(configMap:Map[String, String], endpointType:String):Endpoint = {
+  def apply(endpointType:String):Endpoint = {
     val prefix = "shrine." + endpointType.toLowerCase + "Endpoint."
 
     val acceptAllCerts  = ShrineParser.getOrElse(prefix + "acceptAllCerts", "") == "true"
@@ -381,6 +421,32 @@ object Hub{
   }
 }
 
+// -- adapter info -- //
+case class Adapter(crcEndpointUrl:String, setSizeObfuscation:Boolean, adapterLockoutAttemptsThreshold:Int,
+                   adapterMappingsFilename:String)
+object Adapter{
+  def apply():Adapter = {
+    val key                             = "shrine.adapter."
+    val crcEndpointUrl                  = ShrineParser.getOrElse(key + "crcEndpoint.url")
+    val setSizeObfuscation              = ShrineParser.getOrElse(key + "setSizeObfuscation").toLowerCase == "true"
+    val adapterLockoutAttemptsThreshold = ShrineParser.getOrElse(key + "adapterLockoutAttemptsThreshold").toInt
+    val adapterMappingsFileName         = ShrineParser.getOrElse(key + "adapterMappingsFileName")
+
+    Adapter(crcEndpointUrl, setSizeObfuscation, adapterLockoutAttemptsThreshold, adapterMappingsFileName)
+  }
+}
+
+
+case class Steward(qepUserName:String, stewardBaseUrl:String)
+object Steward {
+  def apply ():Steward = {
+    val key = "shrine.queryEntryPoint.shrineSteward."
+    val qepUserName     = ShrineParser.getOrElse(key + "qepUserName")
+    val stewardBaseUrl  = ShrineParser.getOrElse(key + "stewardBaseUrl")
+    Steward(qepUserName, stewardBaseUrl)
+  }
+}
+
 
 // -- if needed -- //
 case class TimeoutInfo (timeUnit:String, description:String)
@@ -390,7 +456,7 @@ case class DatabaseInfo(createTablesOnStart:Boolean, dataSourceFrom:String,
                         jndiDataSourceName:String, slickProfileClassName:String)
 case class Audit(database:DatabaseInfo, collectQepAudit:Boolean)
 object Audit{
-  def apply(configMap:Map[String, String]):Audit = {
+  def apply():Audit = {
     val key = "shrine.queryEntryPoint.audit."
     val createTablesOnStart     = ShrineParser.getOrElse(key + "database.createTablesOnStart") == "true"
     val dataSourceFrom          = ShrineParser.getOrElse(key + "database.dataSourceFrom")
@@ -402,45 +468,24 @@ object Audit{
   }
 }
 case class QEP(maxQueryWaitTimeMinutes:Int, create:Boolean,attachSigningCert:Boolean,
-               authorizationType:String, includeAggregateResults:Boolean, authenticationType:String, audit:Audit)
+               authorizationType:String, includeAggregateResults:Boolean, authenticationType:String, audit:Audit, shrineSteward:Steward)
 object QEP{
-  def apply(configMap:Map[String, String]):QEP = {
+  def apply():QEP = {
     val key = "shrine.queryEntryPoint."
-    val sheriffUsername         = ShrineParser.getOrElse(key + "sheriffCredentials.username")
     val maxQueryWaitTimeMinutes = ShrineParser.getOrElse(key + "maxQueryWaitTime.minutes").toInt
     val create                  = ShrineParser.getOrElse(key + "create") == "true"
     val attachSigningCert       = ShrineParser.getOrElse(key + "attachSigningCert") == "true"
     val authorizationType       = ShrineParser.getOrElse(key + "authorizationType")
     val includeAggregateResults = ShrineParser.getOrElse(key + "includeAggregateResults") == "true"
     val authenticationType      = ShrineParser.getOrElse(key + "authenticationType", "")
-    val audit                   = Audit(configMap)
-    val sheriffServiceEndpoint  = Endpoint(configMap, "queryEntryPoint.sheriff")
-    val broadcasterServiceEndpoint = Endpoint(configMap, "queryEntryPoint.broadcasterService")
-
-    QEP(maxQueryWaitTimeMinutes, create, attachSigningCert, authorizationType, includeAggregateResults, authenticationType, audit)
+    val audit                   = Audit()
+    val shrineSteward           = Steward()
+    QEP(maxQueryWaitTimeMinutes, create, attachSigningCert, authorizationType, includeAggregateResults, authenticationType, audit, shrineSteward)
   }
 }
 
 
 
-/*
-
-
-  val shrineConfig = keyValues.filterKeys(_.toLowerCase.startsWith("shrine"))
-
-  def getHub = {
-    val shouldQuerySelf = shrineConfig.getOrElse("shrine.hub.shouldQuerySelf", "")
-    val create = shrineConfig.getOrElse("shrine.hub.create", "")
-    val downstreamNodes = for((k,v) <- shrineConfig.filterKeys(_.toLowerCase.startsWith
-      ("shrine" +
-      ".hub.downstreamnodes"))) yield (k.split('.').last, v)
-
-    case class Hub(shouldQuerySelf:String, create:String, downstreamNodes:Map[String,
-      String])
-
-    Hub(shouldQuerySelf, create, downstreamNodes)
-  }
- */
 
 //adapted from https://gist.github.com/joseraya/176821d856b43b1cfe19
 object gruntWatchCorsSupport extends Directive0 with RouteConcatenation {

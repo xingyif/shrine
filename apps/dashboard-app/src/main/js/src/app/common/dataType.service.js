@@ -15,7 +15,9 @@
             Undefined:  'Undefined',
             Boolean:    'Boolean',
             Array:      'Array',
-            Null:       'Null'
+            Null:       'Null',
+            Object:     'Object',
+            Function:   'Function'
         };
 
 
@@ -26,6 +28,8 @@
             isTypeOf:       isTypeOf,
             isArray:        isArray,
             isBoolean:      isBoolean,
+            isFunction:     isFunction,
+            isObject:       isObject,
             isString:       isString,
             isNumber:       isNumber,
             isUndefined:    isUndefined,
@@ -77,6 +81,25 @@
             return isTypeOf(element, Types.BOOLEAN);
         }
 
+
+        /**
+         * ture if element is a function
+         * @param element
+         * @returns {boolean}
+         */
+        function isFunction(element) {
+            return isTypeOf(element, Types.Function);
+        }
+
+
+        /**
+         * true if element is an object.
+         * @param element
+         * @returns {boolean}
+         */
+        function isObject(element) {
+            return isTypeOf(element, Types.Object);
+        }
 
         /**
          * true if element is a string.

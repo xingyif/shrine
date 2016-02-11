@@ -1,3 +1,92 @@
 <div>
-    Summary
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            <td colspan="2">
+                Version Info
+            </td>
+        </tr>
+        </thead>
+
+        <tbody>
+        <tr>
+            <td colspan="2">
+                This site is running SHRINE <span style="color:green">{{vm.summary.shrineVersion}}</span> built on <label>{{vm.summary.shrineBuildDate}}</label>
+
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2">
+               This site is currently using <label>{{vm.config.hiveCredentials.ontProjectId}}</label> ontology version <label>{{vm.summary.ontologyVersion}}</label>
+                (based on concept term <label>{{vm.summary.ontologyTerm}}</label>)
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2">
+                This site is currently using <label>{{vm.config.adapter.adapterMappingsFilename}}</label> for mappings.
+            </td>
+        </tr>
+        </tbody>
+
+    </table>
+
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            <td colspan="2">
+                <label>System Health</label>
+            </td>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td>
+                <label>Keystore:</label>
+            </td>
+            <td ng-if="vm.summary.keystoreOk !== true" class="error">
+                Error: <a ui-sref="diagnostic.keystore">click
+                here for more details.</a>
+            </td>
+            <td ng-if="vm.summary.keystoreOk === true" class="ok">
+                OK
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <label>QEP:</label>
+            </td>
+            <td ng-if="vm.summary.keystoreOk !== true" class="error">
+                Error: <a ui-sref="diagnostic.qep">click
+                here for more details.</a>
+            </td>
+            <td ng-if="vm.summary.keystoreOk === true" class="ok">
+                OK
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <label>Hub:</label>
+            </td>
+            <td ng-if="vm.summary.hubOk !== true" class="error">
+                Error: <a ui-sref="diagnostic.hub">click
+                here for more details.</a>
+            </td>
+            <td ng-if="vm.summary.hubOk === true" class="ok">
+                OK
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <label>Adapter:</label>
+            </td>
+            <td ng-if="vm.summary.adapterOk !== true" class="error">
+                Error: <a ui-sref="diagnostic.adapter">click
+                here for more details.</a>
+            </td>
+            <td ng-if="vm.summary.adapterOk === true" class="ok">
+                OK
+            </td>
+        </tr>
+        </tbody>
+    </table>
 </div>
