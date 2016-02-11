@@ -22,7 +22,7 @@
     /**
      * Create url depending on local or deployment.
      * assumption is that remote rest structure is mimicked on local test folder.
-     * @returns {string}
+     * @returns
      */
     function getUrl (endpoint) {
         // -- constants -- //
