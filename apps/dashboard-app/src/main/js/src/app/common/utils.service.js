@@ -28,11 +28,7 @@
         // -- constants -- //
         var deployUrl   = 'https://localhost:6443/shrine-dashboard/',
             testUrl     = 'test/';
-        //return (isTest())? (testUrl + endpoint + '.json') : (deployUrl + endpoint);
-
-
-        //this is a test of a named url vs. using localhost:6443/
-        return 'https://shrine-dev1.catalyst:6443/shrine-dashboard/' + endpoint;
+        return (isTest())? (testUrl + endpoint + '.json') : (deployUrl + endpoint);
     }
 
 
