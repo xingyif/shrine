@@ -25,10 +25,32 @@
      * @returns
      */
     function getUrl (endpoint) {
-        // -- constants -- //
-        var deployUrl   = 'https://localhost:6443/shrine-dashboard/',
-            testUrl     = 'test/';
-        return (isTest())? (testUrl + endpoint + '.json') : (deployUrl + endpoint);
+
+        // -- local -- //
+        var testUrl     = 'test/',
+            urlKey      = 'shrine-dashboard';
+
+        // -- testing locally or deploy -- //
+        return (isTest())?
+            (testUrl + endpoint + '.json'): getDeployUrl(urlKey) + endpoint;
+    }
+
+
+    /**
+     *
+     * @param urlKey
+     * @returns {string}
+     */
+    function getDeployUrl (urlKey) {
+
+        // -- local vars. -- //
+        var urlIndex    = 0,
+            href        = '';
+
+        // -- parse url from location.
+        href        = document.location.href;
+        urlIndex    = href.indexOf(urlKey) + urlKey.length;
+        return href.substring(0, urlIndex) + '/';
     }
 
 
