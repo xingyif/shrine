@@ -390,7 +390,7 @@ object Endpoint{
 
     val acceptAllCerts  = ShrineParser.getOrElse(prefix + "acceptAllCerts", "") == "true"
     val url             = ShrineParser.getOrElse(prefix + "url")
-    val timeoutSeconds  = ShrineParser.getOrElse(prefix + "timeout.seconds", "").toInt
+    val timeoutSeconds  = ShrineParser.getOrElse(prefix + "timeout.seconds", "0").toInt
     Endpoint(acceptAllCerts, url, timeoutSeconds)
   }
 }
@@ -429,7 +429,7 @@ object Adapter{
     val key                             = "shrine.adapter."
     val crcEndpointUrl                  = ShrineParser.getOrElse(key + "crcEndpoint.url")
     val setSizeObfuscation              = ShrineParser.getOrElse(key + "setSizeObfuscation").toLowerCase == "true"
-    val adapterLockoutAttemptsThreshold = ShrineParser.getOrElse(key + "adapterLockoutAttemptsThreshold").toInt
+    val adapterLockoutAttemptsThreshold = ShrineParser.getOrElse(key + "adapterLockoutAttemptsThreshold", "0").toInt
     val adapterMappingsFileName         = ShrineParser.getOrElse(key + "adapterMappingsFileName")
 
     Adapter(crcEndpointUrl, setSizeObfuscation, adapterLockoutAttemptsThreshold, adapterMappingsFileName)
@@ -472,7 +472,7 @@ case class QEP(maxQueryWaitTimeMinutes:Int, create:Boolean,attachSigningCert:Boo
 object QEP{
   def apply():QEP = {
     val key = "shrine.queryEntryPoint."
-    val maxQueryWaitTimeMinutes = ShrineParser.getOrElse(key + "maxQueryWaitTime.minutes").toInt
+    val maxQueryWaitTimeMinutes = ShrineParser.getOrElse(key + "maxQueryWaitTime.minutes", "0").toInt
     val create                  = ShrineParser.getOrElse(key + "create") == "true"
     val attachSigningCert       = ShrineParser.getOrElse(key + "attachSigningCert") == "true"
     val authorizationType       = ShrineParser.getOrElse(key + "authorizationType")
