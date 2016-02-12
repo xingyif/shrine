@@ -37,6 +37,30 @@
                     'src/app/diagnostic/views/i2b2-connections.controller.js'
                 ]
             },
+            'diagnostic.keystore': {
+                name:'diagnostic.keystore',
+                files:[
+                    'src/app/diagnostic/views/keystore.controller.js'
+                ]
+            },
+            'diagnostic.hub': {
+                name:'diagnostic.keystore',
+                files:[
+                    'src/app/diagnostic/views/keystore.hub.js'
+                ]
+            },
+            'diagnostic.adapter': {
+                name:'diagnostic.adapter',
+                files:[
+                    'src/app/diagnostic/views/adapter.controller.js'
+                ]
+            },
+            'diagnostic.qep': {
+                name:'diagnostic.qep',
+                files:[
+                    'src/app/diagnostic/views/qep.controller.js'
+                ]
+            },
             'diagnostic.config': {
                 name: 'diagnostic.config',
                 files: [
@@ -112,8 +136,14 @@
             })
             .state('diagnostic.adapter',{
                 url:          '/adapter',
-                templateUrl:  'src/app/diagnostic/views/adapter.tpl.html'
-                //@todo: load files
+                templateUrl:  'src/app/diagnostic/views/adapter.tpl.html',
+                controller:   'AdapterController',
+                controllerAs: 'vm',
+                resolve: {
+                    loadMyFiles:function($ocLazyLoad) {
+                        return $ocLazyLoad.load(stateConfig['diagnostic.adapter']);
+                    }
+                }
             })
             .state('diagnostic.qep',{
                 url:          '/qep',

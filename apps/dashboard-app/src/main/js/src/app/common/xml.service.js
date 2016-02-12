@@ -8,14 +8,23 @@
 
     function XMLService () {
 
+        var x2js = new X2JS();
+
         // -- public -- //
         return {
+            xmlStringToJson: xmlStringToJson,
             stringToXML: stringToXML,
             xmlToJson:   xmlToJson
         };
 
 
         // -- private -- //
+        function xmlStringToJson (xmlString) {
+            return x2js.xml_str2json(xmlString);
+        }
+
+
+
         /**
          * Convert a string representation of an xml document to an XML Document.
          * IE 10+ and all other modernish browser xml doc parser.
@@ -43,7 +52,7 @@
             }
 
             // -- if node is a parent -- //
-            else if (xml.childNodes.length) {
+            else if (xml.childNodes.length === 0) {
                 for(var i = 0; i < xml.childNodes.length; i++) {
 
                     item      = xml.childNodes.item(i);

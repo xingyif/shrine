@@ -20,7 +20,7 @@
          *
          */
         function init() {
-            $app.model.getSummary()
+            $app.model.getHappyAll()
                 .then(setSummary)
                 .then(getConfig)
                 .then(setConfig);
@@ -31,8 +31,9 @@
          *
          * @param summary
          */
-        function setSummary(summary) {
-            vm.summary = summary;
+        function setSummary(all) {
+            $app.model.cache['all'] = all;
+            vm.summary              = all.summary;
         }
 
 

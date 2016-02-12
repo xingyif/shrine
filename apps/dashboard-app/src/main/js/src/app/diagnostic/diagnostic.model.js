@@ -7,17 +7,18 @@
         .factory('DiagnosticModel', DiagnosticModel)
 
 
-    DiagnosticModel.$inject = ['$http', '$q', 'UrlGetter'];
-    function DiagnosticModel (h, q, urlGetter) {
+    DiagnosticModel.$inject = ['$http', '$q', 'UrlGetter', 'XMLService'];
+    function DiagnosticModel (h, q, urlGetter, xmlService) {
 
 
         var cache = {};
 
         // -- private const -- //
         var Config = {
-            OptionsEndpoint: 'admin/status/options',
-            ConfigEndpoint:  'admin/status/config',
-            SummaryEndpoint: 'admin/status/summary'
+            OptionsEndpoint:  'admin/status/options',
+            ConfigEndpoint:   'admin/status/config',
+            SummaryEndpoint:  'admin/status/summary',
+            HapyAllEndpoint:  'admin/happy/all'
         };
 
 
@@ -26,6 +27,7 @@
             getOptions: getOptions,
             getConfig:  getConfig,
             getSummary: getSummary,
+            getHappyAll:getHappyAll,
             cache:      cache
         };
 
@@ -44,8 +46,62 @@
          * @param result
          * @returns {*}
          */
-        function parseResult(result) {
+        function parseJsonResult(result) {
             return result.data;
+        }
+
+
+        /**
+         *
+         * @param result
+         * @returns {*}
+         */
+        function parseHappyAllResult(result) {
+            if(isQEPError(result.data)) {
+                return $q.reject(result.data);
+            }
+            var happyObj = xmlService.xmlStringToJson(result.data);
+
+            //logic for summary here.
+            happyObj.summary = parseSummaryFromAll(happyObj.all);
+
+            return happyObj;
+        }
+
+
+        /**
+         *
+         * @param all
+         * @returns {{}}
+         */
+        function parseSummaryFromAll (all) {
+
+            //
+            var summary             = {};
+
+            summary.isHub           = Boolean(all.notAHub) !== true;
+            summary.shrineVersion   = all.versionInfo.shrineVersion;
+            summary.shrineBuildDate = all.versionInfo.buildDate;
+            summary.ontologyVersion = all.versionInfo.ontologyVersion
+            summary.ontologyTerm    = "UNKOWN"; //to be implemented in config.
+            summary.adapterOk       = all.adapter.result.response.errorResponse === undefined;
+            summary.keystoreOk      = true;
+            summary.qepOk           = true;
+
+            // -- verify hub is operating, if necessary -- //
+            if(!summary.isHub) {
+                summary.hubOk = true;
+            }
+            else {
+                var hasFailures         = Number(all.net.failureCount) > 0;
+                var hasInvalidResults   = Number(all.net.validResultCount) !=
+                    Number(all.net.expectedResultCount);
+
+                var hasTimeouts         = Number(all.net.timeoutCount) > 0;
+                summary.hubOk           = !hasFailures && !hasInvalidResults && !hasTimeouts;
+            }
+
+            return summary;
         }
 
 
@@ -57,7 +113,7 @@
         function getOptions() {
             var url = urlGetter(Config.OptionsEndpoint)
             return h.get(url)
-                .then(parseResult, onFail);
+                .then(parseJsonResult, onFail);
         }
 
 
@@ -68,13 +124,39 @@
         function getConfig () {
             var url = urlGetter(Config.ConfigEndpoint)
             return h.get(url)
-                .then(parseResult, onFail);
+                .then(parseJsonResult, onFail);
         }
 
+
+        /**
+         *
+         * @returns {*}
+         */
         function getSummary () {
             var url = urlGetter(Config.SummaryEndpoint)
             return h.get(url)
-                .then(parseResult, onFail);
+                .then(parseJsonResult, onFail);
+        }
+
+
+        /**
+         *
+         * @returns {*}
+         */
+        function getHappyAll() {
+            var url = urlGetter(Config.HapyAllEndpoint, '.xml')
+            return h.get(url)
+                .then(parseHappyAllResult, onFail);
+        }
+
+        /**
+         *
+         * @param resultXML
+         * @returns {boolean}
+         */
+        function isQEPError(resultXML) {
+            var result = resultXML.indexOf('<all>') + resultXML.indexOf('</all>');
+            return result == -2
         }
     }
 })();

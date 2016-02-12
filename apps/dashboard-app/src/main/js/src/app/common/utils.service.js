@@ -5,7 +5,7 @@
     // -- angular module -- //
     angular
         .module('shrine.common')
-        .value('UrlGetter', getUrl)// -- todo: move to another location? -- //
+        .value('UrlGetter', getUrl)
         .factory('UtilsService', UtilsService);
 
 
@@ -24,15 +24,16 @@
      * assumption is that remote rest structure is mimicked on local test folder.
      * @returns
      */
-    function getUrl (endpoint) {
+    function getUrl (endpoint, extension) {
 
         // -- local -- //
         var testUrl     = 'test/',
             urlKey      = 'shrine-dashboard';
 
+        extension = extension || '.json';
         // -- testing locally or deploy -- //
         return (isTest())?
-            (testUrl + endpoint + '.json'): getDeployUrl(urlKey) + endpoint;
+            (testUrl + endpoint + extension): getDeployUrl(urlKey) + endpoint;
     }
 
 
