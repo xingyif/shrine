@@ -21,8 +21,9 @@
          */
         function init() {
             $app.model.getHappyAll()
-                .then(setSummary)
-                .then(getConfig)
+                .then(setSummary);
+
+            $app.model.getConfig()
                 .then(setConfig);
         }
 
@@ -31,9 +32,15 @@
          *
          * @param summary
          */
-        function setSummary(all) {
-            $app.model.cache['all'] = all;
-            vm.summary              = all.summary;
+        function setSummary(happyAll) {
+
+            // -- cache summary and all -- //
+            $app.model.cache['all']     = happyAll.all;
+            $app.model.cache['summary'] = happyAll.summary;
+
+            // -- set viewmodel  -- //
+            vm.summary              = happyAll.summary;
+            return this;
         }
 
 
@@ -43,6 +50,7 @@
          */
         function getConfig() {
              return $app.model.getConfig();
+            return this;
         }
 
 
@@ -55,6 +63,7 @@
             // -- cache the config --
             $app.model.cache['config'] =  config;
             vm.config = config;
+            return this;
         }
     }
 })();

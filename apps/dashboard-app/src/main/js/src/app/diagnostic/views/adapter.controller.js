@@ -13,32 +13,44 @@
     function AdapterController ($app) {
         var vm = this;
 
-        //init();
+        init();
 
         function init () {
-            $app.model.getAdapter()
-                .then(setAdapter)
-                .then(setConfig);
+            var all     = $app.model.cache['all'];
+            var config  = $app.model.cache['config'];
+
+            setAdapter(all);
+            setConfiguration(config);
+            setMappings(config);
         }
 
 
-        /**
-         *
-         * @param config
-         */
-        function setConfig(config) {
 
-            // -- get config from cache -- //
-            vm.config =  $app.model.cache['config']
+        function setAdapter (all) {
+            vm.adapter  = {
+                term:           "UKNOWN", //@todo:
+                description:    all.adapter.result.response,
+                success:        all.adapter.result.response.errorResponse === undefined
+            };
+
+
         }
 
+        function setConfiguration (config) {
+            vm.configuration = {
+                crcEndpointURL:     config.adapter.crcEndpointUrl,
+                crcProjectId:       config.hiveCredentials.crcProjectId,
+                domain:             config.hiveCredentials.domain,
+                username:           config.hiveCredentials.username,
+                password:           config.hiveCredentials.password,
+                lockoutThreshold:   config.adapter.adapterLockoutAttemptsThreshold
+            }
+        }
 
-        /**
-         *
-         * @param adapter
-         */
-        function setAdapter(adapter) {
-            vm.adapter = adapter;
+        function setMappings (config) {
+            vm.mappings = {
+                mappsingsFilename:  config.adapter.adapterMappingsFilename
+            };
         }
 
     }

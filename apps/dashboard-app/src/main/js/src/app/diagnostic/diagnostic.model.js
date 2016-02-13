@@ -57,12 +57,16 @@
          * @returns {*}
          */
         function parseHappyAllResult(result) {
+
+            var happyObj = {};
             if(isQEPError(result.data)) {
                 return $q.reject(result.data);
             }
-            var happyObj = xmlService.xmlStringToJson(result.data);
 
-            //logic for summary here.
+            // -- append all -- //
+            happyObj.all = xmlService.xmlStringToJson(result.data).all;
+
+            // -- parse and append summary  -- //
             happyObj.summary = parseSummaryFromAll(happyObj.all);
 
             return happyObj;

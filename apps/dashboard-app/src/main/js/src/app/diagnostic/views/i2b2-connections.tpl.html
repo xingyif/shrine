@@ -1,3 +1,98 @@
 <div>
-    {{vm.connections}}
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            <td colspan="2">
+                I2B2 Endpoint URLs
+            </td>
+            </tr>
+        <tr>
+            <td>
+                Cell
+            </td>
+            <td>
+                Url
+            </td>
+        </tr>
+        </thead>
+
+        <tbody>
+        <tr>
+            <td >
+                PM
+
+            </td>
+            <td>
+                {{vm.connections.pmEndpointUrl}}
+            </td>
+        </tr>
+        <tr>
+            <td >
+                CRC
+
+            </td>
+            <td>
+                {{vm.connections.crcEndpointUrl}}
+            </td>
+        </tr>
+        <tr>
+            <td >
+                ONT
+
+            </td>
+            <td>
+                {{vm.connections.ontEndpointUrl}}
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            <td colspan="2">
+                I2B2 Hive Credentials
+            </td>
+        </tr>
+        </thead>
+
+        <tbody>
+        <tr>
+            <td >
+                I2B2 Domain
+
+            </td>
+            <td>
+                {{vm.connections.i2b2Domain}}
+            </td>
+        </tr>
+        <tr>
+            <td >
+                Username
+
+            </td>
+            <td>
+                {{vm.connections.username}}
+            </td>
+        </tr>
+        <tr>
+            <td >
+                CRC Project
+
+            </td>
+            <td>
+                {{vm.connections.crcProject}}
+            </td>
+        </tr>
+        <tr>
+            <td >
+                ONT Project
+
+            </td>
+            <td>
+                {{vm.connections.ontProject}}
+            </td>
+        </tr>
+        </tbody>
+    </table>
 </div>

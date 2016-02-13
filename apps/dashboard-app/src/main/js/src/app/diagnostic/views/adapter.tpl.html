@@ -1,3 +1,129 @@
 <div>
-    adapter
+
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            <td colspan="2">
+                Adapter Configuration
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2">
+                <i>These are the parameters that the SHRINE Adapter will use for querying the i2b2 CRC.</i>
+            </td>
+        </tr>
+        </thead>
+
+        <tbody>
+            <tr>
+                <td>
+                    CRC URL
+                </td>
+                <td>
+                    {{vm.configuration.crcEndpointURL}}
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    CRC Project
+                </td>
+                <td>
+                    {{vm.configuration.crcProjectId}}
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    Domain
+                </td>
+                <td>
+                    {{vm.configuration.domain}}
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    Adapter User
+                </td>
+                <td>
+                    {{vm.configuration.username}}
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    Adapter Password
+                </td>
+                <td>
+                    {{vm.configuration.password}}
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    Lockout Threshold
+                </td>
+                <td>
+                    {{vm.configuration.lockoutThreshold}}
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            <td colspan="2">
+                Adapter Query Test
+            </td>
+        </tr>
+        </thead>
+
+        <tbody>
+        <tr>
+            <td>
+                SHRINE Query Term
+            </td>
+            <td>
+                {{vm.adapter.term}}
+            </td>
+        </tr>
+        <tr>
+            <td>
+                Status
+            </td>
+            <td ng-if="vm.adapter.success" style="color:green">
+                Success
+            </td>
+            <td ng-if="!vm.adapter.success" style="color:red">
+                Failed
+            </td>
+        </tr>
+        <tr>
+            <td>
+                Details
+            </td>
+            <td>
+                {{vm.adapter.description}}
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            <td colspan="2">
+                Mappings File
+            </td>
+        </tr>
+        </thead>
+
+        <tbody>
+        <tr>
+            <td>
+                Filename
+            </td>
+            <td>
+                {{vm.mappings.mappsingsFilename}}
+            </td>
+        </tr>
+        </tbody>
+    </table>
 </div>

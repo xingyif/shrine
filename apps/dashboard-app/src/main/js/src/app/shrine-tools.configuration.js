@@ -46,7 +46,7 @@
             'diagnostic.hub': {
                 name:'diagnostic.keystore',
                 files:[
-                    'src/app/diagnostic/views/keystore.hub.js'
+                    'src/app/diagnostic/views/hub.controller.js'
                 ]
             },
             'diagnostic.adapter': {
@@ -126,12 +126,26 @@
             })
             .state('diagnostic.keystore',{
                 url:          '/keystore',
-                templateUrl:  'src/app/diagnostic/views/keystore.tpl.html'
+                templateUrl:  'src/app/diagnostic/views/keystore.tpl.html',
+                controller:   'KeystoreController',
+                controllerAs: 'vm',
+                resolve: {
+                    loadMyFiles: function ($ocLazyLoad) {
+                        return $ocLazyLoad.load(stateConfig['diagnostic.keystore']);
+                    }
+                }
                 //@todo: load files
             })
             .state('diagnostic.hub',{
                 url:'/hub',
-                templateUrl:  'src/app/diagnostic/views/hub.tpl.html'
+                templateUrl:  'src/app/diagnostic/views/hub.tpl.html',
+                controller: 'HubController',
+                controllerAs: 'vm',
+                resolve: {
+                    loadMyFiles: function ($ocLazyLoad) {
+                        return $ocLazyLoad.load(stateConfig['diagnostic.hub'])
+                    }
+                }
                 //@todo: load files
             })
             .state('diagnostic.adapter',{
@@ -147,8 +161,14 @@
             })
             .state('diagnostic.qep',{
                 url:          '/qep',
-                templateUrl:  'src/app/diagnostic/views/qep.tpl.html'
-                //@todo: load files
+                templateUrl:    'src/app/diagnostic/views/qep.tpl.html',
+                controller:     'QEPController',
+                controllerAs:   'vm',
+                resolve: {
+                    loadMyFiles: function ($ocLazyLoad) {
+                        return $ocLazyLoad.load(stateConfig['diagnostic.qep']);
+                    }
+                }
             })
             .state('diagnostic.config',{
                 url:           '/config',
