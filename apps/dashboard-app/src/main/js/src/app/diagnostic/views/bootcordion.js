@@ -55,12 +55,23 @@
     }
 
 
-
+    /**
+     *  This is a very 'un-angular' way to do this, but for-in behavior is intrinsically un-angular as
+     *  directives do not play nicely with for-in object traversal when using the ng-repeat/nested directive
+     *  recursive approach.  Trust me...this is most pain-free way to do this.
+     * @param json
+     * @param spaces
+     * @returns {string}
+     */
     function buildHtmlFromJson (json, spaces) {
-        spaces      =  spaces || ''
+
+        // -- local vars -- //
         var html    = '';
         var indent  = '&nbsp;&nbsp&nbsp;&nbsp';
-        spaces += indent
+
+        // -- set tab to indicate hierarchy -- //
+        spaces      =  spaces || '';
+        spaces      += indent;
 
 
         for(var el in json){

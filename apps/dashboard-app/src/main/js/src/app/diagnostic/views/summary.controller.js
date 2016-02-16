@@ -5,13 +5,14 @@
     angular.module('shrine-tools')
         .controller('SummaryController', SummaryController);
 
+
     /**
      * Summary Controller.
      *
      */
-    SummaryController.$inject = ['$app']
-    function SummaryController ($app) {
-        var vm = this;
+    SummaryController.$inject = ['$app', '$sce']
+    function SummaryController ($app, $sce) {
+        var vm          = this;
 
         init();
 
@@ -21,10 +22,10 @@
          */
         function init() {
             $app.model.getHappyAll()
-                .then(setSummary);
+                .then(setSummary, onHappyFail);
 
             $app.model.getConfig()
-                .then(setConfig);
+                .then(setConfig, onConfigFail);
         }
 
 
@@ -50,7 +51,6 @@
          */
         function getConfig() {
              return $app.model.getConfig();
-            return this;
         }
 
 
@@ -61,9 +61,27 @@
         function setConfig(config) {
 
             // -- cache the config --
-            $app.model.cache['config'] =  config;
-            vm.config = config;
+            $app.model.cache['config']  =  config;
+            vm.config                   = config;
             return this;
+        }
+
+
+        /**
+         *
+         * @param data
+         */
+        function onHappyFail(data) {
+            vm.trustedHtml  = $sce.trustAsHtml(data);
+        }
+
+
+        /**
+         *
+         * @param data
+         */
+        function onConfigFail (data) {
+            vm.trustedHtml  = $sce.trustAsHtml(data);
         }
     }
 })();

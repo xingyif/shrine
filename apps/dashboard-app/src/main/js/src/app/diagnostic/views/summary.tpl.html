@@ -1,5 +1,5 @@
 <div>
-    <table class="table table-striped">
+    <table class="table table-striped" ng-show="vm.config && vm.summary">
         <thead>
         <tr>
             <td colspan="2">
@@ -30,7 +30,7 @@
 
     </table>
 
-    <table class="table table-striped">
+    <table class="table table-striped" ng-show="vm.config && vm.summary">
         <thead>
         <tr>
             <td colspan="2">
@@ -85,6 +85,25 @@
             </td>
             <td ng-if="general.adapterOk === true" class="ok">
                 OK
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+    <table class="table table-striped" ng-show="vm.trustedHtml">
+        <thead>
+        <tr>
+            <td colspan="2" class="error">
+                Fatal SHRINE Error
+            </td>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td>
+                <label>Technical Details:</label>
+            </td>
+            <td ng-bind-html="vm.trustedHtml">
             </td>
         </tr>
         </tbody>
