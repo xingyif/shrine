@@ -71,14 +71,19 @@ trait AbstractQepService[BaseResp <: BaseShrineResponse] extends Loggable {
 
     //todo read directly from the QEP database code here. Only broadcast if some result is in some sketchy state
 
-    doBroadcastQuery(request, new ReadInstanceResultsAggregator(request.shrineNetworkQueryId, false), shouldBroadcast)
+    //comes back with Iterable[QueryResult]
+    //I'll guess this is an AggregatedRunQueryResponse
+    val result: BaseResp = doBroadcastQuery(request, new ReadInstanceResultsAggregator(request.shrineNetworkQueryId, false), shouldBroadcast)
+    debug(s"doReadInstanceResults result is $result")
+
+    result
   }
 
   protected def doReadQueryInstances(request: ReadQueryInstancesRequest, shouldBroadcast: Boolean): BaseResp = {
     info(s"doReadQueryInstances($request,$shouldBroadcast)")
     authenticateAndThen(request) { authResult =>
       val now = XmlDateHelper.now
-      val networkQueryId = request.queryId
+      val networkQueryId = request.networkQueryId
       val username = request.authn.username
       val groupId = request.projectId
 
@@ -96,7 +101,7 @@ trait AbstractQepService[BaseResp <: BaseShrineResponse] extends Loggable {
   protected def doReadPreviousQueries(request: ReadPreviousQueriesRequest, shouldBroadcast: Boolean): ReadPreviousQueriesResponse = {
     info(s"doReadPreviousQueries($request,$shouldBroadcast)")
 
-    //todo check results. If any results are in one of many pending states, go ahead and request them. (Maybe go async)
+    //todo check results. If any results are in one of many pending states, maybe go ahead and request them. (Maybe go async)
 
     //pull queries from the local database.
     QepQueryDb.db.selectPreviousQueries(request)
