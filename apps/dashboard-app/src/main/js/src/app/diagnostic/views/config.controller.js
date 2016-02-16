@@ -5,9 +5,10 @@
     angular.module('shrine-tools')
         .controller('ShrineConfigurationController', ShrineConfigurationController);
 
-    ShrineConfigurationController.$inject = ['$app'];
-    function ShrineConfigurationController ($app) {
-        var vm = this;
+    ShrineConfigurationController.$inject = ['$scope','$app', '$element', '$compile'];
+    function ShrineConfigurationController ($scope, $app, $element, $compile) {
+        var vm      = this;
+        $scope.ready    = 'false';
 
         init();
 
@@ -24,7 +25,9 @@
          * @param configuration
          */
         function setConfig (config) {
+            $scope.config = config
             vm.config = config;
+            $element.append($compile("<bootcordion data='vm.config'></bootcordion>")($scope));
         }
     }
 })();

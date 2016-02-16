@@ -64,7 +64,8 @@
             'diagnostic.config': {
                 name: 'diagnostic.config',
                 files: [
-                    'src/app/diagnostic/views/config.controller.js'
+                    'src/app/diagnostic/views/config.controller.js',
+                    'src/app/diagnostic/views/bootcordion.js'
                 ]
             }
         };
