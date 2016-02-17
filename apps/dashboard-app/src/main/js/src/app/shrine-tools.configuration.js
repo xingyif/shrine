@@ -78,7 +78,6 @@
         $urlRouterProvider.otherwise('/diagnostic/summary');
 
         configureLazyLoader($ocLazyLoadProvider);
-
         configureHttpProvider($httpProvider);
 
         $stateProvider
