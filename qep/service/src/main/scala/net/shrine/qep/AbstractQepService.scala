@@ -89,7 +89,15 @@ trait AbstractQepService[BaseResp <: BaseShrineResponse] extends Loggable {
     }
     else {
       debug(s"Using qep cached results for query $networkId")
-      doBroadcastQuery(request, new ReadInstanceResultsAggregator(networkId, false), shouldBroadcast)
+      val response = doBroadcastQuery(request, new ReadInstanceResultsAggregator(networkId, false), shouldBroadcast)
+
+      //put the new results in the database
+      response match {
+        case arirr:AggregatedReadInstanceResultsResponse => arirr.results.foreach(r => QepQueryDb.db.insertQueryResult(networkId,r))
+        case _ => //do nothing
+      }
+
+      response
     }
   }
 
@@ -169,7 +177,7 @@ trait AbstractQepService[BaseResp <: BaseShrineResponse] extends Loggable {
 
             response match {
                 //todo do in one transaction
-              case aggregated:AggregatedRunQueryResponse => aggregated.results.map(QepQueryDb.db.insertQueryResult(runQueryRequest.networkQueryId,_))
+              case aggregated:AggregatedRunQueryResponse => aggregated.results.foreach(QepQueryDb.db.insertQueryResult(runQueryRequest.networkQueryId,_))
               case _ => debug(s"Unanticipated response type $response")
             }
 
