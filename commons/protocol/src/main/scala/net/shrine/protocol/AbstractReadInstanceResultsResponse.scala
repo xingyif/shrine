@@ -4,11 +4,9 @@ import scala.xml.NodeSeq
 
 import net.shrine.util.XmlUtil
 
-import net.shrine.serialization.{ I2b2Unmarshaller, XmlUnmarshaller }
-
 /**
  * @author clint
- * @date Nov 30, 2012
+ * @since Nov 30, 2012
  */
 abstract class AbstractReadInstanceResultsResponse(
     rootTagName: String,
@@ -21,10 +19,6 @@ abstract class AbstractReadInstanceResultsResponse(
      * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
      */
     val shrineNetworkQueryId: Long) extends ShrineResponse with HasQueryResults {
-
-  type ActualResponseType <: AbstractReadInstanceResultsResponse
-
-  def withId(id: Long): ActualResponseType
 
   //NB: Set QueryResults' instanceIds to the query id of the enclosing response
   private def resultsWithNetworkQueryId = results.map(_.withInstanceId(shrineNetworkQueryId))
@@ -56,7 +50,8 @@ object AbstractReadInstanceResultsResponse {
   //http://www.casualmiracles.com/2012/05/03/a-small-example-of-the-typeclass-pattern-in-scala/
   //A typeclass is used here in place of an abstract method with multiple concrete implementations,
   //or another similar strategy. -Clint
-  
+  //todo do something simpler and easier to explain.
+
   private trait Creatable[T] {
     def apply(id: Long, results: Seq[QueryResult]): T
   }

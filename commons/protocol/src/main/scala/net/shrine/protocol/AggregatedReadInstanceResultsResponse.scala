@@ -2,7 +2,7 @@ package net.shrine.protocol
 
 /**
  * @author clint
- * @date Dec 4, 2012
+ * @since Dec 4, 2012
  */
 final case class AggregatedReadInstanceResultsResponse(
     /*
@@ -16,10 +16,7 @@ final case class AggregatedReadInstanceResultsResponse(
     override val shrineNetworkQueryId: Long,
     override val results: Seq[QueryResult]) extends AbstractReadInstanceResultsResponse("aggregatedReadInstanceResultsResponse", shrineNetworkQueryId) {
 
-  override type ActualResponseType = AggregatedReadInstanceResultsResponse
-
-  override def withId(id: Long) = this.copy(shrineNetworkQueryId = id)
-  
+  //todo only used in test code
   def withResults(seq: Seq[QueryResult]) = this.copy(results = seq)
 }
 

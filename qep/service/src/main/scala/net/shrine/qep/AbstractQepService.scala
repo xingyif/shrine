@@ -71,8 +71,7 @@ trait AbstractQepService[BaseResp <: BaseShrineResponse] extends Loggable {
 
     //todo read directly from the QEP database code here. Only broadcast if some result is in some sketchy state
 
-    //comes back with Iterable[QueryResult]
-    //I'll guess this is an AggregatedRunQueryResponse
+    //result is an AggregatedReadInstanceResultsResponse
     val result: BaseResp = doBroadcastQuery(request, new ReadInstanceResultsAggregator(request.shrineNetworkQueryId, false), shouldBroadcast)
     debug(s"doReadInstanceResults result is $result")
 
