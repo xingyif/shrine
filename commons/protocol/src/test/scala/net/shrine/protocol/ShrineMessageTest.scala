@@ -116,7 +116,7 @@ final class ShrineMessageTest extends ShouldMatchersForJUnit {
       case readInstanceResultsResponse: ReadInstanceResultsResponse => {
         val unmarshalledResp = unmarshalled.asInstanceOf[ReadInstanceResultsResponse]
 
-        val expected = readInstanceResultsResponse.withQueryResult(readInstanceResultsResponse.singleNodeResult.copy(instanceId = readInstanceResultsResponse.shrineNetworkQueryId))
+        val expected = readInstanceResultsResponse.copy(singleNodeResult = readInstanceResultsResponse.singleNodeResult.copy(instanceId = readInstanceResultsResponse.shrineNetworkQueryId))
 
         unmarshalledResp should equal(expected)
       }
@@ -125,7 +125,7 @@ final class ShrineMessageTest extends ShouldMatchersForJUnit {
       case aggReadInstanceResultsResponse: AggregatedReadInstanceResultsResponse => {
         val unmarshalledResp = unmarshalled.asInstanceOf[AggregatedReadInstanceResultsResponse]
 
-        val expected = aggReadInstanceResultsResponse.withResults(aggReadInstanceResultsResponse.results.map(_.copy(instanceId = aggReadInstanceResultsResponse.shrineNetworkQueryId)))
+        val expected = aggReadInstanceResultsResponse.copy(results = aggReadInstanceResultsResponse.results.map(_.copy(instanceId = aggReadInstanceResultsResponse.shrineNetworkQueryId)))
 
         unmarshalledResp.results(0).problemDigest should equal(expected.results(0).problemDigest)
 

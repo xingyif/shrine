@@ -6,7 +6,8 @@ import net.shrine.authorization.AuthorizationResult.{Authorized, NotAuthorized}
 import net.shrine.authorization.QueryAuthorizationService
 import net.shrine.broadcaster.BroadcastAndAggregationService
 import net.shrine.log.Loggable
-import net.shrine.protocol.{AggregatedRunQueryResponse, AuthenticationInfo, BaseShrineRequest, BaseShrineResponse, Credential, DeleteQueryRequest, FlagQueryRequest, QueryInstance, ReadApprovedQueryTopicsRequest, ReadInstanceResultsRequest, ReadPreviousQueriesRequest, ReadPreviousQueriesResponse, ReadQueryDefinitionRequest, ReadQueryInstancesRequest, ReadQueryInstancesResponse, ReadResultOutputTypesRequest, ReadResultOutputTypesResponse, RenameQueryRequest, ResultOutputType, RunQueryRequest, UnFlagQueryRequest}
+import net.shrine.protocol.QueryResult.StatusType
+import net.shrine.protocol.{QueryResult, AggregatedReadInstanceResultsResponse, AggregatedRunQueryResponse, AuthenticationInfo, BaseShrineRequest, BaseShrineResponse, Credential, DeleteQueryRequest, FlagQueryRequest, QueryInstance, ReadApprovedQueryTopicsRequest, ReadInstanceResultsRequest, ReadPreviousQueriesRequest, ReadPreviousQueriesResponse, ReadQueryDefinitionRequest, ReadQueryInstancesRequest, ReadQueryInstancesResponse, ReadResultOutputTypesRequest, ReadResultOutputTypesResponse, RenameQueryRequest, ResultOutputType, RunQueryRequest, UnFlagQueryRequest}
 import net.shrine.qep.audit.QepAuditDb
 import net.shrine.qep.dao.AuditDao
 import net.shrine.qep.queries.QepQueryDb
@@ -69,13 +70,27 @@ trait AbstractQepService[BaseResp <: BaseShrineResponse] extends Loggable {
   protected def doReadInstanceResults(request: ReadInstanceResultsRequest, shouldBroadcast: Boolean): BaseResp = {
     info(s"doReadInstanceResults($request,$shouldBroadcast)")
 
-    //todo read directly from the QEP database code here. Only broadcast if some result is in some sketchy state
+    val networkId = request.shrineNetworkQueryId
 
-    //result is an AggregatedReadInstanceResultsResponse
-    val result: BaseResp = doBroadcastQuery(request, new ReadInstanceResultsAggregator(request.shrineNetworkQueryId, false), shouldBroadcast)
-    debug(s"doReadInstanceResults result is $result")
+    //read from the QEP database code here. Only broadcast if some result is in some sketchy state
+    val resultsFromDb:Seq[QueryResult] = QepQueryDb.db.selectMostRecentQepResultsFor(networkId)
 
-    result
+    def resultRequiresBroadcastQuery(queryResult: QueryResult):Boolean = {
+      queryResult.statusType match {
+        case StatusType.Error => false
+        case StatusType.Finished => false
+        case _ => true
+      }
+    }
+
+    if(resultsFromDb.nonEmpty && (!resultsFromDb.exists(resultRequiresBroadcastQuery))) {
+      debug(s"Using qep cached results for query $networkId")
+      AggregatedReadInstanceResultsResponse(networkId,resultsFromDb).asInstanceOf[BaseResp]
+    }
+    else {
+      debug(s"Using qep cached results for query $networkId")
+      doBroadcastQuery(request, new ReadInstanceResultsAggregator(networkId, false), shouldBroadcast)
+    }
   }
 
   protected def doReadQueryInstances(request: ReadQueryInstancesRequest, shouldBroadcast: Boolean): BaseResp = {

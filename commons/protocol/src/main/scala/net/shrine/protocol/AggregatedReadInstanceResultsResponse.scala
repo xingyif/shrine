@@ -15,9 +15,6 @@ final case class AggregatedReadInstanceResultsResponse(
      */
     override val shrineNetworkQueryId: Long,
     override val results: Seq[QueryResult]) extends AbstractReadInstanceResultsResponse("aggregatedReadInstanceResultsResponse", shrineNetworkQueryId) {
-
-  //todo only used in test code
-  def withResults(seq: Seq[QueryResult]) = this.copy(results = seq)
 }
 
 object AggregatedReadInstanceResultsResponse extends AbstractReadInstanceResultsResponse.Companion[AggregatedReadInstanceResultsResponse]
