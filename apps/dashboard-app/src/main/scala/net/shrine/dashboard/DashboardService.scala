@@ -21,7 +21,6 @@ import org.json4s.{DefaultFormats, Formats}
 import org.json4s.native.JsonMethods.{parse => json4sParse}
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.xml.Elem
 
 // we don't implement our route structure directly in the service actor because
 // we want to be able to test it independently, without having to spin up an actor

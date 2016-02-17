@@ -158,26 +158,32 @@ class QepQueryDbTest extends ShouldMatchersForJUnit {
 
   val maleRow = QepQueryBreakdownResultsRow(
     networkQueryId = 1L,
+    adapterNode = "example.com",
     resultId = 100L,
     resultType = DefaultBreakdownResultOutputTypes.PATIENT_GENDER_COUNT_XML,
     dataKey = "male",
-    value = 388
+    value = 388,
+    changeDate = System.currentTimeMillis()
   )
 
   val femaleRow = QepQueryBreakdownResultsRow(
     networkQueryId = 1L,
+    adapterNode = "example.com",
     resultId = 100L,
     resultType = DefaultBreakdownResultOutputTypes.PATIENT_GENDER_COUNT_XML,
     dataKey = "female",
-    value = 390
+    value = 390,
+    changeDate = System.currentTimeMillis()
   )
 
   val unknownRow = QepQueryBreakdownResultsRow(
     networkQueryId = 1L,
+    adapterNode = "example.com",
     resultId = 100L,
     resultType = DefaultBreakdownResultOutputTypes.PATIENT_GENDER_COUNT_XML,
     dataKey = "unknown",
-    value = 4
+    value = 4,
+    changeDate = System.currentTimeMillis()
   )
 
   @Test

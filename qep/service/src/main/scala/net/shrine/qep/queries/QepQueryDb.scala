@@ -96,9 +96,11 @@ case class QepQueryDb(schemaDef:QepQuerySchema,dataSource: DataSource) extends L
 
   def insertQueryResult(networkQueryId:NetworkQueryId,result:QueryResult) = {
 
+    val adapterNode = result.description.getOrElse(throw new IllegalStateException("description is empty, does not have an adapter node"))
+
     val queryResultRow = QueryResultRow(networkQueryId,result)
-    val breakdowns: Iterable[QepQueryBreakdownResultsRow] = result.breakdowns.flatMap(QepQueryBreakdownResultsRow.breakdownRowsFor(networkQueryId,result.resultId,_))
-    val problem: Seq[QepProblemDigestRow] = result.problemDigest.map(p => QepProblemDigestRow(networkQueryId,result.description.getOrElse(throw new IllegalStateException("description is empty, does not have an adapter node")),p.codec,p.stampText,p.summary,p.description,p.detailsXml.toString)).to[Seq]
+    val breakdowns: Iterable[QepQueryBreakdownResultsRow] = result.breakdowns.flatMap(QepQueryBreakdownResultsRow.breakdownRowsFor(networkQueryId,adapterNode,result.resultId,_))
+    val problem: Seq[QepProblemDigestRow] = result.problemDigest.map(p => QepProblemDigestRow(networkQueryId,adapterNode,p.codec,p.stampText,p.summary,p.description,p.detailsXml.toString,System.currentTimeMillis())).to[Seq]
 
     dbRun(
       for {
@@ -118,8 +120,8 @@ case class QepQueryDb(schemaDef:QepQuerySchema,dataSource: DataSource) extends L
     val (queryResults, breakdowns,problems) = dbRun(
       for {
         queryResults <- mostRecentQueryResultRows.filter(_.networkQueryId === networkId).result
-        breakdowns <- allBreakdownResultsRows.filter(_.networkQueryId === networkId).result
-        problems <- allProblemDigestRows.filter(_.networkQueryId === networkId).result
+        breakdowns <- mostRecentBreakdownResultsRows.filter(_.networkQueryId === networkId).result
+        problems <- mostRecentProblemDigestRows.filter(_.networkQueryId === networkId).result
       } yield (queryResults, breakdowns, problems)
     )
     val resultIdsToI2b2ResultEnvelopes: Map[Long, Map[ResultOutputType, I2b2ResultEnvelope]] = breakdowns.groupBy(_.resultId).map(rIdToB => rIdToB._1 -> QepQueryBreakdownResultsRow.resultEnvelopesFrom(rIdToB._2))
@@ -259,17 +261,23 @@ case class QepQuerySchema(jdbcProfile: JdbcProfile) extends Loggable {
 
   class QepQueryBreakdownResults(tag:Tag) extends Table[QepQueryBreakdownResultsRow](tag,"queryBreakdownResults") {
     def networkQueryId = column[NetworkQueryId]("networkQueryId")
+    def adapterNode = column[String]("adapterNode")
     def resultId = column[Long]("resultId")
     def resultType = column[ResultOutputType]("resultType")
     def dataKey = column[String]("dataKey")
     def value = column[Long]("value")
+    def changeDate = column[Long]("changeDate")
 
-    def * = (networkQueryId,resultId,resultType,dataKey,value) <> (QepQueryBreakdownResultsRow.tupled,QepQueryBreakdownResultsRow.unapply)
+    def * = (networkQueryId,adapterNode,resultId,resultType,dataKey,value,changeDate) <> (QepQueryBreakdownResultsRow.tupled,QepQueryBreakdownResultsRow.unapply)
   }
 
   val allBreakdownResultsRows = TableQuery[QepQueryBreakdownResults]
+  //Most recent query result rows for each queryId from each adapter
+  val mostRecentBreakdownResultsRows: Query[QepQueryBreakdownResults, QepQueryBreakdownResultsRow, Seq] = for(
+    breakdownResultsRows <- allBreakdownResultsRows if !allBreakdownResultsRows.filter(_.networkQueryId === breakdownResultsRows.networkQueryId).filter(_.adapterNode === breakdownResultsRows.adapterNode).filter(_.resultId === breakdownResultsRows.resultId).filter(_.changeDate > breakdownResultsRows.changeDate).exists
+  ) yield breakdownResultsRows
 
-/*
+  /*
 case class ProblemDigest(codec: String, stampText: String, summary: String, description: String, detailsXml: NodeSeq) extends XmlMarshaller {
     */
   class QepResultProblemDigests(tag:Tag) extends Table [QepProblemDigestRow](tag,"queryResultProblemDigests") {
@@ -280,11 +288,15 @@ case class ProblemDigest(codec: String, stampText: String, summary: String, desc
     def summary = column[String]("summary")
     def description = column[String]("description")
     def details = column[String]("details")
+    def changeDate = column[Long]("changeDate")
 
-    def * = (networkQueryId,adapterNode,codec,stamp,summary,description,details) <> (QepProblemDigestRow.tupled,QepProblemDigestRow.unapply)
+    def * = (networkQueryId,adapterNode,codec,stamp,summary,description,details,changeDate) <> (QepProblemDigestRow.tupled,QepProblemDigestRow.unapply)
   }
 
   val allProblemDigestRows = TableQuery[QepResultProblemDigests]
+  val mostRecentProblemDigestRows: Query[QepResultProblemDigests, QepProblemDigestRow, Seq] = for(
+    problemDigests <- allProblemDigestRows if !allProblemDigestRows.filter(_.networkQueryId === problemDigests.networkQueryId).filter(_.adapterNode === problemDigests.adapterNode).filter(_.changeDate > problemDigests.changeDate).exists
+  ) yield problemDigests
 
 }
 
@@ -431,18 +443,21 @@ object QueryResultRow extends ((Long,NetworkQueryId,Long,String,ResultOutputType
 
 case class QepQueryBreakdownResultsRow(
                                         networkQueryId: NetworkQueryId,
+                                        adapterNode:String,
                                         resultId:Long,
                                         resultType: ResultOutputType,
                                         dataKey:String,
-                                        value:Long
+                                        value:Long,
+                                        changeDate:Long
                                       )
 
-object QepQueryBreakdownResultsRow extends ((NetworkQueryId,Long,ResultOutputType,String,Long) => QepQueryBreakdownResultsRow){
+object QepQueryBreakdownResultsRow extends ((NetworkQueryId,String,Long,ResultOutputType,String,Long,Long) => QepQueryBreakdownResultsRow){
 
   def breakdownRowsFor(networkQueryId:NetworkQueryId,
+                       adapterNode:String,
                        resultId:Long,
                        breakdown:(ResultOutputType,I2b2ResultEnvelope)): Iterable[QepQueryBreakdownResultsRow] = {
-    breakdown._2.data.map(b => QepQueryBreakdownResultsRow(networkQueryId,resultId,breakdown._1,b._1,b._2))
+    breakdown._2.data.map(b => QepQueryBreakdownResultsRow(networkQueryId,adapterNode,resultId,breakdown._1,b._1,b._2,System.currentTimeMillis()))
   }
 
   def resultEnvelopesFrom(breakdowns:Seq[QepQueryBreakdownResultsRow]): Map[ResultOutputType, I2b2ResultEnvelope] = {
@@ -462,7 +477,8 @@ case class QepProblemDigestRow(
                                 stampText: String,
                                 summary: String,
                                 description: String,
-                                details: String
+                                details: String,
+                                changeDate:Long
                               ){
   def toProblemDigest = {
     ProblemDigest(
