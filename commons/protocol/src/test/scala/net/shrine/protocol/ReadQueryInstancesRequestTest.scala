@@ -42,7 +42,7 @@ final class ReadQueryInstancesRequestTest extends ShrineRequestValidator {
     val translatedRequest = ReadQueryInstancesRequest.fromI2b2(DefaultBreakdownResultOutputTypes.toSet)(request).get
 
     validateRequestWith(translatedRequest) {
-      translatedRequest.queryId should equal(queryId)
+      translatedRequest.networkQueryId should equal(queryId)
     }
   }
 
@@ -75,7 +75,7 @@ final class ReadQueryInstancesRequestTest extends ShrineRequestValidator {
     val actual = ReadQueryInstancesRequest.fromXml(DefaultBreakdownResultOutputTypes.toSet)(readQueryInstancesRequest).get
 
     validateRequestWith(actual) {
-      actual.queryId should equal(queryId)
+      actual.networkQueryId should equal(queryId)
     }
   }
 
