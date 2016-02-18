@@ -124,13 +124,12 @@ trait AbstractQepService[BaseResp <: BaseShrineResponse] extends Loggable {
   protected def doRenameQuery(request: RenameQueryRequest, shouldBroadcast: Boolean): BaseResp = {
     info(s"doRenameQuery($request,$shouldBroadcast)")
     QepQueryDb.db.renamePreviousQuery(request)
-
     doBroadcastQuery(request, new RenameQueryAggregator, shouldBroadcast)
   }
 
   protected def doDeleteQuery(request: DeleteQueryRequest, shouldBroadcast: Boolean): BaseResp = {
-    //todo handle with local/local
     info(s"doDeleteQuery($request,$shouldBroadcast)")
+    QepQueryDb.db.deletePreviousQuery(request)
     doBroadcastQuery(request, new DeleteQueryAggregator, shouldBroadcast)
   }
 
