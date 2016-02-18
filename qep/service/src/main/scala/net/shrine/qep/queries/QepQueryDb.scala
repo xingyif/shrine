@@ -78,18 +78,18 @@ case class QepQueryDb(schemaDef:QepQuerySchema,dataSource: DataSource) extends L
     dbRun(
       for {
         queryResults <- mostRecentVisibleQepQueries.filter(_.networkId === networkQueryId).result
-        _ <- allQepQueryQuery ++= queryResults.map(_.copy(queryName = request.queryName))
+        _ <- allQepQueryQuery ++= queryResults.map(_.copy(queryName = request.queryName,changeDate = System.currentTimeMillis()))
       } yield queryResults
     )
   }
 
-  def deletePreviousQuery(request:DeleteQueryRequest):Unit = {
+  def deleteQuery(request:DeleteQueryRequest):Unit = {
 
     val networkQueryId = request.networkQueryId
     dbRun(
       for {
         queryResults <- mostRecentVisibleQepQueries.filter(_.networkId === networkQueryId).result
-        _ <- allQepQueryQuery ++= queryResults.map(_.copy(deleted = true))
+        _ <- allQepQueryQuery ++= queryResults.map(_.copy(deleted = true,changeDate = System.currentTimeMillis()))
       } yield queryResults
     )
   }

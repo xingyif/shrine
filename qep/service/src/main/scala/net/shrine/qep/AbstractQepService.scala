@@ -129,7 +129,7 @@ trait AbstractQepService[BaseResp <: BaseShrineResponse] extends Loggable {
 
   protected def doDeleteQuery(request: DeleteQueryRequest, shouldBroadcast: Boolean): BaseResp = {
     info(s"doDeleteQuery($request,$shouldBroadcast)")
-    QepQueryDb.db.deletePreviousQuery(request)
+    QepQueryDb.db.deleteQuery(request)
     doBroadcastQuery(request, new DeleteQueryAggregator, shouldBroadcast)
   }
 
