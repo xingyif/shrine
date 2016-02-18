@@ -45,7 +45,7 @@ final class DeleteQueryRequestTest extends ShrineRequestValidator {
     val translatedRequest = DeleteQueryRequest.fromI2b2(DefaultBreakdownResultOutputTypes.toSet)(request).get
     
     validateRequestWith(translatedRequest) {
-      translatedRequest.queryId should equal(queryId)
+      translatedRequest.networkQueryId should equal(queryId)
     }
   }
 
@@ -74,7 +74,7 @@ final class DeleteQueryRequestTest extends ShrineRequestValidator {
     val actual = DeleteQueryRequest.fromXml(DefaultBreakdownResultOutputTypes.toSet)(deleteQueryRequest).get
     
     validateRequestWith(actual) {
-      actual.queryId should equal(queryId)
+      actual.networkQueryId should equal(queryId)
     }
   }
 

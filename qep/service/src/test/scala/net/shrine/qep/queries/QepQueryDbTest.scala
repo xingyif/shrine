@@ -19,7 +19,9 @@ class QepQueryDbTest extends ShouldMatchersForJUnit {
     queryName = "testQuery",
     expression = "testExpression",
     dateCreated = System.currentTimeMillis(),
-    queryXml = "testXML"
+    deleted = false,
+    queryXml = "testXML",
+    changeDate = System.currentTimeMillis()
   )
 
   val secondQepQuery = QepQuery(
@@ -28,8 +30,10 @@ class QepQueryDbTest extends ShouldMatchersForJUnit {
     userDomain = "testDomain",
     queryName = "testQuery",
     expression = "testExpression",
+    deleted = false,
     dateCreated = System.currentTimeMillis(),
-    queryXml = "testXML"
+    queryXml = "testXML",
+    changeDate = System.currentTimeMillis()
   )
 
   val flag = QepQueryFlag(

@@ -20,8 +20,8 @@ final class DeleteQueryAdapter(dao: AdapterDao) extends Adapter {
   override protected[adapter] def processRequest(message: BroadcastMessage): ShrineResponse = {
     val request = message.request.asInstanceOf[DeleteQueryRequest]
     
-    dao.deleteQuery(request.queryId)
+    dao.deleteQuery(request.networkQueryId)
     
-    DeleteQueryResponse(request.queryId)
+    DeleteQueryResponse(request.networkQueryId)
   }
 }
