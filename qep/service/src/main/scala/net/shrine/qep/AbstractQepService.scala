@@ -6,7 +6,6 @@ import net.shrine.authorization.AuthorizationResult.{Authorized, NotAuthorized}
 import net.shrine.authorization.QueryAuthorizationService
 import net.shrine.broadcaster.BroadcastAndAggregationService
 import net.shrine.log.Loggable
-import net.shrine.protocol.QueryResult.StatusType
 import net.shrine.protocol.{QueryResult, AggregatedReadInstanceResultsResponse, AggregatedRunQueryResponse, AuthenticationInfo, BaseShrineRequest, BaseShrineResponse, Credential, DeleteQueryRequest, FlagQueryRequest, QueryInstance, ReadApprovedQueryTopicsRequest, ReadInstanceResultsRequest, ReadPreviousQueriesRequest, ReadPreviousQueriesResponse, ReadQueryDefinitionRequest, ReadQueryInstancesRequest, ReadQueryInstancesResponse, ReadResultOutputTypesRequest, ReadResultOutputTypesResponse, RenameQueryRequest, ResultOutputType, RunQueryRequest, UnFlagQueryRequest}
 import net.shrine.qep.audit.QepAuditDb
 import net.shrine.qep.dao.AuditDao
@@ -75,15 +74,8 @@ trait AbstractQepService[BaseResp <: BaseShrineResponse] extends Loggable {
     //read from the QEP database code here. Only broadcast if some result is in some sketchy state
     val resultsFromDb:Seq[QueryResult] = QepQueryDb.db.selectMostRecentQepResultsFor(networkId)
 
-    def resultRequiresBroadcastQuery(queryResult: QueryResult):Boolean = {
-      queryResult.statusType match {
-        case StatusType.Error => false
-        case StatusType.Finished => false
-        case _ => true
-      }
-    }
-
-    if(resultsFromDb.nonEmpty && (!resultsFromDb.exists(resultRequiresBroadcastQuery))) {
+    //If any query result was pending
+    if(resultsFromDb.nonEmpty && (!resultsFromDb.exists(!_.statusType.isDone))) {
       debug(s"Using qep cached results for query $networkId")
       AggregatedReadInstanceResultsResponse(networkId,resultsFromDb).asInstanceOf[BaseResp]
     }
@@ -91,7 +83,7 @@ trait AbstractQepService[BaseResp <: BaseShrineResponse] extends Loggable {
       debug(s"Using qep cached results for query $networkId")
       val response = doBroadcastQuery(request, new ReadInstanceResultsAggregator(networkId, false), shouldBroadcast)
 
-      //put the new results in the database
+      //put the new results in the database if we got what we wanted
       response match {
         case arirr:AggregatedReadInstanceResultsResponse => arirr.results.foreach(r => QepQueryDb.db.insertQueryResult(networkId,r))
         case _ => //do nothing
@@ -123,7 +115,7 @@ trait AbstractQepService[BaseResp <: BaseShrineResponse] extends Loggable {
   protected def doReadPreviousQueries(request: ReadPreviousQueriesRequest, shouldBroadcast: Boolean): ReadPreviousQueriesResponse = {
     info(s"doReadPreviousQueries($request,$shouldBroadcast)")
 
-    //todo check results. If any results are in one of many pending states, maybe go ahead and request them. (Maybe go async)
+    //todo if any results are in one of the pending states go ahead and request them async (has to wait for async Shrine)
 
     //pull queries from the local database.
     QepQueryDb.db.selectPreviousQueries(request)
