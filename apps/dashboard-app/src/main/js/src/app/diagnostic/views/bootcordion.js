@@ -21,7 +21,7 @@
         return {
             restict: 'E',
             replace: true,
-            link: BootcordionLinker,
+            link:       BootcordionLinker,
             controller: BootcordionController,
             controllerAs: 'vm',
             scope: {
@@ -42,6 +42,8 @@
     }
 
 
+    //https://jsfiddle.net/GpdgF/5535/
+
     /**
      *
      * @type {string[]}
@@ -49,8 +51,22 @@
     BootcordionLinker.$inject = ['scope', 'element', 'attributes'];
     function BootcordionLinker (s, e, a) {
         var vm      = s.vm;
+        var htmlStart = '<div class="tree well" style="height: 600px; overflow: auto; background: transparent"> <ul>';
+        var htmlEnd   = '</ul> </div>';
+
+        vm.testClick = function ($event, $element) {
+            var children = $($event.target).parent().find(' > ul > li ');
+            if (children.is(":visible")) {
+                children.hide('fast');
+                $($event.target).attr('title', 'Expand this branch').find(' > i').addClass('icon-plus-sign').removeClass('icon-minus-sign');
+            } else {
+                children.show('fast');
+                $($event.target).attr('title', 'Collapse this branch').find(' > i').addClass('icon-minus-sign').removeClass('icon-plus-sign');
+            }
+        }
+
         var html    = buildHtmlFromJson(vm.data);
-        e.append(html);
+        e.append(htmlStart + html + htmlEnd);
         compileRef(e.contents())(s);
     }
 
@@ -63,38 +79,46 @@
      * @param spaces
      * @returns {string}
      */
-    function buildHtmlFromJson (json, spaces) {
+    function buildHtmlFromJson (json) {
 
         // -- local vars -- //
         var html    = '';
         var indent  = '&nbsp;&nbsp&nbsp;&nbsp';
 
-        // -- set tab to indicate hierarchy -- //
-        spaces      =  spaces || '';
-        spaces      += indent;
-
-
         for(var el in json){
+
+            var openingTag = '<ul>',
+                closingTag = '</ul>'
+
             if(json.hasOwnProperty(el)){
 
                 //open tag and append name if it is not an array element.
+
                 if(isNaN(el)){
-                    html += '<div>' + el;
+
+                    if(isPrimitive(json[el])) {
+                        openingTag = '<label>';
+                        closingTag = '</label>'
+                    }
+
+                    html += '<li><span ng-click="vm.testClick($event, $element)"><i class="icon-folder-open"></i>' + el + '</span>' + openingTag;
+
                 }
+
 
                 //if value is a leaf.
                 if(typeof(json[el]) !== 'object'){
-                    html +=  json[el];
+                    html += indent + json[el];
                 }
 
                 //if value is not a leaf
                 else {
-                    html += buildHtmlFromJson(json[el], spaces);
+                    html += buildHtmlFromJson(json[el]);
                 }
 
-                //close tag if it is not an arra element.
+                //close tag if it is not an array element.
                 if(isNaN(el)){
-                    html += '</div>';
+                    html += closingTag;
                 }
             }
         }
@@ -102,5 +126,40 @@
         return html;
     }
 
+    function isPrimitive (element) {
+        return typeof(element) !== 'object'
+    }
+
 })();
 
+
+/*
+ <div class="tree well">
+ <ul>
+ <li>
+ <span><i class="icon-folder-open"></i> Parent</span> <a href="">Goes somewhere</a>
+ <ul>
+ <li>
+ <span><i class="icon-minus-sign"></i> Child</span> <a href="">Goes somewhere</a>
+ <ul>
+ <li>
+ <span><i class="icon-leaf"></i> Grand Child</span> <a href="">Goes somewhere</a>
+ </li>
+ </ul>
+ </li>
+ <li>
+ <span><i class="icon-minus-sign"></i> Child</span> <a href="">Goes somewhere</a>
+ </li>
+ </ul>
+ </li>
+ <li>
+ <span><i class="icon-folder-open"></i> Parent2</span> <a href="">Goes somewhere</a>
+ <ul>
+ <li>
+ <span><i class="icon-leaf"></i> Child</span> <a href="">Goes somewhere</a>
+ </li>
+ </ul>
+ </li>
+ </ul>
+ </div>
+ */

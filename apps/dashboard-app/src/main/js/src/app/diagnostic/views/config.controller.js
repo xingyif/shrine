@@ -27,7 +27,7 @@
         function setConfig (config) {
             $scope.config = config
             vm.config = config;
-            $element.append($compile("<bootcordion data='vm.config'></bootcordion>")($scope));
+            $element.append($compile('<bootcordion data="vm.config"></bootcordion>')($scope));
         }
     }
 })();
