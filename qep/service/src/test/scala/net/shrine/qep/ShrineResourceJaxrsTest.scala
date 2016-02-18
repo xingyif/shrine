@@ -268,7 +268,7 @@ final class ShrineResourceJaxrsTest extends AbstractPortSearchingJerseyTest with
 
     validateCachedParam(param, RequestType.MasterRenameRequest)
 
-    param.queryId should equal(queryId)
+    param.networkQueryId should equal(queryId)
     param.queryName should equal(queryName)
   }
 

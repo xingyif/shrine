@@ -19,8 +19,8 @@ final class RenameQueryAdapter(dao: AdapterDao) extends Adapter {
   override protected[adapter] def processRequest(message: BroadcastMessage): ShrineResponse = {
     val request = message.request.asInstanceOf[RenameQueryRequest]
     
-    dao.renameQuery(request.queryId, request.queryName)
+    dao.renameQuery(request.networkQueryId, request.queryName)
     
-    RenameQueryResponse(request.queryId, request.queryName)
+    RenameQueryResponse(request.networkQueryId, request.queryName)
   }
 }

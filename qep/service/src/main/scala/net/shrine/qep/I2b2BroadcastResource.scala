@@ -52,7 +52,7 @@ final case class I2b2BroadcastResource(i2b2RequestHandler: I2b2RequestHandler, b
   def doPDORequest(i2b2Request: String): Response = processI2b2Message(i2b2Request)
 
   def processI2b2Message(i2b2Request: String): Response = {
-    info(s"${this.getClass}.processI2b2Message()")// todo would be good to log $i2b2Request)")
+    // todo would be good to log $i2b2Request)")
 
     def errorResponse(e: Throwable): ErrorResponse = ErrorResponse(s"Error processing message: ${e.getMessage}: Stack trace follows: ${StackTrace.stackTraceAsString(e)}")
 

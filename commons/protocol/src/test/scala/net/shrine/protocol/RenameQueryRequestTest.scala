@@ -46,7 +46,7 @@ final class RenameQueryRequestTest extends ShrineRequestValidator {
     val translatedRequest = RenameQueryRequest.fromI2b2(DefaultBreakdownResultOutputTypes.toSet)(request).get
     
     validateRequestWith(translatedRequest) {
-      translatedRequest.queryId should equal(queryId)
+      translatedRequest.networkQueryId should equal(queryId)
       translatedRequest.queryName should equal(queryName)
     }
   }
@@ -80,7 +80,7 @@ final class RenameQueryRequestTest extends ShrineRequestValidator {
     val actual = RenameQueryRequest.fromXml(DefaultBreakdownResultOutputTypes.toSet)(renameQueryRequest).get
     
     validateRequestWith(actual) {
-      actual.queryId should equal(queryId)
+      actual.networkQueryId should equal(queryId)
       actual.queryName should equal(queryName)
     }
   }

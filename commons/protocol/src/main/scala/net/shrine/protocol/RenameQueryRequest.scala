@@ -3,29 +3,28 @@ package net.shrine.protocol
 import scala.concurrent.duration.Duration
 import scala.util.Try
 import scala.xml.NodeSeq
-import net.shrine.serialization.I2b2Unmarshaller
 import net.shrine.util.XmlUtil
 import net.shrine.util.NodeSeqEnrichments
 import net.shrine.serialization.I2b2UnmarshallingHelpers
 
 /**
  * @author Bill Simons
- * @date 3/28/11
- * @link http://cbmi.med.harvard.edu
- * @link http://chip.org
+ * @since 3/28/11
+ * @see http://cbmi.med.harvard.edu
+ * @see http://chip.org
  *       <p/>
  *       NOTICE: This software comes with NO guarantees whatsoever and is
  *       licensed as Lgpl Open Source
- * @link http://www.gnu.org/licenses/lgpl.html
+ * @see http://www.gnu.org/licenses/lgpl.html
  *
  * NB: this is a case class to get a structural equality contract in hashCode and equals, mostly for testing
  */
 final case class RenameQueryRequest(
-  override val projectId: String,
-  override val waitTime: Duration,
-  override val authn: AuthenticationInfo,
-  val queryId: Long,
-  val queryName: String) extends ShrineRequest(projectId, waitTime, authn) with CrcRequest with TranslatableRequest[RenameQueryRequest] with HandleableShrineRequest with HandleableI2b2Request {
+                                     override val projectId: String,
+                                     override val waitTime: Duration,
+                                     override val authn: AuthenticationInfo,
+                                     networkQueryId: Long,
+                                     queryName: String) extends ShrineRequest(projectId, waitTime, authn) with CrcRequest with TranslatableRequest[RenameQueryRequest] with HandleableShrineRequest with HandleableI2b2Request {
 
   override val requestType = RequestType.MasterRenameRequest
 
@@ -36,12 +35,10 @@ final case class RenameQueryRequest(
   override def toXml = XmlUtil.stripWhitespace {
     <renameQuery>
       { headerFragment }
-      <queryId>{ queryId }</queryId>
+      <queryId>{ networkQueryId }</queryId>
       <queryName>{ queryName }</queryName>
     </renameQuery>
   }
-
-  def withId(id: Long) = this.copy(queryId = id)
 
   override def withAuthn(ai: AuthenticationInfo) = this.copy(authn = ai)
 
@@ -52,7 +49,7 @@ final case class RenameQueryRequest(
       { i2b2PsmHeader }
       <ns4:request xsi:type="ns4:master_rename_requestType" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
         <user_id>{ authn.username }</user_id>
-        <query_master_id>{ queryId }</query_master_id>
+        <query_master_id>{ networkQueryId }</query_master_id>
         <query_name>{ queryName }</query_name>
       </ns4:request>
     </message_body>
