@@ -58,10 +58,10 @@
             var children = $($event.target).parent().find(' > ul > li ');
             if (children.is(":visible")) {
                 children.hide('fast');
-                $($event.target).attr('title', 'Expand this branch').find(' > i').addClass('icon-plus-sign').removeClass('icon-minus-sign');
+
             } else {
                 children.show('fast');
-                $($event.target).attr('title', 'Collapse this branch').find(' > i').addClass('icon-minus-sign').removeClass('icon-plus-sign');
+
             }
         }
 
@@ -101,7 +101,7 @@
                         closingTag = '</label>'
                     }
 
-                    html += '<li><span ng-click="vm.testClick($event, $element)"><i class="icon-folder-open"></i>' + el + '</span>' + openingTag;
+                    html += '<li><span ng-click="vm.testClick($event, $element)">' + el + '</span>' + openingTag;
 
                 }
 

@@ -30,7 +30,8 @@
          *
          * @param config
          */
-        function setDownstreamNodes (config) {
+        function setDownstreamNodes (conf) {
+            var config = angular.copy(conf);
 
             vm.shouldQuerySelf = config.hub.shouldQuerySelf;
             vm.downstreamNodes = config.hub.downstreamNodes;
@@ -38,7 +39,7 @@
             if(vm.shouldQuerySelf === true) {
                 vm.downstreamNodes.unshift({
                     name: 'self',
-                    url:  $app.utils.getUrl('')
+                    url:  'not applicable'
                 });
             }
         }

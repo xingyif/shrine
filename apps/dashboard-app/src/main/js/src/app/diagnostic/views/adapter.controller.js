@@ -28,12 +28,21 @@
 
         function setAdapter (all) {
             vm.adapter  = {
-                term:           "UKNOWN", //@todo:
-                description:    all.adapter.result.response,
+                term:           "UNKNOWN",
                 success:        all.adapter.result.response.errorResponse === undefined
             };
 
-
+            if (all.adapter.result.response.errorResponse) {
+                vm.adapter.errorData = all.adapter.result.response.errorResponse.problem;
+            }
+            else {
+                vm.adapter.description = all.adapter.result.response.runQueryResponse.queryResults.
+                    queryResult.setSize;
+                vm.adapter.description += ' ' + all.adapter.result.response.runQueryResponse.queryResults.
+                        queryResult.resultType.description;
+                vm.adapter.term = all.adapter.result.response.runQueryResponse
+                    .requestXml.queryDefinition.expr.term;
+            }
         }
 
         function setConfiguration (config) {
