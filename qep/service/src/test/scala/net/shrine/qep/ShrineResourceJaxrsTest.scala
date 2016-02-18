@@ -244,7 +244,7 @@ final class ShrineResourceJaxrsTest extends AbstractPortSearchingJerseyTest with
 
     validateCachedParam(param, RequestType.MasterDeleteRequest)
 
-    param.queryId should equal(queryId)
+    param.networkQueryId should equal(queryId)
   }
 
   @Test

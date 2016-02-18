@@ -7,7 +7,7 @@ import com.typesafe.config.Config
 import net.shrine.audit.{NetworkQueryId, QueryName, Time, UserName}
 import net.shrine.log.Loggable
 import net.shrine.problem.ProblemDigest
-import net.shrine.protocol.{I2b2ResultEnvelope, QueryResult, ResultOutputType, DefaultBreakdownResultOutputTypes, UnFlagQueryRequest, FlagQueryRequest, QueryMaster, ReadPreviousQueriesRequest, ReadPreviousQueriesResponse, RunQueryRequest}
+import net.shrine.protocol.{DeleteQueryRequest, RenameQueryRequest, I2b2ResultEnvelope, QueryResult, ResultOutputType, DefaultBreakdownResultOutputTypes, UnFlagQueryRequest, FlagQueryRequest, QueryMaster, ReadPreviousQueriesRequest, ReadPreviousQueriesResponse, RunQueryRequest}
 import net.shrine.qep.QepConfigSource
 import net.shrine.slick.TestableDataSourceCreator
 import net.shrine.util.XmlDateHelper
@@ -55,7 +55,7 @@ case class QepQueryDb(schemaDef:QepQuerySchema,dataSource: DataSource) extends L
   }
 
   def selectAllQepQueries:Seq[QepQuery] = {
-    dbRun(allQepQueryQuery.result)
+    dbRun(mostRecentVisibleQepQueries.result)
   }
 
   //todo order
@@ -69,7 +69,29 @@ case class QepQueryDb(schemaDef:QepQuerySchema,dataSource: DataSource) extends L
 
   //todo order
   def selectPreviousQueriesByUserAndDomain(userName: UserName,domain: String):Seq[QepQuery] = {
-    dbRun(allQepQueryQuery.filter(_.userName === userName).filter(_.userDomain === domain).result)
+    dbRun(mostRecentVisibleQepQueries.filter(_.userName === userName).filter(_.userDomain === domain).result)
+  }
+
+  def renamePreviousQuery(request:RenameQueryRequest):Unit = {
+
+    val networkQueryId = request.networkQueryId
+    dbRun(
+      for {
+        queryResults <- mostRecentVisibleQepQueries.filter(_.networkId === networkQueryId).result
+        _ <- allQepQueryQuery ++= queryResults.map(_.copy(queryName = request.queryName))
+      } yield queryResults
+    )
+  }
+
+  def deletePreviousQuery(request:DeleteQueryRequest):Unit = {
+
+    val networkQueryId = request.networkQueryId
+    dbRun(
+      for {
+        queryResults <- mostRecentVisibleQepQueries.filter(_.networkId === networkQueryId).result
+        _ <- allQepQueryQuery ++= queryResults.map(_.copy(deleted = true))
+      } yield queryResults
+    )
   }
 
   def insertQepQueryFlag(flagQueryRequest: FlagQueryRequest):Unit = {
@@ -197,13 +219,19 @@ case class QepQuerySchema(jdbcProfile: JdbcProfile) extends Loggable {
     def queryName = column[QueryName]("queryName")
     def expression = column[String]("expression")
     def dateCreated = column[Time]("dateCreated")
+    def deleted = column[Boolean]("deleted")
     def queryXml = column[String]("queryXml")
+    def changeDate = column[Long]("changeDate")
 
-    def * = (networkId,userName,userDomain,queryName,expression,dateCreated,queryXml) <> (QepQuery.tupled,QepQuery.unapply)
+    def * = (networkId,userName,userDomain,queryName,expression,dateCreated,deleted,queryXml,changeDate) <> (QepQuery.tupled,QepQuery.unapply)
 
   }
 
   val allQepQueryQuery = TableQuery[QepQueries]
+  val mostRecentQepQueryQuery: Query[QepQueries, QepQuery, Seq] = for(
+    queries <- allQepQueryQuery if !allQepQueryQuery.filter(_.networkId === queries.networkId).filter(_.changeDate > queries.changeDate).exists
+  ) yield queries
+  val mostRecentVisibleQepQueries = mostRecentQepQueryQuery.filter(_.deleted === false)
 
   class QepQueryFlags(tag:Tag) extends Table[QepQueryFlag](tag,"queryFlags") {
     def networkId = column[NetworkQueryId]("networkId")
@@ -320,7 +348,9 @@ case class QepQuery(
                      queryName: QueryName,
                      expression: String,
                      dateCreated: Time,
-                     queryXml:String
+                     deleted: Boolean,
+                     queryXml: String,
+                     changeDate: Time
                    ){
 
   def toQueryMaster(qepQueryFlag:Option[QepQueryFlag]):QueryMaster = {
@@ -339,7 +369,7 @@ case class QepQuery(
   }
 }
 
-object QepQuery extends ((NetworkQueryId,UserName,String,QueryName,String,Time,String) => QepQuery) {
+object QepQuery extends ((NetworkQueryId,UserName,String,QueryName,String,Time,Boolean,String,Time) => QepQuery) {
   def apply(runQueryRequest: RunQueryRequest):QepQuery = {
     new QepQuery(
       networkId = runQueryRequest.networkQueryId,
@@ -348,7 +378,9 @@ object QepQuery extends ((NetworkQueryId,UserName,String,QueryName,String,Time,S
       queryName = runQueryRequest.queryDefinition.name,
       expression = runQueryRequest.queryDefinition.expr.getOrElse("No Expression").toString,
       dateCreated = System.currentTimeMillis(),
-      queryXml = runQueryRequest.toXmlString
+      deleted = false,
+      queryXml = runQueryRequest.toXmlString,
+      changeDate = System.currentTimeMillis()
     )
   }
 }

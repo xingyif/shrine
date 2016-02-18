@@ -37,7 +37,7 @@ class MockAdapterRequestHandler(val nodeId: NodeId) extends AdapterRequestHandle
     }
 
     message.request match {
-      case req: DeleteQueryRequest => Result(nodeId, elapsed, DeleteQueryResponse(req.queryId))
+      case req: DeleteQueryRequest => Result(nodeId, elapsed, DeleteQueryResponse(req.networkQueryId))
       case req: FlagQueryRequest => Result(nodeId, elapsed, FlagQueryResponse)
       case req: UnFlagQueryRequest => Result(nodeId, elapsed, UnFlagQueryResponse)
       case req: RunQueryRequest => Result(nodeId, elapsed, {
@@ -77,7 +77,7 @@ final case class TimesOutAdapterRequestHandler(howLong: Duration) extends Adapte
     case req: DeleteQueryRequest => {
       Thread.sleep(howLong.toMillis)
 
-      Result(nodeId, 1.second, DeleteQueryResponse(req.queryId))
+      Result(nodeId, 1.second, DeleteQueryResponse(req.networkQueryId))
     }
     case _ => ???
   }

@@ -323,7 +323,7 @@ final class DefaultSignerVerifierTest extends ShouldMatchersForJUnit {
       //modifying anything should prevent verification
 
       shouldNotVerify {
-        val anotherRequest = signedMessage.request.asInstanceOf[DeleteQueryRequest].copy(queryId = 123L)
+        val anotherRequest = signedMessage.request.asInstanceOf[DeleteQueryRequest].copy(networkQueryId = 123L)
 
         signedMessage.withRequest(anotherRequest)
       }

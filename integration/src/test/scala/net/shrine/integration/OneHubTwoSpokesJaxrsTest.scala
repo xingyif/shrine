@@ -57,7 +57,7 @@ final class OneHubTwoSpokesJaxrsTest extends AbstractHubAndSpokesTest with Shoul
 
       val req = lastMessage.request.asInstanceOf[DeleteQueryRequest]
 
-      req.queryId should equal(masterId)
+      req.networkQueryId should equal(masterId)
       req.projectId should equal(projectId)
       req.requestType should equal(RequestType.MasterDeleteRequest)
       req.authn should equal(networkAuthn)
