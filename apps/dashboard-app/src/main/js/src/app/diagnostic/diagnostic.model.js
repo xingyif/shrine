@@ -87,7 +87,7 @@
             summary.shrineVersion   = all.versionInfo.shrineVersion;
             summary.shrineBuildDate = all.versionInfo.buildDate;
             summary.ontologyVersion = all.versionInfo.ontologyVersion
-            summary.ontologyTerm    = "UNKOWN"; //to be implemented in config.
+            summary.ontologyTerm    = ""; //to be implemented in config.
             summary.adapterOk       = all.adapter.result.response.errorResponse === undefined;
             summary.keystoreOk      = true;
             summary.qepOk           = true;
@@ -96,7 +96,7 @@
             if(!summary.isHub) {
                 summary.hubOk = true;
             }
-            else {
+            else if(all.net !== undefined) {
                 var hasFailures         = Number(all.net.failureCount) > 0;
                 var hasInvalidResults   = Number(all.net.validResultCount) !=
                     Number(all.net.expectedResultCount);

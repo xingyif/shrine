@@ -18,7 +18,7 @@
       replace:      true,
       link:         SidebarLinker,
       controller:   SidebarController,
-      controllerAs: 'sbVM',
+      controllerAs: 'vm',
       scope: {
         options: '='
       }
@@ -33,11 +33,24 @@
    *
    */
   SidebarController.$inject = ['$scope','$app'];
-  function SidebarController ($scope, svc) {
+  function SidebarController ($scope, $app) {
 
     // -- scope --//
-    var _sbVM = this;
-    _sbVM.options = $scope.options;
+    var vm = this;
+
+    init();
+
+    function init() {
+      $app.model.getOptions()
+          .then(setOptions);
+    }
+
+
+
+    function setOptions(data) {
+      vm.options = data;
+    }
+
   }
 
   /**
