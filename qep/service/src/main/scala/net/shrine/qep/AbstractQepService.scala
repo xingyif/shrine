@@ -75,12 +75,12 @@ trait AbstractQepService[BaseResp <: BaseShrineResponse] extends Loggable {
     val resultsFromDb:Seq[QueryResult] = QepQueryDb.db.selectMostRecentQepResultsFor(networkId)
 
     //If any query result was pending
-    if(resultsFromDb.nonEmpty && (!resultsFromDb.exists(!_.statusType.isDone))) {
+    val response = if(resultsFromDb.nonEmpty && (!resultsFromDb.exists(!_.statusType.isDone))) {
       debug(s"Using qep cached results for query $networkId")
       AggregatedReadInstanceResultsResponse(networkId,resultsFromDb).asInstanceOf[BaseResp]
     }
     else {
-      debug(s"Using qep cached results for query $networkId")
+      debug(s"Requesting results for $networkId from network")
       val response = doBroadcastQuery(request, new ReadInstanceResultsAggregator(networkId, false), shouldBroadcast)
 
       //put the new results in the database if we got what we wanted
@@ -91,6 +91,8 @@ trait AbstractQepService[BaseResp <: BaseShrineResponse] extends Loggable {
 
       response
     }
+    debug(s"doReadInstanceResults($request,$shouldBroadcast) is $response")
+    response
   }
 
   protected def doReadQueryInstances(request: ReadQueryInstancesRequest, shouldBroadcast: Boolean): BaseResp = {
