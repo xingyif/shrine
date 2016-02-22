@@ -7,7 +7,7 @@ import com.typesafe.config.Config
 import net.shrine.audit.{NetworkQueryId, QueryName, Time, UserName}
 import net.shrine.log.Loggable
 import net.shrine.problem.ProblemDigest
-import net.shrine.protocol.{DeleteQueryRequest, RenameQueryRequest, I2b2ResultEnvelope, QueryResult, ResultOutputType, DefaultBreakdownResultOutputTypes, UnFlagQueryRequest, FlagQueryRequest, QueryMaster, ReadPreviousQueriesRequest, ReadPreviousQueriesResponse, RunQueryRequest}
+import net.shrine.protocol.{ResultOutputTypes, DeleteQueryRequest, RenameQueryRequest, I2b2ResultEnvelope, QueryResult, ResultOutputType, DefaultBreakdownResultOutputTypes, UnFlagQueryRequest, FlagQueryRequest, QueryMaster, ReadPreviousQueriesRequest, ReadPreviousQueriesResponse, RunQueryRequest}
 import net.shrine.qep.QepConfigSource
 import net.shrine.slick.TestableDataSourceCreator
 import net.shrine.util.XmlDateHelper
@@ -186,7 +186,7 @@ object QepQueryDb extends Loggable {
   *
   * @param jdbcProfile Database profile to use for the schema
   */
-case class QepQuerySchema(jdbcProfile: JdbcProfile) extends Loggable {
+case class QepQuerySchema(jdbcProfile: JdbcProfile,moreBreakdowns: Set[ResultOutputType]) extends Loggable {
   import jdbcProfile.api._
 
   def ddlForAllTables: jdbcProfile.DDL = {
@@ -248,7 +248,7 @@ case class QepQuerySchema(jdbcProfile: JdbcProfile) extends Loggable {
   ) yield queryFlags
 
   //todo there may be other custom breakdowns in the config. Use that as the source
-  val qepQueryResultTypes = DefaultBreakdownResultOutputTypes.toSet ++ ResultOutputType.values
+  val qepQueryResultTypes = DefaultBreakdownResultOutputTypes.toSet ++ ResultOutputType.values ++ moreBreakdowns
   val stringsToQueryResultTypes: Map[String, ResultOutputType] = qepQueryResultTypes.map(x => (x.name,x)).toMap
   val queryResultTypesToString: Map[ResultOutputType, String] = stringsToQueryResultTypes.map(_.swap)
 
@@ -336,7 +336,10 @@ object QepQuerySchema {
   val slickProfileClassName = config.getString("slickProfileClassName")
   val slickProfile:JdbcProfile = QepConfigSource.objectForName(slickProfileClassName)
 
-  val schema = QepQuerySchema(slickProfile)
+  import net.shrine.config.{ConfigExtensions, Keys}
+  val moreBreakdowns: Set[ResultOutputType] = config.getOptionConfigured(Keys.breakdownResultOutputTypes,ResultOutputTypes.fromConfig).getOrElse(Set.empty)
+
+  val schema = QepQuerySchema(slickProfile,moreBreakdowns)
 }
 
 
