@@ -91,7 +91,6 @@ trait AbstractQepService[BaseResp <: BaseShrineResponse] extends Loggable {
 
       response
     }
-    debug(s"doReadInstanceResults($request,$shouldBroadcast) is $response")
     response
   }
 

@@ -181,7 +181,7 @@ object ManuallyWiredShrineJaxrsResources extends ShrineJaxrsResources with Logga
         if(queryEntryPointConfig.broadcasterIsLocal) {
           //If broadcaster is local, we need a hub config
           //TODO: Enforce this when unmarshalling configs
-          require(broadcastDestinations.isDefined, "Local broadcaster specified, but no downstream nodes defined")
+          require(broadcastDestinations.isDefined, s"The QEP's config implied a local hub (no broadcasterServiceEndpoint), but either no downstream nodes were configured, the hub was not configured, or the hub's configuration specified not to create it.")
           
           val broadcaster: AdapterClientBroadcaster = AdapterClientBroadcaster(broadcastDestinations.get, hubDao)
           
