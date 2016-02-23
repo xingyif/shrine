@@ -29,10 +29,6 @@ abstract class StoredResultsAggregator[R <: ShrineResponse with HasQueryResults 
 
   protected def makeAggregatedResult(queryResults: Iterable[QueryResult]): Option[QueryResult]
 
-  import ResultOutputType._
-
-  private val setType = Some(PATIENTSET)
-  private val finishedStatusType = QueryResult.StatusType.Finished.name
   private val allowedSetTypes = ResultOutputType.values.filterNot(_.isError).toSet
 
   private val makeResponse = implicitly[Aggregated[AR]]

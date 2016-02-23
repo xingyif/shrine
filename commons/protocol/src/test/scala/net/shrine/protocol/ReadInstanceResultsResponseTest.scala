@@ -20,7 +20,7 @@ final class ReadInstanceResultsResponseTest extends TestCase with ShrineResponse
   val shrineNetworkQueryId = 1111111L
   val resultId1 = 1111111L
   val setSize = 12
-  val type1 = ResultOutputType.PATIENTSET
+  val type1 = ResultOutputType.PATIENT_COUNT_XML
   val statusName1 = QueryResult.StatusType.Finished
   val startDate1 = XmlDateHelper.now
   val endDate1 = XmlDateHelper.now

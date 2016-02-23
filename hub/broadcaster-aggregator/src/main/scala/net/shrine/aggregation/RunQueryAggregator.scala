@@ -42,11 +42,9 @@ final class RunQueryAggregator(
 
     val counts = validResponses.map {
       case Valid(origin, elsapsed, response) =>
-        val setResultOption = response.results.find(_.resultTypeIs(PATIENTSET)).map(_.setSize)
-
         val countResultOption = response.results.find(_.resultTypeIs(PATIENT_COUNT_XML)).map(_.setSize)
 
-        (setResultOption orElse countResultOption).getOrElse(0L)
+        countResultOption.getOrElse(0L)
     }
 
     val now = XmlDateHelper.now

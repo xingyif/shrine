@@ -33,7 +33,7 @@ final class AggregatedRunQueryResponseTest extends ShrineResponseI2b2Serializabl
   private val startDate = createDate
   private val endDate = createDate
   private val resultId2 = 4L
-  private val resultType1 = ResultOutputType.PATIENTSET
+  private val resultType1 = ResultOutputType.PATIENT_COUNT_XML
   private val resultType2 = ResultOutputType.PATIENT_COUNT_XML
   private val statusType = QueryResult.StatusType.Finished
 
@@ -66,11 +66,11 @@ final class AggregatedRunQueryResponseTest extends ShrineResponseI2b2Serializabl
           <result_instance_id>{ resultId }</result_instance_id>
           <query_instance_id>{ queryInstanceId }</query_instance_id>
           <query_result_type>
-						<result_type_id>1</result_type_id>
+						<result_type_id>4</result_type_id>
             <name>{ resultType1 }</name>
-            <display_type>LIST</display_type>
+            <display_type>CATNUM</display_type>
             <visual_attribute_type>LA</visual_attribute_type>
-            <description>Patient set</description>
+            <description>Number of patients</description>
           </query_result_type>
           <set_size>{ setSize }</set_size>
           <start_date>{ startDate }</start_date>

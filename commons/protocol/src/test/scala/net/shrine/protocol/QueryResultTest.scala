@@ -25,7 +25,7 @@ final class QueryResultTest extends ShouldMatchersForJUnit with XmlRoundTripper[
   private val date = XmlDateHelper.now
   private val resultId = 1L
   private val instanceId = 2L
-  private val resultType = ResultOutputType.PATIENTSET
+  private val resultType = ResultOutputType.PATIENT_COUNT_XML
   private val setSize = 12L
   private val statusType = QueryResult.StatusType.Finished
   private val description = "description"
@@ -107,9 +107,9 @@ final class QueryResultTest extends ShouldMatchersForJUnit with XmlRoundTripper[
       <query_instance_id>{ instanceId }</query_instance_id>
       <description>{ description }</description>
       <query_result_type>
-        <result_type_id>1</result_type_id>
+        <result_type_id>4</result_type_id>
         <name>{ resultType }</name>
-        <display_type>LIST</display_type><visual_attribute_type>LA</visual_attribute_type><description>Patient set</description>
+        <display_type>CATNUM</display_type><visual_attribute_type>LA</visual_attribute_type><description>Number of patients</description>
       </query_result_type>
       <set_size>{ setSize }</set_size>
       <start_date>{ date }</start_date>

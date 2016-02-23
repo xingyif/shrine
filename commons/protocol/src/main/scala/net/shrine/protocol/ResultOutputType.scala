@@ -84,14 +84,13 @@ object ResultOutputType extends I2b2Unmarshaller[Try[ResultOutputType]] with Xml
 
   //NB: There is apparently another Patient Set output type with the description "Patient set"; 
   //I chose this version arbitrarily -Clint Oct 6, 2014
-  val PATIENTSET = ResultOutputType("PATIENTSET", isBreakdown = false, I2b2Options("Patient set", "LIST"), Some(1))
+//todo delete  val PATIENTSET = ResultOutputType("PATIENTSET", isBreakdown = false, I2b2Options("Patient set", "LIST"), Some(1))
 
   val PATIENT_COUNT_XML = ResultOutputType("PATIENT_COUNT_XML", isBreakdown = false, I2b2Options("Number of patients"), Some(4))
 
   val ERROR = ResultOutputType("ERROR", isBreakdown = false, I2b2Options("Error"), None)
 
   lazy val values: Seq[ResultOutputType] = Seq(
-    PATIENTSET,
     PATIENT_COUNT_XML,
     ERROR)
 

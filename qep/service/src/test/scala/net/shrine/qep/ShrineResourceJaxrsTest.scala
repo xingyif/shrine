@@ -148,7 +148,6 @@ final class ShrineResourceJaxrsTest extends AbstractPortSearchingJerseyTest with
 
     Seq(ResultOutputType.values.toSet,
       Set(ResultOutputType.PATIENT_COUNT_XML),
-      Set(ResultOutputType.PATIENTSET),
       Set.empty[ResultOutputType]).foreach(doTestRunQuery)
   }
 
