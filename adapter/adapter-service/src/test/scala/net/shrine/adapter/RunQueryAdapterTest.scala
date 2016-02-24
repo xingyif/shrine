@@ -333,7 +333,7 @@ final class RunQueryAdapterTest extends AbstractSquerylAdapterTest with ShouldMa
       collectAdapterAudit = false
     )
 
-    val resp = adapter.parseShrineErrorResponseWithFallback(altI2b2ErrorXml).asInstanceOf[ErrorResponse]
+    val resp: ErrorResponse = adapter.parseShrineErrorResponseWithFallback(altI2b2ErrorXml).asInstanceOf[ErrorResponse]
 
     resp should not be (null)
 

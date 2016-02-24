@@ -1,7 +1,7 @@
 package net.shrine.protocol
 
 import javax.xml.datatype.XMLGregorianCalendar
-import net.shrine.problem.{Problem, ProblemDigest}
+import net.shrine.problem.{ProblemSources, AbstractProblem, Problem, ProblemDigest}
 import net.shrine.protocol.QueryResult.StatusType
 
 import scala.xml.NodeSeq
@@ -300,6 +300,13 @@ object QueryResult {
 
     def asXmlGcOption(path: String): Option[XMLGregorianCalendar] = asTextOption(path).filter(!_.isEmpty).flatMap(parseDate)
 
+    val statusType = StatusType.valueOf(asText("query_status_type", "name")(xml)).get //TODO: Avoid fragile .get call
+    val statusMessage: Option[String] = asTextOption("query_status_type", "description")
+    val encodedProblemDigest = extractProblemDigest(xml \ "query_status_type")
+    val problemDigest = if (encodedProblemDigest.isDefined) encodedProblemDigest
+                        else if (statusType.isError) Some(ErrorStatusFromCrc(statusMessage,xml.text).toDigest)
+                        else None
+
     QueryResult(
       resultId = asLong("result_instance_id"),
       instanceId = asLong("query_instance_id"),
@@ -308,9 +315,10 @@ object QueryResult {
       startDate = asXmlGcOption("start_date"),
       endDate = asXmlGcOption("end_date"),
       description = asTextOption("description"),
-      statusType = StatusType.valueOf(asText("query_status_type", "name")(xml)).get, //TODO: Avoid fragile .get call
-      statusMessage = asTextOption("query_status_type", "description"),
-      problemDigest = extractProblemDigest(xml \ "query_status_type"))
+      statusType = statusType,
+      statusMessage = statusMessage,
+      problemDigest = problemDigest
+    )
   }
 
   def errorResult(description: Option[String], statusMessage: String,problemDigest:ProblemDigest):QueryResult = {
@@ -365,3 +373,12 @@ object QueryResult {
       problemDigest = Option(problemDigest))
   }
 }
+
+case class ErrorStatusFromCrc(messageFromCrC:Option[String], xmlResponseFromCrc: String) extends AbstractProblem(ProblemSources.Adapter) {
+  override val summary: String = "The I2B2 CRC reported an internal error."
+  override val description:String = s"The I2B2 CRC responded with status type ERROR ${messageFromCrC.fold(" but no message")(message => s"and a message of '$message'")}"
+  override val detailsXml = <details>
+    CRC's Response is {xmlResponseFromCrc}
+  </details>
+}
+

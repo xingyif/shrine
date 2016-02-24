@@ -95,11 +95,11 @@ object ErrorResponse extends XmlUnmarshaller[ErrorResponse] with I2b2Unmarshalle
     def parseFormatB: Try[ErrorResponse] = {
       for {
         conditionXml <- xml withChild "message_body" withChild "response" withChild "status" withChild "condition"
-        typeText <- conditionXml attribute "type"
-        if typeText == "ERROR"
-        statusMessage = XmlUtil.trim(conditionXml)
+        typeText <- conditionXml attribute "type" if typeText == "ERROR"
+                                                    statusMessage = XmlUtil.trim(conditionXml)
+                                                    problemDigest = ErrorStatusFromCrc(Option(statusMessage),xml.text).toDigest//here's another place where an ERROR can have no ProblemDigest
       } yield {
-        ErrorResponse(statusMessage)
+        ErrorResponse(statusMessage,problemDigest)
       }
     }
 

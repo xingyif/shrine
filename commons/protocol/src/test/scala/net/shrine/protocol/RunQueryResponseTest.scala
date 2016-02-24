@@ -1,5 +1,7 @@
 package net.shrine.protocol
 
+import net.shrine.problem.ProblemDigest
+
 import scala.xml.NodeSeq
 
 import org.junit.Test
@@ -91,7 +93,9 @@ final class RunQueryResponseTest extends ShrineResponseI2b2SerializableValidator
     endDate = Option(createDate),
     description = None,
     statusType = statusType,
-    statusMessage = Some(statusType.name))
+    statusMessage = Some(statusType.name),
+    problemDigest = None
+  )
 
   private val runQueryResponse = XmlUtil.stripWhitespace {
     <runQueryResponse>
@@ -223,7 +227,7 @@ final class RunQueryResponseTest extends ShrineResponseI2b2SerializableValidator
     }
   }
 
-  private def doTestFromI2b2(i2b2Response: NodeSeq, expectedQueryDef: AnyRef, expectedStatusType: QueryResult.StatusType) {
+  private def doTestFromI2b2(i2b2Response: NodeSeq, expectedQueryDef: AnyRef, expectedStatusType: QueryResult.StatusType, expectedProblemDigest:Option[ProblemDigest] = None) {
     val translatedResponse = RunQueryResponse.fromI2b2(breakdownTypes.toSet)(i2b2Response).get
 
     translatedResponse.queryId should equal(queryId)
@@ -232,7 +236,13 @@ final class RunQueryResponseTest extends ShrineResponseI2b2SerializableValidator
     translatedResponse.groupId should equal(groupId)
     translatedResponse.requestXml should equal(expectedQueryDef)
     translatedResponse.queryInstanceId should equal(queryInstanceId)
-    translatedResponse.results should equal(Seq(qr1.copy(statusType = expectedStatusType)))
+    if(!expectedStatusType.isError) translatedResponse.results should equal(Seq(qr1.copy(statusType = expectedStatusType,problemDigest = expectedProblemDigest)))
+    else {
+      translatedResponse.results.size should equal(1)
+      val result: QueryResult = translatedResponse.results.head
+      result.copy(problemDigest = None) should equal(qr1.copy(statusType = expectedStatusType))
+      result.problemDigest.get.codec should equal(classOf[ErrorStatusFromCrc].getName)
+    }
     translatedResponse.queryName should equal(queryName)
     translatedResponse.singleNodeResult.statusType should be(expectedStatusType)
   }

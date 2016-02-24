@@ -32,7 +32,10 @@ abstract class CrcAdapter[T <: ShrineRequest, V <: ShrineResponse](
     //NB: https://open.med.harvard.edu/jira/browse/SHRINE-745
     val shrineResponseAttempt = for {
       crcXml <- Try(XML.loadString(xmlResponseFromCrc))
-      shrineResponse <- Try(parseShrineResponse(crcXml)).recover { case NonFatal(e) => ErrorResponse.fromI2b2(crcXml) }
+      shrineResponse <- Try(parseShrineResponse(crcXml)).recover { case NonFatal(e) =>
+        info(s"Exception while parsing $crcXml",e)
+        ErrorResponse.fromI2b2(crcXml)
+      } //todo pass the exception to build a proper error response, and log the exception
     } yield shrineResponse
 
     shrineResponseAttempt.recover {
