@@ -242,12 +242,12 @@ trait AbstractQepService[BaseResp <: BaseShrineResponse] extends Loggable {
     val authResult = authenticator.authenticate(request.authn)
 
     //todo remove
-    throw new NotAuthenticatedException("Broke the code to see what happens")
+    throw new NotAuthenticatedException(domain,username,"Broke the code to see what happens",null)
 
     authResult match {
       case a: Authenticated => f(a)
         //todo this exception is never caught. Fix that with SHRINE-1322
-      case NotAuthenticated(_, _, reason) => throw new NotAuthenticatedException(s"User $domain:$username could not be authenticated: $reason")
+      case na:NotAuthenticated => throw NotAuthenticatedException(na)
     }
   }
 }

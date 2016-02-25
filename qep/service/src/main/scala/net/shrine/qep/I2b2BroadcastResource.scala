@@ -1,5 +1,6 @@
 package net.shrine.qep
 
+import net.shrine.authentication.NotAuthenticatedException
 import net.shrine.log.Loggable
 
 import scala.util.Try
@@ -54,7 +55,10 @@ final case class I2b2BroadcastResource(i2b2RequestHandler: I2b2RequestHandler, b
   def processI2b2Message(i2b2Request: String): Response = {
     // todo would be good to log $i2b2Request)")
 
-    def errorResponse(e: Throwable): ErrorResponse = ErrorResponse(s"Error processing message: ${e.getMessage}: Stack trace follows: ${StackTrace.stackTraceAsString(e)}")
+    def errorResponse(e: Throwable): ErrorResponse = e match {
+      case nax:NotAuthenticatedException => ErrorResponse(s"Error processing message: ${e.getMessage}",Some(nax.problem))
+      case _ => ErrorResponse(s"Error processing message: ${e.getMessage}: Stack trace follows: ${StackTrace.stackTraceAsString(e)}")
+    }
 
     def prettyPrint(xml: NodeSeq): String = XmlUtil.prettyPrint(xml.head).trim
     

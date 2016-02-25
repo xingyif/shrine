@@ -33,7 +33,7 @@ abstract class BasePmAuthenticator(pmPoster: Poster, makeAuthenticationResult: (
       case NonFatal(e) => {
         val AuthenticationInfo(domain, username, _) = authn
 
-        AuthenticationResult.NotAuthenticated(domain, username, s"Failed to certify user $domain:$username, $e, ${StackTrace.stackTraceAsString(e)}")
+        AuthenticationResult.NotAuthenticated(domain, username, s"Failed attempt to certify user", Some(e))
       }
     }
     

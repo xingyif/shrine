@@ -6,11 +6,11 @@ import net.shrine.protocol.AuthenticationInfo
 
 /**
  * @author clint
- * @date Jan 14, 2014
+ * @since Jan 14, 2014
  */
 object Authenticators {
   val neverWorks: Authenticator = new Authenticator {
-    override def authenticate(authn: AuthenticationInfo): AuthenticationResult = AuthenticationResult.NotAuthenticated(authn.domain, authn.username, "blarg")
+    override def authenticate(authn: AuthenticationInfo): AuthenticationResult = AuthenticationResult.NotAuthenticated(authn.domain, authn.username, "Will never authenticate")
   }
 
   val alwaysWorks: Authenticator = new Authenticator {

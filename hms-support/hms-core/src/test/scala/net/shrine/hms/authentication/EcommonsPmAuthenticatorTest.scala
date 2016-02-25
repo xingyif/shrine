@@ -32,7 +32,7 @@ final class EcommonsPmAuthenticatorTest extends ShouldMatchersForJUnit {
       
       val result = authenticator.authenticate(authn(domain, username, ""))
       
-      val NotAuthenticated(d, u, reason) = result
+      val NotAuthenticated(d, u, reason, maybeException) = result
       
       d should equal(domain)
       u should equal(username)
@@ -57,7 +57,7 @@ final class EcommonsPmAuthenticatorTest extends ShouldMatchersForJUnit {
       
       val result = authenticator.authenticate(authn(domain, username, ""))
       
-      val NotAuthenticated(d, u, reason) = result
+      val NotAuthenticated(d, u, reason, maybeException) = result
       
       d should equal(domain)
       u should equal(username)
