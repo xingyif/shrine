@@ -1,6 +1,7 @@
 package net.shrine.qep
 
 import net.shrine.aggregation.{Aggregator, Aggregators, DeleteQueryAggregator, FlagQueryAggregator, ReadInstanceResultsAggregator, ReadQueryDefinitionAggregator, RenameQueryAggregator, RunQueryAggregator, UnFlagQueryAggregator}
+import net.shrine.authentication.AuthenticationResult.Authenticated
 import net.shrine.authentication.{AuthenticationResult, Authenticator, NotAuthenticatedException}
 import net.shrine.authorization.AuthorizationResult.{Authorized, NotAuthorized}
 import net.shrine.authorization.QueryAuthorizationService
@@ -43,60 +44,70 @@ trait AbstractQepService[BaseResp <: BaseShrineResponse] extends Loggable {
   }
   
   protected def doFlagQuery(request: FlagQueryRequest, shouldBroadcast: Boolean = true): BaseResp = {
-    QepQueryDb.db.insertQepQueryFlag(request)
-    doBroadcastQuery(request, new FlagQueryAggregator, shouldBroadcast)
+    authenticateAndThen(request) { authResult =>
+      QepQueryDb.db.insertQepQueryFlag(request)
+      doBroadcastQuery(request, new FlagQueryAggregator, shouldBroadcast,authResult)
+    }
   }
   
   protected def doUnFlagQuery(request: UnFlagQueryRequest, shouldBroadcast: Boolean = true): BaseResp = {
-    QepQueryDb.db.insertQepQueryFlag(request)
-    doBroadcastQuery(request, new UnFlagQueryAggregator, shouldBroadcast)
+    authenticateAndThen(request) { authResult =>
+      QepQueryDb.db.insertQepQueryFlag(request)
+      doBroadcastQuery(request, new UnFlagQueryAggregator, shouldBroadcast,authResult)
+    }
   }
   
   protected def doRunQuery(request: RunQueryRequest, shouldBroadcast: Boolean): BaseResp = {
-    info(s"doRunQuery($request,$shouldBroadcast) with $runQueryAggregatorFor")
+    authenticateAndThen(request) { authResult =>
+      info(s"doRunQuery($request,$shouldBroadcast) with $runQueryAggregatorFor")
 
-    //store the query in the qep's database
+      //store the query in the qep's database
 
-    doBroadcastQuery(request, runQueryAggregatorFor(request), shouldBroadcast)
+      doBroadcastQuery(request, runQueryAggregatorFor(request), shouldBroadcast,authResult)
+    }
   }
 
   protected def doReadQueryDefinition(request: ReadQueryDefinitionRequest, shouldBroadcast: Boolean): BaseResp = {
-    info(s"doReadQueryDefinition($request,$shouldBroadcast)")
+    authenticateAndThen(request) { authResult =>
+      info(s"doReadQueryDefinition($request,$shouldBroadcast)")
 
-    doBroadcastQuery(request, new ReadQueryDefinitionAggregator, shouldBroadcast)
+      doBroadcastQuery(request, new ReadQueryDefinitionAggregator, shouldBroadcast,authResult)
+    }
   }
 
   protected def doReadInstanceResults(request: ReadInstanceResultsRequest, shouldBroadcast: Boolean): BaseResp = {
-    info(s"doReadInstanceResults($request,$shouldBroadcast)")
+    authenticateAndThen(request) { authResult =>
+      info(s"doReadInstanceResults($request,$shouldBroadcast)")
 
-    val networkId = request.shrineNetworkQueryId
+      val networkId = request.shrineNetworkQueryId
 
-    //read from the QEP database code here. Only broadcast if some result is in some sketchy state
-    val resultsFromDb:Seq[QueryResult] = QepQueryDb.db.selectMostRecentQepResultsFor(networkId)
+      //read from the QEP database code here. Only broadcast if some result is in some sketchy state
+      val resultsFromDb: Seq[QueryResult] = QepQueryDb.db.selectMostRecentQepResultsFor(networkId)
 
-    //If any query result was pending
-    val response = if(resultsFromDb.nonEmpty && (!resultsFromDb.exists(!_.statusType.isDone))) {
-      debug(s"Using qep cached results for query $networkId")
-      AggregatedReadInstanceResultsResponse(networkId,resultsFromDb).asInstanceOf[BaseResp]
-    }
-    else {
-      debug(s"Requesting results for $networkId from network")
-      val response = doBroadcastQuery(request, new ReadInstanceResultsAggregator(networkId, false), shouldBroadcast)
-
-      //put the new results in the database if we got what we wanted
-      response match {
-        case arirr:AggregatedReadInstanceResultsResponse => arirr.results.foreach(r => QepQueryDb.db.insertQueryResult(networkId,r))
-        case _ => //do nothing
+      //If any query result was pending
+      val response = if (resultsFromDb.nonEmpty && (!resultsFromDb.exists(!_.statusType.isDone))) {
+        debug(s"Using qep cached results for query $networkId")
+        AggregatedReadInstanceResultsResponse(networkId, resultsFromDb).asInstanceOf[BaseResp]
       }
+      else {
+        debug(s"Requesting results for $networkId from network")
+        val response = doBroadcastQuery(request, new ReadInstanceResultsAggregator(networkId, false), shouldBroadcast,authResult)
 
+        //put the new results in the database if we got what we wanted
+        response match {
+          case arirr: AggregatedReadInstanceResultsResponse => arirr.results.foreach(r => QepQueryDb.db.insertQueryResult(networkId, r))
+          case _ => //do nothing
+        }
+
+        response
+      }
       response
     }
-    response
   }
 
   protected def doReadQueryInstances(request: ReadQueryInstancesRequest, shouldBroadcast: Boolean): BaseResp = {
-    info(s"doReadQueryInstances($request,$shouldBroadcast)")
     authenticateAndThen(request) { authResult =>
+      info(s"doReadQueryInstances($request,$shouldBroadcast)")
       val now = XmlDateHelper.now
       val networkQueryId = request.networkQueryId
       val username = request.authn.username
@@ -114,24 +125,29 @@ trait AbstractQepService[BaseResp <: BaseShrineResponse] extends Loggable {
   }
 
   protected def doReadPreviousQueries(request: ReadPreviousQueriesRequest, shouldBroadcast: Boolean): ReadPreviousQueriesResponse = {
-    info(s"doReadPreviousQueries($request,$shouldBroadcast)")
+    authenticateAndThen(request){ authResult =>
+      info(s"doReadPreviousQueries($request,$shouldBroadcast)")
 
-    //todo if any results are in one of the pending states go ahead and request them async (has to wait for async Shrine)
-
-    //pull queries from the local database.
-    QepQueryDb.db.selectPreviousQueries(request)
+      //todo if any results are in one of the pending states go ahead and request them async (has to wait for async Shrine)
+      //pull queries from the local database.
+      QepQueryDb.db.selectPreviousQueries(request)
+    }
   }
 
   protected def doRenameQuery(request: RenameQueryRequest, shouldBroadcast: Boolean): BaseResp = {
-    info(s"doRenameQuery($request,$shouldBroadcast)")
-    QepQueryDb.db.renamePreviousQuery(request)
-    doBroadcastQuery(request, new RenameQueryAggregator, shouldBroadcast)
+    authenticateAndThen(request) { authResult =>
+      info(s"doRenameQuery($request,$shouldBroadcast)")
+      QepQueryDb.db.renamePreviousQuery(request)
+      doBroadcastQuery(request, new RenameQueryAggregator, shouldBroadcast,authResult)
+    }
   }
 
   protected def doDeleteQuery(request: DeleteQueryRequest, shouldBroadcast: Boolean): BaseResp = {
-    info(s"doDeleteQuery($request,$shouldBroadcast)")
-    QepQueryDb.db.deleteQuery(request)
-    doBroadcastQuery(request, new DeleteQueryAggregator, shouldBroadcast)
+    authenticateAndThen(request) { authResult =>
+      info(s"doDeleteQuery($request,$shouldBroadcast)")
+      QepQueryDb.db.markDeleted(request)
+      doBroadcastQuery(request, new DeleteQueryAggregator, shouldBroadcast,authResult)
+    }
   }
 
   protected def doReadApprovedQueryTopics(request: ReadApprovedQueryTopicsRequest, shouldBroadcast: Boolean): BaseResp = authenticateAndThen(request) { _ =>
@@ -145,39 +161,36 @@ trait AbstractQepService[BaseResp <: BaseShrineResponse] extends Loggable {
 
   import broadcastAndAggregationService.sendAndAggregate
 
-  protected def doBroadcastQuery(request: BaseShrineRequest, aggregator: Aggregator, shouldBroadcast: Boolean): BaseResp = {
+  protected def doBroadcastQuery(request: BaseShrineRequest, aggregator: Aggregator, shouldBroadcast: Boolean, authResult:Authenticated): BaseResp = {
 
-    authenticateAndThen(request) { authResult =>
+    debug(s"doBroadcastQuery($request) authResult is $authResult")
+    //NB: Use credentials obtained from Authenticator (oddly, we authenticate with one set of credentials and are "logged in" under (possibly!) another
+    //When making BroadcastMessages
+    val networkAuthn = AuthenticationInfo(authResult.domain, authResult.username, Credential("", isToken = false))
 
-      debug(s"doBroadcastQuery($request) authResult is $authResult")
-      //NB: Use credentials obtained from Authenticator (oddly, we authenticate with one set of credentials and are "logged in" under (possibly!) another
-      //When making BroadcastMessages
-      val networkAuthn = AuthenticationInfo(authResult.domain, authResult.username, Credential("", isToken = false))
-
-      //NB: Only audit RunQueryRequests
-      request match {
-        case runQueryRequest: RunQueryRequest =>
-          // inject modified, authorized runQueryRequest
+    //NB: Only audit RunQueryRequests
+    request match {
+      case runQueryRequest: RunQueryRequest =>
+        // inject modified, authorized runQueryRequest
 //although it might make more sense to put this whole if block in the aggregator, the RunQueryAggregator lives in the hub, far from this DB code
-          auditAuthorizeAndThen(runQueryRequest) { authorizedRequest =>
-            debug(s"doBroadcastQuery authorizedRequest is $authorizedRequest")
+        auditAuthorizeAndThen(runQueryRequest) { authorizedRequest =>
+          debug(s"doBroadcastQuery authorizedRequest is $authorizedRequest")
 
-            // tuck the ACT audit metrics data into a database here
-            if (collectQepAudit) QepAuditDb.db.insertQepQuery(authorizedRequest,commonName)
-            QepQueryDb.db.insertQepQuery(authorizedRequest)
+          // tuck the ACT audit metrics data into a database here
+          if (collectQepAudit) QepAuditDb.db.insertQepQuery(authorizedRequest,commonName)
+          QepQueryDb.db.insertQepQuery(authorizedRequest)
 
-            val response: BaseResp = doSynchronousQuery(networkAuthn,authorizedRequest,aggregator,shouldBroadcast)
+          val response: BaseResp = doSynchronousQuery(networkAuthn,authorizedRequest,aggregator,shouldBroadcast)
 
-            response match {
-                //todo do in one transaction
-              case aggregated:AggregatedRunQueryResponse => aggregated.results.foreach(QepQueryDb.db.insertQueryResult(runQueryRequest.networkQueryId,_))
-              case _ => debug(s"Unanticipated response type $response")
-            }
-
-            response
+          response match {
+              //todo do in one transaction
+            case aggregated:AggregatedRunQueryResponse => aggregated.results.foreach(QepQueryDb.db.insertQueryResult(runQueryRequest.networkQueryId,_))
+            case _ => debug(s"Unanticipated response type $response")
           }
-        case _ => doSynchronousQuery(networkAuthn,request,aggregator,shouldBroadcast)
-      }
+
+          response
+        }
+      case _ => doSynchronousQuery(networkAuthn,request,aggregator,shouldBroadcast)
     }
   }
 
@@ -230,6 +243,7 @@ trait AbstractQepService[BaseResp <: BaseShrineResponse] extends Loggable {
 
     authResult match {
       case a: Authenticated => f(a)
+        //todo this exception is never caught. Fix that with SHRINE-1322
       case NotAuthenticated(_, _, reason) => throw new NotAuthenticatedException(s"User $domain:$username could not be authenticated: $reason")
     }
   }

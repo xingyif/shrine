@@ -36,8 +36,9 @@ final case class QepService(
   
   override def unFlagQuery(request: UnFlagQueryRequest, shouldBroadcast: Boolean = true) = doUnFlagQuery(request, shouldBroadcast)
   
-  override def readTranslatedQueryDefinition(request: ReadTranslatedQueryDefinitionRequest, shouldBroadcast: Boolean = true): BaseShrineResponse = {
-    doBroadcastQuery(request, new ReadTranslatedQueryDefinitionAggregator, shouldBroadcast)
+  override def readTranslatedQueryDefinition(request: ReadTranslatedQueryDefinitionRequest, shouldBroadcast: Boolean = true): BaseShrineResponse = authenticateAndThen(request) { authResult => {
+    doBroadcastQuery(request, new ReadTranslatedQueryDefinitionAggregator, shouldBroadcast,authResult)
+    }
   }
   
   override def runQuery(request: RunQueryRequest, shouldBroadcast: Boolean) = doRunQuery(request, shouldBroadcast)
@@ -57,6 +58,7 @@ final case class QepService(
   override def readApprovedQueryTopics(request: ReadApprovedQueryTopicsRequest, shouldBroadcast: Boolean) = doReadApprovedQueryTopics(request, shouldBroadcast)
 
   override def readQueryResult(request: ReadQueryResultRequest, shouldBroadcast: Boolean) = {
-    doBroadcastQuery(request, new ReadQueryResultAggregator(request.queryId, includeAggregateResult), shouldBroadcast)
+    authenticateAndThen(request) { authResult => doBroadcastQuery(request, new ReadQueryResultAggregator(request.queryId, includeAggregateResult), shouldBroadcast, authResult)
+    }
   }
 }

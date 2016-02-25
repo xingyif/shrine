@@ -83,7 +83,7 @@ case class QepQueryDb(schemaDef:QepQuerySchema,dataSource: DataSource) extends L
     )
   }
 
-  def deleteQuery(request:DeleteQueryRequest):Unit = {
+  def markDeleted(request:DeleteQueryRequest):Unit = {
 
     val networkQueryId = request.networkQueryId
     dbRun(
