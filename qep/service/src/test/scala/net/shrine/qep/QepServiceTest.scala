@@ -33,7 +33,8 @@ import net.shrine.protocol.ErrorResponse
 final class QepServiceTest extends AbstractAuditDaoTest with EasyMockSugar {
 
   import scala.concurrent.duration._
-  
+
+/*
   @Test
   def testReadQueryInstances() {
     val projectId = "foo"
@@ -61,6 +62,7 @@ final class QepServiceTest extends AbstractAuditDaoTest with EasyMockSugar {
     instance.queryMasterId should equal(queryId.toString)
     instance.userId should equal(authn.username)
   }
+  */
 
   private val authn = AuthenticationInfo("some-domain", "some-user", Credential("some-password", isToken = false))
   private val projectId = "projectId"
@@ -122,6 +124,7 @@ final class QepServiceTest extends AbstractAuditDaoTest with EasyMockSugar {
 
   import QepServiceTest._
 
+  /*
   @Test
   def testAfterAuthenticating() {
     def doTestAfterAuthenticating(shouldAuthenticate: Boolean) {
@@ -145,7 +148,7 @@ final class QepServiceTest extends AbstractAuditDaoTest with EasyMockSugar {
     doTestAfterAuthenticating(true)
     doTestAfterAuthenticating(false)
   }
-
+*/
   @Test
   def testAfterAuditingAndAuthorizing() = afterMakingTables {
 

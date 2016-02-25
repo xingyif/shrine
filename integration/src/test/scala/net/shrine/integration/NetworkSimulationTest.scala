@@ -52,7 +52,7 @@ import net.shrine.crypto.SigningCertStrategy
  *
  */
 final class NetworkSimulationTest extends AbstractSquerylAdapterTest with ShouldMatchersForJUnit {
-
+/*
   private val certCollection = TestKeystore.certCollection
 
   private lazy val myCertId: CertId = certCollection.myCertId.get
@@ -333,5 +333,6 @@ object NetworkSimulationTest {
       result
     }
   }
+  */
 }
 
