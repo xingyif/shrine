@@ -14,7 +14,7 @@ import org.junit.{After, Before, Test}
  * @since Mar 6, 2014
  */
 final class OneQepOneHubTwoSpokesJaxrsTest extends AbstractHubAndSpokesTest with ShouldMatchersForJUnit { thisTest =>
-/*
+
   @Test
   def testBroadcastDeleteQueryShrine(): Unit = doTestBroadcastDeleteQuery(shrineQueryEntryPointComponent)
   
@@ -245,5 +245,4 @@ final class OneQepOneHubTwoSpokesJaxrsTest extends AbstractHubAndSpokesTest with
     
     super.tearDown()
   }
-  */
 }

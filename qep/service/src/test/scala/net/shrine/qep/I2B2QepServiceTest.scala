@@ -21,7 +21,7 @@ final class I2B2QepServiceTest extends ShouldMatchersForJUnit {
   private val unknownUsername = "some-unknown-user"
 
   import scala.concurrent.duration._
-/*
+
   @Test
   def testReadResultOutputTypes(): Unit = {
     val authenticator: Authenticator = new Authenticator {
@@ -54,5 +54,4 @@ final class I2B2QepServiceTest extends ShouldMatchersForJUnit {
       }
     }
   }
-  */
 }

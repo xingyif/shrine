@@ -234,6 +234,7 @@ trait AbstractQepService[BaseResp <: BaseShrineResponse] extends Loggable {
     }
   }
 
+  //todo move auth code with SHRINE-1322
   import AuthenticationResult._
   
   private[qep] def authenticateAndThen[T](request: BaseShrineRequest)(f: Authenticated => T): T = {
@@ -241,12 +242,8 @@ trait AbstractQepService[BaseResp <: BaseShrineResponse] extends Loggable {
 
     val authResult = authenticator.authenticate(request.authn)
 
-    //todo remove
-    throw new NotAuthenticatedException(domain,username,"Broke the code to see what happens",null)
-
     authResult match {
       case a: Authenticated => f(a)
-        //todo this exception is never caught. Fix that with SHRINE-1322
       case na:NotAuthenticated => throw NotAuthenticatedException(na)
     }
   }

@@ -20,7 +20,7 @@ import org.junit.{After, Before, Test}
  * NB: The hub runs on port 9997, and the two spokes run on ports 9998 and 9999.
  */
 final class OneHubTwoSpokesJaxrsTest extends AbstractHubAndSpokesTest with ShouldMatchersForJUnit { thisTest =>
-/*
+
   @Test
   def testBroadcastDeleteQueryShrine: Unit = {
     doTestBroadcastDeleteQuery(shrineHubComponent)
@@ -87,5 +87,4 @@ final class OneHubTwoSpokesJaxrsTest extends AbstractHubAndSpokesTest with Shoul
     i2b2HubComponent.JerseyTest.tearDown()
     super.tearDown()
   }
-  */
 }
