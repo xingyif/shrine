@@ -60,7 +60,7 @@ case class QepQueryDb(schemaDef:QepQuerySchema,dataSource: DataSource) extends L
 
   //todo order
   def selectPreviousQueries(request: ReadPreviousQueriesRequest):ReadPreviousQueriesResponse = {
-    val previousQueries: Seq[QepQuery] = selectPreviousQueriesByUserAndDomain(request.authn.username,request.authn.domain)
+    val previousQueries: Seq[QepQuery] = selectPreviousQueriesByUserAndDomain(request.authn.username,request.authn.domain,request.fetchSize)
     val flags:Map[NetworkQueryId,QepQueryFlag] = selectMostRecentQepQueryFlagsFor(previousQueries.map(_.networkId).to[Set])
     val queriesAndFlags = previousQueries.map(x => (x,flags.get(x.networkId)))
 
@@ -68,8 +68,8 @@ case class QepQueryDb(schemaDef:QepQuerySchema,dataSource: DataSource) extends L
   }
 
   //todo order
-  def selectPreviousQueriesByUserAndDomain(userName: UserName,domain: String):Seq[QepQuery] = {
-    dbRun(mostRecentVisibleQepQueries.filter(_.userName === userName).filter(_.userDomain === domain).result)
+  def selectPreviousQueriesByUserAndDomain(userName: UserName, domain: String, limit:Int):Seq[QepQuery] = {
+    dbRun(mostRecentVisibleQepQueries.filter(_.userName === userName).filter(_.userDomain === domain).take(limit).result)
   }
 
   def renamePreviousQuery(request:RenameQueryRequest):Unit = {
