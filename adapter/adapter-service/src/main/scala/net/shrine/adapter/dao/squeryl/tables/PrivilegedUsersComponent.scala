@@ -7,7 +7,7 @@ import net.shrine.dao.squeryl.SquerylEntryPoint
 
 /**
  * @author clint
- * @date May 22, 2013
+ * @since May 22, 2013
  */
 trait PrivilegedUsersComponent extends AbstractTableComponent { self: Schema =>
   import SquerylEntryPoint._

@@ -10,7 +10,7 @@ import org.squeryl.KeyedEntity
 
 /**
  * @author clint
- * @date May 28, 2013
+ * @since May 28, 2013
  */
 case class SquerylPrivilegedUser(
     @Column(name = "ID")
@@ -20,7 +20,7 @@ case class SquerylPrivilegedUser(
     @Column(name = "DOMAIN")
     domain: String,
     @Column(name = "THRESHOLD")
-    threshold: Int,
+    threshold: Option[Int],
     @Column(name = "OVERRIDE_DATE")
     overrideDate: Option[Timestamp]) extends KeyedEntity[Int] {
   
@@ -28,11 +28,11 @@ case class SquerylPrivilegedUser(
       id: Int,
       username: String,
       domain: String,
-      threshold: Int,
+      threshold: Option[Int],
       overrideDate: Option[XMLGregorianCalendar])(implicit dummy: Int = 42) = this(id, username, domain, threshold, overrideDate.map(DateHelpers.toTimestamp))
   
   //NB: For Squeryl, ugh :(
-  def this() = this(0, "", "", 0, Option(XmlDateHelper.now))
+  def this() = this(0, "", "", None, Option(XmlDateHelper.now))
   
   def toPrivilegedUser = PrivilegedUser(id, username, domain, threshold, overrideDate.map(DateHelpers.toXmlGc))
 }

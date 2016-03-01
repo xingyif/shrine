@@ -1,37 +1,22 @@
 package net.shrine.adapter.dao.squeryl
 
-import net.shrine.log.Loggable
-import net.shrine.problem.{AbstractProblem, ProblemSources}
-import org.squeryl.Query
 import javax.xml.datatype.XMLGregorianCalendar
+
 import net.shrine.adapter.dao.AdapterDao
-import net.shrine.adapter.dao.model.BreakdownResultRow
-import net.shrine.adapter.dao.model.CountRow
-import net.shrine.adapter.dao.model.ObfuscatedPair
-import net.shrine.adapter.dao.model.PrivilegedUser
-import net.shrine.adapter.dao.model.QueryResultRow
-import net.shrine.adapter.dao.model.ShrineError
-import net.shrine.adapter.dao.model.ShrineQuery
-import net.shrine.adapter.dao.model.ShrineQueryResult
-import net.shrine.adapter.dao.model.squeryl.SquerylBreakdownResultRow
-import net.shrine.adapter.dao.model.squeryl.SquerylCountRow
-import net.shrine.adapter.dao.model.squeryl.SquerylQueryResultRow
-import net.shrine.adapter.dao.model.squeryl.SquerylShrineError
-import net.shrine.adapter.dao.model.squeryl.SquerylShrineQuery
+import net.shrine.adapter.dao.model.{ObfuscatedPair, ShrineQuery, ShrineQueryResult}
+import net.shrine.adapter.dao.model.squeryl.{SquerylBreakdownResultRow, SquerylCountRow, SquerylPrivilegedUser, SquerylQueryResultRow, SquerylShrineError, SquerylShrineQuery}
 import net.shrine.adapter.dao.squeryl.tables.Tables
 import net.shrine.dao.DateHelpers
-import net.shrine.dao.squeryl.SquerylInitializer
-import net.shrine.dao.squeryl.SquerylEntryPoint
-import net.shrine.protocol.AuthenticationInfo
-import net.shrine.protocol.I2b2ResultEnvelope
-import net.shrine.protocol.QueryResult
-import net.shrine.protocol.ResultOutputType
+import net.shrine.dao.squeryl.{SquerylEntryPoint, SquerylInitializer}
+import net.shrine.log.Loggable
+import net.shrine.problem.{AbstractProblem, ProblemSources}
+import net.shrine.protocol.{AuthenticationInfo, I2b2ResultEnvelope, QueryResult, ResultOutputType}
 import net.shrine.protocol.query.QueryDefinition
 import net.shrine.util.XmlDateHelper
-import scala.util.Try
-import net.shrine.adapter.dao.model.squeryl.SquerylQueryResultRow
-import net.shrine.adapter.dao.model.squeryl.SquerylPrivilegedUser
+import org.squeryl.Query
+import org.squeryl.dsl.GroupWithMeasures
 
+import scala.util.Try
 import scala.xml.NodeSeq
 
 
@@ -111,7 +96,7 @@ final class SquerylAdapterDao(initializer: SquerylInitializer, tables: Tables)(i
     
     import ResultOutputType.PATIENT_COUNT_XML
     
-    def isCount(qr: QueryResult): Boolean = qr.resultType == Some(PATIENT_COUNT_XML)
+    def isCount(qr: QueryResult): Boolean = qr.resultType.contains(PATIENT_COUNT_XML)
     
     inTransaction {
       //NB: Take the count/setSize from the FIRST PATIENT_COUNT_XML QueryResult, 
@@ -224,7 +209,7 @@ final class SquerylAdapterDao(initializer: SquerylInitializer, tables: Tables)(i
     inTransaction {
       val privilegedUserOption = Queries.privilegedUsers(authn.domain, authn.username).singleOption
 
-      val threshold = privilegedUserOption.map(_.threshold).getOrElse(defaultThreshold.intValue)
+      val threshold:Int = privilegedUserOption.flatMap(_.threshold).getOrElse(defaultThreshold.intValue)
 
       val thirtyDaysInThePast: XMLGregorianCalendar = DateHelpers.daysFromNow(-30)
 
@@ -379,14 +364,14 @@ final class SquerylAdapterDao(initializer: SquerylInitializer, tables: Tables)(i
 
     def repeatedResults(domain: String, username: String, overrideDate: XMLGregorianCalendar): Query[Long] = {
 
-      val counts = join(tables.shrineQueries, tables.queryResults, tables.countResults) { (queryRow, resultRow, countRow) =>
+      val counts: Query[GroupWithMeasures[Long, Long]] = join(tables.shrineQueries, tables.queryResults, tables.countResults) { (queryRow, resultRow, countRow) =>
         where(queryRow.username === username and queryRow.domain === domain and (countRow.originalValue <> 0L) and queryRow.dateCreated > DateHelpers.toTimestamp(overrideDate)).
           groupBy(countRow.originalValue).
           compute(count(countRow.originalValue)).
           on(queryRow.id === resultRow.queryId, resultRow.id === countRow.resultId)
       }
 
-      //Filter for result counts > 1
+      //Filter for result counts > 0
       from(counts) { cnt =>
         where(cnt.measures gt 0).select(cnt.measures)
       }
