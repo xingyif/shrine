@@ -67,7 +67,7 @@ create table PRIVILEGED_USER(
   id int not null auto_increment,
   username varchar(255) not null,
   domain varchar(255) not null,
-  threshold int not null,
+  threshold int null, #Used to be not null. See SHRINE-1262
   override_date timestamp null,
   constraint priviliged_user_pk primary key(id),
   constraint ix_PRIVILEGED_USER_username_domain unique (username, domain)
