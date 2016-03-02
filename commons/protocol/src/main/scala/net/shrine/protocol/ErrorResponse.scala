@@ -1,5 +1,6 @@
 package net.shrine.protocol
 
+import net.shrine.log.Loggable
 import net.shrine.problem.{ProblemNotYetEncoded, LoggingProblemHandler, Problem, ProblemDigest}
 
 import scala.xml.{NodeBuffer, NodeSeq}
@@ -46,7 +47,7 @@ final case class ErrorResponse(errorMessage: String,problemDigest:ProblemDigest)
   }
 }
 
-object ErrorResponse extends XmlUnmarshaller[ErrorResponse] with I2b2Unmarshaller[ErrorResponse] with HasRootTagName {
+object ErrorResponse extends XmlUnmarshaller[ErrorResponse] with I2b2Unmarshaller[ErrorResponse] with HasRootTagName with Loggable {
   val rootTagName = "errorResponse"
 
   //todo deprecate this one
@@ -104,7 +105,7 @@ object ErrorResponse extends XmlUnmarshaller[ErrorResponse] with I2b2Unmarshalle
     }
 
     parseFormatA.recoverWith { case NonFatal(e) => {
-      e.printStackTrace() //todo log instead
+      warn(s"Encountered a problem while parsing an error from I2B2 with 'format A', trying 'format B' ${xml.text}",e)
       parseFormatB
     } }.get
   }
