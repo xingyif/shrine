@@ -7,7 +7,7 @@ import javax.sql.DataSource
 
 /**
  * @author clint
- * @date May 21, 2013
+ * @since May 21, 2013
  */
 final class DataSourceSquerylInitializer(dataSource: DataSource, adapter: DatabaseAdapter) extends SquerylInitializer {
   override lazy val init: Unit = {

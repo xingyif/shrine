@@ -34,6 +34,7 @@ object TestableDataSourceCreator {
       Class.forName(driverClassName).newInstance()
 
       object TestDataSource extends DataSource {
+        //todo this is the one used . probably needs to handle passwords
         override def getConnection: Connection = {
           DriverManager.getConnection(url)
         }

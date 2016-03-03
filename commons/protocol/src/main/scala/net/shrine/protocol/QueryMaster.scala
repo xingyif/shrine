@@ -19,6 +19,6 @@ final case class QueryMaster (
                                userId: String,
                                groupId: String,
                                createDate: XMLGregorianCalendar,
-                               held: Option[Boolean] = None,
+                               held: Option[Boolean] = None, //todo field should be removed, along with supporting code and tests. It's never used.
                                flagged: Option[Boolean] = None,
                                flagMessage: Option[String] = None)

@@ -247,7 +247,6 @@ case class QepQuerySchema(jdbcProfile: JdbcProfile,moreBreakdowns: Set[ResultOut
     queryFlags <- allQepQueryFlags if !allQepQueryFlags.filter(_.networkId === queryFlags.networkId).filter(_.changeDate > queryFlags.changeDate).exists
   ) yield queryFlags
 
-  //todo there may be other custom breakdowns in the config. Use that as the source
   val qepQueryResultTypes = DefaultBreakdownResultOutputTypes.toSet ++ ResultOutputType.values ++ moreBreakdowns
   val stringsToQueryResultTypes: Map[String, ResultOutputType] = qepQueryResultTypes.map(x => (x.name,x)).toMap
   val queryResultTypesToString: Map[ResultOutputType, String] = stringsToQueryResultTypes.map(_.swap)
@@ -365,7 +364,7 @@ case class QepQuery(
       userId = userName,
       groupId = userDomain,
       createDate = XmlDateHelper.toXmlGregorianCalendar(dateCreated),
-      held = None, //todo if a query is held at the adapter, how will we know? do we care? Question out to Bill and leadership
+      held = None, //todo this field is never used. Remove it in 1.22
       flagged = qepQueryFlag.map(_.flagged),
       flagMessage = qepQueryFlag.map(_.flagMessage)
     )
@@ -415,15 +414,6 @@ object QepQueryFlag extends ((NetworkQueryId,Boolean,String,Long) => QepQueryFla
   }
 
 }
-
-/*
-
-  //todo problemDigest in a separate table
-  problemDigest: Option[ProblemDigest] = None,
-
-  //todo breakdowns in a separate table
-  breakdowns: Map[ResultOutputType,I2b2ResultEnvelope] = Map.empty
- */
 
 case class QueryResultRow(
                            resultId:Long,

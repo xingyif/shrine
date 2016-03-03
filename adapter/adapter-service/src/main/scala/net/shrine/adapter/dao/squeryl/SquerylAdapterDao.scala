@@ -331,6 +331,12 @@ final class SquerylAdapterDao(initializer: SquerylInitializer, tables: Tables)(i
     }
   }
 
+  override def findQueriesByDomain(domain: String): Seq[ShrineQuery] = {
+    inTransaction {
+      Queries.queriesForDomain(domain).toSeq.map(_.toShrineQuery)
+    }
+  }
+
   override def findResultsFor(networkQueryId: Long): Option[ShrineQueryResult] = {
     inTransaction {
       val breakdownRowsByType = Queries.breakdownResults(networkQueryId).toSeq.groupBy { case (outputType, _) => outputType.toQueryResultRow.resultType }.mapValues(_.map { case (_, row) => row.toBreakdownResultRow })
@@ -388,6 +394,14 @@ final class SquerylAdapterDao(initializer: SquerylInitializer, tables: Tables)(i
     def queriesForUser(username: String, domain: String): Query[SquerylShrineQuery] = {
       from(tables.shrineQueries) { queryRow =>
         where(queryRow.domain === domain and queryRow.username === username).
+          select(queryRow).
+          orderBy(queryRow.dateCreated.desc)
+      }
+    }
+
+    def queriesForDomain(domain: String): Query[SquerylShrineQuery] = {
+      from(tables.shrineQueries) { queryRow =>
+        where(queryRow.domain === domain).
           select(queryRow).
           orderBy(queryRow.dateCreated.desc)
       }
