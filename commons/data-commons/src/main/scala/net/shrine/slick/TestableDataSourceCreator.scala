@@ -7,6 +7,7 @@ import javax.naming.InitialContext
 import javax.sql.DataSource
 
 import com.typesafe.config.Config
+import net.shrine.config.ConfigExtensions
 
 /**
   * @author david 
@@ -30,13 +31,18 @@ object TestableDataSourceCreator {
       val driverClassName = testDataSourceConfig.getString("driverClassName")
       val url = testDataSourceConfig.getString("url")
 
+      case class Credentials(username: String,password:String)
+      def configToCredentials(config:Config) = new Credentials(config.getString("username"),config.getString("password"))
+
+      val credentials: Option[Credentials] = testDataSourceConfig.getOptionConfigured("credentials",configToCredentials)
+
       //Creating an instance of the driver register it. (!) From a previous epoch, but it works.
       Class.forName(driverClassName).newInstance()
 
       object TestDataSource extends DataSource {
-        //todo this is the one used . probably needs to handle passwords
         override def getConnection: Connection = {
-          DriverManager.getConnection(url)
+          credentials.fold(DriverManager.getConnection(url))(credentials =>
+            DriverManager.getConnection(url,credentials.username,credentials.password))
         }
 
         override def getConnection(username: String, password: String): Connection = {

@@ -42,8 +42,12 @@ object AdapterQueriesToQep {
 
     val adapterQueries: Seq[ShrineQuery] = adapterDao.findQueriesByDomain(domain)
 
+    //todo filter out any queries that already exist
+
     //turn each ShrineQuery into a QepQuery and store it
     adapterQueries.map(shrineQueryToQepQuery).foreach(QepQueryDb.db.insertQepQuery)
+
+    //todo only carry over flags for queries that don't already have flag entries
 
     //make flags for each ShrineQuery and store that
     adapterQueries.flatMap(shrineQueryToQepQueryFlag).foreach(QepQueryDb.db.insertQepQueryFlag)
