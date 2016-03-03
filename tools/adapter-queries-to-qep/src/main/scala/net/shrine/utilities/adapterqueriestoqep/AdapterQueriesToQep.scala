@@ -29,7 +29,7 @@ object AdapterQueriesToQep {
     val localConfig = args(1)
     val shrineConfig = args(2)
 
-    val config: Config = ConfigFactory.parseFile(new File(localConfig)).withFallback(ConfigFactory.load(shrineConfig))
+    val config: Config = ConfigFactory.parseFile(new File(localConfig)).withFallback(ConfigFactory.parseFile(new File(shrineConfig))).withFallback(ConfigFactory.load())
 
     val adapterDataSource: DataSource = TestableDataSourceCreator.dataSource(config.getConfig("shrine.adapter.query.database"))
     val squerylAdapter: DatabaseAdapter = SquerylDbAdapterSelecter.determineAdapter(config.getString("shrine.shrineDatabaseType"))
@@ -41,6 +41,8 @@ object AdapterQueriesToQep {
     val adapterDao: AdapterDao = new SquerylAdapterDao(squerylInitializer, squerylAdapterTables)(breakdownTypes)
 
     val adapterQueries: Seq[ShrineQuery] = adapterDao.findQueriesByDomain(domain)
+
+    println(s"Found ${adapterQueries.mkString(",\n")}")
 
     //todo filter out any queries that already exist
 
