@@ -8,6 +8,7 @@ import com.typesafe.config.{Config, ConfigFactory}
 import net.shrine.adapter.dao.AdapterDao
 import net.shrine.adapter.dao.model.ShrineQuery
 import net.shrine.adapter.dao.squeryl.SquerylAdapterDao
+import net.shrine.audit.NetworkQueryId
 import net.shrine.dao.squeryl.{DataSourceSquerylInitializer, SquerylInitializer, SquerylDbAdapterSelecter}
 import net.shrine.adapter.dao.squeryl.tables.{Tables => AdapterTables}
 import net.shrine.protocol.ResultOutputTypes
@@ -32,8 +33,6 @@ object AdapterQueriesToQep {
 
     val config: Config = ConfigFactory.parseFile(new File(localConfig)).withFallback(ConfigFactory.parseFile(new File(shrineConfig))).withFallback(ConfigFactory.load())
 
-//    println(config)
-
     val adapterDataSource: DataSource = TestableDataSourceCreator.dataSource(config.getConfig("shrine.adapter.query.database"))
     val squerylAdapter: DatabaseAdapter = SquerylDbAdapterSelecter.determineAdapter(config.getString("shrine.shrineDatabaseType"))
     val squerylInitializer: SquerylInitializer = new DataSourceSquerylInitializer(adapterDataSource, squerylAdapter)
@@ -45,19 +44,29 @@ object AdapterQueriesToQep {
 
     val adapterQueries: Seq[ShrineQuery] = adapterDao.findQueriesByDomain(domain)
 
-//    println(s"Found ${adapterQueries.mkString(",\n")}")
+    println(s"Found ${adapterQueries.size} queries for $domain in the adapter's table")
 
     QepConfigSource.configForBlock(config,getClass.getSimpleName) {
 
+      //filter out any queries that already exist
+      val queriesInQep: Set[NetworkQueryId] = QepQueryDb.db.selectAllQepQueries.map(_.networkId).to[Set]
+
       //turn each ShrineQuery into a QepQuery and store it
-      //todo filter out any queries that already exist
-      adapterQueries.map(shrineQueryToQepQuery).foreach(QepQueryDb.db.insertQepQuery)
+      val queriesToInsert: Seq[ShrineQuery] = adapterQueries.filterNot(q => queriesInQep.contains(q.networkId))
+      println(s"Will insert ${queriesToInsert.size} rows into the qep's previousQueries table. (${adapterQueries.size - queriesToInsert.size} have matching network ids.)")
 
-      //todo only carry over flags for queries that don't already have flag entries
+      queriesToInsert.map(shrineQueryToQepQuery).foreach(QepQueryDb.db.insertQepQuery)
 
-      //make flags for each ShrineQuery and store that
-      adapterQueries.flatMap(shrineQueryToQepQueryFlag).foreach(QepQueryDb.db.insertQepQueryFlag)
+      //only carry over flags for queries that don't already have flag entries
+      val flagsInQep: Set[NetworkQueryId] = QepQueryDb.db.selectMostRecentQepQueryFlagsFor(adapterQueries.map(q => q.networkId).to[Set]).keySet
+      val flagsToInsert: Seq[QepQueryFlag] = adapterQueries.filterNot(q => flagsInQep.contains(q.networkId)).flatMap(shrineQueryToQepQueryFlag)
+      println(s"Will insert ${flagsToInsert.size} rows into the qep's queryFlags table.")
+
+      //make flags for each ShrineQuery that has them and store that
+      flagsToInsert.foreach(QepQueryDb.db.insertQepQueryFlag)
     }
+
+    println("previousQueries transferred from the local adapter.")
   }
 
   def shrineQueryToQepQuery(shrineQuery: ShrineQuery):QepQuery = {
