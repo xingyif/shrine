@@ -33,20 +33,27 @@ class AtomicConfigSource(baseConfig:Config) {
 
     val configPairsJava:java.util.Map[String, _ <: AnyRef] = configPairs.asJava
     val blockConfig:Config = ConfigFactory.parseMap(configPairsJava,origin)
-    val originalConfig:Config = atomicConfigRef.getAndSet(blockConfig)
+
+    configForBlock(blockConfig,origin)(block)
+  }
+
+  def configForBlock[T](config:Config,origin:String)(block: => T):T = {
+
+    val originalConfig:Config = atomicConfigRef.getAndSet(config)
     val tryT:Try[T] = Try(block)
 
-    val ok = atomicConfigRef.compareAndSet(blockConfig,originalConfig)
+    val ok = atomicConfigRef.compareAndSet(config,originalConfig)
 
     tryT match {
       case Success(t) => {
         if(ok) t
-        else throw new IllegalStateException(s"Expected config from ${blockConfig.origin()} to be from ${atomicConfigRef.get().origin()} instead.")
+        else throw new IllegalStateException(s"Expected config from ${config.origin()} to be from ${atomicConfigRef.get().origin()} instead.")
       }
       case Failure(x) => {
         if(ok) throw x
-        else throw new IllegalStateException(s"Throwable in block and expected config from ${blockConfig.origin()} to be from ${atomicConfigRef.get().origin()} instead.",x)
+        else throw new IllegalStateException(s"Throwable in block and expected config from ${config.origin()} to be from ${atomicConfigRef.get().origin()} instead.",x)
       }
     }
   }
+
 }

@@ -11,6 +11,7 @@ import net.shrine.adapter.dao.squeryl.SquerylAdapterDao
 import net.shrine.dao.squeryl.{DataSourceSquerylInitializer, SquerylInitializer, SquerylDbAdapterSelecter}
 import net.shrine.adapter.dao.squeryl.tables.{Tables => AdapterTables}
 import net.shrine.protocol.ResultOutputTypes
+import net.shrine.qep.QepConfigSource
 import net.shrine.qep.queries.{QepQueryDb, QepQuery, QepQueryFlag}
 import net.shrine.slick.TestableDataSourceCreator
 import org.squeryl.internals.DatabaseAdapter
@@ -31,6 +32,8 @@ object AdapterQueriesToQep {
 
     val config: Config = ConfigFactory.parseFile(new File(localConfig)).withFallback(ConfigFactory.parseFile(new File(shrineConfig))).withFallback(ConfigFactory.load())
 
+//    println(config)
+
     val adapterDataSource: DataSource = TestableDataSourceCreator.dataSource(config.getConfig("shrine.adapter.query.database"))
     val squerylAdapter: DatabaseAdapter = SquerylDbAdapterSelecter.determineAdapter(config.getString("shrine.shrineDatabaseType"))
     val squerylInitializer: SquerylInitializer = new DataSourceSquerylInitializer(adapterDataSource, squerylAdapter)
@@ -42,17 +45,19 @@ object AdapterQueriesToQep {
 
     val adapterQueries: Seq[ShrineQuery] = adapterDao.findQueriesByDomain(domain)
 
-    println(s"Found ${adapterQueries.mkString(",\n")}")
+//    println(s"Found ${adapterQueries.mkString(",\n")}")
 
-    //todo filter out any queries that already exist
+    QepConfigSource.configForBlock(config,getClass.getSimpleName) {
 
-    //turn each ShrineQuery into a QepQuery and store it
-    adapterQueries.map(shrineQueryToQepQuery).foreach(QepQueryDb.db.insertQepQuery)
+      //turn each ShrineQuery into a QepQuery and store it
+      //todo filter out any queries that already exist
+      adapterQueries.map(shrineQueryToQepQuery).foreach(QepQueryDb.db.insertQepQuery)
 
-    //todo only carry over flags for queries that don't already have flag entries
+      //todo only carry over flags for queries that don't already have flag entries
 
-    //make flags for each ShrineQuery and store that
-    adapterQueries.flatMap(shrineQueryToQepQueryFlag).foreach(QepQueryDb.db.insertQepQueryFlag)
+      //make flags for each ShrineQuery and store that
+      adapterQueries.flatMap(shrineQueryToQepQueryFlag).foreach(QepQueryDb.db.insertQepQueryFlag)
+    }
   }
 
   def shrineQueryToQepQuery(shrineQuery: ShrineQuery):QepQuery = {

@@ -24,7 +24,11 @@ object QepConfigSource {
     atomicConfig.configForBlock(key,value,origin)(block)
   }
 
-//todo move this to common code somewhere
+  def configForBlock[T](config:Config,origin:String)(block: => T):T = {
+    atomicConfig.configForBlock(config,origin)(block)
+  }
+
+  //todo move this to common code somewhere
   def objectForName[T](objectName:String):T = {
 
     import scala.reflect.runtime.universe
