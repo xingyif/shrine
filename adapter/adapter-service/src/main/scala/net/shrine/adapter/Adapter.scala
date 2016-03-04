@@ -1,6 +1,6 @@
 package net.shrine.adapter
 
-import java.sql.SQLSyntaxErrorException
+import java.sql.SQLException
 
 import net.shrine.log.Loggable
 import net.shrine.problem.{Problem, ProblemNotYetEncoded, LoggingProblemHandler, ProblemSources, AbstractProblem}
@@ -33,7 +33,7 @@ abstract class Adapter extends Loggable {
 
       case e: AdapterMappingException => problemToErrorResponse(AdapterMappingProblem(e))
 
-      case e: SQLSyntaxErrorException => problemToErrorResponse(AdapterDatabaseProblem(e))
+      case e: SQLException => problemToErrorResponse(AdapterDatabaseProblem(e))
 
       //noinspection RedundantBlock
       case e: Exception => {
@@ -80,9 +80,9 @@ case class AdapterMappingProblem(x:AdapterMappingException) extends AbstractProb
                             </details>
 }
 
-case class AdapterDatabaseProblem(x:SQLSyntaxErrorException) extends AbstractProblem(ProblemSources.Adapter) {
+case class AdapterDatabaseProblem(x:SQLException) extends AbstractProblem(ProblemSources.Adapter) {
 
   override val throwable = Some(x)
-  override val summary: String = "Problem in Adapter database."
-  override val description = "The Shrine Adapter on encountered a problem with a database."
+  override val summary: String = "Problem using the Adapter database."
+  override val description = "The Shrine Adapter encountered a problem using a database."
 }
