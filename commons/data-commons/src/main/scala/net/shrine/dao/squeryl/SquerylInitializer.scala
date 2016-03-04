@@ -9,6 +9,7 @@ import javax.sql.DataSource
  * @author clint
  * @date May 21, 2013
  */
+
 trait SquerylInitializer {
   def init(): Unit
 }

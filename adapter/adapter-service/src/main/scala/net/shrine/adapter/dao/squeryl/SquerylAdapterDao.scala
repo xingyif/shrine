@@ -333,7 +333,7 @@ final class SquerylAdapterDao(initializer: SquerylInitializer, tables: Tables)(i
 
   override def findQueriesByDomain(domain: String): Seq[ShrineQuery] = {
     inTransaction {
-      Queries.queriesForDomain(domain).toSeq.map(_.toShrineQuery)
+      Queries.queriesForDomain(domain).toList.map(_.toShrineQuery)
     }
   }
 
