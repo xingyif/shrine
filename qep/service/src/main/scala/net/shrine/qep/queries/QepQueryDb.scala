@@ -27,7 +27,7 @@ import scala.xml.XML
   * @author david
   * @since 1/19/16
   */
-case class QepQueryDb(schemaDef:QepQuerySchema,dataSource: DataSource) extends Loggable {
+case class QepQueryDb(schemaDef:QepQuerySchema,dataSource: DataSource,timeout:Duration) extends Loggable {
   import schemaDef._
   import jdbcProfile.api._
 
@@ -40,7 +40,7 @@ case class QepQueryDb(schemaDef:QepQuerySchema,dataSource: DataSource) extends L
   def dbRun[R](action: DBIOAction[R, NoStream, Nothing]):R = {
     val future: Future[R] = database.run(action)
     blocking {
-      Await.result(future, 10 seconds)
+      Await.result(future, timeout)
     }
   }
 
@@ -173,8 +173,9 @@ case class QepQueryDb(schemaDef:QepQuerySchema,dataSource: DataSource) extends L
 object QepQueryDb extends Loggable {
 
   val dataSource:DataSource = TestableDataSourceCreator.dataSource(QepQuerySchema.config)
+  val timeout = QepQuerySchema.config.getInt("timeout") seconds
 
-  val db = QepQueryDb(QepQuerySchema.schema,dataSource)
+  val db = QepQueryDb(QepQuerySchema.schema,dataSource,timeout)
 
   val createTablesOnStart = QepQuerySchema.config.getBoolean("createTablesOnStart")
   if(createTablesOnStart) QepQueryDb.db.createTables()
