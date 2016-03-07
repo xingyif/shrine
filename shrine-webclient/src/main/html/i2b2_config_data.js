@@ -6,7 +6,7 @@
     password_label: 'test password:', //Password Label
     clientHelpUrl:  'help/pdf/shrine-client-guide.pdf',
     networkHelpUrl: 'help/pdf/shrine-network-guide.pdf',
-    wikiBaseUrl:    'need-wiki-url',
+    wikiBaseUrl:    'https://open.med.harvard.edu/wiki/display/SHRINE/',
 
     // -------------------------------------------------------------------------------------------
     // THESE ARE ALL THE DOMAINS A USER CAN LOGIN TO
