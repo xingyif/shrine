@@ -46,7 +46,7 @@ case class QepQueryDb(schemaDef:QepQuerySchema,dataSource: DataSource,timeout:Du
       }
     }
     catch {
-      case tx:TimeoutException => throw CouldNotRunDbioActionException(dataSource,tx)
+      case tx:TimeoutException => throw CouldNotRunDbIoActionException(dataSource,tx)
     }
   }
 
@@ -524,13 +524,11 @@ case class QepProblemDigestRow(
   }
 }
 
-case class CouldNotRunDbioActionException(dataSource: DataSource,exception: Exception) extends RuntimeException(exception) {
+case class CouldNotRunDbIoActionException(dataSource: DataSource, exception: Exception) extends RuntimeException(exception) {
   override def getMessage:String = s"Could not use the database defined by $dataSource due to ${exception.getLocalizedMessage}"
-
-  lazy val problem = CouldNotRunDbioAction(this)
 }
 
-case class CouldNotRunDbioAction(x:CouldNotRunDbioActionException) extends AbstractProblem(ProblemSources.Qep){
+case class QepDatabaseProblem(x:Exception) extends AbstractProblem(ProblemSources.Qep){
   override val summary = "A problem encountered while using a database."
 
   override val throwable = Some(x)

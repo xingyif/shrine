@@ -1,8 +1,10 @@
 package net.shrine.qep
 
+import java.sql.SQLException
+
 import net.shrine.authentication.NotAuthenticatedException
 import net.shrine.log.Loggable
-import net.shrine.qep.queries.CouldNotRunDbioActionException
+import net.shrine.qep.queries.{QepDatabaseProblem, CouldNotRunDbIoActionException}
 
 import scala.util.Try
 import javax.ws.rs.POST
@@ -58,7 +60,8 @@ final case class I2b2BroadcastResource(i2b2RequestHandler: I2b2RequestHandler, b
 
     def errorResponse(e: Throwable): ErrorResponse = e match {
       case nax:NotAuthenticatedException => ErrorResponse(s"Error processing message: ${e.getMessage}",Some(nax.problem))
-      case cnrdax:CouldNotRunDbioActionException => ErrorResponse(s"Error processing message: ${e.getMessage}",Some(cnrdax.problem))
+      case cnrdax:CouldNotRunDbIoActionException => ErrorResponse(s"Error processing message: ${e.getMessage}",Some(QepDatabaseProblem(cnrdax)))
+      case sqlx:SQLException => ErrorResponse(s"Error processing message: ${e.getMessage}",Some(QepDatabaseProblem(sqlx)))
       case _ => ErrorResponse(s"Error processing message: ${e.getMessage}: Stack trace follows: ${StackTrace.stackTraceAsString(e)}")
     }
 
