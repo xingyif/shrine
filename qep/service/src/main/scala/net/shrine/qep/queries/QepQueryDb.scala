@@ -1,12 +1,13 @@
 package net.shrine.qep.queries
 
 import java.sql.SQLException
+import java.util.concurrent.TimeoutException
 import javax.sql.DataSource
 
 import com.typesafe.config.Config
 import net.shrine.audit.{NetworkQueryId, QueryName, Time, UserName}
 import net.shrine.log.Loggable
-import net.shrine.problem.ProblemDigest
+import net.shrine.problem.{AbstractProblem, ProblemSources, ProblemDigest}
 import net.shrine.protocol.{ResultOutputTypes, DeleteQueryRequest, RenameQueryRequest, I2b2ResultEnvelope, QueryResult, ResultOutputType, DefaultBreakdownResultOutputTypes, UnFlagQueryRequest, FlagQueryRequest, QueryMaster, ReadPreviousQueriesRequest, ReadPreviousQueriesResponse, RunQueryRequest}
 import net.shrine.qep.QepConfigSource
 import net.shrine.slick.TestableDataSourceCreator
@@ -39,8 +40,13 @@ case class QepQueryDb(schemaDef:QepQuerySchema,dataSource: DataSource,timeout:Du
 
   def dbRun[R](action: DBIOAction[R, NoStream, Nothing]):R = {
     val future: Future[R] = database.run(action)
-    blocking {
-      Await.result(future, timeout)
+    try {
+      blocking {
+        Await.result(future, timeout)
+      }
+    }
+    catch {
+      case tx:TimeoutException => throw CouldNotRunDbioActionException(dataSource,tx)
     }
   }
 
@@ -516,4 +522,18 @@ case class QepProblemDigestRow(
       else <details/>
     )
   }
+}
+
+case class CouldNotRunDbioActionException(dataSource: DataSource,exception: Exception) extends RuntimeException(exception) {
+  override def getMessage:String = s"Could not use the database defined by $dataSource due to ${exception.getLocalizedMessage}"
+
+  lazy val problem = CouldNotRunDbioAction(this)
+}
+
+case class CouldNotRunDbioAction(x:CouldNotRunDbioActionException) extends AbstractProblem(ProblemSources.Qep){
+  override val summary = "A problem encountered while using a database."
+
+  override val throwable = Some(x)
+
+  override val description = x.getMessage()
 }
