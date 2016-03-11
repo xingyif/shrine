@@ -94,6 +94,6 @@ case class SquerylShrineQuery(
       }.get.copy(unTrimmedName = name)
     }
 
-    ShrineQuery(id, localId, networkId, queryDefinition.name, username, domain, DateHelpers.toXmlGc(dateCreated), isFlagged, hasBeenRun, flagMessage, queryDefinition)
+    ShrineQuery(id, localId, networkId, queryDefinition.name, username, domain, DateHelpers.toXmlGc(dateCreated), isFlagged, flagMessage, queryDefinition)
   }
 }

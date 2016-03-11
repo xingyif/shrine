@@ -574,7 +574,6 @@ final class RunQueryAdapterTest extends AbstractSquerylAdapterTest with ShouldMa
 
     storedQuery.dateCreated should not be (null) // :\
     storedQuery.domain should equal(networkAuthn.domain)
-    storedQuery.hasBeenRun should equal(false)
     storedQuery.isFlagged should equal(false)
     storedQuery.localId should equal(-1L.toString)
     storedQuery.name should equal(queryDef.name)

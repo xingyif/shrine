@@ -110,8 +110,6 @@ final class SquerylAdapterDaoTest extends AbstractSquerylAdapterTest with Should
     shrineQuery.domain should equal(domain)
     shrineQuery.username should equal(user)
     shrineQuery.flagMessage should equal(flagMessage)
-    shrineQuery.hasBeenRun should equal(hasBeenRun)
-    shrineQuery.hasNotBeenRun should equal(!hasBeenRun)
     shrineQuery.id should equal(1)
     shrineQuery.isFlagged should equal(isFlagged)
     shrineQuery.localId should equal(localId)
@@ -212,7 +210,6 @@ final class SquerylAdapterDaoTest extends AbstractSquerylAdapterTest with Should
     renamedQuery.queryDefinition.constraints should equal(queryDef1.constraints)
     renamedQuery.queryDefinition.subQueries should equal(queryDef1.subQueries)
     renamedQuery.isFlagged should be(false)
-    renamedQuery.hasBeenRun should be(true)
     renamedQuery.queryDefinition should not equal(queryDef1)
   }
 
@@ -281,7 +278,7 @@ final class SquerylAdapterDaoTest extends AbstractSquerylAdapterTest with Should
     dao.insertQuery(masterId1, networkQueryId1, authn, queryDef1, isFlagged = false, hasBeenRun = true, flagMessage = None)
 
     {
-      val Some(ShrineQuery(id, localMasterId, actualNetworkId, name, username, domain, dateCreated, isFlagged, wasRun, flagMessage,queryDef)) = dao.findQueryByNetworkId(networkQueryId1)
+      val Some(ShrineQuery(id, localMasterId, actualNetworkId, name, username, domain, dateCreated, isFlagged, flagMessage,queryDef)) = dao.findQueryByNetworkId(networkQueryId1)
 
       id should be(1)
       localMasterId should equal(masterId1)
@@ -291,7 +288,6 @@ final class SquerylAdapterDaoTest extends AbstractSquerylAdapterTest with Should
       domain should equal(authn.domain)
       dateCreated should not be (null) //NB: Don't compare, to avoid off-by-a-few errors :/
       isFlagged should be(false)
-      wasRun should be(true)
       queryDef should be(queryDef1)
     }
 
@@ -300,7 +296,7 @@ final class SquerylAdapterDaoTest extends AbstractSquerylAdapterTest with Should
 
     {
       //However, the first shrine_query row with the passed networkQueryId should be returned, not the one we just inserted 
-      val Some(ShrineQuery(id, localMasterId, actualNetworkId, name, username, domain, dateCreated, isFlagged, wasRun, flagMessage,queryDef)) = dao.findQueryByNetworkId(networkQueryId1)
+      val Some(ShrineQuery(id, localMasterId, actualNetworkId, name, username, domain, dateCreated, isFlagged, flagMessage,queryDef)) = dao.findQueryByNetworkId(networkQueryId1)
 
       id should be(1)
       localMasterId should equal(masterId1)
@@ -310,7 +306,6 @@ final class SquerylAdapterDaoTest extends AbstractSquerylAdapterTest with Should
       dateCreated should not be (null) //NB: Don't compare, to avoid off-by-a-few errors :/
       queryDef should equal(queryDef1)
       isFlagged should be(false)
-      wasRun should be(true)
     }
   }
 
@@ -363,7 +358,6 @@ final class SquerylAdapterDaoTest extends AbstractSquerylAdapterTest with Should
         r.username should equal(authn.username)
         r.queryDefinition should equal(queryDef1)
         r.isFlagged should equal(flagged)
-        r.hasBeenRun should equal(run)
       }
 
       val rows = list(queryRows)

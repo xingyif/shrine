@@ -254,7 +254,6 @@ final class NetworkSimulationTest extends AbstractSquerylAdapterTest with Should
     dao.insertQuery(masterId.toString, networkQueryId, authn, fooQuery, isFlagged = false, hasBeenRun = true, flagMessage = None)
 
     dao.findQueryByNetworkId(networkQueryId).get.isFlagged should be(false)
-    dao.findQueryByNetworkId(networkQueryId).get.hasBeenRun should be(true)
     dao.findQueryByNetworkId(networkQueryId).get.flagMessage should be(None)
 
     val req = FlagQueryRequest("some-project-id", 1.second, authn, networkQueryId, Some("foo"))
@@ -264,7 +263,6 @@ final class NetworkSimulationTest extends AbstractSquerylAdapterTest with Should
     resp should equal(FlagQueryResponse)
 
     dao.findQueryByNetworkId(networkQueryId).get.isFlagged should be(true)
-    dao.findQueryByNetworkId(networkQueryId).get.hasBeenRun should be(true)
     dao.findQueryByNetworkId(networkQueryId).get.flagMessage should be(Some("foo"))
   }
   
@@ -286,7 +284,6 @@ final class NetworkSimulationTest extends AbstractSquerylAdapterTest with Should
     dao.insertQuery(masterId.toString, networkQueryId, authn, fooQuery, isFlagged = true, hasBeenRun = true, flagMessage = flagMsg)
 
     dao.findQueryByNetworkId(networkQueryId).get.isFlagged should be(true)
-    dao.findQueryByNetworkId(networkQueryId).get.hasBeenRun should be(true)
     dao.findQueryByNetworkId(networkQueryId).get.flagMessage should be(flagMsg)
 
     val req = UnFlagQueryRequest("some-project-id", 1.second, authn, networkQueryId)
@@ -296,7 +293,6 @@ final class NetworkSimulationTest extends AbstractSquerylAdapterTest with Should
     resp should equal(UnFlagQueryResponse)
 
     dao.findQueryByNetworkId(networkQueryId).get.isFlagged should be(false)
-    dao.findQueryByNetworkId(networkQueryId).get.hasBeenRun should be(true)
     dao.findQueryByNetworkId(networkQueryId).get.flagMessage should be(None)
   }
 }

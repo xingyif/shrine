@@ -47,7 +47,6 @@ final class UnFlagQueryAdapterTest extends AbstractSquerylAdapterTest with Adapt
 
       query.networkId should equal(queryId)
       query.isFlagged should be(false)
-      query.hasBeenRun should be(true)
       query.flagMessage should be(None)
     }
 
@@ -62,7 +61,6 @@ final class UnFlagQueryAdapterTest extends AbstractSquerylAdapterTest with Adapt
 
       query.networkId should equal(queryId)
       query.isFlagged should be(false)
-      query.hasBeenRun should be(true)
       query.flagMessage should be(None)
     }
     
@@ -83,7 +81,6 @@ final class UnFlagQueryAdapterTest extends AbstractSquerylAdapterTest with Adapt
 
       query.networkId should equal(queryId)
       query.isFlagged should be(false)
-      query.hasBeenRun should be(true)
       query.flagMessage should be(None)
     }
   }

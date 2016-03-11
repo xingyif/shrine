@@ -19,12 +19,9 @@ final case class ShrineQuery(
   domain: String,
   dateCreated: XMLGregorianCalendar,
   isFlagged: Boolean,
-  hasBeenRun: Boolean, //todo this goes next
   flagMessage: Option[String],
   queryDefinition: QueryDefinition) {
   
-  def hasNotBeenRun: Boolean = !hasBeenRun
-
   def withName(newName: String): ShrineQuery = this.copy(name = newName)
 
   //NB: Due to the new i2b2 admin previous queries API, we need to be able to transform

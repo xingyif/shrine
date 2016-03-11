@@ -18,7 +18,7 @@ final class ShrineQueryTest extends ShouldMatchersForJUnit {
     val queryName = "some-query-name"
     val queryExpr = Term("nuh")
     val queryDefinition = QueryDefinition(queryName,queryExpr)
-    val shrineQuery = ShrineQuery(123, "master-id", 456L, "some-query-name", "foo", "bar", XmlDateHelper.now, isFlagged = true, hasBeenRun = true, flagMessage = Some(message),queryDefinition)
+    val shrineQuery = ShrineQuery(123, "master-id", 456L, "some-query-name", "foo", "bar", XmlDateHelper.now, isFlagged = true, flagMessage = Some(message),queryDefinition)
 
     def doTestToQueryMaster(idField: ShrineQuery => String) {
       val queryMaster = shrineQuery.toQueryMaster(idField)

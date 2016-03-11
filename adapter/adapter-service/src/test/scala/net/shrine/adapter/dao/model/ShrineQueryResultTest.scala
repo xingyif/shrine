@@ -49,7 +49,7 @@ final class ShrineQueryResultTest extends ShouldMatchersForJUnit {
   private val queryName = "some-query"
   private val queryExpr = Term("foo")
   private val queryDefinition = QueryDefinition(queryName,queryExpr)
-  private val queryRow = ShrineQuery(123, "48573498739845", 392874L, queryName, "some-user", "some-domain", XmlDateHelper.now, isFlagged = true, hasBeenRun = true, flagMessage = flagMessage,queryDefinition = queryDefinition)
+  private val queryRow = ShrineQuery(123, "48573498739845", 392874L, queryName, "some-user", "some-domain", XmlDateHelper.now, isFlagged = true, flagMessage = flagMessage,queryDefinition = queryDefinition)
   
   private val resultRows = Seq(countQueryResultRow, breakdownQueryResultRow1, breakdownQueryResultRow2, errorQueryResultRow1, errorQueryResultRow2)
 
@@ -86,9 +86,7 @@ final class ShrineQueryResultTest extends ShouldMatchersForJUnit {
 
     shrineQueryResult.isFlagged should be(queryRow.isFlagged)
     shrineQueryResult.flagMessage should be(flagMessage)
-    shrineQueryResult.wasRun should be(queryRow.hasBeenRun)
-    shrineQueryResult.wasNotRun should be(!queryRow.hasBeenRun)
-    
+
     shrineQueryResult.count should equal(Count.fromRows(countQueryResultRow, countRow))
     shrineQueryResult.errors should equal(errorRows)
     shrineQueryResult.breakdowns.toSet should equal(Set(

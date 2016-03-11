@@ -9,7 +9,7 @@ import net.shrine.protocol.query.QueryDefinition
 
 /**
  * @author clint
- * @date Jan 26, 2015
+ * @since Jan 26, 2015
  */
 final class SquerylShrineQueryTest extends ShouldMatchersForJUnit {
   private val expr = Term("foo")
@@ -47,8 +47,6 @@ final class SquerylShrineQueryTest extends ShouldMatchersForJUnit {
     shrineQuery.domain should equal(domain)
     shrineQuery.username should equal(user)
     shrineQuery.flagMessage should equal(flagMessage)
-    shrineQuery.hasBeenRun should equal(hasBeenRun)
-    shrineQuery.hasNotBeenRun should equal(!hasBeenRun)
     shrineQuery.id should equal(id)
     shrineQuery.isFlagged should equal(isFlagged)
     shrineQuery.localId should equal(localId)
@@ -82,8 +80,6 @@ final class SquerylShrineQueryTest extends ShouldMatchersForJUnit {
     shrineQuery.domain should equal(domain)
     shrineQuery.username should equal(user)
     shrineQuery.flagMessage should equal(flagMessage)
-    shrineQuery.hasBeenRun should equal(hasBeenRun)
-    shrineQuery.hasNotBeenRun should equal(!hasBeenRun)
     shrineQuery.id should equal(id)
     shrineQuery.isFlagged should equal(isFlagged)
     shrineQuery.localId should equal(localId)

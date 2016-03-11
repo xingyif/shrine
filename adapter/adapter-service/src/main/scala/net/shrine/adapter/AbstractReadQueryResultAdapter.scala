@@ -85,36 +85,27 @@ abstract class AbstractReadQueryResultAdapter[Req <: BaseShrineRequest, Rsp <: S
         errorResponse(queryId)
       }
       case Some(shrineQueryRow) => {
-        if (shrineQueryRow.hasNotBeenRun) {
-          debug(s"Query $queryId found, but it wasn't run before")
 
-          findShrineQueryResults.map(makeResponseFrom(queryId, _)).getOrElse {
-            debug(s"Couldn't retrive all results for query $queryId; it's likely the query's status is incomplete (QUEUED, PROCESSING, etc)")
-            
+        findShrineQueryResults match {
+          case None => {
+            debug(s"Query $queryId found but its results are not available yet")
+
+            //TODO: When precisely can this happen?  Should we go back to the CRC here?
+
             errorResponse(queryId)
           }
-        } else {
-          findShrineQueryResults match {
-            case None => {
-              debug(s"Query $queryId found, and it has been run, but its results are not available yet")
-              
-              //TODO: When precisely can this happen?  Should we go back to the CRC here?
-              
-              errorResponse(queryId) 
-            }
-            case Some(shrineQueryResult) => {
-              if (shrineQueryResult.isDone) {
-                debug(s"Query $queryId is done and already stored, returning stored results")
+          case Some(shrineQueryResult) => {
+            if (shrineQueryResult.isDone) {
+              debug(s"Query $queryId is done and already stored, returning stored results")
 
-                makeResponseFrom(queryId, shrineQueryResult)
-              } else {
-                debug(s"Query $queryId is incomplete, asking CRC for results")
+              makeResponseFrom(queryId, shrineQueryResult)
+            } else {
+              debug(s"Query $queryId is incomplete, asking CRC for results")
 
-                val result: ShrineResponse = retrieveQueryResults(queryId, req, shrineQueryResult, message)
-                if (collectAdapterAudit) AdapterAuditDb.db.insertResultSent(queryId,result)
+              val result: ShrineResponse = retrieveQueryResults(queryId, req, shrineQueryResult, message)
+              if (collectAdapterAudit) AdapterAuditDb.db.insertResultSent(queryId,result)
 
-                result
-              }
+              result
             }
           }
         }
