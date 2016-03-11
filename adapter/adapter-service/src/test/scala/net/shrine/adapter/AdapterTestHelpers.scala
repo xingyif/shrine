@@ -9,7 +9,7 @@ import net.shrine.util.XmlDateHelper
 
 /**
  * @author clint
- * @date Nov 28, 2012
+ * @since Nov 28, 2012
  */
 trait AdapterTestHelpers {
   val queryId = 123
@@ -39,8 +39,8 @@ trait AdapterTestHelpers {
 
   val password = "some-val"
 
-  lazy val authn = AuthenticationInfo(domain, userId, Credential(password, false))
-  lazy val authn2 = AuthenticationInfo(authn.domain, "a-different-user", Credential("jkafhkjdhsfjksdhfkjsdg", false))
+  lazy val authn = AuthenticationInfo(domain, userId, Credential(password, isToken = false))
+  lazy val authn2 = AuthenticationInfo(authn.domain, "a-different-user", Credential("jkafhkjdhsfjksdhfkjsdg", isToken = false))
   
   val projectId = "some-project-id"
 
@@ -48,7 +48,7 @@ trait AdapterTestHelpers {
     
   val waitTime = 12345.milliseconds
 
-  lazy val queryMaster1 = QueryMaster(masterId1, networkQueryId1, queryName1, userId, domain, XmlDateHelper.now, held = Some(false), flagged = Some(true))
-  lazy val queryMaster2 = QueryMaster(masterId2, networkQueryId2, queryName2, userId, domain, XmlDateHelper.now, held = Some(false), flagged = Some(false))
-  lazy val queryMaster4 = QueryMaster(masterId4, networkQueryId4, queryName2, authn2.username, anotherDomain, XmlDateHelper.now, held = Some(false), flagged = Some(true))
+  lazy val queryMaster1 = QueryMaster(masterId1, networkQueryId1, queryName1, userId, domain, XmlDateHelper.now, flagged = Some(true))
+  lazy val queryMaster2 = QueryMaster(masterId2, networkQueryId2, queryName2, userId, domain, XmlDateHelper.now, flagged = Some(false))
+  lazy val queryMaster4 = QueryMaster(masterId4, networkQueryId4, queryName2, authn2.username, anotherDomain, XmlDateHelper.now, flagged = Some(true))
 }

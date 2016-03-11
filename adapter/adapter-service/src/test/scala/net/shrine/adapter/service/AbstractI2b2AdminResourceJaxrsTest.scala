@@ -1,31 +1,20 @@
 package net.shrine.adapter.service
 
-import scala.xml.XML
-import org.junit.After
-import org.junit.Before
-import net.shrine.util.ShouldMatchersForJUnit
+import junit.framework.TestCase
 import net.shrine.adapter.AdapterTestHelpers
 import net.shrine.adapter.dao.squeryl.AbstractSquerylAdapterTest
-import net.shrine.client.HttpClient
-import net.shrine.client.HttpResponse
-import net.shrine.client.JerseyHttpClient
-import net.shrine.protocol.ErrorResponse
-import net.shrine.protocol.QueryMaster
-import net.shrine.protocol.ReadI2b2AdminPreviousQueriesRequest
-import net.shrine.protocol.ReadPreviousQueriesResponse
-import net.shrine.protocol.ReadQueryDefinitionRequest
-import net.shrine.protocol.ReadQueryDefinitionResponse
-import net.shrine.protocol.query.QueryDefinition
-import net.shrine.util.XmlUtil
+import net.shrine.client.{HttpClient, HttpResponse, JerseyHttpClient}
 import net.shrine.crypto.TrustParam.AcceptAllCerts
-import net.shrine.protocol.I2b2AdminRequestHandler
-import net.shrine.protocol.I2b2AdminReadQueryDefinitionRequest
-import junit.framework.TestCase
-import net.shrine.protocol.DefaultBreakdownResultOutputTypes
+import net.shrine.protocol.{DefaultBreakdownResultOutputTypes, ErrorResponse, I2b2AdminReadQueryDefinitionRequest, I2b2AdminRequestHandler, QueryMaster, ReadI2b2AdminPreviousQueriesRequest, ReadPreviousQueriesResponse, ReadQueryDefinitionResponse}
+import net.shrine.protocol.query.QueryDefinition
+import net.shrine.util.{ShouldMatchersForJUnit, XmlUtil}
+import org.junit.{After, Before}
+
+import scala.xml.XML
 
 /**
  * @author clint
- * @date Apr 24, 2013
+ * @since Apr 24, 2013
  */
 abstract class AbstractI2b2AdminResourceJaxrsTest extends TestCase with JerseyTestComponent[I2b2AdminRequestHandler] with AbstractSquerylAdapterTest with ShouldMatchersForJUnit with CanLoadTestData with AdapterTestHelpers {
 
@@ -72,8 +61,6 @@ abstract class AbstractI2b2AdminResourceJaxrsTest extends TestCase with JerseyTe
   protected def doTestReadQueryDefinition(networkQueryId: Long, expectedQueryNameAndQueryDef: Option[(String, QueryDefinition)]) {
     val request = I2b2AdminReadQueryDefinitionRequest(projectId, waitTime, authn, networkQueryId)
 
-    val currentHandler = handler
-    
     val resp = adminClient.readQueryDefinition(request)
 
     def stripNamespaces(s: String) = XmlUtil.stripNamespaces(XML.loadString(s))
@@ -96,8 +83,6 @@ abstract class AbstractI2b2AdminResourceJaxrsTest extends TestCase with JerseyTe
   }
   
   protected def doTestReadI2b2AdminPreviousQueries(request: ReadI2b2AdminPreviousQueriesRequest, expectedQueryMasters: Seq[QueryMaster]) {
-    val currentHandler = handler
-    
     val ReadPreviousQueriesResponse(queryMasters) = adminClient.readI2b2AdminPreviousQueries(request)
 
     if(expectedQueryMasters.isEmpty) { queryMasters.isEmpty should be(true) }
@@ -110,7 +95,6 @@ abstract class AbstractI2b2AdminResourceJaxrsTest extends TestCase with JerseyTe
         queryMaster.userId should equal(expected.userId)
         queryMaster.groupId should equal(expected.groupId)
         queryMaster.flagged should equal(expected.flagged)
-        queryMaster.held should equal(expected.held)
       }
     }
   }

@@ -19,7 +19,7 @@ final case class ShrineQuery(
   domain: String,
   dateCreated: XMLGregorianCalendar,
   isFlagged: Boolean,
-  hasBeenRun: Boolean,
+  hasBeenRun: Boolean, //todo this goes next
   flagMessage: Option[String],
   queryDefinition: QueryDefinition) {
   
@@ -30,8 +30,6 @@ final case class ShrineQuery(
   //NB: Due to the new i2b2 admin previous queries API, we need to be able to transform
   //ourselves into a QueryMaster using either the network or local id .
   def toQueryMaster(idField: ShrineQuery => String = _.networkId.toString): QueryMaster = {
-    val held = hasNotBeenRun
-    
-    QueryMaster(idField(this), networkId, name, username, domain, dateCreated, Some(held), Some(isFlagged), if(isFlagged) flagMessage else None)
+    QueryMaster(idField(this), networkId, name, username, domain, dateCreated, Some(isFlagged), if(isFlagged) flagMessage else None)
   }
 }

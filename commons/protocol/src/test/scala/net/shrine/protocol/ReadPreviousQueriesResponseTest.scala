@@ -1,6 +1,5 @@
 package net.shrine.protocol
 
-import java.util.Calendar
 import org.junit.Test
 import net.shrine.util.XmlUtil
 import net.shrine.util.XmlDateHelper
@@ -8,13 +7,13 @@ import javax.xml.datatype.XMLGregorianCalendar
 
 /**
  * @author Bill Simons
- * @date 4/12/11
- * @link http://cbmi.med.harvard.edu
- * @link http://chip.org
+ * @since 4/12/11
+ * @see http://cbmi.med.harvard.edu
+ * @see http://chip.org
  *       <p/>
  *       NOTICE: This software comes with NO guarantees whatsoever and is
  *       licensed as Lgpl Open Source
- * @link http://www.gnu.org/licenses/lgpl.html
+ * @see http://www.gnu.org/licenses/lgpl.html
  */
 final class ReadPreviousQueriesResponseTest extends ShrineResponseI2b2SerializableValidator {
 
@@ -36,20 +35,17 @@ final class ReadPreviousQueriesResponseTest extends ShrineResponseI2b2Serializab
   val createDate1 = XmlDateHelper.now
   val createDate2 = XmlDateHelper.now
 
-  val held1 = None
-  val held2 = Some(true)
-  
   val flagged1 = Some(true)
   val flagged2 = None
 
   val flagMessage1 = Some("askldhlaksdjlkasdjklasdjl")
   val flagMessage2 = None
 
-  val queryMaster1 = makeQueryMaster(queryMasterId1, networkQueryId1, queryName1, userId1, groupId1, createDate1, held1, flagged1, flagMessage1)
-  val queryMaster2 = makeQueryMaster(queryMasterId2, networkQueryId2, queryName2, userId2, groupId2, createDate2, held2, flagged2, flagMessage2)
+  val queryMaster1 = makeQueryMaster(queryMasterId1, networkQueryId1, queryName1, userId1, groupId1, createDate1, flagged1, flagMessage1)
+  val queryMaster2 = makeQueryMaster(queryMasterId2, networkQueryId2, queryName2, userId2, groupId2, createDate2, flagged2, flagMessage2)
 
-  def makeQueryMaster(queryMasterId: Long, networkQueryId: Long, queryName: String, userId: Option[String], groupId: Option[String], createDate: XMLGregorianCalendar, held: Option[Boolean], flagged: Option[Boolean], flagMessage: Option[String]) = {
-    QueryMaster(String.valueOf(queryMasterId), networkQueryId, queryName, userId.get, groupId.get, createDate, held, flagged, flagMessage)
+  def makeQueryMaster(queryMasterId: Long, networkQueryId: Long, queryName: String, userId: Option[String], groupId: Option[String], createDate: XMLGregorianCalendar, flagged: Option[Boolean], flagMessage: Option[String]) = {
+    QueryMaster(String.valueOf(queryMasterId), networkQueryId, queryName, userId.get, groupId.get, createDate, flagged, flagMessage)
   }
 
   def messageBody = XmlUtil.stripWhitespace {
@@ -75,11 +71,41 @@ final class ReadPreviousQueriesResponseTest extends ShrineResponseI2b2Serializab
           <user_id>{ userId2.get }</user_id>
           <group_id>{ groupId2.get }</group_id>
           <create_date>{ createDate2 }</create_date>
-          <held>{ held2.get }</held>
         </query_master>
       </ns5:response>
     </message_body>
   }
+
+  //keep the held field around to be sure that old messages can be read.
+  def oldMessageBody = XmlUtil.stripWhitespace {
+    <message_body>
+      <ns5:response xmlns="" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="ns5:master_responseType">
+        <status>
+          <condition type="DONE">DONE</condition>
+        </status>
+        <query_master>
+          <query_master_id>{ queryMasterId1 }</query_master_id>
+          <network_query_id>{ networkQueryId1 }</network_query_id>
+          <name>{ queryName1 }</name>
+          <user_id>{ userId1.get }</user_id>
+          <group_id>{ groupId1.get }</group_id>
+          <create_date>{ createDate1 }</create_date>
+          <flagged>{ flagged1.get }</flagged>
+          <flagMessage>{ flagMessage1.get }</flagMessage>
+        </query_master>
+        <query_master>
+          <query_master_id>{ queryMasterId2 }</query_master_id>
+          <network_query_id>{ networkQueryId2 }</network_query_id>
+          <name>{ queryName2 }</name>
+          <user_id>{ userId2.get }</user_id>
+          <group_id>{ groupId2.get }</group_id>
+          <create_date>{ createDate2 }</create_date>
+          <held>false</held>
+        </query_master>
+      </ns5:response>
+    </message_body>
+  }
+
 
   val readPreviousQueriesResponse = XmlUtil.stripWhitespace {
     <readPreviousQueriesResponse>
@@ -100,13 +126,12 @@ final class ReadPreviousQueriesResponseTest extends ShrineResponseI2b2Serializab
         <createDate>{ createDate2 }</createDate>
         <userId>{ userId2.get }</userId>
         <groupId>{ groupId2.get }</groupId>
-        <held>{ held2.get }</held>
       </queryMaster>
     </readPreviousQueriesResponse>
   }
 
   @Test
-  def testFromI2b2FailsFast {
+  def testFromI2b2FailsFast() {
     intercept[Exception] {
       ReadPreviousQueriesResponse.fromI2b2(<foo/>)
     }
@@ -117,7 +142,7 @@ final class ReadPreviousQueriesResponseTest extends ShrineResponseI2b2Serializab
   }
 
   @Test
-  def testFromXml {
+  def testFromXml() {
     val actual = ReadPreviousQueriesResponse.fromXml(readPreviousQueriesResponse)
 
     val expectedQueryMasters = Set(queryMaster1, queryMaster2)
@@ -126,20 +151,20 @@ final class ReadPreviousQueriesResponseTest extends ShrineResponseI2b2Serializab
   }
 
   @Test
-  def testToXml {
+  def testToXml() {
     //we compare the string versions of the xml because Scala's xml equality does not always behave properly
     ReadPreviousQueriesResponse(Seq(queryMaster1, queryMaster2)).toXmlString should equal(readPreviousQueriesResponse.toString)
   }
 
   @Test
-  def testFromI2b2 {
+  def testFromI2b2() {
     val translatedResponse = ReadPreviousQueriesResponse.fromI2b2(response)
 
     translatedResponse.queryMasters.toSet should equal(Set(queryMaster1, queryMaster2))
   }
 
   @Test
-  def testToI2b2 {
+  def testToI2b2() {
     //Per-queryMaster userids and groupids
 
     //we compare the string versions of the xml because Scala's xml equality does not always behave properly

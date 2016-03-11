@@ -35,7 +35,6 @@ final case class ReadPreviousQueriesResponse(queryMasters: Seq[QueryMaster]) ext
             <user_id>{ master.userId }</user_id>
             <group_id>{ master.groupId }</group_id>
             <create_date>{ master.createDate }</create_date>
-            { master.held.map(f => <held>{ f }</held>).orNull }
             { master.flagged.map(f => <flagged>{ f }</flagged>).orNull }
             { master.flagMessage.map(f => <flagMessage>{ f }</flagMessage>).orNull }
           </query_master>
@@ -55,7 +54,6 @@ final case class ReadPreviousQueriesResponse(queryMasters: Seq[QueryMaster]) ext
             <createDate>{ master.createDate }</createDate>
             <userId>{ master.userId }</userId>
             <groupId>{ master.groupId }</groupId>
-            { master.held.map(f => <held>{ f }</held>).orNull }
             { master.flagged.map(f => <flagged>{ f }</flagged>).orNull }
             { master.flagMessage.map(f => <flagMessage>{ f }</flagMessage>).orNull }
           </queryMaster>
@@ -101,11 +99,10 @@ object ReadPreviousQueriesResponse extends I2b2Unmarshaller[ReadPreviousQueriesR
         groupId <- querymasterXml.withChild(groupIdTagName).map(toText)
         createDateText <- querymasterXml.withChild(createDateTagName).map(toText)
         createDate <- XmlDateHelper.parseXmlTime(createDateText)
-        held = (querymasterXml \ heldTagName).headOption.map(toText(_).toBoolean)
         flagged = (querymasterXml \ flaggedTagName).headOption.map(toText(_).toBoolean)
         flagMessage = (querymasterXml \ flagMessageTagName).headOption.map(toText(_))
       } yield {
-        QueryMaster(queryMasterId, networkQueryId, name, userId, groupId, createDate, held, flagged, flagMessage)
+        QueryMaster(queryMasterId, networkQueryId, name, userId, groupId, createDate, flagged, flagMessage)
       }
     }
   }

@@ -1,48 +1,22 @@
 package net.shrine.adapter.service
 
+import com.sun.jersey.test.framework.{AppDescriptor, JerseyTest}
+import net.shrine.adapter.service.I2b2AdminResourceJaxrsTest._
+import net.shrine.client.JerseyHttpClient
+import net.shrine.crypto.TrustParam.AcceptAllCerts
 import net.shrine.problem.TestProblem
+import net.shrine.protocol.{AbstractReadQueryDefinitionRequest, AuthenticationInfo, Credential, DefaultBreakdownResultOutputTypes, I2b2AdminReadQueryDefinitionRequest, I2b2AdminRequestHandler, I2b2AdminUserWithRole, QueryMaster, QueryResult, ReadI2b2AdminPreviousQueriesRequest, ReadI2b2AdminQueryingUsersRequest, ReadI2b2AdminQueryingUsersResponse, ReadPreviousQueriesResponse, ReadQueryDefinitionResponse, RunHeldQueryRequest, RunQueryResponse, ShrineResponse}
+import net.shrine.protocol.query.{QueryDefinition, Term}
+import net.shrine.util.{JerseyAppDescriptor, ShouldMatchersForJUnit, XmlDateHelper, XmlUtil}
+import org.junit.{After, Before, Test}
 
 import scala.xml.XML
-import org.junit.Test
-import net.shrine.util.ShouldMatchersForJUnit
-import com.sun.jersey.test.framework.AppDescriptor
-import com.sun.jersey.test.framework.JerseyTest
-import I2b2AdminResourceJaxrsTest._
-import net.shrine.client.JerseyHttpClient
-import net.shrine.protocol.AuthenticationInfo
-import net.shrine.protocol.Credential
-import net.shrine.protocol.I2b2AdminRequestHandler
-import net.shrine.protocol.QueryMaster
-import net.shrine.protocol.ReadI2b2AdminPreviousQueriesRequest
-import net.shrine.protocol.ReadI2b2AdminPreviousQueriesRequest
-import net.shrine.protocol.ReadPreviousQueriesResponse
-import net.shrine.protocol.ReadQueryDefinitionRequest
-import net.shrine.protocol.ReadQueryDefinitionResponse
-import net.shrine.protocol.ShrineResponse
-import net.shrine.protocol.query.QueryDefinition
-import net.shrine.protocol.query.Term
-import net.shrine.util.JerseyAppDescriptor
-import net.shrine.util.XmlDateHelper
-import net.shrine.util.XmlUtil
-import net.shrine.crypto.TrustParam.AcceptAllCerts
-import net.shrine.protocol.ReadI2b2AdminQueryingUsersRequest
-import net.shrine.protocol.I2b2AdminUserWithRole
-import net.shrine.protocol.ReadI2b2AdminQueryingUsersResponse
-import net.shrine.protocol.I2b2AdminReadQueryDefinitionRequest
-import net.shrine.protocol.AbstractReadQueryDefinitionRequest
-import net.shrine.protocol.RunHeldQueryRequest
-import net.shrine.protocol.RunQueryResponse
-import net.shrine.protocol.QueryResult
-import junit.framework.TestCase
-import org.junit.Before
-import org.junit.After
-import net.shrine.protocol.DefaultBreakdownResultOutputTypes
-import net.shrine.protocol.ShrineRequestHandler
 
 /**
  * @author clint
- * @date Apr 10, 2013
+ * @since Apr 10, 2013
  */
+//noinspection ScalaUnnecessaryParentheses
 final class I2b2AdminResourceJaxrsTest extends JerseyTest with ShouldMatchersForJUnit {
   
   var handler: MockShrineRequestHandler = _
@@ -68,7 +42,7 @@ final class I2b2AdminResourceJaxrsTest extends JerseyTest with ShouldMatchersFor
   def adminClient = I2b2AdminClient(resourceUrl, new JerseyHttpClient(AcceptAllCerts, 5.minutes))
   
   @Test
-  def testReadQueryDefinition {
+  def testReadQueryDefinition() {
     val queryId = 987654321L
     
     val request = I2b2AdminReadQueryDefinitionRequest(projectId, waitTime, authn, queryId)
@@ -96,7 +70,7 @@ final class I2b2AdminResourceJaxrsTest extends JerseyTest with ShouldMatchersFor
   }
   
   @Test
-  def testReadI2b2AdminPreviousQueries {
+  def testReadI2b2AdminPreviousQueries() {
     val searchString = "asdk;laskd;lask;gdjsg"
     val maxResults = 123
     val sortOrder = ReadI2b2AdminPreviousQueriesRequest.SortOrder.Ascending
@@ -120,7 +94,7 @@ final class I2b2AdminResourceJaxrsTest extends JerseyTest with ShouldMatchersFor
   }
   
   @Test
-  def testReadI2b2QueryingUsers {
+  def testReadI2b2QueryingUsers() {
     val projectIdToSearchFor = "foo-project-id"
     
     val request = ReadI2b2AdminQueryingUsersRequest(projectId, waitTime, authn, projectIdToSearchFor)
@@ -154,7 +128,14 @@ object I2b2AdminResourceJaxrsTest {
     
   private val waitTime = 12345.milliseconds
   
-  private lazy val queryMaster = QueryMaster("queryMasterId", 123456789L, "name", userId, domain, XmlDateHelper.now, Some(true), Some(true))
+  private lazy val queryMaster = QueryMaster(
+    queryMasterId = "queryMasterId",
+    networkQueryId = 123456789L,
+    name = "name",
+    userId = userId,
+    groupId = domain,
+    createDate = XmlDateHelper.now,
+    flagged = Some(true))
   
   private lazy val users = Seq(
       I2b2AdminUserWithRole("projectId1", "joe user", "some important role"),

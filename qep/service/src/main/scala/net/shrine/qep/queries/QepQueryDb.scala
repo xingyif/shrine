@@ -371,7 +371,6 @@ case class QepQuery(
       userId = userName,
       groupId = userDomain,
       createDate = XmlDateHelper.toXmlGregorianCalendar(dateCreated),
-      held = None, //todo this field is never used. Remove it in 1.22
       flagged = qepQueryFlag.map(_.flagged),
       flagMessage = qepQueryFlag.map(_.flagMessage)
     )
