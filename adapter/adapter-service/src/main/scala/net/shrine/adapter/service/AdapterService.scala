@@ -2,7 +2,7 @@ package net.shrine.adapter.service
 
 import net.shrine.log.Loggable
 import net.shrine.problem.{ProblemSources, AbstractProblem}
-import net.shrine.protocol.{Signature, NodeId, Result, BroadcastMessage, ErrorResponse, BaseShrineResponse}
+import net.shrine.protocol.{RequestType, Signature, NodeId, Result, BroadcastMessage, ErrorResponse, BaseShrineResponse}
 import net.shrine.adapter.AdapterMap
 import net.shrine.crypto.Verifier
 import scala.concurrent.duration.Duration
@@ -32,7 +32,7 @@ final class AdapterService(
         adapter.perform(message)
       }
     }.getOrElse {
-      Result(nodeId, 0.milliseconds, ErrorResponse(s"Unknown request type '${message.request.requestType}'"))
+      Result(nodeId, 0.milliseconds, ErrorResponse(UnknownRequestType(message.request.requestType)))
     }
   }
 
@@ -93,4 +93,10 @@ case class CouldNotVerifySignature(message: BroadcastMessage) extends AbstractPr
                 Signature is {sig}
               </details>
     )
+}
+
+case class UnknownRequestType(requestType: RequestType) extends AbstractProblem(ProblemSources.Adapter){
+
+  override val summary: String = s"Unknown request type $requestType"
+  override val description: String = s"The Adapter at ${stamp.host.getHostName} received a request of type $requestType that it cannot process."
 }
