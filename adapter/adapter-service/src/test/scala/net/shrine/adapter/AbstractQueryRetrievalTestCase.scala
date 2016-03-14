@@ -267,7 +267,7 @@ abstract class AbstractQueryRetrievalTestCase[R <: BaseShrineResponse](
     val dbQueryId = dao.insertQuery(localMasterId, shrineNetworkQueryId, authn, fooQuery, isFlagged = false, hasBeenRun = false, flagMessage = None)
 
     getResults match {
-      case errorResponse:ErrorResponse => errorResponse.problemDigest.codec should be (classOf[QueryNotFound].getName)
+      case errorResponse:ErrorResponse => errorResponse.problemDigest.codec should be (classOf[QueryResultNotAvailable].getName)
       case x => fail(s"Got $x, not an ErrorResponse")
     }
 

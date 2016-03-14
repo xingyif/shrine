@@ -35,6 +35,7 @@ object AbstractReadQueryResultAdapter {
   private final case class SpecificResponseAttempts[R](responseAttempt: Try[R], breakdownResponseAttempts: Seq[Try[ReadResultResponse]])
 }
 
+//noinspection RedundantBlock
 abstract class AbstractReadQueryResultAdapter[Req <: BaseShrineRequest, Rsp <: ShrineResponse with HasQueryResults](
   poster: Poster,
   override val hiveCredentials: HiveCredentials,
@@ -81,18 +82,18 @@ abstract class AbstractReadQueryResultAdapter[Req <: BaseShrineRequest, Rsp <: S
     findShrineQueryRow match {
       case None => {
         debug(s"Query $queryId not found in the Shrine DB")
-        
-        errorResponse(queryId)
+
+        ErrorResponse(QueryNotFound(queryId))
       }
       case Some(shrineQueryRow) => {
 
         findShrineQueryResults match {
           case None => {
-            debug(s"Query $queryId found but its results are not available yet")
+            debug(s"Query $queryId found but its results are not available")
 
             //TODO: When precisely can this happen?  Should we go back to the CRC here?
 
-            errorResponse(queryId)
+            ErrorResponse(QueryResultNotAvailable(queryId))
           }
           case Some(shrineQueryResult) => {
             if (shrineQueryResult.isDone) {
@@ -113,10 +114,8 @@ abstract class AbstractReadQueryResultAdapter[Req <: BaseShrineRequest, Rsp <: S
     }
   }
 
-  private def errorResponse(queryId: Long) = ErrorResponse(QueryNotFound(queryId))
-
   private def makeResponseFrom(queryId: Long, shrineQueryResult: ShrineQueryResult): ShrineResponse = {
-    shrineQueryResult.toQueryResults(doObfuscation).map(toResponse(queryId, _)).getOrElse(errorResponse(queryId))
+    shrineQueryResult.toQueryResults(doObfuscation).map(toResponse(queryId, _)).getOrElse(ErrorResponse(QueryNotFound(queryId)))
   }
 
   private def retrieveQueryResults(queryId: Long, req: Req, shrineQueryResult: ShrineQueryResult, message: BroadcastMessage): ShrineResponse = {
@@ -141,7 +140,7 @@ abstract class AbstractReadQueryResultAdapter[Req <: BaseShrineRequest, Rsp <: S
 
         countResponse
       }
-      case Failure(e) => ErrorResponse(s"Couldn't retrieve query with id '$queryId' from the CRC: exception message follows: ${e.getMessage} stack trace: ${StackTrace.stackTraceAsString(e)}")
+      case Failure(e) => ErrorResponse(CouldNotRetrieveQueryFromCrc(queryId,e))
     }
   }
 
@@ -221,8 +220,6 @@ abstract class AbstractReadQueryResultAdapter[Req <: BaseShrineRequest, Rsp <: S
       
       breakdownResponses: Seq[ReadResultResponse] <- sequence(breakdownResponseAttempts)
     } yield {
-      val localCountResultId = countResponse.metadata.resultId
-
       val breakdownsByType = (for {
         breakdownResponse <- breakdownResponses
         resultType <- breakdownResponse.metadata.resultType
@@ -287,3 +284,13 @@ case class QueryNotFound(queryId:Long) extends AbstractProblem(ProblemSources.Ad
   override def description:String = s"No query with id $queryId found on ${stamp.host.getHostName}"
 }
 
+case class QueryResultNotAvailable(queryId:Long) extends AbstractProblem(ProblemSources.Adapter) {
+  override def summary: String = s"Query $queryId found but its results are not available yet"
+  override def description:String = s"Query $queryId found but its results are not available yet on ${stamp.host.getHostName}"
+}
+
+case class CouldNotRetrieveQueryFromCrc(queryId:Long,x: Throwable) extends AbstractProblem(ProblemSources.Adapter) {
+  override def summary: String = s"Could not retrieve query $queryId from the CRC"
+  override def description:String = s"Unhandled exception while retrieving query $queryId while retrieving it from the CRC on ${stamp.host.getHostName}"
+  override def throwable = Some(x)
+}
