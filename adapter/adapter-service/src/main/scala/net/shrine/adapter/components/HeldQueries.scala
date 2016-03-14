@@ -10,7 +10,7 @@ import net.shrine.protocol.ErrorResponse
 import net.shrine.protocol.query.QueryDefinition
 import net.shrine.protocol.RunQueryResponse
 import net.shrine.adapter.dao.AdapterDao
-import net.shrine.adapter.RunQueryAdapter
+import net.shrine.adapter.{QueryNotFound, RunQueryAdapter}
 import net.shrine.protocol.AuthenticationInfo
 import net.shrine.protocol.Credential
 
@@ -54,7 +54,7 @@ final case class HeldQueries(dao: AdapterDao, runQueryAdapter: RunQueryAdapter) 
           runQueryAdapter.processRequest(newBroadcastMessage)
         }
       }
-      case None => ErrorResponse(s"Couldn't find query with networkQueryId '${}'")
+      case None => ErrorResponse(QueryNotFound(queryId))
     }
   }
 }
