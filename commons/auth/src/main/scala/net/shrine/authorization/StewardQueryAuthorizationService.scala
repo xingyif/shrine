@@ -9,7 +9,8 @@ import com.typesafe.config.ConfigFactory
 import net.shrine.authorization.AuthorizationResult.{NotAuthorized, Authorized}
 import net.shrine.authorization.steward.{TopicIdAndName, ResearchersTopics, InboundShrineQuery}
 import net.shrine.log.Loggable
-import net.shrine.protocol.{ApprovedTopic, RunQueryRequest, ReadApprovedQueryTopicsResponse, ErrorResponse, ReadApprovedQueryTopicsRequest}
+import net.shrine.problem.{ProblemSources, AbstractProblem}
+import net.shrine.protocol.{AuthenticationInfo, ApprovedTopic, RunQueryRequest, ReadApprovedQueryTopicsResponse, ErrorResponse, ReadApprovedQueryTopicsRequest}
 
 import org.json4s.native.JsonMethods.parse
 import org.json4s.{DefaultFormats, Formats}
@@ -58,6 +59,7 @@ final case class StewardQueryAuthorizationService(qepUserName:String,
 
     // Place a special SSLContext in scope here to be used by HttpClient.
     // It trusts all server certificates.
+    // Most important - it will encrypt all of the traffic on the wire.
     implicit def trustfulSslContext: SSLContext = {
       object BlindFaithX509TrustManager extends X509TrustManager {
         def checkClientTrusted(chain: Array[X509Certificate], authType: String) = (info(s"Client asked BlindFaithX509TrustManager to check $chain for $authType"))
@@ -215,4 +217,14 @@ import spray.can.Http
   override def toString() = {
     super.toString().replaceAll(qepPassword,"REDACTED")
   }
+}
+
+case class ErrorStatusFromDataStewardApp(response:HttpResponse,stewardBaseUrl:URL) extends AbstractProblem(ProblemSources.Qep) {
+  override val summary: String = s"Data Steward App responded with status ${response.status}"
+  override val description:String = s"The Data Steward App at ${stewardBaseUrl} responded with status ${response.status}, not OK."
+  override val detailsXml = <details>
+    Response is {response}
+    {throwableDetail.getOrElse("")}
+  </details>
+
 }

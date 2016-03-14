@@ -32,7 +32,7 @@ trait PmAuthorizerComponent { self: PmHttpClientComponent with Loggable =>
         case NonFatal(e) => {
           val problem = CouldNotInterpretResponseFromPmCell(pmPoster.url,authn,httpResponse,e)
           LoggingProblemHandler.handleProblem(problem)
-          Left(ErrorResponse(problem.summary,Some(problem)))
+          Left(ErrorResponse(problem))
         }
       }
     }
