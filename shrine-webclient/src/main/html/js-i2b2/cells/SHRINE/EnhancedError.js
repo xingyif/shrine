@@ -85,16 +85,17 @@ $hrine.EnhancedError =
                 errorDetailDiv.innerHTML    = getRetractedHtml();
             }
 
-            function onClick(event) {
-                event.preventDefault();
-
-                errorData   = event.currentTarget.__errorData__;
+            function onClick(evt) {
+                //ie logic.
+                var currentTarget = (evt.currentTarget !== undefined)?
+                    evt.currentTarget : evt.srcElement.parentElement.parentElement;
+                errorData   = currentTarget.__errorData__;
                 btnExpand   = document.getElementById('btnExpandErrorDetail');
                 btnContract = document.getElementById('btnContractErrorDetail');
 
                 // -- add event listeners for expand and contract as well --//
-                btnExpand.addEventListener('click', expandErrorDetailDiv, false);
-                btnContract.addEventListener('click', retractErrorDetailDiv, false);
+                addEventListener(btnExpand, 'click', expandErrorDetailDiv, false);
+                addEventListener(btnContract,'click', retractErrorDetailDiv, false);
 
                 showErrorDetail(errorData);
             }
@@ -167,7 +168,6 @@ $hrine.EnhancedError =
                 });
 
                 dialogErrorDetail._doClose = function (e) {
-                    e.preventDefault();
                     this.cancel();
                     removeAllEvents();
                     retractErrorDetailDiv();
@@ -194,13 +194,13 @@ $hrine.EnhancedError =
                 for(var i = 0; i < length; i ++) {
                     var el = anchors[i];
                     el.__errorData__ = errorObjects[i];
-                    el.addEventListener('click', onClick, false);
+                    addEventListener(el, 'click', onClick, false);
                 }
             }
 
             function removeAllEvents () {
-                btnExpand.removeEventListener('click', expandErrorDetailDiv);
-                btnContract.removeEventListener('click', retractErrorDetailDiv);
+                removeEventListener(btnExpand, 'click', expandErrorDetailDiv);
+                removeEventListener(btnContract, 'click', retractErrorDetailDiv);
             }
         }
 
@@ -230,7 +230,9 @@ $hrine.EnhancedError =
             }
             //error format as expected.
             else{
-                problem.details                 = details[0].innerHTML.unescapeHTML().replace(/(<([^>]+)>)/ig,"");
+                var innerHTML                   = (details[0].xml !== undefined)?
+                    details[0].xml : details[0].innerHTML;
+                problem.details                 = innerHTML.unescapeHTML().replace(/(<([^>]+)>)/ig,"");
                 problem.exception.name          = grabXmlNodeData(qriNode, 'descendant-or-self::query_status_type/problem/details/exception/name');
                 problem.exception.message       = grabXmlNodeData(qriNode, 'descendant-or-self::query_status_type/problem/details/exception/message');
                 problem.exception.stackTrace    = parseErrorException(qriNode);
@@ -247,15 +249,17 @@ $hrine.EnhancedError =
          */
         function parseErrorException(node) {
 
+            var innerHTML = (node.xml !== undefined)? node.xml : node.innerHTML;
+
             //no exception, abandon ship!
-            if(node.innerHTML.indexOf('<exception>') == -1){
+            if(innerHTML.indexOf('<exception>') == -1){
                 return '';
             }
 
             var content, startIdx, endIdx;
 
             //fish out the problem section.
-            content = node.innerHTML.split('<problem>')
+            content = innerHTML.split('<problem>')
                 .join()
                 .split('</problem>')
                 .join();
@@ -300,7 +304,36 @@ $hrine.EnhancedError =
          */
         function grabXmlNodeData(node, xPathString){
             var nodeVal = i2b2.h.XPath(node, xPathString);
-            return (nodeVal.length)? nodeVal[0].innerHTML : '';
+            return (nodeVal.length)? nodeVal[0].firstChild.nodeValue : '';
+        }
+
+        /**
+         *
+         * @param el
+         * @param event
+         * @param callback
+         */
+        function addEventListener(el, event, callback) {
+
+            if(el.addEventListener !== undefined) {
+                el.addEventListener(event, callback, false);
+            } else {
+                el.attachEvent('on' + event, callback)
+            }
+        }
+
+        /**
+         *
+         * @param el
+         * @param event
+         * @param callback
+         */
+        function removeEventListener(el, event, callback) {
+            if(el.removeEventListener !== undefined) {
+                el.removeEventListener(event, callback);
+            } else {
+                el.detachEvent('on' + event, callback);
+            }
         }
 
 
