@@ -278,6 +278,7 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
     }
   }
 
+  /*
   "DashboardService" should  "not find a bogus web service to talk to" in {
 
     Get(s"/toDashboard/bogus.harvard.edu/ping") ~>
@@ -289,7 +290,7 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
       assertResult(NotFound)(status)
     }
   }
-
+*/
 
 }
 
