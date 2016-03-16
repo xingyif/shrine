@@ -111,13 +111,10 @@ final case class QueryResult(
         <query_instance_id>{ instanceId }</query_instance_id>
         { description.toXml(<description/>) }
         {
-          resultType match {
-            case Some(rt) if !rt.isError => //noinspection RedundantBlock
-            {
-              if (rt.isBreakdown) { rt.toI2b2NameOnly() }
-              else { rt.toI2b2 }
-            }
-            case _ => ResultOutputType.ERROR.toI2b2NameOnly("")
+          resultType.fold( ResultOutputType.ERROR.toI2b2NameOnly("") ){ rt =>
+            if(rt.isBreakdown) rt.toI2b2NameOnly()
+            else if (rt.isError) rt.toI2b2NameOnly()  //QueryResults with ERRORs don't have result types in I2B2
+            else rt.toI2b2
           }
         }
         <set_size>{ setSize }</set_size>
