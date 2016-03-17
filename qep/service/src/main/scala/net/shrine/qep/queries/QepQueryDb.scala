@@ -273,7 +273,7 @@ case class QepQuerySchema(jdbcProfile: JdbcProfile,moreBreakdowns: Set[ResultOut
     def networkQueryId = column[NetworkQueryId]("networkQueryId")
     def instanceId = column[Long]("instanceId")
     def adapterNode = column[String]("adapterNode")
-    def resultType = column[ResultOutputType]("resultType")
+    def resultType = column[Option[ResultOutputType]]("resultType")
     def size = column[Long]("size")
     def startDate = column[Option[Long]]("startDate")
     def endDate = column[Option[Long]]("endDate")
@@ -425,7 +425,7 @@ case class QueryResultRow(
                            networkQueryId:NetworkQueryId,
                            instanceId:Long,
                            adapterNode:String,
-                           resultType:ResultOutputType,
+                           resultType:Option[ResultOutputType],
                            size:Long,
                            startDate:Option[Long],
                            endDate:Option[Long],
@@ -437,7 +437,7 @@ case class QueryResultRow(
   def toQueryResult(breakdowns:Map[ResultOutputType,I2b2ResultEnvelope],problemDigest:Option[ProblemDigest]) = QueryResult(
     resultId = resultId,
     instanceId = instanceId,
-    resultType = Some(resultType),
+    resultType = resultType,
     setSize = size,
     startDate = startDate.map(XmlDateHelper.toXmlGregorianCalendar),
     endDate = endDate.map(XmlDateHelper.toXmlGregorianCalendar),
@@ -450,7 +450,7 @@ case class QueryResultRow(
 
 }
 
-object QueryResultRow extends ((Long,NetworkQueryId,Long,String,ResultOutputType,Long,Option[Long],Option[Long],QueryResult.StatusType,Option[String],Long) => QueryResultRow)
+object QueryResultRow extends ((Long,NetworkQueryId,Long,String,Option[ResultOutputType],Long,Option[Long],Option[Long],QueryResult.StatusType,Option[String],Long) => QueryResultRow)
 {
 
   def apply(networkQueryId:NetworkQueryId,result:QueryResult):QueryResultRow = {
@@ -459,7 +459,7 @@ object QueryResultRow extends ((Long,NetworkQueryId,Long,String,ResultOutputType
       networkQueryId = networkQueryId,
       instanceId = result.instanceId,
       adapterNode = result.description.getOrElse(s"$result has None in its description field, not a name of an adapter node."),
-      resultType = result.resultType.getOrElse(ResultOutputType.PATIENT_COUNT_XML), //todo how is this optional??
+      resultType = result.resultType,
       size = result.setSize,
       startDate = result.startDate.map(_.toGregorianCalendar.getTimeInMillis),
       endDate = result.endDate.map(_.toGregorianCalendar.getTimeInMillis),
@@ -531,5 +531,5 @@ case class QepDatabaseProblem(x:Exception) extends AbstractProblem(ProblemSource
 
   override val throwable = Some(x)
 
-  override val description = x.getMessage()
+  override val description = x.getMessage
 }
