@@ -112,14 +112,12 @@ final case class QueryResult (
         <query_instance_id>{ instanceId }</query_instance_id>
         { description.toXml(<description/>) }
         {
-          val resultTypeXML = resultType.fold( ResultOutputType.ERROR.toI2b2NameOnly("") ){ rt =>
+          resultType.fold( ResultOutputType.ERROR.toI2b2NameOnly("") ){ rt =>
             if(rt.isBreakdown) rt.toI2b2NameOnly()
             else if (rt.isError) rt.toI2b2NameOnly()  //The result type can be an error
             else if (statusType.isError) rt.toI2b2NameOnly() //Or the status type can be an error
             else rt.toI2b2
           }
-          info(s"resultType $resultType produced ${resultTypeXML.text}")
-          resultTypeXML
         }
         <set_size>{ setSize }</set_size>
         { startDate.toXml(<start_date/>) }
