@@ -109,7 +109,7 @@ object AdapterQueriesToQep {
       userName = shrineQuery.username,
       userDomain = shrineQuery.domain,
       queryName = shrineQuery.name,
-      expression = shrineQuery.queryDefinition.expr.fold("")(expression => expression.toXml.text),
+      expression = shrineQuery.queryDefinition.expr.map(_.toString),
       dateCreated = date,
       deleted = false,
       queryXml = shrineQuery.queryDefinition.toXml.text,

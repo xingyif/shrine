@@ -20,6 +20,7 @@ import scala.concurrent.{Await, Future, blocking}
 import scala.language.postfixOps
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.util.control.NonFatal
 import scala.xml.XML
 
 /**
@@ -47,6 +48,7 @@ case class QepQueryDb(schemaDef:QepQuerySchema,dataSource: DataSource,timeout:Du
     }
     catch {
       case tx:TimeoutException => throw CouldNotRunDbIoActionException(dataSource,tx)
+      case NonFatal(x) => throw CouldNotRunDbIoActionException(dataSource,x)
     }
   }
 
@@ -222,7 +224,7 @@ case class QepQuerySchema(jdbcProfile: JdbcProfile,moreBreakdowns: Set[ResultOut
     def userName = column[UserName]("userName")
     def userDomain = column[String]("domain")
     def queryName = column[QueryName]("queryName")
-    def expression = column[String]("expression")
+    def expression = column[Option[String]]("expression")
     def dateCreated = column[Time]("dateCreated")
     def deleted = column[Boolean]("deleted")
     def queryXml = column[String]("queryXml")
@@ -353,7 +355,7 @@ case class QepQuery(
                      userName: UserName,
                      userDomain: String,
                      queryName: QueryName,
-                     expression: String,
+                     expression: Option[String],
                      dateCreated: Time,
                      deleted: Boolean,
                      queryXml: String,
@@ -376,14 +378,14 @@ case class QepQuery(
   }
 }
 
-object QepQuery extends ((NetworkQueryId,UserName,String,QueryName,String,Time,Boolean,String,Time) => QepQuery) {
+object QepQuery extends ((NetworkQueryId,UserName,String,QueryName,Option[String],Time,Boolean,String,Time) => QepQuery) {
   def apply(runQueryRequest: RunQueryRequest):QepQuery = {
     new QepQuery(
       networkId = runQueryRequest.networkQueryId,
       userName = runQueryRequest.authn.username,
       userDomain = runQueryRequest.authn.domain,
       queryName = runQueryRequest.queryDefinition.name,
-      expression = runQueryRequest.queryDefinition.expr.getOrElse("No Expression").toString,
+      expression = runQueryRequest.queryDefinition.expr.map(_.toString),
       dateCreated = System.currentTimeMillis(),
       deleted = false,
       queryXml = runQueryRequest.toXmlString,
@@ -522,7 +524,7 @@ case class QepProblemDigestRow(
   }
 }
 
-case class CouldNotRunDbIoActionException(dataSource: DataSource, exception: Exception) extends RuntimeException(exception) {
+case class CouldNotRunDbIoActionException(dataSource: DataSource, exception: Throwable) extends RuntimeException(exception) {
   override def getMessage:String = s"Could not use the database defined by $dataSource due to ${exception.getLocalizedMessage}"
 }
 
