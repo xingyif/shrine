@@ -20,6 +20,7 @@ import scala.concurrent.{Await, Future, blocking}
 import scala.language.postfixOps
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.util.control.NonFatal
 import scala.xml.XML
 
 /**
@@ -47,6 +48,7 @@ case class QepQueryDb(schemaDef:QepQuerySchema,dataSource: DataSource,timeout:Du
     }
     catch {
       case tx:TimeoutException => throw CouldNotRunDbIoActionException(dataSource,tx)
+      case NonFatal(x) => throw CouldNotRunDbIoActionException(dataSource,x)
     }
   }
 
@@ -64,7 +66,6 @@ case class QepQueryDb(schemaDef:QepQuerySchema,dataSource: DataSource,timeout:Du
     dbRun(mostRecentVisibleQepQueries.result)
   }
 
-  //todo order
   def selectPreviousQueries(request: ReadPreviousQueriesRequest):ReadPreviousQueriesResponse = {
     val previousQueries: Seq[QepQuery] = selectPreviousQueriesByUserAndDomain(request.authn.username,request.authn.domain,request.fetchSize)
     val flags:Map[NetworkQueryId,QepQueryFlag] = selectMostRecentQepQueryFlagsFor(previousQueries.map(_.networkId).to[Set])
@@ -73,9 +74,8 @@ case class QepQueryDb(schemaDef:QepQuerySchema,dataSource: DataSource,timeout:Du
     ReadPreviousQueriesResponse(queriesAndFlags.map(x => x._1.toQueryMaster(x._2)))
   }
 
-  //todo order
   def selectPreviousQueriesByUserAndDomain(userName: UserName, domain: String, limit:Int):Seq[QepQuery] = {
-    dbRun(mostRecentVisibleQepQueries.filter(_.userName === userName).filter(_.userDomain === domain).take(limit).result)
+    dbRun(mostRecentVisibleQepQueries.filter(_.userName === userName).filter(_.userDomain === domain).sortBy(x => x.changeDate.desc).take(limit).result)
   }
 
   def renamePreviousQuery(request:RenameQueryRequest):Unit = {
@@ -224,7 +224,7 @@ case class QepQuerySchema(jdbcProfile: JdbcProfile,moreBreakdowns: Set[ResultOut
     def userName = column[UserName]("userName")
     def userDomain = column[String]("domain")
     def queryName = column[QueryName]("queryName")
-    def expression = column[String]("expression")
+    def expression = column[Option[String]]("expression")
     def dateCreated = column[Time]("dateCreated")
     def deleted = column[Boolean]("deleted")
     def queryXml = column[String]("queryXml")
@@ -275,7 +275,7 @@ case class QepQuerySchema(jdbcProfile: JdbcProfile,moreBreakdowns: Set[ResultOut
     def networkQueryId = column[NetworkQueryId]("networkQueryId")
     def instanceId = column[Long]("instanceId")
     def adapterNode = column[String]("adapterNode")
-    def resultType = column[ResultOutputType]("resultType")
+    def resultType = column[Option[ResultOutputType]]("resultType")
     def size = column[Long]("size")
     def startDate = column[Option[Long]]("startDate")
     def endDate = column[Option[Long]]("endDate")
@@ -355,7 +355,7 @@ case class QepQuery(
                      userName: UserName,
                      userDomain: String,
                      queryName: QueryName,
-                     expression: String,
+                     expression: Option[String],
                      dateCreated: Time,
                      deleted: Boolean,
                      queryXml: String,
@@ -377,14 +377,14 @@ case class QepQuery(
   }
 }
 
-object QepQuery extends ((NetworkQueryId,UserName,String,QueryName,String,Time,Boolean,String,Time) => QepQuery) {
+object QepQuery extends ((NetworkQueryId,UserName,String,QueryName,Option[String],Time,Boolean,String,Time) => QepQuery) {
   def apply(runQueryRequest: RunQueryRequest):QepQuery = {
     new QepQuery(
       networkId = runQueryRequest.networkQueryId,
       userName = runQueryRequest.authn.username,
       userDomain = runQueryRequest.authn.domain,
       queryName = runQueryRequest.queryDefinition.name,
-      expression = runQueryRequest.queryDefinition.expr.getOrElse("No Expression").toString,
+      expression = runQueryRequest.queryDefinition.expr.map(_.toString),
       dateCreated = System.currentTimeMillis(),
       deleted = false,
       queryXml = runQueryRequest.toXmlString,
@@ -426,7 +426,7 @@ case class QueryResultRow(
                            networkQueryId:NetworkQueryId,
                            instanceId:Long,
                            adapterNode:String,
-                           resultType:ResultOutputType,
+                           resultType:Option[ResultOutputType],
                            size:Long,
                            startDate:Option[Long],
                            endDate:Option[Long],
@@ -438,7 +438,7 @@ case class QueryResultRow(
   def toQueryResult(breakdowns:Map[ResultOutputType,I2b2ResultEnvelope],problemDigest:Option[ProblemDigest]) = QueryResult(
     resultId = resultId,
     instanceId = instanceId,
-    resultType = Some(resultType),
+    resultType = resultType,
     setSize = size,
     startDate = startDate.map(XmlDateHelper.toXmlGregorianCalendar),
     endDate = endDate.map(XmlDateHelper.toXmlGregorianCalendar),
@@ -451,7 +451,7 @@ case class QueryResultRow(
 
 }
 
-object QueryResultRow extends ((Long,NetworkQueryId,Long,String,ResultOutputType,Long,Option[Long],Option[Long],QueryResult.StatusType,Option[String],Long) => QueryResultRow)
+object QueryResultRow extends ((Long,NetworkQueryId,Long,String,Option[ResultOutputType],Long,Option[Long],Option[Long],QueryResult.StatusType,Option[String],Long) => QueryResultRow)
 {
 
   def apply(networkQueryId:NetworkQueryId,result:QueryResult):QueryResultRow = {
@@ -460,7 +460,7 @@ object QueryResultRow extends ((Long,NetworkQueryId,Long,String,ResultOutputType
       networkQueryId = networkQueryId,
       instanceId = result.instanceId,
       adapterNode = result.description.getOrElse(s"$result has None in its description field, not a name of an adapter node."),
-      resultType = result.resultType.getOrElse(ResultOutputType.PATIENT_COUNT_XML), //todo how is this optional??
+      resultType = result.resultType,
       size = result.setSize,
       startDate = result.startDate.map(_.toGregorianCalendar.getTimeInMillis),
       endDate = result.endDate.map(_.toGregorianCalendar.getTimeInMillis),
@@ -523,7 +523,7 @@ case class QepProblemDigestRow(
   }
 }
 
-case class CouldNotRunDbIoActionException(dataSource: DataSource, exception: Exception) extends RuntimeException(exception) {
+case class CouldNotRunDbIoActionException(dataSource: DataSource, exception: Throwable) extends RuntimeException(exception) {
   override def getMessage:String = s"Could not use the database defined by $dataSource due to ${exception.getLocalizedMessage}"
 }
 
@@ -532,5 +532,5 @@ case class QepDatabaseProblem(x:Exception) extends AbstractProblem(ProblemSource
 
   override val throwable = Some(x)
 
-  override val description = x.getMessage()
+  override val description = x.getMessage
 }

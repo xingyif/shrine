@@ -1,6 +1,7 @@
 package net.shrine.protocol
 
 import javax.xml.datatype.XMLGregorianCalendar
+import net.shrine.log.Loggable
 import net.shrine.problem.{ProblemSources, AbstractProblem, Problem, ProblemDigest}
 import net.shrine.protocol.QueryResult.StatusType
 
@@ -21,7 +22,7 @@ import scala.util.Try
  *
  * NB: this is a case class to get a structural equality contract in hashCode and equals, mostly for testing
  */
-final case class QueryResult(
+final case class QueryResult (
   resultId: Long,
   instanceId: Long,
   resultType: Option[ResultOutputType],
@@ -33,7 +34,7 @@ final case class QueryResult(
   statusMessage: Option[String],
   problemDigest: Option[ProblemDigest] = None,
   breakdowns: Map[ResultOutputType,I2b2ResultEnvelope] = Map.empty
-) extends XmlMarshaller with I2b2Marshaller {
+) extends XmlMarshaller with I2b2Marshaller with Loggable {
 
   //only used in tests
   def this(
@@ -111,13 +112,11 @@ final case class QueryResult(
         <query_instance_id>{ instanceId }</query_instance_id>
         { description.toXml(<description/>) }
         {
-          resultType match {
-            case Some(rt) if !rt.isError => //noinspection RedundantBlock
-            {
-              if (rt.isBreakdown) { rt.toI2b2NameOnly() }
-              else { rt.toI2b2 }
-            }
-            case _ => ResultOutputType.ERROR.toI2b2NameOnly("")
+          resultType.fold( ResultOutputType.ERROR.toI2b2NameOnly("") ){ rt =>
+            if(rt.isBreakdown) rt.toI2b2NameOnly()
+            else if (rt.isError) rt.toI2b2NameOnly()  //The result type can be an error
+            else if (statusType.isError) rt.toI2b2NameOnly() //Or the status type can be an error
+            else rt.toI2b2
           }
         }
         <set_size>{ setSize }</set_size>
