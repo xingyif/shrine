@@ -367,8 +367,15 @@ object Options{
   }
 }
 
-case class ShrineConfig(isHub:Boolean, hub:Hub, pmEndpoint:Endpoint,
-                        ontEndpoint:Endpoint, hiveCredentials: HiveCredentials, adapter: Adapter, queryEntryPoint:QEP)
+case class ShrineConfig(isHub:Boolean,
+                        hub:Hub,
+                        pmEndpoint:Endpoint,
+                        ontEndpoint:Endpoint, 
+                        hiveCredentials: HiveCredentials,
+                        adapter: Adapter,
+                        queryEntryPoint:QEP,
+                        networkStatusQuery:String
+                       )
 object ShrineConfig{
   def apply(configMap:Map[String, String]):ShrineConfig = {
     val hub               = Hub(configMap)
@@ -378,7 +385,9 @@ object ShrineConfig{
     val hiveCredentials   = HiveCredentials()
     val adapter           = Adapter()
     val queryEntryPoint   = QEP()
-    ShrineConfig(isHub, hub, pmEndpoint, ontEndpoint, hiveCredentials, adapter, queryEntryPoint)
+    val networkStatusQuery = configMap("shrine.networkStatusQuery")
+
+    ShrineConfig(isHub, hub, pmEndpoint, ontEndpoint, hiveCredentials, adapter, queryEntryPoint, networkStatusQuery)
   }
 }
 

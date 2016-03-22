@@ -80,7 +80,10 @@ class PermittedHostOnly extends ContainerRequestFilter {
     val path = requestContext.getPath
 
     //happy and internalstatus API calls must come from the same host as tomcat is running on (hopefully the dashboard servlet).
-    if ((path.contains("happy") || path.contains("internalstatus")) && (hostOfOrigin != permittedHostOfOrigin)) {
+    // todo access to the happy service permitted for SHRINE 1.21 per SHRINE-1366
+    // restrict access to happy service when database work resumes as part of SHRINE-
+    //       if ((path.contains("happy") || path.contains("internalstatus")) && (hostOfOrigin != permittedHostOfOrigin)) {
+    if (( path.contains("internalstatus")) && (hostOfOrigin != permittedHostOfOrigin)) {
       val response = Response.status(Response.Status.UNAUTHORIZED).entity(s"Only available from $permittedHostOfOrigin, not $hostOfOrigin, controlled by shrine.status.permittedHostOfOrigin in shrine.conf").build()
       throw new WebApplicationException(response)
     }

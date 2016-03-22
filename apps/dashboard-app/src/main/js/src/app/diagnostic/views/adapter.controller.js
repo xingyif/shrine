@@ -19,16 +19,16 @@
             var all     = $app.model.cache['all'];
             var config  = $app.model.cache['config'];
 
-            setAdapter(all);
+            setAdapter(all,config);
             setConfiguration(config);
             setMappings(config);
         }
 
 
 
-        function setAdapter (all) {
+        function setAdapter (all,config) {
             vm.adapter  = {
-                term:           "UNKNOWN",
+                term:           config.networkStatusQuery,
                 success:        all.adapter.result.response.errorResponse === undefined
             };
 
@@ -40,8 +40,6 @@
                     queryResult.setSize;
                 vm.adapter.description += ' ' + all.adapter.result.response.runQueryResponse.queryResults.
                         queryResult.resultType.description;
-                vm.adapter.term = all.adapter.result.response.runQueryResponse
-                    .requestXml.queryDefinition.expr.term;
             }
         }
 
