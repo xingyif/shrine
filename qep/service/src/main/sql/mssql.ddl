@@ -1,7 +1,7 @@
 create database qepAuditDB;
 use qepAuditDB;
 create table "queriesSent" ("shrineNodeId" VARCHAR(MAX) NOT NULL,"userName" VARCHAR(MAX) NOT NULL,"networkQueryId" BIGINT NOT NULL,"queryName" VARCHAR(MAX) NOT NULL,"queryTopicId" VARCHAR(MAX),"queryTopicName" VARCHAR(MAX),"timeQuerySent" BIGINT NOT NULL);
-create table "previousQueries" ("networkId" BIGINT NOT NULL,"userName" VARCHAR(MAX) NOT NULL,"domain" VARCHAR(MAX) NOT NULL,"queryName" VARCHAR(MAX) NOT NULL,"expression" VARCHAR(MAX) NOT NULL,"dateCreated" BIGINT NOT NULL,"deleted" BIT NOT NULL,"queryXml" VARCHAR(MAX) NOT NULL,"changeDate" BIGINT NOT NULL);
+create table "previousQueries" ("networkId" BIGINT NOT NULL,"userName" VARCHAR(MAX) NOT NULL,"domain" VARCHAR(MAX) NOT NULL,"queryName" VARCHAR(MAX) NOT NULL,"expression" VARCHAR(MAX),"dateCreated" BIGINT NOT NULL,"deleted" BIT NOT NULL,"queryXml" VARCHAR(MAX) NOT NULL,"changeDate" BIGINT NOT NULL);
 create table "queryFlags" ("networkId" BIGINT NOT NULL,"flagged" BIT NOT NULL,"flagMessage" VARCHAR(MAX) NOT NULL,"changeDate" BIGINT NOT NULL);
 create table "queryResults" ("resultId" BIGINT NOT NULL,"networkQueryId" BIGINT NOT NULL,"instanceId" BIGINT NOT NULL,"adapterNode" VARCHAR(MAX) NOT NULL,"resultType" VARCHAR(MAX),"size" BIGINT NOT NULL,"startDate" BIGINT,"endDate" BIGINT,"status" VARCHAR(MAX) NOT NULL,"statusMessage" VARCHAR(MAX),"changeDate" BIGINT NOT NULL);
 create table "queryBreakdownResults" ("networkQueryId" BIGINT NOT NULL,"adapterNode" VARCHAR(MAX) NOT NULL,"resultId" BIGINT NOT NULL,"resultType" VARCHAR(MAX) NOT NULL,"dataKey" VARCHAR(MAX) NOT NULL,"value" BIGINT NOT NULL,"changeDate" BIGINT NOT NULL);
