@@ -47,8 +47,8 @@
          *
          */
         function setBroadcasterUrl (config) {
-            vm.broadcasterUrl = (vm.isDownstream === true && config.adapter.broadcasterServiceEndpoint !== undefined)?
-                config.adapter.broadcasterServiceEndpoint.url : "UNKNOWN";
+            vm.broadcasterUrl = (vm.isDownstream === true && config.queryEntryPoint.broadcasterServiceEndpointUrl !== undefined)?
+                config.queryEntryPoint.broadcasterServiceEndpointUrl : "UNKNOWN";
         }
 
 
