@@ -83,7 +83,12 @@
             //
             var summary             = {};
 
+            console.log( "all.notAHub is "+all.notAHub )
+
             summary.isHub           = Boolean(all.notAHub) !== true;
+
+            console.log( "summary.isHub is "+summary.isHub )
+
             summary.shrineVersion   = all.versionInfo.shrineVersion;
             summary.shrineBuildDate = all.versionInfo.buildDate;
             summary.ontologyVersion = all.versionInfo.ontologyVersion

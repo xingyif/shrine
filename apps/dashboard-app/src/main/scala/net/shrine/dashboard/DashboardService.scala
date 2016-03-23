@@ -21,6 +21,7 @@ import org.json4s.{DefaultFormats, Formats}
 import org.json4s.native.JsonMethods.{parse => json4sParse}
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.xml.Elem
 
 // we don't implement our route structure directly in the service actor because
 // we want to be able to test it independently, without having to spin up an actor
@@ -248,8 +249,8 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
 
     def pullSummaryFromHappy(httpResponse:HttpResponse,uri:Uri):Route = {
       ctx => {
-        val result = scala.xml.XML.loadString(httpResponse.entity.asString)
-        val isHub = (result \\ "notAHub").text.length == 0
+        val result: Elem = scala.xml.XML.loadString(httpResponse.entity.asString)
+        val isHub: Boolean = (result \\ "notAHub").text.length == 0
         val shrineVersion =   (result \\ "versionInfo" \ "shrineVersion").text
         val shrineBuildDate = (result \\ "versionInfo" \ "buildDate").text
         val ontologyVersion = (result \\ "versionInfo" \ "ontologyVersion").text
