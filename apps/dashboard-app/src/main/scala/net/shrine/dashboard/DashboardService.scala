@@ -21,6 +21,7 @@ import org.json4s.{DefaultFormats, Formats}
 import org.json4s.native.JsonMethods.{parse => json4sParse}
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.xml.Elem
 
 // we don't implement our route structure directly in the service actor because
 // we want to be able to test it independently, without having to spin up an actor
@@ -248,8 +249,8 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
 
     def pullSummaryFromHappy(httpResponse:HttpResponse,uri:Uri):Route = {
       ctx => {
-        val result = scala.xml.XML.loadString(httpResponse.entity.asString)
-        val isHub = (result \\ "notAHub").text.length == 0
+        val result: Elem = scala.xml.XML.loadString(httpResponse.entity.asString)
+        val isHub: Boolean = (result \\ "notAHub").text.length == 0
         val shrineVersion =   (result \\ "versionInfo" \ "shrineVersion").text
         val shrineBuildDate = (result \\ "versionInfo" \ "buildDate").text
         val ontologyVersion = (result \\ "versionInfo" \ "ontologyVersion").text
@@ -303,10 +304,6 @@ object ShrineParser{
   private val trueVal = "true"
   private val rootKey = "shrine"
 
-  private def isInit =
-    this.shrineMap.contains(rootKey)
-
-
   // -- @todo: where should this live ? -- //
   def parseShrineFromConfig(resultStr:String) = {
 
@@ -346,8 +343,11 @@ object ShrineParser{
       v.split("\"").mkString(""))
 
   // -- -- //
-  def getOrElse(key:String, elseVal:String = "") = this.shrineMap.getOrElse(key, elseVal)
-    .split("\"").mkString("")
+  def fromJsonString(jsonString:String) = jsonString.split("\"").mkString("")
+
+  def get(key:String) = shrineMap.get(key).map(fromJsonString)
+
+  def getOrElse(key:String, elseVal:String = "") = get(key).getOrElse(elseVal)
 }
 
 case class DownstreamNode(name:String, url:String){
@@ -475,21 +475,31 @@ object Audit{
     Audit(database, collectQepAudit)
   }
 }
-case class QEP(maxQueryWaitTimeMinutes:Int, create:Boolean,attachSigningCert:Boolean,
-               authorizationType:String, includeAggregateResults:Boolean, authenticationType:String, audit:Audit, shrineSteward:Steward)
+case class QEP(
+            maxQueryWaitTimeMinutes:Int,
+            create:Boolean,
+            attachSigningCert:Boolean,
+            authorizationType:String,
+            includeAggregateResults:Boolean,
+            authenticationType:String,
+            audit:Audit,
+            shrineSteward:Steward,
+            broadcasterServiceEndpointUrl:Option[String]
+)
+
 object QEP{
-  def apply():QEP = {
-    val key = "shrine.queryEntryPoint."
-    val maxQueryWaitTimeMinutes = ShrineParser.getOrElse(key + "maxQueryWaitTime.minutes", "0").toInt
-    val create                  = ShrineParser.getOrElse(key + "create") == "true"
-    val attachSigningCert       = ShrineParser.getOrElse(key + "attachSigningCert") == "true"
-    val authorizationType       = ShrineParser.getOrElse(key + "authorizationType")
-    val includeAggregateResults = ShrineParser.getOrElse(key + "includeAggregateResults") == "true"
-    val authenticationType      = ShrineParser.getOrElse(key + "authenticationType", "")
-    val audit                   = Audit()
-    val shrineSteward           = Steward()
-    QEP(maxQueryWaitTimeMinutes, create, attachSigningCert, authorizationType, includeAggregateResults, authenticationType, audit, shrineSteward)
-  }
+  val key = "shrine.queryEntryPoint."
+  def apply():QEP = QEP(
+    maxQueryWaitTimeMinutes = ShrineParser.getOrElse(key + "maxQueryWaitTime.minutes", "0").toInt,
+    create                  = ShrineParser.getOrElse(key + "create") == "true",
+    attachSigningCert       = ShrineParser.getOrElse(key + "attachSigningCert") == "true",
+    authorizationType       = ShrineParser.getOrElse(key + "authorizationType"),
+    includeAggregateResults = ShrineParser.getOrElse(key + "includeAggregateResults") == "true",
+    authenticationType      = ShrineParser.getOrElse(key + "authenticationType", ""),
+    audit                   = Audit(),
+    shrineSteward           = Steward(),
+    broadcasterServiceEndpointUrl = ShrineParser.get(key + "broadcasterServiceEndpoint.url")
+  )
 }
 
 
