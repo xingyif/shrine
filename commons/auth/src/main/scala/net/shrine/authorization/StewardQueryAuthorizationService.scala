@@ -211,7 +211,7 @@ import spray.can.Http
 
       Right(ReadApprovedQueryTopicsResponse(topics))
     }
-    else Left(ErrorResponse(s"Response status is ${response.status}, not OK. Response is "+response))
+    else Left(ErrorResponse(ErrorStatusFromDataStewardApp(response,stewardBaseUrl)))
   }
 
   override def toString() = {

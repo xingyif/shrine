@@ -31,7 +31,7 @@ abstract class IgnoresErrorsAggregator[T <: BaseShrineResponse : Manifest] exten
 
     validResponses.map(_.response).toSet.headOption.getOrElse{
       val problem = NoValidResponsesToAggregate()
-      ErrorResponse(problem.summary,Some(problem))
+      ErrorResponse(problem)
     }
   }
 }

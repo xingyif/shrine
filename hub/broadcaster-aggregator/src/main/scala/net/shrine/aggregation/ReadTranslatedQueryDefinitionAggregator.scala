@@ -10,11 +10,11 @@ import net.shrine.protocol.BaseShrineResponse
 
 /**
  * @author clint
- * @date Feb 14, 2014
+ * @since Feb 14, 2014
  */
 final class ReadTranslatedQueryDefinitionAggregator extends IgnoresErrorsAggregator[SingleNodeReadTranslatedQueryDefinitionResponse] {
   override private[aggregation] def makeResponseFrom(validResponses: Iterable[Valid[SingleNodeReadTranslatedQueryDefinitionResponse]]): BaseShrineResponse = {
-    if(validResponses.isEmpty) { ErrorResponse("No valid responses to aggregate") }
+    if(validResponses.isEmpty) { ErrorResponse(NoValidResponsesToAggregate()) }
     else {
       val singleNodeResults = validResponses.map(_.response.result).toSeq
       
