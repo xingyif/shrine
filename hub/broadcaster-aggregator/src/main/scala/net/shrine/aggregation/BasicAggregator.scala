@@ -1,6 +1,5 @@
 package net.shrine.aggregation
 
-import java.io.IOException
 import java.net.{UnknownHostException, ConnectException}
 
 import com.sun.jersey.api.client.ClientHandlerException
@@ -55,21 +54,18 @@ abstract class BasicAggregator[T <: BaseShrineResponse: Manifest] extends Aggreg
           case Result(origin, _, errorResponse: ErrorResponse) => Error(Option(origin), errorResponse)
           case Result(origin, elapsed, response: T) if isAggregatable(response) => Valid(origin, elapsed, response)
           case Timeout(origin) => Error(Option(origin), ErrorResponse(s"Timed out querying node '${origin.name}'"))
-          case Failure(origin, cause) => {
-            cause match {
-              case cx: ConnectException => Error(Option(origin), ErrorResponse(CouldNotConnectToAdapter(origin, cx)))
-              case uhx: UnknownHostException => Error(Option(origin), ErrorResponse(CouldNotConnectToAdapter(origin, uhx)))
-              case chx: ClientHandlerException => Error(Option(origin), ErrorResponse(CouldNotConnectToAdapter(origin, chx)))
-              case cnprx:CouldNotParseResultsException => {
-                if(cnprx.statusCode >= 400) Error(Option(origin), ErrorResponse(HttpErrorResponseProblem(cnprx)))
-                else Error(Option(origin), ErrorResponse(CouldNotParseResultsProblem(cnprx)))
-              }
-              case x => Error(Option(origin), ErrorResponse(ProblemNotYetEncoded(s"Failure querying node ${origin.name}",x)))
-            }
+          case Failure(origin, cause) => cause match {
+            case cx: ConnectException => Error(Option(origin), ErrorResponse(CouldNotConnectToAdapter(origin, cx)))
+            case uhx: UnknownHostException => Error(Option(origin), ErrorResponse(CouldNotConnectToAdapter(origin, uhx)))
+            case chx: ClientHandlerException => Error(Option(origin), ErrorResponse(CouldNotConnectToAdapter(origin, chx)))
+            case cnprx:CouldNotParseResultsException =>
+              if(cnprx.statusCode >= 400) Error(Option(origin), ErrorResponse(HttpErrorResponseProblem(cnprx)))
+              else Error(Option(origin), ErrorResponse(CouldNotParseResultsProblem(cnprx)))
+
+            case x => Error(Option(origin), ErrorResponse(ProblemNotYetEncoded(s"Failure querying node ${origin.name}",x)))
           }
           case _ => Invalid(None, s"Unexpected response in $getClass:\r\n $result")
         }
-
         parsedResponse
       }
     }
@@ -103,6 +99,12 @@ case class CouldNotConnectToAdapter(origin:NodeId,cx: Exception) extends Abstrac
   override val throwable = Some(cx)
   override val summary: String = "Shrine could not connect to the adapter."
   override val description: String = s"Shrine could not connect to the adapter at ${origin.name} due to ${throwable.get}."
+}
+
+case class TimedOutWithAdapter(origin:NodeId) extends AbstractProblem(ProblemSources.Hub) {
+  override val throwable = None
+  override val summary: String = "Timed out with adapter."
+  override val description: String = s"Shrine observed a timeout with the adapter at ${origin.name}."
 }
 
 case class CouldNotParseResultsProblem(cnrpx:CouldNotParseResultsException) extends AbstractProblem(ProblemSources.Hub) {
