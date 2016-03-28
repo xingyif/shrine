@@ -53,7 +53,7 @@ abstract class BasicAggregator[T <: BaseShrineResponse: Manifest] extends Aggreg
         val parsedResponse: ParsedResult[T] = result match {
           case Result(origin, _, errorResponse: ErrorResponse) => Error(Option(origin), errorResponse)
           case Result(origin, elapsed, response: T) if isAggregatable(response) => Valid(origin, elapsed, response)
-          case Timeout(origin) => Error(Option(origin), ErrorResponse(s"Timed out querying node '${origin.name}'"))
+          case Timeout(origin) => Error(Option(origin), ErrorResponse(TimedOutWithAdapter(origin)))
           case Failure(origin, cause) => cause match {
             case cx: ConnectException => Error(Option(origin), ErrorResponse(CouldNotConnectToAdapter(origin, cx)))
             case uhx: UnknownHostException => Error(Option(origin), ErrorResponse(CouldNotConnectToAdapter(origin, uhx)))
