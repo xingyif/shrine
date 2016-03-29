@@ -12,7 +12,7 @@
   // -------------------------------------------------------------------------------------------
   // THESE ARE ALL THE DOMAINS A USER CAN LOGIN TO
   lstDomains: [
-                { domain: "shrinedomain",
+                { domain: "i2b2demo",
                   name: "SHRINE",
                   urlCellPM: "http://127.0.0.1/i2b2/services/PMService/",
                   allowAnalysis: false,
