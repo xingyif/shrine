@@ -1,16 +1,10 @@
 package net.shrine.hms.authorization
 
+import net.shrine.authentication.{AuthenticationResult, Authenticator}
+import net.shrine.authorization.{AuthorizationResult, QueryAuthorizationService}
 import net.shrine.log.Loggable
-
-import net.shrine.authorization.QueryAuthorizationService
-import net.shrine.protocol.AuthenticationInfo
-import net.shrine.protocol.ReadApprovedQueryTopicsRequest
-import net.shrine.protocol.ReadApprovedQueryTopicsResponse
-import net.shrine.protocol.RunQueryRequest
-import net.shrine.authorization.AuthorizationResult
-import net.shrine.authentication.Authenticator
-import net.shrine.protocol.ErrorResponse
-import net.shrine.authentication.AuthenticationResult
+import net.shrine.problem.{AbstractProblem, ProblemSources}
+import net.shrine.protocol.{AuthenticationInfo, ErrorResponse, ReadApprovedQueryTopicsRequest, ReadApprovedQueryTopicsResponse, RunQueryRequest}
 
 /**
  * @author Bill Simons
@@ -32,12 +26,12 @@ final case class HmsDataStewardAuthorizationService(
     val authn = request.authn
 
     authenticate(authn) match {
-      case None => Left(ErrorResponse(s"Couldn't authenticate user ${toDomainAndUser(authn)}"))
-      case Some(ecommonsUsername) => {
+      case None => Left(ErrorResponse(HMSNotAuthenticatedProblem(authn)))
+      case Some(ecommonsUsername) =>
         val topics = sheriffClient.getApprovedEntries(ecommonsUsername)
 
         Right(ReadApprovedQueryTopicsResponse(topics))
-      }
+
     }
   }
 
@@ -49,9 +43,9 @@ final case class HmsDataStewardAuthorizationService(
     } else {
       authenticate(authn) match {
         case None => AuthorizationResult.NotAuthorized(s"Requested topic is not approved; couldn't authenticate user ${toDomainAndUser(authn)}")
-        case Some(ecommonsUsername) => {
+        case Some(ecommonsUsername) =>
           sheriffClient.isAuthorized(ecommonsUsername, request.topicId.get, request.queryDefinition.toI2b2String)
-        }
+
       }
     }
   }
@@ -70,4 +64,10 @@ object HmsDataStewardAuthorizationService {
     case AuthenticationResult.Authenticated(_, ecommonsUsername) => Option(ecommonsUsername)
     case _ => None
   }
+}
+
+case class HMSNotAuthenticatedProblem(authn: AuthenticationInfo) extends AbstractProblem(ProblemSources.Qep){
+  override val summary = s"Can not authenticate ${authn.domain}:${authn.username}."
+
+  override val description = s"Can not authenticate ${authn.domain}:${authn.username}."
 }
