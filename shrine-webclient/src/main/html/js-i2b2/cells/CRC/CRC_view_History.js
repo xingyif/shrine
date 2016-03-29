@@ -318,13 +318,11 @@ function openQueryFlagPrompt(){
         buttons: [{
             text: "OK",
             handler: function(){
-                var message = document.getElementById('inputQueryFlagMessage').value,
-                    queryId = i2b2.CRC.view.history.contextRecord.sdxInfo.sdxKeyValue;
+                var message = document.getElementById('inputQueryFlagMessage').value;
 
                 //make a call to the controller flag method.
                 i2b2.CRC.ctrlr.history.Flag({
-                    queryId: queryId,
-                    message: message
+                    queryId: i2b2.CRC.view.history.contextRecord.sdxInfo.sdxKeyValue
                 });
 
                 this.cancel();

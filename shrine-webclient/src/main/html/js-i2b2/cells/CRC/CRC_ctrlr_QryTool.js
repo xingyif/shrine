@@ -1351,381 +1351,1510 @@ function QueryToolController() {
     /***************
      * Print Query
      ****************/
-        this.doPrintQuery = function() {
-            var v_i2b2_quey_name = i2b2.CRC.model.queryCurrent.name;
-
-
-            var crc_bcgrnd1 = "<td style='border:1px solid #667788;'>";
-            var crc_bcgrnd2 = "<td style='border:1px solid #667788;background:#7FFFD4'>";
-            var crc_cur_bcgrnd = null;
-
-            if(
-                (v_i2b2_quey_name == null) ||
-                    (v_i2b2_quey_name == undefined) ||
-                    (v_i2b2_quey_name.length == 0)
-                ){
-                v_i2b2_quey_name = 'No Query Name is currently provided.';
-            }
-            var v_cnt_panels = i2b2.CRC.model.queryCurrent.panels[0].length;
-
-            if(v_cnt_panels > 0){
-                var win_html_inner =
-                    "<table style='border:1px solid #667788;width:700px;' cellpadding=3px>"+
-                        "<tbody>";
-
-
-
-                //Get Query Name if available
-                win_html_inner +=
-                    "<tr>"+
-                        "<td style='background:#6677AA none repeat scroll 0%;border:1px solid #667788;'>"+
-                        "<span style='color:#FFFFFF;font-weight:bold;font-family:arial,helvetica;font-size:13px;'>"+
-                        "Query Name: "+ v_i2b2_quey_name + "<br>Temporal Constraint: ";
-
-                var v_querytiming = i2b2.CRC.ctrlr.QT.queryTiming;
-                if  (v_querytiming == "ANY")
-                {
-                    win_html_inner += "Treat all groups independently";
-                } else if  (v_querytiming == "SAMEVISIT") {
-                    win_html_inner += "Selected groups occur in the same financial encounter";
-                } else if  (v_querytiming == "TEMPORAL") {
-                    win_html_inner += "Define sequence of events";
-                } else {
-                    win_html_inner +=  "Items Instance will be the same";
-                }
-
-                win_html_inner += "</span></td></tr>";
-
-
-                var isTemporal = false;
-                if (this.queryTiming == "TEMPORAL") {
-                    isTemporal = true;
-                }
-
-                for (var ip = 0; ip < i2b2.CRC.model.queryCurrent.panels.length; ip++)
-                {
-
-                    var v_cnt_panels = i2b2.CRC.model.queryCurrent.panels[ip].length;
-
-                    //Get information for each query panel
-                    for(x =0; x < v_cnt_panels; x++){
-                        var v_dateTo    = i2b2.CRC.model.queryCurrent.panels[ip][x].dateTo;
-                        var v_dateFrom  = i2b2.CRC.model.queryCurrent.panels[ip][x].dateFrom;
-                        var v_exclude   = i2b2.CRC.model.queryCurrent.panels[ip][x].exclude;
-                        var v_occurs    = i2b2.CRC.model.queryCurrent.panels[ip][x].occurs;
-                        var v_relevance = i2b2.CRC.model.queryCurrent.panels[ip][x].relevance;
-                        var v_timing    = i2b2.CRC.model.queryCurrent.panels[ip][x].timing;
-                        var v_items     = i2b2.CRC.model.queryCurrent.panels[ip][x].items;
-
-                        if((x % 2) == 0){
-                            crc_cur_bcgrnd = crc_bcgrnd1;
-                        }
-                        else{
-                            crc_cur_bcgrnd = crc_bcgrnd2;
-                        }
-
-                        var v_strDateTo = null;
-                        var v_strDateFrom = null;
-                        //Handle JS Dates
-                        if((v_dateTo == null) ||
-                            (v_dateTo == undefined)  ||
-                            (v_dateTo == false)
-                            ){
-                            v_strDateTo = "none";
-                        }
-                        else{
-                            v_strDateTo =
-                                v_dateTo.Month +"/"+
-                                    v_dateTo.Day  +"/" +
-                                    v_dateTo.Year;
-                        }
-
-
-                        //QueryTiming
-                        if (v_querytiming == "ANY")
-                        {
-                            v_timing = "Treat Independently";
-
-                        } else if (v_querytiming == "SAMEVISIT")
-                        {
-                            if (v_timing == "ANY")
-                            {
-                                v_timing = "Treat Independently";
-                            } else {
-                                v_timing = "Occurs in Same Encounter";
-                            }
-                        } else
-                        {
-                            if (v_timing == "ANY")
-                            {
-                                v_timing = "Treat Independently";
-                            } else {
-                                v_timing = "Items Instance will be the same";
-                            }
-                        }
-
-
-                        //Handle JS Dates
-                        if((v_dateFrom == null) ||
-                            (v_dateFrom == undefined)  ||
-                            (v_dateFrom == false)
-                            ){
-                            v_strDateFrom = "none";
-                        }
-                        else{
-                            v_strDateFrom =
-                                v_dateFrom.Month +"/"+
-                                    v_dateFrom.Day  +"/" +
-                                    v_dateFrom.Year;
-                        }
-
-                        if (isTemporal)
-                        {
-                            var tempalTitle = "Population in which events occur";
-                            if (ip > 0)
-                                tempalTitle = "Event " + ip;
-
-                            win_html_inner +=
-                                "<tr>"+
-                                    crc_cur_bcgrnd;
-
-                            win_html_inner +=
-                                "<span style='color:black;font-weight:bold;font-family:arial,helvetica;font-size:12px;'>"+
-                                    tempalTitle
-                            "</span></td></tr>";
-                        }
-
-                        win_html_inner +=
-                            "<tr>"+
-                                crc_cur_bcgrnd;
-
-                        win_html_inner +=
-                            "<span style='color:black;font-weight:bold;font-family:arial,helvetica;font-size:12px;'>"+
-                                "Group "+ (x + 1)
-                        "</span></td></tr>";
-
-                        win_html_inner +=
-                            "<tr><td style='border:1px solid #667788;'>"+
-                                "<table width=100% cellpadding=2px cellspacing=0>"+
-                                "<tbody>"+
-                                "<tr style='border:1px solid #667788;'>"+
-                                "<td colspan=3>"+
-                                "<span style='color:black;font-weight:bold;font-family:arial,helvetica;font-size:11px;'>"+
-                                "&nbsp; Date From: &nbsp;</span>"+
-                                "<span style='color:black;font-weight:normal;font-family:arial,helvetica;font-size:11px;'>"+
-                                v_strDateFrom +
-                                "</span>"+
-                                "<span style='color:black;font-weight:normal;font-family:arial,helvetica;font-size:11px;'> </span>"+
-                                "<span style='color:black;font-weight:bold;font-family:arial,helvetica;font-size:11px;'>"+
-                                "&nbsp; Date To: &nbsp;</span>"+
-                                "<span style='color:black;font-weight:normal;font-family:arial,helvetica;font-size:11px;'>"+
-                                v_strDateTo +
-                                "</span>"+
-                                "<span style='color:black;font-weight:normal;font-family:arial,helvetica;font-size:11px;'> </span>"+
-                                "<!--Excluded-->"+
-                                "<span style='color:black;font-weight:bold;font-family:arial,helvetica;font-size:11px;'>"+
-                                "&nbsp; Excluded? &nbsp;</span>"+
-                                "<span style='color:black;font-weight:normal;font-family:arial,helvetica;font-size:11px;'>"+
-                                v_exclude +
-                                "</span>"+
-                                "<span style='color:black;font-weight:normal;font-family:arial,helvetica;font-size:11px;'> </span>"+
-                                "<span style='color:black;font-weight:bold;font-family:arial,helvetica;font-size:11px;'>"+
-                                "&nbsp; Occurs X times: &nbsp;</span>"+
-                                "<span style='color:black;font-weight:normal;font-family:arial,helvetica;font-size:11px;'>&gt; "+
-                                v_occurs +
-                                "</span>"+
-                                "<span style='color:black;font-weight:normal;font-family:arial,helvetica;font-size:11px;'> </span>"+
-                                "<span style='color:black;font-weight:bold;font-family:arial,helvetica;font-size:11px;'>"+
-                                "&nbsp; Relevance %: &nbsp;</span>"+
-                                "<span style='color:black;font-weight:normal;font-family:arial,helvetica;font-size:11px;'> "+
-                                v_relevance +
-                                "</span>"+
-                                "<span style='color:black;font-weight:normal;font-family:arial,helvetica;font-size:11px;'> </span>"+
-                                "<span style='color:black;font-weight:bold;font-family:arial,helvetica;font-size:11px;'>"+
-                                "&nbsp; Temporal Constraint: &nbsp;</span>"+
-                                "<span style='color:black;font-weight:normal;font-family:arial,helvetica;font-size:11px;'>"+
-                                v_timing +
-                                "</span>"+
-                                "</td>"+
-                                "</tr>";
-
-                        win_html_inner +=
-                            "<!--Header Columns-->"+
-                                "<tr>"+
-                                "<!--Path-->"+
-                                "<td width=40% style='background:#6677AA none repeat scroll 0%;align:center;border-left-style:solid;border-bottom-style:solid;border-top-style:solid;border-right-style:solid;'>"+
-                                "<span style='color:#FFFFFF;font-weight:bold;font-family:arial,helvetica;font-size:11px;'>Path</span>"+
-                                "</td>"+
-                                "<!--Concept-->"+
-                                "<td width=30% style='background:#6677AA none repeat scroll 0%;align:center;border-bottom-style:solid;border-top-style:solid;border-right-style:solid;'>"+
-                                "<span style='color:#FFFFFF;font-weight:bold;font-family:arial,helvetica;font-size:11px;'>Concept/Term</span>"+
-                                "</td>"+
-                                "<!--Other Information-->"+
-                                "<td width=30% style='background:#6677AA none repeat scroll 0%;align:center;border-bottom-style:solid;border-top-style:solid;border-right-style:solid;'>"+
-                                "<span style='color:#FFFFFF;font-weight:bold;font-family:arial,helvetica;font-size:11px;'>Other Information</span>"+
-                                "</td>"+
-                                "</tr>";
-
-                        win_html_inner +=
-                            "<!--Data Columns-->";
-
-                        for(n = 0; n < v_items.length; n++){
-                            //str_shrine_path = v_items[n].sdxInfo.sdxKeyValue;
-                            //Using tooltips
-                            str_shrine_path = v_items[n].origData.tooltip;
-
-                            win_html_inner += "<tr>";
-                            win_html_inner +=
-                                "<td width=40% style='align:center;border-left-style:solid;border-bottom-style:solid;border-right-style:solid;'>"+
-                                    "<span style='color:black;font-weight:normal;font-family:arial,helvetica;font-size:11px;'>"+
-                                    str_shrine_path +
-                                    "</span></td>";
-
-                            win_html_inner +=
-                                "<td width=30% style='align:center;solid;border-bottom-style:solid;border-right-style:solid;'>"+
-                                    "<span style='color:black;font-weight:normal;font-family:arial,helvetica;font-size:11px;'>"+
-                                    v_items[n].origData.name +
-                                    "</span></td>";
-
-                            win_html_inner +=
-                                "<td width=30% style='align:center;border-bottom-style:solid;border-right-style:solid;'>"+
-                                    "<span style='color:black;font-weight:normal;font-family:arial,helvetica;font-size:11px;'>";
-                            if((v_items[n].LabValues == null) ||
-                                (v_items[n].LabValues == undefined) ||
-                                (v_items[n].LabValues.length <= 0)
-                                ){
-
-                                win_html_inner += "&nbsp;";
-
-                            }
-                            else{
-                                var v_lab_values = v_items[n].LabValues;
-
-                                var str_lab_values = "";
-
-
-                                if(v_lab_values.GeneralValueType == "NUMBER") {
-                                    str_lab_values =
-                                        v_lab_values.NumericOp +" : ";
-
-                                    if((v_lab_values.ValueLow != null) ||
-                                        (v_lab_values.ValueLow != undefined)
-                                        ){
-                                        str_lab_values +=
-                                            v_lab_values.ValueLow + " - "+
-                                                v_lab_values.ValueHigh;
-                                    } else {
-                                        str_lab_values +=
-                                            v_lab_values.Value;
-                                    }
-                                    str_lab_values += " "+ v_lab_values.UnitsCtrl;
-                                }
-                                //String
-                                else if((v_lab_values.ValueString != null) ||
-                                    (v_lab_values.ValueString != undefined)
-                                    ){
-                                    str_lab_values =
-                                        "By String: "+
-                                            v_lab_values.ValueString;
-                                }
-                                //Flag
-                                else if((v_lab_values.ValueFlag != null) ||
-                                    (v_lab_values.ValueFlag != undefined)
-                                    ){
-                                    var v_flag = "Normal";
-                                    if(v_lab_values.ValueFlag == "H"){
-                                        v_flag = "High";
-                                    }
-                                    else if(v_lab_values.ValueFlag == "L"){
-                                        v_flag = "Low";
-                                    }
-
-                                    str_lab_values =
-                                        "By Flag: "+ v_flag;
-                                }
-
-                                win_html_inner += str_lab_values;
-                            }
-
-
-                            win_html_inner += "</span></td></tr>";
-                        }
-
-                        //end
-
-                        if (isTemporal == false)
-                            break;
-                    }
-
-
-
-                    win_html_inner += "</tbody></table>";
-
-                }
-
-                if (isTemporal)
-                {
-
-                    win_html_inner +=
-                        "<tr>"+
-                            crc_cur_bcgrnd;
-
-                    win_html_inner +=
-                        "<span style='color:black;font-weight:bold;font-family:arial,helvetica;font-size:12px;'><center>"+
-
-                            $('instancevent1[0]').options[$('instancevent1[0]').selectedIndex].value + " " +
-                            $('preloc1[0]').options[$('preloc1[0]').selectedIndex].value +" " +
-                            $('instanceopf1[0]').options[$('instanceopf1[0]').selectedIndex].value  +"<br/>" +
-                            $('postloc[0]').options[$('postloc[0]').selectedIndex].value + "<br/>" +
-                            $('instancevent2[0]').options[$('instancevent2[0]').selectedIndex].value + " " +
-                            $('preloc2[0]').options[$('preloc2[0]').selectedIndex].value + " " +
-                            $('instanceopf2[0]').options[$('instanceopf2[0]').selectedIndex].value +" ";
-
-                    if ( $('bytime1[0]').checked)
-                    {
-                        win_html_inner += "<br/>" + $('byspan1[0]').options[$('byspan1[0]').selectedIndex].value + " " +
-                            $('bytimevalue1[0]').value + " " +
-                            $('bytimeunit1[0]').options[$('bytimeunit1[0]').selectedIndex].value +" ";
-
-                    }
-                    if ( $('bytime2[0]').checked)
-                    {
-                        win_html_inner += "<br/>" +  $('byspan2[0]').options[$('byspan2[0]').selectedIndex].value + " " +
-                            $('bytimevalue2[0]').value + " " +
-                            $('bytimeunit2[0]').options[$('bytimeunit2[0]').selectedIndex].value;
-
-                    }
-                    win_html_inner += "</center></span></td></tr>";
-                }
-
-                win_html_inner += "</tbody></table>";
-
-                //Query Status window
-                var self = i2b2.CRC.ctrlr.currentQueryStatus;
-                if(
-                    (self != null) &&
-                        (self != undefined) &&
-                        (self.dispDIV != null) &&
-                        (self.dispDIV != undefined)
-                    ){
-                    win_html_inner += self.dispDIV.innerHTML;
-
-                }
-
-                var win =
-                    window.open("",'shrinePrintWindow','width=800,height=750,menubar=yes,resizable=yes,scrollbars=yes');
-
-
-
-                win.document.writeln('<div id="shrinePrintQueryPage">');
-                win.document.writeln(win_html_inner);
-                win.document.writeln('</div>');
-            }
-            else{
-                alert("Currently no query is available for printing. \nPlease generate a query before clicking on [Print Query] button.");
-            }
-        }
-
+	this.doPrintQuery = function() {
+		var v_i2b2_quey_name = i2b2.CRC.model.queryCurrent.name;
+
+
+		var crc_bcgrnd1 = "<td style='border:1px solid #667788;'>";
+		var crc_bcgrnd2 = "<td style='border:1px solid #667788;background:#7FFFD4'>";
+		var crc_cur_bcgrnd = null;
+
+		if(
+			(v_i2b2_quey_name == null) ||
+				(v_i2b2_quey_name == undefined) ||
+				(v_i2b2_quey_name.length == 0)
+			){
+			v_i2b2_quey_name = 'No Query Name is currently provided.';
+		}
+		var v_cnt_panels = i2b2.CRC.model.queryCurrent.panels[0].length;
+
+		if(v_cnt_panels > 0){
+			var win_html_inner =
+				"<table style='border:1px solid #667788;width:700px;' cellpadding=3px>"+
+					"<tbody>";
+
+
+
+			//Get Query Name if available
+			win_html_inner +=
+				"<tr>"+
+					"<td style='background:#6677AA none repeat scroll 0%;border:1px solid #667788;'>"+
+					"<span style='color:#FFFFFF;font-weight:bold;font-family:arial,helvetica;font-size:13px;'>"+
+					"Query Name: "+ v_i2b2_quey_name + "<br>Temporal Constraint: ";
+
+			var v_querytiming = i2b2.CRC.ctrlr.QT.queryTiming;
+			if  (v_querytiming == "ANY")
+			{
+				win_html_inner += "Treat all groups independently";
+			} else if  (v_querytiming == "SAMEVISIT") {
+				win_html_inner += "Selected groups occur in the same financial encounter";
+			} else if  (v_querytiming == "TEMPORAL") {
+				win_html_inner += "Define sequence of events";
+			} else {
+				win_html_inner +=  "Items Instance will be the same";
+			}
+
+			win_html_inner += "</span></td></tr>";
+
+
+			var isTemporal = false;
+			if (this.queryTiming == "TEMPORAL") {
+				isTemporal = true;
+			}
+
+			for (var ip = 0; ip < i2b2.CRC.model.queryCurrent.panels.length; ip++)
+			{
+
+				var v_cnt_panels = i2b2.CRC.model.queryCurrent.panels[ip].length;
+
+				//Get information for each query panel
+				for(x =0; x < v_cnt_panels; x++){
+					var v_dateTo    = i2b2.CRC.model.queryCurrent.panels[ip][x].dateTo;
+					var v_dateFrom  = i2b2.CRC.model.queryCurrent.panels[ip][x].dateFrom;
+					var v_exclude   = i2b2.CRC.model.queryCurrent.panels[ip][x].exclude;
+					var v_occurs    = i2b2.CRC.model.queryCurrent.panels[ip][x].occurs;
+					var v_relevance = i2b2.CRC.model.queryCurrent.panels[ip][x].relevance;
+					var v_timing    = i2b2.CRC.model.queryCurrent.panels[ip][x].timing;
+					var v_items     = i2b2.CRC.model.queryCurrent.panels[ip][x].items;
+
+					if((x % 2) == 0){
+						crc_cur_bcgrnd = crc_bcgrnd1;
+					}
+					else{
+						crc_cur_bcgrnd = crc_bcgrnd2;
+					}
+
+					var v_strDateTo = null;
+					var v_strDateFrom = null;
+					//Handle JS Dates
+					if((v_dateTo == null) ||
+						(v_dateTo == undefined)  ||
+						(v_dateTo == false)
+						){
+						v_strDateTo = "none";
+					}
+					else{
+						v_strDateTo =
+							v_dateTo.Month +"/"+
+								v_dateTo.Day  +"/" +
+								v_dateTo.Year;
+					}
+
+
+					//QueryTiming
+					if (v_querytiming == "ANY")
+					{
+						v_timing = "Treat Independently";
+
+					} else if (v_querytiming == "SAMEVISIT")
+					{
+						if (v_timing == "ANY")
+						{
+							v_timing = "Treat Independently";
+						} else {
+							v_timing = "Occurs in Same Encounter";
+						}
+					} else
+					{
+						if (v_timing == "ANY")
+						{
+							v_timing = "Treat Independently";
+						} else {
+							v_timing = "Items Instance will be the same";
+						}
+					}
+
+
+					//Handle JS Dates
+					if((v_dateFrom == null) ||
+						(v_dateFrom == undefined)  ||
+						(v_dateFrom == false)
+						){
+						v_strDateFrom = "none";
+					}
+					else{
+						v_strDateFrom =
+							v_dateFrom.Month +"/"+
+								v_dateFrom.Day  +"/" +
+								v_dateFrom.Year;
+					}
+
+					if (isTemporal)
+					{
+						var tempalTitle = "Population in which events occur";
+						if (ip > 0)
+							tempalTitle = "Event " + ip;
+
+						win_html_inner +=
+							"<tr>"+
+								crc_cur_bcgrnd;
+
+						win_html_inner +=
+							"<span style='color:black;font-weight:bold;font-family:arial,helvetica;font-size:12px;'>"+
+								tempalTitle
+						"</span></td></tr>";
+					}
+
+					win_html_inner +=
+						"<tr>"+
+							crc_cur_bcgrnd;
+
+					win_html_inner +=
+						"<span style='color:black;font-weight:bold;font-family:arial,helvetica;font-size:12px;'>"+
+							"Group "+ (x + 1)
+					"</span></td></tr>";
+
+					win_html_inner +=
+						"<tr><td style='border:1px solid #667788;'>"+
+							"<table width=100% cellpadding=2px cellspacing=0>"+
+							"<tbody>"+
+							"<tr style='border:1px solid #667788;'>"+
+							"<td colspan=3>"+
+							"<span style='color:black;font-weight:bold;font-family:arial,helvetica;font-size:11px;'>"+
+							"&nbsp; Date From: &nbsp;</span>"+
+							"<span style='color:black;font-weight:normal;font-family:arial,helvetica;font-size:11px;'>"+
+							v_strDateFrom +
+							"</span>"+
+							"<span style='color:black;font-weight:normal;font-family:arial,helvetica;font-size:11px;'> </span>"+
+							"<span style='color:black;font-weight:bold;font-family:arial,helvetica;font-size:11px;'>"+
+							"&nbsp; Date To: &nbsp;</span>"+
+							"<span style='color:black;font-weight:normal;font-family:arial,helvetica;font-size:11px;'>"+
+							v_strDateTo +
+							"</span>"+
+							"<span style='color:black;font-weight:normal;font-family:arial,helvetica;font-size:11px;'> </span>"+
+							"<!--Excluded-->"+
+							"<span style='color:black;font-weight:bold;font-family:arial,helvetica;font-size:11px;'>"+
+							"&nbsp; Excluded? &nbsp;</span>"+
+							"<span style='color:black;font-weight:normal;font-family:arial,helvetica;font-size:11px;'>"+
+							v_exclude +
+							"</span>"+
+							"<span style='color:black;font-weight:normal;font-family:arial,helvetica;font-size:11px;'> </span>"+
+							"<span style='color:black;font-weight:bold;font-family:arial,helvetica;font-size:11px;'>"+
+							"&nbsp; Occurs X times: &nbsp;</span>"+
+							"<span style='color:black;font-weight:normal;font-family:arial,helvetica;font-size:11px;'>&gt; "+
+							v_occurs +
+							"</span>"+
+							"<span style='color:black;font-weight:normal;font-family:arial,helvetica;font-size:11px;'> </span>"+
+							"<span style='color:black;font-weight:bold;font-family:arial,helvetica;font-size:11px;'>"+
+							"&nbsp; Relevance %: &nbsp;</span>"+
+							"<span style='color:black;font-weight:normal;font-family:arial,helvetica;font-size:11px;'> "+
+							v_relevance +
+							"</span>"+
+							"<span style='color:black;font-weight:normal;font-family:arial,helvetica;font-size:11px;'> </span>"+
+							"<span style='color:black;font-weight:bold;font-family:arial,helvetica;font-size:11px;'>"+
+							"&nbsp; Temporal Constraint: &nbsp;</span>"+
+							"<span style='color:black;font-weight:normal;font-family:arial,helvetica;font-size:11px;'>"+
+							v_timing +
+							"</span>"+
+							"</td>"+
+							"</tr>";
+
+					win_html_inner +=
+						"<!--Header Columns-->"+
+							"<tr>"+
+							"<!--Path-->"+
+							"<td width=40% style='background:#6677AA none repeat scroll 0%;align:center;border-left-style:solid;border-bottom-style:solid;border-top-style:solid;border-right-style:solid;'>"+
+							"<span style='color:#FFFFFF;font-weight:bold;font-family:arial,helvetica;font-size:11px;'>Path</span>"+
+							"</td>"+
+							"<!--Concept-->"+
+							"<td width=30% style='background:#6677AA none repeat scroll 0%;align:center;border-bottom-style:solid;border-top-style:solid;border-right-style:solid;'>"+
+							"<span style='color:#FFFFFF;font-weight:bold;font-family:arial,helvetica;font-size:11px;'>Concept/Term</span>"+
+							"</td>"+
+							"<!--Other Information-->"+
+							"<td width=30% style='background:#6677AA none repeat scroll 0%;align:center;border-bottom-style:solid;border-top-style:solid;border-right-style:solid;'>"+
+							"<span style='color:#FFFFFF;font-weight:bold;font-family:arial,helvetica;font-size:11px;'>Other Information</span>"+
+							"</td>"+
+							"</tr>";
+
+					win_html_inner +=
+						"<!--Data Columns-->";
+
+					for(n = 0; n < v_items.length; n++){
+						//str_shrine_path = v_items[n].sdxInfo.sdxKeyValue;
+						//Using tooltips
+						str_shrine_path = v_items[n].origData.tooltip;
+
+						win_html_inner += "<tr>";
+						win_html_inner +=
+							"<td width=40% style='align:center;border-left-style:solid;border-bottom-style:solid;border-right-style:solid;'>"+
+								"<span style='color:black;font-weight:normal;font-family:arial,helvetica;font-size:11px;'>"+
+								str_shrine_path +
+								"</span></td>";
+
+						win_html_inner +=
+							"<td width=30% style='align:center;solid;border-bottom-style:solid;border-right-style:solid;'>"+
+								"<span style='color:black;font-weight:normal;font-family:arial,helvetica;font-size:11px;'>"+
+								v_items[n].origData.name +
+								"</span></td>";
+
+						win_html_inner +=
+							"<td width=30% style='align:center;border-bottom-style:solid;border-right-style:solid;'>"+
+								"<span style='color:black;font-weight:normal;font-family:arial,helvetica;font-size:11px;'>";
+						if((v_items[n].LabValues == null) ||
+							(v_items[n].LabValues == undefined) ||
+							(v_items[n].LabValues.length <= 0)
+							){
+
+							win_html_inner += "&nbsp;";
+
+						}
+						else{
+							var v_lab_values = v_items[n].LabValues;
+
+							var str_lab_values = "";
+
+
+							if(v_lab_values.GeneralValueType == "NUMBER") {
+								str_lab_values =
+									v_lab_values.NumericOp +" : ";
+
+								if((v_lab_values.ValueLow != null) ||
+									(v_lab_values.ValueLow != undefined)
+									){
+									str_lab_values +=
+										v_lab_values.ValueLow + " - "+
+											v_lab_values.ValueHigh;
+								} else {
+									str_lab_values +=
+										v_lab_values.Value;
+								}
+								str_lab_values += " "+ v_lab_values.UnitsCtrl;
+							}
+							//String
+							else if((v_lab_values.ValueString != null) ||
+								(v_lab_values.ValueString != undefined)
+								){
+								str_lab_values =
+									"By String: "+
+										v_lab_values.ValueString;
+							}
+							//Flag
+							else if((v_lab_values.ValueFlag != null) ||
+								(v_lab_values.ValueFlag != undefined)
+								){
+								var v_flag = "Normal";
+								if(v_lab_values.ValueFlag == "H"){
+									v_flag = "High";
+								}
+								else if(v_lab_values.ValueFlag == "L"){
+									v_flag = "Low";
+								}
+
+								str_lab_values =
+									"By Flag: "+ v_flag;
+							}
+
+							win_html_inner += str_lab_values;
+						}
+
+
+						win_html_inner += "</span></td></tr>";
+					}
+
+					//end
+
+					if (isTemporal == false)
+						break;
+				}
+
+
+
+				win_html_inner += "</tbody></table>";
+
+			}
+
+			if (isTemporal)
+			{
+
+				win_html_inner +=
+					"<tr>"+
+						crc_cur_bcgrnd;
+
+				win_html_inner +=
+					"<span style='color:black;font-weight:bold;font-family:arial,helvetica;font-size:12px;'><center>"+
+
+						$('instancevent1[0]').options[$('instancevent1[0]').selectedIndex].value + " " +
+						$('preloc1[0]').options[$('preloc1[0]').selectedIndex].value +" " +
+						$('instanceopf1[0]').options[$('instanceopf1[0]').selectedIndex].value  +"<br/>" +
+						$('postloc[0]').options[$('postloc[0]').selectedIndex].value + "<br/>" +
+						$('instancevent2[0]').options[$('instancevent2[0]').selectedIndex].value + " " +
+						$('preloc2[0]').options[$('preloc2[0]').selectedIndex].value + " " +
+						$('instanceopf2[0]').options[$('instanceopf2[0]').selectedIndex].value +" ";
+
+				if ( $('bytime1[0]').checked)
+				{
+					win_html_inner += "<br/>" + $('byspan1[0]').options[$('byspan1[0]').selectedIndex].value + " " +
+						$('bytimevalue1[0]').value + " " +
+						$('bytimeunit1[0]').options[$('bytimeunit1[0]').selectedIndex].value +" ";
+
+				}
+				if ( $('bytime2[0]').checked)
+				{
+					win_html_inner += "<br/>" +  $('byspan2[0]').options[$('byspan2[0]').selectedIndex].value + " " +
+						$('bytimevalue2[0]').value + " " +
+						$('bytimeunit2[0]').options[$('bytimeunit2[0]').selectedIndex].value;
+
+				}
+				win_html_inner += "</center></span></td></tr>";
+			}
+
+			win_html_inner += "</tbody></table>";
+
+			//Query Status window
+			var self = i2b2.CRC.ctrlr.currentQueryStatus;
+			if(
+				(self != null) &&
+					(self != undefined) &&
+					(self.dispDIV != null) &&
+					(self.dispDIV != undefined)
+				){
+				win_html_inner += self.dispDIV.innerHTML;
+
+			}
+
+			var win =
+				window.open("",'shrinePrintWindow','width=800,height=750,menubar=yes,resizable=yes,scrollbars=yes');
+
+
+
+			win.document.writeln('<div id="shrinePrintQueryPage">');
+			win.document.writeln(win_html_inner);
+			win.document.writeln('</div>');
+		}
+		else{
+			alert("Currently no query is available for printing. \nPlease generate a query before clicking on [Print Query] button.");
+		}
+	},
+	
+// =====================================================================================================//
+	/**********************
+	* Query Report BG 
+	**********************/		
+	// Print Query variables
+	this.queryPanelObjForPrinting = {};
+	this.QI_Rec_ForPrinting = new Object();
+	this.QueryResultsForPrinting = {};
+	this.QueryResultsForPrintingIndex = 0;
+	this.QueryResultsNum = 0;
+	this.query_user_id=null;
+	this.XMLResultsStringForPrint = "";
+	var uniqueItems = $H();
+	var queryReportWin = null;
+	// End Print Query variables
+	
+	this.ClearVariablesForPrinting = function()
+	{
+		this.queryPanelObjForPrinting = {};
+		this.QI_Rec_ForPrinting = new Object();
+		this.QueryResultsForPrinting = {};
+		this.QueryResultsForPrintingIndex = 0;
+		this.QueryResultsNum = 0;
+		this.query_user_id=null;
+		this.XMLResultsStringForPrint = "";
+		var uniqueItems = $H();
+		queryReportWin = null;
+	};
+	
+	this.createQueryReport = function(queryNameInput,previewQueryOnly)
+	{
+		//This request is to populate the query report panel in the query results section
+		//If the status box is empty no need to proceed
+		if($('infoQueryStatusText').innerHTML=="") return;
+		
+		//Clean the corresponding div before repopulating
+		$("infoQueryStatusReport").innerHTML="";
+		
+		//Clean and populate the variables for printing
+		this.ClearVariablesForPrinting();
+		if(queryNameInput.length>0 || previewQueryOnly)
+			this.queryPanelObjForPrinting.name = queryNameInput;
+		else{
+			var nameObj = document.getElementById("queryName");
+			var v_i2b2_quey_name = i2b2.CRC.model.queryCurrent.name;
+			if(nameObj){
+				this.queryPanelObjForPrinting.name = nameObj.innerHTML;
+			}
+		}
+		
+		var userIdElm = $("userIdElem");
+		if(userIdElm)
+			this.query_user_id = userIdElm.value;
+		
+		var v_cnt_panels = i2b2.CRC.model.queryCurrent.panels[0].length;
+		if(v_cnt_panels > 0){
+			this.queryPanelObjForPrinting.timing = i2b2.CRC.ctrlr.QT.queryTiming;
+			
+			var isTemporal = false;
+			if (this.queryTiming == "TEMPORAL") {
+				isTemporal = true;	
+			}
+			this.queryPanelObjForPrinting.subQryRelationStructure = [];
+			this.queryPanelObjForPrinting.mainQryStructure = [];
+			this.queryPanelObjForPrinting.subQryStructure = [];
+			this.queryPanelObjForPrinting.hasSubquery = false;
+			
+			
+			for (var ip = 0; ip < i2b2.CRC.model.queryCurrent.panels.length; ip++)
+			{
+				var v_cnt_panels = i2b2.CRC.model.queryCurrent.panels[ip].length;
+				//Get information for each query panel
+				var panels = [];
+				for(x =0; x < v_cnt_panels; x++){
+					var po = {};
+					po.dateTo = i2b2.CRC.model.queryCurrent.panels[ip][x].dateTo;
+					po.dateFrom = i2b2.CRC.model.queryCurrent.panels[ip][x].dateFrom;
+					po.exclude = i2b2.CRC.model.queryCurrent.panels[ip][x].exclude;
+					po.occurs = i2b2.CRC.model.queryCurrent.panels[ip][x].occurs;
+					po.relevance = i2b2.CRC.model.queryCurrent.panels[ip][x].relevance;
+					po.timing = i2b2.CRC.model.queryCurrent.panels[ip][x].timing;
+					po.subquery = false;
+					if (isTemporal && ip>0){
+						po.name = "Event" + ip;
+						po.subquery = true;
+					}
+					
+					var v_items = i2b2.CRC.model.queryCurrent.panels[ip][x].items;
+										
+					var v_strDateTo = null;
+					var v_strDateFrom = null;
+					//Handle JS Dates
+					if((po.dateTo == null) ||
+					   (po.dateTo == undefined)  ||
+					   (po.dateTo == false)
+					){
+					  v_strDateTo = "none";				   
+					}
+					else{
+					  v_strDateTo = 
+						po.dateTo.Month +"/"+
+						po.dateTo.Day  +"/" +
+						po.dateTo.Year;
+					}
+					po.dateTo = v_strDateTo
+
+					//Handle JS Dates
+					if((po.dateFrom == null) ||
+					   (po.dateFrom == undefined)  ||
+					   (po.dateFrom == false)
+					){
+					  po.strDateFrom = "none";				   
+					}
+					else{
+					  v_strDateFrom =
+						po.dateFrom.Month +"/"+
+						po.dateFrom.Day  +"/" +
+						po.dateFrom.Year;
+					}
+					po.dateFrom = v_strDateFrom;
+														
+					po.items = [];
+					
+					for(n = 0; n < v_items.length; n++){
+						var itemObj = {};
+						itemObj.tooltip = v_items[n].origData.tooltip? v_items[n].origData.tooltip:"";
+						itemObj.name = 	v_items[n].origData.result_instance_id ? 
+										(v_items[n].origData.title ? v_items[n].origData.title : 
+										(v_items[n].origData.titleCRC ? v_items[n].origData.titleCRC : ""))
+										:(v_items[n].origData.newName ? v_items[n].origData.newName 
+										: (v_items[n].origData.name?v_items[n].origData.name:""));
+						itemObj.hasChildren = v_items[n].origData.hasChildren;
+						po.items.push(itemObj);
+						//itemObj.level = 	
+					}
+					panels[x] = po;
+				}
+				if(panels.length>0){
+					if (isTemporal)
+					{
+						if (ip > 0)
+							this.queryPanelObjForPrinting.subQryStructure.push(panels);
+						else
+							this.queryPanelObjForPrinting.mainQryStructure.push(panels);
+					}
+					else
+						this.queryPanelObjForPrinting.mainQryStructure.push(panels);
+				}
+			}
+			
+			if(isTemporal)
+			{
+				var evntRelDiv = document.getElementById('temporalbuilders');
+				if(evntRelDiv)
+				{
+					var relationNodes = evntRelDiv.childNodes;
+					this.queryPanelObjForPrinting.subQryRelationStructure = [];
+					var subQryRelationStructureIndex = 0;
+					for(i=0; i < relationNodes.length; i++)
+					{
+						var thisRelNode = relationNodes[i];
+						var rel = {};
+						rel.spans = [];
+						var spanIndex = 0;
+						var spanObj = {};
+						var bytime1 = false;
+						var bytime2 = false;
+						var allChildren = thisRelNode.childNodes;
+						
+						for(j=0; j < allChildren.length; j++)
+						{
+							var currentNode = allChildren[j];
+							if(currentNode.id){
+								if(currentNode.id.indexOf("preloc1") >= 0)
+								{
+									rel.firstQryJoinCol = getSelectedValueFromOptions(currentNode.options);
+								}
+								if(currentNode.id.indexOf("instanceopf1") >= 0)
+								{
+									rel.firstQryOp = getSelectedValueFromOptions(currentNode.options);
+								}
+								if(currentNode.id.indexOf("instancevent1") >= 0)
+								{
+									rel.firstQryEvntNm = getSelectedValueFromOptions(currentNode.options);
+								}
+								if(currentNode.id.indexOf("postloc") >= 0)
+								{
+									rel.operator = getSelectedValueFromOptions(currentNode.options);
+								}
+								if(currentNode.id.indexOf("preloc2") >= 0)
+								{
+									rel.secondQryJoinCol = getSelectedValueFromOptions(currentNode.options);
+								}
+								if(currentNode.id.indexOf("instanceopf2") >= 0)
+								{
+									rel.secondQryOp = getSelectedValueFromOptions(currentNode.options);
+								}
+								if(currentNode.id.indexOf("instancevent2") >= 0)
+								{
+									rel.secondQryEvntNm = getSelectedValueFromOptions(currentNode.options);
+								}
+								if((currentNode.id.indexOf('bytime1') >= 0) && currentNode.checked)
+								{
+									bytime1 = true;
+								}
+								if(currentNode.id.indexOf('byspan1') >= 0 && bytime1)
+								{
+									spanObj.oprator = getSelectedValueFromOptions(currentNode.options);
+								}
+								if(currentNode.id.indexOf('bytimevalue1') >= 0 && bytime1)
+								{
+									spanObj.value = currentNode.value;
+								}
+								if(currentNode.id.indexOf('bytimeunit1') >= 0 && bytime1)
+								{
+									spanObj.units = getSelectedValueFromOptions(currentNode.options);
+									rel.spans[spanIndex++] = spanObj;
+								}
+								if((currentNode.id.indexOf('bytime2') >= 0) && currentNode.checked)
+								{
+									bytime2 = true;
+									spanObj = {};
+								}
+								if(currentNode.id.indexOf('byspan2') >= 0 && bytime2)
+								{
+									spanObj.oprator = getSelectedValueFromOptions(currentNode.options);
+								}
+								if(currentNode.id.indexOf('bytimevalue2') >= 0 && bytime2)
+								{
+									spanObj.value = currentNode.value;
+								}
+								if(currentNode.id.indexOf('bytimeunit2') >= 0 && bytime2)
+								{
+									spanObj.units = getSelectedValueFromOptions(currentNode.options);
+									rel.spans[spanIndex++] = spanObj;
+								}	 
+							}
+						}
+						if(allChildren.length > 0)
+							this.queryPanelObjForPrinting.subQryRelationStructure[subQryRelationStructureIndex++] = rel ;
+					}
+				}
+			}
+			//All variables are ready to print. 
+			var infoQueryStatusTextObj = $('infoQueryStatusText');
+			this.createHTMLForPrinting(previewQueryOnly);
+		}
+		else{
+		  	alert("Currently no query is available for printing. \nPlease generate a query before clicking on [Print Query] button.");
+		}
+	};
+	
+	this.PrintQueryTemplate = "<head>"+
+			"<title>Query Report</title>"+
+			// "<script type=\"text/javascript\" src=\"js-i2b2/cells/CRC/CRC_ctrlr_Query_Report.js\"></script>"+
+			"<link href='http://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet'  type='text/css'>"+
+			"<link rel='stylesheet' TYPE='text/css' href='js-i2b2/cells/CRC/assets/query_report.css'>"+
+			"<link href='js-ext/c3code/c3.css' rel='stylesheet' type='text/css'>"+
+			"</head>"+
+			"<body>"+
+			"</body>";
+			
+	this.PrintQueryBody = 
+			"<div id=\"QueryReportLoading\"><img src=\"js-i2b2/cells/CRC/assets/loading.gif\" alt=\"Loading\"/></div>"+
+			"<div id='QueryReportContainer' class='no-show'>"+
+			"<span style='float:right;'><img src='assets/images/title.gif'/></span>"+
+			"<span class='no-print' style='font-family:Arial;font-size:11px;'><img src=\"js-i2b2/cells/CRC/assets/print.png\"/><a href='javascript:window.print()' title='Click here to print the report.'>  Print Report</a></span>"+
+			"<div class='QRMainHeader'>Query Report</div>"+
+			"<table id='queryDetailsTable'></table>"+
+			"<div class='descHead'>Query Definition</div>"+
+			"<table id='qdHeaderTable'></table>"+
+			"<table id='qdContainerTable'></table><br>"+
+			"<table id='temporalQryEventsContainerTable'></table><br>"+
+			"<table id='temporalQryEventsRelationsTable'></table>"+
+			"<div id='qrsTitle' class='descHead'>Query Results</div>"+
+			"<br><div id='queryResultsContainer'><div id='tablesContainer'></div><div id='graphsContainer'></div></div>" + 
+			"<span class='no-print' style='font-family:Arial;font-size:11px;'><img src=\"js-i2b2/cells/CRC/assets/print.png\"/><a href='javascript:window.print()' title='Click here to print the report.'>  Print Report</a></span>"+
+			"</div>";
+	
+	this.createHTMLForPrinting = function(previewQueryOnly)
+	{
+		var QueryReportWin = null;
+		var QueryReportDiv = null;
+		var ua = window.navigator.userAgent;
+		var msie = ua.indexOf("MSIE ");
+		var browserIsIE = false;
+		if (msie > 0)
+			browserIsIE = true;
+		if(!(window.ActiveXObject) && "ActiveXObject" in window)
+			browserIsIE = true;
+		var savedHTML = null;
+		
+		if(this.queryPanelObjForPrinting.mainQryStructure.length > 0){
+			if( previewQueryOnly){
+				if(browserIsIE){
+					i2b2.CRC.ctrlr.QT.queryReportViewer.yuiPanel = null;
+					i2b2.CRC.ctrlr.QT.queryReportViewer.show();
+					QueryReportDiv = jQuery(i2b2.CRC.ctrlr.QT.queryReportViewer.yuiPanel.body)//.find('#queryReport-viewer-body');
+				}
+				else{ //Open a new window for printing query for non-IE browsers
+					QueryReportWin = window.open("",'shrinePrintWindow','width=800,height=750,menubar=yes,resizable=yes,scrollbars=yes');
+					//Request came for query preview generation. Need to load the child window with template
+					// if(previewQueryOnly){
+						var doc = QueryReportWin.document;
+						doc.write(this.PrintQueryTemplate);
+						doc.write(this.PrintQueryBody);
+						doc.close();
+					// }
+				}
+			}
+			else
+			{
+				QueryReportDiv = $('infoQueryStatusReport');
+				QueryReportDiv.innerHTML=this.PrintQueryBody;
+				var printLinks = $$('.no-print');
+				if(printLinks)
+					printLinks.each(function(printLink){
+						var link = printLink.down('a');
+						if(link)
+							link.href="javascript:i2b2.CRC.ctrlr.QT.PrintElem('infoQueryStatusReport')";
+					});
+
+			}
+			
+			//Populate the query details section
+			try{
+				if(QueryReportWin)
+					this.getQueryDetails(this.queryPanelObjForPrinting,this.query_user_id,previewQueryOnly,QueryReportWin,"queryDetailsTable");
+					
+				if(QueryReportDiv)
+					this.getQueryDetails(this.queryPanelObjForPrinting,this.query_user_id,previewQueryOnly,false,"queryDetailsTable");
+			}
+			catch(e)
+			{
+				console.error(e);
+			}
+			
+			//Populate the query description section
+			
+			try{
+				if(QueryReportWin)
+					this.getQrTiming(this.queryPanelObjForPrinting,QueryReportWin,"qdHeaderTable");
+				if(QueryReportDiv)
+					this.getQrTiming(this.queryPanelObjForPrinting,false,"qdHeaderTable");
+			}
+			catch(e)
+			{
+				console.error(e);
+			}
+			
+			//Populate the query structure description section
+				
+			var qdDescription = this.getQueryDescription(this.queryPanelObjForPrinting.mainQryStructure);
+			if(qdDescription)
+			{
+				try{
+					var Row = "<tr><td width=\"5px\"><div class=\"tabSpace\"></div></td>";
+					var Cell = "<td class=\"eventsRelHdr\">" + "All Groups" + "</td>";
+					Row = Row + Cell;
+					
+					if(QueryReportWin)
+						jQuery("#qdContainerTable",QueryReportWin.document).append(Row);
+					if(QueryReportDiv)
+						jQuery("#qdContainerTable").append(Row);
+						
+					if(QueryReportWin)
+						jQuery("#qdContainerTable",QueryReportWin.document).append(qdDescription);
+					if(QueryReportDiv)
+						jQuery("#qdContainerTable").append(qdDescription);
+				}
+				catch(e)
+				{
+					console.error(e);
+				}
+			}
+			
+			//Populate temporal query events description section
+			var qdDescription = this.getQueryDescription(this.queryPanelObjForPrinting.subQryStructure);
+			if(qdDescription)
+			{
+				try{
+					var Row = "<tr><td width=\"5px\"><div class=\"tabSpace\"></div></td>";
+					var Cell = "<td class=\"eventsRelHdr\">" + "All Events" + "</td>";
+					Row = Row + Cell;
+					
+					if(QueryReportWin)
+						jQuery("#temporalQryEventsContainerTable",QueryReportWin.document).append(Row);
+					if(QueryReportDiv)
+						jQuery("#temporalQryEventsContainerTable").append(Row);
+						
+					if(QueryReportWin)
+						jQuery("#temporalQryEventsContainerTable",QueryReportWin.document).append(qdDescription);
+					if(QueryReportDiv)
+						jQuery("#temporalQryEventsContainerTable").append(qdDescription);
+				}
+				catch(e)
+				{
+					console.error(e);
+				}
+			}
+			
+			//Populate temporal query events relation section
+			if(this.queryPanelObjForPrinting.subQryStructure && this.queryPanelObjForPrinting.subQryStructure.length>0){
+				var temporalQEventsRelTable = null;
+				if(QueryReportWin)
+					temporalQEventsRelTable = QueryReportWin.document.getElementById("temporalQryEventsRelationsTable");
+				if(QueryReportDiv)
+					temporalQEventsRelTable = $("temporalQryEventsRelationsTable");
+				
+				try{
+					var qdDescription = this.getTemporalQueryEventRelations(temporalQEventsRelTable);
+				}	
+				catch(e)
+				{
+					console.error(e);
+				}	
+			}			
+			
+			if(!previewQueryOnly){
+				//Populate the query results section
+				var resultsArray = i2b2.CRC.view.graphs.parseInputIntoArray(i2b2.CRC.ctrlr.currentQueryResults.resultString, true);
+				if(resultsArray && resultsArray.length>0){
+					try{
+						if(QueryReportWin)
+							this.createResultsForPrint(resultsArray,QueryReportWin);
+						else{
+							this.createResultsForPrint(resultsArray,false);
+						}
+					}
+					catch(e)
+					{
+						console.error(e);
+					}
+				}
+				else  // There is no results, so no need to show Query Results section
+				{
+					var resultTitleDiv = null;
+					if(QueryReportWin)
+						resultTitleDiv = QueryReportWin.document.getElementById("qrsTitle");
+					if(QueryReportDiv)
+						resultTitleDiv = $("qrsTitle");
+						
+					if(resultTitleDiv){
+						resultTitleDiv.parentNode.removeChild(resultTitleDiv);
+					}
+				}
+			}
+			else  // This window is to only show the query structure preview, so no need to show Query Results section
+			{
+				var resultTitleDiv = null;
+				if(QueryReportWin)
+					resultTitleDiv = QueryReportWin.document.getElementById("qrsTitle");
+				if(QueryReportDiv)
+					resultTitleDiv = $("qrsTitle");
+					
+				if(resultTitleDiv){
+					resultTitleDiv.parentNode.removeChild(resultTitleDiv);
+				}
+			}
+			var loaderDiv = null;
+			if(QueryReportWin)
+				loaderDiv = QueryReportWin.document.getElementById("QueryReportLoading");
+			if(QueryReportDiv){
+				// if(browserIsIE && printFromId)
+					loaderDiv = jQuery(QueryReportDiv).find('#QueryReportLoading');
+				// else
+					// loaderDiv = jQuery("#infoQueryStatusReport #QueryReportLoading");
+			}
+				
+			if(loaderDiv)
+				jQuery(loaderDiv).addClass("no-show");
+				
+			var resultsDiv = null;
+			if(QueryReportWin)
+				resultsDiv = QueryReportWin.document.getElementById("QueryReportContainer");
+			if(QueryReportDiv){
+				// if(browserIsIE && printFromId)
+					resultsDiv = jQuery(QueryReportDiv).find('#QueryReportContainer');
+				// else
+					// resultsDiv = $("#infoQueryStatusReport #QueryReportContainer");
+			}
+
+			if(resultsDiv)
+				jQuery(resultsDiv).removeClass("no-show");
+				
+			if(browserIsIE && previewQueryOnly)
+			{
+				// this.PrintElem();
+				// jQuery(resultsDiv).html(savedHTML);
+			}
+		}
+		else{
+			alert("Currently no query is available for printing. \nPlease generate a query before clicking on [Print Query] button.");
+		}
+	};
+	
+	this.getQueryDetails = function(queryObj,query_user_id,previewQueryOnly,QueryReportWin,objId){
+		var username = this.getQueryUserFullName(query_user_id);
+		var instanceRec = this.QI_Rec_ForPrinting;
+		var dateInfoProvided = false;
+		var diff = "";
+		var text = "";
+		var qrNameNotProvided = false;
+		if(queryObj.name.length <= 0){
+			text = 'No Query Name is currently provided';
+			qrNameNotProvided = true;
+		}
+		else{
+			if(previewQueryOnly)
+				text = 'The query is entitled "' + queryObj.name + '"';
+			else
+				text = 'The query entitled "' + queryObj.name ;
+		}
+		
+		var formattedResObj = i2b2.CRC.ctrlr.currentQueryResults;
+		var resString = formattedResObj.resultString;
+		var computeTime = null;
+		if(resString.toLowerCase().indexOf("compute time")>0)
+		{
+			var textCompTime = resString.match(new RegExp("Compute Time" + "(.*)" + "\n")); 
+			if(textCompTime.length>0)
+			{
+				var compText = textCompTime[0];
+				var splitcompText = compText.split(":");
+				if(splitcompText && splitcompText.length>1)
+					computeTime = splitcompText[1];
+			}
+		}
+		
+		text = (qrNameNotProvided ? 'The query "' : '') + text + 
+			' was completed in  '+  computeTime + '. This query was performed by "'+ username +".";
+		
+		if(QueryReportWin)
+			jQuery("#" + objId,QueryReportWin.document).append('<tr><td>' + text.toString() + '</td></tr>');
+		else
+			jQuery("#" + objId).append('<tr><td>' + text.toString() + '</td></tr>');
+	};
+	
+	this.getQrTiming = function(queryObj,QueryReportWin,objId){
+		var tdText = "";
+		if(queryObj.timing)
+		{
+			switch(queryObj.timing)
+			{
+				case "ANY":
+				  tdText = " Temporal Constraint: Treat All Groups Independently";
+				  break;
+				case "SAMEVISIT":
+				  tdText = " Temporal Constraint: Selected groups occur in the same financial encounter";
+				  break;
+				case "TEMPORAL":   //Temporal query
+				  query_order = "Groups occur in the same sequence from left to right";
+				  tdText = " Temporal Constraint: Population in which events occur";
+			}
+			if(QueryReportWin)
+				jQuery("#" + objId,QueryReportWin.document).append('<tr><td>' + tdText + '</td></tr>');
+			else
+				jQuery("#" + objId).append('<tr><td>' + tdText + '</td></tr>');
+		}
+	};
+	
+	this.getQueryDescription = function(queryObj) {
+		var elemToAppend = "";
+		
+		if(queryObj.length > 0)
+		{
+			elemToAppend = "<tr>";
+			var panelNum = 0;
+			elemToAppend = elemToAppend + "<td width=\"5px\"><div class=\"tabSpace\"></div></td>";
+			
+			var tdObj = "<td width=\"610px\">";
+			
+			queryObj.each(function(queryData){
+				var andCounter = 0;
+				var subQryEventNameDisplayed = false;
+				queryData.each(function(panelData){
+					var orCounter = 0;
+					var numItemsInPanel = panelData.items.length;
+					
+					var panelContdivObj = "<div class=\"panelContainer";
+					var PanelTableObj = "<table width=\"615px\" border=\"0\">";
+					var PanelTableTrObj = "<tr>";
+					var PanelTableTd1Obj = "<td width=\"5px\"><div class=\"tabSpace\"></div></td>";
+					PanelTableTrObj = PanelTableTrObj + PanelTableTd1Obj;
+					var PanelTableTd2Obj = "<td width=\"610px\">";
+					panelNum++ ;
+					var panelOperatorDivId = "PanelOp-" + panelNum;
+					var panelOperatorDiv = "<div id=\"" + panelOperatorDivId + "\" class=\"opDiv\">";
+					if(andCounter == 0){
+						andCounter++ ;
+						if (panelData.exclude)
+						{
+							panelOperatorDiv = panelOperatorDiv + "NOT";
+							panelContdivObj = panelContdivObj + " notOpPanel";
+						}
+					}
+					else
+					{
+						var text = "AND";
+						if (panelData.exclude)
+						{
+							text = "AND   NOT";
+							panelContdivObj = panelContdivObj + " notOpPanel";
+						}
+						panelOperatorDiv = panelOperatorDiv + text;
+						andCounter++ ;
+					}
+					var panelItemDiv = "<div class=\"panelItem\">";
+					
+					var panelTiming = "";
+					switch(panelData.timing)
+						{
+						case "ANY":
+						  panelTiming = "Independent of Visit";
+						  break;
+						case "SAMEVISIT":
+						  panelTiming = "Occurs in Same Encounter";
+						  break;
+						case "SAMEINSTANCENUM":
+						  panelTiming = "Items Instance will be the same";
+						  break;
+						}
+						
+					var panelDateFrom = "";
+					if(panelData.dateFrom)
+					{
+						if(panelData.dateFrom.Month && panelData.dateFrom.Day && panelData.dateFrom.Year)
+							panelDateFrom = panelData.dateFrom.Month + "/" + panelData.dateFrom.Day + "/" + panelData.dateFrom.Year;
+						else
+						{
+							panelDateFrom = panelData.dateFrom;
+						}
+					}
+					
+					var panelDateTo = "";
+					if(panelData.dateTo)
+					{
+						if(panelData.dateTo.Month && panelData.dateTo.Day && panelData.dateTo.Year)
+							panelDateTo = panelData.dateTo.Month + "/" + panelData.dateTo.Day + "/" + panelData.dateTo.Year;
+						else
+						{
+							panelDateTo = panelData.dateTo;
+						}
+					}
+					
+					var panelDateRangeText = "From earliest date available to latest date available";
+					if(panelData.dateFrom && panelData.dateTo)
+					{
+						if(panelDateFrom == "none")
+							panelDateFrom = "earliest date available";
+						if(panelDateTo == "none")
+							panelDateTo = "latest date available";
+						panelDateRangeText = "From " + panelDateFrom + " to " + panelDateTo;
+					}
+					else
+					{
+						if(panelDateFrom == "none")
+							panelDateFrom = "earliest date available";
+						if(panelDateTo == "none")
+							panelDateTo = "latest date available";
+						if(panelData.dateFrom && !panelData.dateTo)
+							panelDateRangeText = "From " + panelDateFrom + " to latest date available";
+						
+						if(!panelData.dateFrom && panelData.dateTo)
+							panelDateRangeText = "From earliest date available to " + panelDateTo;
+					}
+					
+					var panelItemOccurrenceText = "# of times an item is recorded is > " + panelData.occurs;
+					
+					panelData.items.each(function(itemData){
+						var data = itemData;
+						if(!(typeof itemData.origData == 'undefined'))
+							data = itemData.origData;
+						var qrPanelItemTableObj = "<table class=\"qrPanelItemTable\">";
+						var qrPanelItemTableTrObj = "<tr>";
+						var imageObj = null;
+						
+						//Evaluate the lab values
+						var str_lab_values = "";
+						if(data.LabValues){
+							var v_lab_values = data.LabValues;
+							
+							if(v_lab_values.GeneralValueType == "NUMBER") {
+								var labOp = "";
+								switch(v_lab_values.NumericOp)
+								{
+									case "LT":
+										labOp = " <";
+										break;
+									case "LE":
+										labOp = " <=";
+										break;
+									case "EQ":
+										labOp = " =";
+										break;
+									case "BETWEEN":
+										labOp = " Between";
+										break;
+									case "GE":
+										labOp = " >=";
+										break;
+									case "GT":
+										labOp = " >";
+										break;
+								}
+								str_lab_values =
+									 labOp +" ";
+									
+									if((v_lab_values.ValueLow != null) ||
+									   (v_lab_values.ValueLow != undefined)
+									){
+										str_lab_values +=
+										v_lab_values.ValueLow + " - "+
+										v_lab_values.ValueHigh;
+									} else {
+										str_lab_values +=
+										v_lab_values.Value;
+									}							
+									str_lab_values += " "+ v_lab_values.UnitsCtrl;
+							}
+							//String
+							else if((v_lab_values.ValueString != null) ||
+								(v_lab_values.ValueString != undefined)
+							){
+								str_lab_values =
+									"By String: "+
+									v_lab_values.ValueString;
+							}
+							//Flag
+							else if((v_lab_values.ValueFlag != null) ||
+								(v_lab_values.ValueFlag != undefined)
+							){
+								var v_flag = "Normal";
+								if(v_lab_values.ValueFlag == "H"){
+								  v_flag = "High";
+								}
+								else if(v_lab_values.ValueFlag == "L"){
+								  v_flag = "Low";
+								}
+							
+								str_lab_values = 
+								"By Flag: "+ v_flag;
+							}
+							// End evaluate lab values
+						}
+						if(data.hasChildren)  //It is a previous query inside a query, so no item-icon provided
+						{	
+							if( data.hasChildren.indexOf("LA") >=0 )
+							{
+								imageObj = "<img src=\"js-i2b2/cells/ONT/assets/sdx_ONT_CONCPT_leaf.gif\" style=\"float:left;margin-top:5px;margin-right:5px;\">";
+							}
+							else
+							{
+								imageObj = "<img src=\"js-i2b2/cells/ONT/assets/sdx_ONT_CONCPT_branch-exp.gif\" style=\"float:left;margin-top: 5px;margin-right: 5px;\">";
+							}
+						}
+						if(imageObj)
+						{
+							var nameText = "";
+							if(data.newName)
+								nameText = data.newName;
+							else
+								nameText = data.name;
+							var qrPanelItemTableTdObj = "<td width=\"610px\" style=\"font-weight:bold; font-size:18px;\"><div width=\"400px\" style=\"display:inline;\">" + imageObj + "<div>" + "    " + nameText + str_lab_values + "</div></div>" + "</td>";
+						}
+						else
+						{
+						var qrPanelItemTableTdObj = "<td width=\"610px\" style=\"font-weight:bold; font-size:18px;\">" + data.name + str_lab_values + "</td>";
+						}
+						
+						
+						qrPanelItemTableTrObj = qrPanelItemTableTrObj + qrPanelItemTableTdObj;
+						qrPanelItemTableObj = qrPanelItemTableObj + qrPanelItemTableTrObj + "</tr>";
+						
+						qrPanelItemTableTrObj = "<tr>";
+						qrPanelItemTableTdObj = "<td width=\"610px\" style=\"font-weight:bold; font-size:14px;\">" + data.tooltip + "</td>";
+						qrPanelItemTableTrObj = qrPanelItemTableTrObj + qrPanelItemTableTdObj + "</tr>";
+						qrPanelItemTableObj = qrPanelItemTableObj + qrPanelItemTableTrObj;
+						
+						qrPanelItemTableTrObj = "<tr>";
+						qrPanelItemTableTdObj = "<td width=\"610px\"  style=\"font-size:14px;\">" + panelTiming + "</td>" ;
+						qrPanelItemTableTrObj = qrPanelItemTableTrObj + qrPanelItemTableTdObj + "</tr>";
+						qrPanelItemTableObj = qrPanelItemTableObj + qrPanelItemTableTrObj;
+						
+						qrPanelItemTableTrObj = "<tr>";
+						qrPanelItemTableTdObj = "<td width=\"610px\" style=\"font-size:14px;\">" + panelDateRangeText + "</td>" ;
+						qrPanelItemTableTrObj = qrPanelItemTableTrObj + qrPanelItemTableTdObj + "</tr>";
+						qrPanelItemTableObj = qrPanelItemTableObj + qrPanelItemTableTrObj;
+						
+						qrPanelItemTableTrObj = "<tr>";
+						qrPanelItemTableTdObj = "<td width=\"610px\" style=\"font-size:14px;\">" + panelItemOccurrenceText + "</td>" ;
+						qrPanelItemTableTrObj = qrPanelItemTableTrObj + qrPanelItemTableTdObj + "</tr>";
+						qrPanelItemTableObj = qrPanelItemTableObj + qrPanelItemTableTrObj;
+						
+						qrPanelItemTableObj = qrPanelItemTableObj + "</table>";
+						panelItemDiv = panelItemDiv + "<br>" + qrPanelItemTableObj + "<br>";
+						
+						if(++orCounter < numItemsInPanel)
+						{
+							var orDiv = "<div style=\"font-size: 20px;font-style: italic;font-weight: bold;\">" + "OR" + "</div>";
+							panelItemDiv = panelItemDiv + orDiv;
+						}
+						
+					});
+					panelItemDiv = panelItemDiv + "</div>";
+					PanelTableTd2Obj = PanelTableTd2Obj + panelItemDiv + "</td>";
+					PanelTableTrObj = PanelTableTrObj + PanelTableTd2Obj + "</tr>";
+					PanelTableObj = PanelTableObj + PanelTableTrObj + "</table>";
+					panelContdivObj = panelContdivObj + "\">" + PanelTableObj + "</div>";
+					
+					panelOperatorDiv = panelOperatorDiv + "</div>";
+					if(panelData.subquery)
+					{
+						if(!subQryEventNameDisplayed){
+							var eventNameDiv = "<div class=\"opDiv\">" + panelData.name + "</div>";
+							tdObj = tdObj + eventNameDiv + panelOperatorDiv + panelContdivObj;
+							subQryEventNameDisplayed = true;
+						}
+						else
+							tdObj = tdObj + panelOperatorDiv + panelContdivObj;
+					}
+					else
+						tdObj = tdObj + panelOperatorDiv + panelContdivObj;
+					
+				});
+			});
+		}
+		if(elemToAppend)
+			elemToAppend = elemToAppend + tdObj + "</td></tr>";
+		return elemToAppend;
+	};
+	
+	this.getTemporalQueryEventRelations = function(eventsRelTable){
+		if(this.queryPanelObjForPrinting.subQryRelationStructure.length > 0 )
+		{
+			var Row = new Element('tr');
+			var Cell = new Element('td',{'width':'5px'});
+			var divInCell = new Element('div',{'class':'tabSpace'});
+			Row.insert(Cell.insert(divInCell));
+			Cell = new Element('td',{'class':'eventsRelHdr'}).update('Order of Events');
+			Row.insert(Cell);
+			var tempDiv = new Element('div');
+			tempDiv.insert(Row);
+			jQuery(eventsRelTable).append(jQuery(tempDiv).html());
+		}
+		
+		this.queryPanelObjForPrinting.subQryRelationStructure.each(function(relation){
+			var Row = new Element('tr');
+			var Cell = new Element('td',{'width':'5px'});
+			var divInCell = new Element('div',{'class':'tabSpace'});
+			Row.insert(Cell.insert(divInCell));
+			
+			Cell = new Element('td', {'class' : 'eventsRel'});
+			var mnSpan = new Element('span', {'class' : 'eventsRelSpan'});
+			var mainSpan = new Element('center');
+			var textFirst = relation.firstQryJoinCol + " " + relation.firstQryOp + "  occurrence for " + relation.firstQryEvntNm;
+			var firstSpan = new Element('span').update(textFirst);
+			mainSpan.insert(firstSpan).insert(new Element('br'));
+			var relationOperator = "";
+			switch(relation.operator)
+			{
+				case "LESS":
+					relationOperator = "Occurs Before";
+					break;
+				case "LESSEQUAL":
+					relationOperator = "Occurs On Or Before";
+					break;
+				case "EQUAL":
+					relationOperator = "Occurs Simultaneously With";
+					break;
+				case "GREATER":
+					relationOperator = "Occurs After";
+					break;
+				case "GREATEREQUAL":
+					relationOperator = "Occurs On or After";
+					break;
+				default:
+					break;
+			}
+			var textOperator = relationOperator.length>0 ? relationOperator : relation.operator;
+			var opSpan = new Element('span').update(textOperator);
+			mainSpan.insert(opSpan).insert(new Element('br'));
+			var textSecond = relation.secondQryJoinCol + " of " + relation.secondQryOp + "  occurrence of " + relation.secondQryEvntNm;
+			var secondSpan = new Element('span').update(textSecond);
+			mainSpan.insert(secondSpan).insert(new Element('br'));
+			
+			var firstSpan = true;
+			relation.spans.each(function(thisSpan){
+				switch(thisSpan.oprator)
+				{
+					case "GREATER" :
+						thisSpan.oprator = ">";
+						break;
+					case "GREATEREQUAL" :
+						thisSpan.oprator = ">=";
+						break;
+					case "EQUAL" :
+						thisSpan.oprator = "=";
+						break;
+					case "LESSEQUAL" :
+						thisSpan.oprator = "<=";
+						break;
+					case "LESS" :
+						thisSpan.oprator = "<";
+						break;
+					default:
+						break;
+				}
+				var text = "";
+				if(firstSpan)
+				{
+					text = " By " + thisSpan.oprator + " " + thisSpan.value + " " + thisSpan.units;
+					firstSpan = false;
+				}
+				else
+				{
+					text = " And " + thisSpan.oprator + " " + thisSpan.value + " " + thisSpan.units;
+				}
+				mainSpan.insert((new Element('span')).update(text)).insert(new Element('br'));
+			});
+			mnSpan.insert(mainSpan);
+			Row.insert((Cell).insert(mnSpan));
+			var tempDiv = new Element('div');
+			tempDiv.insert(Row);
+			jQuery(eventsRelTable).append(jQuery(tempDiv).html());
+		});
+	};
+			
+	this.createResultsForPrint = function(dataArray,child){
+		var _2DResultsArray = i2b2.CRC.view.downloadData.getFormattedResults(dataArray);
+		if(_2DResultsArray && _2DResultsArray.length>0)
+		{
+			//Populate the tables
+			var clonedArray = _2DResultsArray.slice(0);
+			var allSites = $H();
+			var allSitesRow = clonedArray[0];
+			if(allSitesRow && allSitesRow.length>0)
+			{
+				for(var x = 1; x < allSitesRow.length ; x++)
+				{
+					var siteName = allSitesRow[x];
+					allSites.set(siteName,x);  //SiteName,Index pairs
+				}
+			}
+			clonedArray = _2DResultsArray.slice(0);
+			var allUniqueBreakDowns = $H();
+			for(var i = 0 ; i < clonedArray.length ; i++)
+			{
+				var brkDownEntry = clonedArray[i][0];
+				if(brkDownEntry.length>0)
+				{
+					var tmpBrkDown = brkDownEntry.split("|");
+					if(tmpBrkDown && tmpBrkDown.length>1)
+					{
+						thisBrkDown = tmpBrkDown[0];
+						allUniqueBreakDowns.set(thisBrkDown,thisBrkDown);
+					}
+				}
+			}
+			
+			//Take care of the patient number element separately			
+			//Create the data array for table creation
+			clonedArray = _2DResultsArray.slice(0);
+			var dataArray = new Array();
+			
+			var thisRow = clonedArray[0].slice(0);
+			thisRow[0] = "";
+			dataArray.push(thisRow);
+			thisRow =  clonedArray[1].slice(0);
+			thisRow[0] = "Total Patients Count";
+			dataArray.push(thisRow);
+			
+			if(dataArray && dataArray.length>0)
+			{
+				jQuery('#tablesContainer').append("<br/>");
+				jQuery('#tablesContainer').append("<div class='subTitleDivs'>Total Number of Cases</div>" );
+				this.createTable(dataArray);
+			}
+			//Create tables for the breakdowns
+			allUniqueBreakDowns.each(function(brkDown)
+			{
+				clonedArray = _2DResultsArray.slice(0);
+				dataArray = new Array(); 
+				var thisRow = _2DResultsArray[0].slice(0);
+				thisRow[0] = "";
+				dataArray.push(thisRow);
+				var category = "";
+				for(var i = 1; i<clonedArray.length;i++)
+				{
+					var thisbrkDown = clonedArray[i][0];
+					if(thisbrkDown.toLowerCase().indexOf(brkDown.key.toLowerCase())>=0)
+					{
+						thisRow = clonedArray[i];
+						var tmpBrkDown = thisbrkDown.split("|");
+						if(tmpBrkDown && tmpBrkDown.length>1)
+						{
+							category = tmpBrkDown[0];
+							thisRow[0][0] = tmpBrkDown[1];
+						}
+						dataArray.push(thisRow);
+					}
+				}
+				
+				if(dataArray && dataArray.length>0)
+				{
+					jQuery('#tablesContainer').append("<br/>");
+					jQuery('#tablesContainer').append("<div class='subTitleDivs'>Total Unique Patients by" + category +"</div>" );
+					i2b2.CRC.ctrlr.QT.createTable(dataArray);
+				}
+			});
+			
+			//Populate charts
+			jQuery('#tablesContainer').append("<br/><br/>");
+			i2b2.CRC.view.graphs.createGraphs("graphsContainer", i2b2.CRC.ctrlr.currentQueryResults.resultString, true);
+		}
+	};
+	
+	this.createTable = function(dataArray)
+	{
+		var content = "<table class='reultsTable'>";
+		for(var i = 0 ; i < dataArray.length ; i++)
+		{
+			var thisRow = dataArray[i];
+			if(i==0)
+			{
+				content += "<tr>";
+				for(var j = 0 ; j < thisRow.length ; j++)
+				{
+					content += "<th class='descResultshead'>" + thisRow[j] + "</th>";
+				}
+				content += "</tr>";
+			}
+			else
+			{
+				content += "<tr>";
+				
+				for(var j = 0 ; j < thisRow.length ; j++)
+				{
+					var thisRowColItem = thisRow[j];
+					if(thisRowColItem)
+					{
+						if((thisRowColItem.trim().indexOf("10 patients or fewer"))>0)
+							thisRowColItem = 0;
+						if(i==0 && j==0)
+							content += "<td class='descResults'>&nbsp;</td>";
+						else{
+							if(thisRowColItem==' ')
+								content += "<td class='descResults'>&nbsp;</td>";
+							else
+								content += "<td class='descResults'>" + thisRowColItem + "</td>";	
+						}
+					}
+					else
+						content += "<td class='descResults'>&nbsp;</td>";
+				}
+				content += "</tr>";
+			}
+		}
+					
+		content += "</table>";
+		
+		jQuery('#tablesContainer').append(content);
+	}
+	
+	this.getQueryUserFullName = function(query_user_id)
+	{
+		var returnValue = query_user_id;
+		if(query_user_id)
+		{
+			try {
+				var response = i2b2.PM.ajax.getUser("CRC:PrintQueryNew", {user_id:query_user_id});
+				response.parse();
+				var data = response.model[0];
+				if (data.full_name) { returnValue = data.full_name;}
+				} 
+			catch (e) {}
+		}
+		return returnValue;
+	};
+	
+	function getSelectedValueFromOptions(options)
+	{
+		var value = null;
+		for(k = 0; k < options.length; k++) {
+			var thisOption = options[k];
+			if(thisOption.selected == true)
+			{
+				value = options[k].innerHTML;
+				break;
+			}
+		}
+		return value;
+	};
+	
+	this.PrintElem = function(divIdToPrint)
+    {
+        // Popup(jQuery("#" + divToPrint).html());
+		if(jQuery("#" + divIdToPrint)){
+			var contents = jQuery("#" + divIdToPrint).html();
+			var frame1 = jQuery("<iframe />");
+			frame1[0].name = "frame1";
+			frame1.css({ "position": "absolute", "top": "-1000000px" });
+			jQuery("body").append(frame1);
+			var frameDoc = frame1[0].contentWindow ? frame1[0].contentWindow : frame1[0].contentDocument.document ? frame1[0].contentDocument.document : frame1[0].contentDocument;
+			frameDoc.document.open();
+			//Create a new HTML document.
+			frameDoc.document.write("<html><head><title>Query Report</title>");
+			//Append the external CSS file.
+			frameDoc.document.write("<link rel=\"stylesheet\" href=\"js-i2b2/cells/CRC/assets/query_report.css\">");
+			frameDoc.document.write('<link href=\'js-ext/c3code/c3.css\' rel=\'stylesheet\' type=\'text/css\'></head><body>');
+			frameDoc.document.write("</head><body>");
+			//Append the DIV contents.
+			frameDoc.document.write(contents);
+			frameDoc.document.write('</body></html>');
+			frameDoc.document.close();
+			
+			setTimeout(function () {
+				window.frames["frame1"].focus();
+				window.frames["frame1"].print();
+				frame1.remove();
+			}, 500);
+		}
+		else
+			alert("Query report can't be printed!");
+    };
+	
+/**********************
+* End Query Report BG 
+**********************/	
 }
 
 console.timeEnd('execute time');

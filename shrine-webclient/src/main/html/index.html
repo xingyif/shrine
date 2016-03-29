@@ -1,24 +1,32 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
-<meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7" />
+<meta http-equiv="X-UA-Compatible" content="IE=8,11" />
 <title>Shrine Web Client</title>
 <!--
  *  *************************
  *       i2b2 Web Client
- *           v1.7.02
+ *           v1.7.07
  *  *************************
- *  @modified: 06/15/2014
+ *  @modified: 03/20/2016
  *  Contributors:
  *     Nick Benik
  *     Griffin Weber, MD, PhD
  *     Mike Mendis
  *     Shawn Murphy MD, PhD
+ *     Nich Wattanasin
  *
  */-->
 
 <script type="text/javascript">
-    var i2b2build = "1.7.001   [02/04/2014 4:07 PM] ";
+    var i2b2build = "1.7.007   [03/20/2016 4:07 PM] ";
+	
+	//ie does not support trim method
+	if(typeof String.prototype.trim !== 'function') {
+		String.prototype.trim = function() {
+			return this.replace(/^\s+|\s+$/g, ''); 
+		};
+	}
 </script>
 
 <!-- LOAD YUI FROM Yahoo's CDN
@@ -52,6 +60,21 @@
 <script type="text/javascript" src="js-ext/yui/build/button/button.js"></script>
 <script type="text/javascript" src="js-ext/yui/build/paginator/paginator-min.js"></script>
 <script type="text/javascript" src="js-ext/yui/build/slider/slider-min.js"></script>
+
+<!-- BG -->
+<link type="text/css" href="js-i2b2/cells/CRC/assets/query_report.css" rel="stylesheet" />
+<!-- Load d3.js -->
+<script type="text/javascript" src="js-ext/d3code/d3.v3.js"></script>
+<!-- Load c3.js and stylesheet -->
+<link href="js-ext/c3code/c3.css" rel="stylesheet" type="text/css">
+<script src="js-ext/c3code/c3.js"></script>
+<!-- Load jquery code and turn off $ BG-->
+<script src="js-ext/jquerycode/jquery-1.11.1.js"></script>
+<script>
+$.noConflict();
+// Code that uses other library's $ can follow here.
+</script>
+<!-- BG -->
 <!--
 		<link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/combo?2.6.0/build/assets/skins/sam/skin.css"> 
 -->
@@ -860,15 +883,33 @@
 <!-- ############### <CRC Status View> ############### -->
 <div id="crcStatusBox" style="display:none">
     <div class="TopTabs">
-        <div class="tabBox tabQueryStatus active"><div>Query Status</div></div>
+        <div class="tabBox tabQueryStatus active" onClick="i2b2.CRC.view.status.selectTab('status')">
+			<div>Query Status</div>
+		</div>
         <div class="opXML">
 
-            <a href="JavaScript:i2b2.CRC.ctrlr.QT.doPrintQuery();"><img id="qtPrintImg" width="16" height="16" border="0" src="js-i2b2/cells/CRC/assets/printer_img.gif" alt="Print Query" title="Print Query" /></a>
+            <a href="JavaScript:i2b2.CRC.ctrlr.QT.doPrintQuery();"><img id="qtPrintImg" width="16" height="16" border="0" src="js-i2b2/cells/CRC/assets/printer_img.gif" alt="Print Query" title="Print Query" /></a>&nbsp;
+			<a href="JavaScript:i2b2.CRC.view.status.ZoomView();"><img width="16" height="16" border="0" src="js-i2b2/cells/CRC/assets/zoom_icon.gif" alt="Resize Workspace" /></a>
         </div>
-
+		<!-- BG -->
+		<div class="tabBox tabQueryGraphs" onClick="i2b2.CRC.view.status.selectTab('graphs')">
+			<div>Graph Results</div>
+		</div>
+		<div class="tabBox tabQueryReport" onClick="i2b2.CRC.view.status.selectTab('queryReport')">
+			<div>Query Report</div>
+		</div>
+		<div class="tabBox tabDownloadData" onClick="i2b2.CRC.view.status.selectTab('downloadData')"> 
+			<div>Download Results</div>
+		</div>
+		<!-- BG -->
     </div>
     <div class="StatusBox">
         <div id="infoQueryStatusText" class="StatusBoxText" oncontextmenu="return false"></div>
+		<!-- BG -->
+		<div id="infoQueryStatusChart" class="StatusBoxChart" oncontextmenu="return false" style="display:none"></div>
+		<div id="infoQueryStatusReport" class="StatusBoxReport" oncontextmenu="return false" style="display:none"></div>
+		<div id="infoDownloadStatusData" class="StatusBoxDownload" oncontextmenu="return false" style="display:none"></div>
+		<!-- BG -->
     </div>
 </div>
 
