@@ -60,6 +60,7 @@ object ErrorResponse extends XmlUnmarshaller[ErrorResponse] with I2b2Unmarshalle
   }
 
   def apply(problem:Problem) = {
+    LoggingProblemHandler.handleProblem(problem) //todo someday hook up to the proper problem handler hierarchy.
     new ErrorResponse(problem.summary,problem.toDigest)
   }
 
