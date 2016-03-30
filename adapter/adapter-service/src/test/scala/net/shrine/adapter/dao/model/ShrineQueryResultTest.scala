@@ -59,7 +59,7 @@ final class ShrineQueryResultTest extends ShouldMatchersForJUnit {
     PATIENT_AGE_COUNT_XML -> Seq(BreakdownResultRow(someId, breakdownQueryResultRow1.id, "x", 1, 2), BreakdownResultRow(someId, breakdownQueryResultRow1.id, "y", 2, 3)),
     PATIENT_GENDER_COUNT_XML -> Seq(BreakdownResultRow(someId, breakdownQueryResultRow2.id, "a", 9, 10), BreakdownResultRow(someId, breakdownQueryResultRow2.id, "b", 10, 11)))
 
-  private val pd = TestProblem.toDigest
+  private val pd = TestProblem().toDigest
 
   private val errorRows = Seq(ShrineError(someId, errorQueryResultRow1.id, "foo", pd.codec,pd.stampText,pd.summary,pd.description,pd.detailsXml), ShrineError(someId, errorQueryResultRow2.id, "bar", pd.codec,pd.stampText,pd.summary,pd.description,pd.detailsXml))
 

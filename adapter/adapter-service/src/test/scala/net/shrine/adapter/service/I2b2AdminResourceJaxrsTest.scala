@@ -182,7 +182,7 @@ object I2b2AdminResourceJaxrsTest {
     override def runHeldQuery(request: RunHeldQueryRequest, shouldBroadcast: Boolean): ShrineResponse = {
       lock.synchronized { _runHeldQueryParam = request }
       
-      RunQueryResponse(request.networkQueryId, XmlDateHelper.now, request.authn.username, request.projectId, QueryDefinition("bogus", Term("placeholder")), 12345L, QueryResult.errorResult(Some("foo"), "not actually an error",TestProblem))
+      RunQueryResponse(request.networkQueryId, XmlDateHelper.now, request.authn.username, request.projectId, QueryDefinition("bogus", Term("placeholder")), 12345L, QueryResult.errorResult(Some("foo"), "not actually an error",TestProblem()))
     }
     
     private def setShouldBroadcastAndThen(shouldBroadcast: Boolean)(f: => ShrineResponse): ShrineResponse = {

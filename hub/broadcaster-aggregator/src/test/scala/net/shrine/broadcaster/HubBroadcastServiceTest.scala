@@ -1,35 +1,23 @@
 package net.shrine.broadcaster
 
+import net.shrine.aggregation.Aggregator
 import net.shrine.problem.TestProblem
+import net.shrine.protocol.{AuthenticationInfo, BroadcastMessage, Credential, DeleteQueryRequest, ErrorResponse, Failure, NodeId, Result, ShrineResponse, SingleNodeResult, Timeout}
+import net.shrine.util.ShouldMatchersForJUnit
+import org.junit.Test
 
 import scala.concurrent.Await
-import org.junit.Test
-import net.shrine.util.ShouldMatchersForJUnit
-import net.shrine.aggregation.Aggregator
-import net.shrine.crypto.DefaultSignerVerifier
-import net.shrine.crypto.TestKeystore
-import net.shrine.protocol.AuthenticationInfo
-import net.shrine.protocol.BroadcastMessage
-import net.shrine.protocol.Credential
-import net.shrine.protocol.DeleteQueryRequest
-import net.shrine.protocol.ErrorResponse
-import net.shrine.protocol.Failure
-import net.shrine.protocol.NodeId
-import net.shrine.protocol.Result
-import net.shrine.protocol.ShrineResponse
-import net.shrine.protocol.SingleNodeResult
-import net.shrine.protocol.Timeout
-import net.shrine.broadcaster.dao.MockHubDao
 
 /**
  * @author clint
  * @since Nov 19, 2013
  */
 final class HubBroadcastAndAggregationServiceTest extends AbstractSquerylHubDaoTest with ShouldMatchersForJUnit {
-  import scala.concurrent.duration._
   import MockBroadcasters._
 
-  private def result(description: Char) = Result(NodeId(description.toString), 1.second, ErrorResponse("blah blah blah",Some(TestProblem)))
+  import scala.concurrent.duration._
+
+  private def result(description: Char) = Result(NodeId(description.toString), 1.second, ErrorResponse(TestProblem(summary = "blah blah blah")))
 
   private val results = "abcde".map(result)
 
@@ -56,7 +44,7 @@ final class HubBroadcastAndAggregationServiceTest extends AbstractSquerylHubDaoT
 
     val aggregator: Aggregator = new Aggregator {
       override def aggregate(results: Iterable[SingleNodeResult], errors: Iterable[ErrorResponse]): ShrineResponse = {
-        ErrorResponse(results.size.toString,Some(TestProblem))
+        ErrorResponse(TestProblem(summary = results.size.toString))
       }
     }
 
@@ -64,12 +52,12 @@ final class HubBroadcastAndAggregationServiceTest extends AbstractSquerylHubDaoT
 
     mockBroadcaster.messageParam.signature.isDefined should be(false)
     
-    aggregatedResult should equal(ErrorResponse(s"${results.size}",Some(TestProblem)))
+    aggregatedResult should equal(ErrorResponse(TestProblem(summary = results.size.toString)))
   }
 
   @Test
   def testAggregateHandlesFailures {
-    def toResult(description: Char) = Result(NodeId(description.toString), 1.second, ErrorResponse("blah blah blah"))
+    def toResult(description: Char) = Result(NodeId(description.toString), 1.second, ErrorResponse(TestProblem(summary = "blah blah blah")))
 
     def toFailure(description: Char) = Failure(NodeId(description.toString), new Exception with scala.util.control.NoStackTrace)
 
@@ -87,7 +75,7 @@ final class HubBroadcastAndAggregationServiceTest extends AbstractSquerylHubDaoT
 
     val aggregator: Aggregator = new Aggregator {
       override def aggregate(results: Iterable[SingleNodeResult], errors: Iterable[ErrorResponse]): ShrineResponse = {
-        ErrorResponse(s"${results.size},${errors.size}",Some(TestProblem))
+        ErrorResponse(TestProblem(summary = s"${results.size},${errors.size}"))
       }
     }
 
@@ -95,6 +83,6 @@ final class HubBroadcastAndAggregationServiceTest extends AbstractSquerylHubDaoT
 
     mockBroadcaster.messageParam.signature.isDefined should be(false)
     
-    aggregatedResult should equal(ErrorResponse(s"${results.size + failuresByOrigin.size + timeoutsByOrigin.size},0",Some(TestProblem)))
+    aggregatedResult should equal(ErrorResponse(TestProblem(summary = s"${results.size + failuresByOrigin.size + timeoutsByOrigin.size},0")))
   }
 }

@@ -56,7 +56,7 @@ final class ShrineResponseTest extends ShouldMatchersForJUnit {
     roundTrip(UnFlagQueryResponse)
     roundTrip(FlagQueryResponse)
 
-    roundTrip(ErrorResponse("errorMessage",Some(TestProblem)))
+    roundTrip(ErrorResponse(TestProblem("errorMessage")))
   }
 
   @Test

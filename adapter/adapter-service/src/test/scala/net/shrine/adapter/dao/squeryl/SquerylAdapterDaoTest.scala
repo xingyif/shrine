@@ -57,8 +57,8 @@ final class SquerylAdapterDaoTest extends AbstractSquerylAdapterTest with Should
 
   private val countQueryResult = QueryResult(resultId, instanceId, Some(PATIENT_COUNT_XML), count, now, now, desc, QueryResult.StatusType.Finished, None)
 
-  private val errorQueryResult1 = QueryResult.errorResult(desc, message1,TestProblem)
-  private val errorQueryResult2 = QueryResult.errorResult(desc, message2,TestProblem)
+  private val errorQueryResult1 = QueryResult.errorResult(desc, message1,TestProblem())
+  private val errorQueryResult2 = QueryResult.errorResult(desc, message2,TestProblem())
 
   private val breakdownQueryResult1 = QueryResult(resultId, instanceId, Some(PATIENT_AGE_COUNT_XML), countQueryResult.setSize, now, now, desc, QueryResult.StatusType.Finished, None, breakdowns = onlyAgeBreakdown)
   private val breakdownQueryResult2 = QueryResult(resultId, instanceId, Some(PATIENT_GENDER_COUNT_XML), countQueryResult.setSize, now, now, desc, QueryResult.StatusType.Finished, None, breakdowns = onlyGenderBreakdown)
@@ -529,7 +529,7 @@ final class SquerylAdapterDaoTest extends AbstractSquerylAdapterTest with Should
 
     list(errorResultRows).isEmpty should be(true)
 
-    val pd = TestProblem.toDigest
+    val pd = TestProblem().toDigest
 
     dao.insertErrorResult(resultRow.id, message1,pd.codec,pd.stampText,pd.summary,pd.description,pd.detailsXml)
 
@@ -618,7 +618,7 @@ final class SquerylAdapterDaoTest extends AbstractSquerylAdapterTest with Should
   private def insertErrors(resultIdsByType: Map[ResultOutputType, Seq[Int]]) {
     (resultIdsByType(ERROR) zip Seq(message1, message2)).foreach {
       case (resultId, message) =>
-        val pd = TestProblem.toDigest
+        val pd = TestProblem().toDigest
         dao.insertErrorResult(resultId, message,pd.codec,pd.stampText,pd.summary,pd.description,pd.detailsXml)
     }
   }

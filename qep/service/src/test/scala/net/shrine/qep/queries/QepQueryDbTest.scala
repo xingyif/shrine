@@ -215,7 +215,7 @@ class QepQueryDbTest extends ShouldMatchersForJUnit {
 
   @Test
   def testInsertQueryResultWithProblem(): Unit = {
-    val queryResultWithProblem = queryResult.copy(statusType = StatusType.Error,problemDigest = Some(TestProblem.toDigest))
+    val queryResultWithProblem = queryResult.copy(statusType = StatusType.Error,problemDigest = Some(TestProblem().toDigest))
 
     QepQueryDb.db.insertQueryResult(2L,queryResultWithProblem)
 

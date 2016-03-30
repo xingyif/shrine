@@ -30,7 +30,7 @@ final class SigningBroadcastAndAggregationServiceTest extends ShouldMatchersForJ
   import scala.concurrent.duration._
   import MockBroadcasters._
 
-  private def result(description: Char) = Result(NodeId(description.toString), 1.second, ErrorResponse("blah blah blah",Some(TestProblem)))
+  private def result(description: Char) = Result(NodeId(description.toString), 1.second, ErrorResponse(TestProblem(summary = "blah blah blah")))
 
   private val results = "abcde".map(result)
 
@@ -58,7 +58,7 @@ final class SigningBroadcastAndAggregationServiceTest extends ShouldMatchersForJ
 
     val aggregator: Aggregator = new Aggregator {
       override def aggregate(results: Iterable[SingleNodeResult], errors: Iterable[ErrorResponse]): ShrineResponse = {
-        ErrorResponse(results.size.toString,Some(TestProblem))
+        ErrorResponse(TestProblem(results.size.toString))
       }
     }
 
@@ -66,12 +66,12 @@ final class SigningBroadcastAndAggregationServiceTest extends ShouldMatchersForJ
 
     mockBroadcaster.messageParam.signature.isDefined should be(true)
     
-    aggregatedResult should equal(ErrorResponse(s"${results.size}",Some(TestProblem)))
+    aggregatedResult should equal(ErrorResponse(TestProblem(s"${results.size}")))
   }
 
   @Test
   def testAggregateHandlesFailures {
-    def toResult(description: Char) = Result(NodeId(description.toString), 1.second, ErrorResponse("blah blah blah",Some(TestProblem)))
+    def toResult(description: Char) = Result(NodeId(description.toString), 1.second, ErrorResponse(TestProblem("blah blah blah")))
 
     def toFailure(description: Char) = Failure(NodeId(description.toString), new Exception with scala.util.control.NoStackTrace)
 
@@ -89,7 +89,7 @@ final class SigningBroadcastAndAggregationServiceTest extends ShouldMatchersForJ
 
     val aggregator: Aggregator = new Aggregator {
       override def aggregate(results: Iterable[SingleNodeResult], errors: Iterable[ErrorResponse]): ShrineResponse = {
-        ErrorResponse(s"${results.size},${errors.size}",Some(TestProblem))
+        ErrorResponse(TestProblem(s"${results.size},${errors.size}"))
       }
     }
 
@@ -97,6 +97,6 @@ final class SigningBroadcastAndAggregationServiceTest extends ShouldMatchersForJ
 
     mockBroadcaster.messageParam.signature.isDefined should be(true)
     
-    aggregatedResult should equal(ErrorResponse(s"${results.size + failuresByOrigin.size + timeoutsByOrigin.size},0",Some(TestProblem)))
+    aggregatedResult should equal(ErrorResponse(TestProblem(s"${results.size + failuresByOrigin.size + timeoutsByOrigin.size},0")))
   }
 }

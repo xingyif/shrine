@@ -1,6 +1,6 @@
 package net.shrine.adapter
 
-import net.shrine.problem.TestProblem
+import net.shrine.problem.{ProblemSources, AbstractProblem, TestProblem}
 
 import scala.concurrent.duration.DurationInt
 import org.junit.Test
@@ -636,7 +636,7 @@ final class RunQueryAdapterTest extends AbstractSquerylAdapterTest with ShouldMa
 
   @Test
   def testRegularCountQueryComesBackError = afterCreatingTables {
-    val errorQueryResult = QueryResult.errorResult(Some("some-description"), "some-status-message",TestProblem)
+    val errorQueryResult = QueryResult.errorResult(Some("some-description"), "some-status-message",TestProblem())
 
     val outputTypes = justCounts
 
@@ -737,7 +737,7 @@ final class RunQueryAdapterTest extends AbstractSquerylAdapterTest with ShouldMa
 
   @Test
   def testErrorResponsesArePassedThrough: Unit = {
-    val errorResponse = ErrorResponse("blarg!")
+    val errorResponse = ErrorResponse(TestProblem(summary = "blarg!"))
 
     val resp = doQuery(Set(PATIENT_COUNT_XML)) {
       errorResponse.toI2b2String

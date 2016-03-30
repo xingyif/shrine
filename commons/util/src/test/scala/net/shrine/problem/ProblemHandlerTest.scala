@@ -17,19 +17,10 @@ final class ProblemHandlerTest extends ShouldMatchersForJUnit {
 
     val loggable = new MockLoggable
 
-    case class TestProblem(nodeName:String,summary:String,exception:Exception) extends AbstractProblem(ProblemSources.Hub) {
-
-      val message = s"TestProblem involving $nodeName"
-
-      val description = summary + message
-
-      override def throwable = Some(exception)
-    }
-
     val fakeException = new RuntimeException("test exception")
     fakeException.fillInStackTrace()
 
-    val problem = TestProblem("testProblem","Problem created for testing",fakeException)
+    val problem = TestProblem("testProblem","Problem created for testing",Some(fakeException))
 
     val problemHandler = LoggingProblemHandler
 

@@ -1,5 +1,7 @@
 package net.shrine.adapter
 
+import net.shrine.problem.{TestProblem, ProblemSources, AbstractProblem}
+
 import scala.xml.NodeSeq
 import net.shrine.util.ShouldMatchersForJUnit
 import ObfuscatorTest.within3
@@ -127,7 +129,7 @@ abstract class AbstractQueryRetrievalTestCase[R <: BaseShrineResponse](
             if (countQueryShouldWork) {
               ReadResultResponse(123L, makeFinished(incompleteCountResult), I2b2ResultEnvelope(PATIENT_COUNT_XML, Map(PATIENT_COUNT_XML.name -> incompleteCountResult.setSize)))
             } else {
-              ErrorResponse("Retrieving count result failed")
+              ErrorResponse(TestProblem(summary = "Retrieving count result failed"))
             }
           }
           case Success(req: ReadResultRequest) if req.localResultId == breakdownResultId.toString => {

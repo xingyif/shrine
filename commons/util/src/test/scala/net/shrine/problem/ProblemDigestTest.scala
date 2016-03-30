@@ -18,9 +18,3 @@ final class ProblemDigestTest extends ShouldMatchersForJUnit {
     fromXml should be(problemDigest)
   }
 }
-
-object TestProblem extends AbstractProblem(ProblemSources.Unknown) {
-  override def summary: String = "Test problem summary"
-
-  override def description: String = "Test problem description"
-}

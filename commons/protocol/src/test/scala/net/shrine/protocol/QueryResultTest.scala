@@ -7,7 +7,7 @@ import net.shrine.util.XmlUtil
 import net.shrine.util.XmlDateHelper
 import net.shrine.util.XmlGcEnrichments
 
-import scala.xml.{XML, NodeSeq}
+import scala.xml.NodeSeq
 
 /**
  * @author Bill Simons
@@ -394,7 +394,7 @@ final class QueryResultTest extends ShouldMatchersForJUnit with XmlRoundTripper[
 
   @Test
   def testFromI2b2WithErrors() {
-    val errorResult = QueryResult.errorResult(Some(description), statusMessage,TestProblem)
+    val errorResult = QueryResult.errorResult(Some(description), statusMessage,TestProblem())
 
     val actual = QueryResult.fromI2b2(breakdownTypes.toSet)(loadString(expectedI2b2ErrorXml))
 
@@ -447,13 +447,11 @@ final class QueryResultTest extends ShouldMatchersForJUnit with XmlRoundTripper[
 
   @Test
   def testToI2b2WithErrors(): Unit = {
-    QueryResult.errorResult(Some(description), statusMessage, TestProblem).toI2b2String
+    QueryResult.errorResult(Some(description), statusMessage, TestProblem()).toI2b2String
   }
 
   @Test
   def testWithErrorsAndProblemDigest():Unit = {
-
-    case class TestProblem(override val summary: String = "test summary",override val description:String = "test description") extends AbstractProblem(ProblemSources.Unknown)
 
     val testProblem:TestProblem = new TestProblem()
 

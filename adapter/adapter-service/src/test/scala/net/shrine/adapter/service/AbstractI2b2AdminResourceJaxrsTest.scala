@@ -5,6 +5,7 @@ import net.shrine.adapter.AdapterTestHelpers
 import net.shrine.adapter.dao.squeryl.AbstractSquerylAdapterTest
 import net.shrine.client.{HttpClient, HttpResponse, JerseyHttpClient}
 import net.shrine.crypto.TrustParam.AcceptAllCerts
+import net.shrine.problem.{TestProblem, ProblemSources, AbstractProblem}
 import net.shrine.protocol.{DefaultBreakdownResultOutputTypes, ErrorResponse, I2b2AdminReadQueryDefinitionRequest, I2b2AdminRequestHandler, QueryMaster, ReadI2b2AdminPreviousQueriesRequest, ReadPreviousQueriesResponse, ReadQueryDefinitionResponse}
 import net.shrine.protocol.query.QueryDefinition
 import net.shrine.util.{ShouldMatchersForJUnit, XmlUtil}
@@ -31,9 +32,9 @@ abstract class AbstractI2b2AdminResourceJaxrsTest extends TestCase with JerseyTe
 
   @After
   override def tearDown(): Unit = this.JerseyTest.tearDown()
-  
+
   protected object NeverAuthenticatesMockPmHttpClient extends HttpClient {
-    override def post(input: String, url: String): HttpResponse = HttpResponse.ok(ErrorResponse("blarg").toI2b2String)
+    override def post(input: String, url: String): HttpResponse = HttpResponse.ok(ErrorResponse(TestProblem(summary = "blarg")).toI2b2String)
   }
   
   protected object AlwaysAuthenticatesMockPmHttpClient extends HttpClient {

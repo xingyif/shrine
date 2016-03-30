@@ -1,5 +1,6 @@
 package net.shrine.protocol
 
+import net.shrine.problem.TestProblem
 import org.junit.Test
 import net.shrine.util.XmlUtil
 import net.shrine.util.XmlDateHelper
@@ -137,7 +138,7 @@ final class ReadPreviousQueriesResponseTest extends ShrineResponseI2b2Serializab
     }
 
     intercept[Exception] {
-      ReadPreviousQueriesResponse.fromI2b2(ErrorResponse("foo!").toI2b2)
+      ReadPreviousQueriesResponse.fromI2b2(ErrorResponse(TestProblem("foo!")).toI2b2)
     }
   }
 
