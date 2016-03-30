@@ -26,10 +26,9 @@ final class I2b2BroadcastResourceTest extends ShouldMatchersForJUnit with EasyMo
       def checkIsErrorResponse(resp: Response) {
         val responseBody = resp.getEntity.asInstanceOf[String]
         
-        val errorResponse = ErrorResponse.fromI2b2(responseBody)
+        val errorResponse: ErrorResponse = ErrorResponse.fromI2b2(responseBody)
         
         errorResponse.errorMessage should not be(null)
-        errorResponse.errorMessage.take(5) should equal("Error")
       }
       
       //Just junk data
