@@ -50,16 +50,14 @@ final case class ErrorResponse(errorMessage: String,problemDigest:ProblemDigest)
 object ErrorResponse extends XmlUnmarshaller[ErrorResponse] with I2b2Unmarshaller[ErrorResponse] with HasRootTagName with Loggable {
   val rootTagName = "errorResponse"
 
-  //todo deprecate this one
-  def apply(errorMessage:String,problem:Option[Problem] = None) = {
-    new ErrorResponse(errorMessage,problem.fold{
-      val problem = ProblemNotYetEncoded(s"'$errorMessage'")
-      LoggingProblemHandler.handleProblem(problem) //todo someday hook up to the proper problem handler hierarchy.
-      problem.toDigest
-    }(p => p.toDigest))
+  //todo delete this one
+  def apply(errorMessage:String,problem:Option[Problem] = None):ErrorResponse = {
+    val p = problem.getOrElse(ProblemNotYetEncoded(s"'$errorMessage'"))
+    LoggingProblemHandler.handleProblem(p) //todo someday hook up to the proper problem handler hierarchy.
+    ErrorResponse(errorMessage,p.toDigest)
   }
 
-  def apply(problem:Problem) = {
+  def apply(problem:Problem):ErrorResponse = {
     LoggingProblemHandler.handleProblem(problem) //todo someday hook up to the proper problem handler hierarchy.
     new ErrorResponse(problem.summary,problem.toDigest)
   }
