@@ -61,17 +61,18 @@ trait AbstractQepService[BaseResp <: BaseShrineResponse] extends Loggable {
     authenticateAndThen(request) { authResult =>
       info(s"doRunQuery($request,$shouldBroadcast) with $runQueryAggregatorFor")
 
-      //store the query in the qep's database
+      //store the query in the qep's database inside doBroadcastQuery()
 
       doBroadcastQuery(request, runQueryAggregatorFor(request), shouldBroadcast,authResult)
     }
   }
 
+  //returns a ReadQueryDefinitionResponse
   protected def doReadQueryDefinition(request: ReadQueryDefinitionRequest, shouldBroadcast: Boolean): BaseResp = {
     authenticateAndThen(request) { authResult =>
       info(s"doReadQueryDefinition($request,$shouldBroadcast)")
-
-      doBroadcastQuery(request, new ReadQueryDefinitionAggregator, shouldBroadcast,authResult)
+      QepQueryDb.db.selectPreviousQuery(request).getOrElse{
+        doBroadcastQuery(request, new ReadQueryDefinitionAggregator, shouldBroadcast,authResult)}.asInstanceOf[BaseResp]
     }
   }
 

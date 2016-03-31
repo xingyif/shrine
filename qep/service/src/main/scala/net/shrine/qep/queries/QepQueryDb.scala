@@ -8,7 +8,7 @@ import com.typesafe.config.Config
 import net.shrine.audit.{NetworkQueryId, QueryName, Time, UserName}
 import net.shrine.log.Loggable
 import net.shrine.problem.{AbstractProblem, ProblemSources, ProblemDigest}
-import net.shrine.protocol.{ResultOutputTypes, DeleteQueryRequest, RenameQueryRequest, I2b2ResultEnvelope, QueryResult, ResultOutputType, DefaultBreakdownResultOutputTypes, UnFlagQueryRequest, FlagQueryRequest, QueryMaster, ReadPreviousQueriesRequest, ReadPreviousQueriesResponse, RunQueryRequest}
+import net.shrine.protocol.{ReadQueryDefinitionResponse, ReadQueryDefinitionRequest, ResultOutputTypes, DeleteQueryRequest, RenameQueryRequest, I2b2ResultEnvelope, QueryResult, ResultOutputType, DefaultBreakdownResultOutputTypes, UnFlagQueryRequest, FlagQueryRequest, QueryMaster, ReadPreviousQueriesRequest, ReadPreviousQueriesResponse, RunQueryRequest}
 import net.shrine.qep.QepConfigSource
 import net.shrine.slick.TestableDataSourceCreator
 import net.shrine.util.XmlDateHelper
@@ -64,6 +64,18 @@ case class QepQueryDb(schemaDef:QepQuerySchema,dataSource: DataSource,timeout:Du
 
   def selectAllQepQueries:Seq[QepQuery] = {
     dbRun(mostRecentVisibleQepQueries.result)
+  }
+
+  def selectPreviousQuery(request:ReadQueryDefinitionRequest):Option[ReadQueryDefinitionResponse] = {
+    selectPreviousQuery(request.authn.username,request.authn.domain,request.queryId).map(_.toReadQueryDefinitionResponse)
+  }
+
+  def selectPreviousQuery(userName: UserName, domain: String,networkQueryId: NetworkQueryId):Option[QepQuery] = {
+    dbRun(mostRecentVisibleQepQueries.filter(_.networkId === networkQueryId).filter(_.userName === userName).filter(_.userDomain === domain).sortBy(x => x.changeDate.desc).result) match {
+      case Nil => None
+      case Seq(only) => Some(only)
+      case other => throw new IllegalStateException(s"${other.size} queries stored for id $networkQueryId for $userName:$domain.")
+    }
   }
 
   def selectPreviousQueries(request: ReadPreviousQueriesRequest):ReadPreviousQueriesResponse = {
@@ -374,6 +386,16 @@ case class QepQuery(
       held = None, //todo this field is never used. Remove it in 1.22
       flagged = qepQueryFlag.map(_.flagged),
       flagMessage = qepQueryFlag.map(_.flagMessage)
+    )
+  }
+
+  def toReadQueryDefinitionResponse:ReadQueryDefinitionResponse = {
+    ReadQueryDefinitionResponse(
+      masterId = networkId,
+      name = queryName,
+      userId = userName,
+      createDate = XmlDateHelper.toXmlGregorianCalendar(dateCreated),
+      queryDefinition = queryXml
     )
   }
 }

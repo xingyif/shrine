@@ -54,6 +54,16 @@ class QepQueryDbTest extends ShouldMatchersForJUnit {
   }
 
   @Test
+  def testSelectQepQuery() {
+
+    QepQueryDb.db.insertQepQuery(qepQuery)
+    QepQueryDb.db.insertQepQuery(secondQepQuery)
+
+    val results = QepQueryDb.db.selectPreviousQuery("ben","testDomain",1L)
+    results should equal(Some(qepQuery))
+  }
+
+  @Test
   def testSelectQepQueriesForUser() {
 
     QepQueryDb.db.insertQepQuery(qepQuery)
