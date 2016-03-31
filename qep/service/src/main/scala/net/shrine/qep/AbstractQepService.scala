@@ -70,7 +70,6 @@ trait AbstractQepService[BaseResp <: BaseShrineResponse] extends Loggable {
   //returns a ReadQueryDefinitionResponse
   protected def doReadQueryDefinition(request: ReadQueryDefinitionRequest, shouldBroadcast: Boolean): BaseResp = {
     authenticateAndThen(request) { authResult =>
-      info(s"doReadQueryDefinition($request,$shouldBroadcast)")
       val result =QepQueryDb.db.selectPreviousQuery(request).getOrElse{
         doBroadcastQuery(request, new ReadQueryDefinitionAggregator, shouldBroadcast,authResult)}.asInstanceOf[BaseResp]
       info(s"doReadQueryDefinition($request,$shouldBroadcast) result is $result")
