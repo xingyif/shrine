@@ -1,13 +1,15 @@
 package net.shrine.qep
 
-import net.shrine.aggregation.{Aggregator, Aggregators, DeleteQueryAggregator, FlagQueryAggregator, ReadInstanceResultsAggregator, ReadQueryDefinitionAggregator, RenameQueryAggregator, RunQueryAggregator, UnFlagQueryAggregator}
+import net.shrine.aggregation.{Aggregator, Aggregators, DeleteQueryAggregator, FlagQueryAggregator, ReadInstanceResultsAggregator, RenameQueryAggregator, RunQueryAggregator, UnFlagQueryAggregator}
+import net.shrine.audit.NetworkQueryId
 import net.shrine.authentication.AuthenticationResult.Authenticated
 import net.shrine.authentication.{AuthenticationResult, Authenticator, NotAuthenticatedException}
 import net.shrine.authorization.AuthorizationResult.{Authorized, NotAuthorized}
 import net.shrine.authorization.QueryAuthorizationService
 import net.shrine.broadcaster.BroadcastAndAggregationService
 import net.shrine.log.Loggable
-import net.shrine.protocol.{QueryResult, AggregatedReadInstanceResultsResponse, AggregatedRunQueryResponse, AuthenticationInfo, BaseShrineRequest, BaseShrineResponse, Credential, DeleteQueryRequest, FlagQueryRequest, QueryInstance, ReadApprovedQueryTopicsRequest, ReadInstanceResultsRequest, ReadPreviousQueriesRequest, ReadPreviousQueriesResponse, ReadQueryDefinitionRequest, ReadQueryInstancesRequest, ReadQueryInstancesResponse, ReadResultOutputTypesRequest, ReadResultOutputTypesResponse, RenameQueryRequest, ResultOutputType, RunQueryRequest, UnFlagQueryRequest}
+import net.shrine.problem.{ProblemSources, AbstractProblem}
+import net.shrine.protocol.{ErrorResponse, QueryResult, AggregatedReadInstanceResultsResponse, AggregatedRunQueryResponse, AuthenticationInfo, BaseShrineRequest, BaseShrineResponse, Credential, DeleteQueryRequest, FlagQueryRequest, QueryInstance, ReadApprovedQueryTopicsRequest, ReadInstanceResultsRequest, ReadPreviousQueriesRequest, ReadPreviousQueriesResponse, ReadQueryDefinitionRequest, ReadQueryInstancesRequest, ReadQueryInstancesResponse, ReadResultOutputTypesRequest, ReadResultOutputTypesResponse, RenameQueryRequest, ResultOutputType, RunQueryRequest, UnFlagQueryRequest}
 import net.shrine.qep.audit.QepAuditDb
 import net.shrine.qep.dao.AuditDao
 import net.shrine.qep.queries.QepQueryDb
@@ -70,8 +72,8 @@ trait AbstractQepService[BaseResp <: BaseShrineResponse] extends Loggable {
   //returns a ReadQueryDefinitionResponse
   protected def doReadQueryDefinition(request: ReadQueryDefinitionRequest, shouldBroadcast: Boolean): BaseResp = {
     authenticateAndThen(request) { authResult =>
-      val result =QepQueryDb.db.selectPreviousQuery(request).getOrElse{
-        doBroadcastQuery(request, new ReadQueryDefinitionAggregator, shouldBroadcast,authResult)}.asInstanceOf[BaseResp]
+      val result =QepQueryDb.db.selectPreviousQuery(request).getOrElse(
+        ErrorResponse(PreviousQueryDoesNotExist(request.queryId,request.authn.username,request.authn.domain))).asInstanceOf[BaseResp]
       info(s"doReadQueryDefinition($request,$shouldBroadcast) result is $result")
       result
     }
@@ -249,4 +251,10 @@ trait AbstractQepService[BaseResp <: BaseShrineResponse] extends Loggable {
       case na:NotAuthenticated => throw NotAuthenticatedException(na)
     }
   }
+}
+
+case class PreviousQueryDoesNotExist(networkQueryId: NetworkQueryId,username: String,domain:String) extends AbstractProblem(ProblemSources.Qep) {
+  override val summary: String = "No previous query with the requested id exists for this user."
+
+  override def description: String = s"No previous query with id $networkQueryId exists for ${username}:${domain}"
 }
