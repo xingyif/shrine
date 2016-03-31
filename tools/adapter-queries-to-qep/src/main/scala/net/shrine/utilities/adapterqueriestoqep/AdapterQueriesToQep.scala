@@ -112,7 +112,7 @@ object AdapterQueriesToQep {
       expression = shrineQuery.queryDefinition.expr.map(_.toString),
       dateCreated = date,
       deleted = false,
-      queryXml = shrineQuery.queryDefinition.toXml.text,
+      queryXml = shrineQuery.queryDefinition.toI2b2String,
       changeDate = date
     )
   }

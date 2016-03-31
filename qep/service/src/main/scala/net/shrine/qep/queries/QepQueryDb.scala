@@ -410,7 +410,7 @@ object QepQuery extends ((NetworkQueryId,UserName,String,QueryName,Option[String
       expression = runQueryRequest.queryDefinition.expr.map(_.toString),
       dateCreated = System.currentTimeMillis(),
       deleted = false,
-      queryXml = runQueryRequest.toXmlString,
+      queryXml = runQueryRequest.queryDefinition.toI2b2String,
       changeDate = System.currentTimeMillis()
     )
   }
