@@ -3,7 +3,6 @@ package net.shrine.wiring
 import com.typesafe.config.Config
 import net.shrine.adapter.service.AdapterConfig
 import net.shrine.broadcaster.HubConfig
-import net.shrine.client.EndpointConfig
 import net.shrine.config.{ConfigExtensions, Keys}
 import net.shrine.protocol.{ResultOutputTypes, HiveCredentials, ResultOutputType}
 import net.shrine.qep.QepConfig
@@ -18,12 +17,7 @@ final case class ShrineConfig(
   queryEntryPointConfig: Option[QepConfig],
   crcHiveCredentials: HiveCredentials,
   ontHiveCredentials: HiveCredentials,
-  //TODO: Do we want seperate hive credentials for talking to the Ont cell?
-  //On the dev stack, the project id is the only thing that needs to change, but can we rely on that?
-  pmEndpoint: EndpointConfig,
-  ontEndpoint: EndpointConfig,
   adapterStatusQuery: String,
-  shrineDatabaseType: String,
   breakdownResultOutputTypes: Set[ResultOutputType]) {
   
   //NB: Preparing for the possible case where we'd need distinct credentials for talking to the PM
@@ -43,16 +37,13 @@ object ShrineConfig {
     }
 
     ShrineConfig(
-      getOptionConfiguredIf(adapter, AdapterConfig(_)),
-      getOptionConfiguredIf(hub, HubConfig(_)),
-      getOptionConfiguredIf(queryEntryPoint, QepConfig(_)),
-      configForShrine.getConfigured(hiveCredentials,HiveCredentials(_,HiveCredentials.CRC)),
-      configForShrine.getConfigured(hiveCredentials,HiveCredentials(_,HiveCredentials.ONT)),
-      configForShrine.getConfigured(pmEndpoint,EndpointConfig(_)),
-      configForShrine.getConfigured(ontEndpoint,EndpointConfig(_)),
-      configForShrine.getString(networkStatusQuery),
-      configForShrine.getString(shrineDatabaseType),
-      configForShrine.getOptionConfigured(breakdownResultOutputTypes,ResultOutputTypes.fromConfig).getOrElse(Set.empty)
+      adapterConfig = getOptionConfiguredIf(adapter, AdapterConfig(_)),
+      hubConfig = getOptionConfiguredIf(hub, HubConfig(_)),
+      queryEntryPointConfig = getOptionConfiguredIf(queryEntryPoint, QepConfig(_)),
+      crcHiveCredentials = configForShrine.getConfigured(hiveCredentials, HiveCredentials(_, HiveCredentials.CRC)),
+      ontHiveCredentials = configForShrine.getConfigured(hiveCredentials, HiveCredentials(_, HiveCredentials.ONT)),
+      adapterStatusQuery = configForShrine.getString(networkStatusQuery),
+      breakdownResultOutputTypes = configForShrine.getOptionConfigured(breakdownResultOutputTypes, ResultOutputTypes.fromConfig).getOrElse(Set.empty)
     )
   }
 }

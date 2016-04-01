@@ -8,8 +8,6 @@ package net.shrine.config
  */
 //todo distribute to where they are used once the rest of config is cleaned up
 object Keys {
-  val pmEndpoint = "pmEndpoint"
-  val ontEndpoint = "ontEndpoint"
   val crcEndpoint = "crcEndpoint"
   val sheriffEndpoint = "sheriffEndpoint"
   val sheriffCredentials = "sheriffCredentials"
@@ -26,7 +24,6 @@ object Keys {
   val networkStatusQuery = "networkStatusQuery"
   val adapterMappingsFileName = "adapterMappingsFileName"
   val adapterMappingsFileType = "adapterMappingsFileType"
-  val shrineDatabaseType = "shrineDatabaseType"
   val downstreamNodes = "downstreamNodes"
   val maxSignatureAge = "maxSignatureAge"
   val shouldQuerySelf = "shouldQuerySelf"

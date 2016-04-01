@@ -86,10 +86,7 @@ final class AuthStrategyTest extends ShouldMatchersForJUnit {
                                 collectQepAudit = false)),
                           null, //hiveCredentials
                           null, //more hiveCredentials
-                          null, //pmEndpoint
-                          null, //ontEndpoint
                           null, //adapterStatusQuery
-                          null, //shrineDatabaseType
                           Set.empty
                         ) //breakdown types
       

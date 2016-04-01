@@ -67,19 +67,15 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
   protected lazy val signerVerifier: DefaultSignerVerifier = new DefaultSignerVerifier(shrineCertCollection)
 
   protected lazy val dataSource: DataSource = Jndi("java:comp/env/jdbc/shrineDB").get
-
-  protected lazy val squerylAdapter: DatabaseAdapter = SquerylDbAdapterSelecter.determineAdapter(shrineConfigurationBall.shrineDatabaseType)
-
+  protected lazy val squerylAdapter: DatabaseAdapter = SquerylDbAdapterSelecter.determineAdapter(shrineConfig.getString("shrineDatabaseType"))
   protected lazy val squerylInitializer: SquerylInitializer = new DataSourceSquerylInitializer(dataSource, squerylAdapter)
 
   private def makePoster = poster(shrineCertCollection) _
 
-  private lazy val pmEndpoint: EndpointConfig = shrineConfigurationBall.pmEndpoint
-
-  private lazy val ontEndpoint: EndpointConfig = shrineConfigurationBall.ontEndpoint
-
+  private lazy val pmEndpoint: EndpointConfig = shrineConfig.getConfigured("pmEndpoint", EndpointConfig(_))
   protected lazy val pmPoster: Poster = makePoster(pmEndpoint)
 
+  private lazy val ontEndpoint: EndpointConfig = shrineConfig.getConfigured("ontEndpoint", EndpointConfig(_))
   protected lazy val ontPoster: Poster = makePoster(ontEndpoint)
 
   protected lazy val breakdownTypes: Set[ResultOutputType] = shrineConfigurationBall.breakdownResultOutputTypes
@@ -263,7 +259,7 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
     }
   }
 
-  protected lazy val pmUrlString: String = shrineConfigurationBall.pmEndpoint.url.toString
+  protected lazy val pmUrlString: String = pmEndpoint.url.toString
 
   protected lazy val ontologyMetadata: OntologyMetadata = {
     import scala.concurrent.duration._

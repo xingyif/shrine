@@ -5,7 +5,7 @@ import net.shrine.authentication.AuthenticationType
 import net.shrine.authorization.AuthorizationType
 import net.shrine.broadcaster.NodeListParserTest
 import net.shrine.client.EndpointConfigTest
-import net.shrine.crypto.{KeyStoreDescriptorParser, KeyStoreType, SigningCertStrategy}
+import net.shrine.crypto.SigningCertStrategy
 import net.shrine.protocol.TestResultOutputTypes
 import net.shrine.util.ShouldMatchersForJUnit
 import org.junit.Test
@@ -32,11 +32,7 @@ final class ShrineConfigTest extends ShouldMatchersForJUnit  {
     import EndpointConfigTest.endpoint
 
     val conf = shrineConfig("shrine")
-    
-    conf.pmEndpoint should equal(endpoint("http://services.i2b2.org/i2b2/rest/PMService/getServices"))
-    
-    conf.ontEndpoint should equal(endpoint("http://example.com:9090/i2b2/rest/OntologyService/"))
-    
+
     conf.adapterConfig.get.crcEndpoint should equal(endpoint("http://services.i2b2.org/i2b2/rest/QueryToolService/"))
 
     conf.queryEntryPointConfig.get.authenticationType should be(AuthenticationType.Ecommons)
@@ -85,8 +81,6 @@ final class ShrineConfigTest extends ShouldMatchersForJUnit  {
     
     conf.adapterConfig.get.adapterMappingsFileName should equal("AdapterMappings.xml")
     
-    conf.shrineDatabaseType should equal("mysql")
-
     conf.hubConfig.get.downstreamNodes.toSet should equal {
       Set(
         node("some hospital", "http://example.com/foo"),
