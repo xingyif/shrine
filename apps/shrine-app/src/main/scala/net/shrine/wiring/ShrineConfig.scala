@@ -5,7 +5,6 @@ import net.shrine.adapter.service.AdapterConfig
 import net.shrine.broadcaster.HubConfig
 import net.shrine.client.EndpointConfig
 import net.shrine.config.{ConfigExtensions, Keys}
-import net.shrine.crypto.{KeyStoreDescriptorParser, KeyStoreDescriptor}
 import net.shrine.protocol.{ResultOutputTypes, HiveCredentials, ResultOutputType}
 import net.shrine.qep.QepConfig
 
@@ -25,7 +24,6 @@ final case class ShrineConfig(
   ontEndpoint: EndpointConfig,
   adapterStatusQuery: String,
   shrineDatabaseType: String,
-  keystoreDescriptor: KeyStoreDescriptor,
   breakdownResultOutputTypes: Set[ResultOutputType]) {
   
   //NB: Preparing for the possible case where we'd need distinct credentials for talking to the PM
@@ -54,7 +52,6 @@ object ShrineConfig {
       configForShrine.getConfigured(ontEndpoint,EndpointConfig(_)),
       configForShrine.getString(networkStatusQuery),
       configForShrine.getString(shrineDatabaseType),
-      configForShrine.getConfigured(keystore,KeyStoreDescriptorParser(_)),
       configForShrine.getOptionConfigured(breakdownResultOutputTypes,ResultOutputTypes.fromConfig).getOrElse(Set.empty)
     )
   }

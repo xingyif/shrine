@@ -1,5 +1,6 @@
 package net.shrine.happy
 
+import com.typesafe.config.Config
 import net.shrine.log.Loggable
 import net.shrine.wiring.ShrineConfig
 
@@ -12,8 +13,7 @@ import net.shrine.adapter.service.AdapterRequestHandler
 import net.shrine.broadcaster.{IdAndUrl, AdapterClientBroadcaster}
 import net.shrine.qep.dao.AuditDao
 import net.shrine.client.Poster
-import net.shrine.crypto.KeyStoreCertCollection
-import net.shrine.crypto.Signer
+import net.shrine.crypto.{KeyStoreDescriptor, KeyStoreCertCollection, Signer, SigningCertStrategy}
 import net.shrine.i2b2.protocol.pm.GetUserConfigurationRequest
 import net.shrine.i2b2.protocol.pm.HiveConfig
 import net.shrine.protocol.AuthenticationInfo
@@ -31,7 +31,6 @@ import net.shrine.protocol.query.Term
 import net.shrine.util.{StackTrace, Versions, XmlUtil}
 import net.shrine.ont.data.OntologyMetadata
 import net.shrine.config.mappings.AdapterMappings
-import net.shrine.crypto.SigningCertStrategy
 
 /**
  * @author Bill Simons
@@ -44,16 +43,18 @@ import net.shrine.crypto.SigningCertStrategy
  * @see http://www.gnu.org/licenses/lgpl.html
  */
 final class HappyShrineService(
-  config: ShrineConfig,
-  certCollection: KeyStoreCertCollection,
-  signer: Signer,
-  pmPoster: Poster,
-  ontologyMetadata: OntologyMetadata,
-  adapterMappings: Option[AdapterMappings],
-  auditDaoOption: Option[AuditDao],
-  adapterDaoOption: Option[AdapterDao],
-  broadcasterOption: Option[AdapterClientBroadcaster],
-  adapterOption: Option[AdapterRequestHandler]) extends HappyShrineRequestHandler with Loggable {
+                                config:Config,
+                                keystoreDescriptor: KeyStoreDescriptor,
+                                shrineConfigObject: ShrineConfig,
+                                certCollection: KeyStoreCertCollection,
+                                signer: Signer,
+                                pmPoster: Poster,
+                                ontologyMetadata: OntologyMetadata,
+                                adapterMappings: Option[AdapterMappings],
+                                auditDaoOption: Option[AuditDao],
+                                adapterDaoOption: Option[AdapterDao],
+                                broadcasterOption: Option[AdapterClientBroadcaster],
+                                adapterOption: Option[AdapterRequestHandler]) extends HappyShrineRequestHandler with Loggable {
 
   info("Happy service initialized")
 
@@ -73,9 +74,9 @@ final class HappyShrineService(
 
     XmlUtil.stripWhitespace {
       <keystoreReport>
-        <keystoreFile>{ config.keystoreDescriptor.file }</keystoreFile>
-        <keystoreType>{ config.keystoreDescriptor.keyStoreType }</keystoreType>
-        <privateKeyAlias>{ config.keystoreDescriptor.privateKeyAlias.getOrElse("unspecified") }</privateKeyAlias>
+        <keystoreFile>{ keystoreDescriptor.file }</keystoreFile>
+        <keystoreType>{ keystoreDescriptor.keyStoreType }</keystoreType>
+        <privateKeyAlias>{ keystoreDescriptor.privateKeyAlias.getOrElse("unspecified") }</privateKeyAlias>
         {
           myCertId.map { myId =>
             <certId>
@@ -100,7 +101,7 @@ final class HappyShrineService(
     }.toString
   }
 
-  private def nodeListAsXml: Iterable[Node] = config.hubConfig match {
+  private def nodeListAsXml: Iterable[Node] = shrineConfigObject.hubConfig match {
     case None => Nil
     case Some(hubConfig) => hubConfig.downstreamNodes.map {
       case IdAndUrl(NodeId(nodeName), nodeUrl) => {
@@ -118,9 +119,9 @@ final class HappyShrineService(
 
   override def hiveReport: String = {
     val report = for {
-      adapterConfig <- config.adapterConfig
+      adapterConfig <- shrineConfigObject.adapterConfig
     } yield {
-      val credentials = config.pmHiveCredentials
+      val credentials = shrineConfigObject.pmHiveCredentials
 
       val pmRequest = GetUserConfigurationRequest(credentials.toAuthenticationInfo)
 
@@ -147,7 +148,7 @@ final class HappyShrineService(
 
   override def networkReport: String = {
     val report = for {
-      hubConfig <- config.hubConfig
+      hubConfig <- shrineConfigObject.hubConfig
       broadcaster <- broadcasterOption
     } yield {
       val message = newBroadcastMessageWithRunQueryRequest
@@ -192,7 +193,7 @@ final class HappyShrineService(
   }
 
   private def newRunQueryRequest(authn: AuthenticationInfo): RunQueryRequest = {
-    val queryDefinition = QueryDefinition("TestQuery", OccuranceLimited(1, Term(config.adapterStatusQuery)))
+    val queryDefinition = QueryDefinition("TestQuery", OccuranceLimited(1, Term(shrineConfigObject.adapterStatusQuery)))
 
     import scala.concurrent.duration._
 

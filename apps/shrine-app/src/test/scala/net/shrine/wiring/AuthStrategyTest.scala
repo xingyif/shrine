@@ -89,9 +89,7 @@ final class AuthStrategyTest extends ShouldMatchersForJUnit {
                           null, //pmEndpoint
                           null, //ontEndpoint
                           null, //adapterStatusQuery
-                          null, //humanReadableNodeName
                           null, //shrineDatabaseType
-                          null, //keystoreDescriptor
                           Set.empty
                         ) //breakdown types
       

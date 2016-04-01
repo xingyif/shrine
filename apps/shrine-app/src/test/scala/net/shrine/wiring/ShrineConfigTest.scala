@@ -5,7 +5,7 @@ import net.shrine.authentication.AuthenticationType
 import net.shrine.authorization.AuthorizationType
 import net.shrine.broadcaster.NodeListParserTest
 import net.shrine.client.EndpointConfigTest
-import net.shrine.crypto.{KeyStoreType, SigningCertStrategy}
+import net.shrine.crypto.{KeyStoreDescriptorParser, KeyStoreType, SigningCertStrategy}
 import net.shrine.protocol.TestResultOutputTypes
 import net.shrine.util.ShouldMatchersForJUnit
 import org.junit.Test
@@ -48,7 +48,7 @@ final class ShrineConfigTest extends ShouldMatchersForJUnit  {
     conf.queryEntryPointConfig.get.sheriffCredentials.get.domain should be(None)
     conf.queryEntryPointConfig.get.sheriffCredentials.get.username should be("sheriffUsername")
     conf.queryEntryPointConfig.get.sheriffCredentials.get.password should be("sheriffPassword")
-    
+
     conf.crcHiveCredentials should equal(conf.pmHiveCredentials)
     
     conf.crcHiveCredentials.domain should equal("HarvardDemo")
@@ -86,13 +86,7 @@ final class ShrineConfigTest extends ShouldMatchersForJUnit  {
     conf.adapterConfig.get.adapterMappingsFileName should equal("AdapterMappings.xml")
     
     conf.shrineDatabaseType should equal("mysql")
-    
-    conf.keystoreDescriptor.file should be("shrine.keystore")
-    conf.keystoreDescriptor.password should be("chiptesting")
-    conf.keystoreDescriptor.privateKeyAlias should be(Some("test-cert"))
-    conf.keystoreDescriptor.keyStoreType should be(KeyStoreType.PKCS12)
-    conf.keystoreDescriptor.caCertAliases should be(Seq("carra ca"))
-    
+
     conf.hubConfig.get.downstreamNodes.toSet should equal {
       Set(
         node("some hospital", "http://example.com/foo"),

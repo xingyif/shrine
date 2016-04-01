@@ -27,7 +27,6 @@ object Keys {
   val adapterMappingsFileName = "adapterMappingsFileName"
   val adapterMappingsFileType = "adapterMappingsFileType"
   val shrineDatabaseType = "shrineDatabaseType"
-  val keystore = "keystore"
   val downstreamNodes = "downstreamNodes"
   val maxSignatureAge = "maxSignatureAge"
   val shouldQuerySelf = "shouldQuerySelf"

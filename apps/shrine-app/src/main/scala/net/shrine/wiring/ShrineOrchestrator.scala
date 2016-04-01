@@ -3,30 +3,32 @@ package net.shrine.wiring
 import javax.sql.DataSource
 
 import com.typesafe.config.{Config, ConfigFactory}
-import net.shrine.adapter.{Adapter, AdapterMap, DeleteQueryAdapter, FlagQueryAdapter, ReadInstanceResultsAdapter, ReadPreviousQueriesAdapter, ReadQueryDefinitionAdapter, ReadQueryResultAdapter, ReadTranslatedQueryDefinitionAdapter, RenameQueryAdapter, RunQueryAdapter, UnFlagQueryAdapter}
-import net.shrine.adapter.dao.{AdapterDao, I2b2AdminDao}
-import net.shrine.adapter.dao.squeryl.{SquerylAdapterDao, SquerylI2b2AdminDao}
 import net.shrine.adapter.dao.squeryl.tables.{Tables => AdapterTables}
+import net.shrine.adapter.dao.squeryl.{SquerylAdapterDao, SquerylI2b2AdminDao}
+import net.shrine.adapter.dao.{AdapterDao, I2b2AdminDao}
 import net.shrine.adapter.service.{AdapterRequestHandler, AdapterResource, AdapterService, I2b2AdminResource, I2b2AdminService}
 import net.shrine.adapter.translators.{ExpressionTranslator, QueryDefinitionTranslator}
+import net.shrine.adapter.{Adapter, AdapterMap, DeleteQueryAdapter, FlagQueryAdapter, ReadInstanceResultsAdapter, ReadPreviousQueriesAdapter, ReadQueryDefinitionAdapter, ReadQueryResultAdapter, ReadTranslatedQueryDefinitionAdapter, RenameQueryAdapter, RunQueryAdapter, UnFlagQueryAdapter}
 import net.shrine.authentication.Authenticator
 import net.shrine.authorization.QueryAuthorizationService
-import net.shrine.broadcaster.{AdapterClientBroadcaster, BroadcastAndAggregationService, BroadcasterClient, InJvmBroadcasterClient, NodeHandle, PosterBroadcasterClient, SigningBroadcastAndAggregationService}
 import net.shrine.broadcaster.dao.HubDao
 import net.shrine.broadcaster.dao.squeryl.SquerylHubDao
 import net.shrine.broadcaster.service.{BroadcasterMultiplexerResource, BroadcasterMultiplexerService}
+import net.shrine.broadcaster.{AdapterClientBroadcaster, BroadcastAndAggregationService, BroadcasterClient, InJvmBroadcasterClient, NodeHandle, PosterBroadcasterClient, SigningBroadcastAndAggregationService}
 import net.shrine.client.{EndpointConfig, HttpClient, JerseyHttpClient, OntClient, Poster, PosterOntClient}
+import net.shrine.config.ConfigExtensions
+import net.shrine.config.Keys._
 import net.shrine.config.mappings.{AdapterMappings, AdapterMappingsSource, ClasspathFormatDetectingAdapterMappingsSource}
-import net.shrine.crypto.{DefaultSignerVerifier, KeyStoreCertCollection, TrustParam}
+import net.shrine.crypto.{DefaultSignerVerifier, KeyStoreCertCollection, KeyStoreDescriptorParser, TrustParam}
 import net.shrine.dao.squeryl.{DataSourceSquerylInitializer, SquerylDbAdapterSelecter, SquerylInitializer}
 import net.shrine.happy.{HappyShrineResource, HappyShrineService}
 import net.shrine.log.Loggable
 import net.shrine.ont.data.{OntClientOntologyMetadata, OntologyMetadata}
 import net.shrine.protocol.{NodeId, RequestType, ResultOutputType}
-import net.shrine.qep.{I2b2BroadcastResource, I2b2QepService, ShrineResource, QepService}
 import net.shrine.qep.dao.AuditDao
 import net.shrine.qep.dao.squeryl.SquerylAuditDao
 import net.shrine.qep.dao.squeryl.tables.{Tables => HubTables}
+import net.shrine.qep.{I2b2BroadcastResource, I2b2QepService, QepService, ShrineResource}
 import net.shrine.status.StatusJaxrs
 import org.squeryl.internals.DatabaseAdapter
 
@@ -59,10 +61,9 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
   protected lazy val nodeId: NodeId = NodeId(shrineConfig.getString("humanReadableNodeName"))
 
   //TODO: Don't assume keystore lives on the filesystem, could come from classpath, etc
-  protected lazy val shrineCertCollection: KeyStoreCertCollection = KeyStoreCertCollection.fromFile(shrineConfigurationBall.keystoreDescriptor)
-
+  protected lazy val keyStoreDescriptor = shrineConfig.getConfigured("keystore",KeyStoreDescriptorParser(_))
+  protected lazy val shrineCertCollection: KeyStoreCertCollection = KeyStoreCertCollection.fromFile(keyStoreDescriptor)
   protected lazy val keystoreTrustParam: TrustParam = TrustParam.SomeKeyStore(shrineCertCollection)
-
   protected lazy val signerVerifier: DefaultSignerVerifier = new DefaultSignerVerifier(shrineCertCollection)
 
   protected lazy val dataSource: DataSource = Jndi("java:comp/env/jdbc/shrineDB").get
@@ -276,16 +277,19 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
   //TODO: Don't assume we're an adapter with an AdapterMappings (don't call .get)
   protected lazy val happyService: HappyShrineService = {
     new HappyShrineService(
-        shrineConfigurationBall,
-        shrineCertCollection, 
-        signerVerifier, 
-        pmPoster, 
-        ontologyMetadata, 
-        adapterMappings, 
-        auditDao, 
-        adapterDao, 
-        broadcasterOption, 
-        adapterService)
+      config = config,
+      keystoreDescriptor = keyStoreDescriptor,
+      shrineConfigObject = shrineConfigurationBall,
+      certCollection = shrineCertCollection,
+      signer = signerVerifier,
+      pmPoster = pmPoster,
+      ontologyMetadata = ontologyMetadata,
+      adapterMappings = adapterMappings,
+      auditDaoOption = auditDao,
+      adapterDaoOption = adapterDao,
+      broadcasterOption = broadcasterOption,
+      adapterOption = adapterService
+    )
   }
 
   protected lazy val happyResource: HappyShrineResource = new HappyShrineResource(happyService)
