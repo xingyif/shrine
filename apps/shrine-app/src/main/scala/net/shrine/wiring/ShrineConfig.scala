@@ -17,8 +17,8 @@ final case class ShrineConfig(
   queryEntryPointConfig: Option[QepConfig],
   crcHiveCredentials: HiveCredentials,
   ontHiveCredentials: HiveCredentials,
-  adapterStatusQuery: String,
-  breakdownResultOutputTypes: Set[ResultOutputType]) {
+  adapterStatusQuery: String
+                             ) {
   
   //NB: Preparing for the possible case where we'd need distinct credentials for talking to the PM
   def pmHiveCredentials: HiveCredentials = crcHiveCredentials
@@ -42,8 +42,7 @@ object ShrineConfig {
       queryEntryPointConfig = getOptionConfiguredIf(queryEntryPoint, QepConfig(_)),
       crcHiveCredentials = configForShrine.getConfigured(hiveCredentials, HiveCredentials(_, HiveCredentials.CRC)),
       ontHiveCredentials = configForShrine.getConfigured(hiveCredentials, HiveCredentials(_, HiveCredentials.ONT)),
-      adapterStatusQuery = configForShrine.getString(networkStatusQuery),
-      breakdownResultOutputTypes = configForShrine.getOptionConfigured(breakdownResultOutputTypes, ResultOutputTypes.fromConfig).getOrElse(Set.empty)
+      adapterStatusQuery = configForShrine.getString(networkStatusQuery)
     )
   }
 }

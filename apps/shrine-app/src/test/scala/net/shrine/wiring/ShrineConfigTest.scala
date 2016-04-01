@@ -6,7 +6,6 @@ import net.shrine.authorization.AuthorizationType
 import net.shrine.broadcaster.NodeListParserTest
 import net.shrine.client.EndpointConfigTest
 import net.shrine.crypto.SigningCertStrategy
-import net.shrine.protocol.TestResultOutputTypes
 import net.shrine.util.ShouldMatchersForJUnit
 import org.junit.Test
 
@@ -89,8 +88,6 @@ final class ShrineConfigTest extends ShouldMatchersForJUnit  {
     }
     
     conf.adapterConfig.get.immediatelyRunIncomingQueries should be(false)
-    
-    conf.breakdownResultOutputTypes should equal(TestResultOutputTypes.values)
   }
   
   @Test
@@ -100,7 +97,6 @@ final class ShrineConfigTest extends ShouldMatchersForJUnit  {
     conf.adapterConfig should be(None)
     conf.hubConfig should be(None)
     conf.queryEntryPointConfig should be(None)
-    conf.breakdownResultOutputTypes should be(Set.empty)
   }
   
   @Test
@@ -111,6 +107,5 @@ final class ShrineConfigTest extends ShouldMatchersForJUnit  {
     conf.queryEntryPointConfig.get.authorizationType should be(AuthorizationType.NoAuthorization)
     conf.queryEntryPointConfig.get.signingCertStrategy should be(SigningCertStrategy.DontAttach)
     
-    conf.breakdownResultOutputTypes should equal(TestResultOutputTypes.values)
   }
 }

@@ -89,7 +89,7 @@ object ScannerConfig {
     val projectId = subKey("projectId")
     val credentials = BaseKeys.credentials(base)
     
-    val breakdownResultOutputTypes = subKey(Keys.breakdownResultOutputTypes)
+    val breakdownResultOutputTypes = subKey("breakdownResultOutputTypes")
     
     val outputFile = subKey("outputFile")
   }

@@ -86,8 +86,7 @@ final class AuthStrategyTest extends ShouldMatchersForJUnit {
                                 collectQepAudit = false)),
                           null, //hiveCredentials
                           null, //more hiveCredentials
-                          null, //adapterStatusQuery
-                          Set.empty
+                          null //adapterStatusQuery
                         ) //breakdown types
       
       val authenticator: Authenticator = AllowsAllAuthenticator

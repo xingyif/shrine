@@ -24,7 +24,7 @@ import net.shrine.dao.squeryl.{DataSourceSquerylInitializer, SquerylDbAdapterSel
 import net.shrine.happy.{HappyShrineResource, HappyShrineService}
 import net.shrine.log.Loggable
 import net.shrine.ont.data.{OntClientOntologyMetadata, OntologyMetadata}
-import net.shrine.protocol.{NodeId, RequestType, ResultOutputType}
+import net.shrine.protocol.{ResultOutputTypes, NodeId, RequestType, ResultOutputType}
 import net.shrine.qep.dao.AuditDao
 import net.shrine.qep.dao.squeryl.SquerylAuditDao
 import net.shrine.qep.dao.squeryl.tables.{Tables => HubTables}
@@ -78,7 +78,7 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
   private lazy val ontEndpoint: EndpointConfig = shrineConfig.getConfigured("ontEndpoint", EndpointConfig(_))
   protected lazy val ontPoster: Poster = makePoster(ontEndpoint)
 
-  protected lazy val breakdownTypes: Set[ResultOutputType] = shrineConfigurationBall.breakdownResultOutputTypes
+  protected lazy val breakdownTypes: Set[ResultOutputType] = shrineConfig.getOptionConfigured("breakdownResultOutputTypes", ResultOutputTypes.fromConfig).getOrElse(Set.empty)
 
   protected lazy val hubDao: HubDao = new SquerylHubDao(squerylInitializer, new net.shrine.broadcaster.dao.squeryl.tables.Tables)
 

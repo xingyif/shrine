@@ -74,6 +74,6 @@ object BatchQuerierConfig {
     val projectId = subKey("projectId")
     val topicId = subKey("topicId")
     val queriesPerTerm = subKey("queriesPerTerm")
-    val breakdownResultOutputTypes = Keys.breakdownResultOutputTypes
+    val breakdownResultOutputTypes = "breakdownResultOutputTypes"
   }
 }

@@ -35,6 +35,5 @@ object Keys {
   val immediatelyRunIncomingQueries = "immediatelyRunIncomingQueries"
   val authenticationType = "authenticationType"
   val authorizationType = "authorizationType"
-  val breakdownResultOutputTypes = "breakdownResultOutputTypes"
   val attachSigningCert = "attachSigningCert"
 }
