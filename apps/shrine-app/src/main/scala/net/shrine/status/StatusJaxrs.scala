@@ -5,7 +5,7 @@ import javax.ws.rs.core.{Response, MediaType}
 
 import com.sun.jersey.spi.container.{ContainerRequest, ContainerRequestFilter}
 import com.typesafe.config.{Config => TsConfig}
-import net.shrine.wiring.ManuallyWiredShrineJaxrsResources
+import net.shrine.wiring.ShrineOrchestrator
 import org.json4s.{DefaultFormats, Formats}
 import org.json4s.native.Serialization
 
@@ -74,7 +74,7 @@ class PermittedHostOnly extends ContainerRequestFilter {
   //how to apply in http://stackoverflow.com/questions/4358213/how-does-one-intercept-a-request-during-the-jersey-lifecycle
   override def filter(requestContext: ContainerRequest): ContainerRequest = {
     val hostOfOrigin = requestContext.getBaseUri.getHost
-    val shrineConfig:TsConfig = ManuallyWiredShrineJaxrsResources.config
+    val shrineConfig:TsConfig = ShrineOrchestrator.config
     val permittedHostOfOrigin:String = shrineConfig.getOption("shrine.status.permittedHostOfOrigin",_.getString).getOrElse("localhost")
 
     val path = requestContext.getPath

@@ -1,6 +1,6 @@
 package net.shrine.jersey
 
-import net.shrine.wiring.ManuallyWiredShrineJaxrsResources
+import net.shrine.wiring.ShrineOrchestrator
 
 /**
  * @author clint
@@ -8,4 +8,4 @@ import net.shrine.wiring.ManuallyWiredShrineJaxrsResources
  * 
  * Default (non-HMS) Shrine "entry point" for Jersey.
  */
-final class DefaultShrineResourceConfig extends ShrineResourceConfig(ManuallyWiredShrineJaxrsResources)
+final class DefaultShrineResourceConfig extends ShrineResourceConfig(ShrineOrchestrator)

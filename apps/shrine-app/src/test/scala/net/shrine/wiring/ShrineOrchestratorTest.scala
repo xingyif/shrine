@@ -15,10 +15,10 @@ import javax.ws.rs.core.MediaType
  * @author clint
  * @since Jan 7, 2014
  */
-final class ManuallyWiredShrineJaxrsResourcesTest extends ShouldMatchersForJUnit {
+final class ShrineOrchestratorTest extends ShouldMatchersForJUnit {
   @Test
   def testMakeAdapterServiceOption {
-    import ManuallyWiredShrineJaxrsResources.makeAdapterServiceOption
+    import ShrineOrchestrator.makeAdapterServiceOption
     
     makeAdapterServiceOption(false, null) should be(None)
     
@@ -31,7 +31,7 @@ final class ManuallyWiredShrineJaxrsResourcesTest extends ShouldMatchersForJUnit
   
   @Test
   def testMakeHttpClient {
-    import ManuallyWiredShrineJaxrsResources.makeHttpClient
+    import ShrineOrchestrator.makeHttpClient
     
     val url = new URL("http://example.com")
     
