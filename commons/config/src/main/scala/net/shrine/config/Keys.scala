@@ -14,7 +14,6 @@ object Keys {
   val sheriffEndpoint = "sheriffEndpoint"
   val sheriffCredentials = "sheriffCredentials"
   val shrineSteward = "shrineSteward"
-  val humanReadableNodeName = "humanReadableNodeName"
   val hiveCredentials = "hiveCredentials"
   val ontProjectId = "ontProjectId"
   val crcProjectId = "crcProjectId"

@@ -42,7 +42,6 @@ import org.squeryl.internals.DatabaseAdapter
  *
  * among other links mentioning val overrides, early initializers, etc. -Clint
  */
-//todo this is Shrine. Rename it when things are clean and calm.
 object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
   import NodeHandleSource.makeNodeHandles
 
@@ -52,12 +51,15 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
   
   //Load config from file on the classpath called "shrine.conf"
   lazy val config: Config = ConfigFactory.load("shrine")
-  protected lazy val shrineConfig: ShrineConfig = ShrineConfig(config)
 
-  protected lazy val nodeId: NodeId = NodeId(shrineConfig.humanReadableNodeName)
+  protected lazy val shrineConfigurationBall: ShrineConfig = ShrineConfig(config)
+
+  val shrineConfig = config.getConfig("shrine")
+
+  protected lazy val nodeId: NodeId = NodeId(shrineConfig.getString("humanReadableNodeName"))
 
   //TODO: Don't assume keystore lives on the filesystem, could come from classpath, etc
-  protected lazy val shrineCertCollection: KeyStoreCertCollection = KeyStoreCertCollection.fromFile(shrineConfig.keystoreDescriptor)
+  protected lazy val shrineCertCollection: KeyStoreCertCollection = KeyStoreCertCollection.fromFile(shrineConfigurationBall.keystoreDescriptor)
 
   protected lazy val keystoreTrustParam: TrustParam = TrustParam.SomeKeyStore(shrineCertCollection)
 
@@ -65,26 +67,26 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
 
   protected lazy val dataSource: DataSource = Jndi("java:comp/env/jdbc/shrineDB").get
 
-  protected lazy val squerylAdapter: DatabaseAdapter = SquerylDbAdapterSelecter.determineAdapter(shrineConfig.shrineDatabaseType)
+  protected lazy val squerylAdapter: DatabaseAdapter = SquerylDbAdapterSelecter.determineAdapter(shrineConfigurationBall.shrineDatabaseType)
 
   protected lazy val squerylInitializer: SquerylInitializer = new DataSourceSquerylInitializer(dataSource, squerylAdapter)
 
   private def makePoster = poster(shrineCertCollection) _
 
-  private lazy val pmEndpoint: EndpointConfig = shrineConfig.pmEndpoint
+  private lazy val pmEndpoint: EndpointConfig = shrineConfigurationBall.pmEndpoint
 
-  private lazy val ontEndpoint: EndpointConfig = shrineConfig.ontEndpoint
+  private lazy val ontEndpoint: EndpointConfig = shrineConfigurationBall.ontEndpoint
 
   protected lazy val pmPoster: Poster = makePoster(pmEndpoint)
 
   protected lazy val ontPoster: Poster = makePoster(ontEndpoint)
-  
-  protected lazy val breakdownTypes: Set[ResultOutputType] = shrineConfig.breakdownResultOutputTypes
-  
+
+  protected lazy val breakdownTypes: Set[ResultOutputType] = shrineConfigurationBall.breakdownResultOutputTypes
+
   protected lazy val hubDao: HubDao = new SquerylHubDao(squerylInitializer, new net.shrine.broadcaster.dao.squeryl.tables.Tables)
 
   //todo move as much of this block as possible to the adapter project
-  protected lazy val (adapterService, i2b2AdminService, adapterDao, adapterMappings) = adapterComponentsToTuple(shrineConfig.adapterConfig.map { adapterConfig =>
+  protected lazy val (adapterService, i2b2AdminService, adapterDao, adapterMappings) = adapterComponentsToTuple(shrineConfigurationBall.adapterConfig.map { adapterConfig =>
 
     val crcEndpoint: EndpointConfig = adapterConfig.crcEndpoint
 
@@ -95,7 +97,7 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
     val adapterDao: AdapterDao = new SquerylAdapterDao(squerylInitializer, squerylAdapterTables)(breakdownTypes)
 
     //NB: Is i2b2HiveCredentials.projectId the right project id to use?
-    val i2b2AdminDao: I2b2AdminDao = new SquerylI2b2AdminDao(shrineConfig.crcHiveCredentials.projectId, squerylInitializer, squerylAdapterTables)
+    val i2b2AdminDao: I2b2AdminDao = new SquerylI2b2AdminDao(shrineConfigurationBall.crcHiveCredentials.projectId, squerylInitializer, squerylAdapterTables)
 
     val adapterMappingsSource: AdapterMappingsSource = ClasspathFormatDetectingAdapterMappingsSource(adapterConfig.adapterMappingsFileName)
 
@@ -107,11 +109,11 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
     val queryDefinitionTranslator: QueryDefinitionTranslator = new QueryDefinitionTranslator(expressionTranslator)
 
     val doObfuscation = adapterConfig.setSizeObfuscation
-    
+
     val runQueryAdapter = new RunQueryAdapter(
       crcPoster,
       adapterDao,
-      shrineConfig.crcHiveCredentials,
+      shrineConfigurationBall.crcHiveCredentials,
       queryDefinitionTranslator,
       adapterConfig.adapterLockoutAttemptsThreshold,
       doObfuscation,
@@ -122,7 +124,7 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
 
     val readInstanceResultsAdapter: Adapter = new ReadInstanceResultsAdapter(
       crcPoster,
-      shrineConfig.crcHiveCredentials,
+      shrineConfigurationBall.crcHiveCredentials,
       adapterDao,
       doObfuscation,
       breakdownTypes,
@@ -131,7 +133,7 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
 
     val readQueryResultAdapter: Adapter = new ReadQueryResultAdapter(
       crcPoster,
-      shrineConfig.crcHiveCredentials,
+      shrineConfigurationBall.crcHiveCredentials,
       adapterDao,
       doObfuscation,
       breakdownTypes,
@@ -145,11 +147,11 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
     val renameQueryAdapter: Adapter = new RenameQueryAdapter(adapterDao)
 
     val readQueryDefinitionAdapter: Adapter = new ReadQueryDefinitionAdapter(adapterDao)
-    
-    val readTranslatedQueryDefinitionAdapter: Adapter = new ReadTranslatedQueryDefinitionAdapter(nodeId, queryDefinitionTranslator)    
-    
+
+    val readTranslatedQueryDefinitionAdapter: Adapter = new ReadTranslatedQueryDefinitionAdapter(nodeId, queryDefinitionTranslator)
+
     val flagQueryAdapter: Adapter = new FlagQueryAdapter(adapterDao)
-    
+
     val unFlagQueryAdapter: Adapter = new UnFlagQueryAdapter(adapterDao)
 
     val adapterMap = AdapterMap(Map(
@@ -165,32 +167,32 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
       RequestType.UnFlagQueryRequest -> unFlagQueryAdapter))
 
     AdapterComponents(
-        new AdapterService(nodeId, signerVerifier, adapterConfig.maxSignatureAge, adapterMap), 
-        new I2b2AdminService(adapterDao, i2b2AdminDao, pmPoster, runQueryAdapter), 
-        adapterDao, 
+        new AdapterService(nodeId, signerVerifier, adapterConfig.maxSignatureAge, adapterMap),
+        new I2b2AdminService(adapterDao, i2b2AdminDao, pmPoster, runQueryAdapter),
+        adapterDao,
         adapterMappings)
   })
 
-  private lazy val localAdapterServiceOption: Option[AdapterRequestHandler] = shrineConfig.hubConfig.flatMap(hubConfig => makeAdapterServiceOption(hubConfig.shouldQuerySelf, adapterService))
-  
-  private lazy val broadcastDestinations: Option[Set[NodeHandle]] = shrineConfig.hubConfig.map(hubConfig => makeNodeHandles(keystoreTrustParam, hubConfig.maxQueryWaitTime, hubConfig.downstreamNodes, nodeId, localAdapterServiceOption, breakdownTypes))
-  
-  protected lazy val (shrineService, i2b2Service, auditDao) = queryEntryPointComponentsToTuple(shrineConfig.queryEntryPointConfig.map { queryEntryPointConfig =>
+  private lazy val localAdapterServiceOption: Option[AdapterRequestHandler] = shrineConfigurationBall.hubConfig.flatMap(hubConfig => makeAdapterServiceOption(hubConfig.shouldQuerySelf, adapterService))
+
+  private lazy val broadcastDestinations: Option[Set[NodeHandle]] = shrineConfigurationBall.hubConfig.map(hubConfig => makeNodeHandles(keystoreTrustParam, hubConfig.maxQueryWaitTime, hubConfig.downstreamNodes, nodeId, localAdapterServiceOption, breakdownTypes))
+
+  protected lazy val (shrineService, i2b2Service, auditDao) = queryEntryPointComponentsToTuple(shrineConfigurationBall.queryEntryPointConfig.map { queryEntryPointConfig =>
 
       val broadcasterClient: BroadcasterClient = {
         if(queryEntryPointConfig.broadcasterIsLocal) {
           //If broadcaster is local, we need a hub config
           //TODO: Enforce this when unmarshalling configs
           require(broadcastDestinations.isDefined, s"The QEP's config implied a local hub (no broadcasterServiceEndpoint), but either no downstream nodes were configured, the hub was not configured, or the hub's configuration specified not to create it.")
-          
+
           val broadcaster: AdapterClientBroadcaster = AdapterClientBroadcaster(broadcastDestinations.get, hubDao)
-          
+
           InJvmBroadcasterClient(broadcaster)
         } else {
           //if broadcaster is remote, we need an endpoint
           //TODO: Enforce this when unmarshalling configs
           require(queryEntryPointConfig.broadcasterServiceEndpoint.isDefined, "Non-local broadcaster requested, but no URL for the remote broadcaster is specified")
-          
+
           PosterBroadcasterClient(makePoster(queryEntryPointConfig.broadcasterServiceEndpoint.get), breakdownTypes)
         }
       }
@@ -204,14 +206,14 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
       val broadcastService: BroadcastAndAggregationService = SigningBroadcastAndAggregationService(broadcasterClient, signerVerifier, queryEntryPointConfig.signingCertStrategy)
 
       val auditDao: AuditDao = new SquerylAuditDao(squerylInitializer, new HubTables)
-      
+
       val authenticationType = queryEntryPointConfig.authenticationType
- 
+
       val authorizationType = queryEntryPointConfig.authorizationType
 
       val authenticator: Authenticator = AuthStrategy.determineAuthenticator(authenticationType, pmPoster)
-      
-      val authorizationService: QueryAuthorizationService = AuthStrategy.determineQueryAuthorizationService(authorizationType, shrineConfig, authenticator)
+
+      val authorizationService: QueryAuthorizationService = AuthStrategy.determineQueryAuthorizationService(authorizationType, shrineConfigurationBall, authenticator)
 
       debug(s"authorizationService set to $authorizationService")
 
@@ -240,33 +242,33 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
         ),
         auditDao)
     })
-  
+
   private lazy val broadcasterOption = unpackHubComponents {
     for {
-      hubConfig <- shrineConfig.hubConfig
+      hubConfig <- shrineConfigurationBall.hubConfig
     } yield {
       require(broadcastDestinations.isDefined, "This node is configured to be a hub, but no downstream nodes are defined")
-      
+
       HubComponents(AdapterClientBroadcaster(broadcastDestinations.get, hubDao))
     }
   }
-  
+
   protected lazy val broadcasterMultiplexerService = {
     for {
       broadcaster <- broadcasterOption
-      hubConfig <- shrineConfig.hubConfig
+      hubConfig <- shrineConfigurationBall.hubConfig
     } yield {
       BroadcasterMultiplexerService(broadcaster, hubConfig.maxQueryWaitTime)
     }
   }
 
-  protected lazy val pmUrlString: String = shrineConfig.pmEndpoint.url.toString
+  protected lazy val pmUrlString: String = shrineConfigurationBall.pmEndpoint.url.toString
 
   protected lazy val ontologyMetadata: OntologyMetadata = {
     import scala.concurrent.duration._
 
     //TODO: XXX: Un-hard-code max wait time param
-    val ontClient: OntClient = new PosterOntClient(shrineConfig.ontHiveCredentials, 1.minute, ontPoster)
+    val ontClient: OntClient = new PosterOntClient(shrineConfigurationBall.ontHiveCredentials, 1.minute, ontPoster)
 
     new OntClientOntologyMetadata(ontClient)
   }
@@ -274,7 +276,7 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
   //TODO: Don't assume we're an adapter with an AdapterMappings (don't call .get)
   protected lazy val happyService: HappyShrineService = {
     new HappyShrineService(
-        shrineConfig, 
+        shrineConfigurationBall,
         shrineCertCollection, 
         signerVerifier, 
         pmPoster, 

@@ -24,7 +24,6 @@ final case class ShrineConfig(
   pmEndpoint: EndpointConfig,
   ontEndpoint: EndpointConfig,
   adapterStatusQuery: String,
-  humanReadableNodeName: String,
   shrineDatabaseType: String,
   keystoreDescriptor: KeyStoreDescriptor,
   breakdownResultOutputTypes: Set[ResultOutputType]) {
@@ -54,7 +53,6 @@ object ShrineConfig {
       configForShrine.getConfigured(pmEndpoint,EndpointConfig(_)),
       configForShrine.getConfigured(ontEndpoint,EndpointConfig(_)),
       configForShrine.getString(networkStatusQuery),
-      configForShrine.getString(humanReadableNodeName),
       configForShrine.getString(shrineDatabaseType),
       configForShrine.getConfigured(keystore,KeyStoreDescriptorParser(_)),
       configForShrine.getOptionConfigured(breakdownResultOutputTypes,ResultOutputTypes.fromConfig).getOrElse(Set.empty)

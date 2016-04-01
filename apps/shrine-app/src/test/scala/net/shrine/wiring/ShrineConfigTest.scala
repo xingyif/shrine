@@ -49,8 +49,6 @@ final class ShrineConfigTest extends ShouldMatchersForJUnit  {
     conf.queryEntryPointConfig.get.sheriffCredentials.get.username should be("sheriffUsername")
     conf.queryEntryPointConfig.get.sheriffCredentials.get.password should be("sheriffPassword")
     
-    conf.humanReadableNodeName should equal("SHRINE Cell")
-
     conf.crcHiveCredentials should equal(conf.pmHiveCredentials)
     
     conf.crcHiveCredentials.domain should equal("HarvardDemo")
