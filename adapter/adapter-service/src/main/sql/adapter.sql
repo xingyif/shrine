@@ -33,15 +33,15 @@ create table ERROR_RESULT(
   id int not null auto_increment,
   result_id int not null,
   message varchar(255) not null,
+  CODEC varchar(256) not null default "Pre-1.20 Error",
+  STAMP varchar(256) not null default "Unknown time and machine",
+  SUMMARY text not null,
+  PROBLEM_DESCRIPTION text not null,
+  DETAILS text not null,
   constraint ERROR_RESULT_id_pk primary key(id),
   constraint fk_ERROR_RESULT_QUERY_RESULT_id foreign key (result_id) references QUERY_RESULT (id) on delete cascade
 ) engine=innodb default charset=latin1;
 
-alter table ERROR_RESULT add column CODEC varchar(256) not null default "Pre-1.20 Error"
-alter table ERROR_RESULT add column STAMP varchar(256) not null default "Unknown time and machine"
-alter table ERROR_RESULT add column SUMMARY text not null default "Pre-1.20 Error"
-alter table ERROR_RESULT add column PROBLEM_DESCRIPTION text not null default "Pre-1.20 Error"
-alter table ERROR_RESULT add column DETAILS text not null default "Pre-1.20 Error"
 
 create table COUNT_RESULT(
   id int not null auto_increment,
