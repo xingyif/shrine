@@ -24,7 +24,7 @@ import net.shrine.dao.squeryl.{DataSourceSquerylInitializer, SquerylDbAdapterSel
 import net.shrine.happy.{HappyShrineResource, HappyShrineService}
 import net.shrine.log.Loggable
 import net.shrine.ont.data.{OntClientOntologyMetadata, OntologyMetadata}
-import net.shrine.protocol.{ResultOutputTypes, NodeId, RequestType, ResultOutputType}
+import net.shrine.protocol.{HiveCredentials, ResultOutputTypes, NodeId, RequestType, ResultOutputType}
 import net.shrine.qep.dao.AuditDao
 import net.shrine.qep.dao.squeryl.SquerylAuditDao
 import net.shrine.qep.dao.squeryl.tables.{Tables => HubTables}
@@ -82,6 +82,9 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
 
   protected lazy val hubDao: HubDao = new SquerylHubDao(squerylInitializer, new net.shrine.broadcaster.dao.squeryl.tables.Tables)
 
+
+  lazy val crcHiveCredentials = shrineConfig.getConfigured(hiveCredentials, HiveCredentials(_, HiveCredentials.CRC))
+
   //todo move as much of this block as possible to the adapter project, and get rid of this multi-assignment of one thing
   protected lazy val (
     adapterService: Option[AdapterService],
@@ -99,7 +102,7 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
     val adapterDao: AdapterDao = new SquerylAdapterDao(squerylInitializer, squerylAdapterTables)(breakdownTypes)
 
     //NB: Is i2b2HiveCredentials.projectId the right project id to use?
-    val i2b2AdminDao: I2b2AdminDao = new SquerylI2b2AdminDao(shrineConfigurationBall.crcHiveCredentials.projectId, squerylInitializer, squerylAdapterTables)
+    val i2b2AdminDao: I2b2AdminDao = new SquerylI2b2AdminDao(crcHiveCredentials.projectId, squerylInitializer, squerylAdapterTables)
 
     val adapterMappingsSource: AdapterMappingsSource = ClasspathFormatDetectingAdapterMappingsSource(adapterConfig.adapterMappingsFileName)
 
@@ -115,7 +118,7 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
     val runQueryAdapter = new RunQueryAdapter(
       crcPoster,
       adapterDao,
-      shrineConfigurationBall.crcHiveCredentials,
+      crcHiveCredentials,
       queryDefinitionTranslator,
       adapterConfig.adapterLockoutAttemptsThreshold,
       doObfuscation,
@@ -126,7 +129,7 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
 
     val readInstanceResultsAdapter: Adapter = new ReadInstanceResultsAdapter(
       crcPoster,
-      shrineConfigurationBall.crcHiveCredentials,
+      crcHiveCredentials,
       adapterDao,
       doObfuscation,
       breakdownTypes,
@@ -135,7 +138,7 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
 
     val readQueryResultAdapter: Adapter = new ReadQueryResultAdapter(
       crcPoster,
-      shrineConfigurationBall.crcHiveCredentials,
+      crcHiveCredentials,
       adapterDao,
       doObfuscation,
       breakdownTypes,

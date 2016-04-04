@@ -15,7 +15,7 @@ import net.shrine.protocol.{AuthenticationInfo, BroadcastMessage, Credential, Fa
 import net.shrine.protocol.query.{OccuranceLimited, QueryDefinition, Term}
 import net.shrine.qep.dao.AuditDao
 import net.shrine.util.{StackTrace, Versions, XmlUtil}
-import net.shrine.wiring.ShrineConfig
+import net.shrine.wiring.{ShrineOrchestrator, ShrineConfig}
 
 import scala.concurrent.Await
 import scala.util.Try
@@ -111,7 +111,7 @@ final class HappyShrineService(
     val report = for {
       adapterConfig <- config.getOptionConfiguredIf("adapter", AdapterConfig(_))
     } yield {
-      val credentials = shrineConfigObject.pmHiveCredentials
+      val credentials = ShrineOrchestrator.crcHiveCredentials
 
       val pmRequest = GetUserConfigurationRequest(credentials.toAuthenticationInfo)
 

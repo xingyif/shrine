@@ -42,13 +42,6 @@ final class ShrineConfigTest extends ShouldMatchersForJUnit  {
     conf.queryEntryPointConfig.get.sheriffCredentials.get.username should be("sheriffUsername")
     conf.queryEntryPointConfig.get.sheriffCredentials.get.password should be("sheriffPassword")
 
-    conf.crcHiveCredentials should equal(conf.pmHiveCredentials)
-    
-    conf.crcHiveCredentials.domain should equal("HarvardDemo")
-    conf.crcHiveCredentials.username should equal("demo")
-    conf.crcHiveCredentials.password should equal("demouser")
-    conf.crcHiveCredentials.projectId should equal("Demo")
-    
     conf.ontHiveCredentials.domain should equal("HarvardDemo")
     conf.ontHiveCredentials.username should equal("demo")
     conf.ontHiveCredentials.password should equal("demouser")

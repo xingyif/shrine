@@ -83,7 +83,6 @@ final class AuthStrategyTest extends ShouldMatchersForJUnit {
                                 None,
                                 SigningCertStrategy.Attach,
                                 collectQepAudit = false)),
-                          null, //hiveCredentials
                           null, //more hiveCredentials
                           null //adapterStatusQuery
                         ) //breakdown types

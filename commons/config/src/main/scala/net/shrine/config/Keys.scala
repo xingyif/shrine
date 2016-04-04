@@ -12,7 +12,7 @@ object Keys {
   val sheriffEndpoint = "sheriffEndpoint"
   val sheriffCredentials = "sheriffCredentials"
   val shrineSteward = "shrineSteward"
-  val hiveCredentials = "hiveCredentials"
+  val hiveCredentials = "hiveCredentials" //delete when done with ont credentials
   val ontProjectId = "ontProjectId"
   val crcProjectId = "crcProjectId"
   val setSizeObfuscation = "setSizeObfuscation"

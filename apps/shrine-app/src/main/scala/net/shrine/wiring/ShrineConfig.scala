@@ -14,13 +14,10 @@ import net.shrine.qep.QepConfig
 final case class ShrineConfig(
   hubConfig: Option[HubConfig],
   queryEntryPointConfig: Option[QepConfig],
-  crcHiveCredentials: HiveCredentials,
   ontHiveCredentials: HiveCredentials,
   adapterStatusQuery: String
                              ) {
   
-  //NB: Preparing for the possible case where we'd need distinct credentials for talking to the PM
-  def pmHiveCredentials: HiveCredentials = crcHiveCredentials
 }
 
 object ShrineConfig {
@@ -38,7 +35,6 @@ object ShrineConfig {
     ShrineConfig(
       hubConfig = getOptionConfiguredIf(hub, HubConfig(_)),
       queryEntryPointConfig = getOptionConfiguredIf(queryEntryPoint, QepConfig(_)),
-      crcHiveCredentials = configForShrine.getConfigured(hiveCredentials, HiveCredentials(_, HiveCredentials.CRC)),
       ontHiveCredentials = configForShrine.getConfigured(hiveCredentials, HiveCredentials(_, HiveCredentials.ONT)),
       adapterStatusQuery = configForShrine.getString(networkStatusQuery)
     )
