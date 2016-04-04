@@ -6,7 +6,7 @@ import com.typesafe.config.{Config, ConfigFactory}
 import net.shrine.adapter.dao.squeryl.tables.{Tables => AdapterTables}
 import net.shrine.adapter.dao.squeryl.{SquerylAdapterDao, SquerylI2b2AdminDao}
 import net.shrine.adapter.dao.{AdapterDao, I2b2AdminDao}
-import net.shrine.adapter.service.{AdapterRequestHandler, AdapterResource, AdapterService, I2b2AdminResource, I2b2AdminService}
+import net.shrine.adapter.service.{AdapterConfig, AdapterRequestHandler, AdapterResource, AdapterService, I2b2AdminResource, I2b2AdminService}
 import net.shrine.adapter.translators.{ExpressionTranslator, QueryDefinitionTranslator}
 import net.shrine.adapter.{Adapter, AdapterMap, DeleteQueryAdapter, FlagQueryAdapter, ReadInstanceResultsAdapter, ReadPreviousQueriesAdapter, ReadQueryDefinitionAdapter, ReadQueryResultAdapter, ReadTranslatedQueryDefinitionAdapter, RenameQueryAdapter, RunQueryAdapter, UnFlagQueryAdapter}
 import net.shrine.authentication.Authenticator
@@ -82,8 +82,13 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
 
   protected lazy val hubDao: HubDao = new SquerylHubDao(squerylInitializer, new net.shrine.broadcaster.dao.squeryl.tables.Tables)
 
-  //todo move as much of this block as possible to the adapter project
-  protected lazy val (adapterService, i2b2AdminService, adapterDao, adapterMappings) = adapterComponentsToTuple(shrineConfigurationBall.adapterConfig.map { adapterConfig =>
+  //todo move as much of this block as possible to the adapter project, and get rid of this multi-assignment of one thing
+  protected lazy val (
+    adapterService: Option[AdapterService],
+    i2b2AdminService: Option[I2b2AdminService],
+    adapterDao: Option[AdapterDao],
+    adapterMappings: Option[AdapterMappings]
+  ) = adapterComponentsToTuple(shrineConfig.getOptionConfiguredIf("adapter", AdapterConfig(_)).map { adapterConfig => //todo unwind adapterConfig and just have an adapter
 
     val crcEndpoint: EndpointConfig = adapterConfig.crcEndpoint
 
@@ -325,18 +330,21 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
   private final case class HubComponents(broadcaster: AdapterClientBroadcaster)
 
   //TODO: TEST
+  //todo get rid of this
   private def adapterComponentsToTuple(option: Option[AdapterComponents]): (Option[AdapterService], Option[I2b2AdminService], Option[AdapterDao], Option[AdapterMappings]) = option match {
     case None => (None, None, None, None)
     case Some(AdapterComponents(a, b, c, d)) => (Option(a), Option(b), Option(c), Option(d))
   }
   
   //TODO: TEST
+  //todo get rid of this
   private def queryEntryPointComponentsToTuple(option: Option[QueryEntryPointComponents]): (Option[QepService], Option[I2b2QepService], Option[AuditDao]) = option match {
     case None => (None, None, None)
     case Some(QueryEntryPointComponents(a, b, c)) => (Option(a), Option(b), Option(c))
   }
   
   //TODO: TEST
+  //todo get rid of this
   private def unpackHubComponents(option: Option[HubComponents]): Option[AdapterClientBroadcaster] = option.map(_.broadcaster)
 
   def poster(keystoreCertCollection: KeyStoreCertCollection)(endpoint: EndpointConfig): Poster = {

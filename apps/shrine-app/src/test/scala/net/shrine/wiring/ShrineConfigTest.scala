@@ -32,8 +32,6 @@ final class ShrineConfigTest extends ShouldMatchersForJUnit  {
 
     val conf = shrineConfig("shrine")
 
-    conf.adapterConfig.get.crcEndpoint should equal(endpoint("http://services.i2b2.org/i2b2/rest/QueryToolService/"))
-
     conf.queryEntryPointConfig.get.authenticationType should be(AuthenticationType.Ecommons)
     
     conf.queryEntryPointConfig.get.authorizationType should be(AuthorizationType.HmsSteward)
@@ -66,19 +64,11 @@ final class ShrineConfigTest extends ShouldMatchersForJUnit  {
     conf.queryEntryPointConfig.get.maxQueryWaitTime should equal(5.minutes)
     conf.queryEntryPointConfig.get.signingCertStrategy should equal(SigningCertStrategy.Attach)
     
-    conf.adapterConfig.get.setSizeObfuscation should equal(true)
-    
     conf.queryEntryPointConfig.get.includeAggregateResults should equal(false)
 
-    conf.adapterConfig.get.adapterLockoutAttemptsThreshold should equal(10)
-    
     conf.hubConfig.get.maxQueryWaitTime should equal(4.5.minutes)
     
-    conf.adapterConfig.get.maxSignatureAge should equal(5.minutes)
-    
     conf.adapterStatusQuery should equal("""\\SHRINE\SHRINE\Diagnoses\Mental Illness\Disorders usually diagnosed in infancy, childhood, or adolescence\Pervasive developmental disorders\Infantile autism, current or active state\""")
-    
-    conf.adapterConfig.get.adapterMappingsFileName should equal("AdapterMappings.xml")
     
     conf.hubConfig.get.downstreamNodes.toSet should equal {
       Set(
@@ -86,15 +76,12 @@ final class ShrineConfigTest extends ShouldMatchersForJUnit  {
         node("CHB", "http://example.com/chb"),
         node("PHS", "http://example.com/phs"))
     }
-    
-    conf.adapterConfig.get.immediatelyRunIncomingQueries should be(false)
   }
   
   @Test
   def testApplyOptionalFields() {
     val conf = shrineConfig("shrine-no-optional-configs", loadBreakdownsFile = false)
 
-    conf.adapterConfig should be(None)
     conf.hubConfig should be(None)
     conf.queryEntryPointConfig should be(None)
   }

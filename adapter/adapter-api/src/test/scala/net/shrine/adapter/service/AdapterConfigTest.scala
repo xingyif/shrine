@@ -14,7 +14,7 @@ import net.shrine.client.EndpointConfigTest
 final class AdapterConfigTest extends ShouldMatchersForJUnit {
   private def getConf(name: String): AdapterConfig = {
 
-    AdapterConfig(ConfigFactory.load(name).getConfig(s"shrine.${Keys.adapter}"))
+    AdapterConfig(ConfigFactory.load(name).getConfig(s"shrine.adapter"))
   }
   
   @Test

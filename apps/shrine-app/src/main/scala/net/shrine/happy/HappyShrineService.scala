@@ -1,36 +1,25 @@
 package net.shrine.happy
 
 import com.typesafe.config.Config
+import net.shrine.adapter.dao.AdapterDao
+import net.shrine.adapter.service.{AdapterConfig, AdapterRequestHandler}
+import net.shrine.broadcaster.{AdapterClientBroadcaster, IdAndUrl}
+import net.shrine.client.Poster
+import net.shrine.config.ConfigExtensions
+import net.shrine.config.mappings.AdapterMappings
+import net.shrine.crypto.{KeyStoreCertCollection, KeyStoreDescriptor, Signer, SigningCertStrategy}
+import net.shrine.i2b2.protocol.pm.{GetUserConfigurationRequest, HiveConfig}
 import net.shrine.log.Loggable
+import net.shrine.ont.data.OntologyMetadata
+import net.shrine.protocol.{AuthenticationInfo, BroadcastMessage, Credential, Failure, NodeId, Result, ResultOutputType, RunQueryRequest, Timeout}
+import net.shrine.protocol.query.{OccuranceLimited, QueryDefinition, Term}
+import net.shrine.qep.dao.AuditDao
+import net.shrine.util.{StackTrace, Versions, XmlUtil}
 import net.shrine.wiring.ShrineConfig
 
 import scala.concurrent.Await
 import scala.util.Try
-import scala.xml.Node
-import scala.xml.NodeSeq
-import net.shrine.adapter.dao.AdapterDao
-import net.shrine.adapter.service.AdapterRequestHandler
-import net.shrine.broadcaster.{IdAndUrl, AdapterClientBroadcaster}
-import net.shrine.qep.dao.AuditDao
-import net.shrine.client.Poster
-import net.shrine.crypto.{KeyStoreDescriptor, KeyStoreCertCollection, Signer, SigningCertStrategy}
-import net.shrine.i2b2.protocol.pm.GetUserConfigurationRequest
-import net.shrine.i2b2.protocol.pm.HiveConfig
-import net.shrine.protocol.AuthenticationInfo
-import net.shrine.protocol.BroadcastMessage
-import net.shrine.protocol.Credential
-import net.shrine.protocol.Failure
-import net.shrine.protocol.NodeId
-import net.shrine.protocol.Result
-import net.shrine.protocol.ResultOutputType
-import net.shrine.protocol.RunQueryRequest
-import net.shrine.protocol.Timeout
-import net.shrine.protocol.query.OccuranceLimited
-import net.shrine.protocol.query.QueryDefinition
-import net.shrine.protocol.query.Term
-import net.shrine.util.{StackTrace, Versions, XmlUtil}
-import net.shrine.ont.data.OntologyMetadata
-import net.shrine.config.mappings.AdapterMappings
+import scala.xml.{Node, NodeSeq}
 
 /**
  * @author Bill Simons
@@ -118,8 +107,9 @@ final class HappyShrineService(
   }.toString
 
   override def hiveReport: String = {
+    //todo clean out and ask ShrineOrchestrator for its parts when you get rid of AdapterConfig
     val report = for {
-      adapterConfig <- shrineConfigObject.adapterConfig
+      adapterConfig <- config.getOptionConfiguredIf("adapter", AdapterConfig(_))
     } yield {
       val credentials = shrineConfigObject.pmHiveCredentials
 
@@ -154,8 +144,6 @@ final class HappyShrineService(
       val message = newBroadcastMessageWithRunQueryRequest
 
       val multiplexer = broadcaster.broadcast(message)
-
-      import scala.concurrent.duration._
 
       val responses = Await.result(multiplexer.responses, hubConfig.maxQueryWaitTime).toSeq
 

@@ -71,7 +71,6 @@ final class AuthStrategyTest extends ShouldMatchersForJUnit {
       val sheriffCredentials = CredentialConfig(None, "u", "p")
       
       val shrineConfig = ShrineConfig(
-                          None, //adapter config
                           None, //hub config
                           Some(QepConfig(
                                 authenticationType,

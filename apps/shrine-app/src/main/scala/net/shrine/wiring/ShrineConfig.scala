@@ -12,7 +12,6 @@ import net.shrine.qep.QepConfig
  * @since Feb 6, 2013
  */
 final case class ShrineConfig(
-  adapterConfig: Option[AdapterConfig],
   hubConfig: Option[HubConfig],
   queryEntryPointConfig: Option[QepConfig],
   crcHiveCredentials: HiveCredentials,
@@ -37,7 +36,6 @@ object ShrineConfig {
     }
 
     ShrineConfig(
-      adapterConfig = getOptionConfiguredIf(adapter, AdapterConfig(_)),
       hubConfig = getOptionConfiguredIf(hub, HubConfig(_)),
       queryEntryPointConfig = getOptionConfiguredIf(queryEntryPoint, QepConfig(_)),
       crcHiveCredentials = configForShrine.getConfigured(hiveCredentials, HiveCredentials(_, HiveCredentials.CRC)),
