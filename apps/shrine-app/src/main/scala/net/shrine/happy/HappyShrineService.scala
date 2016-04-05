@@ -107,20 +107,14 @@ final class HappyShrineService(
   }.toString
 
   override def hiveReport: String = {
-    //todo clean out and ask ShrineOrchestrator for its parts when you get rid of AdapterConfig
-    val report = for {
-      adapterConfig <- config.getOptionConfiguredIf("adapter", AdapterConfig(_))
-    } yield {
+    if(ShrineOrchestrator.shrineConfig.getBoolean("adapter.create")) {
       val credentials = ShrineOrchestrator.crcHiveCredentials
-
       val pmRequest = GetUserConfigurationRequest(credentials.toAuthenticationInfo)
-
       val response = pmPoster.post(pmRequest.toI2b2String)
 
       HiveConfig.fromI2b2(response.body).toXmlString
     }
-
-    report.getOrElse(notAnAdapter)
+    else notAnAdapter
   }
 
   private def failureToXml(failure: Failure): NodeSeq = {
