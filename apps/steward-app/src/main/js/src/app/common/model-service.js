@@ -1,7 +1,7 @@
 angular
     .module('model-service', [])
     .constant("urlConfig", {
-        base: "http://localhost:8080/steward/"
+        base: "https://localhost:6443/steward/"
         //base: "https://shrine-qa1.hms.harvard.edu:6443/steward/"
     })
     .constant("mdlVerbs", {
@@ -27,18 +27,14 @@ angular
     })
     .service('ModelService', ['mdlVerbs', 'mdlStates', '$location', function (verbs, states, $location) {
 
-        var model    = this,
+       var model    = this,
             absUrl   = $location.$$absUrl,
-            base     = 'steward/',
-            url      = {
-                base: "http://localhost:8080/steward/"
-            },
-            urlIdx;
+            base      = 'steward',
+            url      = {},
+            urlIdx   = 0;
 
-        if (absUrl.indexOf('localhost') < 0) {
-            urlIdx = absUrl.indexOf(base);
-            url.base    = absUrl.substring(0, urlIdx + base.length);
-        }
+        urlIdx      = absUrl.indexOf(base);
+        url.base    = absUrl.substring(0, urlIdx) + base + '/';
 
         model.verbs  = verbs;
         model.url    = url;
