@@ -26,7 +26,6 @@ object Keys {
   val adapterMappingsFileType = "adapterMappingsFileType"
   val downstreamNodes = "downstreamNodes"
   val maxSignatureAge = "maxSignatureAge"
-  val shouldQuerySelf = "shouldQuerySelf"
   val adapter = "adapter"
   val hub = "hub"
   val queryEntryPoint = "queryEntryPoint"

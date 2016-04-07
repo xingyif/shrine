@@ -151,7 +151,7 @@ final class HappyShrineService(
 
       XmlUtil.stripWhitespace {
         <net>
-          <shouldQuerySelf>{ hubConfig.shouldQuerySelf }</shouldQuerySelf>
+          <shouldQuerySelf>{ ShrineOrchestrator.localAdapterServiceOption.isDefined }</shouldQuerySelf>
           <downstreamNodes>{ nodeListAsXml }</downstreamNodes>
           <noProblems>{ noProblems }</noProblems>
           <expectedResultCount>{ broadcaster.destinations.size }</expectedResultCount>

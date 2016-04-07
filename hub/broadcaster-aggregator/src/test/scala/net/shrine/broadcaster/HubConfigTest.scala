@@ -34,7 +34,6 @@ final class HubConfigTest extends ShouldMatchersForJUnit {
   def testApplyOptionalFields {
     val conf = hubConfig("shrine-some-optional-props")
     
-    conf.shouldQuerySelf should be(HubConfig.defaultShouldQuerySelf)
     conf.downstreamNodes should equal(Nil)
   }
 }

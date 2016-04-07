@@ -2,6 +2,7 @@ package net.shrine.wiring
 
 import javax.sql.DataSource
 
+
 import com.typesafe.config.{Config, ConfigFactory}
 import net.shrine.adapter.dao.squeryl.tables.{Tables => AdapterTables}
 import net.shrine.adapter.dao.squeryl.{SquerylAdapterDao, SquerylI2b2AdminDao}
@@ -178,7 +179,12 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
         adapterMappings)
   })
 
-  private lazy val localAdapterServiceOption: Option[AdapterRequestHandler] = shrineConfigurationBall.hubConfig.flatMap(hubConfig => makeAdapterServiceOption(hubConfig.shouldQuerySelf, adapterService))
+  val shouldQuerySelf = "hub.shouldQuerySelf"
+  lazy val localAdapterServiceOption: Option[AdapterRequestHandler] = if(shrineConfig.getOption(shouldQuerySelf,_.getBoolean).getOrElse(false)) { //todo give this a default value (of false) in the reference.conf for the Hub, and make it part of the Hub's apply(config)
+    require(adapterService.isDefined, s"Self-querying requested because shrine.$shouldQuerySelf is true, but this node is not configured to have an adapter")
+    adapterService
+  }
+    else None //todo eventually make this just another downstream node accessed via loopback
 
   private lazy val broadcastDestinations: Option[Set[NodeHandle]] = shrineConfigurationBall.hubConfig.map(hubConfig => makeNodeHandles(keystoreTrustParam, hubConfig.maxQueryWaitTime, hubConfig.downstreamNodes, nodeId, localAdapterServiceOption, breakdownTypes))
 
@@ -309,14 +315,6 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
   protected lazy val i2b2AdminResource: Option[I2b2AdminResource] = i2b2AdminService.map(I2b2AdminResource(_, breakdownTypes))
   
   protected lazy val broadcasterMultiplexerResource: Option[BroadcasterMultiplexerResource] = broadcasterMultiplexerService.map(BroadcasterMultiplexerResource(_))
-
-  def makeAdapterServiceOption(isQueryable: Boolean, adapterRequestHandler: Option[AdapterRequestHandler]): Option[AdapterRequestHandler] = {
-    if (isQueryable) {
-      require(adapterRequestHandler.isDefined, "Self-querying requested, but this node is not configured to be an adapter")
-
-      adapterRequestHandler
-    } else { None }
-  }
 
   def makeHttpClient(keystoreCertCollection: KeyStoreCertCollection, endpoint: EndpointConfig): HttpClient = {
     import TrustParam.{AcceptAllCerts, SomeKeyStore}

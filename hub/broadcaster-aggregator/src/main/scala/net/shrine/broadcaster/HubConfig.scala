@@ -11,8 +11,7 @@ import scala.concurrent.duration.Duration
  */
 final case class HubConfig(
   maxQueryWaitTime: Duration,
-  downstreamNodes: Iterable[IdAndUrl],
-  shouldQuerySelf: Boolean)
+  downstreamNodes: Iterable[IdAndUrl])
 
 object HubConfig {
 
@@ -23,7 +22,7 @@ object HubConfig {
 
     HubConfig(
       config.getConfigured(maxQueryWaitTime,DurationConfigParser(_)),
-      config.getOptionConfigured(downstreamNodes, NodeListParser(_)).getOrElse(Nil),
-      config.getOption(shouldQuerySelf, _.getBoolean).getOrElse(defaultShouldQuerySelf))
+      config.getOptionConfigured(downstreamNodes, NodeListParser(_)).getOrElse(Nil)
+    )
   }
 }
