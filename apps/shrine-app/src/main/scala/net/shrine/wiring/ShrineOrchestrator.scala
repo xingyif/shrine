@@ -18,7 +18,6 @@ import net.shrine.broadcaster.service.{BroadcasterMultiplexerResource, Broadcast
 import net.shrine.broadcaster.{AdapterClientBroadcaster, BroadcastAndAggregationService, BroadcasterClient, InJvmBroadcasterClient, NodeHandle, PosterBroadcasterClient, SigningBroadcastAndAggregationService}
 import net.shrine.client.{EndpointConfig, HttpClient, JerseyHttpClient, OntClient, Poster, PosterOntClient}
 import net.shrine.config.ConfigExtensions
-import net.shrine.config.Keys._
 import net.shrine.config.mappings.{AdapterMappings, AdapterMappingsSource, ClasspathFormatDetectingAdapterMappingsSource}
 import net.shrine.crypto.{DefaultSignerVerifier, KeyStoreCertCollection, KeyStoreDescriptorParser, TrustParam}
 import net.shrine.dao.squeryl.{DataSourceSquerylInitializer, SquerylDbAdapterSelecter, SquerylInitializer}
@@ -83,8 +82,7 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
 
   protected lazy val hubDao: HubDao = new SquerylHubDao(squerylInitializer, new net.shrine.broadcaster.dao.squeryl.tables.Tables)
 
-
-  lazy val crcHiveCredentials = shrineConfig.getConfigured(hiveCredentials, HiveCredentials(_, HiveCredentials.CRC))
+  lazy val crcHiveCredentials = shrineConfig.getConfigured("hiveCredentials", HiveCredentials(_, HiveCredentials.CRC))
 
   //todo move as much of this block as possible to the adapter project, and get rid of this multi-assignment of one thing
   protected lazy val (
@@ -279,7 +277,7 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
     import scala.concurrent.duration._
 
     //TODO: XXX: Un-hard-code max wait time param
-    val ontClient: OntClient = new PosterOntClient(shrineConfigurationBall.ontHiveCredentials, 1.minute, ontPoster)
+    val ontClient: OntClient = new PosterOntClient(shrineConfig.getConfigured("hiveCredentials", HiveCredentials(_, HiveCredentials.ONT)), 1.minute, ontPoster)
 
     new OntClientOntologyMetadata(ontClient)
   }

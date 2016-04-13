@@ -42,16 +42,6 @@ final class ShrineConfigTest extends ShouldMatchersForJUnit  {
     conf.queryEntryPointConfig.get.sheriffCredentials.get.username should be("sheriffUsername")
     conf.queryEntryPointConfig.get.sheriffCredentials.get.password should be("sheriffPassword")
 
-    conf.ontHiveCredentials.domain should equal("HarvardDemo")
-    conf.ontHiveCredentials.username should equal("demo")
-    conf.ontHiveCredentials.password should equal("demouser")
-    conf.ontHiveCredentials.projectId should equal("SHRINE")
-    
-    conf.ontHiveCredentials.domain should equal("HarvardDemo")
-    conf.ontHiveCredentials.username should equal("demo")
-    conf.ontHiveCredentials.password should equal("demouser")
-    conf.ontHiveCredentials.projectId should equal("SHRINE")
-    
     conf.queryEntryPointConfig.get.broadcasterIsLocal should be(false)
     conf.queryEntryPointConfig.get.broadcasterServiceEndpoint.get should equal(endpoint("http://example.com/shrine/rest/broadcaster/broadcast"))
     conf.queryEntryPointConfig.get.maxQueryWaitTime should equal(5.minutes)

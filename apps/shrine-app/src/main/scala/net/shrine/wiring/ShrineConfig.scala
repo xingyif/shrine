@@ -1,10 +1,9 @@
 package net.shrine.wiring
 
 import com.typesafe.config.Config
-import net.shrine.adapter.service.AdapterConfig
 import net.shrine.broadcaster.HubConfig
 import net.shrine.config.{ConfigExtensions, Keys}
-import net.shrine.protocol.{ResultOutputTypes, HiveCredentials, ResultOutputType}
+import net.shrine.protocol.HiveCredentials
 import net.shrine.qep.QepConfig
 
 /**
@@ -14,11 +13,8 @@ import net.shrine.qep.QepConfig
 final case class ShrineConfig(
   hubConfig: Option[HubConfig],
   queryEntryPointConfig: Option[QepConfig],
-  ontHiveCredentials: HiveCredentials,
   adapterStatusQuery: String
-                             ) {
-  
-}
+                             )
 
 object ShrineConfig {
 
@@ -35,7 +31,6 @@ object ShrineConfig {
     ShrineConfig(
       hubConfig = getOptionConfiguredIf(hub, HubConfig(_)),
       queryEntryPointConfig = getOptionConfiguredIf(queryEntryPoint, QepConfig(_)),
-      ontHiveCredentials = configForShrine.getConfigured(hiveCredentials, HiveCredentials(_, HiveCredentials.ONT)),
       adapterStatusQuery = configForShrine.getString(networkStatusQuery)
     )
   }
