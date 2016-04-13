@@ -436,8 +436,8 @@ var sCheckForNothing = "something";  // this gets checked to be a zero length st
 						var a = asInputSentences[i];
 						if (asInputSentences[i].indexOf("Patient Count") > -1) {
 							asTemp2Array = asInputSentences[i].split(" -");
-							sLatestTitle = 'Patient Count:';
-							sLatestElementName = 'Patient Count:';
+							sLatestTitle = 'Patient Count';
+							sLatestElementName = 'Patient Count';
 							iLatestQuantity = asTemp2Array[1];
 							asInputFragments[iFragmentArrayCounter] = new Array (6);
 							asInputFragments[iFragmentArrayCounter][0] = sLatestQueryName;
@@ -692,53 +692,64 @@ function graph_multiplesite_patient_number(sDivName,sBreakdownType,asInputFragme
 		}
 		// function where the dataset arrays are created:
 		var c3values = new Array();
+		var allCountsZero = true;
 		for (var i = 0; i < asBreakdownArray.length; i++) {
 			//console.log("Element " + i + " = " + asBreakdownArray[i][0] + " " + asBreakdownArray[i][2]);
 			c3values[i] = new Array(2);
 			c3values[i][0] = asBreakdownArray[i][0].trim() + " " + asBreakdownArray[i][1].trim();
-			c3values[i][1] = Number(asBreakdownArray[i][2]);
+			var patCount = Number(asBreakdownArray[i][2]);
+			c3values[i][1] = patCount;
+			if(patCount>0)
+				allCountsZero = false;
 		}
 		// C3 that makes pie chart
-		if(!(typeof c3 === 'undefined')){
-			var chart = c3.generate({
-				bindto: sDivName,
-				size: { 
-					//width: 535,
-					height: 200
-				},
-				data: {
-					columns: c3values,
-					type: 'pie'
-				},
-				pie: {
-					label: {
-					format: d3.format('^g,') 
-					}
-				},
-				legend: {
-					position: 'right'
-				},
-				axis: {
-					x: {
-						type: 'category',
-						tick: {
-							rotate: 25
-						},
-						height: 45
+		if(allCountsZero)
+		{
+			jQuery(sDivName).html("Not enough patients were returned to render the graph.");
+		}
+		else
+		{
+			if(!(typeof c3 === 'undefined')){
+				var chart = c3.generate({
+					bindto: sDivName,
+					size: { 
+						//width: 535,
+						height: 200
 					},
-					y: {
+					data: {
+						columns: c3values,
+						type: 'pie'
+					},
+					pie: {
 						label: {
-							text: 'Number of Patients',
-							position: 'outer-bottom'
+						format: d3.format('^g,') 
+						}
+					},
+					legend: {
+						position: 'right'
+					},
+					axis: {
+						x: {
+							type: 'category',
+							tick: {
+								rotate: 25
+							},
+							height: 45
+						},
+						y: {
+							label: {
+								text: 'Number of Patients',
+								position: 'outer-bottom'
+							}
+						}
+					},
+					bar: {
+						width: {
+							ratio: 0.75 // this makes bar width 75% of length between ticks
 						}
 					}
-				},
-				bar: {
-					width: {
-						ratio: 0.75 // this makes bar width 75% of length between ticks
-					}
-				}
-			});
+				});
+			}
 		}
 	}
 	catch(err) {

@@ -270,7 +270,7 @@ i2b2.CRC.view.downloadData.getCSVFromResultsHash = function() {
 		var maxRowsNum = breakdownHash.size()+1;
 		var maxColNumber = numberOfSites+1;
 		
-		var content = "<a href='#' onclick='javascript:i2b2.CRC.view.downloadData.exportTableToCSV();return false;'> Download CSV File </a><br/><br/><br/>";
+		var content = "<img src=\"js-i2b2/cells/CRC/assets/csv.png\"/> <a href='#' onclick='javascript:i2b2.CRC.view.downloadData.exportTableToCSV();return false;'>Download CSV File</a><br/><br/><br/>";
 		content += "<table id='resultsTable'>";
 		content += "<tr>"+ //Beginning of Site names row
 					"<th colspan=\"" + maxColNumber + "\">SHRINE QUERY RESULTS (OBFUSCATED PATIENT COUNTS)</th>"+
@@ -353,10 +353,20 @@ i2b2.CRC.view.downloadData.exportTableToCSV = function () {
 	//	Check Browser
 	var ua = window.navigator.userAgent;
 	var msie = ua.indexOf("MSIE ");
+	var trident = ua.indexOf('Trident/');
+	var edge = ua.indexOf('Edge/');
 	var browserIsIE = false;
-	if (msie > 0)      // If Internet Explorer, return version number
+	if (msie > 0)  {    // IE 10 or older 
 		browserIsIE = true;
-
+	}
+	else if (trident > 0) { // IE 11 
+		browserIsIE = true;
+	}
+	else if (edge > 0) { // Edge
+		browserIsIE = true;
+	}
+	else
+		browserIsIE = false;
 	if(browserIsIE)
 	{
 		if (window.navigator.msSaveOrOpenBlob) { // IE 10+

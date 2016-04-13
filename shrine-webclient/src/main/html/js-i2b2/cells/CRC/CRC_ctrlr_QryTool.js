@@ -1991,8 +1991,8 @@ function QueryToolController() {
 	this.PrintQueryBody = 
 			"<div id=\"QueryReportLoading\"><img src=\"js-i2b2/cells/CRC/assets/loading.gif\" alt=\"Loading\"/></div>"+
 			"<div id='QueryReportContainer' class='no-show'>"+
-			"<span style='float:right;'><img src='assets/images/title.gif'/></span>"+
-			"<span class='no-print' style='font-family:Arial;font-size:11px;'><img src=\"js-i2b2/cells/CRC/assets/print.png\"/><a href='javascript:window.print()' title='Click here to print the report.'>  Print Report</a></span>"+
+			"<span style='float:right;'><img src='assets/images/title.png'/></span>"+
+			"<span class='no-print' style='font-family:Arial'><img src=\"js-i2b2/cells/CRC/assets/print.png\"/> <a href='javascript:window.print()' title='Click here to print the report.'>Print Report</a></span>"+
 			"<div class='QRMainHeader'>Query Report</div>"+
 			"<table id='queryDetailsTable'></table>"+
 			"<div class='descHead'>Query Definition</div>"+
@@ -2002,7 +2002,7 @@ function QueryToolController() {
 			"<table id='temporalQryEventsRelationsTable'></table>"+
 			"<div id='qrsTitle' class='descHead'>Query Results</div>"+
 			"<br><div id='queryResultsContainer'><div id='tablesContainer'></div><div id='graphsContainer'></div></div>" + 
-			"<span class='no-print' style='font-family:Arial;font-size:11px;'><img src=\"js-i2b2/cells/CRC/assets/print.png\"/><a href='javascript:window.print()' title='Click here to print the report.'>  Print Report</a></span>"+
+			"<span class='no-print' style='font-family:Arial'><img src=\"js-i2b2/cells/CRC/assets/print.png\"/> <a href='javascript:window.print()' title='Click here to print the report.'>Print Report</a></span>"+
 			"</div>";
 	
 	this.createHTMLForPrinting = function(previewQueryOnly)
@@ -2256,7 +2256,7 @@ function QueryToolController() {
 		}
 		
 		text = (qrNameNotProvided ? 'The query "' : '') + text + 
-			' was completed in  '+  computeTime + '. This query was performed by "'+ username +".";
+			'" was completed in  '+  computeTime + '. This query was performed by "'+ username +'".';
 		
 		if(QueryReportWin)
 			jQuery("#" + objId,QueryReportWin.document).append('<tr><td>' + text.toString() + '</td></tr>');
@@ -2732,7 +2732,7 @@ function QueryToolController() {
 				if(dataArray && dataArray.length>0)
 				{
 					jQuery('#tablesContainer').append("<br/>");
-					jQuery('#tablesContainer').append("<div class='subTitleDivs'>Total Unique Patients by" + category +"</div>" );
+					jQuery('#tablesContainer').append("<div class='subTitleDivs'>Total Unique Patients by " + category +"</div>" );
 					i2b2.CRC.ctrlr.QT.createTable(dataArray);
 				}
 			});

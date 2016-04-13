@@ -217,8 +217,8 @@ i2b2.h.EscapeTemplateVars = function(refTemplateVals, arryIgnoreVars) {
 i2b2.h.LoadingMask = {
 	show: function() {
 		var sz = document.viewport.getDimensions();
-		var w = sz.width;
-		var h = sz.height;
+    		var w =  window.innerWidth || (window.document.documentElement.clientWidth || window.document.body.clientWidth);
+    		var h =  window.innerHeight || (window.document.documentElement.clientHeight || window.document.body.clientHeight);
 		if (w < 840) {w = 840;}
 		if (h < 517) {h = 517;}
 		var mn = $('topMask');

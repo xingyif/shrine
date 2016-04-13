@@ -101,9 +101,9 @@ i2b2.CRC.view.history.Resize = function(e) {
     var ve = $('crcHistoryBox');
     if (viewObj.visible) {
         ve.show();
-        var ds = document.viewport.getDimensions();
-        var w = ds.width;
-        var h = ds.height;
+		// var ds = document.viewport.getDimensions();
+	    var w =  window.innerWidth || (window.document.documentElement.clientWidth || window.document.body.clientWidth);
+	    var h =  window.innerHeight || (window.document.documentElement.clientHeight || window.document.body.clientHeight);
         if (w < 840) {w = 840;}
         if (h < 517) {h = 517;}
         ve = ve.style;
@@ -169,8 +169,8 @@ i2b2.CRC.view.history.ResizeHeight = function() {
     var ve = $('crcHistoryBox');
     if (viewObj.visible) {
         ve.show();
-        var ds = document.viewport.getDimensions();
-        var h = ds.height;
+		// var ds = document.viewport.getDimensions();
+	    var h =  window.innerHeight || (window.document.documentElement.clientHeight || window.document.body.clientHeight);
         if (h < 517) {h = 517;}
         ve = ve.style;
         // resize our visual components
@@ -318,13 +318,11 @@ function openQueryFlagPrompt(){
         buttons: [{
             text: "OK",
             handler: function(){
-                var message = document.getElementById('inputQueryFlagMessage').value,
-                    queryId = i2b2.CRC.view.history.contextRecord.sdxInfo.sdxKeyValue;
+                var message = document.getElementById('inputQueryFlagMessage').value;
 
                 //make a call to the controller flag method.
                 i2b2.CRC.ctrlr.history.Flag({
-                    queryId: queryId,
-                    message: message
+                    queryId: i2b2.CRC.view.history.contextRecord.sdxInfo.sdxKeyValue
                 });
 
                 this.cancel();

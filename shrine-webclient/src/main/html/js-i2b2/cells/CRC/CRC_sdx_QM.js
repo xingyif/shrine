@@ -79,15 +79,6 @@ i2b2.sdx.TypeControllers.QM.RenderHTML= function(sdxData, options, targetDiv) {
 	render.canExpand = bCanExp;
 	render.iconType = "QM";
 	
-    //set icon and iconExp if flagged.
-    if(sdxData.origData.flagged === "true") {
-        options.icon                                        = "sdx_CRC_QM_flagged.gif";
-        options.iconExp                                     = "sdx_CRC_QM_exp_flagged.gif";
-    } else{
-        options.icon                                        = "sdx_CRC_QM.gif";
-        options.iconExp                                     = "sdx_CRC_QM_exp.gif";
-    }
-
 	if (!Object.isUndefined(options.icon)) { render.icon = i2b2.hive.cfg.urlFramework + 'cells/CRC/assets/'+ options.icon }
 	if (!Object.isUndefined(options.iconExp)) { render.iconExp = i2b2.hive.cfg.urlFramework + 'cells/CRC/assets/'+ options.iconExp }
 	// in cases of one set icon, copy valid icon to the missing icon
@@ -101,9 +92,8 @@ i2b2.sdx.TypeControllers.QM.RenderHTML= function(sdxData, options, targetDiv) {
 	if (options.dblclick) {sMainEvents += ' ondblclick="'+ options.dblclick +'" '; }
 	if (options.context) {sMainEvents += ' oncontext="'+ options.context +'" '; } else {retHtml += ' oncontextmenu="return false" '; }
 	// **** Render the HTML ***
-	var style = ' style="white-space:nowrap;cursor:pointer;' + (sdxData.origData.flagged)? 'border: 1px solid #f00;"' : '"';
-	var retHtml = '<DIV id="' + id + '" ' + sMainEvents + ' style=' + style +'>';
-
+	var retHtml = '<DIV id="' + id + '" ' + sMainEvents + ' style="white-space:nowrap;cursor:pointer;" >';
+	if (options.tooltip) { var retHtml = '<DIV id="' + id + '" ' + sMainEvents + ' style="white-space:nowrap;cursor:pointer;" title="' + options.tooltip + '">'; }
 	retHtml += '<DIV ';
 	if (Object.isString(options.cssClass)) {
 		retHtml += ' class="'+options.cssClass+'" ';
@@ -437,9 +427,12 @@ i2b2.sdx.TypeControllers.QM.DragDrop.prototype.alignElWithMouse = function(el, i
 	} else {
 		var posX = (oCoord.x + this.deltaSetXY[0]);
 		var posY = (oCoord.y + this.deltaSetXY[1]);
-		var scrSize = document.viewport.getDimensions();
-		var maxX = parseInt(scrSize.width-25-160);
-		var maxY = parseInt(scrSize.height-25);
+		//var scrSize = document.viewport.getDimensions();
+	    var w =  window.innerWidth || (window.document.documentElement.clientWidth || window.document.body.clientWidth);
+	    var h =  window.innerHeight || (window.document.documentElement.clientHeight || window.document.body.clientHeight);
+		
+		var maxX = parseInt(w-25-160);
+		var maxY = parseInt(h-25);
 		if (posX > maxX) {posX = maxX;}
 		if (posX < 6) {posX = 6;}
 		if (posY > maxY) {posY = maxY;}
