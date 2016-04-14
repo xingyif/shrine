@@ -28,7 +28,7 @@ import net.shrine.protocol.{HiveCredentials, ResultOutputTypes, NodeId, RequestT
 import net.shrine.qep.dao.AuditDao
 import net.shrine.qep.dao.squeryl.SquerylAuditDao
 import net.shrine.qep.dao.squeryl.tables.{Tables => HubTables}
-import net.shrine.qep.{I2b2BroadcastResource, I2b2QepService, QepService, ShrineResource}
+import net.shrine.qep.{QepConfig, I2b2BroadcastResource, I2b2QepService, QepService, ShrineResource}
 import net.shrine.status.StatusJaxrs
 import org.squeryl.internals.DatabaseAdapter
 
@@ -196,14 +196,14 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
 
   protected lazy val qepConfig = shrineConfig.getConfig("queryEntryPoint")
 
-  protected lazy val (shrineService, i2b2Service, auditDao) =
+  protected lazy val queryEntryPointComponents:Option[QueryEntryPointComponents] =
     if(qepConfig.getBoolean("create")) {
-      queryEntryPointComponentsToTuple(shrineConfigurationBall.queryEntryPointConfig.map { queryEntryPointConfig =>
+      val queryEntryPointConfig: QepConfig = shrineConfigurationBall.queryEntryPointConfig.get
 
         val broadcasterClient: BroadcasterClient = {
-          if (queryEntryPointConfig.broadcasterIsLocal) {
+          //todo don't bother with a distinction between local and remote QEPs. Just use loopback.
+          if (qepConfig.getOptionConfigured("broadcasterServiceEndpoint", EndpointConfig(_)).isEmpty) {
             //If broadcaster is local, we need a hub config
-            //TODO: Enforce this when unmarshalling configs
             require(broadcastDestinations.isDefined, s"The QEP's config implied a local hub (no broadcasterServiceEndpoint), but either no downstream nodes were configured, the hub was not configured, or the hub's configuration specified not to create it.")
 
             val broadcaster: AdapterClientBroadcaster = AdapterClientBroadcaster(broadcastDestinations.get, hubDao)
@@ -211,7 +211,7 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
             InJvmBroadcasterClient(broadcaster)
           } else {
             //if broadcaster is remote, we need an endpoint
-            //TODO: Enforce this when unmarshalling configs
+            //todo Just have an endpoint always, use loopback for local.
             require(queryEntryPointConfig.broadcasterServiceEndpoint.isDefined, "Non-local broadcaster requested, but no URL for the remote broadcaster is specified")
 
             PosterBroadcasterClient(makePoster(queryEntryPointConfig.broadcasterServiceEndpoint.get), breakdownTypes)
@@ -238,7 +238,7 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
 
         debug(s"authorizationService set to $authorizationService")
 
-        QueryEntryPointComponents(
+        Some(QueryEntryPointComponents(
           QepService(
             commonName,
             auditDao,
@@ -261,11 +261,10 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
             breakdownTypes,
             queryEntryPointConfig.collectQepAudit
           ),
-          auditDao)
-      })
+          auditDao))
     }
     else {
-      (None,None,None)
+      None
     }
 
   private lazy val broadcasterOption = unpackHubComponents {
@@ -309,7 +308,7 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
       pmPoster = pmPoster,
       ontologyMetadata = ontologyMetadata,
       adapterMappings = adapterMappings,
-      auditDaoOption = auditDao,
+      auditDaoOption = queryEntryPointComponents.map(_.auditDao),
       adapterDaoOption = adapterDao,
       broadcasterOption = broadcasterOption,
       adapterOption = adapterService
@@ -320,9 +319,9 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
 
   protected lazy val statusJaxrs: StatusJaxrs = StatusJaxrs(config)
 
-  protected lazy val shrineResource: Option[ShrineResource] = shrineService.map(ShrineResource(_))
+  protected lazy val shrineResource: Option[ShrineResource] = queryEntryPointComponents.map(x => ShrineResource(x.shrineService))
 
-  protected lazy val i2b2BroadcastResource: Option[I2b2BroadcastResource] = i2b2Service.map(new I2b2BroadcastResource(_, breakdownTypes))
+  protected lazy val i2b2BroadcastResource: Option[I2b2BroadcastResource] = queryEntryPointComponents.map(x => new I2b2BroadcastResource(x.i2b2Service,breakdownTypes))
 
   protected lazy val adapterResource: Option[AdapterResource] = adapterService.map(AdapterResource(_))
 
@@ -342,26 +341,17 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
   private final case class AdapterComponents(adapterService: AdapterService, i2b2AdminService: I2b2AdminService, adapterDao: AdapterDao, adapterMappings: AdapterMappings)
 
   //todo here's the QEP. Move to the QEP package.
-  private final case class QueryEntryPointComponents(shrineService: QepService, i2b2Service: I2b2QepService, auditDao: AuditDao)
+  case class QueryEntryPointComponents(shrineService: QepService, i2b2Service: I2b2QepService, auditDao: AuditDao)
 
   //todo here's the Hub. Move to the hub package
   private final case class HubComponents(broadcaster: AdapterClientBroadcaster)
 
-  //TODO: TEST
   //todo get rid of this
   private def adapterComponentsToTuple(option: Option[AdapterComponents]): (Option[AdapterService], Option[I2b2AdminService], Option[AdapterDao], Option[AdapterMappings]) = option match {
     case None => (None, None, None, None)
     case Some(AdapterComponents(a, b, c, d)) => (Option(a), Option(b), Option(c), Option(d))
   }
   
-  //TODO: TEST
-  //todo get rid of this
-  private def queryEntryPointComponentsToTuple(option: Option[QueryEntryPointComponents]): (Option[QepService], Option[I2b2QepService], Option[AuditDao]) = option match {
-    case None => (None, None, None)
-    case Some(QueryEntryPointComponents(a, b, c)) => (Option(a), Option(b), Option(c))
-  }
-  
-  //TODO: TEST
   //todo get rid of this
   private def unpackHubComponents(option: Option[HubComponents]): Option[AdapterClientBroadcaster] = option.map(_.broadcaster)
 

@@ -49,12 +49,12 @@ object QepConfig {
     //todo put these default values in reference.conf if you decide to use one
       optionalAuthenticationType(authenticationType,config).getOrElse(defaultAuthenticationType),
       optionalAuthorizationType(authorizationType,config).getOrElse(defaultAuthorizationType),
-      endpointOption(sheriffEndpoint,config),
+      config.getOptionConfigured(sheriffEndpoint, EndpointConfig(_)),
       credentialsOption(sheriffCredentials,config),
       stewardOption(shrineSteward,config),
       config.getBoolean(includeAggregateResults),
       DurationConfigParser(config.getConfig("maxQueryWaitTime")),
-      endpointOption(broadcasterServiceEndpoint,config),
+      config.getOptionConfigured(broadcasterServiceEndpoint, EndpointConfig(_)),
       signingCertAttachmentStrategy(attachSigningCert,config),
     //todo change to shrine.queryEntryPoint...
       QepConfigSource.config.getBoolean("shrine.queryEntryPoint.audit.collectQepAudit")
@@ -81,5 +81,4 @@ object QepConfig {
 
   def credentialsOption(k: String,config: Config):Option[CredentialConfig] = config.getOptionConfigured(k, CredentialConfig(_))
 
-  def endpointOption(k: String,config: Config): Option[EndpointConfig] = config.getOptionConfigured(k, EndpointConfig(_))
 }
