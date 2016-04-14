@@ -42,30 +42,6 @@ final class NodeHandleSourceTest extends ShouldMatchersForJUnit {
     val timeout = 1.minute
 
     val breakdownTypes = DefaultBreakdownResultOutputTypes.toSet
-    
-    {
-      val handles = NodeHandleSource.makeNodeHandles(trustParam, timeout, nodes, myId, None, breakdownTypes)
 
-      handles should equal {
-        Set(
-          NodeHandle(xId, RemoteAdapterClient(xId,Poster(xUrl, JerseyHttpClient(trustParam, timeout, MediaType.APPLICATION_XML)), breakdownTypes)),
-          NodeHandle(yId, RemoteAdapterClient(yId,Poster(yUrl + "/requests", JerseyHttpClient(trustParam, timeout, MediaType.APPLICATION_XML)), breakdownTypes)))
-      }
-    }
-    
-    {
-      val mockAdapter: AdapterRequestHandler = new AdapterRequestHandler {
-        override def handleRequest(request: BroadcastMessage): Result = ???
-      }
-      
-      val handles = NodeHandleSource.makeNodeHandles(trustParam, timeout, nodes, myId, Some(mockAdapter), breakdownTypes)
-
-      handles should equal {
-        Set(
-          NodeHandle(xId, RemoteAdapterClient(xId,Poster(xUrl, JerseyHttpClient(trustParam, timeout, MediaType.APPLICATION_XML)), breakdownTypes)),
-          NodeHandle(yId, RemoteAdapterClient(yId,Poster(yUrl + "/requests", JerseyHttpClient(trustParam, timeout, MediaType.APPLICATION_XML)), breakdownTypes)),
-          NodeHandle(myId, new InJvmAdapterClient(mockAdapter)))
-      }
-    }
   }
 }

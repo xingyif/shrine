@@ -53,7 +53,7 @@ object QepConfig {
       credentialsOption(sheriffCredentials,config),
       stewardOption(shrineSteward,config),
       config.getBoolean(includeAggregateResults),
-      DurationConfigParser(config.getConfig(maxQueryWaitTime)),
+      DurationConfigParser(config.getConfig("maxQueryWaitTime")),
       endpointOption(broadcasterServiceEndpoint,config),
       signingCertAttachmentStrategy(attachSigningCert,config),
     //todo change to shrine.queryEntryPoint...

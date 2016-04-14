@@ -184,12 +184,20 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
   }
     else None //todo eventually make this just another downstream node accessed via loopback
 
-  private lazy val broadcastDestinations: Option[Set[NodeHandle]] = shrineConfigurationBall.hubConfig.map(hubConfig => makeNodeHandles(keystoreTrustParam, hubConfig.maxQueryWaitTime, hubConfig.downstreamNodes, nodeId, localAdapterServiceOption, breakdownTypes))
+  val hubConfig = shrineConfig.getConfig("hub")
+
+  //todo use an empty Set instead of Option[Set]
+  private lazy val broadcastDestinations: Option[Set[NodeHandle]] = {
+    if(hubConfig.getBoolean("create")) {
+      Some(makeNodeHandles(hubConfig, keystoreTrustParam, nodeId, localAdapterServiceOption, breakdownTypes))
+    }
+    else None
+  }
 
   protected lazy val qepConfig = shrineConfig.getConfig("queryEntryPoint")
 
   protected lazy val (shrineService, i2b2Service, auditDao) =
-    if(qepConfig.getBoolean("create") == true) {
+    if(qepConfig.getBoolean("create")) {
       queryEntryPointComponentsToTuple(shrineConfigurationBall.queryEntryPointConfig.map { queryEntryPointConfig =>
 
         val broadcasterClient: BroadcasterClient = {

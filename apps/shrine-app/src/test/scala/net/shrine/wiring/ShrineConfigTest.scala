@@ -49,16 +49,8 @@ final class ShrineConfigTest extends ShouldMatchersForJUnit  {
     
     conf.queryEntryPointConfig.get.includeAggregateResults should equal(false)
 
-    conf.hubConfig.get.maxQueryWaitTime should equal(4.5.minutes)
-    
     conf.adapterStatusQuery should equal("""\\SHRINE\SHRINE\Diagnoses\Mental Illness\Disorders usually diagnosed in infancy, childhood, or adolescence\Pervasive developmental disorders\Infantile autism, current or active state\""")
     
-    conf.hubConfig.get.downstreamNodes.toSet should equal {
-      Set(
-        node("some hospital", "http://example.com/foo"),
-        node("CHB", "http://example.com/chb"),
-        node("PHS", "http://example.com/phs"))
-    }
   }
   
   @Test

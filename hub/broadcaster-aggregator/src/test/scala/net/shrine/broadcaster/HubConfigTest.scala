@@ -15,13 +15,10 @@ final class HubConfigTest extends ShouldMatchersForJUnit {
   
   @Test
   def testApply {
-    val conf = hubConfig("shrine")
+    val conf: HubConfig = hubConfig("shrine")
 
-    import scala.concurrent.duration._
     import NodeListParserTest.node
 
-    conf.maxQueryWaitTime should equal(4.5.minutes)
-    
     conf.downstreamNodes.toSet should equal {
       Set(
         node("some hospital", "http://example.com/foo"),
