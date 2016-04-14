@@ -40,9 +40,10 @@ i2b2.CRC.view.status.showDisplay = function() {
 i2b2.CRC.view.status.Resize = function(e) {
 	var viewObj = i2b2.CRC.view.status;
 	if (viewObj.visible) {
-		var ds = document.viewport.getDimensions();
-		var w = ds.width;
-		var h = ds.height;
+		//var ds = document.viewport.getDimensions();
+ 	    var w =  window.innerWidth || (window.document.documentElement.clientWidth || window.document.body.clientWidth);
+ 	    var h =  window.innerHeight || (window.document.documentElement.clientHeight || window.document.body.clientHeight);
+		
 		if (w < 840) {w = 840;}
 		if (h < 517) {h = 517;}
 		
@@ -81,11 +82,12 @@ i2b2.CRC.view.status.Resize = function(e) {
 //================================================================================================== //
 i2b2.CRC.view.status.splitterDragged = function()
 {
-	var viewPortDim = document.viewport.getDimensions();
+	//var viewPortDim = document.viewport.getDimensions();
+ 	var w =  window.innerWidth || (window.document.documentElement.clientWidth || window.document.body.clientWidth);
 	var splitter = $( i2b2.hive.mySplitter.name );	
 	var CRCStatus = $("crcStatusBox");
 	CRCStatus.style.left	= (parseInt(splitter.offsetWidth) + parseInt(splitter.style.left) + 3) + "px";
-	CRCStatus.style.width 	= Math.max(parseInt(viewPortDim.width) - parseInt(splitter.style.left) - parseInt(splitter.offsetWidth) - 29, 0) + "px";
+	CRCStatus.style.width 	= Math.max(parseInt(w) - parseInt(splitter.style.left) - parseInt(splitter.offsetWidth) - 29, 0) + "px";
 }
 
 //================================================================================================== //

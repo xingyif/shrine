@@ -6,9 +6,9 @@
 <!--
  *  *************************
  *       i2b2 Web Client
- *           v1.7.02
+ *        v1.7.07-SHRINE
  *  *************************
- *  @modified: 06/15/2014
+ *  @modified: 04/13/2016
  *  Contributors:
  *     Nick Benik
  *     Griffin Weber, MD, PhD
@@ -18,7 +18,14 @@
  */-->
 
 <script type="text/javascript">
-    var i2b2build = "1.7.001   [02/04/2014 4:07 PM] ";
+    var i2b2build = "1.7.007   [04/13/2016 12:00 PM] ";
+	
+	//ie does not support trim method
+	if(typeof String.prototype.trim !== 'function') {
+		String.prototype.trim = function() {
+			return this.replace(/^\s+|\s+$/g, ''); 
+		};
+	}
 </script>
 
 <!-- LOAD YUI FROM Yahoo's CDN
