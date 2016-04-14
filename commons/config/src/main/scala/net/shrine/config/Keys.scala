@@ -27,7 +27,7 @@ object Keys {
   val maxSignatureAge = "maxSignatureAge"
   val adapter = "adapter"
   val hub = "hub"
-  val queryEntryPoint = "queryEntryPoint"
+  val queryEntryPoint = "queryEntryPoint" //todo remove once it's not used anymore
   val broadcasterIsLocal = "broadcasterIsLocal"
   val broadcasterServiceEndpoint = "broadcasterServiceEndpoint"
   val immediatelyRunIncomingQueries = "immediatelyRunIncomingQueries"

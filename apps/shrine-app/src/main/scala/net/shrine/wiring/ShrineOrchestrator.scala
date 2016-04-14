@@ -186,71 +186,79 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
 
   private lazy val broadcastDestinations: Option[Set[NodeHandle]] = shrineConfigurationBall.hubConfig.map(hubConfig => makeNodeHandles(keystoreTrustParam, hubConfig.maxQueryWaitTime, hubConfig.downstreamNodes, nodeId, localAdapterServiceOption, breakdownTypes))
 
-  protected lazy val (shrineService, i2b2Service, auditDao) = queryEntryPointComponentsToTuple(shrineConfigurationBall.queryEntryPointConfig.map { queryEntryPointConfig =>
+  protected lazy val qepConfig = shrineConfig.getConfig("queryEntryPoint")
 
-      val broadcasterClient: BroadcasterClient = {
-        if(queryEntryPointConfig.broadcasterIsLocal) {
-          //If broadcaster is local, we need a hub config
-          //TODO: Enforce this when unmarshalling configs
-          require(broadcastDestinations.isDefined, s"The QEP's config implied a local hub (no broadcasterServiceEndpoint), but either no downstream nodes were configured, the hub was not configured, or the hub's configuration specified not to create it.")
+  protected lazy val (shrineService, i2b2Service, auditDao) =
+    if(qepConfig.getBoolean("create") == true) {
+      queryEntryPointComponentsToTuple(shrineConfigurationBall.queryEntryPointConfig.map { queryEntryPointConfig =>
 
-          val broadcaster: AdapterClientBroadcaster = AdapterClientBroadcaster(broadcastDestinations.get, hubDao)
+        val broadcasterClient: BroadcasterClient = {
+          if (queryEntryPointConfig.broadcasterIsLocal) {
+            //If broadcaster is local, we need a hub config
+            //TODO: Enforce this when unmarshalling configs
+            require(broadcastDestinations.isDefined, s"The QEP's config implied a local hub (no broadcasterServiceEndpoint), but either no downstream nodes were configured, the hub was not configured, or the hub's configuration specified not to create it.")
 
-          InJvmBroadcasterClient(broadcaster)
-        } else {
-          //if broadcaster is remote, we need an endpoint
-          //TODO: Enforce this when unmarshalling configs
-          require(queryEntryPointConfig.broadcasterServiceEndpoint.isDefined, "Non-local broadcaster requested, but no URL for the remote broadcaster is specified")
+            val broadcaster: AdapterClientBroadcaster = AdapterClientBroadcaster(broadcastDestinations.get, hubDao)
 
-          PosterBroadcasterClient(makePoster(queryEntryPointConfig.broadcasterServiceEndpoint.get), breakdownTypes)
+            InJvmBroadcasterClient(broadcaster)
+          } else {
+            //if broadcaster is remote, we need an endpoint
+            //TODO: Enforce this when unmarshalling configs
+            require(queryEntryPointConfig.broadcasterServiceEndpoint.isDefined, "Non-local broadcaster requested, but no URL for the remote broadcaster is specified")
+
+            PosterBroadcasterClient(makePoster(queryEntryPointConfig.broadcasterServiceEndpoint.get), breakdownTypes)
+          }
         }
-      }
 
-      val commonName:String = shrineCertCollection.myCommonName.getOrElse{
-        val hostname = java.net.InetAddress.getLocalHost.getHostName
-        warn(s"No common name available from ${shrineCertCollection.descriptor}. Using $hostname instead.")
-        hostname
-      }
+        val commonName: String = shrineCertCollection.myCommonName.getOrElse {
+          val hostname = java.net.InetAddress.getLocalHost.getHostName
+          warn(s"No common name available from ${shrineCertCollection.descriptor}. Using $hostname instead.")
+          hostname
+        }
 
-      val broadcastService: BroadcastAndAggregationService = SigningBroadcastAndAggregationService(broadcasterClient, signerVerifier, queryEntryPointConfig.signingCertStrategy)
+        val broadcastService: BroadcastAndAggregationService = SigningBroadcastAndAggregationService(broadcasterClient, signerVerifier, queryEntryPointConfig.signingCertStrategy)
 
-      val auditDao: AuditDao = new SquerylAuditDao(squerylInitializer, new HubTables)
+        val auditDao: AuditDao = new SquerylAuditDao(squerylInitializer, new HubTables)
 
-      val authenticationType = queryEntryPointConfig.authenticationType
+        val authenticationType = queryEntryPointConfig.authenticationType
 
-      val authorizationType = queryEntryPointConfig.authorizationType
+        val authorizationType = queryEntryPointConfig.authorizationType
 
-      val authenticator: Authenticator = AuthStrategy.determineAuthenticator(authenticationType, pmPoster)
+        val authenticator: Authenticator = AuthStrategy.determineAuthenticator(authenticationType, pmPoster)
 
-      val authorizationService: QueryAuthorizationService = AuthStrategy.determineQueryAuthorizationService(authorizationType, shrineConfigurationBall, authenticator)
+        val authorizationService: QueryAuthorizationService = AuthStrategy.determineQueryAuthorizationService(qepConfig,authorizationType, shrineConfigurationBall, authenticator)
 
-      debug(s"authorizationService set to $authorizationService")
+        debug(s"authorizationService set to $authorizationService")
 
-      QueryEntryPointComponents(
-        QepService(
-          commonName,
-          auditDao,
-          authenticator,
-          authorizationService,
-          queryEntryPointConfig.includeAggregateResults,
-          broadcastService,
-          queryEntryPointConfig.maxQueryWaitTime,
-          breakdownTypes,
-          queryEntryPointConfig.collectQepAudit
-        ),
-        I2b2QepService(
-          commonName,
-          auditDao,
-          authenticator,
-          authorizationService,
-          queryEntryPointConfig.includeAggregateResults,
-          broadcastService,
-          queryEntryPointConfig.maxQueryWaitTime,
-          breakdownTypes,
-          queryEntryPointConfig.collectQepAudit
-        ),
-        auditDao)
-    })
+        QueryEntryPointComponents(
+          QepService(
+            commonName,
+            auditDao,
+            authenticator,
+            authorizationService,
+            queryEntryPointConfig.includeAggregateResults,
+            broadcastService,
+            queryEntryPointConfig.maxQueryWaitTime,
+            breakdownTypes,
+            queryEntryPointConfig.collectQepAudit
+          ),
+          I2b2QepService(
+            commonName,
+            auditDao,
+            authenticator,
+            authorizationService,
+            queryEntryPointConfig.includeAggregateResults,
+            broadcastService,
+            queryEntryPointConfig.maxQueryWaitTime,
+            breakdownTypes,
+            queryEntryPointConfig.collectQepAudit
+          ),
+          auditDao)
+      })
+    }
+    else {
+      (None,None,None)
+    }
 
   private lazy val broadcasterOption = unpackHubComponents {
     for {
@@ -322,10 +330,13 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
     JerseyHttpClient(trustParam, endpoint.timeout)
   }
 
+  //todo here's the Adapter. Move to the adapter package.
   private final case class AdapterComponents(adapterService: AdapterService, i2b2AdminService: I2b2AdminService, adapterDao: AdapterDao, adapterMappings: AdapterMappings)
 
+  //todo here's the QEP. Move to the QEP package.
   private final case class QueryEntryPointComponents(shrineService: QepService, i2b2Service: I2b2QepService, auditDao: AuditDao)
 
+  //todo here's the Hub. Move to the hub package
   private final case class HubComponents(broadcaster: AdapterClientBroadcaster)
 
   //TODO: TEST

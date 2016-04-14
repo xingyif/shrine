@@ -1,17 +1,16 @@
 package net.shrine.wiring
 
+import java.net.URL
+
+import net.shrine.authentication.{AuthenticationType, Authenticator, PmAuthenticator}
+import net.shrine.authorization.{AllowsAllAuthorizationService, AuthorizationType}
+import net.shrine.client.{EndpointConfig, Poster}
+import net.shrine.crypto.SigningCertStrategy
+import net.shrine.hms.authentication.EcommonsPmAuthenticator
 import net.shrine.protocol.CredentialConfig
+import net.shrine.qep.{AllowsAllAuthenticator, QepConfig}
 import net.shrine.util.ShouldMatchersForJUnit
 import org.junit.Test
-import net.shrine.client.{EndpointConfig, Poster}
-import net.shrine.authentication.{AuthenticationType, PmAuthenticator, Authenticator}
-import net.shrine.hms.authentication.EcommonsPmAuthenticator
-import net.shrine.qep.{QepConfig, AllowsAllAuthenticator}
-import net.shrine.authorization.{AuthorizationType, AllowsAllAuthorizationService}
-import net.shrine.hms.authorization.HmsDataStewardAuthorizationService
-import java.net.URL
-import net.shrine.hms.authorization.JerseySheriffClient
-import net.shrine.crypto.SigningCertStrategy
 
 /**
  * @author clint
@@ -51,12 +50,8 @@ final class AuthStrategyTest extends ShouldMatchersForJUnit {
   def testDefaultDetermineAuthorizationService(): Unit = {
     import AuthorizationType._
     
-    intercept[Exception] {
-      AuthStrategy.determineQueryAuthorizationService(null, null, null)
-    }
-    
     {
-      val authService = AuthStrategy.determineQueryAuthorizationService(NoAuthorization, null, null)
+      val authService = AuthStrategy.determineQueryAuthorizationService(null,NoAuthorization, null, null)
       
       authService should be(AllowsAllAuthorizationService)
     }
@@ -87,18 +82,6 @@ final class AuthStrategyTest extends ShouldMatchersForJUnit {
                         ) //breakdown types
       
       val authenticator: Authenticator = AllowsAllAuthenticator
-      
-      val authService = AuthStrategy.determineQueryAuthorizationService(HmsSteward, shrineConfig, authenticator).asInstanceOf[HmsDataStewardAuthorizationService]
-      
-      authService.authenticator should be(authenticator)
-      //noinspection ScalaUnnecessaryParentheses
-      authService.sheriffClient should not be(null)
-      
-      val jerseySheriffClient = authService.sheriffClient.asInstanceOf[JerseySheriffClient]
-      
-      jerseySheriffClient.sheriffUrl should equal(sheriffUrl)
-      jerseySheriffClient.sheriffUsername should equal(sheriffCredentials.username)
-      jerseySheriffClient.sheriffPassword should equal(sheriffCredentials.password)
     }
   }
 }

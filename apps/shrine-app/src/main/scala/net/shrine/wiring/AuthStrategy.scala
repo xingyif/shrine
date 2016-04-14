@@ -1,5 +1,6 @@
 package net.shrine.wiring
 
+import com.typesafe.config.Config
 import net.shrine.authorization.steward.StewardConfig
 import net.shrine.config.Keys
 import net.shrine.authentication.{AuthenticationType, Authenticator, PmAuthenticator}
@@ -27,18 +28,18 @@ object AuthStrategy {
     case _ => throw new Exception(s"Disallowed authentication type '$authType'")
   }
 
-  def determineQueryAuthorizationService(authType: AuthorizationType, shrineConfig: ShrineConfig, authenticator: Authenticator): QueryAuthorizationService = {
+  def determineQueryAuthorizationService(qepConfig:Config,authType: AuthorizationType, shrineConfigBall: ShrineConfig, authenticator: Authenticator): QueryAuthorizationService = {
     authType match {
-      case ShrineSteward => makeShrineStewardAuthorizationService(shrineConfig)
-      case HmsSteward => makeHmsStewardAuthorizationService(shrineConfig, authenticator)
+      case ShrineSteward => makeShrineStewardAuthorizationService( qepConfig,shrineConfigBall)
+      case HmsSteward => makeHmsStewardAuthorizationService(qepConfig,shrineConfigBall, authenticator)
       case NoAuthorization => AllowsAllAuthorizationService
       case _ => throw new Exception(s"Disallowed authorization type '$authType'")
     }
   }
 
-  private def makeShrineStewardAuthorizationService(shrineConfig: ShrineConfig): QueryAuthorizationService = {
-    require(shrineConfig.queryEntryPointConfig.isDefined, s"${Keys.queryEntryPoint} section must be defined in shrine.conf")
-    val queryEntryPointConfig = shrineConfig.queryEntryPointConfig.get
+  private def makeShrineStewardAuthorizationService(qepConfig:Config,shrineConfigBall: ShrineConfig): QueryAuthorizationService = {
+    require(shrineConfigBall.queryEntryPointConfig.isDefined, s"${Keys.queryEntryPoint} section must be defined in shrine.conf")
+    val queryEntryPointConfig = shrineConfigBall.queryEntryPointConfig.get
 
 
     require(queryEntryPointConfig.stewardConfig.isDefined, s"${Keys.queryEntryPoint}.shrineSteward section must be defined in shrine.conf")
@@ -50,12 +51,12 @@ object AuthStrategy {
       stewardBaseUrl = stewardConfig.stewardBaseUrl)
   }
 
-  private def makeHmsStewardAuthorizationService(shrineConfig: ShrineConfig, authenticator: => Authenticator): QueryAuthorizationService = {
+  private def makeHmsStewardAuthorizationService(qepConfig:Config,shrineConfigBall: ShrineConfig, authenticator: => Authenticator): QueryAuthorizationService = {
     //NB: Fail fast here, since on the fully-meshed HMS deployment, all nodes are expected to be
     //query entry points
-    require(shrineConfig.queryEntryPointConfig.isDefined, s"${Keys.queryEntryPoint} section must be defined in shrine.conf")
+    require(shrineConfigBall.queryEntryPointConfig.isDefined, s"${Keys.queryEntryPoint} section must be defined in shrine.conf")
 
-    val queryEntryPointConfig = shrineConfig.queryEntryPointConfig.get
+    val queryEntryPointConfig = shrineConfigBall.queryEntryPointConfig.get
 
     val sheriffEndpointOption = queryEntryPointConfig.sheriffEndpoint
     val sheriffCredentialsOption = queryEntryPointConfig.sheriffCredentials
