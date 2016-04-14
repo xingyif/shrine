@@ -200,72 +200,72 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
     if(qepConfig.getBoolean("create")) {
       val queryEntryPointConfig: QepConfig = shrineConfigurationBall.queryEntryPointConfig.get
 
-        val broadcasterClient: BroadcasterClient = {
-          //todo don't bother with a distinction between local and remote QEPs. Just use loopback.
-          if (qepConfig.getOptionConfigured("broadcasterServiceEndpoint", EndpointConfig(_)).isEmpty) {
-            //If broadcaster is local, we need a hub config
-            require(broadcastDestinations.isDefined, s"The QEP's config implied a local hub (no broadcasterServiceEndpoint), but either no downstream nodes were configured, the hub was not configured, or the hub's configuration specified not to create it.")
+      val broadcasterClient: BroadcasterClient = {
+        //todo don't bother with a distinction between local and remote QEPs. Just use loopback.
+        if (qepConfig.getOptionConfigured("broadcasterServiceEndpoint", EndpointConfig(_)).isEmpty) {
+          //If broadcaster is local, we need a hub config
+          require(broadcastDestinations.isDefined, s"The QEP's config implied a local hub (no broadcasterServiceEndpoint), but either no downstream nodes were configured, the hub was not configured, or the hub's configuration specified not to create it.")
 
-            val broadcaster: AdapterClientBroadcaster = AdapterClientBroadcaster(broadcastDestinations.get, hubDao)
+          val broadcaster: AdapterClientBroadcaster = AdapterClientBroadcaster(broadcastDestinations.get, hubDao)
 
-            InJvmBroadcasterClient(broadcaster)
-          } else {
-            //if broadcaster is remote, we need an endpoint
-            //todo Just have an endpoint always, use loopback for local.
-            require(queryEntryPointConfig.broadcasterServiceEndpoint.isDefined, "Non-local broadcaster requested, but no URL for the remote broadcaster is specified")
+          InJvmBroadcasterClient(broadcaster)
+        } else {
+          //if broadcaster is remote, we need an endpoint
+          //todo Just have an endpoint always, use loopback for local.
+          require(queryEntryPointConfig.broadcasterServiceEndpoint.isDefined, "Non-local broadcaster requested, but no URL for the remote broadcaster is specified")
 
-            PosterBroadcasterClient(makePoster(queryEntryPointConfig.broadcasterServiceEndpoint.get), breakdownTypes)
-          }
+          PosterBroadcasterClient(makePoster(queryEntryPointConfig.broadcasterServiceEndpoint.get), breakdownTypes)
         }
+      }
 
-        val commonName: String = shrineCertCollection.myCommonName.getOrElse {
-          val hostname = java.net.InetAddress.getLocalHost.getHostName
-          warn(s"No common name available from ${shrineCertCollection.descriptor}. Using $hostname instead.")
-          hostname
-        }
+      val commonName: String = shrineCertCollection.myCommonName.getOrElse {
+        val hostname = java.net.InetAddress.getLocalHost.getHostName
+        warn(s"No common name available from ${shrineCertCollection.descriptor}. Using $hostname instead.")
+        hostname
+      }
 
-        val broadcastService: BroadcastAndAggregationService = SigningBroadcastAndAggregationService(broadcasterClient, signerVerifier, queryEntryPointConfig.signingCertStrategy)
+      val broadcastService: BroadcastAndAggregationService = SigningBroadcastAndAggregationService(broadcasterClient, signerVerifier, queryEntryPointConfig.signingCertStrategy)
 
-        val auditDao: AuditDao = new SquerylAuditDao(squerylInitializer, new HubTables)
+      val auditDao: AuditDao = new SquerylAuditDao(squerylInitializer, new HubTables)
 
-        val authenticationType = queryEntryPointConfig.authenticationType
+      val authenticationType = queryEntryPointConfig.authenticationType
 
-        val authorizationType = queryEntryPointConfig.authorizationType
+      val authorizationType = queryEntryPointConfig.authorizationType
 
-        val authenticator: Authenticator = AuthStrategy.determineAuthenticator(authenticationType, pmPoster)
+      val authenticator: Authenticator = AuthStrategy.determineAuthenticator(authenticationType, pmPoster)
 
-        val authorizationService: QueryAuthorizationService = AuthStrategy.determineQueryAuthorizationService(qepConfig,authorizationType, shrineConfigurationBall, authenticator)
+      val authorizationService: QueryAuthorizationService = AuthStrategy.determineQueryAuthorizationService(qepConfig,authorizationType, shrineConfigurationBall, authenticator)
 
-        debug(s"authorizationService set to $authorizationService")
+      debug(s"authorizationService set to $authorizationService")
 
-        Some(QueryEntryPointComponents(
-          QepService(
-            commonName,
-            auditDao,
-            authenticator,
-            authorizationService,
-            queryEntryPointConfig.includeAggregateResults,
-            broadcastService,
-            queryEntryPointConfig.maxQueryWaitTime,
-            breakdownTypes,
-            queryEntryPointConfig.collectQepAudit
-          ),
-          I2b2QepService(
-            commonName,
-            auditDao,
-            authenticator,
-            authorizationService,
-            queryEntryPointConfig.includeAggregateResults,
-            broadcastService,
-            queryEntryPointConfig.maxQueryWaitTime,
-            breakdownTypes,
-            queryEntryPointConfig.collectQepAudit
-          ),
-          auditDao))
-    }
-    else {
-      None
-    }
+      Some(QueryEntryPointComponents(
+        QepService(
+          commonName,
+          auditDao,
+          authenticator,
+          authorizationService,
+          queryEntryPointConfig.includeAggregateResults,
+          broadcastService,
+          queryEntryPointConfig.maxQueryWaitTime,
+          breakdownTypes,
+          queryEntryPointConfig.collectQepAudit
+        ),
+        I2b2QepService(
+          commonName,
+          auditDao,
+          authenticator,
+          authorizationService,
+          queryEntryPointConfig.includeAggregateResults,
+          broadcastService,
+          queryEntryPointConfig.maxQueryWaitTime,
+          breakdownTypes,
+          queryEntryPointConfig.collectQepAudit
+        ),
+        auditDao))
+  }
+  else {
+    None
+  }
 
   private lazy val broadcasterOption = unpackHubComponents {
     for {
