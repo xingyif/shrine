@@ -230,11 +230,9 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
 
       val authenticationType = queryEntryPointConfig.authenticationType
 
-      val authorizationType = queryEntryPointConfig.authorizationType //todo next target
-
       val authenticator: Authenticator = AuthStrategy.determineAuthenticator(authenticationType, pmPoster)
 
-      val authorizationService: QueryAuthorizationService = AuthStrategy.determineQueryAuthorizationService(qepConfig,authorizationType,authenticator)
+      val authorizationService: QueryAuthorizationService = AuthStrategy.determineQueryAuthorizationService(qepConfig,authenticator)
 
       debug(s"authorizationService set to $authorizationService")
 

@@ -16,7 +16,6 @@ import scala.concurrent.duration.Duration
  */
 final case class QepConfig (
   authenticationType: AuthenticationType,
-  authorizationType: AuthorizationType,
   includeAggregateResults: Boolean,
   maxQueryWaitTime: Duration,
   broadcasterServiceEndpoint: Option[EndpointConfig],
@@ -40,7 +39,6 @@ object QepConfig {
     QepConfig(
     //todo put these default values in reference.conf if you decide to use one
       optionalAuthenticationType(authenticationType,config).getOrElse(defaultAuthenticationType),
-      optionalAuthorizationType(authorizationType,config).getOrElse(defaultAuthorizationType),
       config.getBoolean(includeAggregateResults),
       DurationConfigParser(config.getConfig("maxQueryWaitTime")),
       config.getOptionConfigured(broadcasterServiceEndpoint, EndpointConfig(_)),

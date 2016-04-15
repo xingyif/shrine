@@ -41,15 +41,4 @@ final class AuthStrategyTest extends ShouldMatchersForJUnit {
       authenticator should be(AllowsAllAuthenticator)
     }
   }
-  
-  @Test
-  def testDefaultDetermineAuthorizationService(): Unit = {
-    import AuthorizationType._
-    
-    {
-      val authService = AuthStrategy.determineQueryAuthorizationService(qepConfig = null,authType = NoAuthorization, authenticator = null)
-      
-      authService should be(AllowsAllAuthorizationService)
-    }
-  }
 }

@@ -30,6 +30,5 @@ object Keys {
   val broadcasterServiceEndpoint = "broadcasterServiceEndpoint"
   val immediatelyRunIncomingQueries = "immediatelyRunIncomingQueries"
   val authenticationType = "authenticationType"
-  val authorizationType = "authorizationType"
   val attachSigningCert = "attachSigningCert"
 }
