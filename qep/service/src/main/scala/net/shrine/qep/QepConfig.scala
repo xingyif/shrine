@@ -3,7 +3,6 @@ package net.shrine.qep
 import com.typesafe.config.Config
 import net.shrine.authentication.AuthenticationType
 import net.shrine.authorization.AuthorizationType
-import net.shrine.authorization.steward.StewardConfig
 import net.shrine.client.EndpointConfig
 import net.shrine.config.{DurationConfigParser, Keys,ConfigExtensions}
 import net.shrine.crypto.SigningCertStrategy
@@ -23,8 +22,6 @@ final case class QepConfig (
   sheriffEndpoint: Option[EndpointConfig],
   //NB: optional, only needed for HMS
   sheriffCredentials: Option[CredentialConfig],
-  //steward config, only needed for a data steward
-  stewardConfig: Option[StewardConfig],
   includeAggregateResults: Boolean,
   maxQueryWaitTime: Duration,
   broadcasterServiceEndpoint: Option[EndpointConfig],
@@ -51,7 +48,6 @@ object QepConfig {
       optionalAuthorizationType(authorizationType,config).getOrElse(defaultAuthorizationType),
       config.getOptionConfigured(sheriffEndpoint, EndpointConfig(_)),
       credentialsOption(sheriffCredentials,config),
-      stewardOption(shrineSteward,config),
       config.getBoolean(includeAggregateResults),
       DurationConfigParser(config.getConfig("maxQueryWaitTime")),
       config.getOptionConfigured(broadcasterServiceEndpoint, EndpointConfig(_)),
@@ -76,8 +72,6 @@ object QepConfig {
 
     if(attachSigningCerts) Attach else DontAttach
   }
-
-  def stewardOption(k: String,config: Config): Option[StewardConfig] = config.getOptionConfigured(k, StewardConfig(_))
 
   def credentialsOption(k: String,config: Config):Option[CredentialConfig] = config.getOptionConfigured(k, CredentialConfig(_))
 

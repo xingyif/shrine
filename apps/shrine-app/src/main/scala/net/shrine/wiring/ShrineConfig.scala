@@ -3,7 +3,6 @@ package net.shrine.wiring
 import com.typesafe.config.Config
 import net.shrine.broadcaster.HubConfig
 import net.shrine.config.{ConfigExtensions, Keys}
-import net.shrine.protocol.HiveCredentials
 import net.shrine.qep.QepConfig
 
 /**

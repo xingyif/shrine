@@ -195,10 +195,10 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
   }
 
   protected lazy val qepConfig = shrineConfig.getConfig("queryEntryPoint")
+  lazy val queryEntryPointConfig: QepConfig = shrineConfig.getConfigured("queryEntryPoint", QepConfig(_))
 
   protected lazy val queryEntryPointComponents:Option[QueryEntryPointComponents] =
     if(qepConfig.getBoolean("create")) {
-      val queryEntryPointConfig: QepConfig = shrineConfigurationBall.queryEntryPointConfig.get
 
       val broadcasterClient: BroadcasterClient = {
         //todo don't bother with a distinction between local and remote QEPs. Just use loopback.

@@ -1,8 +1,6 @@
 package net.shrine.wiring
 
 import com.typesafe.config.Config
-import net.shrine.authorization.steward.StewardConfig
-import net.shrine.config.Keys
 import net.shrine.authentication.{AuthenticationType, Authenticator, PmAuthenticator}
 import net.shrine.authorization.{AuthorizationType, StewardQueryAuthorizationService, QueryAuthorizationService, AllowsAllAuthorizationService}
 import net.shrine.qep.AllowsAllAuthenticator
@@ -30,31 +28,22 @@ object AuthStrategy {
 
   def determineQueryAuthorizationService(qepConfig:Config,authType: AuthorizationType, shrineConfigBall: ShrineConfig, authenticator: Authenticator): QueryAuthorizationService = {
     authType match {
-      case ShrineSteward => makeShrineStewardAuthorizationService( qepConfig,shrineConfigBall)
+      case ShrineSteward => makeShrineStewardAuthorizationService(qepConfig)
       case HmsSteward => makeHmsStewardAuthorizationService(qepConfig,shrineConfigBall, authenticator)
       case NoAuthorization => AllowsAllAuthorizationService
       case _ => throw new Exception(s"Disallowed authorization type '$authType'")
     }
   }
 
-  private def makeShrineStewardAuthorizationService(qepConfig:Config,shrineConfigBall: ShrineConfig): QueryAuthorizationService = {
-    require(shrineConfigBall.queryEntryPointConfig.isDefined, s"${Keys.queryEntryPoint} section must be defined in shrine.conf")
-    val queryEntryPointConfig = shrineConfigBall.queryEntryPointConfig.get
-
-
-    require(queryEntryPointConfig.stewardConfig.isDefined, s"${Keys.queryEntryPoint}.shrineSteward section must be defined in shrine.conf")
-    val stewardConfig: StewardConfig = queryEntryPointConfig.stewardConfig.get
-
-    StewardQueryAuthorizationService(
-      qepUserName = stewardConfig.qepUserName,
-      qepPassword = stewardConfig.qepPassword,
-      stewardBaseUrl = stewardConfig.stewardBaseUrl)
+  private def makeShrineStewardAuthorizationService(qepConfig:Config): QueryAuthorizationService = {
+    val stewardConfig: Config = qepConfig.getConfig("shrineSteward")
+    StewardQueryAuthorizationService(stewardConfig)
   }
 
   private def makeHmsStewardAuthorizationService(qepConfig:Config,shrineConfigBall: ShrineConfig, authenticator: => Authenticator): QueryAuthorizationService = {
+    //todo put all this in JerseySheriffClient's apply
     //NB: Fail fast here, since on the fully-meshed HMS deployment, all nodes are expected to be
     //query entry points
-    require(shrineConfigBall.queryEntryPointConfig.isDefined, s"${Keys.queryEntryPoint} section must be defined in shrine.conf")
 
     val queryEntryPointConfig = shrineConfigBall.queryEntryPointConfig.get
 

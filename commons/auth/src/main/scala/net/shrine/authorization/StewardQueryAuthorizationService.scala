@@ -5,12 +5,13 @@ import javax.net.ssl.{KeyManager, X509TrustManager, SSLContext}
 import java.security.cert.X509Certificate
 
 import akka.io.IO
-import com.typesafe.config.ConfigFactory
+import com.typesafe.config.{Config, ConfigFactory}
 import net.shrine.authorization.AuthorizationResult.{NotAuthorized, Authorized}
 import net.shrine.authorization.steward.{TopicIdAndName, ResearchersTopics, InboundShrineQuery}
 import net.shrine.log.Loggable
 import net.shrine.problem.{ProblemSources, AbstractProblem}
 import net.shrine.protocol.{AuthenticationInfo, ApprovedTopic, RunQueryRequest, ReadApprovedQueryTopicsResponse, ErrorResponse, ReadApprovedQueryTopicsRequest}
+import net.shrine.config.ConfigExtensions
 
 import org.json4s.native.JsonMethods.parse
 import org.json4s.{DefaultFormats, Formats}
@@ -217,6 +218,15 @@ import spray.can.Http
   override def toString() = {
     super.toString().replaceAll(qepPassword,"REDACTED")
   }
+}
+
+object StewardQueryAuthorizationService {
+
+  def apply(config:Config):StewardQueryAuthorizationService = StewardQueryAuthorizationService (
+    qepUserName = config.getString("qepUserName"),
+    qepPassword = config.getString("qepPassword"),
+    stewardBaseUrl = config.get("stewardBaseUrl", new URL(_))
+  )
 }
 
 case class ErrorStatusFromDataStewardApp(response:HttpResponse,stewardBaseUrl:URL) extends AbstractProblem(ProblemSources.Qep) {

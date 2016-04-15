@@ -72,7 +72,6 @@ final class AuthStrategyTest extends ShouldMatchersForJUnit {
                                 authorizationType,
                                 Some(EndpointConfig(new URL(sheriffUrl), acceptAllCerts = false, 42.minutes)),
                                 Some(sheriffCredentials),
-                                None,
                                 includeAggregateResults = false,
                                 1.minute,
                                 None,
