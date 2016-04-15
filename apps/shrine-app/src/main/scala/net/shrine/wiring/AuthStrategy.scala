@@ -19,11 +19,18 @@ object AuthStrategy {
   import AuthorizationType._
 
 
-  def determineAuthenticator(authType: AuthenticationType, pmPoster: Poster): Authenticator = authType match {
-    case NoAuthentication => AllowsAllAuthenticator
-    case Pm => PmAuthenticator(pmPoster)
-    case Ecommons => EcommonsPmAuthenticator(pmPoster)
-    case _ => throw new IllegalArgumentException(s"Unknown authentication type '$authType'")
+  def determineAuthenticator(qepConfig:Config, pmPoster: Poster): Authenticator = {
+
+    //todo put these default values in reference.conf if you decide to use one
+    val defaultAuthenticationType: AuthenticationType = AuthenticationType.Pm
+    val authType =qepConfig.getOption("authenticationType",_.getString).flatMap(AuthenticationType.valueOf).getOrElse(defaultAuthenticationType)
+
+    authType match {
+      case NoAuthentication => AllowsAllAuthenticator
+      case Pm => PmAuthenticator(pmPoster)
+      case Ecommons => EcommonsPmAuthenticator(pmPoster)
+      case _ => throw new IllegalArgumentException(s"Unknown authentication type '$authType'")
+    }
   }
 
   def determineQueryAuthorizationService(qepConfig:Config, authenticator: Authenticator): QueryAuthorizationService = {

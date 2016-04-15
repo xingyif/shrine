@@ -32,8 +32,6 @@ final class ShrineConfigTest extends ShouldMatchersForJUnit  {
 
     val conf = shrineConfig("shrine")
 
-    conf.queryEntryPointConfig.get.authenticationType should be(AuthenticationType.Ecommons)
-    
     conf.queryEntryPointConfig.get.broadcasterIsLocal should be(false)
     conf.queryEntryPointConfig.get.broadcasterServiceEndpoint.get should equal(endpoint("http://example.com/shrine/rest/broadcaster/broadcast"))
     conf.queryEntryPointConfig.get.maxQueryWaitTime should equal(5.minutes)
@@ -57,7 +55,6 @@ final class ShrineConfigTest extends ShouldMatchersForJUnit  {
   def testApplySomeOptionalFields() {
     val conf = shrineConfig("shrine-some-optional-props")
     
-    conf.queryEntryPointConfig.get.authenticationType should be(AuthenticationType.Pm)
     conf.queryEntryPointConfig.get.signingCertStrategy should be(SigningCertStrategy.DontAttach)
     
   }

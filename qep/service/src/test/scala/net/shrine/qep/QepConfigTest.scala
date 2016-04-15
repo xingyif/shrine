@@ -21,8 +21,6 @@ final class QepConfigTest extends ShouldMatchersForJUnit {
 
     import scala.concurrent.duration._
     
-    conf.authenticationType should be(AuthenticationType.Ecommons)
-
     conf.broadcasterIsLocal should be(false)
     
     conf.broadcasterServiceEndpoint.get.acceptAllCerts should be(true)
@@ -37,8 +35,6 @@ final class QepConfigTest extends ShouldMatchersForJUnit {
   @Test
   def testApplyOptionalFields() {
     val conf = entryPointServiceConfig("shrine-some-optional-props")
-    
-    conf.authenticationType should be(AuthenticationType.Pm)
     
     conf.broadcasterIsLocal should be(true)
     conf.broadcasterServiceEndpoint should be(None)

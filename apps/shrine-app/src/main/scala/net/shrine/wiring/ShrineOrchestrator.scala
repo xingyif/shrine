@@ -228,9 +228,7 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
 
       val auditDao: AuditDao = new SquerylAuditDao(squerylInitializer, new HubTables)
 
-      val authenticationType = queryEntryPointConfig.authenticationType
-
-      val authenticator: Authenticator = AuthStrategy.determineAuthenticator(authenticationType, pmPoster)
+      val authenticator: Authenticator = AuthStrategy.determineAuthenticator(qepConfig, pmPoster)
 
       val authorizationService: QueryAuthorizationService = AuthStrategy.determineQueryAuthorizationService(qepConfig,authenticator)
 
