@@ -35,12 +35,6 @@ final class ShrineConfigTest extends ShouldMatchersForJUnit  {
     conf.queryEntryPointConfig.get.authenticationType should be(AuthenticationType.Ecommons)
     
     conf.queryEntryPointConfig.get.authorizationType should be(AuthorizationType.HmsSteward)
-    
-    conf.queryEntryPointConfig.get.sheriffEndpoint.get should equal(endpoint("http://localhost:8080/shrine-hms-authorization/queryAuthorization"))
-    
-    conf.queryEntryPointConfig.get.sheriffCredentials.get.domain should be(None)
-    conf.queryEntryPointConfig.get.sheriffCredentials.get.username should be("sheriffUsername")
-    conf.queryEntryPointConfig.get.sheriffCredentials.get.password should be("sheriffPassword")
 
     conf.queryEntryPointConfig.get.broadcasterIsLocal should be(false)
     conf.queryEntryPointConfig.get.broadcasterServiceEndpoint.get should equal(endpoint("http://example.com/shrine/rest/broadcaster/broadcast"))

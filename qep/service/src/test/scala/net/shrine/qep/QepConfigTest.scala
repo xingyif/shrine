@@ -16,7 +16,7 @@ final class QepConfigTest extends ShouldMatchersForJUnit {
   private def entryPointServiceConfig(baseFileName: String) = QepConfig(ConfigFactory.load(baseFileName).getConfig(s"shrine.${Keys.queryEntryPoint}"))
   
   @Test
-  def testApply {
+  def testApply() {
     val conf: QepConfig = entryPointServiceConfig("shrine")
 
     import scala.concurrent.duration._
@@ -34,18 +34,10 @@ final class QepConfigTest extends ShouldMatchersForJUnit {
     conf.includeAggregateResults should equal(false)
 
     conf.maxQueryWaitTime should equal(5.minutes)
-    
-    conf.sheriffCredentials.get.domain should be(None)
-    conf.sheriffCredentials.get.username should be("sheriffUsername")
-    conf.sheriffCredentials.get.password should be("sheriffPassword")
-    
-    conf.sheriffEndpoint.get.acceptAllCerts should be(true)
-    conf.sheriffEndpoint.get.timeout should be(1.second)
-    conf.sheriffEndpoint.get.url.toString should be("http://localhost:8080/shrine-hms-authorization/queryAuthorization")
   }
   
   @Test
-  def testApplyOptionalFields {
+  def testApplyOptionalFields() {
     val conf = entryPointServiceConfig("shrine-some-optional-props")
     
     conf.authenticationType should be(AuthenticationType.Pm)
@@ -54,7 +46,5 @@ final class QepConfigTest extends ShouldMatchersForJUnit {
     
     conf.broadcasterIsLocal should be(true)
     conf.broadcasterServiceEndpoint should be(None)
-    conf.sheriffCredentials should be(None)
-    conf.sheriffEndpoint should be(None)
   }
 }

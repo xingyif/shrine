@@ -9,8 +9,6 @@ package net.shrine.config
 //todo distribute to where they are used once the rest of config is cleaned up
 object Keys {
   val crcEndpoint = "crcEndpoint"
-  val sheriffEndpoint = "sheriffEndpoint"
-  val sheriffCredentials = "sheriffCredentials"
   val shrineSteward = "shrineSteward"
   val ontProjectId = "ontProjectId"
   val crcProjectId = "crcProjectId"

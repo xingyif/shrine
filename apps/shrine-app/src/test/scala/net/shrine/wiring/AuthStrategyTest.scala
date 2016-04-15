@@ -1,14 +1,10 @@
 package net.shrine.wiring
 
-import java.net.URL
-
-import net.shrine.authentication.{AuthenticationType, Authenticator, PmAuthenticator}
+import net.shrine.authentication.{AuthenticationType, PmAuthenticator}
 import net.shrine.authorization.{AllowsAllAuthorizationService, AuthorizationType}
-import net.shrine.client.{EndpointConfig, Poster}
-import net.shrine.crypto.SigningCertStrategy
+import net.shrine.client.Poster
 import net.shrine.hms.authentication.EcommonsPmAuthenticator
-import net.shrine.protocol.CredentialConfig
-import net.shrine.qep.{AllowsAllAuthenticator, QepConfig}
+import net.shrine.qep.AllowsAllAuthenticator
 import net.shrine.util.ShouldMatchersForJUnit
 import org.junit.Test
 
@@ -51,36 +47,9 @@ final class AuthStrategyTest extends ShouldMatchersForJUnit {
     import AuthorizationType._
     
     {
-      val authService = AuthStrategy.determineQueryAuthorizationService(null,NoAuthorization, null, null)
+      val authService = AuthStrategy.determineQueryAuthorizationService(qepConfig = null,authType = NoAuthorization, authenticator = null)
       
       authService should be(AllowsAllAuthorizationService)
-    }
-    
-    {
-      val authenticationType = AuthenticationType.Ecommons
-      val authorizationType = HmsSteward
-
-      import scala.concurrent.duration._
-      
-      val sheriffUrl = "http://example.com/sheriff"
-      val sheriffCredentials = CredentialConfig(None, "u", "p")
-      
-      val shrineConfig = ShrineConfig(
-                          None, //hub config
-                          Some(QepConfig(
-                                authenticationType,
-                                authorizationType,
-                                Some(EndpointConfig(new URL(sheriffUrl), acceptAllCerts = false, 42.minutes)),
-                                Some(sheriffCredentials),
-                                includeAggregateResults = false,
-                                1.minute,
-                                None,
-                                SigningCertStrategy.Attach,
-                                collectQepAudit = false)),
-                          null //adapterStatusQuery
-                        ) //breakdown types
-      
-      val authenticator: Authenticator = AllowsAllAuthenticator
     }
   }
 }

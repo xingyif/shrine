@@ -1,10 +1,15 @@
 package net.shrine.hms.authorization
 
+import java.net.URL
+
+import com.typesafe.config.Config
 import net.shrine.authentication.{AuthenticationResult, Authenticator}
 import net.shrine.authorization.{AuthorizationResult, QueryAuthorizationService}
+import net.shrine.client.EndpointConfig
 import net.shrine.log.Loggable
 import net.shrine.problem.{AbstractProblem, ProblemSources}
-import net.shrine.protocol.{AuthenticationInfo, ErrorResponse, ReadApprovedQueryTopicsRequest, ReadApprovedQueryTopicsResponse, RunQueryRequest}
+import net.shrine.protocol.{CredentialConfig, AuthenticationInfo, ErrorResponse, ReadApprovedQueryTopicsRequest, ReadApprovedQueryTopicsResponse, RunQueryRequest}
+import net.shrine.config.ConfigExtensions
 
 /**
  * @author Bill Simons
@@ -17,8 +22,9 @@ import net.shrine.protocol.{AuthenticationInfo, ErrorResponse, ReadApprovedQuery
  * @see http://www.gnu.org/licenses/lgpl.html
  */
 final case class HmsDataStewardAuthorizationService(
-  sheriffClient: SheriffClient,
-  authenticator: Authenticator) extends QueryAuthorizationService with Loggable {
+                                                    sheriffClient: SheriffClient,
+                                                    authenticator: Authenticator
+                                                   ) extends QueryAuthorizationService with Loggable {
 
   import net.shrine.hms.authorization.HmsDataStewardAuthorizationService._
 
@@ -58,6 +64,16 @@ final case class HmsDataStewardAuthorizationService(
 }
 
 object HmsDataStewardAuthorizationService {
+
+  def apply(config:Config,authenticator: Authenticator):HmsDataStewardAuthorizationService = {
+    val endpointUrl = config.getString("sheriffEndpoint"+EndpointConfig.Keys.url)
+    val credentials = config.getConfigured("sheriffCredentials", CredentialConfig(_))
+
+    val sheriffClient = JerseySheriffClient(endpointUrl, credentials.username, credentials.password)
+
+    HmsDataStewardAuthorizationService(sheriffClient, authenticator)
+  }
+
   private def toDomainAndUser(authn: AuthenticationInfo): String = s"${authn.domain}:${authn.username}"
 
   def identifyEcommonsUsername(authenticationResult: AuthenticationResult): Option[String] = authenticationResult match {

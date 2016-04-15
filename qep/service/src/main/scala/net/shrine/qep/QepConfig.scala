@@ -4,10 +4,9 @@ import com.typesafe.config.Config
 import net.shrine.authentication.AuthenticationType
 import net.shrine.authorization.AuthorizationType
 import net.shrine.client.EndpointConfig
-import net.shrine.config.{DurationConfigParser, Keys,ConfigExtensions}
+import net.shrine.config.{ConfigExtensions, DurationConfigParser, Keys}
 import net.shrine.crypto.SigningCertStrategy
 import net.shrine.log.Log
-import net.shrine.protocol.CredentialConfig
 
 import scala.concurrent.duration.Duration
 
@@ -18,10 +17,6 @@ import scala.concurrent.duration.Duration
 final case class QepConfig (
   authenticationType: AuthenticationType,
   authorizationType: AuthorizationType,
-  //NB: optional, only needed for HMS
-  sheriffEndpoint: Option[EndpointConfig],
-  //NB: optional, only needed for HMS
-  sheriffCredentials: Option[CredentialConfig],
   includeAggregateResults: Boolean,
   maxQueryWaitTime: Duration,
   broadcasterServiceEndpoint: Option[EndpointConfig],
@@ -46,8 +41,6 @@ object QepConfig {
     //todo put these default values in reference.conf if you decide to use one
       optionalAuthenticationType(authenticationType,config).getOrElse(defaultAuthenticationType),
       optionalAuthorizationType(authorizationType,config).getOrElse(defaultAuthorizationType),
-      config.getOptionConfigured(sheriffEndpoint, EndpointConfig(_)),
-      credentialsOption(sheriffCredentials,config),
       config.getBoolean(includeAggregateResults),
       DurationConfigParser(config.getConfig("maxQueryWaitTime")),
       config.getOptionConfigured(broadcasterServiceEndpoint, EndpointConfig(_)),
@@ -72,7 +65,4 @@ object QepConfig {
 
     if(attachSigningCerts) Attach else DontAttach
   }
-
-  def credentialsOption(k: String,config: Config):Option[CredentialConfig] = config.getOptionConfigured(k, CredentialConfig(_))
-
 }

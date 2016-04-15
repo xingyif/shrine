@@ -1,20 +1,11 @@
 package net.shrine.hms.authorization
 
-import net.shrine.authorization.AuthorizationResult.{NotAuthorized, Authorized}
+import net.shrine.authentication.{AuthenticationResult, Authenticator}
+import net.shrine.authorization.AuthorizationResult.{Authorized, NotAuthorized}
+import net.shrine.protocol.{ApprovedTopic, AuthenticationInfo, Credential, ErrorResponse, ReadApprovedQueryTopicsRequest, ReadApprovedQueryTopicsResponse, RunQueryRequest}
+import net.shrine.protocol.query.{QueryDefinition, Term}
 import net.shrine.util.ShouldMatchersForJUnit
 import org.junit.Test
-import net.shrine.protocol.ApprovedTopic
-import org.scalatest.mock.EasyMockSugar
-import net.shrine.authentication.AuthenticationResult
-import net.shrine.authentication.Authenticator
-import net.shrine.protocol.AuthenticationInfo
-import net.shrine.protocol.Credential
-import net.shrine.protocol.ReadApprovedQueryTopicsRequest
-import net.shrine.protocol.ErrorResponse
-import net.shrine.protocol.RunQueryRequest
-import net.shrine.protocol.query.QueryDefinition
-import net.shrine.protocol.query.Term
-import net.shrine.protocol.ReadApprovedQueryTopicsResponse
 
 /**
  * @author Bill Simons
@@ -28,9 +19,9 @@ import net.shrine.protocol.ReadApprovedQueryTopicsResponse
  */
 final class HmsDataStewardAuthorizationServiceTest extends ShouldMatchersForJUnit {
   @Test
-  def testIdentifyEcommonsUsername: Unit = {
-    import HmsDataStewardAuthorizationService.identifyEcommonsUsername
+  def testIdentifyEcommonsUsername(): Unit = {
     import AuthenticationResult._
+    import HmsDataStewardAuthorizationService.identifyEcommonsUsername
 
     identifyEcommonsUsername(NotAuthenticated("", "", "")) should be(None)
 
@@ -40,23 +31,25 @@ final class HmsDataStewardAuthorizationServiceTest extends ShouldMatchersForJUni
   }
 
   import HmsDataStewardAuthorizationServiceTest._
+
   import scala.concurrent.duration._
 
-  private val authn = AuthenticationInfo("d", "u", Credential("p", false))
+  private val authn = AuthenticationInfo("d", "u", Credential("p", isToken = false))
 
   @Test
-  def testReadApprovedEntriesNotAuthenticated {
-    val service = HmsDataStewardAuthorizationService(null, NeverAuthenticatesAuthenticator)
+  def testReadApprovedEntriesNotAuthenticated() {
+    val service = new HmsDataStewardAuthorizationService(null, NeverAuthenticatesAuthenticator)
 
     val result = service.readApprovedEntries(ReadApprovedQueryTopicsRequest("projectId", 0.minutes, authn, authn.username))
 
     val Left(errorResponse: ErrorResponse) = result
 
+    //noinspection ScalaUnnecessaryParentheses
     errorResponse.errorMessage should not be (null)
   }
 
   @Test
-  def testReadApprovedEntriesAuthenticated {
+  def testReadApprovedEntriesAuthenticated() {
     val topic = ApprovedTopic(123L, "blarg")
 
     val ecommonsUsername = "abc123"
@@ -78,8 +71,8 @@ final class HmsDataStewardAuthorizationServiceTest extends ShouldMatchersForJUni
   }
 
   @Test
-  def testAuthorizeRunQueryRequestNotAuthenticated {
-    val service = HmsDataStewardAuthorizationService(null, NeverAuthenticatesAuthenticator)
+  def testAuthorizeRunQueryRequestNotAuthenticated() {
+    val service = new HmsDataStewardAuthorizationService(null, NeverAuthenticatesAuthenticator)
 
     def doTest(topicId: Option[String],topicName:Option[String]): Unit = {
       val result = service.authorizeRunQueryRequest(RunQueryRequest("projectId", 0.minutes, authn, topicId, topicName, Set.empty, QueryDefinition("foo", Term("foo"))))
@@ -92,7 +85,7 @@ final class HmsDataStewardAuthorizationServiceTest extends ShouldMatchersForJUni
   }
 
   @Test
-  def testAuthorizeRunQueryRequestAuthenticated {
+  def testAuthorizeRunQueryRequestAuthenticated() {
 
     def doTest(isAuthorized: Boolean, topicId: Option[String], topicName:Option[String]): Unit = {
       val ecommonsUsername = "abc123"
@@ -121,11 +114,11 @@ final class HmsDataStewardAuthorizationServiceTest extends ShouldMatchersForJUni
       }
     }
 
-    doTest(true, Some("topic123"), Some("Topic Name"))
-    doTest(false, Some("topic123"), Some("Topic Name"))
-    doTest(false, Some("topic123"), None)
-    doTest(true, None, None)
-    doTest(false, None, None)
+    doTest(isAuthorized = true, Some("topic123"), Some("Topic Name"))
+    doTest(isAuthorized = false, Some("topic123"), Some("Topic Name"))
+    doTest(isAuthorized = false, Some("topic123"), None)
+    doTest(isAuthorized = true, None, None)
+    doTest(isAuthorized = false, None, None)
   }
 }
 
