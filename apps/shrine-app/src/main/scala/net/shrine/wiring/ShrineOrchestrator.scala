@@ -70,13 +70,11 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
   protected lazy val squerylAdapter: DatabaseAdapter = SquerylDbAdapterSelecter.determineAdapter(shrineConfig.getString("shrineDatabaseType"))
   protected lazy val squerylInitializer: SquerylInitializer = new DataSourceSquerylInitializer(dataSource, squerylAdapter)
 
-  private def makePoster: (EndpointConfig) => Poster = poster(shrineCertCollection) _
-
   private lazy val pmEndpoint: EndpointConfig = shrineConfig.getConfigured("pmEndpoint", EndpointConfig(_))
-  protected lazy val pmPoster: Poster = makePoster(pmEndpoint)
+  protected lazy val pmPoster: Poster = Poster(shrineCertCollection,pmEndpoint)
 
   private lazy val ontEndpoint: EndpointConfig = shrineConfig.getConfigured("ontEndpoint", EndpointConfig(_))
-  protected lazy val ontPoster: Poster = makePoster(ontEndpoint)
+  protected lazy val ontPoster: Poster = Poster(shrineCertCollection,ontEndpoint)
 
   protected lazy val breakdownTypes: Set[ResultOutputType] = shrineConfig.getOptionConfigured("breakdownResultOutputTypes", ResultOutputTypes.fromConfig).getOrElse(Set.empty)
 
@@ -94,7 +92,7 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
 
     val crcEndpoint: EndpointConfig = adapterConfig.crcEndpoint
 
-    val crcPoster: Poster = makePoster(crcEndpoint)
+    val crcPoster: Poster = Poster(shrineCertCollection,crcEndpoint)
 
     val squerylAdapterTables: AdapterTables = new AdapterTables
 
@@ -202,22 +200,16 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
 
       val broadcasterClient: BroadcasterClient = {
         //todo don't bother with a distinction between local and remote QEPs. Just use loopback.
-        if (qepConfig.getOptionConfigured("broadcasterServiceEndpoint", EndpointConfig(_)).isEmpty) {
-          //If broadcaster is local, we need a hub config
+        val remoteHubEndpoint = qepConfig.getOptionConfigured("broadcasterServiceEndpoint", EndpointConfig(_))
+        remoteHubEndpoint.fold{
           require(broadcastDestinations.isDefined, s"The QEP's config implied a local hub (no broadcasterServiceEndpoint), but either no downstream nodes were configured, the hub was not configured, or the hub's configuration specified not to create it.")
 
           val broadcaster: AdapterClientBroadcaster = AdapterClientBroadcaster(broadcastDestinations.get, hubDao)
 
-          InJvmBroadcasterClient(broadcaster)
-        } else {
-          //if broadcaster is remote, we need an endpoint
-          //todo Just have an endpoint always, use loopback for local.
-
-
-
-          require(queryEntryPointConfig.broadcasterServiceEndpoint.isDefined, "Non-local broadcaster requested, but no URL for the remote broadcaster is specified")
-
-          PosterBroadcasterClient(makePoster(queryEntryPointConfig.broadcasterServiceEndpoint.get), breakdownTypes)
+          val broadcastClient:BroadcasterClient = InJvmBroadcasterClient(broadcaster)
+          broadcastClient
+        }{ hubEndpointConfig =>
+          PosterBroadcasterClient(Poster(shrineCertCollection,hubEndpointConfig), breakdownTypes)
         }
       }
 
@@ -262,9 +254,7 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
         ),
         auditDao))
   }
-  else {
-    None
-  }
+  else None
 
   private lazy val broadcasterOption = unpackHubComponents {
     for {
