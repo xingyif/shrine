@@ -16,7 +16,7 @@ import net.shrine.broadcaster.dao.HubDao
 import net.shrine.broadcaster.dao.squeryl.SquerylHubDao
 import net.shrine.broadcaster.service.{BroadcasterMultiplexerResource, BroadcasterMultiplexerService}
 import net.shrine.broadcaster.{AdapterClientBroadcaster, BroadcastAndAggregationService, BroadcasterClient, InJvmBroadcasterClient, NodeHandle, PosterBroadcasterClient, SigningBroadcastAndAggregationService}
-import net.shrine.client.{EndpointConfig, HttpClient, JerseyHttpClient, OntClient, Poster, PosterOntClient}
+import net.shrine.client.{EndpointConfig, JerseyHttpClient, OntClient, Poster, PosterOntClient}
 import net.shrine.config.ConfigExtensions
 import net.shrine.config.mappings.{AdapterMappings, AdapterMappingsSource, ClasspathFormatDetectingAdapterMappingsSource}
 import net.shrine.crypto.{DefaultSignerVerifier, KeyStoreCertCollection, KeyStoreDescriptorParser, TrustParam}
@@ -70,7 +70,7 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
   protected lazy val squerylAdapter: DatabaseAdapter = SquerylDbAdapterSelecter.determineAdapter(shrineConfig.getString("shrineDatabaseType"))
   protected lazy val squerylInitializer: SquerylInitializer = new DataSourceSquerylInitializer(dataSource, squerylAdapter)
 
-  private def makePoster = poster(shrineCertCollection) _
+  private def makePoster: (EndpointConfig) => Poster = poster(shrineCertCollection) _
 
   private lazy val pmEndpoint: EndpointConfig = shrineConfig.getConfigured("pmEndpoint", EndpointConfig(_))
   protected lazy val pmPoster: Poster = makePoster(pmEndpoint)
@@ -212,6 +212,9 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
         } else {
           //if broadcaster is remote, we need an endpoint
           //todo Just have an endpoint always, use loopback for local.
+
+
+
           require(queryEntryPointConfig.broadcasterServiceEndpoint.isDefined, "Non-local broadcaster requested, but no URL for the remote broadcaster is specified")
 
           PosterBroadcasterClient(makePoster(queryEntryPointConfig.broadcasterServiceEndpoint.get), breakdownTypes)
@@ -325,14 +328,6 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
   
   protected lazy val broadcasterMultiplexerResource: Option[BroadcasterMultiplexerResource] = broadcasterMultiplexerService.map(BroadcasterMultiplexerResource(_))
 
-  def makeHttpClient(keystoreCertCollection: KeyStoreCertCollection, endpoint: EndpointConfig): HttpClient = {
-    import TrustParam.{AcceptAllCerts, SomeKeyStore}
-
-    val trustParam = if (endpoint.acceptAllCerts) AcceptAllCerts else SomeKeyStore(keystoreCertCollection)
-
-    JerseyHttpClient(trustParam, endpoint.timeout)
-  }
-
   //todo here's the Adapter. Move to the adapter package.
   private final case class AdapterComponents(adapterService: AdapterService, i2b2AdminService: I2b2AdminService, adapterDao: AdapterDao, adapterMappings: AdapterMappings)
 
@@ -352,7 +347,7 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
   private def unpackHubComponents(option: Option[HubComponents]): Option[AdapterClientBroadcaster] = option.map(_.broadcaster)
 
   def poster(keystoreCertCollection: KeyStoreCertCollection)(endpoint: EndpointConfig): Poster = {
-    val httpClient = makeHttpClient(keystoreCertCollection, endpoint)
+    val httpClient = JerseyHttpClient(keystoreCertCollection, endpoint)
 
     Poster(endpoint.url.toString, httpClient)
   }

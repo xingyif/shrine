@@ -11,3 +11,10 @@ final case class Poster(url: String, httpClient: HttpClient) {
   
   def mapUrl(f: String => String): Poster = copy(url = f(url))
 }
+/*
+object Poster {
+  def apply():Poster = {
+
+  }
+}
+*/

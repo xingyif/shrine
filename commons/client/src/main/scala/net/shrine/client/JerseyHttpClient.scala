@@ -17,7 +17,7 @@ import javax.net.ssl.TrustManagerFactory
 import javax.net.ssl.X509KeyManager
 import javax.net.ssl.X509TrustManager
 import javax.ws.rs.core.MediaType
-import net.shrine.crypto.TrustParam
+import net.shrine.crypto.{KeyStoreCertCollection, TrustParam}
 import TrustParam.AcceptAllCerts
 import TrustParam.SomeKeyStore
 import net.shrine.log.Loggable
@@ -33,9 +33,9 @@ import net.shrine.util.StringEnrichments
  * @author Bill Simons
  * @author clint
  *
- * @date Sep 20, 2012
- * @link http://cbmi.med.harvard.edu
- * @link http://chip.org
+ * @since Sep 20, 2012
+ * @see http://cbmi.med.harvard.edu
+ * @see http://chip.org
  * <p/>
  * NOTICE: This software comes with NO guarantees whatsoever and is
  * licensed as Lgpl Open Source
@@ -74,6 +74,13 @@ final case class JerseyHttpClient(trustParam: TrustParam, timeout: Duration, med
 }
 
 object JerseyHttpClient {
+
+  //todo take a config instead of an EndpointConfig
+  def apply(keystoreCertCollection: KeyStoreCertCollection, endpoint: EndpointConfig):JerseyHttpClient = {
+    val trustParam = if (endpoint.acceptAllCerts) AcceptAllCerts else SomeKeyStore(keystoreCertCollection)
+    JerseyHttpClient(trustParam, endpoint.timeout)
+  }
+
   private[client] object TrustsAllCertsHostnameVerifier extends HostnameVerifier {
     override def verify(s: String, sslSession: SSLSession) = true
   }

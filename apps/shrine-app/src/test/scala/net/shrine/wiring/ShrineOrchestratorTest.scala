@@ -19,8 +19,7 @@ final class ShrineOrchestratorTest extends ShouldMatchersForJUnit {
 
   @Test
   def testMakeHttpClient {
-    import ShrineOrchestrator.makeHttpClient
-    
+
     val url = new URL("http://example.com")
     
     import scala.concurrent.duration._
@@ -29,7 +28,7 @@ final class ShrineOrchestratorTest extends ShouldMatchersForJUnit {
     {
       val endpoint = EndpointConfig(url, true, 42.minutes)
       
-      val JerseyHttpClient(trustParam, timeout, mediaType, credentials) = makeHttpClient(TestKeystore.certCollection, endpoint)
+      val JerseyHttpClient(trustParam, timeout, mediaType, credentials) = JerseyHttpClient(TestKeystore.certCollection, endpoint)
       
       trustParam should be(TrustParam.AcceptAllCerts)
       timeout should be(endpoint.timeout)
@@ -41,7 +40,7 @@ final class ShrineOrchestratorTest extends ShouldMatchersForJUnit {
     {
       val endpoint = EndpointConfig(url, false, 42.minutes)
       
-      val JerseyHttpClient(trustParam, timeout, mediaType, credentials) = makeHttpClient(TestKeystore.certCollection, endpoint)
+      val JerseyHttpClient(trustParam, timeout, mediaType, credentials) = JerseyHttpClient(TestKeystore.certCollection, endpoint)
       
       trustParam should be(TrustParam.SomeKeyStore(TestKeystore.certCollection))
       timeout should be(endpoint.timeout)
