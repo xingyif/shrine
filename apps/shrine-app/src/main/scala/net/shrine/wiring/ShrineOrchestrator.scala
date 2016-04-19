@@ -196,6 +196,18 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
     else None
   }
 
+  //todo a hub component. Gather them all up
+  private lazy val broadcasterOption: Option[AdapterClientBroadcaster] = {
+    if(hubConfig.getBoolean("create")) {
+      require(broadcastDestinations.isDefined, "This node is configured to be a hub, but no downstream nodes are defined")
+      Some(AdapterClientBroadcaster(broadcastDestinations.get, hubDao))
+    }
+    else None
+  }
+
+  //todo a hub component
+  protected lazy val broadcasterMultiplexerService = broadcasterOption.map(BroadcasterMultiplexerService(_, hubConfig.getConfigured("maxQueryWaitTime",DurationConfigParser(_))))
+
   //todo anything that requires qepConfig should be inside QueryEntryPointComponents's apply
   protected lazy val qepConfig = shrineConfig.getConfig("queryEntryPoint")
 
@@ -232,18 +244,6 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
         ))
     }
     else None
-
-  //todo a hub component. Gather them all up
-  private lazy val broadcasterOption: Option[AdapterClientBroadcaster] = {
-    if(hubConfig.getBoolean("create")) {
-      require(broadcastDestinations.isDefined, "This node is configured to be a hub, but no downstream nodes are defined")
-      Some(AdapterClientBroadcaster(broadcastDestinations.get, hubDao))
-    }
-    else None
-  }
-
-  //todo a hub component
-  protected lazy val broadcasterMultiplexerService = broadcasterOption.map(BroadcasterMultiplexerService(_, hubConfig.getConfigured("maxQueryWaitTime",DurationConfigParser(_))))
 
   protected lazy val pmUrlString: String = pmEndpoint.url.toString
 
