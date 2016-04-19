@@ -1,9 +1,11 @@
 package net.shrine.qep
 
+import com.typesafe.config.Config
 import net.shrine.aggregation.{ReadQueryResultAggregator, ReadTranslatedQueryDefinitionAggregator}
 import net.shrine.authentication.Authenticator
 import net.shrine.authorization.QueryAuthorizationService
 import net.shrine.broadcaster.BroadcastAndAggregationService
+import net.shrine.config.DurationConfigParser
 import net.shrine.protocol.{BaseShrineResponse, DeleteQueryRequest, FlagQueryRequest, ReadApprovedQueryTopicsRequest, ReadInstanceResultsRequest, ReadPreviousQueriesRequest, ReadQueryDefinitionRequest, ReadQueryInstancesRequest, ReadQueryResultRequest, ReadTranslatedQueryDefinitionRequest, RenameQueryRequest, ResultOutputType, RunQueryRequest, ShrineRequestHandler, UnFlagQueryRequest}
 import net.shrine.qep.dao.AuditDao
 
@@ -61,4 +63,28 @@ final case class QepService(
     authenticateAndThen(request) { authResult => doBroadcastQuery(request, new ReadQueryResultAggregator(request.queryId, includeAggregateResult), shouldBroadcast, authResult)
     }
   }
+}
+
+object QepService {
+
+  def apply(qepConfig:Config,
+            commonName: String,
+            auditDao: AuditDao,
+            authenticator: Authenticator,
+            authorizationService: QueryAuthorizationService,
+            broadcastService: BroadcastAndAggregationService,
+            breakdownTypes: Set[ResultOutputType]):QepService = {
+    QepService(
+      commonName,
+      auditDao,
+      authenticator,
+      authorizationService,
+      qepConfig.getBoolean("includeAggregateResults"),
+      broadcastService,
+      DurationConfigParser(qepConfig.getConfig("maxQueryWaitTime")),
+      breakdownTypes,
+      qepConfig.getBoolean("audit.collectQepAudit")
+    )
+  }
+
 }

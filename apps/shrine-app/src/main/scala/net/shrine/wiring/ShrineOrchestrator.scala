@@ -27,7 +27,7 @@ import net.shrine.protocol.{HiveCredentials, NodeId, RequestType, ResultOutputTy
 import net.shrine.qep.dao.AuditDao
 import net.shrine.qep.dao.squeryl.SquerylAuditDao
 import net.shrine.qep.dao.squeryl.tables.{Tables => HubTables}
-import net.shrine.qep.{I2b2BroadcastResource, I2b2QepService, QepConfig, QepService, ShrineResource}
+import net.shrine.qep.{I2b2BroadcastResource, I2b2QepService, QepService, ShrineResource}
 import net.shrine.status.StatusJaxrs
 import org.squeryl.internals.DatabaseAdapter
 
@@ -193,7 +193,6 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
   }
 
   protected lazy val qepConfig = shrineConfig.getConfig("queryEntryPoint")
-  lazy val queryEntryPointConfig: QepConfig = shrineConfig.getConfigured("queryEntryPoint", QepConfig(_))
 
   protected lazy val queryEntryPointComponents:Option[QueryEntryPointComponents] =
     if(qepConfig.getBoolean("create")) {
@@ -219,6 +218,7 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
       debug(s"authorizationService set to $authorizationService")
 
       Some(QueryEntryPointComponents(
+          qepConfig,
           commonName,
           auditDao,
           authenticator,
@@ -294,10 +294,13 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
   private final case class AdapterComponents(adapterService: AdapterService, i2b2AdminService: I2b2AdminService, adapterDao: AdapterDao, adapterMappings: AdapterMappings)
 
   //todo here's the QEP. Move to the QEP package.
-  case class QueryEntryPointComponents(shrineService: QepService, i2b2Service: I2b2QepService, auditDao: AuditDao)
+  case class QueryEntryPointComponents(shrineService: QepService,
+                                       i2b2Service: I2b2QepService,
+                                       auditDao: AuditDao) //todo auditDao is only used by the happy service to grab the most recent entries
 
   object QueryEntryPointComponents {
     def apply(
+      qepConfig:Config,
       commonName: String,
       auditDao: AuditDao,
       authenticator: Authenticator,
@@ -306,26 +309,22 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
     ):QueryEntryPointComponents = {
       QueryEntryPointComponents(
         QepService(
+          qepConfig,
           commonName,
           auditDao,
           authenticator,
           authorizationService,
-          queryEntryPointConfig.includeAggregateResults,
           broadcastService,
-          queryEntryPointConfig.maxQueryWaitTime,
-          breakdownTypes,
-          queryEntryPointConfig.collectQepAudit
+          breakdownTypes
         ),
         I2b2QepService(
+          qepConfig,
           commonName,
           auditDao,
           authenticator,
           authorizationService,
-          queryEntryPointConfig.includeAggregateResults,
           broadcastService,
-          queryEntryPointConfig.maxQueryWaitTime,
-          breakdownTypes,
-          queryEntryPointConfig.collectQepAudit
+          breakdownTypes
         ),
         auditDao)
     }

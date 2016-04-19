@@ -3,7 +3,6 @@ package net.shrine.wiring
 import com.typesafe.config.Config
 import net.shrine.broadcaster.HubConfig
 import net.shrine.config.{ConfigExtensions, Keys}
-import net.shrine.qep.QepConfig
 
 /**
  * @author clint
@@ -11,7 +10,6 @@ import net.shrine.qep.QepConfig
  */
 final case class ShrineConfig(
   hubConfig: Option[HubConfig],
-  queryEntryPointConfig: Option[QepConfig],
   adapterStatusQuery: String
                              )
 
@@ -29,7 +27,6 @@ object ShrineConfig {
 
     ShrineConfig(
       hubConfig = getOptionConfiguredIf(hub, HubConfig(_)),
-      queryEntryPointConfig = getOptionConfiguredIf(queryEntryPoint, QepConfig(_)),
       adapterStatusQuery = configForShrine.getString(networkStatusQuery)
     )
   }

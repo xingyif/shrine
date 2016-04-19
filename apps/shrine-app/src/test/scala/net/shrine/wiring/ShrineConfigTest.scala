@@ -17,17 +17,11 @@ final class ShrineConfigTest extends ShouldMatchersForJUnit  {
     
     ShrineConfig(config)
   }
-  
-  import scala.concurrent.duration._
-  
+
   @Test
   def testApply() {
 
     val conf = shrineConfig("shrine")
-
-    conf.queryEntryPointConfig.get.maxQueryWaitTime should equal(5.minutes)
-
-    conf.queryEntryPointConfig.get.includeAggregateResults should equal(false)
 
     conf.adapterStatusQuery should equal("""\\SHRINE\SHRINE\Diagnoses\Mental Illness\Disorders usually diagnosed in infancy, childhood, or adolescence\Pervasive developmental disorders\Infantile autism, current or active state\""")
     
@@ -38,7 +32,6 @@ final class ShrineConfigTest extends ShouldMatchersForJUnit  {
     val conf = shrineConfig("shrine-no-optional-configs", loadBreakdownsFile = false)
 
     conf.hubConfig should be(None)
-    conf.queryEntryPointConfig should be(None)
   }
   
 }
