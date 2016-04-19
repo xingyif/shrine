@@ -16,7 +16,7 @@ import net.shrine.broadcaster.dao.squeryl.SquerylHubDao
 import net.shrine.broadcaster.service.{BroadcasterMultiplexerResource, BroadcasterMultiplexerService}
 import net.shrine.broadcaster.{AdapterClientBroadcaster, BroadcastAndAggregationService, NodeHandle, SigningBroadcastAndAggregationService}
 import net.shrine.client.{EndpointConfig, JerseyHttpClient, OntClient, Poster, PosterOntClient}
-import net.shrine.config.ConfigExtensions
+import net.shrine.config.{DurationConfigParser, ConfigExtensions}
 import net.shrine.config.mappings.{AdapterMappings, AdapterMappingsSource, ClasspathFormatDetectingAdapterMappingsSource}
 import net.shrine.crypto.{DefaultSignerVerifier, KeyStoreCertCollection, KeyStoreDescriptorParser, TrustParam}
 import net.shrine.dao.squeryl.{DataSourceSquerylInitializer, SquerylDbAdapterSelecter, SquerylInitializer}
@@ -49,7 +49,9 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
   override def resources: Iterable[AnyRef] = {
     Seq(happyResource,statusJaxrs) ++ shrineResource ++ i2b2BroadcastResource ++ adapterResource ++ i2b2AdminResource ++ broadcasterMultiplexerResource
   }
-  
+
+  //todo another pass to put things only used in one place into that place's apply(Config)
+
   //Load config from file on the classpath called "shrine.conf"
   lazy val config: Config = ConfigFactory.load("shrine")
 
@@ -182,6 +184,8 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
   }
     else None //todo eventually make this just another downstream node accessed via loopback
 
+  //todo anything that uses hubConfig should be inside the big Hub component. broadcastDesitnations leak out because the QEP doesn't use loopback to talk to itself.
+  //todo as an easy earlier step, make the hub first, then the QEP. Ask the hub for its destinations
   val hubConfig = shrineConfig.getConfig("hub")
 
   //todo use an empty Set instead of Option[Set]
@@ -192,6 +196,7 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
     else None
   }
 
+  //todo anything that requires qepConfig should be inside QueryEntryPointComponents's apply
   protected lazy val qepConfig = shrineConfig.getConfig("queryEntryPoint")
 
   protected lazy val queryEntryPointComponents:Option[QueryEntryPointComponents] =
@@ -228,24 +233,17 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
     }
     else None
 
-  private lazy val broadcasterOption = unpackHubComponents {
-    for {
-      hubConfig <- shrineConfigurationBall.hubConfig
-    } yield {
+  //todo a hub component. Gather them all up
+  private lazy val broadcasterOption: Option[AdapterClientBroadcaster] = {
+    if(hubConfig.getBoolean("create")) {
       require(broadcastDestinations.isDefined, "This node is configured to be a hub, but no downstream nodes are defined")
-
-      HubComponents(AdapterClientBroadcaster(broadcastDestinations.get, hubDao))
+      Some(AdapterClientBroadcaster(broadcastDestinations.get, hubDao))
     }
+    else None
   }
 
-  protected lazy val broadcasterMultiplexerService = {
-    for {
-      broadcaster <- broadcasterOption
-      hubConfig <- shrineConfigurationBall.hubConfig
-    } yield {
-      BroadcasterMultiplexerService(broadcaster, hubConfig.maxQueryWaitTime)
-    }
-  }
+  //todo a hub component
+  protected lazy val broadcasterMultiplexerService = broadcasterOption.map(BroadcasterMultiplexerService(_, hubConfig.getConfigured("maxQueryWaitTime",DurationConfigParser(_))))
 
   protected lazy val pmUrlString: String = pmEndpoint.url.toString
 
@@ -330,17 +328,11 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
     }
   }
 
-  //todo here's the Hub. Move to the hub package
-  private final case class HubComponents(broadcaster: AdapterClientBroadcaster)
-
   //todo get rid of this
   private def adapterComponentsToTuple(option: Option[AdapterComponents]): (Option[AdapterService], Option[I2b2AdminService], Option[AdapterDao], Option[AdapterMappings]) = option match {
     case None => (None, None, None, None)
     case Some(AdapterComponents(a, b, c, d)) => (Option(a), Option(b), Option(c), Option(d))
   }
-  
-  //todo get rid of this
-  private def unpackHubComponents(option: Option[HubComponents]): Option[AdapterClientBroadcaster] = option.map(_.broadcaster)
 
   def poster(keystoreCertCollection: KeyStoreCertCollection)(endpoint: EndpointConfig): Poster = {
     val httpClient = JerseyHttpClient(keystoreCertCollection, endpoint)
