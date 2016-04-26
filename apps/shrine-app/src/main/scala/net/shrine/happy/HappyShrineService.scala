@@ -2,20 +2,19 @@ package net.shrine.happy
 
 import com.typesafe.config.Config
 import net.shrine.adapter.dao.AdapterDao
-import net.shrine.adapter.service.{AdapterConfig, AdapterRequestHandler}
-import net.shrine.broadcaster.{AdapterClientBroadcaster, IdAndUrl}
+import net.shrine.adapter.service.AdapterRequestHandler
+import net.shrine.broadcaster.{NodeHandle, AdapterClientBroadcaster}
 import net.shrine.client.Poster
-import net.shrine.config.ConfigExtensions
 import net.shrine.config.mappings.AdapterMappings
 import net.shrine.crypto.{KeyStoreCertCollection, KeyStoreDescriptor, Signer, SigningCertStrategy}
 import net.shrine.i2b2.protocol.pm.{GetUserConfigurationRequest, HiveConfig}
 import net.shrine.log.Loggable
 import net.shrine.ont.data.OntologyMetadata
-import net.shrine.protocol.{AuthenticationInfo, BroadcastMessage, Credential, Failure, NodeId, Result, ResultOutputType, RunQueryRequest, Timeout}
 import net.shrine.protocol.query.{OccuranceLimited, QueryDefinition, Term}
+import net.shrine.protocol.{AuthenticationInfo, BroadcastMessage, Credential, Failure, NodeId, Result, ResultOutputType, RunQueryRequest, Timeout}
 import net.shrine.qep.dao.AuditDao
 import net.shrine.util.{StackTrace, Versions, XmlUtil}
-import net.shrine.wiring.{ShrineOrchestrator, ShrineConfig}
+import net.shrine.wiring.{ShrineConfig, ShrineOrchestrator}
 
 import scala.concurrent.Await
 import scala.util.Try
@@ -90,13 +89,14 @@ final class HappyShrineService(
     }.toString
   }
 
-  private def nodeListAsXml: Iterable[Node] = shrineConfigObject.hubConfig match {
-    case None => Nil
-    case Some(hubConfig) => hubConfig.downstreamNodes.map {
-      case IdAndUrl(NodeId(nodeName), nodeUrl) => {
+  private def nodeListAsXml: Iterable[Node] = {
+
+    val noneResult: Iterable[Node] = Nil
+    broadcasterOption.fold{noneResult}{broadcaster =>
+      broadcaster.destinations.map{ node:NodeHandle =>
         <node>
-          <name>{ nodeName }</name>
-          <url>{ nodeUrl }</url>
+          <name>{ node.nodeId.name }</name>
+          <url>{ node.client.url.getOrElse("").toString }</url>
         </node>
       }
     }

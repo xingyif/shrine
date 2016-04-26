@@ -1,6 +1,6 @@
 package net.shrine.adapter.client
 
-import java.net.SocketTimeoutException
+import java.net.{URL, SocketTimeoutException}
 import net.shrine.problem.{ProblemNotYetEncoded, ProblemSources, AbstractProblem}
 import org.xml.sax.SAXParseException
 
@@ -39,7 +39,9 @@ final class RemoteAdapterClient private (nodeId:NodeId,val poster: Poster, val b
     case that: RemoteAdapterClient if that != null => poster == that.poster
     case _ => false
   }
-  
+
+  def url:Option[URL] = Some(new URL(poster.url))
+
   //TODO: Revisit this
   import scala.concurrent.ExecutionContext.Implicits.global
 

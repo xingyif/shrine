@@ -1,5 +1,7 @@
 package net.shrine.broadcaster
 
+import java.net.URL
+
 import net.shrine.log.Loggable
 import net.shrine.protocol.AuthenticationInfo
 import net.shrine.protocol.Credential
@@ -42,6 +44,8 @@ final class AdapterClientBroadcasterLoggingTest extends AbstractSquerylHubDaoTes
   
   private final class TestAdapterClient(toReturn: => Result) extends AdapterClient {
     override def query(message: BroadcastMessage): Future[Result] = Future { toReturn }
+
+    override def url: Option[URL] = ???
   }
   
   private object TestAdapterClient {

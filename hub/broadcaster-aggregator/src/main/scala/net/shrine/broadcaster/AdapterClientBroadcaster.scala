@@ -1,24 +1,17 @@
 package net.shrine.broadcaster
 
+import net.shrine.adapter.client.{AdapterClient, RemoteAdapterClient}
+import net.shrine.broadcaster.dao.HubDao
+import net.shrine.client.TimeoutException
 import net.shrine.log.Loggable
+import net.shrine.protocol.{BroadcastMessage, Failure, RunQueryRequest, SingleNodeResult, Timeout}
 
 import scala.concurrent.Future
-import net.shrine.protocol.BroadcastMessage
-import net.shrine.protocol.SingleNodeResult
-import java.net.SocketTimeoutException
-import net.shrine.protocol.Timeout
-import net.shrine.protocol.Failure
 import scala.util.control.NonFatal
-import net.shrine.protocol.NodeId
-import net.shrine.client.TimeoutException
-import net.shrine.adapter.client.RemoteAdapterClient
-import net.shrine.adapter.client.AdapterClient
-import net.shrine.broadcaster.dao.HubDao
-import net.shrine.protocol.RunQueryRequest
 
 /**
  * @author clint
- * @date Nov 15, 2013
+ * @since Nov 15, 2013
  */
 final case class AdapterClientBroadcaster(destinations: Set[NodeHandle], dao: HubDao) extends Broadcaster with Loggable {
 
@@ -46,16 +39,14 @@ final case class AdapterClientBroadcaster(destinations: Set[NodeHandle], dao: Hu
     val NodeHandle(nodeId, client) = nodeHandle
 
     client.query(message).recover {
-      case e: TimeoutException => {
+      case e: TimeoutException =>
         error(s"Broadcasting to $nodeId timed out")
-
         Timeout(nodeId)
-      }
-      case NonFatal(e) => {
-        error(s"Broadcasting to $nodeId failed with ", e)
 
+      case NonFatal(e) =>
+        error(s"Broadcasting to $nodeId failed with ", e)
         Failure(nodeId, e)
-      }
+
     }
   }
 

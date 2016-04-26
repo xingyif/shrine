@@ -1,5 +1,7 @@
 package net.shrine.broadcaster
 
+import java.net.URL
+
 import net.shrine.util.ShouldMatchersForJUnit
 import org.junit.Test
 import net.shrine.protocol.Result
@@ -43,6 +45,8 @@ final class AdapterClientBroadcasterTest extends ShouldMatchersForJUnit {
       override def query(message: BroadcastMessage): Future[Result] = Future {
         throw new TimeoutException("foo")
       }
+      override def url: Option[URL] = ???
+
     }
     
     val nodeId1 = NodeId("1") 
@@ -109,6 +113,7 @@ final class AdapterClientBroadcasterTest extends ShouldMatchersForJUnit {
         import scala.concurrent.ExecutionContext.Implicits.global
         
         override def query(message: BroadcastMessage): Future[Result] = Future { throw new Exception("blarg") }
+        override def url: Option[URL] = ???
       })
     }).toSet
     

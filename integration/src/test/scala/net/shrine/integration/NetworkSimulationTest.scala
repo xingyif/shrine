@@ -1,5 +1,7 @@
 package net.shrine.integration
 
+import java.net.URL
+
 import net.shrine.log.Loggable
 
 import scala.concurrent.Future
@@ -312,6 +314,8 @@ object NetworkSimulationTest {
 
       result
     }
+    override def url: Option[URL] = ???
+
   }
 
   private final case class MockAdapterRequestHandler(delegate: AdapterRequestHandler) extends AdapterRequestHandler {
