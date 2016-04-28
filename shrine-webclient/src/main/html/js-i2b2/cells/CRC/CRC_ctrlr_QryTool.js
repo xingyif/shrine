@@ -52,6 +52,9 @@ function QueryToolController() {
         this.queryIsDirty = true;
         this.hasModifier = false;
         $('infoQueryStatusText').innerHTML = "";
+		$('infoQueryStatusChart').innerHTML = "";
+		$('infoQueryStatusReport').innerHTML = "";		
+		$('infoDownloadStatusData').innerHTML = "";
         $('crc.temoralBuilder').hide();
         $('crc.innerQueryPanel').show();
         this.panelControllers[0].refTitle.innerHTML =  'Group 1';

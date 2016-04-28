@@ -496,6 +496,32 @@ i2b2.CRC.view.QT.ResizeHeight = function() {
 
 }
 
+i2b2.CRC.view.QT.deleteLastTemporalGroup = function() {
+	
+	if(i2b2.CRC.model.queryCurrent.panels.length > 3){
+		var currentPanels = i2b2.CRC.model.queryCurrent.panels.length - 1;
+		i2b2.CRC.model.queryCurrent.panels.pop();
+		defineTemporalButton.getMenu().removeItem(defineTemporalButton.getMenu().getItems().length-1);
+		
+		for( var i = 0; i < i2b2.CRC.ctrlr.QT.tenporalBuilders + 1; i++){
+			var select = document.getElementById("instancevent1["+i+"]");
+			select.remove(select.length - 1);
+		
+			select = document.getElementById("instancevent2["+i+"]");
+			select.remove(select.length - 1);
+		}
+		
+		alert('Event ' + currentPanels + ' has been removed.');
+		//i2b2.CRC.ctrlr.QT.temporalGroup = i2b2.CRC.model.queryCurrent.panels.length;
+		
+		defineTemporalButton.getMenu().getItem(0).element.click()
+	
+	} else {
+		alert('You must leave a minimum of two events.');
+		
+	}
+};
+
 // This is done once the entire cell has been loaded
 console.info("SUBSCRIBED TO i2b2.events.afterCellInit");
 i2b2.events.afterCellInit.subscribe(
@@ -921,6 +947,10 @@ i2b2.events.afterCellInit.subscribe(
 
             });
 
+			var removeDefineGroup = new YAHOO.widget.Button("removeDefineGroup"); 
+				removeDefineGroup.on("click", function (event) {
+					i2b2.CRC.view.QT.deleteLastTemporalGroup();
+						});
 
             queryTimingButton.on("mousedown", function (event) {
                 //i2b2.CRC.ctrlr.QT.panelControllers[0].doTiming(p_oItem.value);
