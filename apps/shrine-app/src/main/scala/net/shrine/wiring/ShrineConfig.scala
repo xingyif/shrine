@@ -9,8 +9,7 @@ import net.shrine.config.{ConfigExtensions, Keys}
  * @since Feb 6, 2013
  */
 final case class ShrineConfig(
-  hubConfig: Option[HubConfig],
-  adapterStatusQuery: String
+  hubConfig: Option[HubConfig]
                              )
 
 object ShrineConfig {
@@ -26,8 +25,7 @@ object ShrineConfig {
     }
 
     ShrineConfig(
-      hubConfig = getOptionConfiguredIf(hub, HubConfig(_)),
-      adapterStatusQuery = configForShrine.getString(networkStatusQuery)
+      hubConfig = getOptionConfiguredIf(hub, HubConfig(_))
     )
   }
 }

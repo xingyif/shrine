@@ -18,7 +18,6 @@ object Keys {
   val includeAggregateResults = "includeAggregateResults"
   val adapterLockoutAttemptsThreshold = "adapterLockoutAttemptsThreshold"
   val maxQueryWaitTime = "maxQueryWaitTime"
-  val networkStatusQuery = "networkStatusQuery"
   val adapterMappingsFileName = "adapterMappingsFileName"
   val adapterMappingsFileType = "adapterMappingsFileType"
   val downstreamNodes = "downstreamNodes"

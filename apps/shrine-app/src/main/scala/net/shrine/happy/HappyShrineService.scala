@@ -174,8 +174,9 @@ final class HappyShrineService(
     report.getOrElse(notAHub)
   }
 
+  val adapterStatusQuery = config.getString("shrine.networkStatusQuery")
   private def newRunQueryRequest(authn: AuthenticationInfo): RunQueryRequest = {
-    val queryDefinition = QueryDefinition("TestQuery", OccuranceLimited(1, Term(shrineConfigObject.adapterStatusQuery)))
+    val queryDefinition = QueryDefinition("TestQuery", OccuranceLimited(1, Term(adapterStatusQuery)))
 
     import scala.concurrent.duration._
 
