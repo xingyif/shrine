@@ -17,7 +17,6 @@ object Keys {
   val isBroadcaster = "isBroadcaster"
   val includeAggregateResults = "includeAggregateResults"
   val adapterLockoutAttemptsThreshold = "adapterLockoutAttemptsThreshold"
-  val maxQueryWaitTime = "maxQueryWaitTime"
   val adapterMappingsFileName = "adapterMappingsFileName"
   val adapterMappingsFileType = "adapterMappingsFileType"
   val downstreamNodes = "downstreamNodes"
