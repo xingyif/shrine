@@ -3,9 +3,10 @@ package net.shrine.happy
 import com.typesafe.config.Config
 import net.shrine.adapter.dao.AdapterDao
 import net.shrine.adapter.service.AdapterRequestHandler
-import net.shrine.broadcaster.{NodeHandle, AdapterClientBroadcaster}
+import net.shrine.broadcaster.{AdapterClientBroadcaster, NodeHandle}
 import net.shrine.client.Poster
 import net.shrine.config.mappings.AdapterMappings
+import net.shrine.config.{ConfigExtensions, DurationConfigParser}
 import net.shrine.crypto.{KeyStoreCertCollection, KeyStoreDescriptor, Signer, SigningCertStrategy}
 import net.shrine.i2b2.protocol.pm.{GetUserConfigurationRequest, HiveConfig}
 import net.shrine.log.Loggable
@@ -14,7 +15,7 @@ import net.shrine.protocol.query.{OccuranceLimited, QueryDefinition, Term}
 import net.shrine.protocol.{AuthenticationInfo, BroadcastMessage, Credential, Failure, NodeId, Result, ResultOutputType, RunQueryRequest, Timeout}
 import net.shrine.qep.dao.AuditDao
 import net.shrine.util.{StackTrace, Versions, XmlUtil}
-import net.shrine.wiring.{ShrineConfig, ShrineOrchestrator}
+import net.shrine.wiring.ShrineOrchestrator
 
 import scala.concurrent.Await
 import scala.util.Try
@@ -31,9 +32,8 @@ import scala.xml.{Node, NodeSeq}
  * @see http://www.gnu.org/licenses/lgpl.html
  */
 final class HappyShrineService(
-                                config:Config,
+                                config:Config,  //todo happy should really get as much of this as possibly by probing the ShrineOrchestrator
                                 keystoreDescriptor: KeyStoreDescriptor,
-                                shrineConfigObject: ShrineConfig,
                                 certCollection: KeyStoreCertCollection,
                                 signer: Signer,
                                 pmPoster: Poster,
@@ -132,14 +132,14 @@ final class HappyShrineService(
 
   override def networkReport: String = {
     val report = for {
-      hubConfig <- shrineConfigObject.hubConfig
+      maxQueryWaitTime <- config.getOptionConfigured("shrine.hub.maxQueryWaitTime",DurationConfigParser(_))
       broadcaster <- broadcasterOption
     } yield {
       val message = newBroadcastMessageWithRunQueryRequest
 
       val multiplexer = broadcaster.broadcast(message)
 
-      val responses = Await.result(multiplexer.responses, hubConfig.maxQueryWaitTime).toSeq
+      val responses = Await.result(multiplexer.responses, maxQueryWaitTime).toSeq
 
       val failures = responses.collect { case f: Failure => f }
 

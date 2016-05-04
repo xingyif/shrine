@@ -55,8 +55,6 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
   //Load config from file on the classpath called "shrine.conf"
   lazy val config: Config = ConfigFactory.load("shrine")
 
-  protected lazy val shrineConfigurationBall: ShrineConfig = ShrineConfig(config)
-
   val shrineConfig = config.getConfig("shrine")
 
   protected lazy val nodeId: NodeId = NodeId(shrineConfig.getString("humanReadableNodeName"))
@@ -261,7 +259,6 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
     new HappyShrineService(
       config = config,
       keystoreDescriptor = keyStoreDescriptor,
-      shrineConfigObject = shrineConfigurationBall,
       certCollection = shrineCertCollection,
       signer = signerVerifier,
       pmPoster = pmPoster,
