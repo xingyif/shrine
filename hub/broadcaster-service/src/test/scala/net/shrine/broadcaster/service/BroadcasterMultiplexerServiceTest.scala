@@ -2,8 +2,7 @@ package net.shrine.broadcaster.service
 
 import net.shrine.util.ShouldMatchersForJUnit
 import org.junit.Test
-import net.shrine.broadcaster.Broadcaster
-import net.shrine.broadcaster.Multiplexer
+import net.shrine.broadcaster.{NodeHandle, Broadcaster, Multiplexer}
 import net.shrine.protocol.BroadcastMessage
 import net.shrine.protocol.SingleNodeResult
 import net.shrine.protocol.Result
@@ -46,6 +45,8 @@ final class BroadcasterMultiplexerServiceTest extends ShouldMatchersForJUnit {
           override def responses: Future[Iterable[SingleNodeResult]] = Future.successful(expectedResults)
         }
       }
+
+      override def destinations: Set[NodeHandle] = ???
     }
 
     val service = BroadcasterMultiplexerService(mockBroadcaster, 1.second)
@@ -63,6 +64,8 @@ final class BroadcasterMultiplexerServiceTest extends ShouldMatchersForJUnit {
       override def broadcast(message: BroadcastMessage): Multiplexer = {
         throw new Exception
       }
+
+      override def destinations: Set[NodeHandle] = ???
     }
 
     val service = BroadcasterMultiplexerService(mockBroadcaster, 1.second)
@@ -80,6 +83,8 @@ final class BroadcasterMultiplexerServiceTest extends ShouldMatchersForJUnit {
 
         override def responses: Future[Iterable[SingleNodeResult]] = throw new Exception
       }
+
+      override def destinations: Set[NodeHandle] = ???
     }
 
     val service = BroadcasterMultiplexerService(mockBroadcaster, 1.second)

@@ -204,7 +204,7 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
   }
 
   //todo a hub component
-  protected lazy val broadcasterMultiplexerService = broadcasterOption.map(BroadcasterMultiplexerService(_, hubConfig.getConfigured("maxQueryWaitTime",DurationConfigParser(_))))
+  lazy val broadcasterMultiplexerService: Option[BroadcasterMultiplexerService] = broadcasterOption.map(BroadcasterMultiplexerService(_, hubConfig.getConfigured("maxQueryWaitTime",DurationConfigParser(_))))
 
   //todo anything that requires qepConfig should be inside QueryEntryPointComponents's apply
   protected lazy val qepConfig = shrineConfig.getConfig("queryEntryPoint")
@@ -257,7 +257,6 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
   //TODO: Don't assume we're an adapter with an AdapterMappings (don't call .get)
   protected lazy val happyService: HappyShrineService = {
     new HappyShrineService(
-      config = config,
       keystoreDescriptor = keyStoreDescriptor,
       certCollection = shrineCertCollection,
       signer = signerVerifier,
@@ -266,7 +265,6 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
       adapterMappings = adapterMappings,
       auditDaoOption = queryEntryPointComponents.map(_.auditDao),
       adapterDaoOption = adapterDao,
-      broadcasterOption = broadcasterOption,
       adapterOption = adapterService
     )
   }

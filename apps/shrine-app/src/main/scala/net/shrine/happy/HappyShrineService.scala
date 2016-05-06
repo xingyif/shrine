@@ -1,12 +1,10 @@
 package net.shrine.happy
 
-import com.typesafe.config.Config
 import net.shrine.adapter.dao.AdapterDao
 import net.shrine.adapter.service.AdapterRequestHandler
-import net.shrine.broadcaster.{AdapterClientBroadcaster, NodeHandle}
+import net.shrine.broadcaster.{Broadcaster, AdapterClientBroadcaster, NodeHandle}
 import net.shrine.client.Poster
 import net.shrine.config.mappings.AdapterMappings
-import net.shrine.config.{ConfigExtensions, DurationConfigParser}
 import net.shrine.crypto.{KeyStoreCertCollection, KeyStoreDescriptor, Signer, SigningCertStrategy}
 import net.shrine.i2b2.protocol.pm.{GetUserConfigurationRequest, HiveConfig}
 import net.shrine.log.Loggable
@@ -32,7 +30,6 @@ import scala.xml.{Node, NodeSeq}
  * @see http://www.gnu.org/licenses/lgpl.html
  */
 final class HappyShrineService(
-                                config:Config,  //todo happy should really get as much of this as possibly by probing the ShrineOrchestrator
                                 keystoreDescriptor: KeyStoreDescriptor,
                                 certCollection: KeyStoreCertCollection,
                                 signer: Signer,
@@ -41,8 +38,8 @@ final class HappyShrineService(
                                 adapterMappings: Option[AdapterMappings],
                                 auditDaoOption: Option[AuditDao],
                                 adapterDaoOption: Option[AdapterDao],
-                                broadcasterOption: Option[AdapterClientBroadcaster],
-                                adapterOption: Option[AdapterRequestHandler]) extends HappyShrineRequestHandler with Loggable {
+                                adapterOption: Option[AdapterRequestHandler]
+                              ) extends HappyShrineRequestHandler with Loggable {
 
   info("Happy service initialized")
 
@@ -92,7 +89,9 @@ final class HappyShrineService(
   private def nodeListAsXml: Iterable[Node] = {
 
     val noneResult: Iterable[Node] = Nil
-    broadcasterOption.fold{noneResult}{broadcaster =>
+    ShrineOrchestrator.broadcasterMultiplexerService.fold(noneResult) { broadcasterMultiplexerService =>
+
+      val broadcaster = broadcasterMultiplexerService.broadcaster
       broadcaster.destinations.map{ node:NodeHandle =>
         <node>
           <name>{ node.nodeId.name }</name>
@@ -131,50 +130,47 @@ final class HappyShrineService(
   }
 
   override def networkReport: String = {
-    val report = for {
-      maxQueryWaitTime <- config.getOptionConfigured("shrine.hub.maxQueryWaitTime",DurationConfigParser(_))
-      broadcaster <- broadcasterOption
-    } yield {
+    ShrineOrchestrator.broadcasterMultiplexerService.fold(notAHub) { broadcasterMultiplexerService =>
+
+      val maxQueryWaitTime = broadcasterMultiplexerService.maxQueryWaitTime
+      val broadcaster: Broadcaster = broadcasterMultiplexerService.broadcaster
       val message = newBroadcastMessageWithRunQueryRequest
-
       val multiplexer = broadcaster.broadcast(message)
-
       val responses = Await.result(multiplexer.responses, maxQueryWaitTime).toSeq
-
       val failures = responses.collect { case f: Failure => f }
-
       val timeouts = responses.collect { case t: Timeout => t }
-
       val validResults = responses.collect { case r: Result => r }
-
       val noProblems = failures.isEmpty && timeouts.isEmpty
 
       XmlUtil.stripWhitespace {
         <net>
-          <shouldQuerySelf>{ ShrineOrchestrator.localAdapterServiceOption.isDefined }</shouldQuerySelf>
-          <downstreamNodes>{ nodeListAsXml }</downstreamNodes>
-          <noProblems>{ noProblems }</noProblems>
-          <expectedResultCount>{ broadcaster.destinations.size }</expectedResultCount>
-          <validResultCount>{ validResults.size }</validResultCount>
-          <failureCount>{ failures.size }</failureCount>
-          <timeoutCount>{ timeouts.size }</timeoutCount>
-          {
-            nodeListAsXml
-          }
-          {
-            failures.map(failureToXml)
-          }
-          {
-            timeouts.map(timeoutToXml)
-          }
+          <shouldQuerySelf>
+            {ShrineOrchestrator.localAdapterServiceOption.isDefined}
+          </shouldQuerySelf>
+          <downstreamNodes>
+            {nodeListAsXml}
+          </downstreamNodes>
+          <noProblems>
+            {noProblems}
+          </noProblems>
+          <expectedResultCount>
+            {broadcaster.destinations.size}
+          </expectedResultCount>
+          <validResultCount>
+            {validResults.size}
+          </validResultCount>
+          <failureCount>
+            {failures.size}
+          </failureCount>
+          <timeoutCount>
+            {timeouts.size}
+          </timeoutCount>{nodeListAsXml}{failures.map(failureToXml)}{timeouts.map(timeoutToXml)}
         </net>
       }.toString
     }
-
-    report.getOrElse(notAHub)
   }
 
-  val adapterStatusQuery = config.getString("shrine.networkStatusQuery")
+  val adapterStatusQuery = ShrineOrchestrator.shrineConfig.getString("networkStatusQuery")
   private def newRunQueryRequest(authn: AuthenticationInfo): RunQueryRequest = {
     val queryDefinition = QueryDefinition("TestQuery", OccuranceLimited(1, Term(adapterStatusQuery)))
 
