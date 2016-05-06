@@ -87,6 +87,7 @@ object Failure extends SingleNodeResultCompanion[Failure]("shrineFailure") {
 
     for {
       origin <- xml.withChild(NodeId.rootTagName).flatMap(NodeId.fromXml)
+    //TODO see SHRINE-1486
       //NB: Sidestep serializing throwables by just serializing the cause's message and stack trace as a big string
       cause <- xml.withChild("cause").map(_.text)
     } yield Failure(origin, new Exception(cause) with scala.util.control.NoStackTrace) //todo looks like the stack trace gets dropped here
