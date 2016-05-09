@@ -241,10 +241,12 @@ i2b2.sdx.TypeControllers.QI.getChildRecords = function(sdxParentNode, onComplete
 			o.description = i2b2.h.getXNodeVal(ps[i1],'description');
 			o.qs_name = i2b2.h.getXNodeVal(ps[i1],'query_status_type/name');
 			
-			try{
-				o.result_type = i2b2.h.XPath(ps[i1],'query_result_type/name/text()')[0].nodeValue;
-			}
-			catch(e){
+			//try{
+				o.result_type = i2b2.h.getXNodeVal(ps[i1],'query_result_type/name');
+				//o.result_type = i2b2.h.XPath(ps[i1],'query_result_type/name/text()')[0].nodeValue;
+			//}
+			//catch(e){
+			if(typeof o.result_type == 'undefined'){
 				try{
 					o.result_type = "SHRINE_ERROR" ;
 					o.qs_name = i2b2.h.getXNodeVal(ps[i1],'query_status_type/name');
@@ -255,6 +257,7 @@ i2b2.sdx.TypeControllers.QI.getChildRecords = function(sdxParentNode, onComplete
 					o.result_type = "OTH_ERROR" ;
 				}
 			}
+			//}
 			
 			var sdxDataNodeChild = null;
 			

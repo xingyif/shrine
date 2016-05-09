@@ -75,9 +75,11 @@ i2b2.CRC.view.status.selectTab = function(tabCode) {
 			this.cellRoot.view['graphs'].hideDisplay();
 			this.cellRoot.view['status'].hideDisplay();
 			this.cellRoot.view['queryReport'].hideDisplay();
-			var resultsTable = jQuery("#infoDownloadStatusData").find("#resultsTable");
-			if(resultsTable && resultsTable.length<=0)
-				i2b2.CRC.view.downloadData.createCSV();
+			if(i2b2.CRC.ctrlr.currentQueryResults){
+				var resultsTable = jQuery("#infoDownloadStatusData").find("#resultsTable");
+				if(resultsTable && resultsTable.length<=0)
+					i2b2.CRC.view.downloadData.createCSV();
+			}
 			break;
 	}
 }
