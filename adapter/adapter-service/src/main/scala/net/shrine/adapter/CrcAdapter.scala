@@ -47,26 +47,6 @@ abstract class CrcAdapter[T <: ShrineRequest, V <: ShrineResponse](
     }.get
   }
 
-  case class CannotParseXmlFromCrc(saxx:SAXParseException,xmlResponseFromCrc: String) extends AbstractProblem(ProblemSources.Adapter) {
-    override val throwable = Some(saxx)
-    override val summary: String = "Could not parse response from CRC."
-    override val description:String = s"${saxx.getMessage} while parsing the response from the CRC."
-    override val detailsXml = <details>
-      {throwableDetail.getOrElse("")}
-      Response is {xmlResponseFromCrc}
-    </details>
-  }
-
-  case class ExceptionWhileLoadingCrcResponse(t:Throwable,xmlResponseFromCrc: String) extends AbstractProblem(ProblemSources.Adapter) {
-    override val throwable = Some(t)
-    override val summary: String = "Unanticipated exception with response from CRC."
-    override val description:String = s"${t.getMessage} while parsing the response from the CRC."
-    override val detailsXml = <details>
-      {throwableDetail.getOrElse("")}
-      Response is {xmlResponseFromCrc}
-    </details>
-  }
-
   //NB: default is a noop; only RunQueryAdapter needs this for now
   protected[adapter] def translateNetworkToLocal(request: T): T = request
 
@@ -104,4 +84,24 @@ abstract class CrcAdapter[T <: ShrineRequest, V <: ShrineResponse](
     case req: ShrineRequest => req
     case _ => throw new IllegalArgumentException(s"Unexpected request: $request")
   }
+}
+
+case class CannotParseXmlFromCrc(saxx:SAXParseException,xmlResponseFromCrc: String) extends AbstractProblem(ProblemSources.Adapter) {
+  override val throwable = Some(saxx)
+  override val summary: String = "Could not parse response from CRC."
+  override val description:String = s"${saxx.getMessage} while parsing the response from the CRC."
+  override val detailsXml = <details>
+    {throwableDetail.getOrElse("")}
+    Response is {xmlResponseFromCrc}
+  </details>
+}
+
+case class ExceptionWhileLoadingCrcResponse(t:Throwable,xmlResponseFromCrc: String) extends AbstractProblem(ProblemSources.Adapter) {
+  override val throwable = Some(t)
+  override val summary: String = "Unanticipated exception with response from CRC."
+  override val description:String = s"${t.getMessage} while parsing the response from the CRC."
+  override val detailsXml = <details>
+    {throwableDetail.getOrElse("")}
+    Response is {xmlResponseFromCrc}
+  </details>
 }
