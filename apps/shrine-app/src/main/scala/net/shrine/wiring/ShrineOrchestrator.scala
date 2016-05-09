@@ -35,13 +35,7 @@ import org.squeryl.internals.DatabaseAdapter
  * @author clint
  * @since Jan 14, 2014
  *
- * Application wiring for Shrine, in the base, non-HMS case.  All vals are protecetd, so they may be accessed,
- * in subclasses without ballooning this class's public API, and lazy, to work around init-order surprises when
- * overriding vals declared inline.  See
- *
- * https://stackoverflow.com/questions/15762650/scala-override-val-in-class-inheritance
- *
- * among other links mentioning val overrides, early initializers, etc. -Clint
+ * Application wiring for Shrine.
  */
 object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
   import NodeHandleSource.makeNodeHandles
@@ -71,7 +65,7 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
   protected lazy val squerylInitializer: SquerylInitializer = new DataSourceSquerylInitializer(dataSource, squerylAdapter)
 
   private lazy val pmEndpoint: EndpointConfig = shrineConfig.getConfigured("pmEndpoint", EndpointConfig(_))
-  protected lazy val pmPoster: Poster = Poster(shrineCertCollection,pmEndpoint)
+  lazy val pmPoster: Poster = Poster(shrineCertCollection,pmEndpoint)
 
   private lazy val ontEndpoint: EndpointConfig = shrineConfig.getConfigured("ontEndpoint", EndpointConfig(_))
   protected lazy val ontPoster: Poster = Poster(shrineCertCollection,ontEndpoint)
@@ -83,12 +77,7 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
   lazy val crcHiveCredentials = shrineConfig.getConfigured("hiveCredentials", HiveCredentials(_, HiveCredentials.CRC))
 
   //todo move as much of this block as possible to the adapter project, and get rid of this multi-assignment of one thing
-  protected lazy val (
-    adapterService: Option[AdapterService],
-    i2b2AdminService: Option[I2b2AdminService],
-    adapterDao: Option[AdapterDao],
-    adapterMappings: Option[AdapterMappings]
-  ) = adapterComponentsToTuple(shrineConfig.getOptionConfiguredIf("adapter", AdapterConfig(_)).map { adapterConfig => //todo unwind adapterConfig and just have an adapter
+  val adapterTupple = adapterComponentsToTuple(shrineConfig.getOptionConfiguredIf("adapter", AdapterConfig(_)).map { adapterConfig => //todo unwind adapterConfig and just have an adapter
 
     val crcEndpoint: EndpointConfig = adapterConfig.crcEndpoint
 
@@ -175,6 +164,15 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
         adapterMappings)
   })
 
+
+
+  lazy val (
+    adapterService: Option[AdapterService],
+    i2b2AdminService: Option[I2b2AdminService],
+    adapterDao: Option[AdapterDao],
+    adapterMappings: Option[AdapterMappings]
+  ) = adapterTupple
+
   val shouldQuerySelf = "hub.shouldQuerySelf"
   lazy val localAdapterServiceOption: Option[AdapterRequestHandler] = if(shrineConfig.getOption(shouldQuerySelf,_.getBoolean).getOrElse(false)) { //todo give this a default value (of false) in the reference.conf for the Hub, and make it part of the Hub's apply(config)
     require(adapterService.isDefined, s"Self-querying requested because shrine.$shouldQuerySelf is true, but this node is not configured to have an adapter")
@@ -209,7 +207,7 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
   //todo anything that requires qepConfig should be inside QueryEntryPointComponents's apply
   protected lazy val qepConfig = shrineConfig.getConfig("queryEntryPoint")
 
-  protected lazy val queryEntryPointComponents:Option[QueryEntryPointComponents] =
+  lazy val queryEntryPointComponents:Option[QueryEntryPointComponents] =
     if(qepConfig.getBoolean("create")) {
 
       val commonName: String = shrineCertCollection.myCommonName.getOrElse {
@@ -245,7 +243,7 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
 
   protected lazy val pmUrlString: String = pmEndpoint.url.toString
 
-  protected lazy val ontologyMetadata: OntologyMetadata = {
+  lazy val ontologyMetadata: OntologyMetadata = {
     import scala.concurrent.duration._
 
     //TODO: XXX: Un-hard-code max wait time param
@@ -254,19 +252,7 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
     new OntClientOntologyMetadata(ontClient)
   }
 
-  //TODO: Don't assume we're an adapter with an AdapterMappings (don't call .get)
-  protected lazy val happyService: HappyShrineService = {
-    new HappyShrineService(
-      pmPoster = pmPoster,
-      ontologyMetadata = ontologyMetadata,
-      adapterMappings = adapterMappings,
-      auditDaoOption = queryEntryPointComponents.map(_.auditDao),
-      adapterDaoOption = adapterDao,
-      adapterOption = adapterService
-    )
-  }
-
-  protected lazy val happyResource: HappyShrineResource = new HappyShrineResource(happyService)
+  protected lazy val happyResource: HappyShrineResource = new HappyShrineResource(HappyShrineService)
 
   protected lazy val statusJaxrs: StatusJaxrs = StatusJaxrs(config)
 

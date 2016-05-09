@@ -1,17 +1,11 @@
 package net.shrine.happy
 
-import net.shrine.adapter.dao.AdapterDao
-import net.shrine.adapter.service.AdapterRequestHandler
 import net.shrine.broadcaster.{Broadcaster, NodeHandle}
-import net.shrine.client.Poster
-import net.shrine.config.mappings.AdapterMappings
 import net.shrine.crypto.SigningCertStrategy
 import net.shrine.i2b2.protocol.pm.{GetUserConfigurationRequest, HiveConfig}
 import net.shrine.log.Loggable
-import net.shrine.ont.data.OntologyMetadata
 import net.shrine.protocol.query.{OccuranceLimited, QueryDefinition, Term}
 import net.shrine.protocol.{AuthenticationInfo, BroadcastMessage, Credential, Failure, NodeId, Result, ResultOutputType, RunQueryRequest, Timeout}
-import net.shrine.qep.dao.AuditDao
 import net.shrine.util.{StackTrace, Versions, XmlUtil}
 import net.shrine.wiring.ShrineOrchestrator
 
@@ -29,14 +23,7 @@ import scala.xml.{Node, NodeSeq}
  *       licensed as Lgpl Open Source
  * @see http://www.gnu.org/licenses/lgpl.html
  */
-final class HappyShrineService(
-                                pmPoster: Poster,
-                                ontologyMetadata: OntologyMetadata,
-                                adapterMappings: Option[AdapterMappings],
-                                auditDaoOption: Option[AuditDao],
-                                adapterDaoOption: Option[AdapterDao],
-                                adapterOption: Option[AdapterRequestHandler]
-                              ) extends HappyShrineRequestHandler with Loggable {
+object HappyShrineService extends HappyShrineRequestHandler with Loggable {
 
   info("Happy service initialized")
 
@@ -109,7 +96,7 @@ final class HappyShrineService(
     if(ShrineOrchestrator.shrineConfig.getBoolean("adapter.create")) {
       val credentials = ShrineOrchestrator.crcHiveCredentials
       val pmRequest = GetUserConfigurationRequest(credentials.toAuthenticationInfo)
-      val response = pmPoster.post(pmRequest.toI2b2String)
+      val response = ShrineOrchestrator.pmPoster.post(pmRequest.toI2b2String)
 
       HiveConfig.fromI2b2(response.body).toXmlString
     }
@@ -194,7 +181,7 @@ final class HappyShrineService(
 
   override def adapterReport: String = {
     val report = for {
-      adapterRequestHandler <- adapterOption
+      adapterRequestHandler <- ShrineOrchestrator.adapterService
     } yield {
       val message = newBroadcastMessageWithRunQueryRequest
 
@@ -234,7 +221,7 @@ final class HappyShrineService(
   override def auditReport: String = {
 
     val report = for {
-      auditDao <- auditDaoOption
+      auditDao <- ShrineOrchestrator.queryEntryPointComponents.map(_.auditDao)
     } yield {
       val recentEntries = auditDao.findRecentEntries(10)
 
@@ -258,7 +245,7 @@ final class HappyShrineService(
 
   override def queryReport: String = {
     val report = for {
-      adapterDao <- adapterDaoOption
+      adapterDao <- ShrineOrchestrator.adapterDao
     } yield {
       val recentQueries = adapterDao.findRecentQueries(10)
 
@@ -283,8 +270,8 @@ final class HappyShrineService(
   override def versionReport: String = XmlUtil.stripWhitespace {
     <versionInfo>
       <shrineVersion>{ Versions.version }</shrineVersion>
-      <ontologyVersion>{ ontologyMetadata.ontologyVersion }</ontologyVersion>
-      <adapterMappingsVersion>{ adapterMappings.map(_.version).getOrElse("No adapter mappings present") }</adapterMappingsVersion>
+      <ontologyVersion>{ ShrineOrchestrator.ontologyMetadata.ontologyVersion }</ontologyVersion>
+      <adapterMappingsVersion>{ ShrineOrchestrator.adapterMappings.map(_.version).getOrElse("No adapter mappings present") }</adapterMappingsVersion>
       <scmRevision>{ Versions.scmRevision }</scmRevision>
       <scmBranch>{ Versions.scmBranch }</scmBranch>
       <buildDate>{ Versions.buildDate }</buildDate>
