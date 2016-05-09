@@ -60,11 +60,11 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
   protected lazy val nodeId: NodeId = NodeId(shrineConfig.getString("humanReadableNodeName"))
 
   //TODO: Don't assume keystore lives on the filesystem, could come from classpath, etc
-  protected lazy val keyStoreDescriptor = shrineConfig.getConfigured("keystore",KeyStoreDescriptorParser(_))
-  protected lazy val shrineCertCollection: KeyStoreCertCollection = KeyStoreCertCollection.fromFile(keyStoreDescriptor)
+  lazy val keyStoreDescriptor = shrineConfig.getConfigured("keystore",KeyStoreDescriptorParser(_))
+  lazy val shrineCertCollection: KeyStoreCertCollection = KeyStoreCertCollection.fromFile(keyStoreDescriptor)
   protected lazy val keystoreTrustParam: TrustParam = TrustParam.SomeKeyStore(shrineCertCollection)
   //todo see if you can remove this by pushing it closer to where it gets used
-  protected lazy val signerVerifier: DefaultSignerVerifier = new DefaultSignerVerifier(shrineCertCollection)
+  lazy val signerVerifier: DefaultSignerVerifier = new DefaultSignerVerifier(shrineCertCollection)
 
   protected lazy val dataSource: DataSource = Jndi("java:comp/env/jdbc/shrineDB").get
   protected lazy val squerylAdapter: DatabaseAdapter = SquerylDbAdapterSelecter.determineAdapter(shrineConfig.getString("shrineDatabaseType"))
@@ -257,9 +257,6 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
   //TODO: Don't assume we're an adapter with an AdapterMappings (don't call .get)
   protected lazy val happyService: HappyShrineService = {
     new HappyShrineService(
-      keystoreDescriptor = keyStoreDescriptor,
-      certCollection = shrineCertCollection,
-      signer = signerVerifier,
       pmPoster = pmPoster,
       ontologyMetadata = ontologyMetadata,
       adapterMappings = adapterMappings,

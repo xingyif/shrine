@@ -2,10 +2,10 @@ package net.shrine.happy
 
 import net.shrine.adapter.dao.AdapterDao
 import net.shrine.adapter.service.AdapterRequestHandler
-import net.shrine.broadcaster.{Broadcaster, AdapterClientBroadcaster, NodeHandle}
+import net.shrine.broadcaster.{Broadcaster, NodeHandle}
 import net.shrine.client.Poster
 import net.shrine.config.mappings.AdapterMappings
-import net.shrine.crypto.{KeyStoreCertCollection, KeyStoreDescriptor, Signer, SigningCertStrategy}
+import net.shrine.crypto.SigningCertStrategy
 import net.shrine.i2b2.protocol.pm.{GetUserConfigurationRequest, HiveConfig}
 import net.shrine.log.Loggable
 import net.shrine.ont.data.OntologyMetadata
@@ -30,9 +30,6 @@ import scala.xml.{Node, NodeSeq}
  * @see http://www.gnu.org/licenses/lgpl.html
  */
 final class HappyShrineService(
-                                keystoreDescriptor: KeyStoreDescriptor,
-                                certCollection: KeyStoreCertCollection,
-                                signer: Signer,
                                 pmPoster: Poster,
                                 ontologyMetadata: OntologyMetadata,
                                 adapterMappings: Option[AdapterMappings],
@@ -52,6 +49,9 @@ final class HappyShrineService(
   private val networkAuthn = AuthenticationInfo(domain, username, Credential("", isToken = false))
 
   override def keystoreReport: String = {
+
+    val keystoreDescriptor = ShrineOrchestrator.keyStoreDescriptor
+    val certCollection = ShrineOrchestrator.shrineCertCollection
 
     val myCertId = certCollection.myCertId
 
@@ -189,7 +189,7 @@ final class HappyShrineService(
   private def newBroadcastMessageWithRunQueryRequest: BroadcastMessage = {
     val req = newRunQueryRequest(networkAuthn)
 
-    signer.sign(BroadcastMessage(req.networkQueryId, networkAuthn, req), SigningCertStrategy.Attach)
+    ShrineOrchestrator.signerVerifier.sign(BroadcastMessage(req.networkQueryId, networkAuthn, req), SigningCertStrategy.Attach)
   }
 
   override def adapterReport: String = {
