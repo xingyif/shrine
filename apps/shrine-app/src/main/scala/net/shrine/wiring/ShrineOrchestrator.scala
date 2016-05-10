@@ -76,102 +76,106 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
 
   lazy val crcHiveCredentials = shrineConfig.getConfigured("hiveCredentials", HiveCredentials(_, HiveCredentials.CRC))
 
-  //todo move as much of this block as possible to the adapter project, and get rid of this multi-assignment of one thing
-  val adapterTupple = adapterComponentsToTuple(shrineConfig.getOptionConfiguredIf("adapter", AdapterConfig(_)).map { adapterConfig => //todo unwind adapterConfig and just have an adapter
+  //todo here's the Adapter. Move to the adapter package.
+  case class AdapterComponents(adapterService: AdapterService, i2b2AdminService: I2b2AdminService, adapterDao: AdapterDao, adapterMappings: AdapterMappings)
 
-    val crcEndpoint: EndpointConfig = adapterConfig.crcEndpoint
+  object AdapterComponents {
+    def apply(config:Config,adapterConfig:AdapterConfig):AdapterComponents = {
+      val crcEndpoint: EndpointConfig = adapterConfig.crcEndpoint
 
-    val crcPoster: Poster = Poster(shrineCertCollection,crcEndpoint)
+      val crcPoster: Poster = Poster(shrineCertCollection,crcEndpoint)
 
-    val squerylAdapterTables: AdapterTables = new AdapterTables
+      val squerylAdapterTables: AdapterTables = new AdapterTables
 
-    val adapterDao: AdapterDao = new SquerylAdapterDao(squerylInitializer, squerylAdapterTables)(breakdownTypes)
+      val adapterDao: AdapterDao = new SquerylAdapterDao(squerylInitializer, squerylAdapterTables)(breakdownTypes)
 
-    //NB: Is i2b2HiveCredentials.projectId the right project id to use?
-    val i2b2AdminDao: I2b2AdminDao = new SquerylI2b2AdminDao(crcHiveCredentials.projectId, squerylInitializer, squerylAdapterTables)
+      //NB: Is i2b2HiveCredentials.projectId the right project id to use?
+      val i2b2AdminDao: I2b2AdminDao = new SquerylI2b2AdminDao(crcHiveCredentials.projectId, squerylInitializer, squerylAdapterTables)
 
-    val adapterMappingsSource: AdapterMappingsSource = ClasspathFormatDetectingAdapterMappingsSource(adapterConfig.adapterMappingsFileName)
+      val adapterMappingsSource: AdapterMappingsSource = ClasspathFormatDetectingAdapterMappingsSource(adapterConfig.adapterMappingsFileName)
 
-    //NB: Fail fast
-    val adapterMappings: AdapterMappings = adapterMappingsSource.load.get
+      //NB: Fail fast
+      val adapterMappings: AdapterMappings = adapterMappingsSource.load.get
 
-    val expressionTranslator: ExpressionTranslator = ExpressionTranslator(adapterMappings)
+      val expressionTranslator: ExpressionTranslator = ExpressionTranslator(adapterMappings)
 
-    val queryDefinitionTranslator: QueryDefinitionTranslator = new QueryDefinitionTranslator(expressionTranslator)
+      val queryDefinitionTranslator: QueryDefinitionTranslator = new QueryDefinitionTranslator(expressionTranslator)
 
-    val doObfuscation = adapterConfig.setSizeObfuscation
+      val doObfuscation = adapterConfig.setSizeObfuscation
 
-    val runQueryAdapter = new RunQueryAdapter(
-      crcPoster,
-      adapterDao,
-      crcHiveCredentials,
-      queryDefinitionTranslator,
-      adapterConfig.adapterLockoutAttemptsThreshold,
-      doObfuscation,
-      adapterConfig.immediatelyRunIncomingQueries,
-      breakdownTypes,
-      collectAdapterAudit = adapterConfig.collectAdapterAudit
-    )
+      val runQueryAdapter = new RunQueryAdapter(
+        crcPoster,
+        adapterDao,
+        crcHiveCredentials,
+        queryDefinitionTranslator,
+        adapterConfig.adapterLockoutAttemptsThreshold,
+        doObfuscation,
+        adapterConfig.immediatelyRunIncomingQueries,
+        breakdownTypes,
+        collectAdapterAudit = adapterConfig.collectAdapterAudit
+      )
 
-    val readInstanceResultsAdapter: Adapter = new ReadInstanceResultsAdapter(
-      crcPoster,
-      crcHiveCredentials,
-      adapterDao,
-      doObfuscation,
-      breakdownTypes,
-      collectAdapterAudit = adapterConfig.collectAdapterAudit
-    )
+      val readInstanceResultsAdapter: Adapter = new ReadInstanceResultsAdapter(
+        crcPoster,
+        crcHiveCredentials,
+        adapterDao,
+        doObfuscation,
+        breakdownTypes,
+        collectAdapterAudit = adapterConfig.collectAdapterAudit
+      )
 
-    val readQueryResultAdapter: Adapter = new ReadQueryResultAdapter(
-      crcPoster,
-      crcHiveCredentials,
-      adapterDao,
-      doObfuscation,
-      breakdownTypes,
-      collectAdapterAudit = adapterConfig.collectAdapterAudit
-    )
+      val readQueryResultAdapter: Adapter = new ReadQueryResultAdapter(
+        crcPoster,
+        crcHiveCredentials,
+        adapterDao,
+        doObfuscation,
+        breakdownTypes,
+        collectAdapterAudit = adapterConfig.collectAdapterAudit
+      )
 
-    val readPreviousQueriesAdapter: Adapter = new ReadPreviousQueriesAdapter(adapterDao)
+      val readPreviousQueriesAdapter: Adapter = new ReadPreviousQueriesAdapter(adapterDao)
 
-    val deleteQueryAdapter: Adapter = new DeleteQueryAdapter(adapterDao)
+      val deleteQueryAdapter: Adapter = new DeleteQueryAdapter(adapterDao)
 
-    val renameQueryAdapter: Adapter = new RenameQueryAdapter(adapterDao)
+      val renameQueryAdapter: Adapter = new RenameQueryAdapter(adapterDao)
 
-    val readQueryDefinitionAdapter: Adapter = new ReadQueryDefinitionAdapter(adapterDao)
+      val readQueryDefinitionAdapter: Adapter = new ReadQueryDefinitionAdapter(adapterDao)
 
-    val readTranslatedQueryDefinitionAdapter: Adapter = new ReadTranslatedQueryDefinitionAdapter(nodeId, queryDefinitionTranslator)
+      val readTranslatedQueryDefinitionAdapter: Adapter = new ReadTranslatedQueryDefinitionAdapter(nodeId, queryDefinitionTranslator)
 
-    val flagQueryAdapter: Adapter = new FlagQueryAdapter(adapterDao)
+      val flagQueryAdapter: Adapter = new FlagQueryAdapter(adapterDao)
 
-    val unFlagQueryAdapter: Adapter = new UnFlagQueryAdapter(adapterDao)
+      val unFlagQueryAdapter: Adapter = new UnFlagQueryAdapter(adapterDao)
 
-    val adapterMap = AdapterMap(Map(
-      RequestType.QueryDefinitionRequest -> runQueryAdapter,
-      RequestType.GetRequestXml -> readQueryDefinitionAdapter,
-      RequestType.UserRequest -> readPreviousQueriesAdapter,
-      RequestType.InstanceRequest -> readInstanceResultsAdapter,
-      RequestType.MasterDeleteRequest -> deleteQueryAdapter,
-      RequestType.MasterRenameRequest -> renameQueryAdapter,
-      RequestType.GetQueryResult -> readQueryResultAdapter,
-      RequestType.ReadTranslatedQueryDefinitionRequest -> readTranslatedQueryDefinitionAdapter,
-      RequestType.FlagQueryRequest -> flagQueryAdapter,
-      RequestType.UnFlagQueryRequest -> unFlagQueryAdapter))
+      val adapterMap = AdapterMap(Map(
+        RequestType.QueryDefinitionRequest -> runQueryAdapter,
+        RequestType.GetRequestXml -> readQueryDefinitionAdapter,
+        RequestType.UserRequest -> readPreviousQueriesAdapter,
+        RequestType.InstanceRequest -> readInstanceResultsAdapter,
+        RequestType.MasterDeleteRequest -> deleteQueryAdapter,
+        RequestType.MasterRenameRequest -> renameQueryAdapter,
+        RequestType.GetQueryResult -> readQueryResultAdapter,
+        RequestType.ReadTranslatedQueryDefinitionRequest -> readTranslatedQueryDefinitionAdapter,
+        RequestType.FlagQueryRequest -> flagQueryAdapter,
+        RequestType.UnFlagQueryRequest -> unFlagQueryAdapter))
 
-    AdapterComponents(
+      AdapterComponents(
         new AdapterService(nodeId, signerVerifier, adapterConfig.maxSignatureAge, adapterMap),
         new I2b2AdminService(adapterDao, i2b2AdminDao, pmPoster, runQueryAdapter),
         adapterDao,
         adapterMappings)
-  })
+    }
+  }
 
+  val adapterComponents:Option[AdapterComponents] = shrineConfig.getOptionConfiguredIf("adapter", AdapterConfig(_)).map { adapterConfig => //todo unwind adapterConfig and just have an adapter, call AdapterComponents(_)
+    AdapterComponents(shrineConfig.getConfig("adapter"),adapterConfig)
+  }
 
-
-  lazy val (
-    adapterService: Option[AdapterService],
-    i2b2AdminService: Option[I2b2AdminService],
-    adapterDao: Option[AdapterDao],
-    adapterMappings: Option[AdapterMappings]
-  ) = adapterTupple
+  //todo maybe just break demeter too use these
+  lazy val adapterService: Option[AdapterService] = adapterComponents.map(_.adapterService)
+  lazy val i2b2AdminService: Option[I2b2AdminService] = adapterComponents.map(_.i2b2AdminService)
+  lazy val adapterDao: Option[AdapterDao] = adapterComponents.map(_.adapterDao)
+  lazy val adapterMappings: Option[AdapterMappings] = adapterComponents.map(_.adapterMappings)
 
   val shouldQuerySelf = "hub.shouldQuerySelf"
   lazy val localAdapterServiceOption: Option[AdapterRequestHandler] = if(shrineConfig.getOption(shouldQuerySelf,_.getBoolean).getOrElse(false)) { //todo give this a default value (of false) in the reference.conf for the Hub, and make it part of the Hub's apply(config)
@@ -266,9 +270,6 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
   
   protected lazy val broadcasterMultiplexerResource: Option[BroadcasterMultiplexerResource] = broadcasterMultiplexerService.map(BroadcasterMultiplexerResource(_))
 
-  //todo here's the Adapter. Move to the adapter package.
-  private final case class AdapterComponents(adapterService: AdapterService, i2b2AdminService: I2b2AdminService, adapterDao: AdapterDao, adapterMappings: AdapterMappings)
-
   //todo here's the QEP. Move to the QEP package.
   case class QueryEntryPointComponents(shrineService: QepService,
                                        i2b2Service: I2b2QepService,
@@ -304,12 +305,6 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
         ),
         auditDao)
     }
-  }
-
-  //todo get rid of this
-  private def adapterComponentsToTuple(option: Option[AdapterComponents]): (Option[AdapterService], Option[I2b2AdminService], Option[AdapterDao], Option[AdapterMappings]) = option match {
-    case None => (None, None, None, None)
-    case Some(AdapterComponents(a, b, c, d)) => (Option(a), Option(b), Option(c), Option(d))
   }
 
   def poster(keystoreCertCollection: KeyStoreCertCollection)(endpoint: EndpointConfig): Poster = {
