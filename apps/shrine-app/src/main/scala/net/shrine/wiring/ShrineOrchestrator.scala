@@ -6,7 +6,7 @@ import com.typesafe.config.{Config, ConfigFactory}
 import net.shrine.adapter.dao.squeryl.tables.{Tables => AdapterTables}
 import net.shrine.adapter.dao.squeryl.{SquerylAdapterDao, SquerylI2b2AdminDao}
 import net.shrine.adapter.dao.{AdapterDao, I2b2AdminDao}
-import net.shrine.adapter.service.{AdapterConfig, AdapterRequestHandler, AdapterResource, AdapterService, I2b2AdminResource, I2b2AdminService}
+import net.shrine.adapter.service.{AdapterRequestHandler, AdapterResource, AdapterService, I2b2AdminResource, I2b2AdminService}
 import net.shrine.adapter.translators.{ExpressionTranslator, QueryDefinitionTranslator}
 import net.shrine.adapter.{Adapter, AdapterMap, DeleteQueryAdapter, FlagQueryAdapter, ReadInstanceResultsAdapter, ReadPreviousQueriesAdapter, ReadQueryDefinitionAdapter, ReadQueryResultAdapter, ReadTranslatedQueryDefinitionAdapter, RenameQueryAdapter, RunQueryAdapter, UnFlagQueryAdapter}
 import net.shrine.authentication.Authenticator
@@ -16,7 +16,7 @@ import net.shrine.broadcaster.dao.squeryl.SquerylHubDao
 import net.shrine.broadcaster.service.{BroadcasterMultiplexerResource, BroadcasterMultiplexerService}
 import net.shrine.broadcaster.{AdapterClientBroadcaster, BroadcastAndAggregationService, NodeHandle, SigningBroadcastAndAggregationService}
 import net.shrine.client.{EndpointConfig, JerseyHttpClient, OntClient, Poster, PosterOntClient}
-import net.shrine.config.{DurationConfigParser, ConfigExtensions}
+import net.shrine.config.{ConfigExtensions, DurationConfigParser}
 import net.shrine.config.mappings.{AdapterMappings, AdapterMappingsSource, ClasspathFormatDetectingAdapterMappingsSource}
 import net.shrine.crypto.{DefaultSignerVerifier, KeyStoreCertCollection, KeyStoreDescriptorParser, TrustParam}
 import net.shrine.dao.squeryl.{DataSourceSquerylInitializer, SquerylDbAdapterSelecter, SquerylInitializer}
@@ -80,8 +80,8 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
   case class AdapterComponents(adapterService: AdapterService, i2b2AdminService: I2b2AdminService, adapterDao: AdapterDao, adapterMappings: AdapterMappings)
 
   object AdapterComponents {
-    def apply(config:Config,adapterConfig:AdapterConfig):AdapterComponents = {
-      val crcEndpoint: EndpointConfig = adapterConfig.crcEndpoint
+    def apply(adapterConfig:Config):AdapterComponents = { //config is "shrine.adapter"
+      val crcEndpoint: EndpointConfig = adapterConfig.getConfigured("crcEndpoint",EndpointConfig(_))
 
       val crcPoster: Poster = Poster(shrineCertCollection,crcEndpoint)
 
@@ -92,7 +92,7 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
       //NB: Is i2b2HiveCredentials.projectId the right project id to use?
       val i2b2AdminDao: I2b2AdminDao = new SquerylI2b2AdminDao(crcHiveCredentials.projectId, squerylInitializer, squerylAdapterTables)
 
-      val adapterMappingsSource: AdapterMappingsSource = ClasspathFormatDetectingAdapterMappingsSource(adapterConfig.adapterMappingsFileName)
+      val adapterMappingsSource: AdapterMappingsSource = ClasspathFormatDetectingAdapterMappingsSource(adapterConfig.getString("adapterMappingsFileName"))
 
       //NB: Fail fast
       val adapterMappings: AdapterMappings = adapterMappingsSource.load.get
@@ -101,18 +101,19 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
 
       val queryDefinitionTranslator: QueryDefinitionTranslator = new QueryDefinitionTranslator(expressionTranslator)
 
-      val doObfuscation = adapterConfig.setSizeObfuscation
+      val doObfuscation = adapterConfig.getBoolean("setSizeObfuscation")
+      val collectAdapterAudit = adapterConfig.getBoolean("audit.collectAdapterAudit") //todo figure out testing
 
       val runQueryAdapter = new RunQueryAdapter(
         crcPoster,
         adapterDao,
         crcHiveCredentials,
         queryDefinitionTranslator,
-        adapterConfig.adapterLockoutAttemptsThreshold,
+        adapterConfig.getInt("adapterLockoutAttemptsThreshold"),
         doObfuscation,
-        adapterConfig.immediatelyRunIncomingQueries,
+        adapterConfig.getOption("immediatelyRunIncomingQueries", _.getBoolean).getOrElse(true), //todo use reference.conf
         breakdownTypes,
-        collectAdapterAudit = adapterConfig.collectAdapterAudit
+        collectAdapterAudit
       )
 
       val readInstanceResultsAdapter: Adapter = new ReadInstanceResultsAdapter(
@@ -121,7 +122,7 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
         adapterDao,
         doObfuscation,
         breakdownTypes,
-        collectAdapterAudit = adapterConfig.collectAdapterAudit
+        collectAdapterAudit
       )
 
       val readQueryResultAdapter: Adapter = new ReadQueryResultAdapter(
@@ -130,7 +131,7 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
         adapterDao,
         doObfuscation,
         breakdownTypes,
-        collectAdapterAudit = adapterConfig.collectAdapterAudit
+        collectAdapterAudit
       )
 
       val readPreviousQueriesAdapter: Adapter = new ReadPreviousQueriesAdapter(adapterDao)
@@ -160,16 +161,24 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
         RequestType.UnFlagQueryRequest -> unFlagQueryAdapter))
 
       AdapterComponents(
-        new AdapterService(nodeId, signerVerifier, adapterConfig.maxSignatureAge, adapterMap),
-        new I2b2AdminService(adapterDao, i2b2AdminDao, pmPoster, runQueryAdapter),
-        adapterDao,
-        adapterMappings)
+        adapterService = new AdapterService(
+          nodeId = nodeId,
+          signatureVerifier = signerVerifier,
+          maxSignatureAge = adapterConfig.getConfigured("maxSignatureAge", DurationConfigParser(_)),
+          adapterMap = adapterMap
+        ),
+        i2b2AdminService = new I2b2AdminService(
+          dao = adapterDao,
+          i2b2AdminDao = i2b2AdminDao,
+          pmPoster = pmPoster,
+          runQueryAdapter = runQueryAdapter
+        ),
+        adapterDao = adapterDao,
+        adapterMappings = adapterMappings)
     }
   }
 
-  val adapterComponents:Option[AdapterComponents] = shrineConfig.getOptionConfiguredIf("adapter", AdapterConfig(_)).map { adapterConfig => //todo unwind adapterConfig and just have an adapter, call AdapterComponents(_)
-    AdapterComponents(shrineConfig.getConfig("adapter"),adapterConfig)
-  }
+  val adapterComponents:Option[AdapterComponents] = shrineConfig.getOptionConfiguredIf("adapter", AdapterComponents(_))
 
   //todo maybe just break demeter too use these
   lazy val adapterService: Option[AdapterService] = adapterComponents.map(_.adapterService)
