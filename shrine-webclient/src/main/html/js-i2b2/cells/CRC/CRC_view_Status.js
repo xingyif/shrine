@@ -37,6 +37,49 @@ i2b2.CRC.view.status.showDisplay = function() {
 }
 
 // ================================================================================================== //
+//BG
+i2b2.CRC.view.status.selectTab = function(tabCode) {
+	// toggle between the Navigate and Find Terms tabs
+	switch (tabCode) {
+		case "graphs":
+			this.currentTab = 'graphs';
+			this.cellRoot.view['graphs'].showDisplay();
+			this.cellRoot.view['status'].hideDisplay();
+			this.cellRoot.view['queryReport'].hideDisplay();  
+			this.cellRoot.view['downloadData'].hideDisplay();
+			if(i2b2.CRC.ctrlr.currentQueryResults)
+				i2b2.CRC.view.graphs.createGraphs("infoQueryStatusChart", i2b2.CRC.ctrlr.currentQueryResults.resultString, true);
+			break;
+		case "status":
+			this.currentTab = 'status';
+			this.cellRoot.view['status'].showDisplay();
+			this.cellRoot.view['graphs'].hideDisplay();
+			this.cellRoot.view['queryReport'].hideDisplay();  
+			this.cellRoot.view['downloadData'].hideDisplay();
+			break;
+		case "queryReport":
+			this.currentTab = 'queryReport';
+			this.cellRoot.view['queryReport'].showDisplay();
+			this.cellRoot.view['graphs'].hideDisplay();
+			this.cellRoot.view['status'].hideDisplay();
+			this.cellRoot.view['downloadData'].hideDisplay();
+			break;
+		case "downloadData":
+			this.currentTab = 'downloadData';
+			this.cellRoot.view['downloadData'].showDisplay();
+			this.cellRoot.view['graphs'].hideDisplay();
+			this.cellRoot.view['status'].hideDisplay();
+			this.cellRoot.view['queryReport'].hideDisplay();
+			if(i2b2.CRC.ctrlr.currentQueryResults){
+				var resultsTable = jQuery("#infoDownloadStatusData").find("#resultsTable");
+				if(resultsTable && resultsTable.length<=0)
+					i2b2.CRC.view.downloadData.createCSV();
+			}
+			break;
+	}
+}
+//BG
+// ================================================================================================== //
 i2b2.CRC.view.status.Resize = function(e) {
 	var viewObj = i2b2.CRC.view.status;
 	if (viewObj.visible) {

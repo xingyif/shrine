@@ -38,6 +38,7 @@ function QueryToolController() {
     this.doQueryClear = function() {
         // function to clear query from memory
         delete i2b2.CRC.model.queryCurrent;
+		delete i2b2.CRC.ctrlr.currentQueryResults;
         i2b2.CRC.model.queryCurrent = {};
         i2b2.CRC.ctrlr.QT.temporalGroup = 0;
         var dm = i2b2.CRC.model.queryCurrent;
@@ -52,6 +53,9 @@ function QueryToolController() {
         this.queryIsDirty = true;
         this.hasModifier = false;
         $('infoQueryStatusText').innerHTML = "";
+		$('infoQueryStatusChart').innerHTML = "";
+		$('infoQueryStatusReport').innerHTML = "";		
+		$('infoDownloadStatusData').innerHTML = "";
         $('crc.temoralBuilder').hide();
         $('crc.innerQueryPanel').show();
         this.panelControllers[0].refTitle.innerHTML =  'Group 1';
