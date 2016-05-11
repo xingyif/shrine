@@ -38,7 +38,7 @@ object HappyShrineService extends HappyShrineRequestHandler with Loggable {
   override def keystoreReport: String = {
 
     val keystoreDescriptor = ShrineOrchestrator.keyStoreDescriptor
-    val certCollection = ShrineOrchestrator.shrineCertCollection
+    val certCollection = ShrineOrchestrator.certCollection
 
     val myCertId = certCollection.myCertId
 
