@@ -196,7 +196,7 @@ object QueryResult {
         if(queryResult.statusType.name == "ERROR") pd.summary
         else queryResult.statusType.name
       }
-      <status_type_id>{ i2b2Id }</status_type_id><description>{ queryResult.statusType.name }</description>
+      <status_type_id>{ i2b2Id }</status_type_id><description>{ description }</description>
     }
 
     val noMessage:NodeSeq = null
