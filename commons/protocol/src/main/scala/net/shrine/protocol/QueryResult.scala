@@ -328,6 +328,12 @@ object QueryResult {
       Filling(resultType,setSize,startDate,endDate)
     }
 
+    val defaultDescription = asTextOption("description")
+    val description = problemDigest.fold(defaultDescription){ pd =>
+      if(defaultDescription == Some("ERROR")) Some(pd.summary)
+      else defaultDescription
+    }
+
     QueryResult(
       resultId = asLong("result_instance_id"),
       instanceId = asLong("query_instance_id"),
@@ -335,7 +341,7 @@ object QueryResult {
       setSize = filling.setSize,
       startDate = filling.startDate,
       endDate = filling.endDate,
-      description = asTextOption("description"),
+      description = description,
       statusType = statusType,
       statusMessage = statusMessage,
       problemDigest = problemDigest
