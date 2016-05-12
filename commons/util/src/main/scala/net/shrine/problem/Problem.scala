@@ -44,8 +44,6 @@ trait Problem {
 }
 
 case class ProblemDigest(codec: String, stampText: String, summary: String, description: String, detailsXml: NodeSeq) extends XmlMarshaller {
-  //todo remove this validation after the experiment
-  if(description == null) throw new NullPointerException(s"ProblemDigest.description is null for $codec")
 
   override def toXml: Node = {
     <problem>
