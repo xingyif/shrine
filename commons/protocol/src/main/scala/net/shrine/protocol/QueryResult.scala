@@ -192,6 +192,10 @@ object QueryResult {
       val i2b2Id: Int = queryResult.statusType.i2b2Id.getOrElse{
         throw new IllegalStateException(s"queryResult.statusType ${queryResult.statusType} has no i2b2Id")
       }
+      val description = queryResult.problemDigest.fold(queryResult.statusType.name) { pd =>
+        if(queryResult.statusType.name == "ERROR") pd.summary
+        else queryResult.statusType.name
+      }
       <status_type_id>{ i2b2Id }</status_type_id><description>{ queryResult.statusType.name }</description>
     }
 
@@ -328,12 +332,6 @@ object QueryResult {
       Filling(resultType,setSize,startDate,endDate)
     }
 
-    val defaultDescription = asTextOption("description")
-    val description = problemDigest.fold(defaultDescription){ pd =>
-      if(defaultDescription == Some("ERROR")) Some(pd.summary)
-      else defaultDescription
-    }
-
     QueryResult(
       resultId = asLong("result_instance_id"),
       instanceId = asLong("query_instance_id"),
@@ -341,7 +339,7 @@ object QueryResult {
       setSize = filling.setSize,
       startDate = filling.startDate,
       endDate = filling.endDate,
-      description = description,
+      description = asTextOption("description"),
       statusType = statusType,
       statusMessage = statusMessage,
       problemDigest = problemDigest
