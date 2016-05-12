@@ -88,7 +88,7 @@ object ErrorResponse extends XmlUnmarshaller[ErrorResponse] with I2b2Unmarshalle
                                                     statusMessage = XmlUtil.trim(statusXml)
                                                     problemDigest = ProblemDigest.fromXml(resultStatusXml)
       } yield {
-        ErrorResponse(problemDigest.summary,problemDigest)
+        ErrorResponse(statusMessage,problemDigest)
       }
     }
 
@@ -99,7 +99,9 @@ object ErrorResponse extends XmlUnmarshaller[ErrorResponse] with I2b2Unmarshalle
                                                     statusMessage = XmlUtil.trim(conditionXml)
                                                     problemDigest = ErrorStatusFromCrc(Option(statusMessage),xml.text).toDigest//here's another place where an ERROR can have no ProblemDigest
       } yield {
-        ErrorResponse(problemDigest.summary,problemDigest)
+        val realStatusMessage = if(statusMessage != "ERROR") statusMessage
+                                else problemDigest.summary
+        ErrorResponse(realStatusMessage,problemDigest)
       }
     }
 
