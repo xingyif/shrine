@@ -192,30 +192,19 @@ object QueryResult {
       val i2b2Id: Int = queryResult.statusType.i2b2Id.getOrElse{
         throw new IllegalStateException(s"queryResult.statusType ${queryResult.statusType} has no i2b2Id")
       }
-      val description = queryResult.problemDigest.fold(queryResult.statusType.name) { pd =>
-        if(queryResult.statusType.name == "ERROR") pd.summary
-        else queryResult.statusType.name
-      }
-      <status_type_id>{ i2b2Id }</status_type_id><description>{ description }</description>
+      <status_type_id>{ i2b2Id }</status_type_id><description>{ queryResult.statusType.name }</description>
     }
 
     val noMessage:NodeSeq = null
     val Error = StatusType("ERROR", isDone = true, None, { queryResult =>
       (queryResult.statusMessage, queryResult.problemDigest) match {
-        case (Some(msg),Some(pd)) => <description>{ msg }</description> ++ pd.toXml
+        case (Some(msg),Some(pd)) => <description>{ if(msg != "ERROR") msg else pd.summary }</description> ++ pd.toXml
         case (Some(msg),None) => <description>{ msg }</description>
-        case (None,Some(pd)) => pd.toXml
+        case (None,Some(pd)) => <description>{ pd.summary }</description> ++ pd.toXml
         case (None, None) => noMessage
       }
     })
-    /*
-      msg =>
-        <codec>net.shrine.something.is.Broken</codec>
-          <summary>Something is borked</summary>
-          <description>{ msg }</description>
-          <details>Herein is a stack trace, multiple lines</details>
-    ))
-    */
+
     val Finished = StatusType("FINISHED", isDone = true, Some(3))
     //TODO: Can we use the same <status_type_id> for Queued, Processing, and Incomplete?
     val Processing = StatusType("PROCESSING", isDone = false, Some(2))  //todo only used in tests
