@@ -198,20 +198,13 @@ object QueryResult {
     val noMessage:NodeSeq = null
     val Error = StatusType("ERROR", isDone = true, None, { queryResult =>
       (queryResult.statusMessage, queryResult.problemDigest) match {
-        case (Some(msg),Some(pd)) => <description>{ msg }</description> ++ pd.toXml
+        case (Some(msg),Some(pd)) => <description>{ if(msg != "ERROR") msg else pd.summary }</description> ++ pd.toXml
         case (Some(msg),None) => <description>{ msg }</description>
-        case (None,Some(pd)) => pd.toXml
+        case (None,Some(pd)) => <description>{ pd.summary }</description> ++ pd.toXml
         case (None, None) => noMessage
       }
     })
-    /*
-      msg =>
-        <codec>net.shrine.something.is.Broken</codec>
-          <summary>Something is borked</summary>
-          <description>{ msg }</description>
-          <details>Herein is a stack trace, multiple lines</details>
-    ))
-    */
+
     val Finished = StatusType("FINISHED", isDone = true, Some(3))
     //TODO: Can we use the same <status_type_id> for Queued, Processing, and Incomplete?
     val Processing = StatusType("PROCESSING", isDone = false, Some(2))  //todo only used in tests
@@ -306,13 +299,35 @@ object QueryResult {
                         else if (statusType.isError) Some(ErrorStatusFromCrc(statusMessage,xml.text).toDigest)
                         else None
 
+    case class Filling(
+                        resultType:Option[ResultOutputType],
+                        setSize:Long,
+                        startDate:Option[XMLGregorianCalendar],
+                        endDate:Option[XMLGregorianCalendar]
+                      )
+
+    val filling = if(!statusType.isError) {
+      val resultType: Option[ResultOutputType] = extractResultOutputType(xml \ "query_result_type")(ResultOutputType.fromI2b2)
+      val setSize = asLong("set_size")
+      val startDate = asXmlGcOption("start_date")
+      val endDate = asXmlGcOption("end_date")
+      Filling(resultType,setSize,startDate,endDate)
+    }
+    else {
+      val resultType = None
+      val setSize = 0L
+      val startDate = None
+      val endDate = None
+      Filling(resultType,setSize,startDate,endDate)
+    }
+
     QueryResult(
       resultId = asLong("result_instance_id"),
       instanceId = asLong("query_instance_id"),
-      resultType = extractResultOutputType(xml \ "query_result_type")(ResultOutputType.fromI2b2),
-      setSize = asLong("set_size"),
-      startDate = asXmlGcOption("start_date"),
-      endDate = asXmlGcOption("end_date"),
+      resultType = filling.resultType,
+      setSize = filling.setSize,
+      startDate = filling.startDate,
+      endDate = filling.endDate,
       description = asTextOption("description"),
       statusType = statusType,
       statusMessage = statusMessage,

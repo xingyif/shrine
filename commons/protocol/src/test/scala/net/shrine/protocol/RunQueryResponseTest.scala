@@ -240,7 +240,7 @@ final class RunQueryResponseTest extends ShrineResponseI2b2SerializableValidator
     else {
       translatedResponse.results.size should equal(1)
       val result: QueryResult = translatedResponse.results.head
-      result.copy(problemDigest = None) should equal(qr1.copy(statusType = expectedStatusType))
+      result.copy(problemDigest = None) should equal(qr1.copy(statusType = expectedStatusType,resultType = None,setSize = 0,startDate = None,endDate = None))
       result.problemDigest.get.codec should equal(classOf[ErrorStatusFromCrc].getName)
     }
     translatedResponse.queryName should equal(queryName)
