@@ -10,11 +10,11 @@ import net.shrine.authentication.Authenticator
 import net.shrine.authorization.QueryAuthorizationService
 import net.shrine.broadcaster.dao.HubDao
 import net.shrine.broadcaster.dao.squeryl.SquerylHubDao
-import net.shrine.broadcaster.service.{BroadcasterMultiplexerResource, BroadcasterMultiplexerService}
-import net.shrine.broadcaster.{AdapterClientBroadcaster, BroadcastAndAggregationService, NodeHandle, SigningBroadcastAndAggregationService}
+import net.shrine.broadcaster.service.HubComponents
+import net.shrine.broadcaster.{BroadcastAndAggregationService, SigningBroadcastAndAggregationService}
 import net.shrine.client.{EndpointConfig, JerseyHttpClient, OntClient, Poster, PosterOntClient}
+import net.shrine.config.ConfigExtensions
 import net.shrine.config.mappings.AdapterMappings
-import net.shrine.config.{ConfigExtensions, DurationConfigParser}
 import net.shrine.crypto.{DefaultSignerVerifier, KeyStoreCertCollection, KeyStoreDescriptorParser, TrustParam}
 import net.shrine.dao.squeryl.{DataSourceSquerylInitializer, SquerylDbAdapterSelecter, SquerylInitializer}
 import net.shrine.happy.{HappyShrineResource, HappyShrineService}
@@ -35,10 +35,14 @@ import org.squeryl.internals.DatabaseAdapter
  * Application wiring for Shrine.
  */
 object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
-  import NodeHandleSource.makeNodeHandles
 
   override def resources: Iterable[AnyRef] = {
-    Seq(happyResource,statusJaxrs) ++ shrineResource ++ i2b2BroadcastResource ++ adapterResource ++ i2b2AdminResource ++ broadcasterMultiplexerResource
+    Seq(happyResource,statusJaxrs) ++
+      shrineResource ++
+      i2b2BroadcastResource ++
+      adapterResource ++
+      i2b2AdminResource ++
+      hubComponents.map(_.broadcasterMultiplexerResource)
   }
 
   //todo another pass to put things only used in one place into that place's apply(Config)
@@ -65,11 +69,9 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
   private lazy val pmEndpoint: EndpointConfig = shrineConfig.getConfigured("pmEndpoint", EndpointConfig(_))
   lazy val pmPoster: Poster = Poster(certCollection,pmEndpoint)
 
-  private lazy val ontEndpoint: EndpointConfig = shrineConfig.getConfigured("ontEndpoint", EndpointConfig(_))
-  protected lazy val ontPoster: Poster = Poster(certCollection,ontEndpoint)
-
   protected lazy val breakdownTypes: Set[ResultOutputType] = shrineConfig.getOptionConfigured("breakdownResultOutputTypes", ResultOutputTypes.fromConfig).getOrElse(Set.empty)
 
+  //todo why does the qep need a HubDao ?
   protected lazy val hubDao: HubDao = new SquerylHubDao(squerylInitializer, new net.shrine.broadcaster.dao.squeryl.tables.Tables)
 
 //todo really should be part of the adapter config, but is out in shrine's part of the name space
@@ -102,29 +104,15 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
   }
     else None //todo eventually make this just another downstream node accessed via loopback
 
-  //todo anything that uses hubConfig should be inside the big Hub component. broadcastDesitnations leak out because the QEP doesn't use loopback to talk to itself.
-  //todo as an easy earlier step, make the hub first, then the QEP. Ask the hub for its destinations
   val hubConfig = shrineConfig.getConfig("hub")
 
-  //todo use an empty Set instead of Option[Set]
-  private lazy val broadcastDestinations: Option[Set[NodeHandle]] = {
-    if(hubConfig.getBoolean("create")) {
-      Some(makeNodeHandles(hubConfig, keystoreTrustParam, nodeId, localAdapterServiceOption, breakdownTypes))
-    }
-    else None
-  }
-
-  //todo a hub component. Gather them all up
-  private lazy val broadcasterOption: Option[AdapterClientBroadcaster] = {
-    if(hubConfig.getBoolean("create")) {
-      require(broadcastDestinations.isDefined, "This node is configured to be a hub, but no downstream nodes are defined")
-      Some(AdapterClientBroadcaster(broadcastDestinations.get, hubDao))
-    }
-    else None
-  }
-
-  //todo a hub component
-  lazy val broadcasterMultiplexerService: Option[BroadcasterMultiplexerService] = broadcasterOption.map(BroadcasterMultiplexerService(_, hubConfig.getConfigured("maxQueryWaitTime",DurationConfigParser(_))))
+  lazy val hubComponents: Option[HubComponents] = shrineConfig.getOptionConfiguredIf("hub",HubComponents(_,
+    keystoreTrustParam,
+    nodeId,
+    localAdapterServiceOption,
+    breakdownTypes,
+    hubDao
+  ))
 
   //todo anything that requires qepConfig should be inside QueryEntryPointComponents's apply
   protected lazy val qepConfig = shrineConfig.getConfig("queryEntryPoint")
@@ -142,7 +130,7 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
         qepConfig,
         certCollection,
         breakdownTypes,
-        broadcastDestinations,
+        hubComponents.map(_.broadcastDestinations),
         hubDao
       )
 
@@ -165,6 +153,10 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
 
   protected lazy val pmUrlString: String = pmEndpoint.url.toString
 
+  private lazy val ontEndpoint: EndpointConfig = shrineConfig.getConfigured("ontEndpoint", EndpointConfig(_))
+  protected lazy val ontPoster: Poster = Poster(certCollection,ontEndpoint)
+
+  //todo only used by happy outside of here
   lazy val ontologyMetadata: OntologyMetadata = {
     import scala.concurrent.duration._
 
@@ -186,8 +178,6 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
 
   protected lazy val i2b2AdminResource: Option[I2b2AdminResource] = i2b2AdminService.map(I2b2AdminResource(_, breakdownTypes))
   
-  protected lazy val broadcasterMultiplexerResource: Option[BroadcasterMultiplexerResource] = broadcasterMultiplexerService.map(BroadcasterMultiplexerResource(_))
-
   //todo here's the QEP. Move to the QEP package.
   case class QueryEntryPointComponents(shrineService: QepService,
                                        i2b2Service: I2b2QepService,

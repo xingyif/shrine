@@ -76,9 +76,9 @@ object HappyShrineService extends HappyShrineRequestHandler with Loggable {
   private def nodeListAsXml: Iterable[Node] = {
 
     val noneResult: Iterable[Node] = Nil
-    ShrineOrchestrator.broadcasterMultiplexerService.fold(noneResult) { broadcasterMultiplexerService =>
+    ShrineOrchestrator.hubComponents.fold(noneResult) { hubComponents =>
 
-      val broadcaster = broadcasterMultiplexerService.broadcaster
+      val broadcaster = hubComponents.broadcasterMultiplexerService.broadcaster
       broadcaster.destinations.map{ node:NodeHandle =>
         <node>
           <name>{ node.nodeId.name }</name>
@@ -117,10 +117,10 @@ object HappyShrineService extends HappyShrineRequestHandler with Loggable {
   }
 
   override def networkReport: String = {
-    ShrineOrchestrator.broadcasterMultiplexerService.fold(notAHub) { broadcasterMultiplexerService =>
+    ShrineOrchestrator.hubComponents.fold(notAHub) { hubComponents =>
 
-      val maxQueryWaitTime = broadcasterMultiplexerService.maxQueryWaitTime
-      val broadcaster: Broadcaster = broadcasterMultiplexerService.broadcaster
+      val maxQueryWaitTime = hubComponents.broadcasterMultiplexerService.maxQueryWaitTime
+      val broadcaster: Broadcaster = hubComponents.broadcasterMultiplexerService.broadcaster
       val message = newBroadcastMessageWithRunQueryRequest
       val multiplexer = broadcaster.broadcast(message)
       val responses = Await.result(multiplexer.responses, maxQueryWaitTime).toSeq
