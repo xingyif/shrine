@@ -5,18 +5,17 @@ import net.shrine.protocol.NodeId
 import net.shrine.protocol.QueryResult
 import net.shrine.protocol.ReadInstanceResultsResponse
 import net.shrine.protocol.ResultOutputType
-import net.shrine.protocol.ResultOutputType.PATIENT_COUNT_XML
 
 /**
  * @author Bill Simons
  * @author Clint Gilbert
- * @date 6/13/11
- * @link http://cbmi.med.harvard.edu
- * @link http://chip.org
+ * @since 6/13/11
+ * @see http://cbmi.med.harvard.edu
+ * @see http://chip.org
  *       <p/>
  *       NOTICE: This software comes with NO guarantees whatsoever and is
  *       licensed as Lgpl Open Source
- * @link http://www.gnu.org/licenses/lgpl.html
+ * @see http://www.gnu.org/licenses/lgpl.html
  */
 final class ReadInstanceResultsAggregator(shrineNetworkQueryId: Long, showAggregation: Boolean) extends 
     StoredResultsAggregator[ReadInstanceResultsResponse, AggregatedReadInstanceResultsResponse](
@@ -29,7 +28,6 @@ final class ReadInstanceResultsAggregator(shrineNetworkQueryId: Long, showAggreg
   
   private val setType = Some(PATIENT_COUNT_XML)
   private val statusType = QueryResult.StatusType.Finished
-  private val allowedSetTypes = ResultOutputType.values.toSet
 
   protected override def consolidateQueryResults(queryResultsFromAllValidResponses: Iterable[(BasicAggregator.Valid[ReadInstanceResultsResponse], Iterable[QueryResult])]): Iterable[QueryResult] = {
     queryResultsFromAllValidResponses.flatMap { case (validResult, resultsFromOneResponse) =>

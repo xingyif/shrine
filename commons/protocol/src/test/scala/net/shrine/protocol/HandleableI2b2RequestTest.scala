@@ -15,12 +15,12 @@ final class HandleableI2b2RequestTest extends ShouldMatchersForJUnit {
   import HandleableI2b2Request.fromI2b2
   import scala.concurrent.duration._
 
-  private val authn = AuthenticationInfo("some-domain", "some-user", Credential("some-password", false))
+  private val authn = AuthenticationInfo("some-domain", "some-user", Credential("some-password", isToken = false))
   private val waitTime = 1.minute
   private val projectId = "some-project-id"
 
   @Test
-  def testFromI2b2ReadResultOutputTypesRequest: Unit = {
+  def testFromI2b2ReadResultOutputTypesRequest(): Unit = {
     val i2b2Xml = ReadResultOutputTypesRequestTest.i2b2Xml(CrcRequestType.GetResultOutputTypes)
 
     val req = fromI2b2(DefaultBreakdownResultOutputTypes.toSet)(i2b2Xml).get
@@ -31,7 +31,7 @@ final class HandleableI2b2RequestTest extends ShouldMatchersForJUnit {
   }
 
   @Test
-  def testFromI2b2: Unit = {
+  def testFromI2b2(): Unit = {
     def roundTrip(req: Req): Unit = {
       val xml = req.toI2b2
 
@@ -39,10 +39,9 @@ final class HandleableI2b2RequestTest extends ShouldMatchersForJUnit {
 
       (req, unmarshalled) match {
         //NB: Special handling for RunQueryRequest, which does not preserve networkQueryIds when serializing to i2b2 format
-        case (expected: RunQueryRequest, actual: RunQueryRequest) => {
+        case (expected: RunQueryRequest, actual: RunQueryRequest) =>
           //NB: When unmarshalling from i2b2 format, networkQueryId will always be -1; other fields should be fine
           actual should equal(expected.withNetworkQueryId(actual.networkQueryId))
-        }
         case _ => unmarshalled should equal(req)
       }
     }
@@ -61,8 +60,6 @@ final class HandleableI2b2RequestTest extends ShouldMatchersForJUnit {
     val networkQueryId = 12345L
     val userId = "some-user"
 
-    fromI2b2(DefaultBreakdownResultOutputTypes.toSet)(ReadPdoRequest(projectId, waitTime, authn, "patient-set-coll-id", <foo/>).toI2b2).isFailure should be(true)
-
     roundTrip(DeleteQueryRequest(projectId, waitTime, authn, networkQueryId))
     roundTrip(FlagQueryRequest(projectId, waitTime, authn, networkQueryId, None))
     roundTrip(FlagQueryRequest(projectId, waitTime, authn, networkQueryId, Some("some-message")))
@@ -71,12 +68,6 @@ final class HandleableI2b2RequestTest extends ShouldMatchersForJUnit {
     roundTrip(ReadApprovedQueryTopicsRequest(projectId, waitTime, authn, userId))
     roundTrip(ReadInstanceResultsRequest(projectId, waitTime, authn, networkQueryId))
 
-    //Make minimal PDO request (kind of finnicky due to embedded XML)
-    val patientSetCollId = "patient-set-coll-id"
-    val optionsXml = <request><pdoheader><request_type>{ CrcRequestType.GetPDOFromInputListRequestType.i2b2RequestType }</request_type></pdoheader><input_list><patient_list><patient_set_coll_id>{ patientSetCollId }</patient_set_coll_id></patient_list></input_list></request>
-    val pdoXml = ReadPdoRequest.updateCollId(optionsXml.head, patientSetCollId).toSeq
-
-    roundTrip(ReadPdoRequest(projectId, waitTime, authn, patientSetCollId, pdoXml))
     roundTrip(ReadPreviousQueriesRequest(projectId, waitTime, authn, userId, 123))
     roundTrip(ReadQueryDefinitionRequest(projectId, waitTime, authn, networkQueryId))
     roundTrip(ReadQueryInstancesRequest(projectId, waitTime, authn, networkQueryId))

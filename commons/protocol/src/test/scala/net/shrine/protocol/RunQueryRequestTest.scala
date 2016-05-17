@@ -27,7 +27,7 @@ final class RunQueryRequestTest extends ShrineRequestValidator {
   private val resultOutputTypes = {
     import ResultOutputType._
 
-    (Seq(PATIENTSET, PATIENT_COUNT_XML) ++ DefaultBreakdownResultOutputTypes.values).sortBy(_.name).zipWithIndex.map {
+    (Seq(PATIENT_COUNT_XML) ++ DefaultBreakdownResultOutputTypes.values).sortBy(_.name).zipWithIndex.map {
       case (rot, i) =>
         rot.withId(i + 1)
     }

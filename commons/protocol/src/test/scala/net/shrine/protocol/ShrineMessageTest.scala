@@ -1,10 +1,8 @@
 package net.shrine.protocol
 
-import net.shrine.serialization.XmlMarshaller
-import net.shrine.serialization.XmlUnmarshaller
+import net.shrine.problem.TestProblem
 import net.shrine.util.ShouldMatchersForJUnit
 import org.junit.Test
-import scala.util.Try
 import scala.xml.NodeSeq
 import net.shrine.protocol.query.QueryDefinition
 import net.shrine.protocol.query.Term
@@ -46,7 +44,7 @@ final class ShrineMessageTest extends ShouldMatchersForJUnit {
     val shrineNetworkQueryId = 1287698235L
     val start = Some(XmlDateHelper.now)
     val end = Some(XmlDateHelper.now)
-    val singleNodeResult1 = QueryResult.errorResult(Some("blarg"), "glarg")
+    val singleNodeResult1 = QueryResult.errorResult(Some("blarg"), "glarg",TestProblem)
     val singleNodeResult2 = QueryResult(
       42L,
       99L,
@@ -80,7 +78,6 @@ final class ShrineMessageTest extends ShouldMatchersForJUnit {
     doMarshallingRoundTrip(DeleteQueryRequest(projectId, waitTime, authn, queryId))
     doMarshallingRoundTrip(ReadApprovedQueryTopicsRequest(projectId, waitTime, authn, userId))
     doMarshallingRoundTrip(ReadInstanceResultsRequest(projectId, waitTime, authn, queryId))
-    doMarshallingRoundTrip(ReadPdoRequest(projectId, waitTime, authn, patientSetCollId, optionsXml))
     doMarshallingRoundTrip(ReadPreviousQueriesRequest(projectId, waitTime, authn, userId, fetchSize))
     doMarshallingRoundTrip(ReadQueryDefinitionRequest(projectId, waitTime, authn, queryId))
     doMarshallingRoundTrip(ReadQueryInstancesRequest(projectId, waitTime, authn, queryId))
@@ -114,24 +111,12 @@ final class ShrineMessageTest extends ShouldMatchersForJUnit {
     val unmarshalled = ShrineMessage.fromXml(DefaultBreakdownResultOutputTypes.toSet)(xml).get
 
     message match {
-      //NB: Special handling of ReadPdoRequest due to fiddly serialization and equality issues with its 
-      //NodeSeq field. :( :(
-      case readPdoRequest: ReadPdoRequest => {
-        val unmarshalledReadPdoRequest = unmarshalled.asInstanceOf[ReadPdoRequest]
-
-        readPdoRequest.projectId should equal(unmarshalledReadPdoRequest.projectId)
-        readPdoRequest.waitTime should equal(unmarshalledReadPdoRequest.waitTime)
-        readPdoRequest.authn should equal(unmarshalledReadPdoRequest.authn)
-        readPdoRequest.patientSetCollId should equal(unmarshalledReadPdoRequest.patientSetCollId)
-        //NB: Ugh :(
-        readPdoRequest.optionsXml.toString should equal(unmarshalledReadPdoRequest.optionsXml.toString)
-      }
-      //NB: Special handling of ReadInstanceResultsResponse because its member QueryRequests are munged 
+      //NB: Special handling of ReadInstanceResultsResponse because its member QueryRequests are munged
       //before serialization
       case readInstanceResultsResponse: ReadInstanceResultsResponse => {
         val unmarshalledResp = unmarshalled.asInstanceOf[ReadInstanceResultsResponse]
 
-        val expected = readInstanceResultsResponse.withQueryResult(readInstanceResultsResponse.singleNodeResult.copy(instanceId = readInstanceResultsResponse.shrineNetworkQueryId))
+        val expected = readInstanceResultsResponse.copy(singleNodeResult = readInstanceResultsResponse.singleNodeResult.copy(instanceId = readInstanceResultsResponse.shrineNetworkQueryId))
 
         unmarshalledResp should equal(expected)
       }
@@ -140,7 +125,7 @@ final class ShrineMessageTest extends ShouldMatchersForJUnit {
       case aggReadInstanceResultsResponse: AggregatedReadInstanceResultsResponse => {
         val unmarshalledResp = unmarshalled.asInstanceOf[AggregatedReadInstanceResultsResponse]
 
-        val expected = aggReadInstanceResultsResponse.withResults(aggReadInstanceResultsResponse.results.map(_.copy(instanceId = aggReadInstanceResultsResponse.shrineNetworkQueryId)))
+        val expected = aggReadInstanceResultsResponse.copy(results = aggReadInstanceResultsResponse.results.map(_.copy(instanceId = aggReadInstanceResultsResponse.shrineNetworkQueryId)))
 
         unmarshalledResp.results(0).problemDigest should equal(expected.results(0).problemDigest)
 

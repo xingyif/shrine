@@ -39,7 +39,7 @@ final case class ReadInstanceResultsRequest(
    * CRC from Shrine's datastore.
    * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    */
-  val shrineNetworkQueryId: Long) extends ShrineRequest(projectId, waitTime, authn) with CrcRequest with HandleableShrineRequest with HandleableI2b2Request {
+  shrineNetworkQueryId: Long) extends ShrineRequest(projectId, waitTime, authn) with CrcRequest with HandleableShrineRequest with HandleableI2b2Request {
 
   override val requestType = RequestType.InstanceRequest
 

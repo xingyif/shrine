@@ -45,17 +45,6 @@ final class ShrineRequestTest extends ShouldMatchersForJUnit {
       val unmarshalled = ShrineRequest.fromXml(DefaultBreakdownResultOutputTypes.toSet)(xml)
       
       req match {
-        //NB: Special handling of ReadPdoRequest due to fiddly serialization and equality issues with its NodeSeq field. :( :(
-        case readPdoRequest: ReadPdoRequest => {
-          val unmarshalledReadPdoRequest = unmarshalled.get.asInstanceOf[ReadPdoRequest]
-          
-          readPdoRequest.projectId should equal(unmarshalledReadPdoRequest.projectId)
-          readPdoRequest.waitTime should equal(unmarshalledReadPdoRequest.waitTime)
-          readPdoRequest.authn should equal(unmarshalledReadPdoRequest.authn)
-          readPdoRequest.patientSetCollId should equal(unmarshalledReadPdoRequest.patientSetCollId)
-          //NB: Ugh :(
-          readPdoRequest.optionsXml.toString should equal(unmarshalledReadPdoRequest.optionsXml.toString)
-        }
         case _ => unmarshalled.get should equal(req)
       }
     }
@@ -64,7 +53,6 @@ final class ShrineRequestTest extends ShouldMatchersForJUnit {
     doMarshallingRoundTrip(DeleteQueryRequest(projectId, waitTime, authn, queryId))
     doMarshallingRoundTrip(ReadApprovedQueryTopicsRequest(projectId, waitTime, authn, userId))
     doMarshallingRoundTrip(ReadInstanceResultsRequest(projectId, waitTime, authn, queryId))
-    doMarshallingRoundTrip(ReadPdoRequest(projectId, waitTime, authn, patientSetCollId, optionsXml))
     doMarshallingRoundTrip(ReadPreviousQueriesRequest(projectId, waitTime, authn, userId, fetchSize))
     doMarshallingRoundTrip(ReadQueryDefinitionRequest(projectId, waitTime, authn, queryId))
     doMarshallingRoundTrip(ReadQueryInstancesRequest(projectId, waitTime, authn, queryId))

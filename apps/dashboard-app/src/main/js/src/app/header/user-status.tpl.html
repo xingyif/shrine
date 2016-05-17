@@ -1,0 +1,21 @@
+<ul class="nav navbar-top-links navbar-right" ng-show="vm.isUserLoggedIn()"
+    style="margin-top: 8px"
+    ng-cloak>
+    <li>
+        <span style="color:#1a1a1a;
+                        text-transform: capitalize; margin-right: 10px" ng-cloak>
+                        Hello,
+                        {{vm.getUsername()}}</span>
+    </li>
+    <li class="dropdown">
+        <a class="dropdown-toggle" data-toggle="dropdown">
+            <i class="fa fa-user fa-fw"></i>  <i class="fa fa-caret-down"></i>
+        </a>
+        <ul class="dropdown-menu dropdown-user">
+            <li><a href="#" ng-click="vm.logout()" ng-cloak><i
+                    class="fa fa-sign-out fa-fw"></i> Logout</a>
+            </li>
+        </ul>
+    </li>
+</ul>
+

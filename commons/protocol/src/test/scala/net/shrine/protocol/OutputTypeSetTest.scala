@@ -20,7 +20,6 @@ final class OutputTypeSetTest extends ShouldMatchersForJUnit {
 
   private val possibleOutputTypeSets = Seq(ResultOutputType.values.toSet,
     Set(ResultOutputType.PATIENT_COUNT_XML),
-    Set(ResultOutputType.PATIENTSET),
     Set.empty[ResultOutputType])
 
   @Test
@@ -70,7 +69,7 @@ final class OutputTypeSetTest extends ShouldMatchersForJUnit {
 
     new OutputTypeSet(Set.empty[ResultOutputType]).serialized should equal("")
 
-    new OutputTypeSet(Set(PATIENT_COUNT_XML, PATIENTSET)).serialized should equal("PATIENT_COUNT_XML%2CPATIENTSET")
+    new OutputTypeSet(Set(PATIENT_COUNT_XML)).serialized should equal("PATIENT_COUNT_XML")
 
     ResultOutputType.values.foreach { outputType =>
       new OutputTypeSet(Set(outputType)).serialized should equal(outputType.name)
@@ -91,10 +90,10 @@ final class OutputTypeSetTest extends ShouldMatchersForJUnit {
       deserialize(outputType.name) should equal(Set(outputType))
     }
 
-    val someOutputTypes = Set(ResultOutputType.PATIENTSET, ResultOutputType.PATIENT_COUNT_XML)
+    val someOutputTypes = Set(ResultOutputType.PATIENT_COUNT_XML)
 
-    deserialize("PATIENT_COUNT_XML%2CPATIENTSET") should equal(someOutputTypes)
-    deserialize("PATIENTSET%2CPATIENT_COUNT_XML") should equal(someOutputTypes)
+    deserialize("PATIENT_COUNT_XML") should equal(someOutputTypes)
+    deserialize("PATIENT_COUNT_XML") should equal(someOutputTypes)
   }
   
   @Test

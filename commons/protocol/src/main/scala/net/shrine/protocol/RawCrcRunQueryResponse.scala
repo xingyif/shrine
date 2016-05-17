@@ -18,12 +18,6 @@ final case class RawCrcRunQueryResponse(
     override val queryInstanceId: Long,
     val singleNodeResults: Map[ResultOutputType, Seq[QueryResult]]) extends AbstractRunQueryResponse("rawCrcRunQueryResponse", queryId, createDate, userId, groupId, requestXml, queryInstanceId) {
 
-  override type ActualResponseType = RawCrcRunQueryResponse
-  
-  override def withId(id: Long) = this.copy(queryId = id)
-
-  override def withInstanceId(id: Long) = this.copy(queryInstanceId = id)
-  
   override def results = singleNodeResults.values.flatten.toSeq
   
   //NB: Will fail loudly if no PATIENT_COUNT_XML or ERROR QueryResults are present; PATIENT_COUNT_XML results take priority

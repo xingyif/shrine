@@ -1,14 +1,17 @@
 package net.shrine.crypto
 
-import java.io.File
-
 /**
  * @author clint
- * @date Nov 22, 2013
+ * @since Nov 22, 2013
  */
+
+//todo consolidate with KeyStoreParser, maybe combine the whole works into KeyStoreCertCollection's collection
 final case class KeyStoreDescriptor(
     file: String, 
     password: String, 
     privateKeyAlias: Option[String], 
     caCertAliases: Seq[String], 
-    keyStoreType: KeyStoreType = KeyStoreType.Default)
+    keyStoreType: KeyStoreType = KeyStoreType.Default){
+
+  override def toString = scala.runtime.ScalaRunTime._toString(this.copy(password = "REDACTED"))
+}

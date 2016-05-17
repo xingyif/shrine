@@ -1,28 +1,12 @@
 package net.shrine.integration
 
+import net.shrine.adapter.service.{AdapterRequestHandler, AdapterResource, JerseyTestComponent}
+import net.shrine.client.{JerseyHttpClient, Poster}
+import net.shrine.crypto.{DefaultSignerVerifier, TestKeystore, TrustParam}
+import net.shrine.protocol.{AuthenticationInfo, CertId, Credential, NodeId}
+import org.junit.{After, Before}
+
 import scala.concurrent.duration.DurationInt
-import net.shrine.adapter.client.RemoteAdapterClient
-import net.shrine.adapter.service.AdapterRequestHandler
-import net.shrine.adapter.service.AdapterResource
-import net.shrine.adapter.service.JerseyTestComponent
-import net.shrine.broadcaster.AdapterClientBroadcaster
-import net.shrine.broadcaster.InJvmBroadcasterClient
-import net.shrine.broadcaster.NodeHandle
-import net.shrine.client.JerseyHttpClient
-import net.shrine.client.Poster
-import net.shrine.crypto.DefaultSignerVerifier
-import net.shrine.crypto.TestKeystore
-import net.shrine.crypto.TrustParam
-import net.shrine.protocol.AuthenticationInfo
-import net.shrine.protocol.CertId
-import net.shrine.protocol.Credential
-import net.shrine.protocol.NodeId
-import net.shrine.protocol.ShrineRequestHandler
-import net.shrine.service.ShrineResource
-import net.shrine.service.ShrineService
-import org.junit.Before
-import org.junit.After
-import net.shrine.protocol.DefaultBreakdownResultOutputTypes
 
 
 /**
@@ -42,8 +26,6 @@ trait AbstractHubAndSpokesTest {
   }
   
   def posterFor(component: JerseyTestComponent[_]): Poster = Poster(component.resourceUrl, JerseyHttpClient(TrustParam.AcceptAllCerts, 30.minutes))
-  
-  import scala.concurrent.duration._
   
   val networkAuthn = AuthenticationInfo("d", "u", Credential("p", false))
   

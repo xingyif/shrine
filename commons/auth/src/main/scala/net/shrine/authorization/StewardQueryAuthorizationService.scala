@@ -5,6 +5,7 @@ import javax.net.ssl.{KeyManager, X509TrustManager, SSLContext}
 import java.security.cert.X509Certificate
 
 import akka.io.IO
+import com.typesafe.config.ConfigFactory
 import net.shrine.authorization.AuthorizationResult.{NotAuthorized, Authorized}
 import net.shrine.authorization.steward.{TopicIdAndName, ResearchersTopics, InboundShrineQuery}
 import net.shrine.log.Loggable
@@ -45,7 +46,7 @@ final case class StewardQueryAuthorizationService(qepUserName:String,
                                                   defaultTimeout:FiniteDuration = 10 seconds) extends QueryAuthorizationService with Loggable with Json4sSupport {
 
   import system.dispatcher // execution context for futures
-  implicit val system = ActorSystem()
+  implicit val system = ActorSystem("AuthorizationServiceActors",ConfigFactory.load("shrine")) //todo use shrine's config
 
   implicit val timeout:Timeout = Timeout.durationToTimeout(defaultTimeout)//10 seconds
 

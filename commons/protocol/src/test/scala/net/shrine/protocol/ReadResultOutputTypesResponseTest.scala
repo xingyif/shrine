@@ -6,7 +6,7 @@ import net.shrine.util.XmlUtil
 
 /**
  * @author clint
- * @date Oct 6, 2014
+ * @since Oct 6, 2014
  */
 final class ReadResultOutputTypesResponseTest extends ShouldMatchersForJUnit {
   @Test
@@ -18,41 +18,34 @@ final class ReadResultOutputTypesResponseTest extends ShouldMatchersForJUnit {
         </status>
         <query_result_type>
           <result_type_id>1</result_type_id>
-          <name>PATIENTSET</name>
-          <display_type>LIST</display_type>
-          <visual_attribute_type>LA</visual_attribute_type>
-          <description>Patient set</description>
-        </query_result_type>
-        <query_result_type>
-          <result_type_id>2</result_type_id>
           <name>PATIENT_COUNT_XML</name>
           <display_type>CATNUM</display_type>
           <visual_attribute_type>LA</visual_attribute_type>
           <description>Number of patients</description>
         </query_result_type>
         <query_result_type>
-          <result_type_id>3</result_type_id>
+          <result_type_id>2</result_type_id>
           <name>PATIENT_GENDER_COUNT_XML</name>
           <display_type>CATNUM</display_type>
           <visual_attribute_type>LA</visual_attribute_type>
           <description>Gender patient breakdown</description>
         </query_result_type>
         <query_result_type>
-          <result_type_id>4</result_type_id>
+          <result_type_id>3</result_type_id>
           <name>PATIENT_VITALSTATUS_COUNT_XML</name>
           <display_type>CATNUM</display_type>
           <visual_attribute_type>LA</visual_attribute_type>
           <description>Vital Status patient breakdown</description>
         </query_result_type>
         <query_result_type>
-          <result_type_id>5</result_type_id>
+          <result_type_id>4</result_type_id>
           <name>PATIENT_RACE_COUNT_XML</name>
           <display_type>CATNUM</display_type>
           <visual_attribute_type>LA</visual_attribute_type>
           <description>Race patient breakdown</description>
         </query_result_type>
         <query_result_type>
-          <result_type_id>6</result_type_id>
+          <result_type_id>5</result_type_id>
           <name>PATIENT_AGE_COUNT_XML</name>
           <display_type>CATNUM</display_type>
           <visual_attribute_type>LA</visual_attribute_type>
@@ -64,7 +57,7 @@ final class ReadResultOutputTypesResponseTest extends ShouldMatchersForJUnit {
     import ResultOutputType._
     import DefaultBreakdownResultOutputTypes._
 
-    val resp = ReadResultOutputTypesResponse(Seq(PATIENTSET, PATIENT_COUNT_XML, PATIENT_GENDER_COUNT_XML, PATIENT_VITALSTATUS_COUNT_XML, PATIENT_RACE_COUNT_XML, PATIENT_AGE_COUNT_XML))
+    val resp = ReadResultOutputTypesResponse(Seq(PATIENT_COUNT_XML, PATIENT_GENDER_COUNT_XML, PATIENT_VITALSTATUS_COUNT_XML, PATIENT_RACE_COUNT_XML, PATIENT_AGE_COUNT_XML))
 
     val messageBody = resp.i2b2MessageBody
 

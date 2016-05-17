@@ -1,0 +1,12 @@
+<span class="downstream-node">
+    <a href="#SubMenu{{dsnVM.nodeIndex}}" class="list-group-item strong"
+       data-toggle="collapse" data-parent="#SubMenu{{dsnVM.nodeIndex}}"
+       ng-click="dsnVM.addMenu = true">
+        {{dsnVM.nodeData.name}}
+        <i class="fa fa-caret-down"></i>
+    </a>
+    <span ng-if="dsnVM.addMenu">
+        <div node-menu id="SubMenu{{dsnVM.nodeIndex}}"
+             menu-id="SubMenu{{dsnVM.nodeIndex}}"class="collapse list-group-submenu" ></div>
+    </span>
+</span>

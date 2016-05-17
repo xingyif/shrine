@@ -10,7 +10,7 @@ import scala.xml.NodeSeq
 import net.shrine.adapter.dao.AdapterDao
 import net.shrine.adapter.service.AdapterRequestHandler
 import net.shrine.broadcaster.{IdAndUrl, AdapterClientBroadcaster}
-import net.shrine.service.dao.AuditDao
+import net.shrine.qep.dao.AuditDao
 import net.shrine.client.Poster
 import net.shrine.crypto.KeyStoreCertCollection
 import net.shrine.crypto.Signer

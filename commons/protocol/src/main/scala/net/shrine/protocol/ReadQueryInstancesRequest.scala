@@ -2,8 +2,6 @@ package net.shrine.protocol
 
 import xml.NodeSeq
 import net.shrine.util.XmlUtil
-import net.shrine.serialization.I2b2Unmarshaller
-import net.shrine.protocol.handlers.ReadQueryInstancesHandler
 import scala.util.Try
 import scala.concurrent.duration.Duration
 import net.shrine.util.NodeSeqEnrichments
@@ -11,21 +9,21 @@ import net.shrine.serialization.I2b2UnmarshallingHelpers
 
 /**
  * @author Bill Simons
- * @date 3/17/11
- * @link http://cbmi.med.harvard.edu
- * @link http://chip.org
+ * @since 3/17/11
+ * @see http://cbmi.med.harvard.edu
+ * @see http://chip.org
  *       <p/>
  *       NOTICE: This software comes with NO guarantees whatsoever and is
  *       licensed as Lgpl Open Source
- * @link http://www.gnu.org/licenses/lgpl.html
+ * @see http://www.gnu.org/licenses/lgpl.html
  *
  * NB: this is a case class to get a structural equality contract in hashCode and equals, mostly for testing
  */
 final case class ReadQueryInstancesRequest(
-  override val projectId: String,
-  override val waitTime: Duration,
-  override val authn: AuthenticationInfo,
-  val queryId: Long) extends ShrineRequest(projectId, waitTime, authn) with CrcRequest with HandleableShrineRequest with HandleableI2b2Request {
+                                            override val projectId: String,
+                                            override val waitTime: Duration,
+                                            override val authn: AuthenticationInfo,
+                                            networkQueryId: Long) extends ShrineRequest(projectId, waitTime, authn) with CrcRequest with HandleableShrineRequest with HandleableI2b2Request {
 
   override val requestType = RequestType.MasterRequest
 
@@ -36,7 +34,7 @@ final case class ReadQueryInstancesRequest(
   override def toXml = XmlUtil.stripWhitespace {
     <readQueryInstances>
       { headerFragment }
-      <queryId>{ queryId }</queryId>
+      <queryId>{ networkQueryId }</queryId>
     </readQueryInstances>
   }
 
@@ -44,16 +42,10 @@ final case class ReadQueryInstancesRequest(
     <message_body>
       { i2b2PsmHeader }
       <ns4:request xsi:type="ns4:master_requestType" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-        <query_master_id>{ queryId }</query_master_id>
+        <query_master_id>{ networkQueryId }</query_master_id>
       </ns4:request>
     </message_body>
   }
-
-  def withProject(proj: String) = this.copy(projectId = proj)
-
-  def withAuthn(ai: AuthenticationInfo) = this.copy(authn = ai)
-
-  def withId(id: Long): ReadQueryInstancesRequest = this.copy(queryId = id)
 }
 
 object ReadQueryInstancesRequest extends I2b2XmlUnmarshaller[ReadQueryInstancesRequest] with ShrineXmlUnmarshaller[ReadQueryInstancesRequest] with ShrineRequestUnmarshaller with I2b2UnmarshallingHelpers {

@@ -1,70 +1,34 @@
 package net.shrine.wiring
 
-import com.typesafe.config.ConfigFactory
-import net.shrine.adapter.Adapter
-import net.shrine.adapter.AdapterMap
-import net.shrine.adapter.DeleteQueryAdapter
-import net.shrine.adapter.FlagQueryAdapter
-import net.shrine.adapter.ReadInstanceResultsAdapter
-import net.shrine.adapter.ReadPreviousQueriesAdapter
-import net.shrine.adapter.ReadQueryDefinitionAdapter
-import net.shrine.adapter.ReadQueryResultAdapter
-import net.shrine.adapter.ReadTranslatedQueryDefinitionAdapter
-import net.shrine.adapter.RenameQueryAdapter
-import net.shrine.adapter.RunQueryAdapter
-import net.shrine.adapter.UnFlagQueryAdapter
-import net.shrine.adapter.dao.AdapterDao
-import net.shrine.adapter.dao.I2b2AdminDao
-import net.shrine.adapter.dao.squeryl.SquerylAdapterDao
-import net.shrine.adapter.dao.squeryl.SquerylI2b2AdminDao
+import javax.sql.DataSource
+
+import com.typesafe.config.{Config, ConfigFactory}
+import net.shrine.adapter.{Adapter, AdapterMap, DeleteQueryAdapter, FlagQueryAdapter, ReadInstanceResultsAdapter, ReadPreviousQueriesAdapter, ReadQueryDefinitionAdapter, ReadQueryResultAdapter, ReadTranslatedQueryDefinitionAdapter, RenameQueryAdapter, RunQueryAdapter, UnFlagQueryAdapter}
+import net.shrine.adapter.dao.{AdapterDao, I2b2AdminDao}
+import net.shrine.adapter.dao.squeryl.{SquerylAdapterDao, SquerylI2b2AdminDao}
 import net.shrine.adapter.dao.squeryl.tables.{Tables => AdapterTables}
-import net.shrine.adapter.service.AdapterRequestHandler
-import net.shrine.adapter.service.AdapterResource
-import net.shrine.adapter.service.AdapterService
-import net.shrine.adapter.service.I2b2AdminResource
-import net.shrine.adapter.service.I2b2AdminService
-import net.shrine.adapter.translators.ExpressionTranslator
-import net.shrine.adapter.translators.QueryDefinitionTranslator
+import net.shrine.adapter.service.{AdapterRequestHandler, AdapterResource, AdapterService, I2b2AdminResource, I2b2AdminService}
+import net.shrine.adapter.translators.{ExpressionTranslator, QueryDefinitionTranslator}
 import net.shrine.authentication.Authenticator
 import net.shrine.authorization.QueryAuthorizationService
-import net.shrine.broadcaster.AdapterClientBroadcaster
-import net.shrine.broadcaster.BroadcastAndAggregationService
-import net.shrine.broadcaster.BroadcasterClient
-import net.shrine.broadcaster.InJvmBroadcasterClient
-import net.shrine.broadcaster.NodeHandle
-import net.shrine.broadcaster.PosterBroadcasterClient
-import net.shrine.broadcaster.SigningBroadcastAndAggregationService
-import net.shrine.log.Loggable
-import net.shrine.service.dao.AuditDao
-import net.shrine.service.dao.squeryl.SquerylAuditDao
-import net.shrine.service.dao.squeryl.tables.{Tables => HubTables}
-import net.shrine.broadcaster.service.BroadcasterMultiplexerResource
-import net.shrine.broadcaster.service.BroadcasterMultiplexerService
-import net.shrine.client.{EndpointConfig, HttpClient, JerseyHttpClient, OntClient, Poster, PosterOntClient}
-import net.shrine.config.mappings.AdapterMappings
-import net.shrine.config.mappings.AdapterMappingsSource
-import net.shrine.config.mappings.ClasspathFormatDetectingAdapterMappingsSource
-import net.shrine.crypto.DefaultSignerVerifier
-import net.shrine.crypto.KeyStoreCertCollection
-import net.shrine.dao.squeryl.DataSourceSquerylInitializer
-import net.shrine.dao.squeryl.SquerylDbAdapterSelecter
-import net.shrine.ont.data.OntClientOntologyMetadata
-import net.shrine.protocol.NodeId
-import net.shrine.protocol.RequestType
-import net.shrine.protocol.ResultOutputType
-import net.shrine.happy.HappyShrineResource
-import net.shrine.happy.HappyShrineService
-import net.shrine.service.I2b2BroadcastResource
-import net.shrine.service.I2b2BroadcastService
-import net.shrine.service.ShrineResource
-import net.shrine.service.ShrineService
-import net.shrine.crypto.TrustParam
-import javax.sql.DataSource
-import org.squeryl.internals.DatabaseAdapter
-import net.shrine.dao.squeryl.SquerylInitializer
-import net.shrine.ont.data.OntologyMetadata
+import net.shrine.broadcaster.{AdapterClientBroadcaster, BroadcastAndAggregationService, BroadcasterClient, InJvmBroadcasterClient, NodeHandle, PosterBroadcasterClient, SigningBroadcastAndAggregationService}
 import net.shrine.broadcaster.dao.HubDao
 import net.shrine.broadcaster.dao.squeryl.SquerylHubDao
+import net.shrine.broadcaster.service.{BroadcasterMultiplexerResource, BroadcasterMultiplexerService}
+import net.shrine.client.{EndpointConfig, HttpClient, JerseyHttpClient, OntClient, Poster, PosterOntClient}
+import net.shrine.config.mappings.{AdapterMappings, AdapterMappingsSource, ClasspathFormatDetectingAdapterMappingsSource}
+import net.shrine.crypto.{DefaultSignerVerifier, KeyStoreCertCollection, TrustParam}
+import net.shrine.dao.squeryl.{DataSourceSquerylInitializer, SquerylDbAdapterSelecter, SquerylInitializer}
+import net.shrine.happy.{HappyShrineResource, HappyShrineService}
+import net.shrine.log.Loggable
+import net.shrine.ont.data.{OntClientOntologyMetadata, OntologyMetadata}
+import net.shrine.protocol.{NodeId, RequestType, ResultOutputType}
+import net.shrine.qep.{I2b2BroadcastResource, I2b2QepService, ShrineResource, QepService}
+import net.shrine.qep.dao.AuditDao
+import net.shrine.qep.dao.squeryl.SquerylAuditDao
+import net.shrine.qep.dao.squeryl.tables.{Tables => HubTables}
+import net.shrine.status.StatusJaxrs
+import org.squeryl.internals.DatabaseAdapter
 
 /**
  * @author clint
@@ -78,17 +42,18 @@ import net.shrine.broadcaster.dao.squeryl.SquerylHubDao
  *
  * among other links mentioning val overrides, early initializers, etc. -Clint
  */
-class ManuallyWiredShrineJaxrsResources(authStrategy: AuthStrategy = AuthStrategy.Default) extends ShrineJaxrsResources with Loggable {
-  import ManuallyWiredShrineJaxrsResources._
+//todo this is Shrine. Rename it when things are clean and calm.
+object ManuallyWiredShrineJaxrsResources extends ShrineJaxrsResources with Loggable {
   import NodeHandleSource.makeNodeHandles
 
   override def resources: Iterable[AnyRef] = {
-    Seq(happyResource) ++ shrineResource ++ i2b2BroadcastResource ++ adapterResource ++ i2b2AdminResource ++ broadcasterMultiplexerResource
+    Seq(happyResource,statusJaxrs) ++ shrineResource ++ i2b2BroadcastResource ++ adapterResource ++ i2b2AdminResource ++ broadcasterMultiplexerResource
   }
   
   //Load config from file on the classpath called "shrine.conf"
-  protected lazy val shrineConfig: ShrineConfig = ShrineConfig(ConfigFactory.load("shrine"))
-  
+  lazy val config: Config = ConfigFactory.load("shrine")
+  protected lazy val shrineConfig: ShrineConfig = ShrineConfig(config)
+
   protected lazy val nodeId: NodeId = NodeId(shrineConfig.humanReadableNodeName)
 
   //TODO: Don't assume keystore lives on the filesystem, could come from classpath, etc
@@ -206,9 +171,9 @@ class ManuallyWiredShrineJaxrsResources(authStrategy: AuthStrategy = AuthStrateg
         adapterMappings)
   })
 
-  private val localAdapterServiceOption: Option[AdapterRequestHandler] = shrineConfig.hubConfig.flatMap(hubConfig => makeAdapterServiceOption(hubConfig.shouldQuerySelf, adapterService))
+  private lazy val localAdapterServiceOption: Option[AdapterRequestHandler] = shrineConfig.hubConfig.flatMap(hubConfig => makeAdapterServiceOption(hubConfig.shouldQuerySelf, adapterService))
   
-  private val broadcastDestinations: Option[Set[NodeHandle]] = shrineConfig.hubConfig.map(hubConfig => makeNodeHandles(keystoreTrustParam, hubConfig.maxQueryWaitTime, hubConfig.downstreamNodes, nodeId, localAdapterServiceOption, breakdownTypes))
+  private lazy val broadcastDestinations: Option[Set[NodeHandle]] = shrineConfig.hubConfig.map(hubConfig => makeNodeHandles(keystoreTrustParam, hubConfig.maxQueryWaitTime, hubConfig.downstreamNodes, nodeId, localAdapterServiceOption, breakdownTypes))
   
   protected lazy val (shrineService, i2b2Service, auditDao) = queryEntryPointComponentsToTuple(shrineConfig.queryEntryPointConfig.map { queryEntryPointConfig =>
 
@@ -216,7 +181,7 @@ class ManuallyWiredShrineJaxrsResources(authStrategy: AuthStrategy = AuthStrateg
         if(queryEntryPointConfig.broadcasterIsLocal) {
           //If broadcaster is local, we need a hub config
           //TODO: Enforce this when unmarshalling configs
-          require(broadcastDestinations.isDefined, "Local broadcaster specified, but no downstream nodes defined")
+          require(broadcastDestinations.isDefined, s"The QEP's config implied a local hub (no broadcasterServiceEndpoint), but either no downstream nodes were configured, the hub was not configured, or the hub's configuration specified not to create it.")
           
           val broadcaster: AdapterClientBroadcaster = AdapterClientBroadcaster(broadcastDestinations.get, hubDao)
           
@@ -244,14 +209,14 @@ class ManuallyWiredShrineJaxrsResources(authStrategy: AuthStrategy = AuthStrateg
  
       val authorizationType = queryEntryPointConfig.authorizationType
 
-      val authenticator: Authenticator = authStrategy.determineAuthenticator(authenticationType, pmPoster)
+      val authenticator: Authenticator = AuthStrategy.determineAuthenticator(authenticationType, pmPoster)
       
-      val authorizationService: QueryAuthorizationService = authStrategy.determineQueryAuthorizationService(authorizationType, shrineConfig, authenticator)
+      val authorizationService: QueryAuthorizationService = AuthStrategy.determineQueryAuthorizationService(authorizationType, shrineConfig, authenticator)
 
       debug(s"authorizationService set to $authorizationService")
 
       QueryEntryPointComponents(
-        ShrineService(
+        QepService(
           commonName,
           auditDao,
           authenticator,
@@ -262,7 +227,7 @@ class ManuallyWiredShrineJaxrsResources(authStrategy: AuthStrategy = AuthStrateg
           breakdownTypes,
           queryEntryPointConfig.collectQepAudit
         ),
-        I2b2BroadcastService(
+        I2b2QepService(
           commonName,
           auditDao,
           authenticator,
@@ -323,6 +288,8 @@ class ManuallyWiredShrineJaxrsResources(authStrategy: AuthStrategy = AuthStrateg
 
   protected lazy val happyResource: HappyShrineResource = new HappyShrineResource(happyService)
 
+  protected lazy val statusJaxrs: StatusJaxrs = StatusJaxrs(config)
+
   protected lazy val shrineResource: Option[ShrineResource] = shrineService.map(ShrineResource(_))
 
   protected lazy val i2b2BroadcastResource: Option[I2b2BroadcastResource] = i2b2Service.map(new I2b2BroadcastResource(_, breakdownTypes))
@@ -332,9 +299,7 @@ class ManuallyWiredShrineJaxrsResources(authStrategy: AuthStrategy = AuthStrateg
   protected lazy val i2b2AdminResource: Option[I2b2AdminResource] = i2b2AdminService.map(I2b2AdminResource(_, breakdownTypes))
   
   protected lazy val broadcasterMultiplexerResource: Option[BroadcasterMultiplexerResource] = broadcasterMultiplexerService.map(BroadcasterMultiplexerResource(_))
-}
 
-object ManuallyWiredShrineJaxrsResources {
   def makeAdapterServiceOption(isQueryable: Boolean, adapterRequestHandler: Option[AdapterRequestHandler]): Option[AdapterRequestHandler] = {
     if (isQueryable) {
       require(adapterRequestHandler.isDefined, "Self-querying requested, but this node is not configured to be an adapter")
@@ -344,7 +309,7 @@ object ManuallyWiredShrineJaxrsResources {
   }
 
   def makeHttpClient(keystoreCertCollection: KeyStoreCertCollection, endpoint: EndpointConfig): HttpClient = {
-    import TrustParam.{ AcceptAllCerts, SomeKeyStore }
+    import TrustParam.{AcceptAllCerts, SomeKeyStore}
 
     val trustParam = if (endpoint.acceptAllCerts) AcceptAllCerts else SomeKeyStore(keystoreCertCollection)
 
@@ -353,7 +318,7 @@ object ManuallyWiredShrineJaxrsResources {
 
   private final case class AdapterComponents(adapterService: AdapterService, i2b2AdminService: I2b2AdminService, adapterDao: AdapterDao, adapterMappings: AdapterMappings)
 
-  private final case class QueryEntryPointComponents(shrineService: ShrineService, i2b2Service: I2b2BroadcastService, auditDao: AuditDao)
+  private final case class QueryEntryPointComponents(shrineService: QepService, i2b2Service: I2b2QepService, auditDao: AuditDao)
 
   private final case class HubComponents(broadcaster: AdapterClientBroadcaster)
 
@@ -364,7 +329,7 @@ object ManuallyWiredShrineJaxrsResources {
   }
   
   //TODO: TEST
-  private def queryEntryPointComponentsToTuple(option: Option[QueryEntryPointComponents]): (Option[ShrineService], Option[I2b2BroadcastService], Option[AuditDao]) = option match {
+  private def queryEntryPointComponentsToTuple(option: Option[QueryEntryPointComponents]): (Option[QepService], Option[I2b2QepService], Option[AuditDao]) = option match {
     case None => (None, None, None)
     case Some(QueryEntryPointComponents(a, b, c)) => (Option(a), Option(b), Option(c))
   }

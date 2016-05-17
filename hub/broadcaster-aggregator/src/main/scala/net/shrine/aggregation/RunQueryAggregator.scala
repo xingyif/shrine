@@ -4,8 +4,6 @@ import net.shrine.aggregation.BasicAggregator.Valid
 import net.shrine.protocol.AggregatedRunQueryResponse
 import net.shrine.protocol.QueryResult
 import net.shrine.protocol.ResultOutputType
-import net.shrine.protocol.ResultOutputType.PATIENTSET
-import net.shrine.protocol.ResultOutputType.PATIENT_COUNT_XML
 import net.shrine.protocol.RunQueryResponse
 import net.shrine.protocol.ShrineResponse
 import net.shrine.protocol.query.QueryDefinition
@@ -33,7 +31,7 @@ final class RunQueryAggregator(
 
   import RunQueryAggregator._
   
-  private[aggregation] final override def makeResponse(validResponses: Iterable[Valid[RunQueryResponse]], errorResponses: Iterable[QueryResult], invalidResponses: Iterable[QueryResult]): ShrineResponse = {
+  private[aggregation] override def makeResponse(validResponses: Iterable[Valid[RunQueryResponse]], errorResponses: Iterable[QueryResult], invalidResponses: Iterable[QueryResult]): ShrineResponse = {
 
     val results = validResponses.flatMap {
       case result @ Valid(origin, elapsed, response) =>
@@ -44,11 +42,9 @@ final class RunQueryAggregator(
 
     val counts = validResponses.map {
       case Valid(origin, elsapsed, response) =>
-        val setResultOption = response.results.find(_.resultTypeIs(PATIENTSET)).map(_.setSize)
-
         val countResultOption = response.results.find(_.resultTypeIs(PATIENT_COUNT_XML)).map(_.setSize)
 
-        (setResultOption orElse countResultOption).getOrElse(0L)
+        countResultOption.getOrElse(0L)
     }
 
     val now = XmlDateHelper.now

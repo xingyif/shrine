@@ -35,6 +35,8 @@ trait MockAdapterDao extends AdapterDao {
 
   override def findQueriesByUserAndDomain(domain: String, username: String, howMany: Int): Seq[ShrineQuery] = Nil
 
+  override def findQueriesByDomain(domain: String): Seq[ShrineQuery] = Nil
+
   override def findResultsFor(networkQueryId: Long): Option[ShrineQueryResult] = None
 
   override def isUserLockedOut(id: AuthenticationInfo, defaultThreshold: Int): Boolean = false

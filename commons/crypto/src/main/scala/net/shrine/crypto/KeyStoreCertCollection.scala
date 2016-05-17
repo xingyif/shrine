@@ -1,7 +1,6 @@
 package net.shrine.crypto
 
-import java.io.FileInputStream
-import java.io.InputStream
+import java.io.{IOException, FileInputStream, InputStream, File}
 import java.security.KeyStore
 import java.security.PrivateKey
 import java.security.cert.X509Certificate
@@ -10,7 +9,6 @@ import net.shrine.log.Loggable
 
 import scala.collection.JavaConverters.enumerationAsScalaIteratorConverter
 import net.shrine.protocol.CertId
-import java.io.File
 import java.security.Key
 import java.security.Principal
 
@@ -36,7 +34,7 @@ final case class KeyStoreCertCollection(keystore: KeyStore, descriptor: KeyStore
   override lazy val caCerts: Map[Principal, X509Certificate] = {
     caCertAliases.flatMap(getX509Cert).map(cert => CertCollection.getIssuer(cert) -> cert).toMap
   }
-  
+
   override lazy val myCert: Option[X509Certificate] = descriptor.privateKeyAlias.flatMap(getX509Cert)
   
   override lazy val myCertId: Option[CertId] = myCert.map(toCertId)
@@ -49,25 +47,22 @@ final case class KeyStoreCertCollection(keystore: KeyStore, descriptor: KeyStore
 
   override val myKeyPair: KeyPair = {
     val privateKeyAlias: String = descriptor.privateKeyAlias match {
-      case Some(alias) => {
+      case Some(alias) =>
         if(isPrivateKey(alias)) { alias }
-        else { throw new Exception(s"No key, or no private key component, at alias '$alias'") }
-      }
-      case _ => {
+        else throw new Exception(s"No key, or no private key component, at alias '$alias'")
+
+      case _ =>
         val privateKeyAliases = keystore.aliases.asScala.filter(isPrivateKey).toIndexedSeq
-        
+
         privateKeyAliases.size match {
-          case 1 => {
+          case 1 =>
             val alias = privateKeyAliases.head
-            
             info(s"Found one cert with a private key, with alias '$alias'")
-            
             alias
-          }
+
           case 0 => throw new Exception(s"No aliases point to certs with private keys.  Known aliases are: $privateKeyAliases")
           case n => throw new Exception(s"$n aliases point to certs with private keys: $privateKeyAliases; specify the private key to use with the privateKeyAlias option")
         }
-      }
     }
     
     val keyPairOption = for {
@@ -75,7 +70,7 @@ final case class KeyStoreCertCollection(keystore: KeyStore, descriptor: KeyStore
       privateKey <- getPrivateKey(privateKeyAlias)
     } yield KeyPair(cert.getPublicKey, privateKey)
     
-    require(keyPairOption.isDefined, "Private key alias must be defined, and indentify a cert with a private key component, or exactly one cert with a private key component must be present in the keystore")
+    require(keyPairOption.isDefined, "Private key alias must be defined, and identify a cert with a private key component, or exactly one cert with a private key component must be present in the keystore")
     
     keyPairOption.get
   }
@@ -134,9 +129,11 @@ object KeyStoreCertCollection extends Loggable {
     require(stream != null,s"null stream for descriptor ${toString(descriptor)}")
     
     val keystore = KeyStore.getInstance(descriptor.keyStoreType.name)
-    
-    keystore.load(stream, descriptor.password.toCharArray)
-    
+
+    try {
+      keystore.load(stream, descriptor.password.toCharArray)
+    } catch {case x:IOException => throw new IOException(s"Unable to load keystore from $descriptor",x)}
+
     import scala.collection.JavaConverters._
     
     debug(s"Keystore aliases: ${keystore.aliases.asScala.mkString(",")}")

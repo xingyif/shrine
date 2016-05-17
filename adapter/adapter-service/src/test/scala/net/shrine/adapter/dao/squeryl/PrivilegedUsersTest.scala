@@ -1,6 +1,6 @@
 package net.shrine.adapter.dao.squeryl
 
-import org.junit.{Ignore, Test}
+import org.junit.Test
 import net.shrine.util.ShouldMatchersForJUnit
 import org.squeryl.Query
 import javax.xml.datatype.XMLGregorianCalendar
@@ -26,7 +26,7 @@ final class PrivilegedUsersTest extends AbstractSquerylAdapterTest with ShouldMa
   private val testDomain = "testDomain"
   private val testUsername = "testUsername"
   private val testAuthn = AuthenticationInfo(testDomain, testUsername, Credential("asdalksdasd", isToken = false))
-  private val testThreshold = 3
+  private val testThreshold = Some(3)
   private val defaultThreshold = 10
 
   import SquerylEntryPoint._
@@ -133,13 +133,13 @@ final class PrivilegedUsersTest extends AbstractSquerylAdapterTest with ShouldMa
   }
   
   private def lockoutUser(lockedOutAuthn: AuthenticationInfo, resultSetSize: Int) {
-    for (i <- 1 until testThreshold + 2) {
+    for (i <- 1 until testThreshold.get + 2) {
       logCountQueryResult("masterId:" + i, i, lockedOutAuthn, resultSetSize)
     }
   }
 
   private def runQueriesDoNotLockoutUser(lockedOutAuthn: AuthenticationInfo, startResultSetSize: Int) {
-    for (i <- 1 until testThreshold + 2) {
+    for (i <- 1 until testThreshold.get + 2) {
       logCountQueryResult("masterId:" + i, i, lockedOutAuthn, startResultSetSize + i)
     }
   }
@@ -164,7 +164,7 @@ final class PrivilegedUsersTest extends AbstractSquerylAdapterTest with ShouldMa
     dao.findResultsFor(networkQueryId).get.count.data.get.originalValue should equal(resultSetSize)
   }
   
-  private def userThresholdQuery(authn: AuthenticationInfo): Query[Int] = {
+  private def userThresholdQuery(authn: AuthenticationInfo): Query[Option[Int]] = {
     from(tables.privilegedUsers) { user =>
       where(user.username === authn.username and user.domain === authn.domain).select(user.threshold)
     }

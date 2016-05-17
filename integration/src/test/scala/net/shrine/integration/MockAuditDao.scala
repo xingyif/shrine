@@ -1,8 +1,8 @@
 package net.shrine.integration
 
-import net.shrine.service.dao.AuditDao
+import net.shrine.qep.dao.AuditDao
 import java.util.Date
-import net.shrine.service.dao.model.AuditEntry
+import net.shrine.qep.dao.model.AuditEntry
 
 /**
  * @author clint

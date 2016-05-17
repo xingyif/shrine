@@ -303,9 +303,13 @@ i2b2.CRC.view.QT.ZoomView = function() {
 
 // ================================================================================================== //
 i2b2.CRC.view.QT.Resize = function(e) {
-    var ds = document.viewport.getDimensions();
-    var w = ds.width;
-    var h = ds.height;
+	//var ds = document.viewport.getDimensions();
+	//var w = ds.width;
+	//var h = ds.height
+    var w =  window.innerWidth || (window.document.documentElement.clientWidth || window.document.body.clientWidth);
+    var h =  window.innerHeight || (window.document.documentElement.clientHeight || window.document.body.clientHeight);
+	
+	
     if (w < 840) {w = 840;}
     if (h < 517) {h = 517;}
 
@@ -339,7 +343,9 @@ i2b2.CRC.view.QT.Resize = function(e) {
 //================================================================================================== //
 i2b2.CRC.view.QT.splitterDragged = function()
 {
-    var viewPortDim = document.viewport.getDimensions();
+	//var viewPortDim = document.viewport.getDimensions();
+	var w =  window.innerWidth || (window.document.documentElement.clientWidth || window.document.body.clientWidth);
+	
     var splitter = $( i2b2.hive.mySplitter.name );
     var CRCQT = $("crcQueryToolBox");
     var CRCQTBodyBox = $("crcQueryToolBox.bodyBox");
@@ -359,7 +365,7 @@ i2b2.CRC.view.QT.splitterDragged = function()
     var CRCQueryPanels 			= $("crcQryToolPanels");
     var CRCinnerQueryPanel		= $("crc.innerQueryPanel");
     var CRCtemoralBuilder		= $("crc.temoralBuilder");
-    var basicWidth					= parseInt(viewPortDim.width) - parseInt(splitter.style.left) - parseInt(splitter.offsetWidth);
+    var basicWidth					= parseInt(w) - parseInt(splitter.style.left) - parseInt(splitter.offsetWidth);
 
     /* Title, buttons, and panels */
     CRCQT.style.left				= parseInt(splitter.offsetWidth) + parseInt(splitter.style.left) + 3 + "px";
@@ -461,8 +467,11 @@ i2b2.CRC.view.QT.splitterDragged = function()
 
 //================================================================================================== //
 i2b2.CRC.view.QT.ResizeHeight = function() {
-    var ds = document.viewport.getDimensions();
-    var h = ds.height;
+	//var ds = document.viewport.getDimensions();
+	//var h = ds.height;
+	//var h = window.document.documentElement.clientHeight;
+	var h = window.innerHeight || (window.document.documentElement.clientHeight || window.document.body.clientHeight);
+	
     if (h < 517) {h = 517;}
     // resize our visual components
     if (i2b2.WORK && i2b2.WORK.isLoaded) {
@@ -486,6 +495,32 @@ i2b2.CRC.view.QT.ResizeHeight = function() {
     $('temporalbuilders').style.height = z + 50;
 
 }
+
+i2b2.CRC.view.QT.deleteLastTemporalGroup = function() {
+	
+	if(i2b2.CRC.model.queryCurrent.panels.length > 3){
+		var currentPanels = i2b2.CRC.model.queryCurrent.panels.length - 1;
+		i2b2.CRC.model.queryCurrent.panels.pop();
+		defineTemporalButton.getMenu().removeItem(defineTemporalButton.getMenu().getItems().length-1);
+		
+		for( var i = 0; i < i2b2.CRC.ctrlr.QT.tenporalBuilders + 1; i++){
+			var select = document.getElementById("instancevent1["+i+"]");
+			select.remove(select.length - 1);
+		
+			select = document.getElementById("instancevent2["+i+"]");
+			select.remove(select.length - 1);
+		}
+		
+		alert('Event ' + currentPanels + ' has been removed.');
+		//i2b2.CRC.ctrlr.QT.temporalGroup = i2b2.CRC.model.queryCurrent.panels.length;
+		
+		defineTemporalButton.getMenu().getItem(0).element.click()
+	
+	} else {
+		alert('You must leave a minimum of two events.');
+		
+	}
+};
 
 // This is done once the entire cell has been loaded
 console.info("SUBSCRIBED TO i2b2.events.afterCellInit");
@@ -912,6 +947,10 @@ i2b2.events.afterCellInit.subscribe(
 
             });
 
+			var removeDefineGroup = new YAHOO.widget.Button("removeDefineGroup"); 
+				removeDefineGroup.on("click", function (event) {
+					i2b2.CRC.view.QT.deleteLastTemporalGroup();
+						});
 
             queryTimingButton.on("mousedown", function (event) {
                 //i2b2.CRC.ctrlr.QT.panelControllers[0].doTiming(p_oItem.value);

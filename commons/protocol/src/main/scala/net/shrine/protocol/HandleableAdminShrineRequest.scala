@@ -3,11 +3,10 @@ package net.shrine.protocol
 import CrcRequestType._
 import scala.xml.NodeSeq
 import scala.util.Try
-import net.shrine.util.NodeSeqEnrichments
 
 /**
  * @author clint
- * @date Apr 17, 2013
+ * @since Apr 17, 2013
  */
 trait HandleableAdminShrineRequest {self: ShrineRequest =>
   def handleAdmin(handler: I2b2AdminRequestHandler, shouldBroadcast: Boolean): ShrineResponse
@@ -41,13 +40,4 @@ object HandleableAdminShrineRequest extends AbstractI2b2UnmarshallerCompanion[Sh
   
   protected def isRunHeldQueryRequest(requestXml: NodeSeq): Boolean = hasMessageBodySubElement(requestXml, "runHeldQuery")
 
-  private def parsePdoRequest(breakdownTypes: Set[ResultOutputType])(requestXml: NodeSeq): Try[ReadPdoRequest] = {
-    import NodeSeqEnrichments.Strictness._
-    
-    for {
-      requestTypeText <- (requestXml withChild "message_body" withChild "pdoheader" withChild "request_type").map(_.text)
-      if requestTypeText == GetPDOFromInputListRequestType.i2b2RequestType 
-      req <- ReadPdoRequest.fromI2b2(breakdownTypes)(requestXml)
-    } yield req
-  }
 }

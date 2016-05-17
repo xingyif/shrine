@@ -1,0 +1,54 @@
+<div class="navbar-default sidebar" role="navigation" ng-show="vm.options">
+    <div>
+        <div class="list-group panel" style="    max-height: 600px; overflow: auto;">
+
+            <span ui-sref-active="shrine-on">
+                <a href="#shrine-diagnostic1"
+                   class="list-group-item shrine-off"
+                   ui-sref="diagnostic.summary" data-toggle="collapse" >Summary</a>
+            </span>
+            <span ui-sref-active="shrine-on">
+                <a href="#shrine-diagnostic2" class="list-group-item shrine-off"
+                   ui-sref="diagnostic.i2b2-connections" data-toggle="collapse">I2B2
+                    Connections</a>
+            </span>
+            <span ui-sref-active="shrine-on">
+                <a href="#shrine-diagnostic3" class="list-group-item shrine-off"
+                   ui-sref="diagnostic.keystore" data-toggle="collapse">Keystore</a>
+            </span>
+            <span ui-sref-active="shrine-on" ng-if="vm.options.isHub">
+                <a href="#shrine-diagnostic4" class="list-group-item shrine-off"
+                   ui-sref="diagnostic.hub" data-toggle="collapse">Hub</a>
+            </span>
+            <span ui-sref-active="shrine-on">
+                <a href="#shrine-diagnostic5" class="list-group-item shrine-off"
+                   ui-sref="diagnostic.adapter" data-toggle="collapse">Adapter</a>
+            </span>
+            <span ui-sref-active="shrine-on">
+                <a href="#shrine-diagnostic6" class="list-group-item shrine-off"
+                   ui-sref="diagnostic.qep" data-toggle="collapse">QEP</a>
+            </span>
+            <span ui-sref-active="shrine-on">
+                <a href="#shrine-diagnostic7" class="list-group-item shrine-off"
+                   ui-sref="diagnostic.config" data-toggle="collapse">Config File</a>
+            </span>
+            <!-- if hub and there are downstream nodes -->
+            <!--span ui-sref-active="shrine-on">
+                <span ui-sref="diagnostic.downstream-nodes">
+                     <a href="#shrine-diagnostic8" class="list-group-item shrine-off"
+                        data-toggle="collapse">Downstream Nodes<i class="fa fa-caret-down"></i></a>
+                </span>
+            </span>
+            <div class="collapse" id="shrine-diagnostic8">
+                <span ng-repeat="node in sbVM.options.downstreamNodes">
+                    <downstream-node node-index="{{$index}}" node-data="node">
+                    </downstream-node>
+                </span>
+            </div-->
+        </div>
+    </div>
+</div>
+
+
+
+

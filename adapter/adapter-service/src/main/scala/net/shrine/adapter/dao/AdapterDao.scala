@@ -37,7 +37,9 @@ trait AdapterDao {
   def insertErrorResult(parentResultId: Int, errorMessage: String, codec:String, stampText:String, summary:String, digestDescription:String,detailsXml:NodeSeq): Unit
   
   def findQueriesByUserAndDomain(domain: String, username: String, howMany: Int): Seq[ShrineQuery]
-  
+
+  def findQueriesByDomain(domain:String):Seq[ShrineQuery]
+
   def findQueryByNetworkId(networkQueryId: Long): Option[ShrineQuery]
   
   def findResultsFor(networkQueryId: Long): Option[ShrineQueryResult]

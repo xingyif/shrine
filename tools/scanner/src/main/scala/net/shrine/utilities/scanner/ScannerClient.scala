@@ -33,7 +33,7 @@ trait ScannerClient {
     
     authenticationResult match {
       case a: Authenticated => f(a)
-      case NotAuthenticated(_, _, reason) => throw new NotAuthenticatedException(s"User ${authn.domain}:${authn.username} could not be authenticated: $reason")
+      case na:NotAuthenticated => throw NotAuthenticatedException(na)
     }
   }
 }

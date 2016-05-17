@@ -1,5 +1,7 @@
 package net.shrine.adapter
 
+import java.sql.SQLException
+
 import net.shrine.log.Loggable
 import net.shrine.problem.{Problem, ProblemNotYetEncoded, LoggingProblemHandler, ProblemSources, AbstractProblem}
 import net.shrine.protocol.{ShrineRequest, BroadcastMessage, ErrorResponse, BaseShrineResponse, AuthenticationInfo}
@@ -30,6 +32,8 @@ abstract class Adapter extends Loggable {
       case e @ CrcInvocationException(invokedCrcUrl, request, cause) => problemToErrorResponse(CrcCouldNotBeInvoked(invokedCrcUrl,request,e))
 
       case e: AdapterMappingException => problemToErrorResponse(AdapterMappingProblem(e))
+
+      case e: SQLException => problemToErrorResponse(AdapterDatabaseProblem(e))
 
       //noinspection RedundantBlock
       case e: Exception => {
@@ -74,4 +78,11 @@ case class AdapterMappingProblem(x:AdapterMappingException) extends AbstractProb
                               RunQueryRequest is ${x.runQueryRequest.elideAuthenticationInfo}
                               {throwableDetail.getOrElse("")}
                             </details>
+}
+
+case class AdapterDatabaseProblem(x:SQLException) extends AbstractProblem(ProblemSources.Adapter) {
+
+  override val throwable = Some(x)
+  override val summary: String = "Problem using the Adapter database."
+  override val description = "The Shrine Adapter encountered a problem using a database."
 }

@@ -1,0 +1,30 @@
+<div>
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            <td colspan="2">
+                Downstream Nodes
+            </td>
+        </tr>
+        <tr>
+            <td>
+                Site
+            </td>
+            <td>
+                URL
+            </td>
+        </tr>
+        </thead>
+
+        <tbody>
+            <tr ng-repeat="node in vm.downstreamNodes track by $index">
+                <td>
+                    {{node.name}}
+                </td>
+                <td>
+                    {{node.url}}
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>

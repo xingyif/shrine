@@ -6,7 +6,7 @@ import org.junit.Test
 import net.shrine.client.{EndpointConfig, Poster}
 import net.shrine.authentication.{AuthenticationType, PmAuthenticator, Authenticator}
 import net.shrine.hms.authentication.EcommonsPmAuthenticator
-import net.shrine.service.{QepConfig, AllowsAllAuthenticator}
+import net.shrine.qep.{QepConfig, AllowsAllAuthenticator}
 import net.shrine.authorization.{AuthorizationType, AllowsAllAuthorizationService}
 import net.shrine.hms.authorization.HmsDataStewardAuthorizationService
 import java.net.URL
@@ -21,44 +21,42 @@ final class AuthStrategyTest extends ShouldMatchersForJUnit {
   private[this] val pmPoster = Poster("http://example.com", null)
   
   @Test
-  def testDefaultDetermineAuthenticator: Unit = {
-    import AuthStrategy.Default
+  def testDefaultDetermineAuthenticator(): Unit = {
     import AuthenticationType._
     
     intercept[Exception] {
-      Default.determineAuthenticator(null, pmPoster)
+      AuthStrategy.determineAuthenticator(null, pmPoster)
     }
     
     {
-      val authenticator = Default.determineAuthenticator(Pm, pmPoster).asInstanceOf[PmAuthenticator]
+      val authenticator = AuthStrategy.determineAuthenticator(Pm, pmPoster).asInstanceOf[PmAuthenticator]
       
       authenticator.pmPoster should be(pmPoster)
     }
     
     {
-      val authenticator = Default.determineAuthenticator(Ecommons, pmPoster).asInstanceOf[EcommonsPmAuthenticator]
+      val authenticator = AuthStrategy.determineAuthenticator(Ecommons, pmPoster).asInstanceOf[EcommonsPmAuthenticator]
       
       authenticator.pmPoster should be(pmPoster)
     }
     
     {
-      val authenticator = Default.determineAuthenticator(NoAuthentication, pmPoster)
+      val authenticator = AuthStrategy.determineAuthenticator(NoAuthentication, pmPoster)
       
       authenticator should be(AllowsAllAuthenticator)
     }
   }
   
   @Test
-  def testDefaultDetermineAuthorizationService: Unit = {
-    import AuthStrategy.Default
+  def testDefaultDetermineAuthorizationService(): Unit = {
     import AuthorizationType._
     
     intercept[Exception] {
-      Default.determineQueryAuthorizationService(null, null, null)
+      AuthStrategy.determineQueryAuthorizationService(null, null, null)
     }
     
     {
-      val authService = Default.determineQueryAuthorizationService(NoAuthorization, null, null)
+      val authService = AuthStrategy.determineQueryAuthorizationService(NoAuthorization, null, null)
       
       authService should be(AllowsAllAuthorizationService)
     }
@@ -78,14 +76,14 @@ final class AuthStrategyTest extends ShouldMatchersForJUnit {
                           Some(QepConfig(
                                 authenticationType,
                                 authorizationType,
-                                Some(EndpointConfig(new URL(sheriffUrl), false, 42.minutes)),
+                                Some(EndpointConfig(new URL(sheriffUrl), acceptAllCerts = false, 42.minutes)),
                                 Some(sheriffCredentials),
                                 None,
-                                false,
+                                includeAggregateResults = false,
                                 1.minute,
                                 None,
                                 SigningCertStrategy.Attach,
-                                false)),
+                                collectQepAudit = false)),
                           null, //hiveCredentials
                           null, //more hiveCredentials
                           null, //pmEndpoint
@@ -99,9 +97,10 @@ final class AuthStrategyTest extends ShouldMatchersForJUnit {
       
       val authenticator: Authenticator = AllowsAllAuthenticator
       
-      val authService = Default.determineQueryAuthorizationService(HmsSteward, shrineConfig, authenticator).asInstanceOf[HmsDataStewardAuthorizationService]
+      val authService = AuthStrategy.determineQueryAuthorizationService(HmsSteward, shrineConfig, authenticator).asInstanceOf[HmsDataStewardAuthorizationService]
       
       authService.authenticator should be(authenticator)
+      //noinspection ScalaUnnecessaryParentheses
       authService.sheriffClient should not be(null)
       
       val jerseySheriffClient = authService.sheriffClient.asInstanceOf[JerseySheriffClient]

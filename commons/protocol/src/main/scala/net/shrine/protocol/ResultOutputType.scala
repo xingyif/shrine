@@ -1,6 +1,5 @@
 package net.shrine.protocol
 
-import net.shrine.util.SEnum
 import scala.xml.NodeSeq
 import net.shrine.util.XmlUtil
 import ResultOutputType.I2b2Options
@@ -15,13 +14,13 @@ import net.shrine.util.OptionEnrichments
 /**
  * @author Bill Simons
  * @author clint
- * @date 8/30/11
- * @link http://cbmi.med.harvard.edu
- * @link http://chip.org
+ * @since 8/30/11
+ * @see http://cbmi.med.harvard.edu
+ * @see http://chip.org
  * <p/>
  * NOTICE: This software comes with NO guarantees whatsoever and is
  * licensed as Lgpl Open Source
- * @link http://www.gnu.org/licenses/lgpl.html
+ * @see http://www.gnu.org/licenses/lgpl.html
  */
 final case class ResultOutputType(
   name: String,
@@ -85,14 +84,13 @@ object ResultOutputType extends I2b2Unmarshaller[Try[ResultOutputType]] with Xml
 
   //NB: There is apparently another Patient Set output type with the description "Patient set"; 
   //I chose this version arbitrarily -Clint Oct 6, 2014
-  val PATIENTSET = ResultOutputType("PATIENTSET", false, I2b2Options("Patient set", "LIST"), Some(1))
+//todo delete  val PATIENTSET = ResultOutputType("PATIENTSET", isBreakdown = false, I2b2Options("Patient set", "LIST"), Some(1))
 
-  val PATIENT_COUNT_XML = ResultOutputType("PATIENT_COUNT_XML", false, I2b2Options("Number of patients"), Some(4))
+  val PATIENT_COUNT_XML = ResultOutputType("PATIENT_COUNT_XML", isBreakdown = false, I2b2Options("Number of patients"), Some(4))
 
-  val ERROR = ResultOutputType("ERROR", false, I2b2Options("Error"), None)
+  val ERROR = ResultOutputType("ERROR", isBreakdown = false, I2b2Options("Error"), None)
 
   lazy val values: Seq[ResultOutputType] = Seq(
-    PATIENTSET,
     PATIENT_COUNT_XML,
     ERROR)
 
@@ -106,7 +104,7 @@ object ResultOutputType extends I2b2Unmarshaller[Try[ResultOutputType]] with Xml
 
   def valueOf(knownTypes: Set[ResultOutputType])(name: String): Option[ResultOutputType] = tryValueOf(knownTypes)(name).toOption
 
-  implicit final object ResultOutputTypeOrdering extends Ordering[ResultOutputType] {
+  implicit object ResultOutputTypeOrdering extends Ordering[ResultOutputType] {
     override def compare(x: ResultOutputType, y: ResultOutputType): Int = x.name.compareTo(y.name)
   }
 
@@ -124,9 +122,9 @@ object ResultOutputType extends I2b2Unmarshaller[Try[ResultOutputType]] with Xml
     }
   }
   
-  override def fromI2b2(xml: NodeSeq): Try[ResultOutputType] = unmarshalXml(xml)("name", "display_type", "description", "result_type_id")
+  def fromI2b2(xml: NodeSeq): Try[ResultOutputType] = unmarshalXml(xml)("name", "display_type", "description", "result_type_id")
   
-  override def fromXml(xml: NodeSeq): Try[ResultOutputType] = unmarshalXml(xml)("name", "displayType", "description", "id")
+  def fromXml(xml: NodeSeq): Try[ResultOutputType] = unmarshalXml(xml)("name", "displayType", "description", "id")
   
   private def unmarshalXml(xml: NodeSeq)(nameTag: String, displayTypeTag: String, descriptionTag: String, idTag: String): Try[ResultOutputType] = {
     import NodeSeqEnrichments.Strictness._

@@ -1,14 +1,11 @@
 package net.shrine.protocol
 
-import net.shrine.serialization.I2b2Unmarshaller
 import scala.xml.NodeSeq
-import CrcRequestType._
 import scala.util.Try
-import net.shrine.util.NodeSeqEnrichments
 
 /**
  * @author clint
- * @date Feb 19, 2014
+ * @since Feb 19, 2014
  */
 abstract class AbstractShrineRequestI2b2UnmarshallerCompanion[Req <: ShrineRequest](i2b2CrcRequestUnmarshallers: Map[CrcRequestType, I2b2XmlUnmarshaller[Req]]) extends AbstractI2b2UnmarshallerCompanion[Req](i2b2CrcRequestUnmarshallers) {
 
@@ -29,8 +26,6 @@ abstract class AbstractShrineRequestI2b2UnmarshallerCompanion[Req <: ShrineReque
     { case i2b2Request if isReadResultOutputTypesRequest(i2b2Request) => breakdownTypes => ReadResultOutputTypesRequest.fromI2b2(breakdownTypes)(i2b2Request).asInstanceOf[Try[Req]] },
     { case i2b2Request if isPsmRequest(i2b2Request) => breakdownTypes => parsePsmRequest(breakdownTypes, i2b2Request) },
     //NB: Cast is needed, "safe", but not nice
-    { case i2b2Request if isPdoRequest(i2b2Request) => breakdownTypes => parsePdoRequest(breakdownTypes, i2b2Request).asInstanceOf[Try[Req]] },
-    //NB: Cast is needed, "safe", but not nice
     { case i2b2Request if isSheriffRequest(i2b2Request) => breakdownTypes => parseSheriffRequest(breakdownTypes, i2b2Request).asInstanceOf[Try[Req]] },
     //NB: Cast is needed, "safe", but not nice
     { case i2b2Request if isFlagRequest(i2b2Request) => breakdownTypes => FlagQueryRequest.fromI2b2(breakdownTypes)(i2b2Request).asInstanceOf[Try[Req]] },
@@ -48,16 +43,6 @@ abstract class AbstractShrineRequestI2b2UnmarshallerCompanion[Req <: ShrineReque
   protected def isUnFlagRequest(requestXml: NodeSeq): Boolean = hasRequestSubElement(requestXml, UnFlagQueryRequest.rootTagName)
 
   private def hasRequestSubElement(requestXml: NodeSeq, tagName: String): Boolean = (requestXml \ "message_body" \ "request" \ tagName).nonEmpty
-
-  private def parsePdoRequest(breakdownTypes: Set[ResultOutputType], requestXml: NodeSeq): Try[ReadPdoRequest] = {
-    import NodeSeqEnrichments.Strictness._
-
-    for {
-      requestTypeText <- (requestXml withChild "message_body" withChild "pdoheader" withChild "request_type").map(_.text)
-      if requestTypeText == GetPDOFromInputListRequestType.i2b2RequestType
-      req <- ReadPdoRequest.fromI2b2(breakdownTypes)(requestXml)
-    } yield req
-  }
 
   private def parseSheriffRequest(breakdownTypes: Set[ResultOutputType], xml: NodeSeq) = ReadApprovedQueryTopicsRequest.fromI2b2(breakdownTypes)(xml)
 

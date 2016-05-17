@@ -1,7 +1,8 @@
 package net.shrine.protocol
 
 import javax.xml.datatype.XMLGregorianCalendar
-import net.shrine.problem.{ProblemNotYetEncoded, Problem, ProblemDigest}
+import net.shrine.log.Loggable
+import net.shrine.problem.{ProblemSources, AbstractProblem, Problem, ProblemDigest}
 import net.shrine.protocol.QueryResult.StatusType
 
 import scala.xml.NodeSeq
@@ -21,7 +22,7 @@ import scala.util.Try
  *
  * NB: this is a case class to get a structural equality contract in hashCode and equals, mostly for testing
  */
-final case class QueryResult(
+final case class QueryResult (
   resultId: Long,
   instanceId: Long,
   resultType: Option[ResultOutputType],
@@ -33,7 +34,7 @@ final case class QueryResult(
   statusMessage: Option[String],
   problemDigest: Option[ProblemDigest] = None,
   breakdowns: Map[ResultOutputType,I2b2ResultEnvelope] = Map.empty
-) extends XmlMarshaller with I2b2Marshaller {
+) extends XmlMarshaller with I2b2Marshaller with Loggable {
 
   //only used in tests
   def this(
@@ -111,13 +112,11 @@ final case class QueryResult(
         <query_instance_id>{ instanceId }</query_instance_id>
         { description.toXml(<description/>) }
         {
-          resultType match {
-            case Some(rt) if !rt.isError => //noinspection RedundantBlock
-            {
-              if (rt.isBreakdown) { rt.toI2b2NameOnly() }
-              else { rt.toI2b2 }
-            }
-            case _ => ResultOutputType.ERROR.toI2b2NameOnly("")
+          resultType.fold( ResultOutputType.ERROR.toI2b2NameOnly("") ){ rt =>
+            if(rt.isBreakdown) rt.toI2b2NameOnly()
+            else if (rt.isError) rt.toI2b2NameOnly()  //The result type can be an error
+            else if (statusType.isError) rt.toI2b2NameOnly() //Or the status type can be an error
+            else rt.toI2b2
           }
         }
         <set_size>{ setSize }</set_size>
@@ -199,23 +198,16 @@ object QueryResult {
     val noMessage:NodeSeq = null
     val Error = StatusType("ERROR", isDone = true, None, { queryResult =>
       (queryResult.statusMessage, queryResult.problemDigest) match {
-        case (Some(msg),Some(pd)) => <description>{ msg }</description> ++ pd.toXml
+        case (Some(msg),Some(pd)) => <description>{ if(msg != "ERROR") msg else pd.summary }</description> ++ pd.toXml
         case (Some(msg),None) => <description>{ msg }</description>
-        case (None,Some(pd)) => pd.toXml
+        case (None,Some(pd)) => <description>{ pd.summary }</description> ++ pd.toXml
         case (None, None) => noMessage
       }
     })
-    /*
-      msg =>
-        <codec>net.shrine.something.is.Broken</codec>
-          <summary>Something is borked</summary>
-          <description>{ msg }</description>
-          <details>Herein is a stack trace, multiple lines</details>
-    ))
-    */
+
     val Finished = StatusType("FINISHED", isDone = true, Some(3))
     //TODO: Can we use the same <status_type_id> for Queued, Processing, and Incomplete?
-    val Processing = StatusType("PROCESSING", isDone = false, Some(2))
+    val Processing = StatusType("PROCESSING", isDone = false, Some(2))  //todo only used in tests
     val Queued = StatusType("QUEUED", isDone = false, Some(2))
     val Incomplete = StatusType("INCOMPLETE", isDone = false, Some(2))
     //TODO: What <status_type_id>s should these have?  Does anyone care?
@@ -300,17 +292,47 @@ object QueryResult {
 
     def asXmlGcOption(path: String): Option[XMLGregorianCalendar] = asTextOption(path).filter(!_.isEmpty).flatMap(parseDate)
 
+    val statusType = StatusType.valueOf(asText("query_status_type", "name")(xml)).get //TODO: Avoid fragile .get call
+    val statusMessage: Option[String] = asTextOption("query_status_type", "description")
+    val encodedProblemDigest = extractProblemDigest(xml \ "query_status_type")
+    val problemDigest = if (encodedProblemDigest.isDefined) encodedProblemDigest
+                        else if (statusType.isError) Some(ErrorStatusFromCrc(statusMessage,xml.text).toDigest)
+                        else None
+
+    case class Filling(
+                        resultType:Option[ResultOutputType],
+                        setSize:Long,
+                        startDate:Option[XMLGregorianCalendar],
+                        endDate:Option[XMLGregorianCalendar]
+                      )
+
+    val filling = if(!statusType.isError) {
+      val resultType: Option[ResultOutputType] = extractResultOutputType(xml \ "query_result_type")(ResultOutputType.fromI2b2)
+      val setSize = asLong("set_size")
+      val startDate = asXmlGcOption("start_date")
+      val endDate = asXmlGcOption("end_date")
+      Filling(resultType,setSize,startDate,endDate)
+    }
+    else {
+      val resultType = None
+      val setSize = 0L
+      val startDate = None
+      val endDate = None
+      Filling(resultType,setSize,startDate,endDate)
+    }
+
     QueryResult(
       resultId = asLong("result_instance_id"),
       instanceId = asLong("query_instance_id"),
-      resultType = extractResultOutputType(xml \ "query_result_type")(ResultOutputType.fromI2b2),
-      setSize = asLong("set_size"),
-      startDate = asXmlGcOption("start_date"),
-      endDate = asXmlGcOption("end_date"),
+      resultType = filling.resultType,
+      setSize = filling.setSize,
+      startDate = filling.startDate,
+      endDate = filling.endDate,
       description = asTextOption("description"),
-      statusType = StatusType.valueOf(asText("query_status_type", "name")(xml)).get, //TODO: Avoid fragile .get call
-      statusMessage = asTextOption("query_status_type", "description"),
-      problemDigest = extractProblemDigest(xml \ "query_status_type"))
+      statusType = statusType,
+      statusMessage = statusMessage,
+      problemDigest = problemDigest
+    )
   }
 
   def errorResult(description: Option[String], statusMessage: String,problemDigest:ProblemDigest):QueryResult = {
@@ -327,9 +349,9 @@ object QueryResult {
       problemDigest = Option(problemDigest))
   }
 
-  def errorResult(description: Option[String], statusMessage: String,problem:Option[Problem] = None):QueryResult = {
+  def errorResult(description: Option[String], statusMessage: String,problem:Problem):QueryResult = {
 
-    val problemDigest = problem.getOrElse(ProblemNotYetEncoded(statusMessage)).toDigest
+    val problemDigest = problem.toDigest
 
     QueryResult(
       resultId = 0L,
@@ -365,3 +387,12 @@ object QueryResult {
       problemDigest = Option(problemDigest))
   }
 }
+
+case class ErrorStatusFromCrc(messageFromCrC:Option[String], xmlResponseFromCrc: String) extends AbstractProblem(ProblemSources.Adapter) {
+  override val summary: String = "The I2B2 CRC reported an internal error."
+  override val description:String = s"The I2B2 CRC responded with status type ERROR ${messageFromCrC.fold(" but no message")(message => s"and a message of '$message'")}"
+  override val detailsXml = <details>
+    CRC's Response is {xmlResponseFromCrc}
+  </details>
+}
+

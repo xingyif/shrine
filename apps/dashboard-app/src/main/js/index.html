@@ -2,7 +2,7 @@
 <html class="no-js">
 <head>
     <meta charset="utf-8">
-    <title>Shrine Dashboard</title>
+    <title>Shrine Diagnostic</title>
     <meta name="description" content="">
     <meta name="viewport" content="width=device-width">
 
@@ -21,16 +21,16 @@
 <body class="main-app">
 
 
+
+
     <div ng-app="shrine-tools" ng-controller="STCtrl">
 
-        <header></header>
+        <header title="dashboard"></header>
 
         <div ui-view>
         </div>
 
-        <!-- /#page-wrapper -->
-        <!-- footer -->
-        <hms-footer footer-url="footerUrl"></hms-footer>
+        <hms-footer footer-url="src/assets/img/logo_harvard_catalyst.png"></hms-footer>
     </div>
 
     <!-- build:js(.) src/vendor.js -->
@@ -56,13 +56,22 @@
     <!-- endbuild -->
 
     <!-- build:js src/app.js -->
-    <script type="text/javascript" src="src/app/common/utils-service.js"></script>
-    <script type="text/javascript" src="src/app/common/model-service.js"></script>
-    <script type="text/javascript" src="src/app/shrine-tools.js"></script>
-    <script type="text/javascript" src="src/app/st-model.js"></script>
-    <script type="text/javascript" src="src/app/header/header.js"></script>
-    <script type="text/javascript" src="src/app/header/user-status/user-status.js"></script>
-    <script type="text/javascript" src="src/app/footer/footer.js"></script>
+    <script src="src/app/common/common.module.js"></script>
+    <script src="src/app/common/xml.service.js"></script>
+    <script src="src/app/common/dataType.service.js"></script>
+    <script src="src/app/common/utils.service.js"></script>
+    <script src="src/app/common/authentication/authentication.module.js"></script>
+    <script src="src/app/common/authentication/authentication.service.js"></script>
+    <script src="src/app/shrine-tools.module.js"></script>
+    <script src="src/app/diagnostic/diagnostic.model.js"></script>
+    <script src="src/app/shrine-tools.service.js"></script>
+
+    <script src="src/app/shrine-tools.configuration.js"></script>
+    <script src="src/app/shrine-tools.runner.js"></script>
+    <script src="src/app/shrine-tools.controller.js"></script>
+    <script src="src/app/header/header.js"></script>
+    <script src="src/app/header/user-status.js"></script>
+    <script src="src/app/footer/footer.js"></script>
     <!-- endbuild -->
 </body>
 </html>

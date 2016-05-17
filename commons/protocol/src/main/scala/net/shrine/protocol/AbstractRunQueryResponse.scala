@@ -6,13 +6,12 @@ import scala.xml.NodeSeq
 import javax.xml.datatype.XMLGregorianCalendar
 import net.shrine.protocol.query.QueryDefinition
 import net.shrine.util.XmlUtil
-import net.shrine.serialization.{ I2b2Unmarshaller, XmlUnmarshaller }
 import scala.util.Try
 import net.shrine.util.XmlDateHelper
 
 /**
  * @author clint
- * @date Nov 29, 2012
+ * @since Nov 29, 2012
  */
 abstract class AbstractRunQueryResponse(
   rootTagName: String,
@@ -22,12 +21,6 @@ abstract class AbstractRunQueryResponse(
   val groupId: String,
   val requestXml: QueryDefinition,
   val queryInstanceId: Long) extends ShrineResponse with HasQueryResults {
-
-  type ActualResponseType <: AbstractRunQueryResponse
-
-  def withId(id: Long): ActualResponseType
-
-  def withInstanceId(id: Long): ActualResponseType
 
   final def queryName = requestXml.name
 
@@ -87,6 +80,7 @@ object AbstractRunQueryResponse {
   //A typeclass is used here in place of an abstract method with multiple concrete implementations,
   //or another similar strategy. -Clint
 
+  //But why? Why would you swing that big a hammer for code this simple? - Dave todo unwind this and just use an intermediate case class
   private trait Creatable[T] {
     def apply(queryId: Long, createDate: XMLGregorianCalendar, userId: String, groupId: String, requestXml: QueryDefinition, queryInstanceId: Long, results: Seq[QueryResult]): T
   }

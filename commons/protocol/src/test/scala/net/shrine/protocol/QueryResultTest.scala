@@ -1,6 +1,6 @@
 package net.shrine.protocol
 
-import net.shrine.problem.{ProblemSources, AbstractProblem}
+import net.shrine.problem.{TestProblem, ProblemSources, AbstractProblem}
 import net.shrine.util.ShouldMatchersForJUnit
 import org.junit.Test
 import net.shrine.util.XmlUtil
@@ -25,7 +25,7 @@ final class QueryResultTest extends ShouldMatchersForJUnit with XmlRoundTripper[
   private val date = XmlDateHelper.now
   private val resultId = 1L
   private val instanceId = 2L
-  private val resultType = ResultOutputType.PATIENTSET
+  private val resultType = ResultOutputType.PATIENT_COUNT_XML
   private val setSize = 12L
   private val statusType = QueryResult.StatusType.Finished
   private val description = "description"
@@ -107,9 +107,9 @@ final class QueryResultTest extends ShouldMatchersForJUnit with XmlRoundTripper[
       <query_instance_id>{ instanceId }</query_instance_id>
       <description>{ description }</description>
       <query_result_type>
-        <result_type_id>1</result_type_id>
+        <result_type_id>4</result_type_id>
         <name>{ resultType }</name>
-        <display_type>LIST</display_type><visual_attribute_type>LA</visual_attribute_type><description>Patient set</description>
+        <display_type>CATNUM</display_type><visual_attribute_type>LA</visual_attribute_type><description>Number of patients</description>
       </query_result_type>
       <set_size>{ setSize }</set_size>
       <start_date>{ date }</start_date>
@@ -394,7 +394,7 @@ final class QueryResultTest extends ShouldMatchersForJUnit with XmlRoundTripper[
 
   @Test
   def testFromI2b2WithErrors() {
-    val errorResult = QueryResult.errorResult(Some(description), statusMessage)
+    val errorResult = QueryResult.errorResult(Some(description), statusMessage,TestProblem)
 
     val actual = QueryResult.fromI2b2(breakdownTypes.toSet)(loadString(expectedI2b2ErrorXml))
 
@@ -447,7 +447,7 @@ final class QueryResultTest extends ShouldMatchersForJUnit with XmlRoundTripper[
 
   @Test
   def testToI2b2WithErrors(): Unit = {
-    QueryResult.errorResult(Some(description), statusMessage).toI2b2String
+    QueryResult.errorResult(Some(description), statusMessage, TestProblem).toI2b2String
   }
 
   @Test
@@ -480,7 +480,7 @@ final class QueryResultTest extends ShouldMatchersForJUnit with XmlRoundTripper[
     val actual = QueryResult.errorResult(
       Some(description),
       statusMessage,
-      Option(testProblem))
+      testProblem)
 
     val i2b2Xml: NodeSeq = actual.toI2b2
 

@@ -1,18 +1,52 @@
-'use strict';
+(function () {
+	'use strict';
 
-/**
- * @ngdoc directive
- * @name izzyposWebApp.directive:adminPosHeader
- * @description
- * # adminPosHeader
- */
-angular.module('shrine-tools')
-	.directive('header', function() {
+
+	// -- register directive with angular -- //
+	angular.module('shrine-tools')
+		.directive('header', Header);
+
+
+	/**
+	 *
+	 * @returns {{restrict: string, replace: boolean, templateUrl: string,
+	 * controller: HeaderController, controllerAs: string, link: HeaderLinker, scope: {title: string}}}
+	 * @constructor
+	 */
+	function Header () {
 		return {
-        templateUrl:'src/app/header/header.tpl.html',
-        restrict: 'E',
-        replace: true
-    	}
-	});
+			restrict: 		'E',
+			replace: 		true,
+			templateUrl: 	'src/app/header/header.tpl.html',
+			controller: 	HeaderController,
+			controllerAs: 	'vm',
+			link:			HeaderLinker,
+			scope: {
+				title: '@'
+			}
+		}
+	}
+
+
+	/**
+	 *
+	 * @type {string[]}
+	 */
+	HeaderController.$inject = ['$app'];
+	function HeaderController($app) {
+		var vm = this;
+	}
+
+	/**
+	 *
+	 * @type {string[]}
+	 */
+	HeaderLinker.$inject = ['scope', 'element', 'attributes' ];
+	function HeaderLinker (s, e, a) {
+		var vm = s.vm;
+	}
+
+})();
+
 
 

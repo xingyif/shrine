@@ -89,7 +89,6 @@ final class ResultOutputTypeTest extends ShouldMatchersForJUnit {
   @Test
   def testValues: Unit = {
     values should equal(Seq(
-      PATIENTSET,
       PATIENT_COUNT_XML,
       ERROR))
   }
@@ -154,7 +153,6 @@ final class ResultOutputTypeTest extends ShouldMatchersForJUnit {
 
   @Test
   def testBreakdownFlag: Unit =  {
-    PATIENTSET.isBreakdown should be(false)
     PATIENT_COUNT_XML.isBreakdown should be(false)
     ERROR.isBreakdown should be(false)
   }
@@ -162,14 +160,12 @@ final class ResultOutputTypeTest extends ShouldMatchersForJUnit {
   @Test
   def testIsError: Unit =  {
     ERROR.isError should be(true)
-    PATIENTSET.isError should be(false)
     PATIENT_COUNT_XML.isError should be(false)
   }
 
   @Test
   def testNonBreakdownTypes: Unit =  {
     nonBreakdownTypes.toSet should equal(Set(
-      PATIENTSET,
       PATIENT_COUNT_XML,
       ERROR))
   }
@@ -177,7 +173,6 @@ final class ResultOutputTypeTest extends ShouldMatchersForJUnit {
   @Test
   def testNonErrorTypes: Unit =  {
     nonErrorTypes.toSet should equal(Set(
-      PATIENTSET,
       PATIENT_COUNT_XML))
   }
   
@@ -186,13 +181,6 @@ final class ResultOutputTypeTest extends ShouldMatchersForJUnit {
     import XmlUtil.{ stripWhitespace => compact }
 
     val expected: Map[ResultOutputType, NodeSeq] = Map(
-      PATIENTSET -> compact(<query_result_type>
-                              <result_type_id>1</result_type_id>
-                              <name>PATIENTSET</name>
-                              <display_type>LIST</display_type>
-                              <visual_attribute_type>LA</visual_attribute_type>
-                              <description>Patient set</description>
-                            </query_result_type>),
       PATIENT_COUNT_XML -> compact(<query_result_type>
                                      <result_type_id>4</result_type_id>
                                      <name>PATIENT_COUNT_XML</name>

@@ -30,6 +30,14 @@ object XmlDateHelper {
     datatypeFactory.newXMLGregorianCalendar(cal)
   }
 
+  def toXmlGregorianCalendar(milliseconds: Long): XMLGregorianCalendar = {
+    val cal = new GregorianCalendar
+
+    cal.setTimeInMillis(milliseconds)
+
+    datatypeFactory.newXMLGregorianCalendar(cal)
+  }
+
   //todo move out. Has nothing to do with XML
   def time[T](taskName: String)(log: String => Unit)(f: => T): T = {
     val start = System.currentTimeMillis

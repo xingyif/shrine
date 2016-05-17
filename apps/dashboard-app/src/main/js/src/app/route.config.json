@@ -1,0 +1,12 @@
+{
+  "diagnostic": {
+    "baseDirectory": "src/app/diagnostic",
+    "files": [
+      "sidebar/sidebar.model",
+      "sidebar/sidebar.service",
+      "sidebar/node-menu",
+      "sidebar/downstream-node",
+      "sidebar/sidebar"
+    ]
+  }
+}

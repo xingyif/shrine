@@ -1,26 +1,25 @@
 package net.shrine.adapter
 
+import net.shrine.problem.{ProblemSources, AbstractProblem}
+import org.xml.sax.SAXParseException
+
 import scala.xml.NodeSeq
 import scala.xml.XML
 import net.shrine.protocol.{HiveCredentials, AuthenticationInfo, BroadcastMessage, Credential, ShrineRequest, ShrineResponse, TranslatableRequest, BaseShrineRequest, ErrorResponse, BaseShrineResponse}
-import net.shrine.serialization.XmlMarshaller
-import net.shrine.client.HttpClient
 import net.shrine.util.XmlDateHelper
 import net.shrine.client.Poster
-import net.shrine.util.XmlUtil
-import net.shrine.client.HttpResponse
 import scala.util.Try
 import scala.util.control.NonFatal
 
 /**
  * @author Bill Simons
- * @date 4/11/11
- * @link http://cbmi.med.harvard.edu
- * @link http://chip.org
+ * @since 4/11/11
+ * @see http://cbmi.med.harvard.edu
+ * @see http://chip.org
  *       <p/>
  *       NOTICE: This software comes with NO guarantees whatsoever and is
  *       licensed as Lgpl Open Source
- * @link http://www.gnu.org/licenses/lgpl.html
+ * @see http://www.gnu.org/licenses/lgpl.html
  */
 abstract class CrcAdapter[T <: ShrineRequest, V <: ShrineResponse](
   poster: Poster,
@@ -33,14 +32,18 @@ abstract class CrcAdapter[T <: ShrineRequest, V <: ShrineResponse](
     //NB: https://open.med.harvard.edu/jira/browse/SHRINE-745
     val shrineResponseAttempt = for {
       crcXml <- Try(XML.loadString(xmlResponseFromCrc))
-      shrineResponse <- Try(parseShrineResponse(crcXml)).recover { case NonFatal(e) => ErrorResponse.fromI2b2(crcXml) }
+      shrineResponse <- Try(parseShrineResponse(crcXml)).recover { case NonFatal(e) =>
+        info(s"Exception while parsing $crcXml",e)
+        ErrorResponse.fromI2b2(crcXml)
+      } //todo pass the exception to build a proper error response, and log the exception
     } yield shrineResponse
 
     shrineResponseAttempt.recover {
+      case saxx:SAXParseException => ErrorResponse(CannotParseXmlFromCrc(saxx,xmlResponseFromCrc))
       case NonFatal(e) =>
         error(s"Error parsing response from CRC: ", e)
 
-        ErrorResponse(s"Error parsing response from CRC; $e")
+        ErrorResponse(ExceptionWhileLoadingCrcResponse(e,xmlResponseFromCrc))
     }.get
   }
 
@@ -54,14 +57,6 @@ abstract class CrcAdapter[T <: ShrineRequest, V <: ShrineResponse](
   }
 
   protected def callCrc(request: ShrineRequest): String = {
-    def prettyPrintXmlString(reqXml: String): Try[String] = Try {
-      XmlUtil.prettyPrint(XML.loadString(reqXml))
-    }
-
-    def prettyPrintResponse(resp: HttpResponse): Try[HttpResponse] = {
-      prettyPrintXmlString(resp.body).map(prettyPrintedXml => resp.copy(body = s"\r\n$prettyPrintedXml"))
-    }
-
     debug(s"Sending Shrine-formatted request to the CRC at '${poster.url}': $request")
 
     val crcRequest = request.toI2b2String
@@ -78,14 +73,35 @@ abstract class CrcAdapter[T <: ShrineRequest, V <: ShrineResponse](
   }
 
   private[adapter] def translateRequest(request: BaseShrineRequest): ShrineRequest = request match {
-    case transReq: TranslatableRequest[T] => {
+    case transReq: TranslatableRequest[T] => //noinspection RedundantBlock
+    {
       val HiveCredentials(domain, username, password, project) = hiveCredentials
 
-      val authInfo = AuthenticationInfo(domain, username, Credential(password, false))
+      val authInfo = AuthenticationInfo(domain, username, Credential(password, isToken = false))
 
       translateNetworkToLocal(transReq.withAuthn(authInfo).withProject(project).asRequest)
     }
     case req: ShrineRequest => req
     case _ => throw new IllegalArgumentException(s"Unexpected request: $request")
   }
+}
+
+case class CannotParseXmlFromCrc(saxx:SAXParseException,xmlResponseFromCrc: String) extends AbstractProblem(ProblemSources.Adapter) {
+  override val throwable = Some(saxx)
+  override val summary: String = "Could not parse response from CRC."
+  override val description:String = s"${saxx.getMessage} while parsing the response from the CRC."
+  override val detailsXml = <details>
+    {throwableDetail.getOrElse("")}
+    Response is {xmlResponseFromCrc}
+  </details>
+}
+
+case class ExceptionWhileLoadingCrcResponse(t:Throwable,xmlResponseFromCrc: String) extends AbstractProblem(ProblemSources.Adapter) {
+  override val throwable = Some(t)
+  override val summary: String = "Unanticipated exception with response from CRC."
+  override val description:String = s"${t.getMessage} while parsing the response from the CRC."
+  override val detailsXml = <details>
+    {throwableDetail.getOrElse("")}
+    Response is {xmlResponseFromCrc}
+  </details>
 }

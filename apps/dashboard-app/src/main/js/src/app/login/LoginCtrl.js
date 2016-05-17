@@ -1,7 +1,13 @@
+
+
+
+
 angular.module("login", ['hms-authentication'])
     .controller('LoginCtrl', ['$scope', '$location', 'HMSAuthenticationService', function ($scope, $location, HMSAuthenticationService) {
 
-        HMSAuthenticationService.ClearCredentials();
+            HMSAuthenticationService.ClearCredentials();
+
+
         $scope.loginFail = false;
         $scope.login = function () {
             HMSAuthenticationService.SetAuthHeader($scope.username, $scope.password);

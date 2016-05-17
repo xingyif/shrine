@@ -33,7 +33,7 @@ final class ReadInstanceResultsAggregatorTest extends ShouldMatchersForJUnit {
     val endDate = XmlDateHelper.now
     
     val queryResult1 = new QueryResult(1L, instanceId, PATIENT_COUNT_XML, 12, startDate, endDate, QueryResult.StatusType.Finished)
-    val queryResult2 = new QueryResult(2L, instanceId, PATIENTSET, 14, startDate, endDate, QueryResult.StatusType.Finished)
+    val queryResult2 = new QueryResult(2L, instanceId, PATIENT_COUNT_XML, 14, startDate, endDate, QueryResult.StatusType.Finished)
 
     val aggregator = new ReadInstanceResultsAggregator(instanceId, true)
     val aggregatorNoAggregate = new ReadInstanceResultsAggregator(instanceId, false)

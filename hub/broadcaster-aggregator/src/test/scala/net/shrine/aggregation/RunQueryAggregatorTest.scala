@@ -9,8 +9,6 @@ import net.shrine.protocol.I2b2ResultEnvelope
 import net.shrine.protocol.NodeId
 import net.shrine.protocol.QueryResult
 import net.shrine.protocol.Result
-import net.shrine.protocol.ResultOutputType
-import net.shrine.protocol.ResultOutputType.PATIENTSET
 import net.shrine.protocol.ResultOutputType.PATIENT_COUNT_XML
 import net.shrine.protocol.RunQueryResponse
 import net.shrine.protocol.query.QueryDefinition
@@ -41,31 +39,27 @@ final class RunQueryAggregatorTest extends ShouldMatchersForJUnit {
   @Test
   def testAggregate {
     val qrCount = new QueryResult(1L, queryInstanceId, PATIENT_COUNT_XML, 10L, now, now, "Desc", QueryResult.StatusType.Finished)
-    val qrSet = new QueryResult(2L, queryInstanceId, PATIENTSET, 10L, now, now, "Desc", QueryResult.StatusType.Finished)
 
     val rqr1 = RunQueryResponse(queryId, now, userId, groupId, requestQueryDef, queryInstanceId, qrCount)
-    val rqr2 = RunQueryResponse(queryId, now, userId, groupId, requestQueryDef, queryInstanceId, qrSet)
 
-    val result2 = Result(NodeId("description1"), 1.second, rqr2)
     val result1 = Result(NodeId("description2"), 1.second, rqr1)
 
     val aggregator = new RunQueryAggregator(queryId, userId, groupId, requestQueryDef, true)
     
-    val actual = aggregator.aggregate(Vector(result1, result2), Nil).asInstanceOf[AggregatedRunQueryResponse]
+    val actual = aggregator.aggregate(Vector(result1), Nil).asInstanceOf[AggregatedRunQueryResponse]
 
     actual.queryId should equal(queryId)
     actual.queryInstanceId should equal(-1L)
-    actual.results.size should equal(3)
+    actual.results.size should equal(2)
     actual.results.filter(_.resultTypeIs(PATIENT_COUNT_XML)).size should equal(2) //1 for the actual count result, 1 for the aggregated total count 
-    actual.results.filter(_.resultTypeIs(PATIENTSET)).size should equal(1)
     actual.results.filter(hasTotalCount).size should equal(1)
-    actual.results.filter(hasTotalCount).head.setSize should equal(20)
+    actual.results.filter(hasTotalCount).head.setSize should equal(10)
     actual.queryName should equal(queryName)
   }
 
   @Test
   def testAggCount {
-    val qrSet = new QueryResult(2L, queryInstanceId, PATIENTSET, 10L, now, now, "Desc", QueryResult.StatusType.Finished)
+    val qrSet = new QueryResult(2L, queryInstanceId, PATIENT_COUNT_XML, 10L, now, now, "Desc", QueryResult.StatusType.Finished)
 
     val rqr1 = RunQueryResponse(queryId, now, userId, groupId, requestQueryDef, queryInstanceId, qrSet)
     val rqr2 = RunQueryResponse(queryId, now, userId, groupId, requestQueryDef, queryInstanceId, qrSet)

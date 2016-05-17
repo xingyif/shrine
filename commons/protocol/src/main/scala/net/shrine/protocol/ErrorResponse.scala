@@ -1,5 +1,6 @@
 package net.shrine.protocol
 
+import net.shrine.log.Loggable
 import net.shrine.problem.{ProblemNotYetEncoded, LoggingProblemHandler, Problem, ProblemDigest}
 
 import scala.xml.{NodeBuffer, NodeSeq}
@@ -46,19 +47,18 @@ final case class ErrorResponse(errorMessage: String,problemDigest:ProblemDigest)
   }
 }
 
-object ErrorResponse extends XmlUnmarshaller[ErrorResponse] with I2b2Unmarshaller[ErrorResponse] with HasRootTagName {
+object ErrorResponse extends XmlUnmarshaller[ErrorResponse] with I2b2Unmarshaller[ErrorResponse] with HasRootTagName with Loggable {
   val rootTagName = "errorResponse"
 
-  //todo deprecate this one
-  def apply(errorMessage:String,problem:Option[Problem] = None) = {
-    new ErrorResponse(errorMessage,problem.fold{
-      val problem = ProblemNotYetEncoded(s"'$errorMessage'")
-      LoggingProblemHandler.handleProblem(problem) //todo someday hook up to the proper problem handler hierarchy.
-      problem.toDigest
-    }(p => p.toDigest))
+  //todo delete this one
+  def apply(errorMessage:String,problem:Option[Problem] = None):ErrorResponse = {
+    val p = problem.getOrElse(ProblemNotYetEncoded(s"'$errorMessage'"))
+    LoggingProblemHandler.handleProblem(p) //todo someday hook up to the proper problem handler hierarchy.
+    ErrorResponse(errorMessage,p.toDigest)
   }
 
-  def apply(problem:Problem) = {
+  def apply(problem:Problem):ErrorResponse = {
+    LoggingProblemHandler.handleProblem(problem) //todo someday hook up to the proper problem handler hierarchy.
     new ErrorResponse(problem.summary,problem.toDigest)
   }
 
@@ -95,16 +95,16 @@ object ErrorResponse extends XmlUnmarshaller[ErrorResponse] with I2b2Unmarshalle
     def parseFormatB: Try[ErrorResponse] = {
       for {
         conditionXml <- xml withChild "message_body" withChild "response" withChild "status" withChild "condition"
-        typeText <- conditionXml attribute "type"
-        if typeText == "ERROR"
-        statusMessage = XmlUtil.trim(conditionXml)
+        typeText <- conditionXml attribute "type" if typeText == "ERROR"
+                                                    statusMessage = XmlUtil.trim(conditionXml)
+                                                    problemDigest = ErrorStatusFromCrc(Option(statusMessage),xml.text).toDigest//here's another place where an ERROR can have no ProblemDigest
       } yield {
-        ErrorResponse(statusMessage)
+        ErrorResponse(statusMessage,problemDigest)
       }
     }
 
     parseFormatA.recoverWith { case NonFatal(e) => {
-      e.printStackTrace() //todo log instead
+      warn(s"Encountered a problem while parsing an error from I2B2 with 'format A', trying 'format B' ${xml.text}",e)
       parseFormatB
     } }.get
   }

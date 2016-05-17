@@ -14,6 +14,9 @@ angular.module('shrine-tools')
         return {
             templateUrl:'src/app/footer/footer.tpl.html',
             restrict: 'E',
-            replace: true
+            replace: true,
+            scope: {
+                footerUrl: '@'
+            }
         }
     });

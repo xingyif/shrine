@@ -44,6 +44,7 @@ trait Problem {
 }
 
 case class ProblemDigest(codec: String, stampText: String, summary: String, description: String, detailsXml: NodeSeq) extends XmlMarshaller {
+
   override def toXml: Node = {
     <problem>
       <codec>{codec}</codec>

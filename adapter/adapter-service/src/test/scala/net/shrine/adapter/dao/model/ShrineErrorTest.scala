@@ -15,6 +15,6 @@ final class ShrineErrorTest extends ShouldMatchersForJUnit {
     val tpd = testProblem.toDigest
     val error = ShrineError(1, 123, message,tpd.codec,tpd.stampText,tpd.summary,tpd.description,tpd.detailsXml)
     
-    error.toQueryResult should equal(QueryResult.errorResult(Some(message), QueryResult.StatusType.Error.name,Some(TestProblem)))
+    error.toQueryResult should equal(QueryResult.errorResult(Some(message), QueryResult.StatusType.Error.name,TestProblem))
   }
 }

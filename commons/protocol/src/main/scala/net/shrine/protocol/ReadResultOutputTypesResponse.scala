@@ -5,7 +5,7 @@ import net.shrine.util.XmlUtil
 
 /**
  * @author clint
- * @date Oct 6, 2014
+ * @since Oct 6, 2014
  * 
  * NB: Takes a Seq of ResultOutputTypes, even though this should probably be a Set to disallow dupes, for
  * better determinism when testing.

@@ -46,6 +46,8 @@ case class UserAuthenticator(config:Config) extends Loggable {
 
     BasicAuth((a:Option[UserPass]) => authenticator(a), realm = realm)
   }
+
+
 }
 
 case class PmUserSource(config:Config) extends UserSource with Loggable {
