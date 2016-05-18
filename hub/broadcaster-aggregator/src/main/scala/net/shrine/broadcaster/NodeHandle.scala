@@ -20,10 +20,8 @@ final case class NodeHandle(nodeId: NodeId, client: AdapterClient)
   * @author clint
   * @since Dec 11, 2013
   */
-object NodeHandleSource {
+object NodeHandle {
 
-  //TODO: Allow per-node timeouts?
-  //todo move all this to the NodeHandle's apply method
   def makeNodeHandles(
                        hubConfig:Config,
                        trustParam: TrustParam,

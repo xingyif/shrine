@@ -3,7 +3,7 @@ package net.shrine.broadcaster.service
 import com.typesafe.config.Config
 import net.shrine.adapter.service.AdapterRequestHandler
 import net.shrine.broadcaster.dao.HubDao
-import net.shrine.broadcaster.{AdapterClientBroadcaster, NodeHandle, NodeHandleSource}
+import net.shrine.broadcaster.{AdapterClientBroadcaster, NodeHandle}
 import net.shrine.config.{ConfigExtensions, DurationConfigParser}
 import net.shrine.crypto.TrustParam
 import net.shrine.protocol.{NodeId, ResultOutputType}
@@ -24,7 +24,7 @@ object HubComponents {
              breakdownTypes:Set[ResultOutputType],
              hubDao: HubDao
            ): HubComponents = {
-    val broadcastDestinations: Set[NodeHandle]= NodeHandleSource.makeNodeHandles(hubConfig, keystoreTrustParam, nodeId, localAdapterServiceOption, breakdownTypes)
+    val broadcastDestinations: Set[NodeHandle]= NodeHandle.makeNodeHandles(hubConfig, keystoreTrustParam, nodeId, localAdapterServiceOption, breakdownTypes)
 
     val broadcaster: AdapterClientBroadcaster = AdapterClientBroadcaster(broadcastDestinations, hubDao)
 

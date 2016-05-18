@@ -21,7 +21,7 @@ import net.shrine.protocol.DefaultBreakdownResultOutputTypes
  * @author clint
  * @since Dec 11, 2013
  */
-final class NodeHandleSourceTest extends ShouldMatchersForJUnit {
+final class NodeHandleTest extends ShouldMatchersForJUnit {
   @Test
   def testMakeNodeHandles {
     val trustParam = AcceptAllCerts

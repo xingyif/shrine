@@ -6,12 +6,9 @@ import com.typesafe.config.{Config, ConfigFactory}
 import net.shrine.adapter.AdapterComponents
 import net.shrine.adapter.dao.AdapterDao
 import net.shrine.adapter.service.{AdapterRequestHandler, AdapterResource, AdapterService, I2b2AdminResource, I2b2AdminService}
-import net.shrine.authentication.Authenticator
-import net.shrine.authorization.QueryAuthorizationService
 import net.shrine.broadcaster.dao.HubDao
 import net.shrine.broadcaster.dao.squeryl.SquerylHubDao
 import net.shrine.broadcaster.service.HubComponents
-import net.shrine.broadcaster.{BroadcastAndAggregationService, SigningBroadcastAndAggregationService}
 import net.shrine.client.{EndpointConfig, JerseyHttpClient, OntClient, Poster, PosterOntClient}
 import net.shrine.config.ConfigExtensions
 import net.shrine.config.mappings.AdapterMappings
@@ -21,10 +18,8 @@ import net.shrine.happy.{HappyShrineResource, HappyShrineService}
 import net.shrine.log.Loggable
 import net.shrine.ont.data.{OntClientOntologyMetadata, OntologyMetadata}
 import net.shrine.protocol.{HiveCredentials, NodeId, ResultOutputType, ResultOutputTypes}
-import net.shrine.qep.dao.AuditDao
-import net.shrine.qep.dao.squeryl.SquerylAuditDao
-import net.shrine.qep.dao.squeryl.tables.{Tables => HubTables}
-import net.shrine.qep.{I2b2BroadcastResource, I2b2QepService, QepService, ShrineResource}
+
+import net.shrine.qep.{I2b2BroadcastResource, QueryEntryPointComponents, ShrineResource}
 import net.shrine.status.StatusJaxrs
 import org.squeryl.internals.DatabaseAdapter
 
@@ -117,39 +112,14 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
   //todo anything that requires qepConfig should be inside QueryEntryPointComponents's apply
   protected lazy val qepConfig = shrineConfig.getConfig("queryEntryPoint")
 
-  lazy val queryEntryPointComponents:Option[QueryEntryPointComponents] =
-    if(qepConfig.getBoolean("create")) {
-
-      val commonName: String = certCollection.myCommonName.getOrElse {
-        val hostname = java.net.InetAddress.getLocalHost.getHostName
-        warn(s"No common name available from ${certCollection.descriptor}. Using $hostname instead.")
-        hostname
-      }
-
-      val broadcastService: BroadcastAndAggregationService = SigningBroadcastAndAggregationService(
-        qepConfig,
-        certCollection,
-        breakdownTypes,
-        hubComponents.map(_.broadcastDestinations),
-        hubDao
-      )
-
-      val auditDao: AuditDao = new SquerylAuditDao(squerylInitializer, new HubTables)
-      val authenticator: Authenticator = AuthStrategy.determineAuthenticator(qepConfig, pmPoster)
-      val authorizationService: QueryAuthorizationService = AuthStrategy.determineQueryAuthorizationService(qepConfig,authenticator)
-
-      debug(s"authorizationService set to $authorizationService")
-
-      Some(QueryEntryPointComponents(
-          qepConfig,
-          commonName,
-          auditDao,
-          authenticator,
-          authorizationService,
-          broadcastService
-        ))
-    }
-    else None
+  lazy val queryEntryPointComponents:Option[QueryEntryPointComponents] = shrineConfig.getOptionConfiguredIf("queryEntryPoint",QueryEntryPointComponents(_,
+    certCollection,
+    breakdownTypes,
+    hubComponents.map(_.broadcastDestinations),
+    hubDao, //todo the QEP should not need the hub dao
+    squerylInitializer, //todo could really have its own
+    pmPoster //todo could really have its own
+  ))
 
   protected lazy val pmUrlString: String = pmEndpoint.url.toString
 
@@ -178,42 +148,7 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
 
   protected lazy val i2b2AdminResource: Option[I2b2AdminResource] = i2b2AdminService.map(I2b2AdminResource(_, breakdownTypes))
   
-  //todo here's the QEP. Move to the QEP package.
-  case class QueryEntryPointComponents(shrineService: QepService,
-                                       i2b2Service: I2b2QepService,
-                                       auditDao: AuditDao) //todo auditDao is only used by the happy service to grab the most recent entries
 
-  object QueryEntryPointComponents {
-    def apply(
-      qepConfig:Config,
-      commonName: String,
-      auditDao: AuditDao,
-      authenticator: Authenticator,
-      authorizationService: QueryAuthorizationService,
-      broadcastService: BroadcastAndAggregationService
-    ):QueryEntryPointComponents = {
-      QueryEntryPointComponents(
-        QepService(
-          qepConfig,
-          commonName,
-          auditDao,
-          authenticator,
-          authorizationService,
-          broadcastService,
-          breakdownTypes
-        ),
-        I2b2QepService(
-          qepConfig,
-          commonName,
-          auditDao,
-          authenticator,
-          authorizationService,
-          broadcastService,
-          breakdownTypes
-        ),
-        auditDao)
-    }
-  }
 
   def poster(keystoreCertCollection: KeyStoreCertCollection)(endpoint: EndpointConfig): Poster = {
     val httpClient = JerseyHttpClient(keystoreCertCollection, endpoint)
@@ -221,3 +156,4 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
     Poster(endpoint.url.toString, httpClient)
   }
 }
+
