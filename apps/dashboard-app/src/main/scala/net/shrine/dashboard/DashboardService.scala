@@ -3,29 +3,27 @@ package net.shrine.dashboard
 import akka.actor.Actor
 import akka.event.Logging
 import net.shrine.authentication.UserAuthenticator
-
 import net.shrine.authorization.steward.OutboundUser
 import net.shrine.dashboard.jwtauth.ShrineJwtAuthenticator
 import net.shrine.i2b2.protocol.pm.User
 import net.shrine.status.protocol.{Config => StatusProtocolConfig}
-import net.shrine.dashboard.httpclient.HttpClientDirectives.{forwardUnmatchedPath,requestUriThenRoute}
+import net.shrine.dashboard.httpclient.HttpClientDirectives.{forwardUnmatchedPath, requestUriThenRoute}
 import net.shrine.log.Loggable
+import org.json4s.native.JsonMethods
 import shapeless.HNil
-
-import spray.http.{Uri, HttpResponse, HttpRequest, StatusCodes}
+import spray.http.{HttpRequest, HttpResponse, StatusCodes, Uri}
 import spray.httpx.Json4sSupport
 import spray.routing.directives.LogEntry
-import spray.routing.{AuthenticationFailedRejection, Rejected, RouteConcatenation, Directive0, Route, HttpService}
-
+import spray.routing.{AuthenticationFailedRejection, Directive0, HttpService, Rejected, Route, RouteConcatenation}
 import org.json4s.{DefaultFormats, Formats}
 import org.json4s.native.JsonMethods.{parse => json4sParse}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.xml.Elem
 
-// we don't implement our route structure directly in the service actor because
-// we want to be able to test it independently, without having to spin up an actor
-
+/**
+  * Mixes the DashboardService trait with an Akka Actor to provide the actual service.
+  */
 class DashboardServiceActor extends Actor with DashboardService {
 
   // the HttpService trait defines only one abstract member, which
@@ -38,7 +36,10 @@ class DashboardServiceActor extends Actor with DashboardService {
   def receive = runRoute(route)
 }
 
-// this trait defines our service behavior independently from the service actor
+/**
+  * A web service that provides the Dashboard endpoints. It is a trait to support testing independent of Akka.
+  */
+
 trait DashboardService extends HttpService with Json4sSupport with Loggable {
   implicit def json4sFormats: Formats = DefaultFormats
 
@@ -49,19 +50,18 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
     redirectToIndex ~ staticResources ~ makeTrouble ~ about ~ authenticatedInBrowser ~ authenticatedDashboard
   }
 
-  // logs just the request method, uri and response at info level
+  /** logs the request method, uri and response at info level */
   def logEntryForRequestResponse(req: HttpRequest): Any => Option[LogEntry] = {
     case res: HttpResponse => Some(LogEntry(s"\n  Request: $req\n  Response: $res", Logging.InfoLevel))
     case _ => None // other kind of responses
   }
 
-  // logs just the request method, uri and response status at info level
+  /** logs just the request method, uri and response status at info level */
   def logEntryForRequest(req: HttpRequest): Any => Option[LogEntry] = {
     case res: HttpResponse => Some(LogEntry(s"\n  Request: $req\n  Response status: ${res.status}", Logging.InfoLevel))
     case _ => None // other kind of responses
   }
 
-  //pathPrefixTest shields the QEP code from the redirect.
   def authenticatedInBrowser: Route = pathPrefixTest("user"|"admin"|"toDashboard") {
     logRequestResponse(logEntryForRequestResponse _) { //logging is controlled by Akka's config, slf4j, and log4j config
       reportIfFailedToAuthenticate {
@@ -127,7 +127,7 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
     }
   }
 
-  //todo is this an admin? Does it matter?
+  //todo check that this an admin.
   def adminRoute(user:User):Route = get {
 
     pathPrefix("happy") {
@@ -135,7 +135,7 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
 
       forwardUnmatchedPath(happyBaseUrl)
     } ~
-    pathPrefix("messWithHappyVersion") {
+    pathPrefix("messWithHappyVersion") { //todo is this used?
       val happyBaseUrl: String = DashboardConfigSource.config.getString("shrine.dashboard.happyBaseUrl")
 
       def pullClasspathFromConfig(httpResponse:HttpResponse,uri:Uri):Route = {
@@ -153,6 +153,9 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
 
   //Manually test this by running a curl command
   //curl -k -w "\n%{response_code}\n" -u dave:kablam "https://shrine-dev1.catalyst:6443/shrine-dashboard/toDashboard/shrine-dev2.catalyst/shrine-dashboard/fromDashboard/ping"
+  /**
+    * Forward a request from this dashboard to a remote dashboard
+    */
   def toDashboardRoute(user:User):Route = get {
 
     pathPrefix(Segment) { dnsName =>
@@ -173,16 +176,13 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
     pathPrefix("summary"){getSummary}
   }
 
-  lazy val getConfig:Route = {
+  val statusBaseUrl = DashboardConfigSource.config.getString("shrine.dashboard.statusBaseUrl")
 
-    // -- vars -- //
-    val urlKey                = "shrine.dashboard.statusBaseUrl"
-    val statusBaseUrl: String = DashboardConfigSource.config.getString(urlKey)
+  lazy val getConfig:Route = {
 
     def completeSummaryRoute(httpResponse:HttpResponse,uri:Uri):Route = {
       ctx => {
         val config =  ShrineParser.parseShrineFromConfig(httpResponse.entity.asString)
-
 
         ctx.complete(
           ShrineConfig(config)
@@ -194,29 +194,20 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
   }
 
   lazy val getClasspath:Route = {
-    val statusBaseUrl: String = DashboardConfigSource.config.getString("shrine" +
-      ".dashboard" +
-      ".statusBaseUrl")
 
     def pullClasspathFromConfig(httpResponse:HttpResponse,uri:Uri):Route = {
       ctx => {
-        // -- import parser -- //
-        import org.json4s.native.JsonMethods.parse
-
-        // -- vars -- //
         val result        = httpResponse.entity.asString
-        val config        = parse(result)
+        val config        = JsonMethods.parse(result)
           .extract[net.shrine.status.protocol.Config]
           .keyValues
-          .filterKeys(_.toLowerCase.startsWith("shrine"))
+          .filterKeys(_.toLowerCase.startsWith("shrine")) //todo no need to filter
         val shrineConfig  = ShrineConfig(config)
 
-        // -- complete route -- //
         ctx.complete(shrineConfig)
       }
     }
 
-    // -- init request -- //
     requestUriThenRoute(statusBaseUrl + "/config",pullClasspathFromConfig)
   }
 
@@ -224,10 +215,6 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
 
 
   lazy val getOptions:Route = {
-
-    // -- vars -- //
-    val urlKey                = "shrine.dashboard.statusBaseUrl"
-    val statusBaseUrl: String = DashboardConfigSource.config.getString(urlKey)
 
     def completeSummaryRoute(httpResponse:HttpResponse,uri:Uri):Route = {
       ctx => {
@@ -242,7 +229,7 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
     requestUriThenRoute(statusBaseUrl + "/config", completeSummaryRoute)
   }
 
-
+//todo this is the Happy summary. Rename, eventually delete when the status service can provide the same
   lazy val getSummary:Route = {
 
     val happyBaseUrl: String = DashboardConfigSource.config.getString("shrine.dashboard.happyBaseUrl")
@@ -256,9 +243,7 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
         val ontologyVersion = (result \\ "versionInfo" \ "ontologyVersion").text
         val ontologyTerm = (result \\ "adapter" \\ "queryDefinition" \\ "term").text
 
-
-
-        def isHubOk:Boolean = {
+        val hubOk = {
           if(!isHub) true
           else {
             val hasFailures = (result \\ "net" \ "failureCount").text.toInt > 0
@@ -268,12 +253,21 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
           }
         }
 
-        val hubOk = isHubOk
         val adapterOk = (result \\ "adapter" \\ "errorResponse").length == 0
         val keystoreOk = true
         val qepOk = true
 
-        val summary = Summary(isHub, shrineVersion, shrineBuildDate, ontologyVersion, ontologyTerm, adapterOk, keystoreOk, hubOk, qepOk)
+        val summary = Summary(
+          isHub = isHub,
+          shrineVersion = shrineVersion,
+          shrineBuildDate = shrineBuildDate,
+          ontologyVersion = ontologyVersion,
+          ontologyTerm = ontologyTerm,
+          adapterOk = adapterOk,
+          keystoreOk = keystoreOk,
+          hubOk = hubOk,
+          qepOk = qepOk
+        )
 
         ctx.complete(summary)
       }
@@ -284,51 +278,51 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
 }
 
 
-case class Summary(isHub:Boolean, shrineVersion:String, shrineBuildDate:String, ontologyVersion:String,
-                   ontologyTerm:String, adapterOk:Boolean, keystoreOk:Boolean, hubOk:Boolean, qepOk:Boolean) {
-
-}
-
-
-
-
+case class Summary(
+                    isHub:Boolean,
+                    shrineVersion:String,
+                    shrineBuildDate:String,
+                    ontologyVersion:String,
+                    ontologyTerm:String,
+                    adapterOk:Boolean,
+                    keystoreOk:Boolean,
+                    hubOk:Boolean,
+                    qepOk:Boolean
+                  )
 /**
  * Centralized parsing logic for map of shrine.conf
  * the class literal `T.class` in Java.
  */
+//todo this thing is ShrineConfig's apply method. Move it all there and get rid of this mess
+//todo this class' crap is spread out everywhere. Clean it all up.
 object ShrineParser{
 
-  // -- @todo: need to make sure this is initialized. -- //
+  //todo wtf??
   private var shrineMap:Map[String, String]
   = Map(""->"")
   private val trueVal = "true"
   private val rootKey = "shrine"
 
   // -- @todo: where should this live ? -- //
-  def parseShrineFromConfig(resultStr:String) = {
+  def parseShrineFromConfig(jsonString:String) = {
 
     // -- needed to use json4s parse -- //
     implicit def json4sFormats: Formats = DefaultFormats
 
     // -- extract map of shrine subset of config file -- //
-    this.shrineMap = json4sParse(resultStr).extract[StatusProtocolConfig].keyValues
+    this.shrineMap = json4sParse(jsonString).extract[StatusProtocolConfig].keyValues
       .filterKeys(_.toLowerCase.startsWith("shrine"))
 
     this.shrineMap
   }
 
-  // --  @todo throw exception in else? -- //
-  private def Parser =
-    this.shrineMap
-
-  // -- -- //
   def IsHub =
     getOrElse(rootKey + ".hub.create", "")
       .toLowerCase == trueVal
 
   // -- -- //
   def StewardEnabled =
-    Parser.keySet
+    shrineMap.keySet
       .contains(rootKey + ".queryEntryPoint.shrineSteward")
 
   // -- -- //
@@ -338,7 +332,7 @@ object ShrineParser{
 
   // -- -- //
   def DownstreamNodes =
-    for((k,v) <- Parser.filterKeys(_.toLowerCase.startsWith
+    for((k,v) <- shrineMap.filterKeys(_.toLowerCase.startsWith
       ("shrine.hub.downstreamnodes"))) yield DownstreamNode(k.split('.').last,
       v.split("\"").mkString(""))
 
@@ -354,6 +348,8 @@ case class DownstreamNode(name:String, url:String){
 }
 
 
+
+//todo this is filling for the dashboard Summary - major components of shrine, and downstream nodes for a hub. Rename
 case class Options(isHub:Boolean, stewardEnabled:Boolean, shouldQuerySelf:Boolean,
                    downstreamNodes:Iterable[DownstreamNode])
 object Options{
@@ -367,6 +363,8 @@ object Options{
   }
 }
 
+
+//todo replace with the actual config, scrubbed of passwords
 case class ShrineConfig(isHub:Boolean,
                         hub:Hub,
                         pmEndpoint:Endpoint,
@@ -376,6 +374,7 @@ case class ShrineConfig(isHub:Boolean,
                         queryEntryPoint:QEP,
                         networkStatusQuery:String
                        )
+
 object ShrineConfig{
   def apply(configMap:Map[String, String]):ShrineConfig = {
     val hub               = Hub(configMap)
@@ -501,9 +500,6 @@ object QEP{
     broadcasterServiceEndpointUrl = ShrineParser.get(key + "broadcasterServiceEndpoint.url")
   )
 }
-
-
-
 
 //adapted from https://gist.github.com/joseraya/176821d856b43b1cfe19
 object gruntWatchCorsSupport extends Directive0 with RouteConcatenation {
