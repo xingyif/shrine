@@ -9,7 +9,6 @@ import net.shrine.i2b2.protocol.pm.User
 import net.shrine.status.protocol.{Config => StatusProtocolConfig}
 import net.shrine.dashboard.httpclient.HttpClientDirectives.{forwardUnmatchedPath, requestUriThenRoute}
 import net.shrine.log.Loggable
-import org.json4s.native.JsonMethods
 import shapeless.HNil
 import spray.http.{HttpRequest, HttpResponse, StatusCodes, Uri}
 import spray.httpx.Json4sSupport
@@ -182,7 +181,7 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
 
     def completeSummaryRoute(httpResponse:HttpResponse,uri:Uri):Route = {
       ctx => {
-        val config = ConfigParser(httpResponse.entity.asString).shrineMap
+        val config = ConfigParser(httpResponse.entity.asString)
 
         ctx.complete(
           ShrineConfig(config)
@@ -198,11 +197,7 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
     def pullClasspathFromConfig(httpResponse:HttpResponse,uri:Uri):Route = {
       ctx => {
         val result        = httpResponse.entity.asString
-        val config        = JsonMethods.parse(result)
-          .extract[net.shrine.status.protocol.Config]
-          .keyValues
-          .filterKeys(_.toLowerCase.startsWith("shrine")) //todo no need to filter
-        val shrineConfig  = ShrineConfig(config)
+        val shrineConfig  = ShrineConfig(ConfigParser(result))
 
         ctx.complete(shrineConfig)
       }
@@ -218,7 +213,7 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
 
     def completeSummaryRoute(httpResponse:HttpResponse,uri:Uri):Route = {
       ctx => {
-        val config = ConfigParser(httpResponse.entity.asString).shrineMap
+        val config = ConfigParser(httpResponse.entity.asString)
 
         ctx.complete(
           Options(config)
