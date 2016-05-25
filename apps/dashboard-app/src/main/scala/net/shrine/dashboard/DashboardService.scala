@@ -19,7 +19,6 @@ import org.json4s.native.JsonMethods.{parse => json4sParse}
 
 import scala.collection.immutable.Iterable
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.xml.Elem
 
 /**
   * Mixes the DashboardService trait with an Akka Actor to provide the actual service.
@@ -225,72 +224,15 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
     requestUriThenRoute(statusBaseUrl + "/config", completeSummaryRoute)
   }
 
-//todo this is the Happy summary. Rename, eventually delete when the status service can provide the same
   lazy val getSummary:Route = {
 
-  def passThrough(httpResponse: HttpResponse,uri: Uri):Route = ctx => ctx.complete(httpResponse.entity.asString)
+    def passThrough(httpResponse: HttpResponse,uri: Uri):Route = ctx => ctx.complete(httpResponse.entity.asString)
 
-  requestUriThenRoute(statusBaseUrl + "/summary",passThrough)
-  /*
-    val happyBaseUrl: String = DashboardConfigSource.config.getString("shrine.dashboard.happyBaseUrl")
-
-    def pullSummaryFromHappy(httpResponse:HttpResponse,uri:Uri):Route = {
-      ctx => {
-        val result: Elem = scala.xml.XML.loadString(httpResponse.entity.asString)
-        val isHub: Boolean = (result \\ "notAHub").text.length == 0
-        val shrineVersion =   (result \\ "versionInfo" \ "shrineVersion").text
-        val shrineBuildDate = (result \\ "versionInfo" \ "buildDate").text
-        val ontologyVersion = (result \\ "versionInfo" \ "ontologyVersion").text
-        val ontologyTerm = (result \\ "adapter" \\ "queryDefinition" \\ "term").text
-
-        val hubOk = {
-          if(!isHub) true
-          else {
-            val hasFailures = (result \\ "net" \ "failureCount").text.toInt > 0
-            val hasInvalidResults = (result \\ "net" \ "validResultCount").text.toInt != (result \\ "net" \ "expectedResultCount").text.toInt
-            val hasTimeouts = (result \\ "net" \ "timeoutCount").text.toInt > 0
-            !hasFailures && !hasInvalidResults && !hasTimeouts
-          }
-        }
-
-        val adapterOk = (result \\ "adapter" \\ "errorResponse").length == 0
-        val keystoreOk = true
-        val qepOk = true
-
-        val summary = Summary(
-          isHub = isHub,
-          shrineVersion = shrineVersion,
-          shrineBuildDate = shrineBuildDate,
-          ontologyVersion = ontologyVersion,
-          ontologyTerm = ontologyTerm,
-          adapterOk = adapterOk,
-          keystoreOk = keystoreOk,
-          hubOk = hubOk,
-          qepOk = qepOk
-        )
-
-        ctx.complete(summary)
-      }
-    }
-
-    requestUriThenRoute(happyBaseUrl+"/all", pullSummaryFromHappy)
-    */
+    requestUriThenRoute(statusBaseUrl + "/summary",passThrough)
   }
 
 }
 
-
-case class Summary(
-                    isHub:Boolean,
-                    shrineVersion:String,
-                    shrineBuildDate:String,
-                    ontologyVersion:String,
-                    ontologyTerm:String,
-                    adapterOk:Boolean,
-                    keystoreOk:Boolean,
-                    hubOk:Boolean,
-                    qepOk:Boolean
-                  )
 /**
  * Centralized parsing logic for map of shrine.conf
  * the class literal `T.class` in Java.

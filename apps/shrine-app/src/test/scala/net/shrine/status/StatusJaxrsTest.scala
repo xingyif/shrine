@@ -43,7 +43,7 @@ class StatusJaxrsTest extends ShouldMatchersForJUnit {
     passwordKeys should equal(Map.empty[String,String])
   }
 
-  /*
+  /* todo need some way to start Shrine for this to work
   @Test
   def testSummary() = {
 //    val expectedJson4sConfig = Json4sConfig(expectedConfig)

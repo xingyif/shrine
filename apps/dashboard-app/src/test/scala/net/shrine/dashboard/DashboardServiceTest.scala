@@ -182,7 +182,6 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
     }
   }
 
-  /* todo turn this back on
   "DashboardService" should  "return an OK for admin/status/summary" in {
 
     Get(s"/admin/status/summary") ~>
@@ -192,10 +191,8 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
       assertResult(OK)(status)
 
       val summary = new String(body.data.toByteArray)
-      println(summary)
     }
   }
-*/
 
   val dashboardCredentials = BasicHttpCredentials(adminUserName,"shh!")
 
