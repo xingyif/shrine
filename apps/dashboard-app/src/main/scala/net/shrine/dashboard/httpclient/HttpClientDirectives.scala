@@ -37,7 +37,6 @@ trait HttpClientDirectives extends Loggable {
     * Proxy the request to the specified base uri appended with the unmatched path.
     *
     */
-  //todo these implicits don't buy that much . Consider ditching them.
   def forwardUnmatchedPath(baseUri: Uri,maybeCredentials:Option[HttpCredentials] = None): Route = {
     def completeWithEntityAsString(httpResponse:HttpResponse,uri:Uri):Route = {
       ctx => {

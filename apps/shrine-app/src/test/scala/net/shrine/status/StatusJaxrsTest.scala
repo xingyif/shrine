@@ -1,6 +1,6 @@
 package net.shrine.status
 
-import com.typesafe.config.{ConfigValue, ConfigFactory}
+import com.typesafe.config.ConfigFactory
 import net.shrine.util.ShouldMatchersForJUnit
 import org.json4s.{DefaultFormats, Formats}
 import org.junit.Test
@@ -42,4 +42,22 @@ class StatusJaxrsTest extends ShouldMatchersForJUnit {
 
     passwordKeys should equal(Map.empty[String,String])
   }
+
+  /*
+  @Test
+  def testSummary() = {
+//    val expectedJson4sConfig = Json4sConfig(expectedConfig)
+
+    val summaryString = statusJaxrs.summary
+
+    println(summaryString)
+
+    val summary = Serialization.read[Summary](summaryString)
+
+//    config should equal(expectedJson4sConfig)
+
+    println(summary)
+
+  }
+  */
 }

@@ -228,6 +228,10 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
 //todo this is the Happy summary. Rename, eventually delete when the status service can provide the same
   lazy val getSummary:Route = {
 
+  def passThrough(httpResponse: HttpResponse,uri: Uri):Route = ctx => ctx.complete(httpResponse.entity.asString)
+
+  requestUriThenRoute(statusBaseUrl + "/summary",passThrough)
+  /*
     val happyBaseUrl: String = DashboardConfigSource.config.getString("shrine.dashboard.happyBaseUrl")
 
     def pullSummaryFromHappy(httpResponse:HttpResponse,uri:Uri):Route = {
@@ -270,7 +274,9 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
     }
 
     requestUriThenRoute(happyBaseUrl+"/all", pullSummaryFromHappy)
+    */
   }
+
 }
 
 
@@ -289,7 +295,7 @@ case class Summary(
  * Centralized parsing logic for map of shrine.conf
  * the class literal `T.class` in Java.
  */
-//todo most of this info should come from the status service in Shrine, not from reading the config
+//todo most of this info should come directly from the status service in Shrine, not from reading the config
 case class ParsedConfig(configMap:Map[String, String]){
 
   private val trueVal = "true"

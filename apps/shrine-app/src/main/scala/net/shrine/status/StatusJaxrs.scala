@@ -1,20 +1,26 @@
 package net.shrine.status
 
-import javax.ws.rs.{WebApplicationException, GET, Path, Produces}
-import javax.ws.rs.core.{Response, MediaType}
+import javax.ws.rs.{GET, Path, Produces, WebApplicationException}
+import javax.ws.rs.core.{MediaType, Response}
 
 import com.sun.jersey.spi.container.{ContainerRequest, ContainerRequestFilter}
 import com.typesafe.config.{Config => TsConfig}
+import net.shrine.broadcaster.Broadcaster
 import net.shrine.wiring.ShrineOrchestrator
 import org.json4s.{DefaultFormats, Formats}
 import org.json4s.native.Serialization
-
 import net.shrine.log.Loggable
 
 import scala.collection.JavaConverters._
-import scala.collection.immutable.{Map,Set}
-
+import scala.collection.immutable.{Map, Set}
 import net.shrine.config.ConfigExtensions
+import net.shrine.crypto.SigningCertStrategy
+import net.shrine.protocol.query.{OccuranceLimited, QueryDefinition, Term}
+import net.shrine.protocol.{AuthenticationInfo, BroadcastMessage, Credential, Failure, Result, ResultOutputType, RunQueryRequest, Timeout}
+import net.shrine.util.Versions
+
+import scala.concurrent.Await
+import scala.util.Try
 
 /**
   * A subservice that shares internal state of the shrine servlet.
@@ -42,14 +48,102 @@ case class StatusJaxrs(shrineConfig:TsConfig) extends Loggable {
     //todo probably better to reach out and grab the config from ManuallyWiredShrineJaxrsResources once it is a singleton
     Serialization.write(Json4sConfig(shrineConfig))
   }
+
+  @GET
+  @Path("summary")
+  def summary: String = {
+    val summary = Summary()
+    Serialization.write(summary)
+  }
+}
+
+case class Summary(
+                    isHub:Boolean,
+                    shrineVersion:String,
+                    shrineBuildDate:String,
+                    ontologyVersion:String,
+                    ontologyTerm:String,
+                    adapterOk:Boolean,
+                    keystoreOk:Boolean,
+                    hubOk:Boolean,
+                    qepOk:Boolean
+                  )
+
+object Summary {
+
+  val term = Term(ShrineOrchestrator.shrineConfig.getString("networkStatusQuery"))
+
+  def runQueryRequest: BroadcastMessage = {
+    val domain = "happy"
+    val username = "happy"
+
+    val networkAuthn = AuthenticationInfo(domain, username, Credential("", isToken = false))
+
+    val queryDefinition = QueryDefinition("TestQuery", OccuranceLimited(1, term))
+    import scala.concurrent.duration._
+    val req = RunQueryRequest(
+      "happyProject",
+      3.minutes,
+      networkAuthn,
+      None,
+      None,
+      Set(ResultOutputType.PATIENT_COUNT_XML),
+      queryDefinition)
+
+
+    ShrineOrchestrator.signerVerifier.sign(BroadcastMessage(req.networkQueryId, networkAuthn, req), SigningCertStrategy.Attach)
+  }
+
+  def apply(): Summary = {
+
+    val message = runQueryRequest
+
+    val adapterOk: Boolean = ShrineOrchestrator.adapterService.fold(true) { adapterService =>
+
+      import scala.concurrent.duration._
+
+      val start = System.currentTimeMillis
+      val resultAttempt: Try[Result] = Try(adapterService.handleRequest(message))
+      val end = System.currentTimeMillis
+      val elapsed = (end - start).milliseconds
+
+      resultAttempt match {
+        case scala.util.Failure(cause) => false
+        case scala.util.Success(response) => true
+      }
+    }
+
+    val hubOk = ShrineOrchestrator.hubComponents.fold(true){ hubComponents =>
+      val maxQueryWaitTime = hubComponents.broadcasterMultiplexerService.maxQueryWaitTime
+      val broadcaster: Broadcaster = hubComponents.broadcasterMultiplexerService.broadcaster
+      val message = runQueryRequest
+      val multiplexer = broadcaster.broadcast(message)
+      val responses = Await.result(multiplexer.responses, maxQueryWaitTime).toSeq
+      val failures = responses.collect { case f: Failure => f }
+      val timeouts = responses.collect { case t: Timeout => t }
+      val validResults = responses.collect { case r: Result => r }
+
+      failures.isEmpty && timeouts.isEmpty && (validResults.size == broadcaster.destinations.size )
+    }
+
+    Summary(
+      isHub = ShrineOrchestrator.hubComponents.isDefined,
+      shrineVersion = Versions.version,
+      shrineBuildDate = Versions.buildDate,
+      ontologyVersion = ShrineOrchestrator.ontologyMetadata.ontologyVersion,
+      ontologyTerm = term.value,
+      adapterOk = adapterOk,
+      keystoreOk = true, //todo something for this
+      hubOk = hubOk,
+      qepOk = true //todo something for this
+    )
+  }
 }
 
 case class Version(version:String)
 
-//todo SortedMap
-case class Json4sConfig(keyValues:Map[String,String]){
-
-}
+//todo SortedMap when possible
+case class Json4sConfig(keyValues:Map[String,String])
 
 object Json4sConfig{
   def isPassword(key:String):Boolean = {
@@ -83,7 +177,7 @@ class PermittedHostOnly extends ContainerRequestFilter {
     // todo access to the happy service permitted for SHRINE 1.21 per SHRINE-1366
     // restrict access to happy service when database work resumes as part of SHRINE-
     //       if ((path.contains("happy") || path.contains("internalstatus")) && (hostOfOrigin != permittedHostOfOrigin)) {
-    if (( path.contains("internalstatus")) && (hostOfOrigin != permittedHostOfOrigin)) {
+    if (path.contains("internalstatus") && (hostOfOrigin != permittedHostOfOrigin)) {
       val response = Response.status(Response.Status.UNAUTHORIZED).entity(s"Only available from $permittedHostOfOrigin, not $hostOfOrigin, controlled by shrine.status.permittedHostOfOrigin in shrine.conf").build()
       throw new WebApplicationException(response)
     }
