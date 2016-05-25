@@ -17,6 +17,7 @@ import spray.routing.{AuthenticationFailedRejection, Directive0, HttpService, Re
 import org.json4s.{DefaultFormats, Formats}
 import org.json4s.native.JsonMethods.{parse => json4sParse}
 
+import scala.collection.immutable.Iterable
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.xml.Elem
 
@@ -181,7 +182,7 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
 
     def completeSummaryRoute(httpResponse:HttpResponse,uri:Uri):Route = {
       ctx => {
-        val config = ConfigParser(httpResponse.entity.asString)
+        val config = ParsedConfig(httpResponse.entity.asString)
 
         ctx.complete(
           ShrineConfig(config)
@@ -197,7 +198,7 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
     def pullClasspathFromConfig(httpResponse:HttpResponse,uri:Uri):Route = {
       ctx => {
         val result        = httpResponse.entity.asString
-        val shrineConfig  = ShrineConfig(ConfigParser(result))
+        val shrineConfig  = ShrineConfig(ParsedConfig(result))
 
         ctx.complete(shrineConfig)
       }
@@ -213,10 +214,10 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
 
     def completeSummaryRoute(httpResponse:HttpResponse,uri:Uri):Route = {
       ctx => {
-        val config = ConfigParser(httpResponse.entity.asString)
+        val config = ParsedConfig(httpResponse.entity.asString)
 
         ctx.complete(
-          Options(config)
+          OptionalParts(config)
         )
       }
     }
@@ -288,70 +289,64 @@ case class Summary(
  * Centralized parsing logic for map of shrine.conf
  * the class literal `T.class` in Java.
  */
-//todo this thing is ShrineConfig's apply method. Move it all there and get rid of this mess
-//todo this class' crap is spread out everywhere. Clean it all up.
-case class ConfigParser(shrineMap:Map[String, String]){
+//todo most of this info should come from the status service in Shrine, not from reading the config
+case class ParsedConfig(configMap:Map[String, String]){
 
   private val trueVal = "true"
   private val rootKey = "shrine"
 
-  def IsHub =
+  def isHub =
     getOrElse(rootKey + ".hub.create", "")
       .toLowerCase == trueVal
 
-  // -- -- //
-  def StewardEnabled =
-    shrineMap.keySet
+  def stewardEnabled =
+    configMap.keySet
       .contains(rootKey + ".queryEntryPoint.shrineSteward")
 
-  // -- -- //
-  def ShouldQuerySelf =
+  def shouldQuerySelf =
     getOrElse(rootKey + ".hub.shouldQuerySelf", "")
       .toLowerCase == trueVal
 
-  // -- -- //
-  def DownstreamNodes =
-    for((k,v) <- shrineMap.filterKeys(_.toLowerCase.startsWith
-      ("shrine.hub.downstreamnodes"))) yield DownstreamNode(k.split('.').last,
-      v.split("\"").mkString(""))
+  def fromJsonString(jsonString:String): String = jsonString.split("\"").mkString("")
 
-  // -- -- //
-  def fromJsonString(jsonString:String) = jsonString.split("\"").mkString("")
+  def get(key:String): Option[String] = configMap.get(key).map(fromJsonString)
 
-  def get(key:String) = shrineMap.get(key).map(fromJsonString)
-
-  def getOrElse(key:String, elseVal:String = "") = get(key).getOrElse(elseVal)
+  def getOrElse(key:String, elseVal:String = ""): String = get(key).getOrElse(elseVal)
 }
 
-object ConfigParser {
-  def apply(jsonString:String):ConfigParser = {
+object ParsedConfig {
+  def apply(jsonString:String):ParsedConfig = {
 
-    // -- needed to use json4s parse -- //
     implicit def json4sFormats: Formats = DefaultFormats
 
-    ConfigParser(json4sParse(jsonString).extract[StatusProtocolConfig].keyValues
-      .filterKeys(_.toLowerCase.startsWith("shrine")))
+    ParsedConfig(json4sParse(jsonString).extract[StatusProtocolConfig].keyValues.filterKeys(_.toLowerCase.startsWith("shrine")))
   }
 
 }
 
+case class DownstreamNode(name:String, url:String)
 
-case class DownstreamNode(name:String, url:String){
+object DownstreamNode {
+  def create(configMap:Map[String,String]):Iterable[DownstreamNode] = {
+    for ((k, v) <- configMap.filterKeys(_.toLowerCase.startsWith
+    ("shrine.hub.downstreamnodes")))
+      yield DownstreamNode(k.split('.').last,v.split("\"").mkString(""))
+  }
 }
 
-
-
 //todo this is filling for the dashboard Summary - major components of shrine, and downstream nodes for a hub. Rename
-case class Options(isHub:Boolean, stewardEnabled:Boolean, shouldQuerySelf:Boolean,
-                   downstreamNodes:Iterable[DownstreamNode])
-object Options{
-  def apply(parsedConfig:ConfigParser):Options ={
-    val isHub           = parsedConfig.IsHub
-    val stewardEnabled  = parsedConfig.StewardEnabled
-    val shouldQuerySelf = parsedConfig.ShouldQuerySelf
-    val downstreamNodes = parsedConfig.DownstreamNodes
+case class OptionalParts(isHub:Boolean,
+                         stewardEnabled:Boolean,
+                         shouldQuerySelf:Boolean,
+                         downstreamNodes:Iterable[DownstreamNode])
+object OptionalParts{
+  def apply(parsedConfig:ParsedConfig):OptionalParts ={
+    val isHub           = parsedConfig.isHub
+    val stewardEnabled  = parsedConfig.stewardEnabled
+    val shouldQuerySelf = parsedConfig.shouldQuerySelf
+    val downstreamNodes = DownstreamNode.create(parsedConfig.configMap)
 
-    Options(isHub, stewardEnabled, shouldQuerySelf, downstreamNodes)
+    OptionalParts(isHub, stewardEnabled, shouldQuerySelf, downstreamNodes)
   }
 }
 
@@ -368,15 +363,15 @@ case class ShrineConfig(isHub:Boolean,
                        )
 
 object ShrineConfig{
-  def apply(config:ConfigParser):ShrineConfig = {
+  def apply(config:ParsedConfig):ShrineConfig = {
     val hub               = Hub(config)
-    val isHub             = config.IsHub
+    val isHub             = config.isHub
     val pmEndpoint        = Endpoint("pm",config)
     val ontEndpoint       = Endpoint("ont",config)
     val hiveCredentials   = HiveCredentials(config)
     val adapter           = Adapter(config)
     val queryEntryPoint   = QEP(config)
-    val networkStatusQuery = config.shrineMap("shrine.networkStatusQuery")
+    val networkStatusQuery = config.configMap("shrine.networkStatusQuery")
 
     ShrineConfig(isHub, hub, pmEndpoint, ontEndpoint, hiveCredentials, adapter, queryEntryPoint, networkStatusQuery)
   }
@@ -384,12 +379,12 @@ object ShrineConfig{
 
 case class Endpoint(acceptAllCerts:Boolean, url:String, timeoutSeconds:Int)
 object Endpoint{
-  def apply(endpointType:String,parsedConfig:ConfigParser):Endpoint = {
+  def apply(endpointType:String,parsedConfig:ParsedConfig):Endpoint = {
     val prefix = "shrine." + endpointType.toLowerCase + "Endpoint."
 
-    val acceptAllCerts  = parsedConfig.shrineMap.getOrElse(prefix + "acceptAllCerts", "") == "true"
-    val url             = parsedConfig.shrineMap.getOrElse(prefix + "url","")
-    val timeoutSeconds  = parsedConfig.shrineMap.getOrElse(prefix + "timeout.seconds", "0").toInt
+    val acceptAllCerts  = parsedConfig.configMap.getOrElse(prefix + "acceptAllCerts", "") == "true"
+    val url             = parsedConfig.configMap.getOrElse(prefix + "url","")
+    val timeoutSeconds  = parsedConfig.configMap.getOrElse(prefix + "timeout.seconds", "0").toInt
     Endpoint(acceptAllCerts, url, timeoutSeconds)
   }
 }
@@ -397,13 +392,13 @@ object Endpoint{
 case class HiveCredentials(domain:String, username:String, password:String,
                            crcProjectId:String, ontProjectId:String)
 object HiveCredentials{
-  def apply(parsedConfig:ConfigParser):HiveCredentials = {
+  def apply(parsedConfig:ParsedConfig):HiveCredentials = {
     val key           = "shrine.hiveCredentials."
-    val domain        = parsedConfig.shrineMap.getOrElse(key + "domain","")
-    val username      = parsedConfig.shrineMap.getOrElse(key + "username","")
+    val domain        = parsedConfig.configMap.getOrElse(key + "domain","")
+    val username      = parsedConfig.configMap.getOrElse(key + "username","")
     val password      = "REDACTED"
-    val crcProjectId  = parsedConfig.shrineMap.getOrElse(key + "crcProjectId","")
-    val ontProjectId  = parsedConfig.shrineMap.getOrElse(key + "ontProjectId","")
+    val crcProjectId  = parsedConfig.configMap.getOrElse(key + "crcProjectId","")
+    val ontProjectId  = parsedConfig.configMap.getOrElse(key + "ontProjectId","")
     HiveCredentials(domain, username, password, crcProjectId, ontProjectId)
   }
 }
@@ -412,10 +407,10 @@ object HiveCredentials{
 case class Hub(shouldQuerySelf:Boolean, create:Boolean,
                downstreamNodes:Iterable[DownstreamNode])
 object Hub{
-  def apply(parsedConfig:ConfigParser):Hub = {
-    val shouldQuerySelf = parsedConfig.ShouldQuerySelf
-    val create          = parsedConfig.IsHub
-    val downstreamNodes = parsedConfig.DownstreamNodes
+  def apply(parsedConfig:ParsedConfig):Hub = {
+    val shouldQuerySelf = parsedConfig.shouldQuerySelf
+    val create          = parsedConfig.isHub
+    val downstreamNodes = DownstreamNode.create(parsedConfig.configMap)
     Hub(shouldQuerySelf, create, downstreamNodes)
   }
 }
@@ -424,12 +419,12 @@ object Hub{
 case class Adapter(crcEndpointUrl:String, setSizeObfuscation:Boolean, adapterLockoutAttemptsThreshold:Int,
                    adapterMappingsFilename:String)
 object Adapter{
-  def apply(parsedConfig:ConfigParser):Adapter = {
+  def apply(parsedConfig:ParsedConfig):Adapter = {
     val key                             = "shrine.adapter."
-    val crcEndpointUrl                  = parsedConfig.shrineMap.getOrElse(key + "crcEndpoint.url","")
-    val setSizeObfuscation              = parsedConfig.shrineMap.getOrElse(key + "setSizeObfuscation","").toLowerCase == "true"
-    val adapterLockoutAttemptsThreshold = parsedConfig.shrineMap.getOrElse(key + "adapterLockoutAttemptsThreshold", "0").toInt
-    val adapterMappingsFileName         = parsedConfig.shrineMap.getOrElse(key + "adapterMappingsFileName","")
+    val crcEndpointUrl                  = parsedConfig.configMap.getOrElse(key + "crcEndpoint.url","")
+    val setSizeObfuscation              = parsedConfig.configMap.getOrElse(key + "setSizeObfuscation","").toLowerCase == "true"
+    val adapterLockoutAttemptsThreshold = parsedConfig.configMap.getOrElse(key + "adapterLockoutAttemptsThreshold", "0").toInt
+    val adapterMappingsFileName         = parsedConfig.configMap.getOrElse(key + "adapterMappingsFileName","")
 
     Adapter(crcEndpointUrl, setSizeObfuscation, adapterLockoutAttemptsThreshold, adapterMappingsFileName)
   }
@@ -438,10 +433,10 @@ object Adapter{
 
 case class Steward(qepUserName:String, stewardBaseUrl:String)
 object Steward {
-  def apply (parsedConfig:ConfigParser):Steward = {
+  def apply (parsedConfig:ParsedConfig):Steward = {
     val key = "shrine.queryEntryPoint.shrineSteward."
-    val qepUserName     = parsedConfig.shrineMap.getOrElse(key + "qepUserName","")
-    val stewardBaseUrl  = parsedConfig.shrineMap.getOrElse(key + "stewardBaseUrl","")
+    val qepUserName     = parsedConfig.configMap.getOrElse(key + "qepUserName","")
+    val stewardBaseUrl  = parsedConfig.configMap.getOrElse(key + "stewardBaseUrl","")
     Steward(qepUserName, stewardBaseUrl)
   }
 }
@@ -455,13 +450,13 @@ case class DatabaseInfo(createTablesOnStart:Boolean, dataSourceFrom:String,
                         jndiDataSourceName:String, slickProfileClassName:String)
 case class Audit(database:DatabaseInfo, collectQepAudit:Boolean)
 object Audit{
-  def apply(parsedConfig:ConfigParser):Audit = {
+  def apply(parsedConfig:ParsedConfig):Audit = {
     val key = "shrine.queryEntryPoint.audit."
-    val createTablesOnStart     = parsedConfig.shrineMap.getOrElse(key + "database.createTablesOnStart","") == "true"
-    val dataSourceFrom          = parsedConfig.shrineMap.getOrElse(key + "database.dataSourceFrom","")
-    val jndiDataSourceName      = parsedConfig.shrineMap.getOrElse(key + "database.jndiDataSourceName","")
-    val slickProfileClassName   = parsedConfig.shrineMap.getOrElse(key + "database.slickProfileClassName","")
-    val collectQepAudit         = parsedConfig.shrineMap.getOrElse(key + "collectQepAudit","") == "true"
+    val createTablesOnStart     = parsedConfig.configMap.getOrElse(key + "database.createTablesOnStart","") == "true"
+    val dataSourceFrom          = parsedConfig.configMap.getOrElse(key + "database.dataSourceFrom","")
+    val jndiDataSourceName      = parsedConfig.configMap.getOrElse(key + "database.jndiDataSourceName","")
+    val slickProfileClassName   = parsedConfig.configMap.getOrElse(key + "database.slickProfileClassName","")
+    val collectQepAudit         = parsedConfig.configMap.getOrElse(key + "collectQepAudit","") == "true"
     val database = DatabaseInfo(createTablesOnStart, dataSourceFrom, jndiDataSourceName, slickProfileClassName)
     Audit(database, collectQepAudit)
   }
@@ -480,16 +475,16 @@ case class QEP(
 
 object QEP{
   val key = "shrine.queryEntryPoint."
-  def apply(parsedConfig:ConfigParser):QEP = QEP(
-    maxQueryWaitTimeMinutes = parsedConfig.shrineMap.getOrElse(key + "maxQueryWaitTime.minutes", "0").toInt,
-    create                  = parsedConfig.shrineMap.getOrElse(key + "create","") == "true",
-    attachSigningCert       = parsedConfig.shrineMap.getOrElse(key + "attachSigningCert","") == "true",
-    authorizationType       = parsedConfig.shrineMap.getOrElse(key + "authorizationType",""),
-    includeAggregateResults = parsedConfig.shrineMap.getOrElse(key + "includeAggregateResults","") == "true",
-    authenticationType      = parsedConfig.shrineMap.getOrElse(key + "authenticationType", ""),
+  def apply(parsedConfig:ParsedConfig):QEP = QEP(
+    maxQueryWaitTimeMinutes = parsedConfig.configMap.getOrElse(key + "maxQueryWaitTime.minutes", "0").toInt,
+    create                  = parsedConfig.configMap.getOrElse(key + "create","") == "true",
+    attachSigningCert       = parsedConfig.configMap.getOrElse(key + "attachSigningCert","") == "true",
+    authorizationType       = parsedConfig.configMap.getOrElse(key + "authorizationType",""),
+    includeAggregateResults = parsedConfig.configMap.getOrElse(key + "includeAggregateResults","") == "true",
+    authenticationType      = parsedConfig.configMap.getOrElse(key + "authenticationType", ""),
     audit                   = Audit(parsedConfig),
     shrineSteward           = Steward(parsedConfig),
-    broadcasterServiceEndpointUrl = parsedConfig.shrineMap.get(key + "broadcasterServiceEndpoint.url")
+    broadcasterServiceEndpointUrl = parsedConfig.configMap.get(key + "broadcasterServiceEndpoint.url")
   )
 }
 
