@@ -1,0 +1,1 @@
+{"isHub":true,"stewardEnabled":true,"shouldQuerySelf":false,"downstreamNodes":[{"name":"shrine-dev2","url":"https://shrine-dev2.catalyst:6443/shrine/rest/adapter/requests"},{"name":"shrine-dev1","url":"not applicable"}]}
