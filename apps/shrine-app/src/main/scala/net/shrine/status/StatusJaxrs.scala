@@ -5,14 +5,15 @@ import javax.ws.rs.core.{MediaType, Response}
 
 import com.sun.jersey.spi.container.{ContainerRequest, ContainerRequestFilter}
 import com.typesafe.config.{Config => TsConfig}
-import net.shrine.broadcaster.Broadcaster
+import net.shrine.authorization.StewardQueryAuthorizationService
+import net.shrine.broadcaster.{Broadcaster, NodeHandle}
 import net.shrine.wiring.ShrineOrchestrator
 import org.json4s.{DefaultFormats, Formats}
 import org.json4s.native.Serialization
 import net.shrine.log.Loggable
 
 import scala.collection.JavaConverters._
-import scala.collection.immutable.{Map, Set}
+import scala.collection.immutable.{Seq, Map, Set}
 import net.shrine.config.ConfigExtensions
 import net.shrine.crypto.SigningCertStrategy
 import net.shrine.protocol.query.{OccuranceLimited, QueryDefinition, Term}
@@ -54,6 +55,38 @@ case class StatusJaxrs(shrineConfig:TsConfig) extends Loggable {
   def summary: String = {
     val summary = Summary()
     Serialization.write(summary)
+  }
+
+  @GET
+  @Path("optionalParts")
+  def optionalParts: String = {
+    val optionalParts = OptionalParts()
+    Serialization.write(optionalParts)
+  }
+
+}
+
+case class DownstreamNode(name:String, url:String)
+
+object DownstreamNode {
+  def apply(nodeHandle: NodeHandle): DownstreamNode = new DownstreamNode(
+    nodeHandle.nodeId.name,
+    nodeHandle.client.url.map(_.toString).getOrElse("not applicable"))
+}
+
+case class OptionalParts(isHub:Boolean,
+                         stewardEnabled:Boolean,
+                         shouldQuerySelf:Boolean, //todo don't use this field any more
+                         downstreamNodes:Seq[DownstreamNode])
+
+object OptionalParts {
+  def apply(): OptionalParts = {
+    OptionalParts(
+      ShrineOrchestrator.hubComponents.isDefined,
+      ShrineOrchestrator.queryEntryPointComponents.fold(false)(_.shrineService.authorizationService.isInstanceOf[StewardQueryAuthorizationService]),
+      false,
+      ShrineOrchestrator.hubComponents.fold(Seq.empty[DownstreamNode])(_.broadcastDestinations.map(DownstreamNode(_)).to[Seq])
+    )
   }
 }
 

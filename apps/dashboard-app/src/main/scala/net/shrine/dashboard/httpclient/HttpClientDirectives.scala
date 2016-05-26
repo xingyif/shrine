@@ -58,10 +58,19 @@ trait HttpClientDirectives extends Loggable {
   }
 
   /**
+    * Just pass the result through
+    */
+  def passThrough(httpResponse: HttpResponse,uri: Uri):Route = ctx => ctx.complete(httpResponse.entity.asString)
+
+  /**
     * proxy the request to the specified uri with the unmatched path, then use the returned entity (as a string) to complete the route.
     *
     */
-  def requestUriThenRoute(resourceUri:Uri, route:(HttpResponse,Uri) => Route,maybeCredentials:Option[HttpCredentials] = None): Route = {
+  def requestUriThenRoute(
+                           resourceUri:Uri,
+                          route:(HttpResponse,Uri) => Route = passThrough,
+                          maybeCredentials:Option[HttpCredentials] = None
+                         ): Route = {
     ctx => {
       val httpResponse = httpResponseForUri(resourceUri,ctx,maybeCredentials)
       info(s"Got $httpResponse for $resourceUri")

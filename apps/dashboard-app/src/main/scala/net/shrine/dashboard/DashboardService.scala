@@ -171,7 +171,7 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
   def statusRoute(user:User):Route = get {
     pathPrefix("config"){getConfig}~
     pathPrefix("classpath"){getClasspath}~
-    pathPrefix("options"){getOptions}~
+    pathPrefix("options"){getOptionalParts}~  //todo rename path to optionalParts
     pathPrefix("summary"){getSummary}
   }
 
@@ -206,29 +206,12 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
     requestUriThenRoute(statusBaseUrl + "/config",pullClasspathFromConfig)
   }
 
-
-
-
-  lazy val getOptions:Route = {
-
-    def completeSummaryRoute(httpResponse:HttpResponse,uri:Uri):Route = {
-      ctx => {
-        val config = ParsedConfig(httpResponse.entity.asString)
-
-        ctx.complete(
-          OptionalParts(config)
-        )
-      }
-    }
-
-    requestUriThenRoute(statusBaseUrl + "/config", completeSummaryRoute)
+  lazy val getOptionalParts:Route = {
+    requestUriThenRoute(statusBaseUrl + "/optionalParts")
   }
 
   lazy val getSummary:Route = {
-
-    def passThrough(httpResponse: HttpResponse,uri: Uri):Route = ctx => ctx.complete(httpResponse.entity.asString)
-
-    requestUriThenRoute(statusBaseUrl + "/summary",passThrough)
+    requestUriThenRoute(statusBaseUrl + "/summary")
   }
 
 }
@@ -281,23 +264,6 @@ object DownstreamNode {
       yield DownstreamNode(k.split('.').last,v.split("\"").mkString(""))
   }
 }
-
-//todo this is filling for the dashboard Summary - major components of shrine, and downstream nodes for a hub. Rename
-case class OptionalParts(isHub:Boolean,
-                         stewardEnabled:Boolean,
-                         shouldQuerySelf:Boolean,
-                         downstreamNodes:Iterable[DownstreamNode])
-object OptionalParts{
-  def apply(parsedConfig:ParsedConfig):OptionalParts ={
-    val isHub           = parsedConfig.isHub
-    val stewardEnabled  = parsedConfig.stewardEnabled
-    val shouldQuerySelf = parsedConfig.shouldQuerySelf
-    val downstreamNodes = DownstreamNode.create(parsedConfig.configMap)
-
-    OptionalParts(isHub, stewardEnabled, shouldQuerySelf, downstreamNodes)
-  }
-}
-
 
 //todo replace with the actual config, scrubbed of passwords
 case class ShrineConfig(isHub:Boolean,
