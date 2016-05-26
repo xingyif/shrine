@@ -179,7 +179,7 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
 
   lazy val getConfig:Route = {
 
-    def completeSummaryRoute(httpResponse:HttpResponse,uri:Uri):Route = {
+    def completeConfigRoute(httpResponse:HttpResponse,uri:Uri):Route = {
       ctx => {
         val config = ParsedConfig(httpResponse.entity.asString)
 
@@ -189,7 +189,7 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
       }
     }
 
-    requestUriThenRoute(statusBaseUrl + "/config", completeSummaryRoute)
+    requestUriThenRoute(statusBaseUrl + "/config", completeConfigRoute)
   }
 
   lazy val getClasspath:Route = {
@@ -318,7 +318,9 @@ object HiveCredentials{
 }
 
 // -- hub only -- //
-case class Hub(shouldQuerySelf:Boolean, create:Boolean,
+//todo delete when the Dashboard front end can use the status service's hub method
+case class Hub(shouldQuerySelf:Boolean,
+               create:Boolean,
                downstreamNodes:Iterable[DownstreamNode])
 object Hub{
   def apply(parsedConfig:ParsedConfig):Hub = {

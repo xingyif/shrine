@@ -64,9 +64,22 @@ case class StatusJaxrs(shrineConfig:TsConfig) extends Loggable {
     Serialization.write(optionalParts)
   }
 
+  @GET
+  @Path("hub")
+  def hub: String = {
+    val optionalParts = OptionalParts()
+    Serialization.write(optionalParts)
+  }
+
 }
 
 case class DownstreamNode(name:String, url:String)
+
+object DownstreamNodes {
+  def get():Seq[DownstreamNode] = {
+    ShrineOrchestrator.hubComponents.fold(Seq.empty[DownstreamNode])(_.broadcastDestinations.map(DownstreamNode(_)).to[Seq])
+  }
+}
 
 object DownstreamNode {
   def apply(nodeHandle: NodeHandle): DownstreamNode = new DownstreamNode(
@@ -74,9 +87,23 @@ object DownstreamNode {
     nodeHandle.client.url.map(_.toString).getOrElse("not applicable"))
 }
 
+case class Hub(shouldQuerySelf:Boolean, //todo don't use this field any more. Drop it when possible
+               create:Boolean,
+               downstreamNodes:Seq[DownstreamNode])
+
+object Hub{
+  def apply():Hub = {
+    val shouldQuerySelf = false
+    val create          = ShrineOrchestrator.hubComponents.isDefined
+    val downstreamNodes = DownstreamNodes.get()
+    Hub(shouldQuerySelf, create, downstreamNodes)
+  }
+}
+
+
 case class OptionalParts(isHub:Boolean,
                          stewardEnabled:Boolean,
-                         shouldQuerySelf:Boolean, //todo don't use this field any more
+                         shouldQuerySelf:Boolean, //todo don't use this field any more. Drop it when possible
                          downstreamNodes:Seq[DownstreamNode])
 
 object OptionalParts {
@@ -85,7 +112,7 @@ object OptionalParts {
       ShrineOrchestrator.hubComponents.isDefined,
       ShrineOrchestrator.queryEntryPointComponents.fold(false)(_.shrineService.authorizationService.isInstanceOf[StewardQueryAuthorizationService]),
       false,
-      ShrineOrchestrator.hubComponents.fold(Seq.empty[DownstreamNode])(_.broadcastDestinations.map(DownstreamNode(_)).to[Seq])
+      DownstreamNodes.get()
     )
   }
 }
