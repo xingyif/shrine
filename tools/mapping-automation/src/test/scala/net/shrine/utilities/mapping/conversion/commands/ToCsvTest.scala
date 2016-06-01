@@ -17,7 +17,7 @@ final class ToCsvTest extends ShouldMatchersForJUnit {
   def testApply: Unit = {
     val csv = ToCsv(ExpectedTestMappings.mappings)
     
-    val unmarshalledMappings = AdapterMappings.fromCsv(new StringReader(csv)).get
+    val unmarshalledMappings = AdapterMappings.fromCsv("testString",new StringReader(csv)).get
     
     unmarshalledMappings should equal(ExpectedTestMappings.mappings)
   }

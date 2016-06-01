@@ -48,10 +48,11 @@ object AdapterComponents {
     //NB: Is i2b2HiveCredentials.projectId the right project id to use?
     val i2b2AdminDao: I2b2AdminDao = new SquerylI2b2AdminDao(crcHiveCredentials.projectId, squerylInitializer, squerylAdapterTables)
 
-    val adapterMappingsSource: AdapterMappingsSource = ClasspathFormatDetectingAdapterMappingsSource(adapterConfig.getString("adapterMappingsFileName"))
+    val adapterMappingsFile = adapterConfig.getString("adapterMappingsFileName")
+    val adapterMappingsSource: AdapterMappingsSource = ClasspathFormatDetectingAdapterMappingsSource(adapterMappingsFile)
 
     //NB: Fail fast
-    val adapterMappings: AdapterMappings = adapterMappingsSource.load.get
+    val adapterMappings: AdapterMappings = adapterMappingsSource.load(adapterMappingsFile).get
 
     val expressionTranslator: ExpressionTranslator = ExpressionTranslator(adapterMappings)
 

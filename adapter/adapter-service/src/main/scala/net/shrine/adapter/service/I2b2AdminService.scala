@@ -56,7 +56,13 @@ final class I2b2AdminService(
   private lazy val i2b2AdminQueryingUsers = I2b2AdminQueryingUsers(i2b2AdminDao)
   
   private lazy val queryDefinitions = QueryDefinitions[I2b2AdminReadQueryDefinitionRequest](dao)
-  
+
+  def crcUrl = runQueryAdapter.poster.url
+
+  def obfuscate = runQueryAdapter.doObfuscation
+
+  def adapterLockoutAttemptsThreshold = runQueryAdapter.adapterLockoutAttemptsThreshold
+
   //NB: shouldBroadcast is ignored; we never broadcast
   override def readQueryDefinition(request: I2b2AdminReadQueryDefinitionRequest, shouldBroadcast: Boolean): ShrineResponse = {
     checkWithPmAndThen(request) {

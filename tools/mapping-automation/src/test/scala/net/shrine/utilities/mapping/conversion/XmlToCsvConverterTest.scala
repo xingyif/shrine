@@ -15,7 +15,7 @@ import net.shrine.utilities.mapping.conversion.commands.ToCsv
 
 /**
  * @author clint
- * @date Jul 17, 2014
+ * @since Jul 17, 2014
  */
 final class XmlToCsvConverterTest extends ShouldMatchersForJUnit {
   @Test
@@ -32,11 +32,11 @@ final class XmlToCsvConverterTest extends ShouldMatchersForJUnit {
   @Test
   def testCommand: Unit = {
     val command = SlurpXml andThen ToCsv
+    val fileName = "src/test/resources/AdapterMappings.xml"
+    val csv = command(fileName)
     
-    val csv = command("src/test/resources/AdapterMappings.xml")
+    val unmarshalled = AdapterMappings.fromCsv(fileName,new StringReader(csv)).get
     
-    val unmarshalled = AdapterMappings.fromCsv(new StringReader(csv)).get
-    
-    unmarshalled should equal(ExpectedTestMappings.mappings)
+    unmarshalled should equal(ExpectedTestMappings.mappings.copy(source = "src/test/resources/AdapterMappings.xml"))
   }
 }

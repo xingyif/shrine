@@ -27,9 +27,9 @@ final class ToAdapterMappingsTest extends ShouldMatchersForJUnit {
       OntTerm(xy) -> Set(OntTerm(abca1), OntTerm(abca2), OntTerm(abc)),
       OntTerm(x) -> Set(OntTerm(abca1), OntTerm(abca2), OntTerm(abc)))
     
-    val adapterMappings = ToAdapterMappings(generatedMappings)
+    val adapterMappings = ToAdapterMappings(generatedMappings).copy(source = "test")
     
-    adapterMappings should equal(AdapterMappings(AdapterMappings.Unknown, Map(
+    adapterMappings should equal(AdapterMappings("test",AdapterMappings.Unknown, Map(
       xyza -> Set(abca1, abca2),
       xyz -> Set(abca1, abca2, abc),
       xy -> Set(abca1, abca2, abc),

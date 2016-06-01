@@ -67,8 +67,15 @@ case class StatusJaxrs(shrineConfig:TsConfig) extends Loggable {
   @GET
   @Path("hub")
   def hub: String = {
-    val optionalParts = OptionalParts()
-    Serialization.write(optionalParts)
+    val hub = Hub()
+    Serialization.write(hub)
+  }
+
+  @GET
+  @Path("adapter")
+  def adapter: String = {
+    val adapter = Adapter()
+    Serialization.write(adapter)
   }
 
 }
@@ -85,6 +92,22 @@ object DownstreamNode {
   def apply(nodeHandle: NodeHandle): DownstreamNode = new DownstreamNode(
     nodeHandle.nodeId.name,
     nodeHandle.client.url.map(_.toString).getOrElse("not applicable"))
+}
+
+case class Adapter(crcEndpointUrl:String,
+                   setSizeObfuscation:Boolean,
+                   adapterLockoutAttemptsThreshold:Int,
+                   adapterMappingsFilename:String)
+
+object Adapter{
+  def apply():Adapter = {
+    val crcEndpointUrl                  = ShrineOrchestrator.adapterComponents.fold("")(_.i2b2AdminService.crcUrl)
+    val setSizeObfuscation              = ShrineOrchestrator.adapterComponents.fold(false)(_.i2b2AdminService.obfuscate)
+    val adapterLockoutAttemptsThreshold = ShrineOrchestrator.adapterComponents.fold(0)(_.i2b2AdminService.adapterLockoutAttemptsThreshold)
+    val adapterMappingsFileName         = ShrineOrchestrator.adapterComponents.fold("")(_.adapterMappings.source)
+
+    Adapter(crcEndpointUrl, setSizeObfuscation, adapterLockoutAttemptsThreshold, adapterMappingsFileName)
+  }
 }
 
 case class Hub(shouldQuerySelf:Boolean, //todo don't use this field any more. Drop it when possible

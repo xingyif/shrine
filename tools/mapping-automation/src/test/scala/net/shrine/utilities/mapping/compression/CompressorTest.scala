@@ -71,7 +71,9 @@ final class CompressorTest extends ShouldMatchersForJUnit {
   @Test
   def testCompressRealWorldFile: Unit = {
     val mappings = {
-      AdapterMappings.fromCsv(new FileReader("src/test/resources/compressable-real-world-mappings.csv")).get.mappings.map {
+
+      val fileName = "src/test/resources/compressable-real-world-mappings.csv"
+      AdapterMappings.fromCsv(fileName,new FileReader(fileName)).get.mappings.map {
         case (shrineTerm, i2b2Terms) =>
           OntTerm(shrineTerm) -> i2b2Terms.map(OntTerm(_))
       }

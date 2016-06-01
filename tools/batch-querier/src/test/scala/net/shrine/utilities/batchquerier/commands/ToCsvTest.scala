@@ -20,7 +20,7 @@ final class ToCsvTest extends ShouldMatchersForJUnit {
                    CsvRow("bar", "Bar", "Finished", 456L, "2.00", "2.00", 2, Term("bar").toXmlString),
                    CsvRow("baz", "Baz", "Error", 789L, "5974.02", "5974.02", 1, Term("baz").toXmlString))
                    
-    val csvString = ToCsv.apply(rows)
+    val csvString: String = ToCsv.apply(rows)
     
     val expectedRows = Seq(
         headerRow,

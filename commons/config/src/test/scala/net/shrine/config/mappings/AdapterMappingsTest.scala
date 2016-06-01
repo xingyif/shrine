@@ -3,10 +3,14 @@ package net.shrine.config.mappings
 import org.junit.Test
 import javax.xml.bind.annotation.XmlAccessorType
 import javax.xml.bind.annotation.XmlRootElement
+
 import net.shrine.util.ShouldMatchersForJUnit
 import java.io.StringReader
+
 import scala.util.Try
 import java.io.FileReader
+
+import scala.xml.NodeSeq
 
 /**
  * @author Andrew McMurry, MS
@@ -30,11 +34,12 @@ object AdapterMappingsTest {
 final class AdapterMappingsTest extends ShouldMatchersForJUnit {
   import AdapterMappingsTest._
 
-  private val mappings = (ClasspathFormatDetectingAdapterMappingsSource("AdapterMappings_DEM_AGE_0_9.xml")).load.get
+  private val mapFileName = "AdapterMappings_DEM_AGE_0_9.xml"
+  private val mappings = (ClasspathFormatDetectingAdapterMappingsSource(mapFileName)).load(mapFileName).get
 
   @Test
   def testDefaultConstructor {
-    val mappings = new AdapterMappings
+    val mappings = new AdapterMappings("test")
     
     mappings.mappings should equal(Map.empty)
     mappings.version should equal(AdapterMappings.Unknown)
@@ -63,21 +68,25 @@ final class AdapterMappingsTest extends ShouldMatchersForJUnit {
   }
 
   @Test
-  def testSerializeXml: Unit = doTestSerialize(_.toXml, AdapterMappings.fromXml)
+  def testSerializeXml: Unit = {
+    val fromXml: (NodeSeq) => Try[AdapterMappings] = AdapterMappings.fromXml("test",_)
+    doTestSerialize(_.toXml, fromXml)
+  }
   
   @Test
-  def testSerializeCsv: Unit = doTestSerialize(_.toCsv, (s: String) => AdapterMappings.fromCsv(new StringReader(s)))
+  def testSerializeCsv: Unit = doTestSerialize(_.toCsv, (s: String) => AdapterMappings.fromCsv("testString",new StringReader(s)))
   
   private def doTestSerialize[S](serialize: AdapterMappings => S, deserialize: S => Try[AdapterMappings]): Unit = {
-    val m = AdapterMappings.empty  ++ Seq("core1" -> "local1", 
+    val m = AdapterMappings.empty  ++ Seq("core1" -> "local1",
 							    	   "core1" -> "local2",
 							    	   "core2" -> "local1",
 							    	   "core2" -> "local2",
 							    	   "core2" -> "local3")
-							    	   
-    val unmarshalled = deserialize(serialize(m)).get
+
+    val expected = m.copy(source = "test")
+    val unmarshalled = deserialize(serialize(expected)).get.copy(source = "test")
     
-    unmarshalled should equal(m)
+    unmarshalled should equal(expected)
   }
   
   @Test
@@ -88,10 +97,11 @@ final class AdapterMappingsTest extends ShouldMatchersForJUnit {
 							    	   "core2" -> "local1",
 							    	   "core2" -> "local2",
 							    	   "core2" -> "local3")
-							    	   
-    val unmarshalled = AdapterMappings.fromCsv(new StringReader(AdapterMappings.fromXml(m.toXml).get.toCsv)).get
+
+    val expected = m.copy(source = "testString")
+    val unmarshalled = AdapterMappings.fromCsv("testString",new StringReader(AdapterMappings.fromXml("testString",expected.toXml).get.toCsv)).get
     
-    unmarshalled should equal(m)
+    unmarshalled should equal(expected)
   }
   
   @Test
@@ -102,8 +112,9 @@ final class AdapterMappingsTest extends ShouldMatchersForJUnit {
   @Test 
   def testVersionParsing {
     val expected = "1.2.3-foo"
-      
-    val mappings = (ClasspathFormatDetectingAdapterMappingsSource("AdapterMappingsWithVersion.xml")).load.get
+
+    val fileName = "AdapterMappingsWithVersion.xml"
+    val mappings = (ClasspathFormatDetectingAdapterMappingsSource(fileName)).load(fileName).get
     
     mappings.version should equal(expected)
     
@@ -117,7 +128,8 @@ final class AdapterMappingsTest extends ShouldMatchersForJUnit {
   
   @Test
   def testFromCsv: Unit = {
-    val mappings = AdapterMappings.fromCsv(new FileReader("src/test/resources/simple-mappings.csv")).get
+    val fileName = "src/test/resources/simple-mappings.csv"
+    val mappings = AdapterMappings.fromCsv(fileName,new FileReader(fileName)).get
     
     mappings.mappings should equal(Map(
         """\\X\Y\Z\A\""" -> Set("""\\A\B\C\A1\""","""\\A\B\C\A2\"""),

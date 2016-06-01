@@ -11,6 +11,7 @@ import net.shrine.utilities.mapping.ExpectedTestMappings
 final class SlurpXmlTest extends ShouldMatchersForJUnit {
   @Test
   def testApply: Unit = {
-    SlurpXml("src/test/resources/AdapterMappings.xml") should equal(ExpectedTestMappings.mappings)
+    val filename = "src/test/resources/AdapterMappings.xml"
+    SlurpXml(filename) should equal(ExpectedTestMappings.mappings.copy(source = filename))
   }
 }
