@@ -82,6 +82,27 @@ case class StatusJaxrs(shrineConfig:TsConfig) extends Loggable {
 
 case class DownstreamNode(name:String, url:String)
 
+case class Qep(
+                maxQueryWaitTimeMillis:Long,
+                create:Boolean,
+                attachSigningCert:Boolean,
+                authorizationType:String,
+                includeAggregateResults:Boolean,
+                authenticationType:String
+              )
+
+object Qep{
+  val key = "shrine.queryEntryPoint."
+  def apply():Qep = new Qep(
+    maxQueryWaitTimeMillis = ShrineOrchestrator.queryEntryPointComponents.fold(0L)(_.i2b2Service.queryTimeout.toMicros),
+    create                  = ShrineOrchestrator.queryEntryPointComponents.isDefined,
+    attachSigningCert       = ShrineOrchestrator.queryEntryPointComponents.fold(false)(_.i2b2Service.broadcastAndAggregationService.attachSigningCert),
+    authorizationType       = ShrineOrchestrator.queryEntryPointComponents.fold("")(_.i2b2Service.authorizationService.getClass.getSimpleName),
+    includeAggregateResults = ShrineOrchestrator.queryEntryPointComponents.fold(false)(_.i2b2Service.includeAggregateResult),
+    authenticationType      = ShrineOrchestrator.queryEntryPointComponents.fold("")(_.i2b2Service.authenticator.getClass.getName)
+  )
+}
+
 object DownstreamNodes {
   def get():Seq[DownstreamNode] = {
     ShrineOrchestrator.hubComponents.fold(Seq.empty[DownstreamNode])(_.broadcastDestinations.map(DownstreamNode(_)).to[Seq])

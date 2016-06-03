@@ -21,4 +21,6 @@ import net.shrine.broadcaster.dao.HubDao
  * @author clint
  * @date Nov 15, 2013
  */
-final class HubBroadcastAndAggregationService(broadcasterClient: BroadcasterClient) extends AbstractBroadcastAndAggregationService(broadcasterClient)
+final class HubBroadcastAndAggregationService(broadcasterClient: BroadcasterClient) extends AbstractBroadcastAndAggregationService(broadcasterClient) {
+  override def attachSigningCert: Boolean = false
+}

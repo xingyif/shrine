@@ -170,5 +170,7 @@ object BroadcastAndAggregationServiceTest {
       
       Future.successful(null)
     }
+
+    override def attachSigningCert: Boolean = false
   }
 }

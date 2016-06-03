@@ -15,7 +15,6 @@ object Keys {
   val setSizeObfuscation = "setSizeObfuscation"
   val isAdapter = "isAdapter"
   val isBroadcaster = "isBroadcaster"
-  val includeAggregateResults = "includeAggregateResults"
   val adapterLockoutAttemptsThreshold = "adapterLockoutAttemptsThreshold"
   val adapterMappingsFileName = "adapterMappingsFileName"
   val adapterMappingsFileType = "adapterMappingsFileType"
@@ -28,5 +27,4 @@ object Keys {
   val broadcasterServiceEndpoint = "broadcasterServiceEndpoint"
   val immediatelyRunIncomingQueries = "immediatelyRunIncomingQueries"
   val authenticationType = "authenticationType"
-  val attachSigningCert = "attachSigningCert"
 }

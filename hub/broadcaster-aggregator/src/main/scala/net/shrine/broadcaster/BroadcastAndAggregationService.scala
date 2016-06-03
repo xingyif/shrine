@@ -46,4 +46,8 @@ trait BroadcastAndAggregationService extends Loggable {
   }
   
   private def newQueryId = BroadcastMessage.Ids.next
+
+
+  def attachSigningCert:Boolean
+
 }
