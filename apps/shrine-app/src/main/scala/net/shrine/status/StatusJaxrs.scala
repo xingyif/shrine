@@ -1,5 +1,6 @@
 package net.shrine.status
 
+import java.io.File
 import javax.ws.rs.{GET, Path, Produces, WebApplicationException}
 import javax.ws.rs.core.{MediaType, Response}
 
@@ -13,7 +14,7 @@ import org.json4s.native.Serialization
 import net.shrine.log.Loggable
 
 import scala.collection.JavaConverters._
-import scala.collection.immutable.{Seq, Map, Set}
+import scala.collection.immutable.{Map, Seq, Set}
 import net.shrine.config.ConfigExtensions
 import net.shrine.crypto.SigningCertStrategy
 import net.shrine.protocol.query.{OccuranceLimited, QueryDefinition, Term}
@@ -175,6 +176,8 @@ case class Summary(
                     shrineBuildDate:String,
                     ontologyVersion:String,
                     ontologyTerm:String,
+                    adapterMappingsFileName:Option[String],
+                    adapterMappingsDate:Option[Long],
                     adapterOk:Boolean,
                     keystoreOk:Boolean,
                     hubOk:Boolean,
@@ -238,12 +241,23 @@ object Summary {
       failures.isEmpty && timeouts.isEmpty && (validResults.size == broadcaster.destinations.size )
     }
 
+    val adapterMappingsFileName = ShrineOrchestrator.adapterComponents.map(_.adapterMappings.source)
+    val adapterMappingsVersion = ShrineOrchestrator.adapterComponents.map(_.adapterMappings.version) //todo use this?
+    val noDate:Option[Long] = None
+    val adapterMappingsDate:Option[Long] = adapterMappingsFileName.fold(noDate){ fileName =>
+      val file:File = new File(fileName)
+      if(file.exists) Some(file.lastModified())
+      else None
+    }
+
     Summary(
       isHub = ShrineOrchestrator.hubComponents.isDefined,
       shrineVersion = Versions.version,
       shrineBuildDate = Versions.buildDate,
       ontologyVersion = ShrineOrchestrator.ontologyMetadata.ontologyVersion,
       ontologyTerm = term.value,
+      adapterMappingsFileName = adapterMappingsFileName,
+      adapterMappingsDate = adapterMappingsDate,
       adapterOk = adapterOk,
       keystoreOk = true, //todo something for this
       hubOk = hubOk,
