@@ -78,6 +78,14 @@ case class StatusJaxrs(shrineConfig:TsConfig) extends Loggable {
     Serialization.write(adapter)
   }
 
+  @GET
+  @Path("qep")
+  def qep: String = {
+    val qep = Qep()
+    Serialization.write(qep)
+  }
+
+
 }
 
 case class DownstreamNode(name:String, url:String)
