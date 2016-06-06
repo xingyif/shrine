@@ -303,8 +303,11 @@ object Endpoint{
   }
 }
 
-case class HiveCredentials(domain:String, username:String, password:String,
-                           crcProjectId:String, ontProjectId:String)
+case class HiveCredentials(domain:String,
+                           username:String,
+                           password:String,
+                           crcProjectId:String,
+                           ontProjectId:String)
 object HiveCredentials{
   def apply(parsedConfig:ParsedConfig):HiveCredentials = {
     val key           = "shrine.hiveCredentials."
