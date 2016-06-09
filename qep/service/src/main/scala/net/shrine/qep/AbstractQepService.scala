@@ -46,7 +46,7 @@ trait AbstractQepService[BaseResp <: BaseShrineResponse] extends Loggable {
   }
   
   protected def doFlagQuery(request: FlagQueryRequest, shouldBroadcast: Boolean = true): BaseResp = {
-    authenticateAndThen(request) { authResult =>
+    authenticateAndThen(request) { authResult:Authenticated =>
       QepQueryDb.db.insertQepQueryFlag(request)
       doBroadcastQuery(request, new FlagQueryAggregator, shouldBroadcast,authResult)
     }
@@ -72,7 +72,7 @@ trait AbstractQepService[BaseResp <: BaseShrineResponse] extends Loggable {
   //returns a ReadQueryDefinitionResponse
   protected def doReadQueryDefinition(request: ReadQueryDefinitionRequest, shouldBroadcast: Boolean): BaseResp = {
     authenticateAndThen(request) { authResult =>
-      val result =QepQueryDb.db.selectPreviousQuery(request).getOrElse(
+      val result =QepQueryDb.db.selectPreviousQuery(request,authResult).getOrElse(
         ErrorResponse(PreviousQueryDoesNotExist(request.queryId,request.authn.username,request.authn.domain))).asInstanceOf[BaseResp]
       info(s"doReadQueryDefinition($request,$shouldBroadcast) result is $result")
       result
@@ -134,7 +134,7 @@ trait AbstractQepService[BaseResp <: BaseShrineResponse] extends Loggable {
 
       //todo if any results are in one of the pending states go ahead and request them async (has to wait for async Shrine)
       //pull queries from the local database.
-      QepQueryDb.db.selectPreviousQueries(request)
+      QepQueryDb.db.selectPreviousQueries(request,authResult)
     }
   }
 
@@ -182,7 +182,7 @@ trait AbstractQepService[BaseResp <: BaseShrineResponse] extends Loggable {
 
           // tuck the ACT audit metrics data into a database here
           if (collectQepAudit) QepAuditDb.db.insertQepQuery(authorizedRequest,commonName)
-          QepQueryDb.db.insertQepQuery(authorizedRequest)
+          QepQueryDb.db.insertQepQuery(authorizedRequest,authResult)
 
           val response: BaseResp = doSynchronousQuery(networkAuthn,authorizedRequest,aggregator,shouldBroadcast)
 
@@ -218,7 +218,7 @@ trait AbstractQepService[BaseResp <: BaseShrineResponse] extends Loggable {
 
       debug(s"auditAuthorizeAndThen($request) with $authorizationService")
 
-      val authorizedRequest = authorizationService.authorizeRunQueryRequest(request) match {
+      val authorizedRequest: RunQueryRequest = authorizationService.authorizeRunQueryRequest(request) match {
         case na: NotAuthorized => throw na.toException
         case authorized: Authorized => request.copy(topicName = authorized.topicIdAndName.map(x => x._2))
       }
