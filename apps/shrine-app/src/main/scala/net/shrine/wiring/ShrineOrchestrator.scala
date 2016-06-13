@@ -16,7 +16,7 @@ import net.shrine.crypto.{DefaultSignerVerifier, KeyStoreCertCollection, KeyStor
 import net.shrine.dao.squeryl.{DataSourceSquerylInitializer, SquerylDbAdapterSelecter, SquerylInitializer}
 import net.shrine.happy.{HappyShrineResource, HappyShrineService}
 import net.shrine.log.Loggable
-import net.shrine.ont.data.{OntClientOntologyMetadata, OntologyMetadata}
+import net.shrine.ont.data.OntClientOntologyMetadata
 import net.shrine.protocol.{HiveCredentials, NodeId, ResultOutputType, ResultOutputTypes}
 
 import net.shrine.qep.{I2b2BroadcastResource, QueryEntryPointComponents, ShrineResource}
@@ -127,7 +127,7 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
   protected lazy val ontPoster: Poster = Poster(certCollection,ontEndpoint)
 
   //todo only used by happy outside of here
-  lazy val ontologyMetadata: OntologyMetadata = {
+  lazy val ontologyMetadata: OntClientOntologyMetadata = {
     import scala.concurrent.duration._
 
     //TODO: XXX: Un-hard-code max wait time param

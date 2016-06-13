@@ -8,6 +8,7 @@ import com.sun.jersey.spi.container.{ContainerRequest, ContainerRequestFilter}
 import com.typesafe.config.{Config => TsConfig}
 import net.shrine.authorization.StewardQueryAuthorizationService
 import net.shrine.broadcaster.{Broadcaster, NodeHandle}
+import net.shrine.client.PosterOntClient
 import net.shrine.wiring.ShrineOrchestrator
 import org.json4s.{DefaultFormats, Formats}
 import org.json4s.native.Serialization
@@ -59,6 +60,13 @@ case class StatusJaxrs(shrineConfig:TsConfig) extends Loggable {
   }
 
   @GET
+  @Path("i2b2")
+  def i2b2: String = {
+    val i2b2 = I2b2()
+    Serialization.write(i2b2)
+  }
+
+  @GET
   @Path("optionalParts")
   def optionalParts: String = {
     val optionalParts = OptionalParts()
@@ -87,6 +95,29 @@ case class StatusJaxrs(shrineConfig:TsConfig) extends Loggable {
   }
 
 
+}
+
+case class I2b2(pmUrl:String,
+                crcUrl:Option[String],
+                ontUrl:String,
+                i2b2Domain:String,
+                username:String,
+                crcProject:String,
+                ontProject:String)
+
+object I2b2 {
+  def apply(): I2b2 = new I2b2(
+    pmUrl = ShrineOrchestrator.pmPoster.url,
+    crcUrl = ShrineOrchestrator.adapterComponents.map(_.i2b2AdminService.crcUrl),
+    ontUrl = "", //todo
+    i2b2Domain = ShrineOrchestrator.crcHiveCredentials.domain,
+    username = ShrineOrchestrator.crcHiveCredentials.username,
+    crcProject = ShrineOrchestrator.crcHiveCredentials.projectId,
+    ontProject = ShrineOrchestrator.ontologyMetadata.client match {
+      case client: PosterOntClient => client.hiveCredentials.projectId
+      case _ => ""
+    }
+  )
 }
 
 case class DownstreamNode(name:String, url:String)
@@ -164,7 +195,7 @@ object OptionalParts {
     OptionalParts(
       ShrineOrchestrator.hubComponents.isDefined,
       ShrineOrchestrator.queryEntryPointComponents.fold(false)(_.shrineService.authorizationService.isInstanceOf[StewardQueryAuthorizationService]),
-      false,
+      shouldQuerySelf = false,
       DownstreamNodes.get()
     )
   }
