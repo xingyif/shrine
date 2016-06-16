@@ -12,7 +12,7 @@ import net.shrine.client.PosterOntClient
 import net.shrine.wiring.ShrineOrchestrator
 import org.json4s.{DefaultFormats, Formats}
 import org.json4s.native.Serialization
-import net.shrine.log.Loggable
+import net.shrine.log.{Log, Loggable}
 
 import scala.collection.JavaConverters._
 import scala.collection.immutable.{Map, Seq, Set}
@@ -24,6 +24,7 @@ import net.shrine.util.Versions
 
 import scala.concurrent.Await
 import scala.util.Try
+import scala.util.control.NonFatal
 
 /**
   * A subservice that shares internal state of the shrine servlet.
@@ -263,13 +264,16 @@ object Summary {
       val maxQueryWaitTime = hubComponents.broadcasterMultiplexerService.maxQueryWaitTime
       val broadcaster: Broadcaster = hubComponents.broadcasterMultiplexerService.broadcaster
       val message = runQueryRequest
-      val multiplexer = broadcaster.broadcast(message)
-      val responses = Await.result(multiplexer.responses, maxQueryWaitTime).toSeq
-      val failures = responses.collect { case f: Failure => f }
-      val timeouts = responses.collect { case t: Timeout => t }
-      val validResults = responses.collect { case r: Result => r }
+      val triedMultiplexer = Try(broadcaster.broadcast(message))
+      //todo just use fold()() in scala 2.12
+      triedMultiplexer.toOption.fold(false) { multiplexer =>
+        val responses = Await.result(multiplexer.responses, maxQueryWaitTime).toSeq
+        val failures = responses.collect { case f: Failure => f }
+        val timeouts = responses.collect { case t: Timeout => t }
+        val validResults = responses.collect { case r: Result => r }
 
-      failures.isEmpty && timeouts.isEmpty && (validResults.size == broadcaster.destinations.size )
+        failures.isEmpty && timeouts.isEmpty && (validResults.size == broadcaster.destinations.size)
+      }
     }
 
     val adapterMappingsFileName = ShrineOrchestrator.adapterComponents.map(_.adapterMappings.source)
@@ -281,11 +285,21 @@ object Summary {
       else None
     }
 
+    val ontologyVersion = try {
+      ShrineOrchestrator.ontologyMetadata.ontologyVersion
+    }
+    catch {
+      case NonFatal(x) =>
+        Log.info("Problem while getting ontology version",x)
+        x.getMessage
+    }
+
     Summary(
       isHub = ShrineOrchestrator.hubComponents.isDefined,
       shrineVersion = Versions.version,
       shrineBuildDate = Versions.buildDate,
-      ontologyVersion = ShrineOrchestrator.ontologyMetadata.ontologyVersion,
+      //todo in scala 2.12, do better
+      ontologyVersion = ontologyVersion,
       ontologyTerm = term.value,
       adapterMappingsFileName = adapterMappingsFileName,
       adapterMappingsDate = adapterMappingsDate,

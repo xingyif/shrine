@@ -40,7 +40,7 @@ import net.shrine.crypto.SigningCertStrategy
  * @author clint
  * @since Nov 27, 2013
  *
- * An in-JVM simulation of a Shrine network with one hub and 4 doanstream adapters.
+ * An in-JVM simulation of a Shrine network with one hub and 4 downstream adapters.
  *
  * The hub and adapters are wired up with mock AdapterClients that do in-JVM communication via method calls
  * instead of remotely.

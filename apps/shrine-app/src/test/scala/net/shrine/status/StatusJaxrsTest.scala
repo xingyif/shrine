@@ -43,10 +43,8 @@ class StatusJaxrsTest extends ShouldMatchersForJUnit {
     passwordKeys should equal(Map.empty[String,String])
   }
 
-  /* todo need some way to start Shrine for this to work
   @Test
   def testSummary() = {
-//    val expectedJson4sConfig = Json4sConfig(expectedConfig)
 
     val summaryString = statusJaxrs.summary
 
@@ -54,10 +52,12 @@ class StatusJaxrsTest extends ShouldMatchersForJUnit {
 
     val summary = Serialization.read[Summary](summaryString)
 
-//    config should equal(expectedJson4sConfig)
-
-    println(summary)
-
+    summary.isHub should be (true)
+    summary.adapterMappingsFileName.isDefined should be (true)
+    summary.adapterMappingsDate.isEmpty should be (true)
+    summary.adapterOk should be (true)
+    summary.keystoreOk should be (true)
+    summary.hubOk should be (false)
+    summary.qepOk should be (true)
   }
-  */
 }

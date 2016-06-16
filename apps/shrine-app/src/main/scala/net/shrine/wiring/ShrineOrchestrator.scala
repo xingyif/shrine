@@ -18,8 +18,8 @@ import net.shrine.happy.{HappyShrineResource, HappyShrineService}
 import net.shrine.log.Loggable
 import net.shrine.ont.data.OntClientOntologyMetadata
 import net.shrine.protocol.{HiveCredentials, NodeId, ResultOutputType, ResultOutputTypes}
-
 import net.shrine.qep.{I2b2BroadcastResource, QueryEntryPointComponents, ShrineResource}
+import net.shrine.slick.TestableDataSourceCreator
 import net.shrine.status.StatusJaxrs
 import org.squeryl.internals.DatabaseAdapter
 
@@ -51,12 +51,12 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
 
   //TODO: Don't assume keystore lives on the filesystem, could come from classpath, etc
   lazy val keyStoreDescriptor = shrineConfig.getConfigured("keystore",KeyStoreDescriptorParser(_))
-  lazy val certCollection: KeyStoreCertCollection = KeyStoreCertCollection.fromFile(keyStoreDescriptor)
+  lazy val certCollection: KeyStoreCertCollection = KeyStoreCertCollection.fromFileRecoverWithClassPath(keyStoreDescriptor)
   protected lazy val keystoreTrustParam: TrustParam = TrustParam.SomeKeyStore(certCollection)
   //todo used by the adapterServide and happyShrineService, but not by the QEP. maybe each can have its own signerVerivier
   lazy val signerVerifier: DefaultSignerVerifier = new DefaultSignerVerifier(certCollection)
 
-  protected lazy val dataSource: DataSource = Jndi("java:comp/env/jdbc/shrineDB").get
+  protected lazy val dataSource: DataSource = TestableDataSourceCreator.dataSource(shrineConfig.getConfig("squerylDataSource.database"))
   protected lazy val squerylAdapter: DatabaseAdapter = SquerylDbAdapterSelecter.determineAdapter(shrineConfig.getString("shrineDatabaseType"))
   protected lazy val squerylInitializer: SquerylInitializer = new DataSourceSquerylInitializer(dataSource, squerylAdapter)
 
