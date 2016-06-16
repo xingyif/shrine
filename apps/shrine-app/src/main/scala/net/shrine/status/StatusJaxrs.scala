@@ -140,7 +140,7 @@ object Qep{
     attachSigningCert       = ShrineOrchestrator.queryEntryPointComponents.fold(false)(_.i2b2Service.broadcastAndAggregationService.attachSigningCert),
     authorizationType       = ShrineOrchestrator.queryEntryPointComponents.fold("")(_.i2b2Service.authorizationService.getClass.getSimpleName),
     includeAggregateResults = ShrineOrchestrator.queryEntryPointComponents.fold(false)(_.i2b2Service.includeAggregateResult),
-    authenticationType      = ShrineOrchestrator.queryEntryPointComponents.fold("")(_.i2b2Service.authenticator.getClass.getName)
+    authenticationType      = ShrineOrchestrator.queryEntryPointComponents.fold("")(_.i2b2Service.authenticator.getClass.getSimpleName)
   )
 }
 

@@ -48,8 +48,6 @@ class StatusJaxrsTest extends ShouldMatchersForJUnit {
 
     val summaryString = statusJaxrs.summary
 
-    println(summaryString)
-
     val summary = Serialization.read[Summary](summaryString)
 
     summary.isHub should be (true)
@@ -60,4 +58,30 @@ class StatusJaxrsTest extends ShouldMatchersForJUnit {
     summary.hubOk should be (false)
     summary.qepOk should be (true)
   }
+
+  @Test
+  def testI2b2() = {
+
+    val i2b2String = statusJaxrs.i2b2
+
+    val i2b2 = Serialization.read[I2b2](i2b2String)
+
+    i2b2.crcUrl.isDefined should be (true)
+  }
+
+  @Test
+  def testOptionalParts() = {
+
+    val string = statusJaxrs.optionalParts
+
+    val actual = Serialization.read[OptionalParts](string)
+
+    actual.isHub should be (true)
+    actual.stewardEnabled should be (true)
+    actual.shouldQuerySelf should be (false)
+    actual.downstreamNodes.size should be (4)
+  }
+
+
+
 }
