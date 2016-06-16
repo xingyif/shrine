@@ -82,6 +82,40 @@ class StatusJaxrsTest extends ShouldMatchersForJUnit {
     actual.downstreamNodes.size should be (4)
   }
 
+  @Test
+  def testHub() = {
 
+    val string = statusJaxrs.hub
 
+    val actual = Serialization.read[Hub](string)
+
+    actual.create should be (true)
+    actual.shouldQuerySelf should be (false)
+    actual.downstreamNodes.size should be (4)
+  }
+
+  @Test
+  def testQep() = {
+
+    val string = statusJaxrs.qep
+
+    val actual = Serialization.read[Qep](string)
+
+    actual.create should be (true)
+    actual.attachSigningCert should be (true)
+    actual.authenticationType should be ("PmAuthenticator")
+    actual.authorizationType should be ("StewardQueryAuthorizationService")
+    actual.includeAggregateResults should be (false)
+    actual.maxQueryWaitTimeMillis should be (300000000L)
+  }
+
+  @Test
+  def testAdapter() = {
+
+    val string = statusJaxrs.adapter
+
+    val actual = Serialization.read[Adapter](string)
+
+    actual.adapterLockoutAttemptsThreshold should be (10)
+  }
 }
