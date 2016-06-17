@@ -118,4 +118,15 @@ class StatusJaxrsTest extends ShouldMatchersForJUnit {
 
     actual.adapterLockoutAttemptsThreshold should be (10)
   }
+
+  @Test
+  def testKeyStore() = {
+
+    val string = statusJaxrs.keystore
+
+    val actual = Serialization.read[KeyStoreReport](string)
+
+    println(s"KeyStoreReport is $actual")
+  }
+
 }

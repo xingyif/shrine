@@ -1,6 +1,9 @@
 package net.shrine.status
 
 import java.io.File
+import java.security.MessageDigest
+import java.security.cert.X509Certificate
+import java.util.Date
 import javax.ws.rs.{GET, Path, Produces, WebApplicationException}
 import javax.ws.rs.core.{MediaType, Response}
 
@@ -17,10 +20,10 @@ import net.shrine.log.{Log, Loggable}
 import scala.collection.JavaConverters._
 import scala.collection.immutable.{Map, Seq, Set}
 import net.shrine.config.ConfigExtensions
-import net.shrine.crypto.SigningCertStrategy
+import net.shrine.crypto.{KeyStoreCertCollection, KeyStoreDescriptor, SigningCertStrategy}
 import net.shrine.protocol.query.{OccuranceLimited, QueryDefinition, Term}
 import net.shrine.protocol.{AuthenticationInfo, BroadcastMessage, Credential, Failure, Result, ResultOutputType, RunQueryRequest, Timeout}
-import net.shrine.util.Versions
+import net.shrine.util.{Base64, Versions}
 
 import scala.concurrent.Await
 import scala.util.Try
@@ -95,7 +98,52 @@ case class StatusJaxrs(shrineConfig:TsConfig) extends Loggable {
     Serialization.write(qep)
   }
 
+  @GET
+  @Path("keystore")
+  def keystore: String = {
+    Serialization.write(KeyStoreReport())
+  }
 
+
+}
+
+case class KeyStoreReport(
+                        fileName:String,
+                        password:String = "REDACTED",
+                        privateKeyAlias:Option[String],
+                        owner:Option[String],
+                        issuer:Option[String],
+                        expires:Option[Date],
+                        signature:Option[String],
+                        caTrustedAlias:Option[String],
+                        caTrustedSignature:Option[String]
+                      //todo list contents of keystore for keyStore validation section
+                      )
+
+object KeyStoreReport {
+  def apply(): KeyStoreReport = {
+    val keystoreDescriptor: KeyStoreDescriptor = ShrineOrchestrator.keyStoreDescriptor
+    val certCollection: KeyStoreCertCollection = ShrineOrchestrator.certCollection
+
+    def toMd5(cert:X509Certificate): String = {
+      val md5 = MessageDigest.getInstance("MD5")
+      def toHex(buf: Array[Byte]): String = buf.map("%02X".format(_)).mkString(":")
+
+      toHex(md5.digest(cert.getEncoded))
+    }
+
+    new KeyStoreReport(
+      fileName = keystoreDescriptor.file,
+      privateKeyAlias = keystoreDescriptor.privateKeyAlias,
+      owner = certCollection.myCert.map(cert => cert.getSubjectDN.getName),
+      issuer = certCollection.myCert.map(cert => cert.getIssuerDN.getName),
+      expires = certCollection.myCert.map(cert => cert.getNotAfter),
+      signature = certCollection.myCert.map(cert => toMd5(cert)),
+      //todo sha1 signature if needed
+      caTrustedAlias = certCollection.caCertAliases.headOption,
+      caTrustedSignature = certCollection.headOption.map(cert => toMd5(cert))
+    )
+  }
 }
 
 case class I2b2(pmUrl:String,
