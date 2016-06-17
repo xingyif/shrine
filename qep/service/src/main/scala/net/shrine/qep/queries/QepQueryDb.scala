@@ -6,9 +6,10 @@ import javax.sql.DataSource
 
 import com.typesafe.config.Config
 import net.shrine.audit.{NetworkQueryId, QueryName, Time, UserName}
+import net.shrine.authentication.AuthenticationResult.Authenticated
 import net.shrine.log.Loggable
-import net.shrine.problem.{AbstractProblem, ProblemSources, ProblemDigest}
-import net.shrine.protocol.{ReadQueryDefinitionResponse, ReadQueryDefinitionRequest, ResultOutputTypes, DeleteQueryRequest, RenameQueryRequest, I2b2ResultEnvelope, QueryResult, ResultOutputType, DefaultBreakdownResultOutputTypes, UnFlagQueryRequest, FlagQueryRequest, QueryMaster, ReadPreviousQueriesRequest, ReadPreviousQueriesResponse, RunQueryRequest}
+import net.shrine.problem.{AbstractProblem, ProblemDigest, ProblemSources}
+import net.shrine.protocol.{DefaultBreakdownResultOutputTypes, DeleteQueryRequest, FlagQueryRequest, I2b2ResultEnvelope, QueryMaster, QueryResult, ReadPreviousQueriesRequest, ReadPreviousQueriesResponse, ReadQueryDefinitionRequest, ReadQueryDefinitionResponse, RenameQueryRequest, ResultOutputType, ResultOutputTypes, RunQueryRequest, UnFlagQueryRequest}
 import net.shrine.qep.QepConfigSource
 import net.shrine.slick.TestableDataSourceCreator
 import net.shrine.util.XmlDateHelper
@@ -18,7 +19,6 @@ import scala.collection.immutable.Iterable
 import scala.concurrent.duration.{Duration, DurationInt}
 import scala.concurrent.{Await, Future, blocking}
 import scala.language.postfixOps
-
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.control.NonFatal
 import scala.xml.XML
@@ -52,10 +52,10 @@ case class QepQueryDb(schemaDef:QepQuerySchema,dataSource: DataSource,timeout:Du
     }
   }
 
-  def insertQepQuery(runQueryRequest: RunQueryRequest):Unit = {
+  def insertQepQuery(runQueryRequest: RunQueryRequest,authResult:Authenticated):Unit = {
     debug(s"insertQepQuery $runQueryRequest")
 
-    insertQepQuery(QepQuery(runQueryRequest))
+    insertQepQuery(QepQuery(runQueryRequest,authResult))
   }
 
   def insertQepQuery(qepQuery: QepQuery):Unit = {
@@ -66,8 +66,8 @@ case class QepQueryDb(schemaDef:QepQuerySchema,dataSource: DataSource,timeout:Du
     dbRun(mostRecentVisibleQepQueries.result)
   }
 
-  def selectPreviousQuery(request:ReadQueryDefinitionRequest):Option[ReadQueryDefinitionResponse] = {
-    selectPreviousQuery(request.authn.username,request.authn.domain,request.queryId).map(_.toReadQueryDefinitionResponse)
+  def selectPreviousQuery(request:ReadQueryDefinitionRequest,authResult:Authenticated):Option[ReadQueryDefinitionResponse] = {
+    selectPreviousQuery(authResult.username,authResult.domain,request.queryId).map(_.toReadQueryDefinitionResponse)
   }
 
   def selectPreviousQuery(userName: UserName, domain: String,networkQueryId: NetworkQueryId):Option[QepQuery] = {
@@ -78,8 +78,8 @@ case class QepQueryDb(schemaDef:QepQuerySchema,dataSource: DataSource,timeout:Du
     }
   }
 
-  def selectPreviousQueries(request: ReadPreviousQueriesRequest):ReadPreviousQueriesResponse = {
-    val previousQueries: Seq[QepQuery] = selectPreviousQueriesByUserAndDomain(request.authn.username,request.authn.domain,request.fetchSize)
+  def selectPreviousQueries(request: ReadPreviousQueriesRequest,authResult:Authenticated):ReadPreviousQueriesResponse = {
+    val previousQueries: Seq[QepQuery] = selectPreviousQueriesByUserAndDomain(authResult.username,authResult.domain,request.fetchSize)
     val flags:Map[NetworkQueryId,QepQueryFlag] = selectMostRecentQepQueryFlagsFor(previousQueries.map(_.networkId).to[Set])
     val queriesAndFlags = previousQueries.map(x => (x,flags.get(x.networkId)))
 
@@ -401,11 +401,11 @@ case class QepQuery(
 }
 
 object QepQuery extends ((NetworkQueryId,UserName,String,QueryName,Option[String],Time,Boolean,String,Time) => QepQuery) {
-  def apply(runQueryRequest: RunQueryRequest):QepQuery = {
+  def apply(runQueryRequest: RunQueryRequest,authenticated: Authenticated):QepQuery = {
     new QepQuery(
       networkId = runQueryRequest.networkQueryId,
-      userName = runQueryRequest.authn.username,
-      userDomain = runQueryRequest.authn.domain,
+      userName = authenticated.username,
+      userDomain = authenticated.domain,
       queryName = runQueryRequest.queryDefinition.name,
       expression = runQueryRequest.queryDefinition.expr.map(_.toString),
       dateCreated = System.currentTimeMillis(),
