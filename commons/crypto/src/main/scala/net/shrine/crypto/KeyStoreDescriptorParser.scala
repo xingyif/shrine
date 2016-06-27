@@ -37,7 +37,7 @@ object KeyStoreDescriptorParser extends Loggable {
       
       def isString(cv: ConfigValue) = cv.valueType == ConfigValueType.STRING
 
-      config.getOption(caCertAliases,_.getList).fold(Seq.empty[ConfigValue])(list => list.asScala.to[Seq]).collect{ case cv if isString(cv) => cv.unwrapped.toString }
+      config.getOption(caCertAliases,_.getList).fold(Seq.empty[ConfigValue])(list => list.asScala).collect{ case cv if isString(cv) => cv.unwrapped.toString }
     }
     
     KeyStoreDescriptor(

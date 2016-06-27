@@ -1,7 +1,7 @@
 package net.shrine.status
 
 import java.io.File
-import java.security.MessageDigest
+import java.security.{MessageDigest, Principal}
 import java.security.cert.X509Certificate
 import java.util.Date
 import javax.ws.rs.{GET, Path, Produces, WebApplicationException}
@@ -23,7 +23,7 @@ import net.shrine.config.ConfigExtensions
 import net.shrine.crypto.{KeyStoreCertCollection, KeyStoreDescriptor, SigningCertStrategy}
 import net.shrine.protocol.query.{OccuranceLimited, QueryDefinition, Term}
 import net.shrine.protocol.{AuthenticationInfo, BroadcastMessage, Credential, Failure, Result, ResultOutputType, RunQueryRequest, Timeout}
-import net.shrine.util.{Base64, Versions}
+import net.shrine.util.Versions
 
 import scala.concurrent.Await
 import scala.util.Try
@@ -107,6 +107,12 @@ case class StatusJaxrs(shrineConfig:TsConfig) extends Loggable {
 
 }
 
+case class KeyStoreEntryReport(
+                              alias:String,
+                              commonName:String,
+                              md5Signature:String
+                              )
+
 case class KeyStoreReport(
                         fileName:String,
                         password:String = "REDACTED",
@@ -116,9 +122,11 @@ case class KeyStoreReport(
                         expires:Option[Date],
                         signature:Option[String],
                         caTrustedAlias:Option[String],
-                        caTrustedSignature:Option[String]
-                      //todo list contents of keystore for keyStore validation section
+                        caTrustedSignature:Option[String],
+                        keyStoreContents:List[KeyStoreEntryReport]
                       )
+
+//todo build new API for the dashboard to use to check signatures
 
 object KeyStoreReport {
   def apply(): KeyStoreReport = {
@@ -141,7 +149,8 @@ object KeyStoreReport {
       signature = certCollection.myCert.map(cert => toMd5(cert)),
       //todo sha1 signature if needed
       caTrustedAlias = certCollection.caCertAliases.headOption,
-      caTrustedSignature = certCollection.headOption.map(cert => toMd5(cert))
+      caTrustedSignature = certCollection.headOption.map(cert => toMd5(cert)),
+      keyStoreContents = certCollection.caCerts.zipWithIndex.map((cert: ((Principal, X509Certificate), Int)) => KeyStoreEntryReport(keystoreDescriptor.caCertAliases(cert._2),cert._1._1.getName,toMd5(cert._1._2))).to[List]
     )
   }
 }
