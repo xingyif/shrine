@@ -1,7 +1,7 @@
 package net.shrine.status
 
 import java.io.File
-import java.security.{MessageDigest, Principal}
+import java.security.MessageDigest
 import java.security.cert.X509Certificate
 import java.util.Date
 import javax.ws.rs.{GET, Path, Produces, WebApplicationException}
@@ -106,13 +106,13 @@ case class StatusJaxrs(shrineConfig:TsConfig) extends Loggable {
 
 
 }
-
+/* todo fill in later when you take the time to get the right parts in place SHRINE-1529
 case class KeyStoreEntryReport(
                               alias:String,
                               commonName:String,
                               md5Signature:String
                               )
-
+*/
 case class KeyStoreReport(
                         fileName:String,
                         password:String = "REDACTED",
@@ -122,8 +122,8 @@ case class KeyStoreReport(
                         expires:Option[Date],
                         signature:Option[String],
                         caTrustedAlias:Option[String],
-                        caTrustedSignature:Option[String],
-                        keyStoreContents:List[KeyStoreEntryReport]
+                        caTrustedSignature:Option[String]
+//                        keyStoreContents:List[KeyStoreEntryReport] //todo SHRINE-1529
                       )
 
 //todo build new API for the dashboard to use to check signatures
@@ -149,8 +149,8 @@ object KeyStoreReport {
       signature = certCollection.myCert.map(cert => toMd5(cert)),
       //todo sha1 signature if needed
       caTrustedAlias = certCollection.caCertAliases.headOption,
-      caTrustedSignature = certCollection.headOption.map(cert => toMd5(cert)),
-      keyStoreContents = certCollection.caCerts.zipWithIndex.map((cert: ((Principal, X509Certificate), Int)) => KeyStoreEntryReport(keystoreDescriptor.caCertAliases(cert._2),cert._1._1.getName,toMd5(cert._1._2))).to[List]
+      caTrustedSignature = certCollection.headOption.map(cert => toMd5(cert))
+//      keyStoreContents = certCollection.caCerts.zipWithIndex.map((cert: ((Principal, X509Certificate), Int)) => KeyStoreEntryReport(keystoreDescriptor.caCertAliases(cert._2),cert._1._1.getName,toMd5(cert._1._2))).to[List]
     )
   }
 }
@@ -216,16 +216,30 @@ object DownstreamNode {
 case class Adapter(crcEndpointUrl:String,
                    setSizeObfuscation:Boolean,
                    adapterLockoutAttemptsThreshold:Int,
-                   adapterMappingsFilename:String)
+                   adapterMappingsFilename:Option[String],
+                   adapterMappingsDate:Option[Long]
+                  )
 
 object Adapter{
   def apply():Adapter = {
     val crcEndpointUrl                  = ShrineOrchestrator.adapterComponents.fold("")(_.i2b2AdminService.crcUrl)
     val setSizeObfuscation              = ShrineOrchestrator.adapterComponents.fold(false)(_.i2b2AdminService.obfuscate)
     val adapterLockoutAttemptsThreshold = ShrineOrchestrator.adapterComponents.fold(0)(_.i2b2AdminService.adapterLockoutAttemptsThreshold)
-    val adapterMappingsFileName         = ShrineOrchestrator.adapterComponents.fold("")(_.adapterMappings.source)
+    val adapterMappingsFileInfo = mappingFileInfo
 
-    Adapter(crcEndpointUrl, setSizeObfuscation, adapterLockoutAttemptsThreshold, adapterMappingsFileName)
+    Adapter(crcEndpointUrl, setSizeObfuscation, adapterLockoutAttemptsThreshold, adapterMappingsFileInfo._1, adapterMappingsFileInfo._2)
+  }
+
+  def mappingFileInfo: (Option[String], Option[Long], Option[String]) = {
+    val adapterMappingsFileName = ShrineOrchestrator.adapterComponents.map(_.adapterMappings.source)
+    val adapterMappingsVersion = ShrineOrchestrator.adapterComponents.map(_.adapterMappings.version) //todo use this?
+  val noDate:Option[Long] = None
+    val adapterMappingsDate:Option[Long] = adapterMappingsFileName.fold(noDate){ fileName =>
+      val file:File = new File(fileName)
+      if(file.exists) Some(file.lastModified())
+      else None
+    }
+    (adapterMappingsFileName,adapterMappingsDate,adapterMappingsVersion)
   }
 }
 
@@ -333,14 +347,7 @@ object Summary {
       }
     }
 
-    val adapterMappingsFileName = ShrineOrchestrator.adapterComponents.map(_.adapterMappings.source)
-    val adapterMappingsVersion = ShrineOrchestrator.adapterComponents.map(_.adapterMappings.version) //todo use this?
-    val noDate:Option[Long] = None
-    val adapterMappingsDate:Option[Long] = adapterMappingsFileName.fold(noDate){ fileName =>
-      val file:File = new File(fileName)
-      if(file.exists) Some(file.lastModified())
-      else None
-    }
+    val adapterMappingInfo = Adapter.mappingFileInfo
 
     val ontologyVersion = try {
       ShrineOrchestrator.ontologyMetadata.ontologyVersion
@@ -358,8 +365,8 @@ object Summary {
       //todo in scala 2.12, do better
       ontologyVersion = ontologyVersion,
       ontologyTerm = term.value,
-      adapterMappingsFileName = adapterMappingsFileName,
-      adapterMappingsDate = adapterMappingsDate,
+      adapterMappingsFileName = adapterMappingInfo._1,
+      adapterMappingsDate = adapterMappingInfo._2,
       adapterOk = adapterOk,
       keystoreOk = true, //todo something for this
       hubOk = hubOk,
