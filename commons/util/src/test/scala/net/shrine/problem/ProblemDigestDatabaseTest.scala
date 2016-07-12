@@ -3,9 +3,9 @@ package net.shrine.problem
 import org.scalatest.FlatSpec
 import slick.lifted.{TableQuery, Tag}
 import slick.driver.SQLiteDriver.api._
-import scala.concurrent.ExecutionContext.Implicits.global
 
-import scala.xml.NodeSeq
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.xml.{NodeSeq, XML}
 
 /**
   * Test creation, insertion, querying, and deletion of ProblemDigest values into an
@@ -35,14 +35,23 @@ class ProblemDigestDatabaseTest extends FlatSpec {
 // Definition of the PROBLEMS table
 class Problems(tag: Tag) extends Table[ProblemDigest](tag, "PROBLEMS") {
   def codec = column[String]("codec")
-  def stampText = column[String]("stampText")
+  def stampText = column[String]("stampText", O.PrimaryKey)
   def summary = column[String]("summary")
   def description = column[String]("description")
-  def xml = column[XML]("node seq")
-  def * = (codec, stampText, summary, description, xml) <> ((ProblemDigest.apply _).tupled, ProblemDigest.unapply)
+  def xml = column[String]("detailsXml")
+  def * = (codec, stampText, summary, description, xml) <> (tupled, untupled)
 
-  def tupling(problem: ProblemDigest) = {
-    (problem.codec, problem.stampText, problem.summary, problem.description, problem.detailsXml)
+  // Converts a table row into a ProblemDigest
+  // I feel like this is somehow flipped with untupled, you can always convert
+  // a ProblemDigest to a row, but converting a row to a ProblemDigest can sometimes fail
+  def tupled(args: (String, String, String, String, String)) = args match {
+    case (codec, stampText, summary, description, detailsXml)
+           => ProblemDigest(codec, stampText, summary, description, XML.loadString(detailsXml))
+  }
+
+  // Converts a ProblemDigest into an Option of a table row
+  def untupled(problem: ProblemDigest) = {
+    Some((problem.codec, problem.stampText, problem.summary, problem.description, problem.detailsXml.toString()))
   }
 }
 
