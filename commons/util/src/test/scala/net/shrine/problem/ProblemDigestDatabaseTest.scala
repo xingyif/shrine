@@ -14,19 +14,26 @@ import scala.xml.{NodeSeq, XML}
 class ProblemDigestDatabaseTest extends FlatSpec {
   "The Database" should "Connect without any problems" in {
     val db = Database.forURL("jdbc:sqlite::memory", driver = "org.sqlite.JDBC")
-    //val problems = TableQuery[Problems]
+    val problems = TableQuery[Problems]
     val suppliers = TableQuery[Suppliers]
-    val schema = suppliers.schema
+    val schema = suppliers.schema ++ problems.schema
     val setup = DBIO.seq(
       schema.create,
       suppliers += (101, "Acme, Inc.",      "99 Market Street", "Groundsville", "CA", "95199"),
       suppliers += ( 49, "Superior Coffee", "1 Party Place",    "Mendocino",    "CA", "95460"),
-      suppliers += (150, "The High Ground", "100 Coffee Lane",  "Meadows",      "CA", "93966")
+      suppliers += (150, "The High Ground", "100 Coffee Lane",  "Meadows",      "CA", "93966"),
+      // Not actually sure what examples of ProblemDigests look like
+      problems += ProblemDigest("MJPG", "01:01:01", "summary here", "description here", <details>uh not sure</details>),
+      problems += ProblemDigest("codec", "01:01:02", "such summary", "such description", <details>more details</details>)
     )
     val setupFuture = db.run(setup)
     db.run(suppliers.result).map(_.foreach {
       case (id, name, street, city, state, zip) =>
         println("  " + id  + "\t" + name + "\t" + street + "\t" + city + "\t" + state + "\t" + zip)
+    })
+    db.run(problems.result).map(_.foreach {
+      case (problemDigest) => println("yes?")
+      case _ => println("no?")
     })
     db.close()
   }
@@ -45,8 +52,8 @@ class Problems(tag: Tag) extends Table[ProblemDigest](tag, "PROBLEMS") {
   // I feel like this is somehow flipped with untupled, you can always convert
   // a ProblemDigest to a row, but converting a row to a ProblemDigest can sometimes fail
   def tupled(args: (String, String, String, String, String)) = args match {
-    case (codec, stampText, summary, description, detailsXml)
-           => ProblemDigest(codec, stampText, summary, description, XML.loadString(detailsXml))
+    case (codec, stampText, summary, description, detailsXml) =>
+      ProblemDigest(codec, stampText, summary, description, XML.loadString(detailsXml))
   }
 
   // Converts a ProblemDigest into an Option of a table row
