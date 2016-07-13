@@ -41,7 +41,7 @@ angular
             $httpProvider.defaults.headers.get['If-Modified-Since'] = 'Sat, 26 Jul 1997 05:00:00 GMT';
             // extra
             $httpProvider.defaults.headers.get['Cache-Control'] = 'no-cache';
-            $httpProvider.defaults.headers.get['Pragma'] = 'no-cache';
+              $httpProvider.defaults.headers.get['Pragma'] = 'no-cache';
         }
 
         $stateProvider
@@ -223,7 +223,7 @@ angular
             titleArray[2]   = $rootScope.app.globals.currentUser.roles[0].toUpperCase();
             $rootScope.app.globals.AppTitle = titleArray.join(' ');
         };
-
+0
         $rootScope.app.utils.clearAppTitle = function () {
             $rootScope.app.globals.AppTitle = $rootScope.app.globals.AppTitleBase;
         };

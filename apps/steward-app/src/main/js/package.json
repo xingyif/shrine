@@ -1,39 +1,47 @@
 {
-  "name": "steward",
-  "version": "1.0.0",
-  "description": "hms steward app",
-  "main": "y",
-  "dependencies": {
-    "grunt": "^0.4.5",
-    "grunt-cli": "0.1.13",
-    "grunt-contrib-clean": "^0.6.0",
-    "grunt-contrib-copy": "^0.8.0",
-    "grunt-contrib-stylus": "^0.21.0",
-    "grunt-contrib-watch": "^0.6.1",
-    "grunt-karma": "^0.10.1",
-    "karma": "^0.12.31",
-    "karma-jasmine": "^0.3.5",
-    "bower": "1.7.7",
-    "karma-phantomjs-launcher": "0.1.4",
-    "grunt-contrib-uglify": "^0.9.1",
-    "karma-firefox-launcher": "^0.1.6",
-    "karma-chrome-launcher": "^0.2.0"
-  },
+  "name": "hms-data-steward",
+  "version": "2.0.0",
+  "description": "HMS Data Steward",
+  "main": "app.js",
   "devDependencies": {
-    "grunt-contrib-uglify": "^0.9.1",
-    "karma-chrome-launcher": "^0.2.0",
-    "karma-firefox-launcher": "^0.1.6",
-    "karma-phantomjs-launcher": "^0.1.4",
-    "phantomjs": "^1.9.17"
+    "bower": "^1.7.9",
+    "del": "^2.2.1",
+    "gulp": "^3.9.1",
+    "gulp-concat": "^2.6.0",
+    "gulp-connect": "^4.1.0",
+    "gulp-copy": "0.0.2",
+    "gulp-if": "^2.0.1",
+    "gulp-inject": "^4.1.0",
+    "gulp-jscs": "^4.0.0",
+    "gulp-jshint": "^2.0.1",
+    "gulp-load-plugins": "^1.2.4",
+    "gulp-print": "^2.0.1",
+    "gulp-sequence": "^0.4.5",
+    "gulp-server-livereload": "^1.8.1",
+    "jasmine": "^2.4.1",
+    "jscs": "^3.0.5",
+    "jshint": "^2.9.2",
+    "jshint-stylish": "^2.2.0",
+    "karma": "^1.1.0",
+    "karma-jasmine": "^1.0.2",
+    "karma-phantomjs-launcher": "^1.0.1",
+    "phantomjs-prebuilt": "^2.1.7",
+    "wiredep": "^4.0.0",
+    "yargs": "^4.7.1"
   },
   "scripts": {
-    "test": "grunt:karma"
+    "test": "gulp test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://open.med.harvard.edu/stash/scm/shrine/shrine.git"
   },
   "keywords": [
-    "hms",
-    "steward",
-    "app"
+    "HMS",
+    "SHRINE",
+    "Data",
+    "Steward"
   ],
-  "author": "Ben Carmen",
-  "license": "ISC"
+  "author": "‘Ben <benjamin_carmen@hms.harvard.edu>",
+  "license": "MIT"
 }

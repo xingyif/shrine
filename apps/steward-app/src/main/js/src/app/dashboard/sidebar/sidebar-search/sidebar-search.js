@@ -10,7 +10,7 @@
 angular.module('stewardApp')
   .directive('sidebarSearch',function() {
     return {
-      templateUrl:'src/app/dashboard/sidebar/sidebar-search/sidebar-search.tpl.html',
+      templateUrl:'app/client/dashboard/sidebar/sidebar-search/sidebar-search.tpl.html',
       restrict: 'E',
       replace: true,
       scope: {

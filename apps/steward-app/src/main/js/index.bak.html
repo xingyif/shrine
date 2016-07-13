@@ -1,0 +1,68 @@
+<!doctype html>
+<html>
+    <head>
+    <meta charset="utf-8">
+    <title>Shrine Data Steward</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width">
+
+    <!-- build:css(.tmp) assets/css/main.css -->
+    <link rel="stylesheet" href="src/vendor/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="src/assets/css/timeline.css">
+    <link rel="stylesheet" href="src/vendor/metisMenu/dist/metisMenu.min.css">
+    <link rel="stylesheet"
+          href="src/vendor/angular-loading-bar/build/loading-bar.min.css">
+
+    <link rel="stylesheet" href="src/vendor/font-awesome/css/font-awesome.min.css"
+          type="text/css">
+    <link rel="stylesheet" href="src/assets/css/shrine.css">
+    <!-- endbuild -->
+</head>
+<body class="main-app" >
+
+ 
+    <div ng-app="stewardApp" ng-controller="AppCtrl">
+
+        <header></header>
+
+        <div ui-view>
+        </div>
+
+        <!-- /#page-wrapper -->
+        <!-- footer -->
+        <hms-footer footer-url="footerUrl"></hms-footer>
+    </div>
+
+
+
+    <!-- build:js(.) src/vendor.js -->
+    <script src="src/vendor/jquery/dist/jquery.min.js"></script>
+    <script type="text/javascript" src="src/vendor/angular/angular.min.js"></script>
+    <script src="src/vendor/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="src/vendor/json3/lib/json3.min.js"></script>
+    <script src="src/vendor/angular-ui-router/release/angular-ui-router.min.js"></script>
+    <script type="text/javascript"
+            src="src/vendor/angular-route/angular-route.min.js"></script>
+    <script type="text/javascript"
+            src="src/vendor/angular-cookies/angular-cookies.min.js"></script>
+    <script src="src/vendor/oclazyload/dist/ocLazyLoad.min.js"></script>
+    <script type="text/javascript" src="src/vendor/lodash/lodash.min.js"></script>
+    <script src="src/vendor/angular-ui-router/release/angular-ui-router.js"></script>
+    <script src="src/vendor/x2js/xml2json.min.js"></script>
+    <script src="src/vendor/angular-loading-bar/build/loading-bar.min.js"></script>
+    <script src="src/vendor/angular-bootstrap/ui-bootstrap-tpls.js"></script>
+    <script src="src/vendor/metisMenu/dist/metisMenu.min.js"></script>
+    <script src="src/vendor/Chart.js/Chart.min.js"></script>
+    <!-- endbuild -->
+
+    <!-- build:js src/app.js -->
+    <script type="text/javascript" src="src/app/common/utils-service.js"></script>
+    <script type="text/javascript" src="src/app/common/model-service.js"></script>
+    <script type="text/javascript" src="src/app/app.js"></script>
+    <script type="text/javascript" src="src/app/app-model.js"></script>
+    <script type="text/javascript" src="src/app/header/user-status/user-status.js"></script>
+    <script type="text/javascript" src="src/app/header/header.js"></script>
+    <script type="text/javascript" src="src/app/footer/footer.js"></script>
+    <!-- endbuild -->
+</body>
+</html>

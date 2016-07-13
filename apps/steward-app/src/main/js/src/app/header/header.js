@@ -9,7 +9,7 @@
 angular.module('stewardApp')
 	.directive('header',function(){
 		return {
-        templateUrl:'src/app/header/header.tpl.html',
+        templateUrl:'app/client/header/header.tpl.html',
         restrict: 'E',
         replace: true
     	}

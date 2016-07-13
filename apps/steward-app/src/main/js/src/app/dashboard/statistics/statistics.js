@@ -118,14 +118,14 @@ angular.module('stewardApp')
     .directive("queryCounts", function () {
         return {
             restrict: "E",
-            templateUrl: "src/app/dashboard/statistics/query-counts-table.tpl.html",
+            templateUrl: "app/client/dashboard/statistics/query-counts-table.tpl.html",
             replace: true
         };
     })
     .directive("topicStatus", function () {
         return {
             restrict: "E",
-            templateUrl: "src/app/dashboard/statistics/query-topic-status-table.tpl.html",
+            templateUrl: "app/client/dashboard/statistics/query-topic-status-table.tpl.html",
             replace: true
         };
     });
