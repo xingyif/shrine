@@ -3,27 +3,24 @@ package net.shrine.problem
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{BeforeAndAfter, FlatSpec, Matchers}
 import slick.lifted.{TableQuery, Tag}
-import slick.driver.SQLiteDriver.api._
-import Matchers._
-import net.shrine.problem.Problems.ProblemsT
-import net.shrine.problem.Suppliers.SuppliersT
+import slick.driver.SQLiteDriver.api._ // Fix this wildcard import
 import org.scalatest.time.{Millis, Seconds, Span}
 
 import scala.concurrent.Await
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
 import scala.xml.XML
 
 /**
   * Test creation, insertion, querying, and deletion of ProblemDigest values into an
-  * in-memory sqlite3 database.
+  * in-memory sqlite3 database. Demonstrates proof of concept mapping of ProblemDigest
+  * case class into a database.
   */
 class ProblemDigestDatabaseTest extends FlatSpec with BeforeAndAfter with ScalaFutures with Matchers {
   implicit val defaultPatience =
     PatienceConfig(timeout = Span(10, Seconds), interval = Span(10, Millis))
-  val db = Database.forURL("jdbc:sqlite::memory:?cache=shared", driver = "org.sqlite.JDBC")
-  val suppliers = Suppliers.suppliers
-  val problems = Problems.problems
+  val db = Database.forURL("jdbc:sqlite:memory", driver = "org.sqlite.JDBC")
+  val suppliers = Suppliers.Queries.suppliers
+  val problems = Problems.Queries.problems
   val schema = suppliers.schema ++ problems.schema
   val problemDigests = Seq(
     // Not actually sure what examples of ProblemDigests look like
@@ -35,9 +32,10 @@ class ProblemDigestDatabaseTest extends FlatSpec with BeforeAndAfter with ScalaF
     (200, "Pavement Coffee", "50 Leon St"      , "Boston"   , "MA", "02115"))
 
   before {
+    // Create the tables in the database
     Await.ready(db.run(schema.create), Duration.Inf)
 
-    // Initially the table has nothing in it
+    // Ensure that the table intially has nothing in it
     whenReady (db.run(problems.result)) { result =>
       result shouldBe empty
     }
@@ -51,6 +49,7 @@ class ProblemDigestDatabaseTest extends FlatSpec with BeforeAndAfter with ScalaF
     // After dropping the tables, there should be nothing left, thus this throws a
     // test failed exception. Technically the exception is due to a java sql exception.
     // Should it be refactored?
+    // TODO: Refactor to show sql exception
     intercept[org.scalatest.exceptions.TestFailedException] {
       whenReady(db.run(problems.result)) { result =>
         result shouldBe empty
@@ -99,6 +98,9 @@ class ProblemDigestDatabaseTest extends FlatSpec with BeforeAndAfter with ScalaF
   }
 }
 
+/**
+  * Problems schema object, defines the PROBLEMS table schema and related queries
+  */
 object Problems {
 
   // Definition of the PROBLEMS table
@@ -113,30 +115,36 @@ object Problems {
 
     def xml = column[String]("detailsXml")
 
-    def * = (codec, stampText, summary, description, xml) <> (tupled, untupled)
+    // Monad Type Hackery
+    def * = (codec, stampText, summary, description, xml) <> (rowToProblem, problemToRow)
 
     // Converts a table row into a ProblemDigest
     // I feel like this is somehow flipped with untupled, you can always convert
     // a ProblemDigest to a row, but converting a row to a ProblemDigest can sometimes fail
-    def tupled(args: (String, String, String, String, String)) = args match {
+    def rowToProblem(args: (String, String, String, String, String)): ProblemDigest = args match {
       case (codec, stampText, summary, description, detailsXml) =>
         ProblemDigest(codec, stampText, summary, description, XML.loadString(detailsXml))
     }
 
     // Converts a ProblemDigest into an Option of a table row
-    def untupled(problem: ProblemDigest) = {
-      Some((problem.codec, problem.stampText, problem.summary, problem.description, problem.detailsXml.toString()))
+    // TODO: Figure out if there are constraints on strings stored in databases that I need to check here,
+    // TODO: For instance will string length be an issue?
+    def problemToRow(problem: ProblemDigest): Option[(String, String, String, String, String)] = {
+        Some((problem.codec, problem.stampText, problem.summary, problem.description, problem.detailsXml.toString))
     }
   }
 
-  val problems = TableQuery[ProblemsT]
-
   object Queries {
+    // Select *
+    val problems = TableQuery[ProblemsT]
     // Selects the detailXml value sorted by their timeStamp
     val selectDetails = problems.sortBy(_.stampText.asc).map(_.xml)
   }
 }
 
+/**
+  *  Suppliers schema object, holds the SUPPLIERS table schema and pre-defined queries for it
+  */
 object Suppliers {
 
   // Definition of the SUPPLIERS table, slick example
@@ -158,9 +166,10 @@ object Suppliers {
     def * = (id, name, street, city, state, zip)
   }
 
-  val suppliers = TableQuery[SuppliersT]
 
   object Queries {
+    // Select *
+    val suppliers = TableQuery[SuppliersT]
     // Simple filter
     val filterBoston = suppliers.filter(_.city === "Boston").map(_.name)
   }
