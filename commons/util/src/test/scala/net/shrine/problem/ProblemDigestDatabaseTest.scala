@@ -1,34 +1,101 @@
 package net.shrine.problem
 
-import org.scalatest.FlatSpec
+import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.{BeforeAndAfter, FlatSpec, Matchers}
 import slick.lifted.{TableQuery, Tag}
 import slick.driver.SQLiteDriver.api._
+import Matchers._
+import net.shrine.problem.Problems.ProblemsT
+import net.shrine.problem.Suppliers.SuppliersT
+import org.scalatest.time.{Millis, Seconds, Span}
 
+import scala.concurrent.Await
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration.Duration
 import scala.xml.XML
 
 /**
   * Test creation, insertion, querying, and deletion of ProblemDigest values into an
   * in-memory sqlite3 database.
   */
-class ProblemDigestDatabaseTest extends FlatSpec {
-  "The Database" should "Connect without any problems" in {
-    val db = Database.forURL("jdbc:sqlite::memory", driver = "org.sqlite.JDBC")
-    val problems = Problems.problems
-    val suppliers = Suppliers.suppliers
-    val schema = problems.schema.create
-    val setup = DBIO.seq(
-      schema,
-      suppliers += (101, "Acme, Inc.", "99 Market Street", "Groundsville", "CA", "95199"),
-      suppliers += (49, "Superior Coffee", "1 Party Place", "Mendocino", "CA", "95460"),
-      suppliers += (150, "The High Ground", "100 Coffee Lane", "Meadows", "CA", "93966"),
-      suppliers += (200, "Pavement", "50 Leon St", "Boston", "MA", "02115"),
-      // Not actually sure what examples of ProblemDigests look like
-      problems += ProblemDigest("MJPG", "01:01:01", "summary here", "description here", <details>uh not sure</details>),
-      problems += ProblemDigest("codec", "01:01:02", "such summary", "such description", <details>more details</details>),\
-    )
-    db.run(setup).onSuccess(db => println("success"))
+class ProblemDigestDatabaseTest extends FlatSpec with BeforeAndAfter with ScalaFutures with Matchers {
+  implicit val defaultPatience =
+    PatienceConfig(timeout = Span(10, Seconds), interval = Span(10, Millis))
+  val db = Database.forURL("jdbc:sqlite::memory:?cache=shared", driver = "org.sqlite.JDBC")
+  val suppliers = Suppliers.suppliers
+  val problems = Problems.problems
+  val schema = suppliers.schema ++ problems.schema
+  val problemDigests = Seq(
+    // Not actually sure what examples of ProblemDigests look like
+    ProblemDigest("MJPG", "01:01:01", "summary here", "description here", <details>uh not sure</details>),
+    ProblemDigest("codec", "01:01:02", "such summary", "such description", <details>more details</details>))
+  val supplierTuples = Seq(
+    (101, "Acme, Inc."     , "99 Market Street", "San Luis" , "CA", "95199"),
+    (49 , "Superior Coffee", "1 Party Place"   , "Mendocino", "CA", "95460"),
+    (200, "Pavement Coffee", "50 Leon St"      , "Boston"   , "MA", "02115"))
+
+  before {
+    Await.ready(db.run(schema.create), Duration.Inf)
+
+    // Initially the table has nothing in it
+    whenReady (db.run(problems.result)) { result =>
+      result shouldBe empty
+    }
+    whenReady (db.run(suppliers.result)) { result =>
+      result shouldBe empty
+    }
+  }
+
+  after {
+    Await.ready(db.run(schema.drop), Duration.Inf)
+    // After dropping the tables, there should be nothing left, thus this throws a
+    // test failed exception. Technically the exception is due to a java sql exception.
+    // Should it be refactored?
+    intercept[org.scalatest.exceptions.TestFailedException] {
+      whenReady(db.run(problems.result)) { result =>
+        result shouldBe empty
+      }
+    }
     db.close()
+  }
+
+  "The Database" should "Connect without any problems" in {
+    // Insert the suppliers and ProblemDigests
+    Await.ready(db.run(DBIO.seq(problems ++= problemDigests, suppliers ++= supplierTuples)), Duration.Inf)
+
+    // Test that they are all in the table
+    whenReady (db.run(suppliers.result)) { result =>
+      result should contain theSameElementsAs supplierTuples
+      result should have length supplierTuples.length
+    }
+    whenReady (db.run(problems.result)) { result =>
+      result should contain theSameElementsAs problemDigests
+      result should have length problemDigests.length
+    }
+
+    // Test that the simple select and filter queries work
+    whenReady (db.run(Suppliers.Queries.filterBoston.result)) { result =>
+      result.head shouldBe "Pavement Coffee"
+      result should have length 1
+    }
+    // This also tests that our conversion from xml to strings works
+    whenReady (db.run(Problems.Queries.selectDetails.result)) { result =>
+      result should have length problemDigests.length
+      result should contain theSameElementsAs problemDigests.map(_.detailsXml.toString())
+    }
+
+    // Tests that show deleting queries work.
+    whenReady(db.run(suppliers.delete)) { result =>
+      // 3 items are deleted
+      result shouldBe supplierTuples.length
+    }
+    whenReady(db.run(problems.delete)) { result =>
+      result shouldBe problemDigests.length
+    }
+    // And when we try to select, the result list is empty
+    whenReady(db.run(problems.result)) { result =>
+      result shouldBe empty
+    }
   }
 }
 
@@ -66,7 +133,7 @@ object Problems {
 
   object Queries {
     // Selects the detailXml value sorted by their timeStamp
-    val selectDetails = problems.sortBy(_.stampText.desc).map(_.xml)
+    val selectDetails = problems.sortBy(_.stampText.asc).map(_.xml)
   }
 }
 
@@ -95,7 +162,7 @@ object Suppliers {
 
   object Queries {
     // Simple filter
-    val filterBoston = suppliers.filter(_.city === "Boston")
+    val filterBoston = suppliers.filter(_.city === "Boston").map(_.name)
   }
 
 }
