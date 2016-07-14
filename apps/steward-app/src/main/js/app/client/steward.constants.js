@@ -2,7 +2,7 @@
   'use strict';
 
   var baseUrl = 'https://localhost:6443/steward/';
-
+  var testPort = '8000';
   var defaultRoute = '/topics';
 
   var restOptions = {
@@ -49,6 +49,7 @@
       'restInterpolators': restInterpolators,
       'states': states,
       'roles': roles,
+      'testPort': testPort,
       'title': title//todo: delete?
     });
 })();

@@ -31,7 +31,7 @@
             delete httpProvider.defaults.headers.common['X-Requested-With'];
 
             // -- If running from deployment, No IE Cache -- //
-            if (window.location.origin.indexOf('http://localhost:63342') === -1) {
+            if (window.location.origin.indexOf('http://localhost:' + constants.testPort) === -1) {
 
                 //initialize get if not there
                 if (!httpProvider.defaults.headers.get) {
