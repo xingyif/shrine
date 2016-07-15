@@ -24,8 +24,8 @@
         });
 
         // -- tests -- //
-        it('defaultRoute member should exist.', function () {
-            expect(stewardConstants.defaultRoute).toBeDefined();
+        it('homeRoute member should exist.', function () {
+            expect(stewardConstants.homeRoute).toBeDefined();
         });
 
         // -- tests -- //

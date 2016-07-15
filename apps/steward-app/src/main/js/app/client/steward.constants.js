@@ -3,7 +3,8 @@
 
   var baseUrl = 'https://localhost:6443/steward/';
   var testPort = '8000';
-  var defaultRoute = '/topics';
+  var homeRoute = '/topics';
+  var defaultRoute = '/login';
 
   var restOptions = {
     skip: '{$SKIP$}',
@@ -43,6 +44,7 @@
   angular
     .module('shrine.steward')
     .constant('constants', {
+      'homeRoute': homeRoute,
       'defaultRoute': defaultRoute,
       'baseUrl': baseUrl,
       'restOptions': restOptions,

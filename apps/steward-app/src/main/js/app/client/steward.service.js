@@ -64,7 +64,7 @@
         this.setAppUser = setAppUser;
         this.getAppUser = getAppUser;
         this.deleteAppUser = deleteAppUser;
-        
+
         /**
          * -- set app user. --
          */
