@@ -1,8 +1,10 @@
 (function () {
   'use strict';
 
-  var baseUrl = 'https://localhost:6443/steward/';
-  var testPort = '8000';
+  var server = 'http://localhost';
+  var restBase = 'steward/'
+  var port = ':8080/';
+  var baseUrl = server + port + restBase;
   var homeRoute = '/topics';
   var defaultRoute = '/login';
 
@@ -51,7 +53,6 @@
       'restInterpolators': restInterpolators,
       'states': states,
       'roles': roles,
-      'testPort': testPort,
       'title': title//todo: delete?
     });
 })();

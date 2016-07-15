@@ -18,17 +18,15 @@
         //-- setup --/
         beforeEach(setup);
 
-        // -- tests -- //
+        
         it('commonService member should exist.', function () {
             expect(stewardService.commonService).toBeDefined();
         });
 
-        // -- tests -- //
         it('constants member should exist.', function () {
             expect(stewardService.constants).toBeDefined();
         });
 
-        // -- tests -- //
         it('setAppUser and getAppUser user should work.', function () {
             var username = 'ben';
             var password = 'kapow';

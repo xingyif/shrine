@@ -37,14 +37,14 @@
         //-- setup --/
         beforeEach(setup);
 
-        // -- tests -- //
+        
         it('topics route url should be set to #/topics', function () {
             stewardService.setAppUser(user.username, user.password, user.roles);
             activateRoute('app/client/topics/topics.tpl.html', 'topics');
             expect($state.href($state.current.name)).toEqual('#/topics');
         });
 
-                // -- tests -- //
+                
         it('login route url should be set to #/login', function () {
             stewardService.deleteAppUser();
             activateRoute('app/client/login/login.tpl.html', 'login');

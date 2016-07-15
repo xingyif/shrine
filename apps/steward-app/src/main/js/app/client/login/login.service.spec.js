@@ -24,7 +24,7 @@
         //-- setup --/
         beforeEach(setup);
 
-        // -- tests -- //
+        
         it('LoginService should exist', function () {
             expect(typeof (loginService)).toBe('object');
         });

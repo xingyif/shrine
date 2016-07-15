@@ -6,7 +6,8 @@
         'ui.bootstrap',
         'ui.bootstrap.modal',
         'angular-loading-bar',
-        'shrine.common'
+        'shrine.common',
+        'shrine.steward.login'
     ];
 
      angular

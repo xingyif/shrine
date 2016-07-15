@@ -18,7 +18,7 @@
         //-- setup --/
         beforeEach(setup);
 
-        // -- tests -- //
+        
         it('StewardController should exist', function () {
             expect(typeof (stewardController)).toBe('object');
         });

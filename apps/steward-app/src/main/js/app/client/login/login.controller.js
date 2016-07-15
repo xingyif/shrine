@@ -2,7 +2,8 @@
     'use strict';
 
     angular
-        .module('shrine.steward.login');
+        .module('shrine.steward.login')
+        .controller('LoginController', LoginController);
 
     LoginController.$inject = ['LoginModel', 'LoginService', '$location', 'constants'];
     function LoginController(loginModel, loginService, $location, constants) {
@@ -11,12 +12,11 @@
         var login = this;
         login.loginFail = false;
         this.checkLogin = checkLogin;
-        this.navigateToHome = navigateToHome;
 
         // -- private -- //
         function checkLogin() {
             loginService.setAuthHeader(login.username, login.password);
-            loginService.login()
+            loginModel.login()
                 .then(navigateToHome, setLoginToError);
         }
 
@@ -29,6 +29,7 @@
             loginService.clearCredentials();
             login.loginFail = true;
             login.username = login.password = '';
+            login.status = response.message;
         }
     }
 })();

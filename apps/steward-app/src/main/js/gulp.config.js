@@ -11,7 +11,7 @@ module.exports = function () {
     var assets = src + 'assets/';
     var build = './build/';
     var lintFiles = clientDir + '**/*.js';
-    var srcFiles = clientDir + '**/!(*.spec)+(.js)'
+    var srcFiles = clientDir + '**/!(*.spec)+(.js)';
     var moduleFiles = clientDir + '**/*.module.js';
     var specFiles = clientDir + '**/*.spec.js';
 

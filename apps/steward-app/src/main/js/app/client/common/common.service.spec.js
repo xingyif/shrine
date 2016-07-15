@@ -21,7 +21,7 @@
         //-- setup --/
         beforeEach(setup);
 
-        // -- tests -- //
+        
         it('CommonService should exist', function () {
             expect(typeof (commonService)).toBe('object');
         });

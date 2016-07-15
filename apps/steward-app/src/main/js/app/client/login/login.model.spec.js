@@ -11,9 +11,9 @@
         function setup() {
             module('shrine.steward.login');
 
-            inject(function (_$httpBackend_, _loginModel_, _constants_) {
+            inject(function (_$httpBackend_, _LoginModel_, _constants_) {
                 $httpBackend = _$httpBackend_;
-                loginModel = _loginModel_;
+                loginModel = _LoginModel_;
                 constants = _constants_;
                 $httpBackend.whenGET(/\.html$/).respond('');
             });

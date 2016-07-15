@@ -3,7 +3,7 @@
 
     angular
         .module('shrine.steward.login')
-        .factory('loginModel', LoginModel);
+        .factory('LoginModel', LoginModel);
 
     LoginModel.$inject = ['$http', '$q', 'constants'];
     function LoginModel($http, $q, constants) {
@@ -24,9 +24,7 @@
 
         function parse(result) {
 
-            var data = result.data;
-
-            return (data === 'AuthenticationFailed') ?
+            return (result.data === 'AuthenticationFailed') ?
                 reject(result) : {
                     success: true,
                     msg: result.data.statusText,
@@ -37,11 +35,11 @@
 
         function reject(result, msg) {
 
-            var statusText = result.data.statusText || result.data;
+            result.data = result.data || 'xhr request timed out';
 
             var response = {
                 success: false,
-                msg: 'invalid login ' + statusText
+                message: 'invalid login: ' + result.data
             };
 
             return $q.reject(response);
