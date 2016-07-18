@@ -23,8 +23,8 @@
             expect(typeof (stewardController)).toBe('object');
         });
 
-        it('Common Service should exist', function () {
-            expect(stewardController.commonService).toBeDefined();
+        it('Steward Service should exist', function () {
+            expect(stewardController.stewardService).toBeDefined();
         })
     }
 })();

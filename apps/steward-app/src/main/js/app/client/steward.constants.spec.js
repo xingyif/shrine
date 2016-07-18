@@ -18,9 +18,12 @@
         //-- setup --/
         beforeEach(setup);
 
-        
         it('constants should exist.', function () {
             expect(stewardConstants).toBeDefined();
+        });
+
+        it('isDevMode should exist.', function () {
+            expect(stewardConstants.isDevMode).toBeDefined();
         });
 
         

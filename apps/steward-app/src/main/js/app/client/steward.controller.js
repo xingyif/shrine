@@ -4,11 +4,12 @@
         .controller('StewardController', StewardController);
 
 
-    StewardController.$inject = ['CommonService'];
-    function StewardController(CommonService) {
+    StewardController.$inject = ['StewardService'];
+    function StewardController(StewardService) {
                 
         var steward = this;
-        steward.message = 'StewardController loaded';
-        steward.commonService = CommonService;
+        steward.stewardService = StewardService;
+        steward.isDevMode = StewardService.constants.isDevMode;
+
     }
 })();

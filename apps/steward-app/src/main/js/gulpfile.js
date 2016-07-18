@@ -95,12 +95,14 @@ gulp.task('copy-app-src', function () {
 /**
  * Todo: figure out livereload issue.
  */
-gulp.task('webserver', function () {
+gulp.task('serve', function () {
     var server = require('gulp-server-livereload');
     console.log('starting server at: ' + config.buildDir);
     return gulp.src(config.buildDir)
         .pipe(server({
-            livereload: true
+            livereload: true,
+            open: true,
+            port: '8000'
         }));
 });
 
