@@ -2,49 +2,68 @@ package net.shrine.dashboard
 import java.util.concurrent.TimeoutException
 
 import net.shrine.problem.ProblemDigest
-import slick.dbio.SuccessAction
+import slick.dbio.{DBIOAction, NoStream, SuccessAction}
 import slick.lifted.{TableQuery, Tag}
 import slick.driver.H2Driver.api._
 import slick.jdbc.meta.MTable
 
-import scala.concurrent.{Await, Future}
+import scala.concurrent.{Await, Future, blocking}
 import scala.concurrent.duration._
 import scala.util.control.NonFatal
 import scala.xml.XML
+import scala.concurrent.ExecutionContext.Implicits.global
 
 /**
   * Handles all interaction with the (current) problem database. Will eventually
   * need to be set up to be able to handle starting up with a config file
   */
 case class ProblemDatabaseConnector(url: DBUrls.URL) {
-  import Problems._
   val db = DBUrls.connectWithUrl(url)
+  val problems = Problems.Queries
 
   /**
     * DBIO Actions. These are pre-defined IO actions that may be useful
     */
-  val tableExists = MTable.getTables(tableName).map(_.nonEmpty)
-  val createIfNotExists = tableExists.map(if (_) SuccessAction else Queries.schema.create)
-  val dropIfExists = tableExists.map(if (_) Queries.schema.drop else SuccessAction)
-  val resetTable = createIfNotExists >> Queries.selectAll.delete
+  val tableExists: DBIO[Boolean] = MTable.getTables(problems.tableName).map(_.nonEmpty)
+  val createIfNotExists = tableExists.map(b => if (b) SuccessAction else problems.schema.create)
+  val dropIfExists = tableExists.map(if (_) problems.schema.drop else SuccessAction)
+  val resetTable = createIfNotExists >> problems.selectAll.delete
+  val selectAll = problems.result
 
   /**
     * Executes a series of IO actions as a single transactions
     */
   def executeTransaction(actions: DBIOAction[_, NoStream, _]*): Future[Unit] = {
-      db.run(DBIO.seq(actions:_*).transactionally)
-    }
+    db.run(DBIO.seq(actions:_*).transactionally)
+  }
 
   /**
     * Executes a series of IO actions as a single transaction, synchronous
     */
-  def executeTransactionBlocking(actions: DBIOAction[_, NoStream, _]*): Unit = {
+  def executeTransactionBlocking(actions: DBIOAction[_, NoStream, _]*)(implicit timeout: Duration): Unit = {
     try {
-      blocking {
-        Await.ready(executeTransaction(actions: _*), 15.seconds)
-      }
+      Await.ready(this.executeTransaction(actions: _*), timeout)
     } catch {
       // TODO: Handle this better
+      case tx:TimeoutException => throw CouldNotRunDbIoActionException(tx)
+      case NonFatal(x) => throw CouldNotRunDbIoActionException(x)
+    }
+  }
+
+  /**
+    * Straight copy of db.run
+    */
+  def run[R](dbio: DBIOAction[R, NoStream, _]): Future[R] = {
+    db.run(dbio)
+  }
+
+  /**
+    * Synchronized copy of db.run
+    */
+  def runBlocking[R](dbio: DBIOAction[R, NoStream, _])(implicit timeout: Duration): R = {
+    try {
+      Await.result(this.run(dbio), timeout)
+    } catch {
       case tx:TimeoutException => throw CouldNotRunDbIoActionException(tx)
       case NonFatal(x) => throw CouldNotRunDbIoActionException(x)
     }
@@ -61,7 +80,7 @@ object DBUrls {
 
   def connectWithUrl(u: URL) = u match {
     case H2(url) => Database.forURL(s"jdbc:h2:$url", driver = "org.h2.Driver")
-    case H2Mem   => Database.forURL("jdbc:mem:test;DB_CLOSE_DELAY=-1", driver = "org.h2.Driver")
+    case H2Mem   => Database.forURL("jdbc:h2:mem:test;DB_CLOSE_DELAY=-1", driver = "org.h2.Driver")
   }
 }
 
@@ -70,16 +89,10 @@ object DBUrls {
   * Problems schema object, defines the PROBLEMS table schema and related queries
   */
 object Problems {
-
-  /**
-    * The table name
-    */
-  val tableName = "PROBLEMS"
-
   /**
     * The Problems Table. This is the table schema.
     */
-  class ProblemsT(tag: Tag) extends Table[ProblemDigest](tag, tableName) {
+  class ProblemsT(tag: Tag) extends Table[ProblemDigest](tag, Queries.tableName) {
     def codec = column[String]("codec")
     def stampText = column[String]("stampText", O.PrimaryKey)
     def summary = column[String]("summary")
@@ -93,7 +106,7 @@ object Problems {
       * @param args the table row, represented as a five-tuple string
       * @return the corresponding ProblemDigest
       */
-    def rowToProblem(args: (String, String, String, String, String)): ProblemDigest = {
+    def rowToProblem(args: (String, String, String, String, String)): ProblemDigest = args match {
       case (codec, stampText, summary, description, detailsXml) =>
         ProblemDigest(codec, stampText, summary, description, XML.loadString(detailsXml))
     }
@@ -114,6 +127,10 @@ object Problems {
     * Queries related to the Problems table.
     */
   object Queries extends TableQuery(new ProblemsT(_)) {
+    /**
+      * The table name
+      */
+    val tableName = "PROBLEMS"
 
     /**
       * Equivalent to Select * from Problems;
@@ -131,6 +148,9 @@ object Problems {
 
 }
 
+/**
+  * Copy of Dave's DbIoActionException
+  */
 case class CouldNotRunDbIoActionException(exception: Throwable) extends RuntimeException(exception) {
   //TODO: Datasource
   override def getMessage:String = s"Could not use the database due to ${exception.getLocalizedMessage}"
