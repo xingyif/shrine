@@ -2,8 +2,10 @@
 module.exports = function () {
     // -- dependencies -- //
     var wiredep = require('wiredep');
+    
     var bowerJS = wiredep({devDependencies:true})['js'];//grab .js dev depenencies.
     var bowerCSS = wiredep({devDependencies:true})['css'];
+    var bowerFnt = ['./bower_components/font-awesome/fonts/**/*'];
 
     // -- directories -- //
     var src = './app/';
@@ -40,9 +42,12 @@ module.exports = function () {
             directory: './bower_components/',
             ignorePath: '../..',
             jsFiles: bowerJS,
-            cssFiles: bowerCSS
+            cssFiles: bowerCSS,
+            fontFiles: bowerFnt
         }
     };
+
+    config.bower.font = config.bower.directory + 'font-awesome/fonts/*';
 
     config.getWiredepDefaultOptions = function () {
         var options = {

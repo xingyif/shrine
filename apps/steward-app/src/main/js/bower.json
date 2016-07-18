@@ -39,19 +39,19 @@
     "x2js": "x2js#^1.2.0"
   },
   "devDependencies": {
-    "angular-mocks": "^1.5.7"
+    "angular-mocks": "^1.5.7",
+    "font-awesome": "^4.6.3"
   },
-
   "overrides": {
     "bootstrap": {
-      "main":[
+      "main": [
         "dist/js/boostrap.js",
         "dist/css/bootstrap.css",
         "less/bootstrap.less"
       ]
     },
-    "font-awesome":{
-      "main":[
+    "font-awesome": {
+      "main": [
         "css/font-awesome.css",
         "less/font-awesome.less",
         "scss/font-awesome.scss"
