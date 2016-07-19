@@ -74,16 +74,19 @@ case class ProblemDatabaseConnector(url: DBUrls.URL) {
 }
 
 /**
-  * Unnecessary once a config file is set up
+  * Unnecessary once a config file is set up. Just to reduce
+  * mental burden of remembering jdbc urls
   */
 object DBUrls {
   sealed trait URL
   case class H2(url: String) extends URL
+  case class Sqlite(url: String) extends URL
   case object H2Mem extends URL
 
   def connectWithUrl(u: URL) = u match {
-    case H2(url) => Database.forURL(s"jdbc:h2:$url", driver = "org.h2.Driver")
-    case H2Mem   => Database.forURL("jdbc:h2:mem:test;DB_CLOSE_DELAY=-1", driver = "org.h2.Driver")
+    case H2(url)     => Database.forURL(s"jdbc:h2:$url", driver = "org.h2.Driver")
+    case H2Mem       => Database.forURL("jdbc:h2:mem:test;DB_CLOSE_DELAY=-1", driver = "org.h2.Driver")
+    case Sqlite(url) => Database.forURL(s"jdbc:sqlite:$url", driver = "org.sqlite.jdbc")
   }
 }
 

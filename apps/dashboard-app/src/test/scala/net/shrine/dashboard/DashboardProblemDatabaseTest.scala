@@ -8,7 +8,7 @@ import scala.concurrent.duration._
 
 /**
   * Test creation, insertion, querying, and deletion of ProblemDigest values into an
-  * in-memory sqlite3 database. Demonstrates proof of concept mapping of ProblemDigest
+  * in-memory H2 database. Demonstrates proof of concept mapping of ProblemDigest
   * case class into a database.
   */
 class DashboardProblemDatabaseTest extends FlatSpec with BeforeAndAfter with ScalaFutures with Matchers {

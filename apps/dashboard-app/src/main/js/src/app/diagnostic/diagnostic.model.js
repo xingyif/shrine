@@ -18,7 +18,7 @@
             OptionsEndpoint:  'admin/status/options',
             ConfigEndpoint:   'admin/status/config',
             SummaryEndpoint:  'admin/status/summary',
-            HapyAllEndpoint:  'admin/happy/all'
+            HappyAllEndpoint:  'admin/happy/all'
         };
 
 
@@ -148,7 +148,7 @@
          * @returns {*}
          */
         function getHappyAll() {
-            var url = urlGetter(Config.HapyAllEndpoint, '.xml')
+            var url = urlGetter(Config.HappyAllEndpoint, '.xml')
             return h.get(url)
                 .then(parseHappyAllResult, onFail);
         }

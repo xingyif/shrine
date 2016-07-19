@@ -12,6 +12,7 @@ import scala.concurrent.Await
 import scala.xml.XML
 
 /**
+  * TODO: Delete
   * Test creation, insertion, querying, and deletion of ProblemDigest values into an
   * in-memory sqlite3 database. Demonstrates proof of concept mapping of ProblemDigest
   * case class into a database.
