@@ -3,7 +3,7 @@
 
   var devMode = true;
   var server = 'http://localhost';
-  var restBase = 'steward/'
+  var restBase = 'steward/';
   var port = ':8080/';
   var baseUrl = server + port + restBase;
   var homeRoute = '/topics';
@@ -54,7 +54,7 @@
       'restInterpolators': restInterpolators,
       'states': states,
       'roles': roles,
-      'title': title, //todo: delete?,
+      'title': title,
       'isDevMode':devMode
     });
 })();

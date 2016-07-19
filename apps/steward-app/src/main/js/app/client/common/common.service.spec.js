@@ -30,18 +30,6 @@
             expect(typeof (commonService.dateService)).toBe('object');
         });
 
-        xit('isTest should return true if url is running on test port in localhost', function () {
-
-            // -- arrange -- //
-            var testUrl = 'http://localhost:63342/shrine-steward/index.html';
-
-            // -- act --//
-            var result = commonService.isTest(testUrl);
-
-            //-- assert --//
-            expect(result).toBe(true);
-        });
-
         it('hasAccess should return true if user is in list of roles', function () {
 
             // -- arrange -- //

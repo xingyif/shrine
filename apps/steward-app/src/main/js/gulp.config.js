@@ -42,7 +42,7 @@ module.exports = function () {
             directory: './bower_components/',
             ignorePath: '../..',
             jsFiles: bowerJS,
-            cssFiles: bowerCSS,
+             cssFiles: bowerCSS,
             fontFiles: bowerFnt
         }
     };

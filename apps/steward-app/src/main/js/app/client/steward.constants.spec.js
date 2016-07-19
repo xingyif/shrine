@@ -57,7 +57,7 @@
         });
 
         
-        it('title member should exist.', function () {
+       it('title member should exist.', function () {
             expect(stewardConstants.title).toBeDefined();
         });
     }

@@ -29,7 +29,7 @@
             // -- set up cross domain -- //
             httpProvider.defaults.useXDomain = true;
             delete httpProvider.defaults.headers.common['X-Requested-With'];
-            $httpProvider.defaults.headers.common['Access-Control-Allow-Headers'] = '*';
+            httpProvider.defaults.headers.common['Access-Control-Allow-Headers'] = '*';
 
 
             // -- If running from deployment, No IE Cache -- //
