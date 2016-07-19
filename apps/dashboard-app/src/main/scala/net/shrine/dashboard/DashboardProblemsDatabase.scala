@@ -18,15 +18,18 @@ import scala.concurrent.ExecutionContext.Implicits.global
   * need to be set up to be able to handle starting up with a config file
   */
 case class ProblemDatabaseConnector(url: DBUrls.URL) {
-  val db = DBUrls.connectWithUrl(url)
+
+  private val db = DBUrls.connectWithUrl(url)
   val problems = Problems.Queries
 
   /**
     * DBIO Actions. These are pre-defined IO actions that may be useful
     */
-  val tableExists: DBIO[Boolean] = MTable.getTables(problems.tableName).map(_.nonEmpty)
-  val createIfNotExists = tableExists.map(b => if (b) SuccessAction else problems.schema.create)
-  val dropIfExists = tableExists.map(if (_) problems.schema.drop else SuccessAction)
+  val tableExists = MTable.getTables(problems.tableName).map(_.nonEmpty)
+  val createIfNotExists = tableExists.flatMap(if (_) SuccessAction(NoOperation)
+                                              else   problems.schema.create)
+  val dropIfExists = tableExists.flatMap(if (_) problems.schema.drop
+                                         else   SuccessAction(NoOperation))
   val resetTable = createIfNotExists >> problems.selectAll.delete
   val selectAll = problems.result
 
@@ -155,3 +158,5 @@ case class CouldNotRunDbIoActionException(exception: Throwable) extends RuntimeE
   //TODO: Datasource
   override def getMessage:String = s"Could not use the database due to ${exception.getLocalizedMessage}"
 }
+
+case object NoOperation

@@ -3,6 +3,7 @@ import net.shrine.problem.ProblemDigest
 import slick.driver.H2Driver.api._
 import org.scalatest.{BeforeAndAfter, FlatSpec, Matchers}
 import org.scalatest.concurrent.ScalaFutures
+
 import scala.concurrent.duration._
 
 /**
@@ -24,12 +25,14 @@ class DashboardProblemDatabaseTest extends FlatSpec with BeforeAndAfter with Sca
   before {
     connector.runBlocking(connector.tableExists) shouldBe false
     connector.runBlocking(connector.createIfNotExists >> connector.tableExists) shouldBe true
+    connector.runBlocking(connector.createIfNotExists) shouldBe NoOperation
     connector.runBlocking(connector.selectAll) shouldBe empty
   }
 
   after {
     connector.runBlocking(connector.tableExists) shouldBe true
-    connector.runBlocking(connector.problems.schema.drop >> connector.tableExists) shouldBe false
+    connector.runBlocking(connector.dropIfExists >> connector.tableExists) shouldBe false
+    connector.runBlocking(connector.dropIfExists) shouldBe NoOperation
   }
 
   "The Database" should "Connect without any problems" in {
