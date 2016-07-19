@@ -71,6 +71,21 @@ case class ProblemDatabaseConnector(url: DBUrls.URL) {
       case NonFatal(x) => throw CouldNotRunDbIoActionException(x)
     }
   }
+
+  /**
+    * Converts a query into a dbio and runs it
+    */
+  def runQuery[R](query: Query[_, R, Seq]): Future[_] = {
+    run(query.result)
+  }
+
+  /**
+    * Converts a query into a blocking dbio and runs it
+    */
+  def runQueryBlocking[R](query: Query[_, R, Seq]) = {
+    runBlocking(query.result)
+  }
+
 }
 
 /**
@@ -86,7 +101,6 @@ object DBUrls {
   def connectWithUrl(u: URL) = u match {
     case H2(url)     => Database.forURL(s"jdbc:h2:$url", driver = "org.h2.Driver")
     case H2Mem       => Database.forURL("jdbc:h2:mem:test;DB_CLOSE_DELAY=-1", driver = "org.h2.Driver")
-    case Sqlite(url) => Database.forURL(s"jdbc:sqlite:$url", driver = "org.sqlite.jdbc")
   }
 }
 

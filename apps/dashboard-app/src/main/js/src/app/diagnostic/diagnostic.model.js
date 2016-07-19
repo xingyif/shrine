@@ -19,6 +19,7 @@
             ConfigEndpoint:   'admin/status/config',
             SummaryEndpoint:  'admin/status/summary',
             HappyAllEndpoint:  'admin/happy/all'
+            //todo 'admin/status/problems'
         };
 
 

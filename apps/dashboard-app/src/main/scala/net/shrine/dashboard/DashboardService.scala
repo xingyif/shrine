@@ -9,6 +9,7 @@ import net.shrine.i2b2.protocol.pm.User
 import net.shrine.status.protocol.{Config => StatusProtocolConfig}
 import net.shrine.dashboard.httpclient.HttpClientDirectives.{forwardUnmatchedPath, requestUriThenRoute}
 import net.shrine.log.Loggable
+import net.shrine.problem.ProblemDigest
 import shapeless.HNil
 import spray.http.{HttpRequest, HttpResponse, StatusCodes, Uri}
 import spray.httpx.Json4sSupport
@@ -18,6 +19,7 @@ import org.json4s.{DefaultFormats, Formats}
 import org.json4s.native.JsonMethods.{parse => json4sParse}
 
 import scala.collection.immutable.Iterable
+import scala.concurrent.duration.{Duration, FiniteDuration, SECONDS}
 import scala.concurrent.ExecutionContext.Implicits.global
 
 /**
@@ -172,7 +174,10 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
     pathPrefix("config"){getConfig}~
     pathPrefix("classpath"){getClasspath}~
     pathPrefix("options"){getOptionalParts}~  //todo rename path to optionalParts
-    pathPrefix("summary"){getSummary}
+    pathPrefix("summary"){getSummary}~
+    pathPrefix("problems"){getProblems}
+  } ~ put {
+    pathPrefix("problems"){postProblems} // todo
   }
 
   val statusBaseUrl = DashboardConfigSource.config.getString("shrine.dashboard.statusBaseUrl")
@@ -212,6 +217,14 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
 
   lazy val getSummary:Route = {
     requestUriThenRoute(statusBaseUrl + "/summary")
+  }
+
+  lazy val getProblems:Route = {
+    implicit val timeout = new FiniteDuration(15, SECONDS)
+    val db = ProblemDatabaseConnector(DBUrls.H2("~/shrine/apps/dashboard-app/src/main/resources/test"))
+    val problems: Seq[ProblemDigest] = db.runQueryBlocking(db.problems.last20Problems)
+
+    complete(problems)
   }
 
 }
