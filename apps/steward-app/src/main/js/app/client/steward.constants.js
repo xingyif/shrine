@@ -1,7 +1,6 @@
 (function () {
   'use strict';
 
-  var devMode = true;
   var server = 'http://localhost';
   var restBase = 'steward/';
   var port = ':8080/';
@@ -54,8 +53,7 @@
       'restInterpolators': restInterpolators,
       'states': states,
       'roles': roles,
-      'title': title,
-      'isDevMode':devMode
+      'title': title
     });
 })();
 

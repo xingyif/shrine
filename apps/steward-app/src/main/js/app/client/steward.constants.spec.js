@@ -21,11 +21,6 @@
         it('constants should exist.', function () {
             expect(stewardConstants).toBeDefined();
         });
-
-        it('isDevMode should exist.', function () {
-            expect(stewardConstants.isDevMode).toBeDefined();
-        });
-
         
         it('homeRoute member should exist.', function () {
             expect(stewardConstants.homeRoute).toBeDefined();

@@ -6,10 +6,9 @@
 
     StewardController.$inject = ['StewardService'];
     function StewardController(StewardService) {
-                
         var steward = this;
-        steward.stewardService = StewardService;
-        steward.isDevMode = StewardService.constants.isDevMode;
-
+        steward.isUserLoggedIn = StewardService.isUserLoggedIn;
+        steward.getUsername = StewardService.getUsername;
+        steward.getRole = StewardService.getRole;
     }
 })();

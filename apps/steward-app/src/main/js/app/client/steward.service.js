@@ -66,6 +66,9 @@
         this.setAppUser = setAppUser;
         this.getAppUser = getAppUser;
         this.deleteAppUser = deleteAppUser;
+        this.isUserLoggedIn = isUserLoggedIn;
+        this.getUsername = getUsername;
+        this.getRole = getRole;
 
         /**
          * -- set app user. --
@@ -92,6 +95,22 @@
          */
         function deleteAppUser() {
             appUser = null;
+        }
+
+        function isUserLoggedIn() {
+            return getAppUser()
+                .isLoggedIn === true;
+        }
+
+        function getUsername() {
+            return getAppUser()
+                .username;
+        }
+
+        function getRole() {
+            var user = getAppUser();
+            return (user.roles && user.roles.length) ?
+                user.roles[0] : '';
         }
     }
 })();

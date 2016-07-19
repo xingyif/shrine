@@ -21,20 +21,19 @@
 
             <div class="shrine-brand">
                 <strong>SHRINE</strong> DATA STEWARD
-                <strong style='color:red' ng-if="steward.isDevMode">(Dev Mode)</strong>
-            </div>
+              </div>
 
             <div class="pull-right shrine-institution-logo"></div>
             
             <ul class="nav navbar-top-links navbar-right" 
-                ng-show="isUserLoggedIn()"
+                ng-show="steward.isUserLoggedIn()"
                 style="margin-top: 8px"
                 ng-cloak>
                 <li>
                     <span style="color:#1a1a1a;
                         text-transform: capitalize; 
                         margin-right: 10px" ng-cloak>
-                        Hello, {{getUsername()}}
+                        Hello, {{steward.getUsername()}}
                     </span>
                 </li>
                 <li class="dropdown">
@@ -43,9 +42,9 @@
                         <i class="fa fa-user fa-fw"></i>  
                         <i class="fa fa-caret-down"></i>
                     </a>
-                    <ul class="dropdown-menu dropdown-user">
+                    <ul class="dropdown-user">
                         <li style="text-align: center">
-                            {{getRole()}}
+                            {{steward.getRole()}}
                         </li>
                         <li class="divider"></li>
                         <li>
