@@ -76,9 +76,7 @@ object Problems {
   val config:Config = DashboardConfigSource.config.getConfig("shrine.dashboard.database")
   val slickProfileClassName = config.getString("slickProfileClassName")
   // TODO: Can we not pay this 2 second cost here?
-  val start = System.currentTimeMillis()
   val slickProfile:JdbcProfile = DashboardConfigSource.objectForName(slickProfileClassName)
-  println(System.currentTimeMillis() - start)
 
   import slickProfile.api._
 
