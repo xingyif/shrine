@@ -14,7 +14,8 @@ import scala.concurrent.duration._
 class DashboardProblemDatabaseTest extends FlatSpec with BeforeAndAfter with ScalaFutures with Matchers {
   implicit val timeout = 10.seconds
 
-  val connector = ProblemDatabaseConnector(DBUrls.H2Mem)
+  val connector = ProblemDatabaseConnector()
+  val IO = connector.IO
   val problemDigests = Seq(
     // Not actually sure what examples of ProblemDigests look like
     ProblemDigest("MJPG", "01:01:01", "summary here", "description here"     , <details>uh not sure</details>),
@@ -23,49 +24,53 @@ class DashboardProblemDatabaseTest extends FlatSpec with BeforeAndAfter with Sca
     ProblemDigest("code", "10:01:02", "such summary", "such description"     , <details>Wow</details>))
 
   before {
-    connector.runBlocking(connector.tableExists) shouldBe false
-    connector.runBlocking(connector.createIfNotExists >> connector.tableExists) shouldBe true
-    connector.runBlocking(connector.createIfNotExists) shouldBe NoOperation
-    connector.runBlocking(connector.selectAll) shouldBe empty
+    connector.runBlocking(IO.dropIfExists >> IO.tableExists) shouldBe false
+    connector.runBlocking(IO.createIfNotExists >> IO.tableExists) shouldBe true
+    connector.runBlocking(IO.createIfNotExists) shouldBe NoOperation
+    connector.runBlocking(IO.selectAll) shouldBe empty
   }
 
   after {
-    connector.runBlocking(connector.tableExists) shouldBe true
-    connector.runBlocking(connector.dropIfExists >> connector.tableExists) shouldBe false
-    connector.runBlocking(connector.dropIfExists) shouldBe NoOperation
+    connector.runBlocking(IO.tableExists) shouldBe true
+    connector.runBlocking(IO.dropIfExists >> IO.tableExists) shouldBe false
+    connector.runBlocking(IO.dropIfExists) shouldBe NoOperation
   }
 
   "The Database" should "Connect without any problems" in {
     // Insert the suppliers and ProblemDigests
-    connector.executeTransactionBlocking(connector.problems ++= problemDigests)
+    connector.executeTransactionBlocking(IO.problems ++= problemDigests)
 
     // Test that they are all in the table
-    var * = connector.runBlocking(connector.selectAll)
+    var * = connector.runBlocking(IO.selectAll)
     * should contain theSameElementsAs problemDigests
     * should have length problemDigests.length
 
     // Reset the table
-    connector.runBlocking(connector.resetTable >> connector.selectAll) shouldBe empty
+    connector.runBlocking(IO.resetTable >> IO.selectAll) shouldBe empty
 
     // Run the test again
-    connector.executeTransactionBlocking(connector.problems += problemDigests.head,
-                                         connector.problems += problemDigests(1),
-                                         connector.problems += problemDigests(2),
-                                         connector.problems += problemDigests(3))
+    connector.executeTransactionBlocking(IO.problems += problemDigests.head,
+                                         IO.problems += problemDigests(1),
+                                         IO.problems += problemDigests(2),
+                                         IO.problems += problemDigests(3))
     // Test that they are all in the table
-    * = connector.runBlocking(connector.selectAll)
+    * = connector.runBlocking(IO.selectAll)
     * should contain theSameElementsAs problemDigests
     * should have length problemDigests.length
 
 
     // Test that the simple select and filter queries work
-    val filtered = connector.runBlocking(connector.problems.filter(_.codec === "code").map(_.description).result)
+    val filtered = connector.runBlocking(IO.problems.filter(_.codec === "code").map(_.description).result)
     filtered should have length 1
     filtered.head shouldBe problemDigests(3).description
 
     // This also tests that our conversion from xml to strings works
-    val xml = connector.runBlocking(connector.problems.map(_.xml).result)
+    val xml = connector.runBlocking(IO.problems.map(_.xml).result)
     xml should have length problemDigests.length
     xml should contain theSameElementsAs problemDigests.map(_.detailsXml.toString())
+
+    val result = connector.runBlocking(IO.sizeAndProblemDigest(problemDigests.length, 0))
+    result._1 should contain theSameElementsAs problemDigests
+    result._2 shouldBe problemDigests.length
   }
 }

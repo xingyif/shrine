@@ -176,8 +176,6 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
     pathPrefix("options"){getOptionalParts}~  //todo rename path to optionalParts
     pathPrefix("summary"){getSummary}~
     pathPrefix("problems"){getProblems}
-  } ~ put {
-    pathPrefix("problems"){postProblems} // todo
   }
 
   val statusBaseUrl = DashboardConfigSource.config.getString("shrine.dashboard.statusBaseUrl")
@@ -219,12 +217,31 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
     requestUriThenRoute(statusBaseUrl + "/summary")
   }
 
+  // table based view, can see N problems at a time. Front end sends a offset that they want
+  // to see up until, and it will show the 'nearest N' ie with n = 20, 0-19 -> 20, 20-39 -> 20-40
   lazy val getProblems:Route = {
-    implicit val timeout = new FiniteDuration(15, SECONDS)
-    val db = ProblemDatabaseConnector(DBUrls.H2("~/shrine/apps/dashboard-app/src/main/resources/test"))
-    val problems: Seq[ProblemDigest] = db.runQueryBlocking(db.problems.last20Problems)
+    def problemToJsonString(problem: ProblemDigest) = problem match {
+      case ProblemDigest(cod, stamp, sum, desc, xml) =>
+        s"""{"codec":"$cod","stampText":"$stamp","summary":"$sum","description","$desc","detailsXml":"${xml.toString}"}"""
+    }
 
-    complete(problems)
+    def problemsToJsonString(problems: Seq[ProblemDigest], numProblems: Int) = {
+      // where size is the total number of problems in the database.
+      s"""{"size":"$numProblems","problems":[${problems.map(problemToJsonString).mkString(", ")}]}"""
+    }
+
+    parameter("offset" ? "0") { offsetString =>
+      val n = 20
+      // Try and grab the offset. If a number wasn't passed in, just default to 0
+      val offset = try { Math.floorMod(offsetString.toInt, n) } catch { case a:java.lang.NumberFormatException =>
+        // todo: Figure out logging
+        0
+      }
+      val db = ProblemDatabaseConnector()
+      val timeout: Duration = new FiniteDuration(15, SECONDS)
+      val problemsAndSize: (Seq[ProblemDigest], Int) = db.runBlocking(db.IO.sizeAndProblemDigest(n, offset))(timeout)
+      complete(problemsToJsonString(problemsAndSize._1, problemsAndSize._2))
+    }
   }
 
 }

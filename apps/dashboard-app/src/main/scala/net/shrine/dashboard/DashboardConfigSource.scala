@@ -22,4 +22,15 @@ object DashboardConfigSource {
     atomicConfig.configForBlock(key,value,origin)(block)
   }
 
+  def objectForName[T](objectName:String):T = {
+
+    import scala.reflect.runtime.universe
+    val runtimeMirror = universe.runtimeMirror(getClass.getClassLoader)
+    val module = runtimeMirror.staticModule(objectName)
+
+    val reflectedObj = runtimeMirror.reflectModule(module)
+    val obj = reflectedObj.instance
+
+    obj.asInstanceOf[T]
+  }
 }

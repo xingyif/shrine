@@ -80,7 +80,6 @@ case class ProblemDigest(codec: String, stampText: String, summary: String, desc
 }
 
 object ProblemDigest extends XmlUnmarshaller[ProblemDigest] with Loggable {
-
   override def fromXml(xml: NodeSeq): ProblemDigest = {
     val problemNode = xml \ "problem"
     require(problemNode.nonEmpty,s"No problem tag in $xml")
@@ -93,8 +92,11 @@ object ProblemDigest extends XmlUnmarshaller[ProblemDigest] with Loggable {
     val description = extractText("description")
     val detailsXml: NodeSeq = problemNode \ "details"
 
+
     ProblemDigest(codec,stampText,summary,description,detailsXml)
   }
+
+
 }
 
 case class Stamp(host:InetAddress,time:Long,source:ProblemSources.ProblemSource) {

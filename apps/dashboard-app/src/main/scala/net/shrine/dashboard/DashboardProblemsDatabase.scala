@@ -1,10 +1,12 @@
 package net.shrine.dashboard
 import java.util.concurrent.TimeoutException
+import javax.sql.DataSource
 
+import com.typesafe.config.Config
 import net.shrine.problem.ProblemDigest
-import slick.dbio.{DBIOAction, NoStream, SuccessAction}
-import slick.lifted.{TableQuery, Tag}
-import slick.driver.H2Driver.api._
+import net.shrine.slick.TestableDataSourceCreator
+import slick.dbio.SuccessAction
+import slick.driver.JdbcProfile
 import slick.jdbc.meta.MTable
 
 import scala.concurrent.{Await, Future, blocking}
@@ -16,22 +18,16 @@ import scala.concurrent.ExecutionContext.Implicits.global
 /**
   * Handles all interaction with the (current) problem database. Will eventually
   * need to be set up to be able to handle starting up with a config file
+  * @author ty
+  * @since 07/16
   */
-case class ProblemDatabaseConnector(url: DBUrls.URL) {
+case class ProblemDatabaseConnector() {
+  import Problems.slickProfile.api._
+  val problems = Problems
 
-  private val db = DBUrls.connectWithUrl(url)
-  val problems = Problems.Queries
-
-  /**
-    * DBIO Actions. These are pre-defined IO actions that may be useful
-    */
-  val tableExists = MTable.getTables(problems.tableName).map(_.nonEmpty)
-  val createIfNotExists = tableExists.flatMap(if (_) SuccessAction(NoOperation)
-                                              else   problems.schema.create)
-  val dropIfExists = tableExists.flatMap(if (_) problems.schema.drop
-                                         else   SuccessAction(NoOperation))
-  val resetTable = createIfNotExists >> problems.selectAll.delete
-  val selectAll = problems.result
+  val db = problems.db
+  val IO = problems.IOActions
+  val Queries = problems.Queries
 
   /**
     * Executes a series of IO actions as a single transactions
@@ -71,44 +67,27 @@ case class ProblemDatabaseConnector(url: DBUrls.URL) {
       case NonFatal(x) => throw CouldNotRunDbIoActionException(x)
     }
   }
-
-  /**
-    * Converts a query into a dbio and runs it
-    */
-  def runQuery[R](query: Query[_, R, Seq]): Future[_] = {
-    run(query.result)
-  }
-
-  /**
-    * Converts a query into a blocking dbio and runs it
-    */
-  def runQueryBlocking[R](query: Query[_, R, Seq]) = {
-    runBlocking(query.result)
-  }
-
 }
-
-/**
-  * Unnecessary once a config file is set up. Just to reduce
-  * mental burden of remembering jdbc urls
-  */
-object DBUrls {
-  sealed trait URL
-  case class H2(url: String) extends URL
-  case class Sqlite(url: String) extends URL
-  case object H2Mem extends URL
-
-  def connectWithUrl(u: URL) = u match {
-    case H2(url)     => Database.forURL(s"jdbc:h2:$url", driver = "org.h2.Driver")
-    case H2Mem       => Database.forURL("jdbc:h2:mem:test;DB_CLOSE_DELAY=-1", driver = "org.h2.Driver")
-  }
-}
-
 
 /**
   * Problems schema object, defines the PROBLEMS table schema and related queries
   */
 object Problems {
+  val allConfig:Config = DashboardConfigSource.config
+  val config:Config = allConfig.getConfig("shrine.dashboard.database")
+
+  val slickProfileClassName = config.getString("slickProfileClassName")
+  val slickProfile:JdbcProfile = DashboardConfigSource.objectForName(slickProfileClassName)
+  import slickProfile.api._
+
+  val dataSource: DataSource = TestableDataSourceCreator.dataSource(config)
+  lazy val db = {
+    val db = Database.forDataSource(dataSource)
+    if (config.getBoolean("createTablesOnStart"))
+      Await.ready(db.run(IOActions.createIfNotExists), FiniteDuration(3, SECONDS))
+    db
+  }
+
   /**
     * The Problems Table. This is the table schema.
     */
@@ -156,14 +135,38 @@ object Problems {
       * Equivalent to Select * from Problems;
       */
     val selectAll = this
+
     /**
       * Selects all the details xml sorted by the problem's time stamp.
       */
     val selectDetails = this.map(_.xml)
+
     /**
-      * Selects the last 20 problems
+      * Selects the last N problems, after the offset
       */
-    val last20Problems = this.sortBy(_.stampText.asc).take(20)
+    def lastNProblems(n: Int)(offset: Int) = this.sortBy(_.stampText.desc).drop(offset).take(n)
+  }
+
+
+  /**
+    * DBIO Actions. These are pre-defined IO actions that may be useful.
+    * Using it to centralize the location of DBIOs. This may be temporary
+    * if I can figure out a better solution to the slick.H2.driver._ import
+    * issue.
+    */
+  object IOActions {
+    val problems = Queries
+    val tableExists = MTable.getTables(problems.tableName).map(_.nonEmpty)
+    val createIfNotExists = tableExists.flatMap(
+      if (_) SuccessAction(NoOperation) else problems.schema.create)
+    val dropIfExists = tableExists.flatMap(
+      if (_) problems.schema.drop else SuccessAction(NoOperation))
+    val resetTable = createIfNotExists >> problems.selectAll.delete
+    val selectAll = problems.result
+    def sizeAndProblemDigest(n: Int, offset: Int) = for {
+      length <- problems.length.result
+      allProblems <- problems.lastNProblems(n)(offset).result
+    } yield (allProblems, length)
   }
 
 }
