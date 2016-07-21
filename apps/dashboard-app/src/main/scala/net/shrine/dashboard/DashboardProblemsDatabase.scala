@@ -9,7 +9,7 @@ import slick.dbio.SuccessAction
 import slick.driver.JdbcProfile
 import slick.jdbc.meta.MTable
 
-import scala.concurrent.{Await, Future, blocking}
+import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
 import scala.util.control.NonFatal
 import scala.xml.XML
@@ -73,11 +73,13 @@ case class ProblemDatabaseConnector() {
   * Problems schema object, defines the PROBLEMS table schema and related queries
   */
 object Problems {
-  val allConfig:Config = DashboardConfigSource.config
-  val config:Config = allConfig.getConfig("shrine.dashboard.database")
-
+  val config:Config = DashboardConfigSource.config.getConfig("shrine.dashboard.database")
   val slickProfileClassName = config.getString("slickProfileClassName")
+  // TODO: Can we not pay this 2 second cost here?
+  val start = System.currentTimeMillis()
   val slickProfile:JdbcProfile = DashboardConfigSource.objectForName(slickProfileClassName)
+  println(System.currentTimeMillis() - start)
+
   import slickProfile.api._
 
   val dataSource: DataSource = TestableDataSourceCreator.dataSource(config)
