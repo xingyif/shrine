@@ -221,8 +221,8 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
   // to see up until, and it will show the 'nearest N' ie with n = 20, 0-19 -> 20, 20-39 -> 20-40
   lazy val getProblems:Route = {
     def problemToJsonString(problem: ProblemDigest) = problem match {
-      case ProblemDigest(cod, stamp, sum, desc, xml) =>
-        s"""{"codec":"$cod","stampText":"$stamp","summary":"$sum","description","$desc","detailsXml":"${xml.toString}"}"""
+      case ProblemDigest(cod, stamp, sum, desc, xml, epoch) =>
+        s"""{"codec":"$cod","stampText":"$stamp","summary":"$sum","description","$desc","detailsXml":"${xml.toString}","epoch":$epoch}"""
     }
 
     def problemsToJsonString(problems: Seq[ProblemDigest], numProblems: Int) = {

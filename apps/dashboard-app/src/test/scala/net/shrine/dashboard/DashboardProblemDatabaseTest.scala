@@ -18,10 +18,10 @@ class DashboardProblemDatabaseTest extends FlatSpec with BeforeAndAfter with Sca
   val IO = connector.IO
   val problemDigests = Seq(
     // Not actually sure what examples of ProblemDigests look like
-    ProblemDigest("MJPG", "01:01:01", "summary here", "description here"     , <details>uh not sure</details>),
-    ProblemDigest("wewu", "01:02:01", "coffee spill", "coffee everywhere"    , <details>He chose decaf</details>),
-    ProblemDigest("wuwu", "02:01:01", "squirrel"    , "chewed all the cables", <details>Like ALL of them</details>),
-    ProblemDigest("code", "10:01:02", "such summary", "such description"     , <details>Wow</details>))
+    ProblemDigest("MJPG", "01:01:01", "summary here", "description here"     , <details>uh not sure</details>     , 2),
+    ProblemDigest("wewu", "01:02:01", "coffee spill", "coffee everywhere"    , <details>He chose decaf</details>  , 1),
+    ProblemDigest("wuwu", "02:01:01", "squirrel"    , "chewed all the cables", <details>Like ALL of them</details>, 0),
+    ProblemDigest("code", "10:01:02", "such summary", "such description"     , <details>Wow</details>             , 3))
 
   before {
     connector.runBlocking(IO.dropIfExists >> IO.tableExists) shouldBe false
@@ -69,8 +69,11 @@ class DashboardProblemDatabaseTest extends FlatSpec with BeforeAndAfter with Sca
     xml should have length problemDigests.length
     xml should contain theSameElementsAs problemDigests.map(_.detailsXml.toString())
 
-    val result = connector.runBlocking(IO.sizeAndProblemDigest(problemDigests.length, 0))
-    result._1 should contain theSameElementsAs problemDigests
+    val result = connector.runBlocking(IO.sizeAndProblemDigest(2))
+    result._1 should have length 2
     result._2 shouldBe problemDigests.length
+    result._1.head shouldBe problemDigests(3)
+    result._1(1) shouldBe problemDigests.head
+
   }
 }

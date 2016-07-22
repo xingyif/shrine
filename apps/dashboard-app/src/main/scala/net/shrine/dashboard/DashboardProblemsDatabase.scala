@@ -4,7 +4,7 @@ import javax.sql.DataSource
 
 import com.typesafe.config.Config
 import net.shrine.problem.ProblemDigest
-import net.shrine.slick.TestableDataSourceCreator
+import net.shrine.slick.{CouldNotRunDbIoActionException, TestableDataSourceCreator}
 import slick.dbio.SuccessAction
 import slick.driver.JdbcProfile
 import slick.jdbc.meta.MTable
@@ -16,8 +16,8 @@ import scala.xml.XML
 import scala.concurrent.ExecutionContext.Implicits.global
 
 /**
-  * Handles all interaction with the (current) problem database. Will eventually
-  * need to be set up to be able to handle starting up with a config file
+  * Handles all interaction with the problem database. Abstracts away
+  * the need for a
   * @author ty
   * @since 07/16
   */
@@ -44,8 +44,8 @@ case class ProblemDatabaseConnector() {
       Await.ready(this.executeTransaction(actions: _*), timeout)
     } catch {
       // TODO: Handle this better
-      case tx:TimeoutException => throw CouldNotRunDbIoActionException(tx)
-      case NonFatal(x) => throw CouldNotRunDbIoActionException(x)
+      case tx:TimeoutException => throw CouldNotRunDbIoActionException(Problems.dataSource, tx)
+      case NonFatal(x) => throw CouldNotRunDbIoActionException(Problems.dataSource, x)
     }
   }
 
@@ -63,9 +63,17 @@ case class ProblemDatabaseConnector() {
     try {
       Await.result(this.run(dbio), timeout)
     } catch {
-      case tx:TimeoutException => throw CouldNotRunDbIoActionException(tx)
-      case NonFatal(x) => throw CouldNotRunDbIoActionException(x)
+      case tx:TimeoutException => throw CouldNotRunDbIoActionException(Problems.dataSource, tx)
+      case NonFatal(x) => throw CouldNotRunDbIoActionException(Problems.dataSource, x)
     }
+  }
+
+  /**
+    * Inserts a problem into the database
+    * @param problem the ProblemDigest
+    */
+  def insertProblem(problem: ProblemDigest): Unit = {
+    run(IO.problems += problem)
   }
 }
 
@@ -91,23 +99,26 @@ object Problems {
   /**
     * The Problems Table. This is the table schema.
     */
+  //TODO: ADD EPOCH VALUE
   class ProblemsT(tag: Tag) extends Table[ProblemDigest](tag, Queries.tableName) {
     def codec = column[String]("codec")
-    def stampText = column[String]("stampText", O.PrimaryKey)
+    def stampText = column[String]("stampText")
     def summary = column[String]("summary")
     def description = column[String]("description")
     def xml = column[String]("detailsXml")
+    def epoch= column[Long]("epoch")
     // projection between table row and problem digest
-    def * = (codec, stampText, summary, description, xml) <> (rowToProblem, problemToRow)
+    def * = (codec, stampText, summary, description, xml, epoch) <> (rowToProblem, problemToRow)
+    def idx = index("idx_epoch", epoch, unique=false)
 
     /**
       * Converts a table row into a ProblemDigest.
       * @param args the table row, represented as a five-tuple string
       * @return the corresponding ProblemDigest
       */
-    def rowToProblem(args: (String, String, String, String, String)): ProblemDigest = args match {
-      case (codec, stampText, summary, description, detailsXml) =>
-        ProblemDigest(codec, stampText, summary, description, XML.loadString(detailsXml))
+    def rowToProblem(args: (String, String, String, String, String, Long)): ProblemDigest = args match {
+      case (codec, stampText, summary, description, detailsXml, epoch) =>
+        ProblemDigest(codec, stampText, summary, description, XML.loadString(detailsXml), epoch)
     }
 
     /**
@@ -117,8 +128,9 @@ object Problems {
       * @param problem the ProblemDigest to convert
       * @return an Option of a table row.
       */
-    def problemToRow(problem: ProblemDigest): Option[(String, String, String, String, String)] = {
-      Some((problem.codec, problem.stampText, problem.summary, problem.description, problem.detailsXml.toString))
+    def problemToRow(problem: ProblemDigest): Option[(String, String, String, String, String, Long)] = problem match {
+      case ProblemDigest(codec, stampText, summary, description, detailsXml, epoch) =>
+        Some((codec, stampText, summary, description, detailsXml.toString, epoch))
     }
   }
 
@@ -144,15 +156,13 @@ object Problems {
     /**
       * Selects the last N problems, after the offset
       */
-    def lastNProblems(n: Int)(offset: Int) = this.sortBy(_.stampText.desc).drop(offset).take(n)
+    def lastNProblems(n: Int, offset: Int = 0) = this.sortBy(_.epoch.desc).drop(offset).take(n)
   }
 
 
   /**
     * DBIO Actions. These are pre-defined IO actions that may be useful.
-    * Using it to centralize the location of DBIOs. This may be temporary
-    * if I can figure out a better solution to the slick.H2.driver._ import
-    * issue.
+    * Using it to centralize the location of DBIOs.
     */
   object IOActions {
     val problems = Queries
@@ -163,20 +173,13 @@ object Problems {
       if (_) problems.schema.drop else SuccessAction(NoOperation))
     val resetTable = createIfNotExists >> problems.selectAll.delete
     val selectAll = problems.result
-    def sizeAndProblemDigest(n: Int, offset: Int) = for {
+    def sizeAndProblemDigest(n: Int, offset: Int = 0) = for {
       length <- problems.length.result
-      allProblems <- problems.lastNProblems(n)(offset).result
+      allProblems <- problems.lastNProblems(n, offset).result
     } yield (allProblems, length)
   }
 
 }
 
-/**
-  * Copy of Dave's DbIoActionException
-  */
-case class CouldNotRunDbIoActionException(exception: Throwable) extends RuntimeException(exception) {
-  //TODO: Datasource
-  override def getMessage:String = s"Could not use the database due to ${exception.getLocalizedMessage}"
-}
-
+// For SuccessAction, just a no_op.
 case object NoOperation

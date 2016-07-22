@@ -371,8 +371,10 @@ object QueryResult {
    */
   //todo remove and replace with real Problems
   def errorResult(description:Option[String], statusMessage:String, codec:String,stampText:String, summary:String, digestDescription:String,detailsXml:NodeSeq): QueryResult = {
-
-    val problemDigest = ProblemDigest(codec,stampText,summary,digestDescription,detailsXml)
+    // This would require parsing the stamp text to change, and without a standard locale that's nigh impossible.
+    // If this i replaced with real problems, then this can be addressed then. For now, passing on zero is the best bet.
+    // TODO: REFACTOR SQUERYL ERRORS TO USE REAL PROBLEMS
+    val problemDigest = ProblemDigest(codec,stampText,summary,digestDescription,detailsXml,0)
 
     QueryResult(
       resultId = 0L,

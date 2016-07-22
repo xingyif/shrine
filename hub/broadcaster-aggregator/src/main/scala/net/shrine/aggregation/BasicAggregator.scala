@@ -115,7 +115,6 @@ case class CouldNotParseResultsProblem(cnrpx:CouldNotParseResultsException) exte
                               Message body is {cnrpx.body}
                               {throwableDetail.getOrElse("")}
                             </details>
-
 }
 
 case class HttpErrorResponseProblem(cnrpx:CouldNotParseResultsException) extends AbstractProblem(ProblemSources.Hub) {
