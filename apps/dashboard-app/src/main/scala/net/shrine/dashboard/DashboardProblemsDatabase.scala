@@ -1,20 +1,20 @@
 package net.shrine.dashboard
+
 import java.util.concurrent.TimeoutException
 import javax.sql.DataSource
 
 import com.typesafe.config.Config
-import net.shrine.config.ConfigExtensions
 import net.shrine.problem.ProblemDigest
 import net.shrine.slick.{CouldNotRunDbIoActionException, TestableDataSourceCreator}
 import slick.dbio.SuccessAction
 import slick.driver.JdbcProfile
 import slick.jdbc.meta.MTable
 
-import scala.concurrent.{Await, Future}
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
+import scala.concurrent.{Await, Future}
 import scala.util.control.NonFatal
 import scala.xml.XML
-import scala.concurrent.ExecutionContext.Implicits.global
 
 /**
   * Handles all interaction with the problem database. Abstracts away

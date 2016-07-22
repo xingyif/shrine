@@ -517,7 +517,9 @@ case class QepProblemDigestRow(
       summary,
       description,
       if(!details.isEmpty) XML.loadString(details)
-      else <details/>
+      else <details/>,
+      //TODO: FIGURE OUT HOW TO GET AN ACUTAL EPOCH INTO HERE
+      0
     )
   }
 }

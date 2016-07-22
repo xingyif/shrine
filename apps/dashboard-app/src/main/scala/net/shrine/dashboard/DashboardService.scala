@@ -10,17 +10,21 @@ import net.shrine.status.protocol.{Config => StatusProtocolConfig}
 import net.shrine.dashboard.httpclient.HttpClientDirectives.{forwardUnmatchedPath, requestUriThenRoute}
 import net.shrine.log.Loggable
 import net.shrine.problem.ProblemDigest
+import org.json4s.JsonAST.JString
 import shapeless.HNil
 import spray.http.{HttpRequest, HttpResponse, StatusCodes, Uri}
 import spray.httpx.Json4sSupport
 import spray.routing.directives.LogEntry
-import spray.routing.{AuthenticationFailedRejection, Directive0, HttpService, Rejected, Route, RouteConcatenation}
-import org.json4s.{DefaultFormats, Formats}
+import spray.routing._
+import org.json4s.{DefaultFormats, DefaultJsonFormats, FieldSerializer, Formats, JValue, MappingException, NoTypeHints, Serializer, ShortTypeHints, TypeHints, TypeInfo}
 import org.json4s.native.JsonMethods.{parse => json4sParse}
+import org.json4s.native.Serialization
+import org.json4s.native.Serialization._
 
 import scala.collection.immutable.Iterable
 import scala.concurrent.duration.{Duration, FiniteDuration, SECONDS}
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.xml.{NodeSeq, XML}
 
 /**
   * Mixes the DashboardService trait with an Akka Actor to provide the actual service.
@@ -217,17 +221,31 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
     requestUriThenRoute(statusBaseUrl + "/summary")
   }
 
+
+  // The default json serializer throws a stack overflow when trying to serialize NodeSeq. 
+  class NodeSeqSerialize extends Serializer[NodeSeq] {
+    private val NodeSeqClass = classOf[NodeSeq]
+
+    override def deserialize(implicit format: Formats): PartialFunction[(TypeInfo, JValue), NodeSeq] = {
+      case (TypeInfo(NodeSeqClass, _), json) => json match {
+        case JString(s: String) =>
+          XML.loadString(s)
+        case x => throw new MappingException("Can't convert " + x + " to NodeSeq")
+      }
+    }
+    override def serialize(implicit format: Formats): PartialFunction[Any, JValue] = {
+      case node:NodeSeq => JString(node.toString)
+    }
+  }
+
   // table based view, can see N problems at a time. Front end sends a offset that they want
   // to see up until, and it will show the 'nearest N' ie with n = 20, 0-19 -> 20, 20-39 -> 20-40
   lazy val getProblems:Route = {
-    def problemToJsonString(problem: ProblemDigest) = problem match {
-      case ProblemDigest(cod, stamp, sum, desc, xml, epoch) =>
-        s"""{"codec":"$cod","stampText":"$stamp","summary":"$sum","description","$desc","detailsXml":"${xml.toString}","epoch":$epoch}"""
-    }
+    val formats = DefaultFormats + new NodeSeqSerialize
 
     def problemsToJsonString(problems: Seq[ProblemDigest], numProblems: Int) = {
       // where size is the total number of problems in the database.
-      s"""{"size":"$numProblems","problems":[${problems.map(problemToJsonString).mkString(", ")}]}"""
+      s"""{"size":"$numProblems","problems":${write(problems)(formats)}"""
     }
 
     parameter("offset" ? "0") { offsetString =>
