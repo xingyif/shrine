@@ -10,6 +10,7 @@ import net.shrine.status.protocol.{Config => StatusProtocolConfig}
 import net.shrine.dashboard.httpclient.HttpClientDirectives.{forwardUnmatchedPath, requestUriThenRoute}
 import net.shrine.log.Loggable
 import net.shrine.problem.ProblemDigest
+import net.shrine.serialization.NodeSeqSerializer
 import org.json4s.JsonAST.JString
 import shapeless.HNil
 import spray.http.{HttpRequest, HttpResponse, StatusCodes, Uri}
@@ -221,27 +222,10 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
     requestUriThenRoute(statusBaseUrl + "/summary")
   }
 
-
-  // The default json serializer throws a stack overflow when trying to serialize NodeSeq.
-  class NodeSeqSerialize extends Serializer[NodeSeq] {
-    private val NodeSeqClass = classOf[NodeSeq]
-
-    override def deserialize(implicit format: Formats): PartialFunction[(TypeInfo, JValue), NodeSeq] = {
-      case (TypeInfo(NodeSeqClass, _), json) => json match {
-        case JString(s: String) =>
-          XML.loadString(s)
-        case x => throw new MappingException("Can't convert " + x + " to NodeSeq")
-      }
-    }
-    override def serialize(implicit format: Formats): PartialFunction[Any, JValue] = {
-      case node:NodeSeq => JString(node.toString)
-    }
-  }
-
   // table based view, can see N problems at a time. Front end sends how many problems that they want
   // to skip, and it will take N the 'nearest N' ie with n = 20, 0-19 -> 20, 20-39 -> 20-40
   lazy val getProblems:Route = {
-    val formats = DefaultFormats + new NodeSeqSerialize
+    val formats = DefaultFormats + new NodeSeqSerializer
 
     def problemsToJsonString(problems: Seq[ProblemDigest], numProblems: Int) = {
       // where size is the total number of problems in the database.
