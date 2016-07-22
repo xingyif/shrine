@@ -222,7 +222,7 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
   }
 
 
-  // The default json serializer throws a stack overflow when trying to serialize NodeSeq. 
+  // The default json serializer throws a stack overflow when trying to serialize NodeSeq.
   class NodeSeqSerialize extends Serializer[NodeSeq] {
     private val NodeSeqClass = classOf[NodeSeq]
 
@@ -238,8 +238,8 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
     }
   }
 
-  // table based view, can see N problems at a time. Front end sends a offset that they want
-  // to see up until, and it will show the 'nearest N' ie with n = 20, 0-19 -> 20, 20-39 -> 20-40
+  // table based view, can see N problems at a time. Front end sends how many problems that they want
+  // to skip, and it will take N the 'nearest N' ie with n = 20, 0-19 -> 20, 20-39 -> 20-40
   lazy val getProblems:Route = {
     val formats = DefaultFormats + new NodeSeqSerialize
 
