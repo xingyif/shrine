@@ -3,6 +3,7 @@ import java.util.concurrent.TimeoutException
 import javax.sql.DataSource
 
 import com.typesafe.config.Config
+import net.shrine.config.ConfigExtensions
 import net.shrine.problem.ProblemDigest
 import net.shrine.slick.{CouldNotRunDbIoActionException, TestableDataSourceCreator}
 import slick.dbio.SuccessAction
