@@ -18,18 +18,19 @@
             OptionsEndpoint:  'admin/status/options',
             ConfigEndpoint:   'admin/status/config',
             SummaryEndpoint:  'admin/status/summary',
-            HappyAllEndpoint:  'admin/happy/all'
-            //todo 'admin/status/problems'
+            ProblemEndpoint:  'admin/status/problems',
+            HappyAllEndpoint: 'admin/happy/all'
         };
 
 
         // -- public -- //
         return {
-            getOptions: getOptions,
-            getConfig:  getConfig,
-            getSummary: getSummary,
-            getHappyAll:getHappyAll,
-            cache:      cache
+            getOptions:  getOptions,
+            getConfig:   getConfig,
+            getSummary:  getSummary,
+            getProblems: getProblems,
+            getHappyAll: getHappyAll,
+            cache:       cache
         };
 
         /**
@@ -139,6 +140,16 @@
          */
         function getSummary () {
             var url = urlGetter(Config.SummaryEndpoint)
+            return h.get(url)
+                .then(parseJsonResult, onFail);
+        }
+
+        /**
+         * //todo
+         * @returns {*}
+         */
+        function getProblems() {
+            var url = urlGetter(Config.ProblemEndpoint);
             return h.get(url)
                 .then(parseJsonResult, onFail);
         }

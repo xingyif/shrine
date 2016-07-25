@@ -1,0 +1,46 @@
+<div>
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            <td colspan="4">
+                Problems: Total = {{vm.totalProbs}}
+            </td>
+        </tr>
+        <tr>
+            <td>
+                Codec
+            </td>
+            <td>
+                Time Logged
+            </td>
+            <td>
+                Summary
+            </td>
+            <td>
+                Description
+            </td>
+        </tr>
+        </thead>
+
+        <tbody>
+        <tr ng-repeat="problem in vm.problems track by $index" ng-click="problem.showDetails = !problem.showDetails">
+            <td>
+                {{problem.codec}}
+            </td>
+            <td>
+                {{problem.stampText}}
+            </td>
+            <td>
+                {{problem.summary}}
+            </td>
+            <td>
+                {{problem.description}}
+            </td>
+            <td colspan="3" ng-hide="problem.showDetails">
+                {{problem.detailsXml}} //todo show as xml
+            </td>
+        </tr>
+        </tbody>
+
+    </table>
+</div>

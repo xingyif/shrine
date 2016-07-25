@@ -75,5 +75,8 @@ class DashboardProblemDatabaseTest extends FlatSpec with BeforeAndAfter with Sca
     result._1.head shouldBe problemDigests(3)
     result._1(1) shouldBe problemDigests.head
 
+    val resultOverLength = connector.runBlocking(IO.sizeAndProblemDigest(10))
+    resultOverLength._1 should have length 4
+    resultOverLength._1 should contain theSameElementsAs problemDigests
   }
 }
