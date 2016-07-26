@@ -67,6 +67,12 @@
                     'src/app/diagnostic/views/config.controller.js',
                     'src/app/diagnostic/views/bootcordion.js'
                 ]
+            },
+            'diagnostic.problems': {
+                name: 'diagnostic.problems',
+                files: [
+                    'src/app/diagnostic/views/problems.controller.js'
+                ]
             }
         };
 
@@ -184,7 +190,18 @@
             .state('diagnostic.downstream-nodes',{
                 url:'/downstream-nodes'
                 //@todo: load files
-            });
+            })
+            .state('diagnostic.problems', {
+                url:            '/problems',
+                controller:     'ProblemsController',
+                controllerAs:   'vm',
+                templateUrl:    'src/app/diagnostic/views/problems.tpl.html',
+                resolve: {
+                    loadFiles: function($ocLazyLoad) {
+                        return $ocLazyLoad.load(stateConfig['diagnostic.problems']);
+                    }
+                }
+            })
     }
 
     /**

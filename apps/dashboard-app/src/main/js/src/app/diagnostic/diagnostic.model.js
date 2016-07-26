@@ -146,10 +146,11 @@
 
         /**
          * //todo
+         * ProblemEndpoint:  'admin/status/problems',
          * @returns {*}
          */
-        function getProblems() {
-            var url = urlGetter(Config.ProblemEndpoint);
+        function getProblems(n) {
+            var url = urlGetter(Config.ProblemEndpoint+'/offset='+n, '.json');
             return h.get(url)
                 .then(parseJsonResult, onFail);
         }

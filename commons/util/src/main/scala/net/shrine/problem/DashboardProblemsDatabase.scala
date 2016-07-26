@@ -1,10 +1,9 @@
-package net.shrine.dashboard
+package net.shrine.problem
 
 import java.util.concurrent.TimeoutException
 import javax.sql.DataSource
 
 import com.typesafe.config.Config
-import net.shrine.problem.ProblemDigest
 import net.shrine.slick.{CouldNotRunDbIoActionException, TestableDataSourceCreator}
 import slick.dbio.SuccessAction
 import slick.driver.JdbcProfile
@@ -17,75 +16,16 @@ import scala.util.control.NonFatal
 import scala.xml.XML
 
 /**
-  * Handles all interaction with the problem database. Abstracts away
-  * the need for a
+  * Problems database object, defines the PROBLEMS table schema and related queries,
+  * as well as all interactions with the database.
   * @author ty
   * @since 07/16
   */
-case class ProblemDatabaseConnector() {
-  import Problems.slickProfile.api._
-  val problems = Problems
-
-  val db = problems.db
-  val IO = problems.IOActions
-  val Queries = problems.Queries
-
-  /**
-    * Executes a series of IO actions as a single transactions
-    */
-  def executeTransaction(actions: DBIOAction[_, NoStream, _]*): Future[Unit] = {
-    db.run(DBIO.seq(actions:_*).transactionally)
-  }
-
-  /**
-    * Executes a series of IO actions as a single transaction, synchronous
-    */
-  def executeTransactionBlocking(actions: DBIOAction[_, NoStream, _]*)(implicit timeout: Duration): Unit = {
-    try {
-      Await.ready(this.executeTransaction(actions: _*), timeout)
-    } catch {
-      // TODO: Handle this better
-      case tx:TimeoutException => throw CouldNotRunDbIoActionException(Problems.dataSource, tx)
-      case NonFatal(x) => throw CouldNotRunDbIoActionException(Problems.dataSource, x)
-    }
-  }
-
-  /**
-    * Straight copy of db.run
-    */
-  def run[R](dbio: DBIOAction[R, NoStream, _]): Future[R] = {
-    db.run(dbio)
-  }
-
-  /**
-    * Synchronized copy of db.run
-    */
-  def runBlocking[R](dbio: DBIOAction[R, NoStream, _])(implicit timeout: Duration): R = {
-    try {
-      Await.result(this.run(dbio), timeout)
-    } catch {
-      case tx:TimeoutException => throw CouldNotRunDbIoActionException(Problems.dataSource, tx)
-      case NonFatal(x) => throw CouldNotRunDbIoActionException(Problems.dataSource, x)
-    }
-  }
-
-  /**
-    * Inserts a problem into the database
-    * @param problem the ProblemDigest
-    */
-  def insertProblem(problem: ProblemDigest): Unit = {
-    run(IO.problems += problem)
-  }
-}
-
-/**
-  * Problems schema object, defines the PROBLEMS table schema and related queries
-  */
 object Problems {
-  val config:Config = DashboardConfigSource.config.getConfig("shrine.dashboard.database")
+  val config:Config = ProblemConfigSource.config.getConfig("shrine.problem.database")
   val slickProfileClassName = config.getString("slickProfileClassName")
   // TODO: Can we not pay this 2 second cost here?
-  val slickProfile:JdbcProfile = DashboardConfigSource.objectForName(slickProfileClassName)
+  val slickProfile:JdbcProfile = ProblemConfigSource.objectForName(slickProfileClassName)
 
   import slickProfile.api._
 
@@ -100,7 +40,6 @@ object Problems {
   /**
     * The Problems Table. This is the table schema.
     */
-  //TODO: ADD EPOCH VALUE
   class ProblemsT(tag: Tag) extends Table[ProblemDigest](tag, Queries.tableName) {
     def codec = column[String]("codec")
     def stampText = column[String]("stampText")
@@ -178,6 +117,60 @@ object Problems {
       length <- problems.length.result
       allProblems <- problems.lastNProblems(n, offset).result
     } yield (allProblems, length)
+  }
+
+
+  /**
+    * Entry point for interacting with the database. Runs IO actions.
+    */
+  object DatabaseConnector {
+    val IO = IOActions
+    /**
+      * Executes a series of IO actions as a single transactions
+      */
+    def executeTransaction(actions: DBIOAction[_, NoStream, _]*): Future[Unit] = {
+      db.run(DBIO.seq(actions:_*).transactionally)
+    }
+
+    /**
+      * Executes a series of IO actions as a single transaction, synchronous
+      */
+    def executeTransactionBlocking(actions: DBIOAction[_, NoStream, _]*)(implicit timeout: Duration): Unit = {
+      try {
+        Await.ready(this.executeTransaction(actions: _*), timeout)
+      } catch {
+        // TODO: Handle this better
+        case tx:TimeoutException => throw CouldNotRunDbIoActionException(Problems.dataSource, tx)
+        case NonFatal(x) => throw CouldNotRunDbIoActionException(Problems.dataSource, x)
+      }
+    }
+
+    /**
+      * Straight copy of db.run
+      */
+    def run[R](dbio: DBIOAction[R, NoStream, _]): Future[R] = {
+      db.run(dbio)
+    }
+
+    /**
+      * Synchronized copy of db.run
+      */
+    def runBlocking[R](dbio: DBIOAction[R, NoStream, _])(implicit timeout: Duration): R = {
+      try {
+        Await.result(this.run(dbio), timeout)
+      } catch {
+        case tx:TimeoutException => throw CouldNotRunDbIoActionException(Problems.dataSource, tx)
+        case NonFatal(x) => throw CouldNotRunDbIoActionException(Problems.dataSource, x)
+      }
+    }
+
+    /**
+      * Inserts a problem into the database
+      * @param problem the ProblemDigest
+      */
+    def insertProblem(problem: ProblemDigest): Unit = {
+      run(Queries += problem)
+    }
   }
 
 }

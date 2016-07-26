@@ -3,7 +3,7 @@
         <thead>
         <tr>
             <td colspan="4">
-                Problems: Total = {{vm.totalProbs}}
+                Problems: Total = {{vm.probsSize}}
             </td>
         </tr>
         <tr>
@@ -23,7 +23,8 @@
         </thead>
 
         <tbody>
-        <tr ng-repeat="problem in vm.problems track by $index" ng-click="problem.showDetails = !problem.showDetails">
+        <tr ng-repeat-start="problem in vm.problems track by $index"
+            ng-click="problem.showDetails = !problem.showDetails">
             <td>
                 {{problem.codec}}
             </td>
@@ -36,11 +37,38 @@
             <td>
                 {{problem.description}}
             </td>
-            <td colspan="3" ng-hide="problem.showDetails">
-                {{problem.detailsXml}} //todo show as xml
+        </tr>
+        <tr ng-repeat-end>
+            <td colspan="4" ng-show="problem.showDetails">
+                <pre>
+                    {{vm.stringify(problem.detailsXml)}}
+                </pre>
             </td>
         </tr>
+        <thead>
+        <tr>
+            <td colspan="4" style="width:100%;text-align:center">
+                <h5 style="display:inline-block;float:left;font-weight: bolder">
+                        <span style="cursor:pointer" ng-click="vm.newPage(vm.probsOffset - vm.probsN)">
+                            &#8592;
+                        </span>
+                        |
+                        <span style="cursor:pointer" ng-click="vm.newPage(vm.probsOffset + vm.probsN)">
+                            &#8594;
+                        </span>
+                </h5>
+                <h5 style="display:inline-block">
+                    {{vm.floorMod(vm.probsOffset, vm.probsN)}}-{{vm.min(vm.probsSize, vm.floorMod(vm.probsOffset, vm.probsN) + vm.probsN - 1)}} / {{vm.probsSize}}
+                </h5>
+                <form style="display:inline-block;float:right" ng-submit="vm.newPage(vm.num)">
+                    <label>
+                        Go to Problem:
+                        <input type="number" name="vm.num" ng-model="vm.num">
+                    </label>
+                </form>
+            </td>
+        </tr>
+        </thead>
         </tbody>
-
     </table>
 </div>

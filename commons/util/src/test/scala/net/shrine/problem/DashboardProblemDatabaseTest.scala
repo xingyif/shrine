@@ -1,8 +1,8 @@
-package net.shrine.dashboard
-import net.shrine.problem.ProblemDigest
-import slick.driver.H2Driver.api._
-import org.scalatest.{BeforeAndAfter, FlatSpec, Matchers}
+package net.shrine.problem
+
 import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.{BeforeAndAfter, FlatSpec, Matchers}
+import slick.driver.H2Driver.api._
 
 import scala.concurrent.duration._
 
@@ -14,7 +14,7 @@ import scala.concurrent.duration._
 class DashboardProblemDatabaseTest extends FlatSpec with BeforeAndAfter with ScalaFutures with Matchers {
   implicit val timeout = 10.seconds
 
-  val connector = ProblemDatabaseConnector()
+  val connector = Problems.DatabaseConnector
   val IO = connector.IO
   val problemDigests = Seq(
     // Not actually sure what examples of ProblemDigests look like

@@ -120,6 +120,10 @@ object Stamp {
 
 abstract class AbstractProblem(source:ProblemSources.ProblemSource) extends Problem {
   val stamp = Stamp(source)
+
+  def logDigest(): Unit = {
+    //import net.shrine
+  }
 }
 
 trait ProblemHandler {

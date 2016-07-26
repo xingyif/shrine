@@ -9,23 +9,21 @@ import net.shrine.i2b2.protocol.pm.User
 import net.shrine.status.protocol.{Config => StatusProtocolConfig}
 import net.shrine.dashboard.httpclient.HttpClientDirectives.{forwardUnmatchedPath, requestUriThenRoute}
 import net.shrine.log.Loggable
-import net.shrine.problem.ProblemDigest
+import net.shrine.problem.{ProblemDigest, Problems}
+import net.shrine.problem.Problems._
 import net.shrine.serialization.NodeSeqSerializer
-import org.json4s.JsonAST.JString
 import shapeless.HNil
 import spray.http.{HttpRequest, HttpResponse, StatusCodes, Uri}
 import spray.httpx.Json4sSupport
 import spray.routing.directives.LogEntry
 import spray.routing._
-import org.json4s.{DefaultFormats, DefaultJsonFormats, FieldSerializer, Formats, JValue, MappingException, NoTypeHints, Serializer, ShortTypeHints, TypeHints, TypeInfo}
+import org.json4s.{DefaultFormats, Formats}
 import org.json4s.native.JsonMethods.{parse => json4sParse}
-import org.json4s.native.Serialization
 import org.json4s.native.Serialization._
 
 import scala.collection.immutable.Iterable
 import scala.concurrent.duration.{Duration, FiniteDuration, SECONDS}
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.xml.{NodeSeq, XML}
 
 /**
   * Mixes the DashboardService trait with an Akka Actor to provide the actual service.
@@ -227,9 +225,9 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
   lazy val getProblems:Route = {
     val formats = DefaultFormats + new NodeSeqSerializer
 
-    def problemsToJsonString(problems: Seq[ProblemDigest], numProblems: Int) = {
+    def problemsToJsonString(problems: Seq[ProblemDigest], numProblems: Int, offset: Int, n: Int) = {
       // where size is the total number of problems in the database.
-      s"""{"size":"$numProblems","problems":${write(problems)(formats)}"""
+      s"""{"size":$numProblems,"problems":${write(problems)(formats)},"offset":$offset,"n":$n}"""
     }
 
     parameter("offset" ? "0") { offsetString =>
@@ -239,10 +237,10 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
         // todo: Figure out logging
         0
       }
-      val db = ProblemDatabaseConnector()
-      val timeout: Duration = new FiniteDuration(15, SECONDS)
-      val problemsAndSize: (Seq[ProblemDigest], Int) = db.runBlocking(db.IO.sizeAndProblemDigest(n, offset))(timeout)
-      complete(problemsToJsonString(problemsAndSize._1, problemsAndSize._2))
+      lazy val db = Problems.DatabaseConnector
+      lazy val timeout: Duration = new FiniteDuration(15, SECONDS)
+      lazy val problemsAndSize: (Seq[ProblemDigest], Int) = db.runBlocking(db.IO.sizeAndProblemDigest(n, offset))(timeout)
+      complete(problemsToJsonString(problemsAndSize._1, problemsAndSize._2, offset, n))
     }
   }
 
