@@ -41,6 +41,7 @@ object Problems {
     * The Problems Table. This is the table schema.
     */
   class ProblemsT(tag: Tag) extends Table[ProblemDigest](tag, Queries.tableName) {
+    def id = column[Int]("id", O.PrimaryKey, O.AutoInc, O.Default(0))
     def codec = column[String]("codec")
     def stampText = column[String]("stampText")
     def summary = column[String]("summary")
@@ -48,7 +49,7 @@ object Problems {
     def xml = column[String]("detailsXml")
     def epoch= column[Long]("epoch")
     // projection between table row and problem digest
-    def * = (codec, stampText, summary, description, xml, epoch) <> (rowToProblem, problemToRow)
+    def * = (id, codec, stampText, summary, description, xml, epoch) <> (rowToProblem, problemToRow)
     def idx = index("idx_epoch", epoch, unique=false)
 
     /**
@@ -56,8 +57,8 @@ object Problems {
       * @param args the table row, represented as a five-tuple string
       * @return the corresponding ProblemDigest
       */
-    def rowToProblem(args: (String, String, String, String, String, Long)): ProblemDigest = args match {
-      case (codec, stampText, summary, description, detailsXml, epoch) =>
+    def rowToProblem(args: (Int, String, String, String, String, String, Long)): ProblemDigest = args match {
+      case (id, codec, stampText, summary, description, detailsXml, epoch) =>
         ProblemDigest(codec, stampText, summary, description, XML.loadString(detailsXml), epoch)
     }
 
@@ -68,9 +69,10 @@ object Problems {
       * @param problem the ProblemDigest to convert
       * @return an Option of a table row.
       */
-    def problemToRow(problem: ProblemDigest): Option[(String, String, String, String, String, Long)] = problem match {
+    def problemToRow(problem: ProblemDigest): Option[(Int, String, String, String, String, String, Long)] = problem match {
       case ProblemDigest(codec, stampText, summary, description, detailsXml, epoch) =>
-        Some((codec, stampText, summary, description, detailsXml.toString, epoch))
+        // 0 is ignored on insert and replaced with an auto incremented id
+        Some((0, codec, stampText, summary, description, detailsXml.toString, epoch))
     }
   }
 

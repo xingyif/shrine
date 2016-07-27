@@ -7,6 +7,7 @@ import java.util.Date
 import net.shrine.log.Loggable
 import net.shrine.serialization.{XmlMarshaller, XmlUnmarshaller}
 
+import scala.concurrent.Future
 import scala.xml.{Elem, Node, NodeSeq}
 
 /**
@@ -120,10 +121,8 @@ object Stamp {
 
 abstract class AbstractProblem(source:ProblemSources.ProblemSource) extends Problem {
   val stamp = Stamp(source)
-
-  def logDigest(): Unit = {
-    //import net.shrine
-  }
+  // The terrible way to do onCreate:
+  // val terrible = Future {Thread.sleep(2000)}.foreach(_ => Problems.DatabaseConnector.insertProblem(this.toDigest))
 }
 
 trait ProblemHandler {

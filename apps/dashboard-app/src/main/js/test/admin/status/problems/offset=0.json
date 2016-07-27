@@ -1,6 +1,6 @@
 {"size":63,"offset":0,"n":20,"problems":
 [{
-  "codec": "Paula",
+  "codec":"net.shrine.protocol.ErrorStatusFromCrc",
   "description": "Proin risus.",
   "summary": "Vivamus in felis eu sapien cursus vestibulum.",
   "stampText": "2016-07-25T17:42:42Z",
@@ -66,7 +66,7 @@
     }
   }
 }, {
-  "codec": "Dennis",
+  "codec":"net.shrine.adapter.CannotParseXmlFromCrc",
   "description": "Aenean sit amet justo.",
   "summary": "Donec ut dolor. Morbi vel lectus in quam fringilla rhoncus.",
   "stampText": "2015-09-20T04:34:50Z",
@@ -103,7 +103,7 @@
     }
   }
 }, {
-  "codec": "Christina",
+  "codec":"net.shrine.aggregation.NoValidResponsesToAggregate",
   "description": "Suspendisse ornare consequat lectus.",
   "summary": "Donec posuere metus vitae ipsum.",
   "stampText": "2015-08-30T15:48:40Z",
@@ -162,7 +162,7 @@
     }
   }
 }, {
-  "codec": "Louise",
+  "codec":"net.shrine.aggregation.NoValidResponsesToAggregate",
   "description": "Maecenas rhoncus aliquam lacus.",
   "summary": "Fusce congue, diam id ornare imperdiet, sapien urna pretium nisl, ut volutpat sapien arcu sed augue.",
   "stampText": "2015-11-15T20:17:04Z",
@@ -220,7 +220,7 @@
     }
   }
 }, {
-  "codec": "Ronald",
+  "codec":"net.shrine.qep.queries.QepDatabaseProblem",
   "description": "Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Mauris viverra diam vitae quam.",
   "summary": "Vivamus vel nulla eget eros elementum pellentesque.",
   "stampText": "2016-03-01T14:48:34Z",
@@ -277,7 +277,7 @@
     }
   }
 }, {
-  "codec": "Victor",
+  "codec":"net.shrine.adapter.CrcCouldNotBeInvoked",
   "description": "Curabitur in libero ut massa volutpat convallis.",
   "summary": "Curabitur in libero ut massa volutpat convallis. Morbi odio odio, elementum eu, interdum eu, tincidunt in, leo.",
   "stampText": "2016-05-12T22:27:05Z",
@@ -326,7 +326,7 @@
     }
   }
 }, {
-  "codec": "Anna",
+  "codec":"net.shrine.qep.queries.QepDatabaseProblem",
   "description": "Integer non velit.",
   "summary": "Integer a nibh. In quis justo. Maecenas rhoncus aliquam lacus.",
   "stampText": "2015-10-19T01:39:35Z",
@@ -372,7 +372,7 @@
     }
   }
 }, {
-  "codec": "Katherine",
+  "codec":"net.shrine.adapter.dao.squeryl.BreakdownFailure",
   "description": "Nulla suscipit ligula in lacus.",
   "summary": "Etiam justo. Etiam pretium iaculis justo.",
   "stampText": "2015-12-18T19:40:27Z",
@@ -418,7 +418,7 @@
     }
   }
 }, {
-  "codec": "Joseph",
+  "codec":"net.shrine.aggregation.HttpErrorResponseProblem",
   "description": "Nullam sit amet turpis elementum ligula vehicula consequat.",
   "summary": "Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Mauris viverra diam vitae quam. Suspendisse potenti.",
   "stampText": "2016-02-04T18:18:08Z",
@@ -476,7 +476,7 @@
     }
   }
 }, {
-  "codec": "Ruth",
+  "codec":"net.shrine.problem.ProblemNotYetEncoded",
   "description": "In hac habitasse platea dictumst.",
   "summary": "Quisque arcu libero, rutrum ac, lobortis vel, dapibus at, diam. Nam tristique tortor eu pede.",
   "stampText": "2016-04-14T19:38:30Z",
@@ -517,7 +517,7 @@
     }
   }
 }, {
-  "codec": "Steve",
+  "codec":"net.shrine.adapter.client.HttpErrorCodeFromAdapter",
   "description": "Mauris ullamcorper purus sit amet nulla.",
   "summary": "Aenean sit amet justo. Morbi ut odio.",
   "stampText": "2016-06-18T19:41:42Z",
@@ -582,7 +582,7 @@
     }
   }
 }, {
-  "codec": "Patrick",
+  "codec":"net.shrine.aggregation.InvalidResultProblem",
   "description": "Curabitur gravida nisi at nibh.",
   "summary": "Nunc nisl.",
   "stampText": "2015-11-01T01:07:51Z",
@@ -620,7 +620,7 @@
     }
   }
 }, {
-  "codec": "Thomas",
+  "codec":"net.shrine.aggregation.HttpErrorResponseProblem",
   "description": "Etiam vel augue.",
   "summary": "Nam congue, risus semper porta volutpat, quam pede lobortis ligula, sit amet eleifend pede libero quis orci.",
   "stampText": "2016-06-30T18:59:38Z",
@@ -660,7 +660,7 @@
     }
   }
 }, {
-  "codec": "Phyllis",
+  "codec":"net.shrine.authorization.HMSNotAuthenticatedProblem",
   "description": "Nunc purus.",
   "summary": "Sed sagittis. Nam congue, risus semper porta volutpat, quam pede lobortis ligula, sit amet eleifend pede libero quis orci.",
   "stampText": "2016-06-21T10:22:12Z",
@@ -696,7 +696,7 @@
     }
   }
 }, {
-  "codec": "Jack",
+  "codec":"net.shrine.adapter.AdapterDatabaseProblem",
   "description": "Donec vitae nisi.",
   "summary": "Suspendisse ornare consequat lectus. In est risus, auctor sed, tristique in, tempus sit amet, sem. Fusce consequat.",
   "stampText": "2015-09-17T07:23:28Z",
@@ -749,7 +749,7 @@
     }
   }
 }, {
-  "codec": "Kathleen",
+  "codec":"net.shrine.adapter.QueryNotFound",
   "description": "Duis bibendum.",
   "summary": "In hac habitasse platea dictumst. Aliquam augue quam, sollicitudin vitae, consectetuer eget, rutrum at, lorem. Integer tincidunt ante vel ipsum.",
   "stampText": "2015-09-06T09:08:14Z",
@@ -813,7 +813,7 @@
     }
   }
 }, {
-  "codec": "Sara",
+  "codec":"net.shrine.authorization.CouldNotInterpretResponseFromPmCell",
   "description": "Nullam sit amet turpis elementum ligula vehicula consequat.",
   "summary": "Donec diam neque, vestibulum eget, vulputate ut, ultrices vel, augue. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Donec pharetra, magna vestibulum aliquet ultrices, erat tortor sollicitudin mi, sit amet lobortis sapien sapien non mi.",
   "stampText": "2016-07-02T13:17:38Z",
@@ -851,7 +851,7 @@
     }
   }
 }, {
-  "codec": "Stephanie",
+  "codec":"net.shrine.adapter.AdapterDatabaseProblem",
   "description": "Donec quis orci eget orci vehicula condimentum.",
   "summary": "Nam congue, risus semper porta volutpat, quam pede lobortis ligula, sit amet eleifend pede libero quis orci. Nullam molestie nibh in lectus.",
   "stampText": "2016-06-07T12:59:14Z",
@@ -888,7 +888,7 @@
     }
   }
 }, {
-  "codec": "Rebecca",
+  "codec":"net.shrine.qep.PreviousQueryDoesNotExist",
   "description": "Donec ut mauris eget massa tempor convallis.",
   "summary": "Proin interdum mauris non ligula pellentesque ultrices. Phasellus id sapien in sapien iaculis congue. Vivamus metus arcu, adipiscing molestie, hendrerit at, vulputate vitae, nisl.",
   "stampText": "2015-09-16T18:57:53Z",
@@ -939,7 +939,7 @@
     }
   }
 }, {
-  "codec": "Jeremy",
+  "codec":"net.shrine.adapter.AdapterDatabaseProblem",
   "description": "Aenean fermentum.",
   "summary": "Quisque ut erat. Curabitur gravida nisi at nibh.",
   "stampText": "2015-10-16T20:29:48Z",

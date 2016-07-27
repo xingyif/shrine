@@ -1,6 +1,6 @@
 {"size":63,"offset":40,"n":20,"problems":
 [{
-  "codec": "Cheryl",
+  "codec":"net.shrine.protocol.ErrorStatusFromCrc",
   "description": "Nulla suscipit ligula in lacus.",
   "summary": "Donec ut mauris eget massa tempor convallis. Nulla neque libero, convallis eget, eleifend luctus, ultricies eu, nibh. Quisque id justo sit amet sapien dignissim vestibulum.",
   "stampText": "2015-09-08T11:27:03Z",
@@ -43,7 +43,7 @@
     }
   }
 }, {
-  "codec": "Joshua",
+  "codec":"net.shrine.adapter.QueryResultNotAvailable",
   "description": "Nunc purus.",
   "summary": "In est risus, auctor sed, tristique in, tempus sit amet, sem.",
   "stampText": "2016-05-21T01:32:50Z",
@@ -103,7 +103,7 @@
     }
   }
 }, {
-  "codec": "Rebecca",
+  "codec":"net.shrine.protocol.ErrorStatusFromCrc",
   "description": "Fusce lacus purus, aliquet at, feugiat non, pretium quis, lectus.",
   "summary": "Lorem ipsum dolor sit amet, consectetuer adipiscing elit.",
   "stampText": "2015-08-12T13:28:35Z",
@@ -156,7 +156,7 @@
     }
   }
 }, {
-  "codec": "Rebecca",
+  "codec":"net.shrine.adapter.CrcCouldNotBeInvoked",
   "description": "In est risus, auctor sed, tristique in, tempus sit amet, sem.",
   "summary": "Quisque erat eros, viverra eget, congue eget, semper rutrum, nulla.",
   "stampText": "2015-09-15T17:46:00Z",
@@ -218,7 +218,7 @@
     }
   }
 }, {
-  "codec": "Evelyn",
+  "codec":"net.shrine.authorization.CouldNotInterpretResponseFromPmCell",
   "description": "Nulla facilisi.",
   "summary": "Vivamus in felis eu sapien cursus vestibulum.",
   "stampText": "2016-07-22T11:53:53Z",
@@ -265,7 +265,7 @@
     }
   }
 }, {
-  "codec": "Peter",
+  "codec":"net.shrine.authorization.HMSNotAuthenticatedProblem",
   "description": "Cras non velit nec nisi vulputate nonummy.",
   "summary": "Curabitur at ipsum ac tellus semper interdum. Mauris ullamcorper purus sit amet nulla. Quisque arcu libero, rutrum ac, lobortis vel, dapibus at, diam.",
   "stampText": "2016-06-18T14:19:43Z",
@@ -305,7 +305,7 @@
     }
   }
 }, {
-  "codec": "Jason",
+  "codec":"net.shrine.authentication.NotAuthenticatedProblem",
   "description": "Quisque ut erat.",
   "summary": "Cras mi pede, malesuada in, imperdiet et, commodo vulputate, justo. In blandit ultrices enim.",
   "stampText": "2015-11-21T20:16:23Z",
@@ -348,7 +348,7 @@
     }
   }
 }, {
-  "codec": "Carolyn",
+  "codec":"net.shrine.authorization.ErrorStatusFromDataStewardApp",
   "description": "Etiam vel augue.",
   "summary": "Cras mi pede, malesuada in, imperdiet et, commodo vulputate, justo. In blandit ultrices enim.",
   "stampText": "2016-05-30T21:28:21Z",
@@ -411,7 +411,7 @@
     }
   }
 }, {
-  "codec": "Carl",
+  "codec":"net.shrine.adapter.AdapterMappingProblem",
   "description": "Aenean sit amet justo.",
   "summary": "Duis ac nibh.",
   "stampText": "2016-01-02T13:31:23Z",
@@ -457,7 +457,7 @@
     }
   }
 }, {
-  "codec": "Gary",
+  "codec":"net.shrine.authorization.MissingRequiredRoles",
   "description": "Integer ac leo.",
   "summary": "Nam nulla.",
   "stampText": "2015-11-03T08:26:29Z",
@@ -499,7 +499,7 @@
     }
   }
 }, {
-  "codec": "Sara",
+  "codec":"net.shrine.adapter.QueryResultNotAvailable",
   "description": "Vestibulum quam sapien, varius ut, blandit non, interdum in, ante.",
   "summary": "Nulla suscipit ligula in lacus. Curabitur at ipsum ac tellus semper interdum.",
   "stampText": "2016-02-08T13:04:04Z",
@@ -543,7 +543,7 @@
     }
   }
 }, {
-  "codec": "Harold",
+  "codec":"net.shrine.adapter.CrcCouldNotBeInvoked",
   "description": "Aliquam quis turpis eget elit sodales scelerisque.",
   "summary": "Phasellus sit amet erat.",
   "stampText": "2015-12-28T18:03:43Z",
@@ -600,7 +600,7 @@
     }
   }
 }, {
-  "codec": "Roy",
+  "codec":"net.shrine.aggregation.NoValidResponsesToAggregate",
   "description": "Etiam vel augue.",
   "summary": "Integer pede justo, lacinia eget, tincidunt eget, tempus vel, pede. Morbi porttitor lorem id ligula.",
   "stampText": "2015-08-21T03:32:47Z",
@@ -655,7 +655,7 @@
     }
   }
 }, {
-  "codec": "Diane",
+  "codec":"net.shrine.protocol.ErrorStatusFromCrc",
   "description": "Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Duis faucibus accumsan odio.",
   "summary": "Praesent blandit lacinia erat. Vestibulum sed magna at nunc commodo placerat. Praesent blandit.",
   "stampText": "2015-10-09T02:47:12Z",
@@ -699,7 +699,7 @@
     }
   }
 }, {
-  "codec": "Scott",
+  "codec":"net.shrine.aggregation.NoValidResponsesToAggregate",
   "description": "Praesent id massa id nisl venenatis lacinia.",
   "summary": "Mauris lacinia sapien quis libero. Nullam sit amet turpis elementum ligula vehicula consequat.",
   "stampText": "2016-01-03T17:10:20Z",
@@ -764,7 +764,7 @@
     }
   }
 }, {
-  "codec": "Kenneth",
+  "codec":"net.shrine.adapter.client.CouldNotParseXmlFromAdapter",
   "description": "Nullam sit amet turpis elementum ligula vehicula consequat.",
   "summary": "Fusce consequat.",
   "stampText": "2016-05-20T11:26:14Z",
@@ -803,7 +803,7 @@
     }
   }
 }, {
-  "codec": "Wayne",
+  "codec":"net.shrine.aggregation.TimedOutWithAdapter",
   "description": "Morbi sem mauris, laoreet ut, rhoncus aliquet, pulvinar sed, nisl.",
   "summary": "Duis bibendum, felis sed interdum venenatis, turpis enim blandit mi, in porttitor pede justo eu massa. Donec dapibus. Duis at velit eu est congue elementum.",
   "stampText": "2015-11-10T15:01:04Z",
@@ -865,7 +865,7 @@
     }
   }
 }, {
-  "codec": "Christine",
+  "codec":"net.shrine.authorization.ErrorStatusFromDataStewardApp",
   "description": "Quisque id justo sit amet sapien dignissim vestibulum.",
   "summary": "Sed ante. Vivamus tortor. Duis mattis egestas metus.",
   "stampText": "2016-03-03T13:06:21Z",
@@ -915,7 +915,7 @@
     }
   }
 }, {
-  "codec": "Thomas",
+  "codec":"net.shrine.aggregation.HttpErrorResponseProblem",
   "description": "Nulla ac enim.",
   "summary": "Integer a nibh. In quis justo. Maecenas rhoncus aliquam lacus.",
   "stampText": "2016-04-28T07:00:31Z",
@@ -966,7 +966,7 @@
     }
   }
 }, {
-  "codec": "Kevin",
+  "codec":"net.shrine.adapter.ExceptionWhileLoadingCrcResponse",
   "description": "Cras mi pede, malesuada in, imperdiet et, commodo vulputate, justo.",
   "summary": "In est risus, auctor sed, tristique in, tempus sit amet, sem. Fusce consequat.",
   "stampText": "2016-06-19T01:15:22Z",

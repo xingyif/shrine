@@ -22,26 +22,36 @@
          */
         function init () {
             vm.num = 0;
-            //vm.probsN = 20;
+            vm.url = "https://open.med.harvard.edu/wiki/display/SHRINE/";
             vm.newPage = newPage;
-            vm.floorMod = function(num1, num2) {
-                if (!(num1 && num2)) {
-                    // can't mod without real numbers
-                    return num1;
-                } else {
-                    var n1 = Math.floor(num1);
-                    var n2 = Math.floor(num2);
-                    return n1 - (n1 % n2);
-                }
+            vm.floorMod = floorMod;
+            vm.numCheck = function(any) {return isFinite(any)? any - 1: vm.probsOffset};
+            vm.formatCodec = function(word) {
+                var index = word.lastIndexOf('.');
+                var arr = word.trim().split("");
+                arr[index] = '\n';
+                return arr.join("");
             };
             vm.min = Math.min;
             vm.stringify = function(arg) { return JSON.stringify(arg, null, 2); };
             newPage(0)
         }
 
+        function floorMod(num1, num2) {
+            if (!(num1 && num2)) {
+                // can't mod without real numbers
+                return num1;
+            } else {
+                var n1 = Math.floor(num1);
+                var n2 = Math.floor(num2);
+                return n1 - (n1 % n2);
+            }
+        }
+
+
         function newPage(n) {
             if (!isFinite(n)) {
-                $log.error('n is not defined!');
+                return;
             }
             var clamp = function(num1) {
                 if (!vm.probsSize) {
@@ -51,7 +61,6 @@
                     return Math.max(0, Math.min(vm.probsSize, num1));
                 }
             };
-
             var num = vm.floorMod(clamp(n), vm.probsN);
             $app.model.getProblems(num)
                 .then(setProblems)

@@ -1,5 +1,12 @@
 <div>
     <table class="table table-striped">
+        <colgroup>
+            <col style="width:27%">
+            <col>
+            <col>
+            <col>
+        </colgroup>
+
         <thead>
         <tr>
             <td colspan="4">
@@ -7,7 +14,7 @@
             </td>
         </tr>
         <tr>
-            <td>
+            <td data-width="25%">
                 Codec
             </td>
             <td>
@@ -24,9 +31,13 @@
 
         <tbody>
         <tr ng-repeat-start="problem in vm.problems track by $index"
-            ng-click="problem.showDetails = !problem.showDetails">
+            ng-click="problem.showDetails = !problem.showDetails"
+            style="cursor: pointer;">
             <td>
-                {{problem.codec}}
+                <a href="{{vm.url}}{{problem.codec}}">
+                    <pre style="background: inherit;border: none;text-decoration: underline;"
+                    >{{vm.formatCodec(problem.codec)}}</pre>
+                </a>
             </td>
             <td>
                 {{problem.stampText}}
@@ -58,9 +69,9 @@
                         </span>
                 </h5>
                 <h5 style="display:inline-block">
-                    {{vm.floorMod(vm.probsOffset, vm.probsN)}}-{{vm.min(vm.probsSize, vm.floorMod(vm.probsOffset, vm.probsN) + vm.probsN - 1)}} / {{vm.probsSize}}
+                    {{vm.floorMod(vm.probsOffset, vm.probsN) + 1}}-{{vm.min(vm.probsSize, vm.floorMod(vm.probsOffset, vm.probsN) + vm.probsN)}} / {{vm.probsSize}}
                 </h5>
-                <form style="display:inline-block;float:right" ng-submit="vm.newPage(vm.num)">
+                <form style="display:inline-block;float:right" ng-submit="vm.newPage(vm.numCheck(vm.num))">
                     <label>
                         Go to Problem:
                         <input type="number" name="vm.num" ng-model="vm.num">
