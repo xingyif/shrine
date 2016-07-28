@@ -54,7 +54,7 @@ router.get('/steward/topics', function (req, res) {
     userId: user.username
   };
 
-  var topics = getMockStewardTopics(response.totalCount, 'Approved');
+  var topics = getMockStewardTopics(response.totalCount, 'Pending');
 
   response.topics = topics;
   res.json(response);
@@ -68,7 +68,7 @@ router.get('/researcher/topics', function (req, res) {
     userId: user.username
   };
 
-  var topics = getMockStewardTopics(response.totalCount, 'Approved', 'Researcher');
+  var topics = getMockStewardTopics(response.totalCount, 'Pending', 'Researcher');
 
   response.topics = topics;
   res.json(response);

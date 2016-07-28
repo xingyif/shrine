@@ -14,11 +14,8 @@
             scope: scope,
             templateUrl: './app/client/topics/directives/steward-menu.tpl.html',
             restrict: 'E',
-            replace: true,
-            //note: no controller needed for this directive.
-            controller: function($scope){
-                //added only to verify 'menu' element for dev.  remove.
-            }
+            replace: true
+            // -- note: no controller necessary -- //
         };
 
         return stewardMenuDirective;

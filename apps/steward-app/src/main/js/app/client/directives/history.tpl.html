@@ -1,5 +1,4 @@
 <div>   
-    <li class="fa fa-caret-down"></li>
     <table class="table table-striped thin-col">
         <thead>
         <tr>
@@ -49,10 +48,10 @@
                 <td>{{query.user.userName}}</td>
 
                 <td class="big-data">
-                    <a href ng-click="showQuery(query)">{{query.name}}</a>
+                    <a href ng-click="history.open(query)">{{query.name}}</a>
                 </td>
                 <td>{{query.stewardResponse}}</td>
-                <td>{{formatDate(query.date)}}</td>
+                <td>{{history.dateFormatter(query.date)}}</td>
             </tr>
         </tbody>
 

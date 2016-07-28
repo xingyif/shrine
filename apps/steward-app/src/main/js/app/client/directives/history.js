@@ -46,7 +46,7 @@
 
         // -- public -- //
         history.sort = sort;
-
+        history.open = openQuery;
 
         init();
 
@@ -148,8 +148,42 @@
                 sortData.sortDirection, topicId)
                 .then(setViewData);
         }
+
+
+        // -- todo create modal service instead of inlining code -- //
+        function openQuery(query) {
+
+            var modalInstance = $uibModal.open({
+                animation: true,
+                templateUrl: './app/client/directives/query-detail.tpl.html',
+                controller: QueryDetailController,
+                controllerAs: 'detail',
+                resolve: {
+                    query: function () {
+                        return query;
+                    }
+                }
+            });
+        }
     }
 
+    // -- todo: should be in own file query-detail.controller.js -- //
+    QueryDetailController.$inject = ['$uibModalInstance', 'query', 'HistoryService'];
+    function QueryDetailController($uibModalInstance, query, HistoryService) {
+
+        // -- setup --//
+        var service = HistoryService;
+        var detail = this;
+        detail.query = query;
+        detail.prettyName = service.prettifyName(query.name);
+        detail.prettyDetail = service.prettifyContents(query.queryContents);
+        detail.ok = close;
+        detail.cancel = close;
+
+        function close() {
+            $uibModalInstance.dismiss('cancel');
+        }
+    }
 })();
 
 

@@ -140,6 +140,9 @@
                 resolve: {
                     topic: function () {
                         return topic;
+                    },
+                    onClose: function () {
+                        return refreshTopics;
                     }
                 }
             });
@@ -149,19 +152,23 @@
             var modalInstance = $uibModal.open({
                 animation: true,
                 templateUrl: './app/client/topics/directives/new-topic.tpl.html',
-                resolve: {
-                    onClose: refreshTopics
-                },
                 controller: NewTopicController,
-                controllerAs: 'newTopic'
+                controllerAs: 'newTopic',
+                resolve: {
+                    onClose: function () {
+                        return refreshTopics;
+                    }
+                },
             });
         }
     }
 
     // -- todo: should be in its own file. -- //
-    function NewTopicController($uibModalInstance, onClose) {
+    NewTopicController.$inject = ['$uibModalInstance', 'onClose', 'TopicsModel'];
+    function NewTopicController($uibModalInstance, onClose, TopicsModel) {
 
         var newTopic = this;
+        var model = TopicsModel;
         newTopic.name = '';
         newTopic.description = '';
 
@@ -171,15 +178,23 @@
 
         // -- private -- //
         function ok() {
-
             var name = newTopic.name;
             var description = newTopic.description;
 
-            //     requestNewTopic({ "name": name, "description": description })
-            //         .then(function () {
-            //             refreshTopics();
-            //             $modalInstance.close();
-            //         });
+            makeRequest()
+                .then(finish);
+        }
+
+        function makeRequest() {
+            return model.requestNewTopic({
+                'name': newTopic.name,
+                'description': newTopic.description
+            });
+        }
+
+        function finish() {
+            onClose();
+            $uibModalInstance.close();
         }
 
         function cancel() {
@@ -187,17 +202,16 @@
         }
     }
 
-
-
     // -- ditto...own file --//
-    TopicDetailController.$inject = ['$scope', '$uibModalInstance', 'topic', 'TopicsService', 'TopicsModel'];
-    function TopicDetailController($scope, $uibModalInstance, topic, TopicsService, TopicsModel) {
+    TopicDetailController.$inject = ['$scope', '$uibModalInstance', 'topic', 'onClose', 'TopicsService', 'TopicsModel'];
+    function TopicDetailController($scope, $uibModalInstance, topic, onClose, TopicsService, TopicsModel) {
         var detail = this;
         var service = TopicsService;
+        var model = TopicsModel;
         var isSteward = service.isSteward();
         var dateFormatter = service.dateFormatter;
-        var loadedState = topic.state;
         var topicDescription = topic.description;
+        var loadedState = topic.state;
 
         detail.topic = topic;
         detail.topicState = loadedState;
@@ -216,30 +230,12 @@
         detail.setState = setState;
         detail.update = update;
 
-        // -- private -- //
-        function ok(id) {
-            topic.state = detail.topicState;
-
-            if (topic.state === 'Pending') {
-                $uibModalInstance.close($scope.topic);
-                return;
-            }
-            else if (topic.state == 'Approved') {
-                // Role2TopicDetailMdl.approveTopic(id) :
-                // Role2TopicDetailMdl.rejectTopic(id))
-                // .then(function (result) {
-                //     refreshTopics();
-                //     $uibModalInstance.close(result);
-                // });
-            }
-        }
-
         function cancel() {
             $uibModalInstance.dismiss('cancel');
         }
 
         function isEditable() {
-            return isSteward || topic.state == 'Pending';
+            return isSteward || topic.state === 'Pending';
         }
 
         function setState(state) {
@@ -248,20 +244,58 @@
             }
         }
 
-        function update(id, name, description) {
-            // Role1TopicDetailMdl.updateTopic(id, name, description)
-            //     .then(function (result) {
-            //         refreshTopics();
-            //         $uibModalInstance.close(result);
-            //     });
+        function finish() {
+            onClose();
+            $uibModalInstance.dismiss('cancel');
         }
 
+        // -- private -- //
+        function stewardUpdate() {
+            topic.state = detail.topicState;
+
+            switch (topic.state) {
+                case 'Approved':
+                    model.approveTopic(topic.id)
+                        .then(finish);
+                    break;
+                case 'Rejected':
+                    model.rejectTopic(topic.id)
+                        .then(finish);
+                    break;
+                default:
+                    $uibModalInstance.close($scope.topic);
+            }
+        }
+
+        function researcherUpdate() {
+            model.updateTopic({
+                name: detail.topicName,
+                description: detail.topicDescription,
+                id: detail.topic.id
+            })
+                .then(finish);
+        }
+
+        function update() {
+            if (isSteward) {
+                stewardUpdate();
+            }
+            else {
+                researcherUpdate();
+            }
+        }
 
         function canViewHistory() {
-            var onlyStewardCanView = (isSteward && loadedState !== 'Pending');
-            var allCanView = (loadedState === 'Approved' && detail.tabState === 'edit');
 
-            return onlyStewardCanView || allCanView;
+            var stewardCanViewApprovedAndRejected = isSteward && $scope.loadedState !== 'Pending';
+            var researcherCanViewOnlyApproved = loadedState === 'Approved';
+            var ifEditingDenyAll = detail.tabState === 'edit';
+
+            if (ifEditingDenyAll) {
+                return false;
+            }
+
+            return stewardCanViewApprovedAndRejected || researcherCanViewOnlyApproved;
         }
     }
 })();
