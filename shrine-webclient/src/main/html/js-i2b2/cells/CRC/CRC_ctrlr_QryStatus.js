@@ -55,7 +55,7 @@ function cgmUtcDateParser(dateString){
 
 i2b2.CRC.ctrlr.QueryStatus = function(dispDIV) { this.dispDIV = dispDIV; };
 
-
+i2b2.CRC.ctrlr.currentQueryResults = null;
 
 function trim(sString) {
 	while (sString.substring(0,1) == '\n') {
@@ -68,6 +68,8 @@ function trim(sString) {
 
 	return sString;
 }
+
+
 
 i2b2.CRC.ctrlr.QueryStatus.prototype = function() {
 	var private_singleton_isRunning = false;
@@ -140,7 +142,6 @@ i2b2.CRC.ctrlr.QueryStatus.prototype = function() {
 		} else {
 			self.dispDIV.innerHTML = '<div style="clear:both;"><div style="float:left; font-weight:bold">Finished Query: "'+self.QM.name+'"</div>';
 			self.dispDIV.innerHTML += '<div style="float:right">['+s+' secs]</div>';
-			
 			//		self.dispDIV.innerHTML += '<div style="margin-left:20px; clear:both; height:16px; line-height:16px; "><div height:16px; line-height:16px; ">Compute Time: ' + (Math.floor((self.QI.end_date - self.QI.start_date)/100))/10 + ' secs</div></div>';
 			//		self.dispDIV.innerHTML += '</div>';
 			$('runBoxText').innerHTML = "Run Query";
@@ -307,12 +308,19 @@ i2b2.CRC.ctrlr.QueryStatus.prototype = function() {
 
 	function private_startQuery() {
 		var self = i2b2.CRC.ctrlr.currentQueryStatus;
+		var resultString = ""; //BG
 
 		if (private_singleton_isRunning) {
             return false;
         }
 
 		private_singleton_isRunning = true;
+		//BG
+		var downloadDataTab = $('infoDownloadStatusData');
+		if(downloadDataTab)
+			downloadDataTab.innerHTML="";
+		i2b2.CRC.ctrlr.currentQueryResults = new i2b2.CRC.ctrlr.QueryResults(resultString);
+		//BG
 		self.dispDIV.innerHTML = '<b>Processing Query: "'+this.name+'"</b>';
 		self.QM.name = this.name; 
 		self.QRS = [];
@@ -324,143 +332,189 @@ i2b2.CRC.ctrlr.QueryStatus.prototype = function() {
 
         this.callbackQueryDef.callback = function(results) {
 
-            //if error
-            if (results.error) {
-                var temp = results.refXML.getElementsByTagName('response_header')[0];
-                if (undefined != temp) {
-                    results.errorMsg = i2b2.h.XPath(temp, 'descendant-or-self::result_status/status')[0].firstChild.nodeValue;
-                    if (results.errorMsg.substring(0,9) == "LOCKEDOUT")
-                    {
-                        results.errorMsg = 'As an "obfuscated user" you have exceeded the allowed query repeat and are now LOCKED OUT, please notify your system administrator.';
-                    }
-                }
-                alert(results.errorMsg);
-                private_cancelQuery();
-                return;
-            }
-
-            //query was successful so update global settings.
-            clearInterval(private_refreshInterrupt);
-            private_refreshInterrupt    =  false;
-            private_singleton_isRunning = false;
-
-            //update the ui
-            var self = i2b2.CRC.ctrlr.currentQueryStatus;
-
-            // this private function refreshes the display DIV
-            var d = new Date();
-            var t = Math.floor((d.getTime() - private_startTime)/100)/10;
-            var s = t.toString();
-            if (s.indexOf('.') < 0) {
-                s += '.0';
-            }
-
-            self.dispDIV.innerHTML = '<div style="clear:both;"><div style="float:left; font-weight:bold">Finished Query: "'+self.QM.name+'"</div>';
-            self.dispDIV.innerHTML += '<div style="float:right">['+s+' secs]</div><br/>';
-
-            $('runBoxText').innerHTML = "Run Query";
-
-            //------------ QI Logic -------------------//
-            // find our query instance
-            var qi_list = results.refXML.getElementsByTagName('query_instance');
-            var l       = qi_list.length;
-
-            for (var i=0; i<l; i++) {
-                var qiNode = qi_list[i];
-                var qi_id = i2b2.h.XPath(qiNode, 'descendant-or-self::query_instance_id')[0].firstChild.nodeValue;
-
-                this.QI.message = i2b2.h.getXNodeVal(qiNode, 'message');
-
-                //start date.
-                this.QI.start_date = i2b2.h.getXNodeVal(qiNode, 'start_date');
-                if (!Object.isUndefined(this.QI.start_date)) {
-                    this.QI.start_date =  new Date(this.QI.start_date.substring(0,4), this.QI.start_date.substring(5,7)-1, this.QI.start_date.substring(8,10), this.QI.start_date.substring(11,13),this.QI.start_date.substring(14,16),this.QI.start_date.substring(17,19),this.QI.start_date.substring(20,23));
-                }
-
-                //end date.
-                this.QI.end_date = i2b2.h.getXNodeVal(qiNode, 'end_date');
-                if (!Object.isUndefined(this.QI.end_date)) {
-                    this.QI.end_date =  new Date(this.QI.end_date.substring(0,4), this.QI.end_date.substring(5,7)-1, this.QI.end_date.substring(8,10), this.QI.end_date.substring(11,13),this.QI.end_date.substring(14,16),this.QI.end_date.substring(17,19),this.QI.end_date.substring(20,23));
-                }
-
-                // found the query instance, extract the info
-                this.QI.status = i2b2.h.XPath(qiNode, 'descendant-or-self::query_status_type/name')[0].firstChild.nodeValue;
-                this.QI.statusID = i2b2.h.XPath(qiNode, 'descendant-or-self::query_status_type/status_type_id')[0].firstChild.nodeValue;
-            }
-
-            //add the compute time.
-            self.dispDIV.innerHTML += '</div>';
-            self.dispDIV.innerHTML += '<div style="margin-left:20px; clear:both; line-height:16px; ">Compute Time: '+ s +' secs</div>';
-
-            // -- query result instance vars -- //
-			var qriNodeList	= results.refXML.getElementsByTagName('query_result_instance'),
-                qriIdx, qriNode, qriObj, breakdownType,
-				errorObjects = [],
-				brdNodeList, brdNode,  brdIdx, brdObj;
-
-            //iterate through each query result.
-            for (qriIdx = 0; qriIdx < qriNodeList.length; qriIdx++) {
-
-                //init qri vars.
-                qriNode         =  qriNodeList[qriIdx];
-                qriObj          = parseQueryResultInstance(qriNode);
-                breakdownType   = '';
-
-                //which hospital
-                self.dispDIV.innerHTML += '<div style="clear:both;"><br/><div style="float:left; font-weight:bold; margin-left:20px;">' + qriObj.description + ' "' +self.QM.name+ '"</div>';
-
-                //if there was an error display it.
-                if((qriObj.statusName == "ERROR") || (qriObj.statusName == "UNAVAILABLE")){
-
-					errorObjects.push(qriObj.problem);
-
-                    self.dispDIV.innerHTML += " &nbsp;- <span title='" + qriObj.statusDescription +"'>      <b><a class='query-error-anchor' href='#' style='color:#ff0000'>      <b><span color='#ff0000'>" + qriObj.problem.summary+ "</span></b></a></b></span>";
-					continue;
-                }
-				else if((qriObj.statusName == "PROCESSING")){
-					self.dispDIV.innerHTML += " - <span><b><font color='#00dd00'>Still Processing Request</font></b></span>";
-					continue;
+            try
+			{
+				//if error
+				if (results.error) {
+					var temp = results.refXML.getElementsByTagName('response_header')[0];
+					if (undefined != temp) {
+						results.errorMsg = i2b2.h.XPath(temp, 'descendant-or-self::result_status/status')[0].firstChild.nodeValue;
+						if (results.errorMsg.substring(0,9) == "LOCKEDOUT")
+						{
+							results.errorMsg = 'As an "obfuscated user" you have exceeded the allowed query repeat and are now LOCKED OUT, please notify your system administrator.';
+						}
+					}
+					alert(results.errorMsg);
+					private_cancelQuery();
+					return;
 				}
 
-				else if(["COMPLETED","FINISHED"].indexOf(qriObj.statusName) < 0){
-                    self.dispDIV.innerHTML += " - <span><b><font color='#dd0000'>Results not available</font></b></span>";
-                    continue;
-                }
+				//query was successful so update global settings.
+				clearInterval(private_refreshInterrupt);
+				private_refreshInterrupt    =  false;
+				private_singleton_isRunning = false;
+				resultString = "";  //BG
 
-                self.dispDIV.innerHTML += "<div style=\"clear: both; margin-left: 30px; float: left; height: 16px; line-height: 16px;\">"
-					+ "Patient Count"
-					+ ": <font color=\"#0000dd\">"
-					+ getObfuscatedResult(qriObj.setSize, 10)
-					+ "</font></div>";
+				//update the ui
+				var self = i2b2.CRC.ctrlr.currentQueryStatus;
 
-                //grab breakdown data.
-                brdNodeList = i2b2.h.XPath(qriNode, 'descendant-or-self::breakdown_data/column');
+				// this private function refreshes the display DIV
+				var d = new Date();
+				var t = Math.floor((d.getTime() - private_startTime)/100)/10;
+				var s = t.toString();
+				if (s.indexOf('.') < 0) {
+					s += '.0';
+				}
 
-                for(brdIdx = 0; brdIdx < brdNodeList.length; brdIdx ++){
+				
+				self.dispDIV.innerHTML = '<div style="clear:both;"><div style="float:left; font-weight:bold">Finished Query: "'+self.QM.name+'"</div>';
+				self.dispDIV.innerHTML += '<div style="float:right">['+s+' secs]</div><br/>';
+				resultString += 'Finished Query: "' + self.QM.name + '"\n';  //BG
+				resultString += '[' + s + ' secs]\n'; //BG
+				
+				
+				$('runBoxText').innerHTML = "Run Query";
 
-                    //init brd vars.
-                    brdNode             = brdNodeList[brdIdx];
-                    brdObj              = parseBreakdown(brdNode);
+				//------------ QI Logic -------------------//
+				
+				//BG find user id
+				var temp = results.refXML.getElementsByTagName('query_master')[0];
+				
+				//Update the userid element when query is run first time
+				var userId = i2b2.h.getXNodeVal(temp,'user_id');
+				if(userId)
+				{
+					var existingUserIdElemList = $$("#userIdElem");
+					if(existingUserIdElemList)
+					{
+						existingUserIdElemList.each(function(existingUserIdElem){
+							existingUserIdElem.remove();
+						});
+					}
+					$("crcQueryToolBox.bodyBox").insert(new Element('input',{'type':'hidden','id':'userIdElem','value':userId}));
+				}
+				//End BG
+				
+				
+				// find our query instance
+				var qi_list = results.refXML.getElementsByTagName('query_instance');  //Original code commented by BG
+				
+				
+				var l       = qi_list.length;
 
-                    if(brdObj.parentResultType !== breakdownType){
-                        breakdownType = brdObj.parentResultType;
-                        self.dispDIV.innerHTML += "<div style=\"clear: both; margin-left: 30px; float: left; height: 16px; line-height: 16px;\"><br/><font>"
-							+ getBreakdownTitle(brdObj.parentResultType)
-							+ ":</font></div>";
-                        self.dispDIV.innerHTML += "<div style=\"clear: both; margin-left: 40px; float: left; height: 16px; line-height: 16px;\"></div>";
-                    }
+				for (var i=0; i<l; i++) {
+					var qiNode = qi_list[i];
+					var qi_id = i2b2.h.XPath(qiNode, 'descendant-or-self::query_instance_id')[0].firstChild.nodeValue;
 
-                    self.dispDIV.innerHTML += "<div style=\"clear: both; margin-left: 40px; float: left; height: 16px; line-height: 16px;\">"
-						+ brdObj.name
+					this.QI.message = i2b2.h.getXNodeVal(qiNode, 'message');
+
+					//start date.
+					this.QI.start_date = i2b2.h.getXNodeVal(qiNode, 'start_date');
+					if (!Object.isUndefined(this.QI.start_date)) {
+						this.QI.start_date =  new Date(this.QI.start_date.substring(0,4), this.QI.start_date.substring(5,7)-1, this.QI.start_date.substring(8,10), this.QI.start_date.substring(11,13),this.QI.start_date.substring(14,16),this.QI.start_date.substring(17,19),this.QI.start_date.substring(20,23));
+					}
+
+					//end date.
+					this.QI.end_date = i2b2.h.getXNodeVal(qiNode, 'end_date');
+					if (!Object.isUndefined(this.QI.end_date)) {
+						this.QI.end_date =  new Date(this.QI.end_date.substring(0,4), this.QI.end_date.substring(5,7)-1, this.QI.end_date.substring(8,10), this.QI.end_date.substring(11,13),this.QI.end_date.substring(14,16),this.QI.end_date.substring(17,19),this.QI.end_date.substring(20,23));
+					}
+
+					// found the query instance, extract the info
+					this.QI.status = i2b2.h.XPath(qiNode, 'descendant-or-self::query_status_type/name')[0].firstChild.nodeValue;
+					this.QI.statusID = i2b2.h.XPath(qiNode, 'descendant-or-self::query_status_type/status_type_id')[0].firstChild.nodeValue;
+				}
+
+				//add the compute time.
+				self.dispDIV.innerHTML += '</div>';
+				resultString += '\n'; //BG
+				self.dispDIV.innerHTML += '<div style="margin-left:20px; clear:both; line-height:16px; ">Compute Time: '+ s +' secs</div>';
+				resultString += 'Compute Time: '+ s + ' secs\n'; //BG
+				
+				// -- query result instance vars -- //
+				var qriNodeList	= results.refXML.getElementsByTagName('query_result_instance'),
+					qriIdx, qriNode, qriObj, breakdownType,
+					errorObjects = [],
+					brdNodeList, brdNode,  brdIdx, brdObj;
+
+				//iterate through each query result.
+				for (qriIdx = 0; qriIdx < qriNodeList.length; qriIdx++) {
+
+					//init qri vars.
+					qriNode         =  qriNodeList[qriIdx];
+					qriObj          = parseQueryResultInstance(qriNode);
+					breakdownType   = '';
+
+					//which hospital
+					self.dispDIV.innerHTML += '<div style="clear:both;"><br/><div style="float:left; font-weight:bold; margin-left:20px;">' + qriObj.description + ' "' +self.QM.name+ '"</div>';
+					resultString += '\n'; //BG
+					resultString += qriObj.description + ' "' + self.QM.name+ '"\n'; //BG
+
+					//if there was an error display it.
+					if((qriObj.statusName == "ERROR") || (qriObj.statusName == "UNAVAILABLE")){
+
+						errorObjects.push(qriObj.problem);
+
+						self.dispDIV.innerHTML += " &nbsp;- <span title='" + qriObj.statusDescription +"'>      <b><a class='query-error-anchor' href='#' style='color:#ff0000'>      <b><span color='#ff0000'>" + qriObj.problem.summary+ "</span></b></a></b></span>";
+						resultString += 'ERROR : ' + qriObj.problem.summary + '\n'; //BG
+						continue;
+					}
+					else if((qriObj.statusName == "PROCESSING")){
+						self.dispDIV.innerHTML += " - <span><b><font color='#00dd00'>Still Processing Request</font></b></span>";
+						resultString += 'Still Processing Request : Still Processing Request\n'; //BG
+						continue;
+					}
+					else if(["COMPLETED","FINISHED"].indexOf(qriObj.statusName) < 0){
+						self.dispDIV.innerHTML += " - <span><b><font color='#dd0000'>Results not available</font></b></span>";
+						resultString += 'Results not available : Results not available\n'; //BG
+						continue;
+					}
+
+					self.dispDIV.innerHTML += "<div style=\"clear: both; margin-left: 30px; float: left; height: 16px; line-height: 16px;\">"
+						+ "Patient Count"
 						+ ": <font color=\"#0000dd\">"
-						+ getObfuscatedResult(brdObj.value, 10)
+						+ getObfuscatedResult(qriObj.setSize, 10)
 						+ "</font></div>";
-                }
-            }
 
-			$hrine.EnhancedError.createErrorDialogue(self.dispDIV, errorObjects);
-			i2b2.CRC.ctrlr.history.Refresh();
-        }
+					resultString += 'Patient Count' + getObfuscatedResult(qriObj.setSize, 10) + '\n'; //BG
+					
+					
+					//grab breakdown data.
+					brdNodeList = i2b2.h.XPath(qriNode, 'descendant-or-self::breakdown_data/column');
+
+					for(brdIdx = 0; brdIdx < brdNodeList.length; brdIdx ++){
+
+						//init brd vars.
+						brdNode             = brdNodeList[brdIdx];
+						brdObj              = parseBreakdown(brdNode);
+
+						if(brdObj.parentResultType !== breakdownType){
+							breakdownType = brdObj.parentResultType;
+							self.dispDIV.innerHTML += "<div style=\"clear: both; margin-left: 30px; float: left; height: 16px; line-height: 16px;\"><br/><font>"
+								+ getBreakdownTitle(brdObj.parentResultType)
+								+ ":</font></div>";
+							resultString += '\n'; //BG
+							resultString += getBreakdownTitle(brdObj.parentResultType) + '\n'; //BG
+							self.dispDIV.innerHTML += "<div style=\"clear: both; margin-left: 40px; float: left; height: 16px; line-height: 16px;\"></div>";
+						}
+
+						self.dispDIV.innerHTML += "<div style=\"clear: both; margin-left: 40px; float: left; height: 16px; line-height: 16px;\">"
+							+ brdObj.name
+							+ ": <font color=\"#0000dd\">"
+							+ getObfuscatedResult(brdObj.value, 10)
+							+ "</font></div>";
+						resultString += brdObj.name + getObfuscatedResult(brdObj.value, 10) + '\n'; //BG
+					}
+				}
+				i2b2.CRC.ctrlr.currentQueryResults = new i2b2.CRC.ctrlr.QueryResults(resultString);
+				$hrine.EnhancedError.createErrorDialogue(self.dispDIV, errorObjects);
+				i2b2.CRC.ctrlr.history.Refresh();
+			}
+			catch(err)
+			{
+				console.error(err);
+			}
+		}
 
 
         /**
