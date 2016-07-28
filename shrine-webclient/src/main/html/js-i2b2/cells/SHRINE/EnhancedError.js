@@ -231,7 +231,11 @@ $hrine.EnhancedError =
             //error format as expected.
             else{
                 var innerHTML                   = (details[0].xml !== undefined)?
-                    details[0].xml : details[0].innerHTML;
+                    details[0].xml : details[0].innerHTML?details[0].innerHTML:null;
+				if(!innerHTML)
+				{
+					innerHTML = jQuery(details[0]).text();
+				}
                 problem.details                 = innerHTML.unescapeHTML().replace(/(<([^>]+)>)/ig,"");
                 problem.exception.name          = grabXmlNodeData(qriNode, 'descendant-or-self::query_status_type/problem/details/exception/name');
                 problem.exception.message       = grabXmlNodeData(qriNode, 'descendant-or-self::query_status_type/problem/details/exception/message');
@@ -249,8 +253,12 @@ $hrine.EnhancedError =
          */
         function parseErrorException(node) {
 
-            var innerHTML = (node.xml !== undefined)? node.xml : node.innerHTML;
+            var innerHTML = (node.xml !== undefined)? node.xml : node.innerHTML?node.innerHTML:null;;
 
+			if(!innerHTML)
+			{
+				innerHTML = jQuery(node).text();
+			}
             //no exception, abandon ship!
             if(innerHTML.indexOf('<exception>') == -1){
                 return '';

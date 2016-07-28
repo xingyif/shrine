@@ -1,5 +1,5 @@
 {
-  urlProxy: "/shrine-proxy/request",	
+  urlProxy: "index.php",	
   urlFramework: "js-i2b2/",
   loginTimeout: 15, // in seconds
   //JIRA|SHRINE-519:Charles McGow

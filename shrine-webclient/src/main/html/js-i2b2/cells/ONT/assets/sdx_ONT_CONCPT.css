@@ -24,3 +24,7 @@
 	background:#FFFFBB !important;	
 }
 
+span.itemExclude {
+    font-size: 8px;
+    color: red;
+}

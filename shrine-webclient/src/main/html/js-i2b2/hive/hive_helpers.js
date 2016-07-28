@@ -32,7 +32,11 @@ delete i2b2.protoObjhack;
 // ================================================================================================== //
 i2b2.h.parseXml = function(xmlString){
 	var xmlDocRet = false;
-	if (typeof window.ActiveXObject != "undefined" && new window.ActiveXObject("Microsoft.XMLDOM")) {  
+	var isActiveXSupported = false;
+
+	try { new ActiveXObject ("MSXML2.DOMDocument.6.0"); isActiveXSupported =  true; } catch (e) { isActiveXSupported =  false; }
+
+	if (isActiveXSupported) {
 		//Internet Explorer
 		xmlDocRet = new ActiveXObject("Microsoft.XMLDOM");
 		xmlDocRet.async = "false";
@@ -43,25 +47,7 @@ i2b2.h.parseXml = function(xmlString){
 		parser = new DOMParser();
 		xmlDocRet = parser.parseFromString(xmlString, "text/xml");
 	}
-	/* oring
-	try //Internet Explorer
-	{
-		xmlDocRet = new ActiveXObject("Microsoft.XMLDOM");
-		xmlDocRet.async = "false";
-		xmlDocRet.loadXML(xmlString);
-		xmlDocRet.setProperty("SelectionLanguage", "XPath");
-	} 
-	catch (e) {
-		try //Firefox, Mozilla, Opera, etc.
-		{
-			parser = new DOMParser();
-			xmlDocRet = parser.parseFromString(xmlString, "text/xml");
-		} 
-		catch (e) {
-			console.error(e.message)
-		}
-	}
-	*/
+
 	return xmlDocRet;
 };
 
@@ -73,7 +59,13 @@ i2b2.h.XPath = function(xmlDoc, xPath) {
 		return retArray;
 	}
 	try {
-		if (window.ActiveXObject) {
+		if (window.ActiveXObject  || "ActiveXObject" in window) {
+			if((!!navigator.userAgent.match(/Trident.*rv\:11\./)) && (typeof xmlDoc.selectNodes == "undefined")) { // IE11 handling
+				var doc = new ActiveXObject('Microsoft.XMLDOM');
+				doc.loadXML(new XMLSerializer().serializeToString(xmlDoc));
+				xmlDoc = doc;
+			}
+			
 			// Microsoft's XPath implementation
 			// HACK: setProperty attempts execution when placed in IF statements' test condition, forced to use try-catch
 			try {  
@@ -82,8 +74,9 @@ i2b2.h.XPath = function(xmlDoc, xPath) {
 				try {
 					xmlDoc.ownerDocument.setProperty("SelectionLanguage", "XPath");
 				} catch(e) {}
-			}
+			} 
 			retArray = xmlDoc.selectNodes(xPath);
+			
 		}
 		else if (document.implementation && document.implementation.createDocument) {
 			// W3C XPath implementation (Internet standard)
