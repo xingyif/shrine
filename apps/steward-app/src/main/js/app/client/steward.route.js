@@ -16,7 +16,8 @@
 
         // -- configure states -- //
         $stateProvider
-            .state('topics',{
+
+            .state('topics', {
                 url:'/topics',
                 controller: 'TopicsController',
                 templateUrl:'app/client/topics/topics.tpl.html',
@@ -27,6 +28,18 @@
                 controller: 'LoginController',
                 templateUrl:'app/client/login/login.tpl.html',
                 controllerAs:'login'
+            })
+            .state('history', {
+                templateUrl:'./app/client/history/history.tpl.html',
+                url:'/history',
+                controller:'HistoryController',
+                controllerAs: 'history'
+            })
+            .state('statistics', {
+                templateUrl:'./app/client/statistics/statistics.tpl.html',
+                url:'/statistics',
+                controller: 'StatisticsController',
+                controllerAs: 'statistics'
             });
 
     }

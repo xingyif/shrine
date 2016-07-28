@@ -55,5 +55,9 @@
        it('title member should exist.', function () {
             expect(stewardConstants.title).toBeDefined();
         });
+
+        it('viewConfig member should exist.', function () {
+            expect(stewardConstants.viewConfig).toBeDefined();
+        });
     }
 })();

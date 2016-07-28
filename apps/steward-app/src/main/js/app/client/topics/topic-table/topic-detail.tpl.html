@@ -1,0 +1,44 @@
+
+<div class="col-sm-12 shrine-modal" style="width: 170%; margin-left: -37%;">
+    <div class="col-sm-12">
+        <!-- close button used for both researcher and steward -->
+        <i class="shrine-close"
+           ng-click="cancel()" style="margin-top: -20px !important">
+        </i>
+
+        <!-- description and history will show toggle the tab state -->
+        <div class="btn-group" role="group" aria-label="...">
+            <button type="button"
+                    class="btn btn-default shrine-btn-default"
+                    ng-click="tabState = 'description'"
+                    ng-class="tabState !== 'history' ? 'shrine-btn-on' : 'shrine-btn-off'">
+                Description
+            </button>
+            <button type="button"
+                    class="btn btn-default shrine-btn-default"
+                    ng-click="tabState = 'history'"
+                    ng-disabled="!canViewHistory()"
+                    ng-class="tabState === 'history' ? 'shrine-btn-on' : 'shrine-btn-off'">
+                Query History
+            </button>
+        </div>
+        
+        <!-- show edit and description based on role, update to ngif -->
+        <div ng-switch on="{{userRole == roles.ROLE1}}" ng-cloak>
+            <!-- researcher -->
+            <div ng-switch-when="true">
+                <!-- create a researcher directive -->
+                <role1-edit         ng-show="tabState == 'edit'"></role1-edit>
+                <role1-description  ng-show="tabState == 'description'"></role1-description>
+            </div>
+            <!-- steward -->
+            <div ng-cloak ng-switch-when="false">
+                <!-- create a steward directive -->
+                <role2-edit         ng-show="tabState == 'edit'"></role2-edit>
+                <role2-description  ng-show="tabState == 'description'"></role2-description>
+            </div>
+        </div>
+        <query-history topic="topic" ng-show="tabState == 'history'"></query-history>
+
+    </div>
+</div>

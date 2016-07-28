@@ -1,4 +1,38 @@
 <div>
-    Topics
-    {{topics.message}}
-</div>
+        <div class="col-sm-12">
+            <div>
+                <div>
+                    <span ng-if="topics.showStewardMenu">
+                        <steward-menu>
+                            STEWARD MENU
+
+                        </steward-menu>
+                    </span>
+                    
+                    <div>
+                        <p>
+                            <topics-result 
+                                show-steward="{{topics.showStewardMenu}}"
+                                sort-data="topics.sortData"
+                                sort="topics.update(column)"
+                                topics="topics.topics"
+                                date-formatter="topics.dateFormatter(utc)",
+                                open="topics.openTopic(topic)",
+                                new="topics.createTopic()">
+                            </topics-result>
+                            <!--topic-table sorted-by="changeDate" sort="sort">
+                            </topic-table-->
+                        </p>
+                    </div>
+
+                   {{topics.sortData.sortDirection}}
+                   {{topics.sortData.column}}
+                </div>
+                <!-- /.panel-heading -->
+
+                <!-- /.panel-body -->
+            </div>
+
+        </div>
+    </div>
+

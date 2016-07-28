@@ -69,17 +69,21 @@
         this.isUserLoggedIn = isUserLoggedIn;
         this.getUsername = getUsername;
         this.getRole = getRole;
+        this.getUrl = getUrl;
 
         /**
          * -- set app user. --
          */
         function setAppUser(username, authdata, roles) {
 
+            var primaryRole = (roles.length > 1) ?
+                constants.roles.dataSteward : constants.roles.researcher;
+
             appUser = {
                 username: username,
                 authdata: authdata,
                 isLoggedIn: true,
-                roles: roles
+                role: primaryRole
             };
         }
 
@@ -108,9 +112,45 @@
         }
 
         function getRole() {
-            var user = getAppUser();
-            return (user.roles && user.roles.length) ?
-                user.roles[0] : '';
+            return getAppUser()
+                .role;
+        }
+
+        function isSteward() {
+            return getRole() === constants.roles.dataSteward;
+        }
+
+        function getUrl(restSegment, skip, limit, state, sortBy, sortDirection, minDate, maxDate) {
+            var url = constants.baseUrl + restSegment +
+                getQueryString(skip, limit, state, sortBy, sortDirection, minDate, maxDate);
+
+            return url;
+        }
+
+        function getQueryString(skip, limit, state, sortBy, sortDirection, minDate, maxDate) {
+            var restOptions = constants.restOptions;
+            var restInterpolators = constants.restInterpolators;
+            var queryString = '';
+
+            //todo: refactor this repetition.
+            queryString = interpolateQueryStringValue(queryString, skip, restInterpolators.skip, restOptions.skip);
+            queryString = interpolateQueryStringValue(queryString, limit, restInterpolators.limit, restOptions.limit);
+            queryString = interpolateQueryStringValue(queryString, state, restInterpolators.state, restOptions.state);
+            queryString = interpolateQueryStringValue(queryString, sortBy, restInterpolators.sortBy, restOptions.sortBy)
+            queryString = interpolateQueryStringValue(queryString, sortDirection, restInterpolators.direction, restOptions.direction);
+            queryString = interpolateQueryStringValue(queryString, minDate, restInterpolators.minDate, restOptions.minDate);
+            queryString = interpolateQueryStringValue(queryString, maxDate, restInterpolators.maxDate, restOptions.maxDate);
+
+            return queryString;
+        }
+
+        function interpolateQueryStringValue(queryString, value, interpolator, option) {
+
+            if (value !== null && value !== undefined) {
+                queryString += (queryString.length > 1) ? '&' : '?';
+                queryString += interpolator.replace(option, value);
+            }
+            return queryString;
         }
     }
 })();

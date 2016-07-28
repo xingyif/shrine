@@ -1,0 +1,28 @@
+<div class="navbar-default sidebar" role="navigation">
+    <div class="sidebar-nav navbar-collapse">
+        <ul class="nav in" id="side-menu">
+            <li ui-sref-active="shrine-on" ng-cloak>
+                <a ui-sref="dashboard.topics" class="shrine-off">
+                    <i class="fa fa-globe fa-fw fa-2x"></i>
+                    Topics
+                </a>
+            </li>
+            <li ui-sref-active="shrine-on" ng-cloak>
+                <a ui-sref="dashboard.history" class="shrine-off">
+                    <i class="fa fa-history fa-fw fa-2x"></i>
+                    History
+                </a>
+            </li>
+            <li ui-sref-active="shrine-on" ng-cloak restrict="{{roles.ROLE2}}">
+                <a ui-sref="dashboard.statistics" class="shrine-off">
+                    <i class="fa fa-bar-chart-o fa-fw fa-2x"></i>
+                    Statistics
+                </a>
+            </li>
+        </ul>
+    </div>
+    <!-- /.sidebar-collapse -->
+</div> 
+
+
+

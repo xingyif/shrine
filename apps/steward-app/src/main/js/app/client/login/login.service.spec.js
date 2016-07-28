@@ -10,7 +10,7 @@
         // -- arrange -- //
         var username = 'test';
         var password = 'testpassword';
-        var roles = ['testRole1', 'testRole2', 'testRole3'];
+        var role = 'DataSteward';
 
         function setup() {
             module('shrine.steward.login');
@@ -49,11 +49,11 @@
                 username: 'test',
                 authdata: 'dGVzdDp0ZXN0cGFzc3dvcmQ=',
                 isLoggedIn: true,
-                roles: ['testRole1', 'testRole2', 'testRole3']
+                role: role
             };
 
             // -- act -- //
-            loginService.setCredentials(username, password, roles);
+            loginService.setCredentials(username, password, role);
             var user = stewardService.getAppUser();
 
             // -- assert --/

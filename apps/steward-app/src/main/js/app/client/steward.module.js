@@ -7,7 +7,10 @@
         'ui.bootstrap.modal',
         'angular-loading-bar',
         'shrine.common',
-        'shrine.steward.login'
+        'shrine.steward.login',
+        'shrine.steward.topics',
+        'shrine.steward.history',
+        'shrine.steward.statistics'
     ];
 
      angular

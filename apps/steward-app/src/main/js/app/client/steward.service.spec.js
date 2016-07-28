@@ -23,15 +23,15 @@
             var username = 'ben';
             var password = 'kapow';
             var authData = stewardService.commonService.toBase64(username + ':' + password);
-            var roles = ['admin','steward','researcher'];
+            var role = 'DataSteward';
             var appUser = {
                 username: 'ben',
                 authData: authData,
                 isLoggedIn:true,
-                roles: roles
+                roles: role
             };
 
-            stewardService.setAppUser(username, authData, roles);
+            stewardService.setAppUser(username, authData, ['Role1', 'Role2']);
         }
 
         
@@ -86,8 +86,20 @@
         it('getRole should work.', function () {
             loginUser();
             var user = stewardService.getAppUser();
-            var role = stewardService.getRole();
-            expect(role).toBe(user.roles[0]);
+            var roleResult = stewardService.getRole();
+            expect(roleResult).toBe('DataSteward');
         });
+
+//"https://shrine-dev1.catalyst:6443/steward/steward/topics?skip=0&limit=20&state=Pending&sortBy=createDate&sortDirection=ascending"
+//"https://shrine-dev1.catalyst:6443/steward/researcher/topics?skip=0&limit=20&sortBy=changeDate&sortDirection=ascending"        
+//'http://localhost:8080/steward/researcher/topics?skip=0&limit=15&state=Pending&sortBy=createDate&sortDirection=ascending&minDate=12345&maxDate=12345'
+        it('getQueryString should work', function() {
+            var expectedResult = 'http://localhost:8080/steward/researcher/topics?skip=0&limit=15&state=Pending&sortBy=createDate&sortDirection=ascending&minDate=12345&maxDate=12345'
+            var result = stewardService.getUrl('researcher/topics', 0,15,'Pending', 'createDate', 'ascending', 12345, 12345)
+
+            expect(result).toBe(expectedResult);
+        });
+        //http://localhost:8080/steward/researcher/topics?skip=0&limit=15&state=Pending&sortBy=createDate&sortDirection=ascending&minDate=12345&maxDate=12345
+        //http://localhost:8080/steward/researcher/topics?limit=15&state=Pending&sortBy=createDate&sortDirection=ascending&minDate=12345&maxDate=12345'
     }
 })();

@@ -10,5 +10,6 @@
         steward.isUserLoggedIn = StewardService.isUserLoggedIn;
         steward.getUsername = StewardService.getUsername;
         steward.getRole = StewardService.getRole;
+        steward.isSteward = StewardService.isSteward;
     }
 })();

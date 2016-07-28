@@ -5,7 +5,7 @@
   var restBase = 'steward/';
   var port = ':8080/';
   var baseUrl = server + port + restBase;
-  var homeRoute = '/topics';
+  var homeRoute = '/researcher/topics';
   var defaultRoute = '/login';
 
   var restOptions = {
@@ -34,13 +34,19 @@
     state3: 'Rejected'
   };
 
+  var viewConfig = {
+    index: 1,
+    range: 4,
+    limit: 20
+  };
+
   // -- todo: delete?
   var title = 'SHRINE DATA STEWARD';
 
   var roles = {
-    role1: 'researcher',
-    role2: 'data-steward',
-    role3: 'admin'
+    researcher: 'Researcher',
+    dataSteward: 'DataSteward',
+    admin: 'Admin'
   };
 
   angular
@@ -53,7 +59,8 @@
       'restInterpolators': restInterpolators,
       'states': states,
       'roles': roles,
-      'title': title
+      'title': title,
+      'viewConfig': viewConfig
     });
 })();
 

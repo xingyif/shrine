@@ -15,7 +15,7 @@
         var user = {
             username: 'testUser',
             password: 'kapow',
-            roles: ['testRole1','testRole2','testRole3']
+            roles: ['testRole1', 'testRole2', 'testRole3']
         };
 
         function setup() {
@@ -37,14 +37,14 @@
         //-- setup --/
         beforeEach(setup);
 
-        
+
         it('topics route url should be set to #/topics', function () {
             stewardService.setAppUser(user.username, user.password, user.roles);
             activateRoute('app/client/topics/topics.tpl.html', 'topics');
             expect($state.href($state.current.name)).toEqual('#/topics');
         });
 
-                
+
         it('login route url should be set to #/login', function () {
             stewardService.deleteAppUser();
             activateRoute('app/client/login/login.tpl.html', 'login');
