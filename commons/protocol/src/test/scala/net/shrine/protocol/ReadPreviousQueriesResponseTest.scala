@@ -1,10 +1,11 @@
 package net.shrine.protocol
 
-import net.shrine.problem.TestProblem
 import org.junit.Test
 import net.shrine.util.XmlUtil
 import net.shrine.util.XmlDateHelper
 import javax.xml.datatype.XMLGregorianCalendar
+
+import net.shrine.problem.TestProblem
 
 /**
  * @author Bill Simons

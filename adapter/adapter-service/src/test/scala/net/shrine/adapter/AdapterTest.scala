@@ -3,7 +3,7 @@ package net.shrine.adapter
 import net.shrine.problem.ProblemNotYetEncoded
 import net.shrine.protocol.query.QueryDefinition
 import net.shrine.util.ShouldMatchersForJUnit
-import net.shrine.protocol.{RunQueryRequest, BaseShrineResponse, BroadcastMessage, DeleteQueryResponse, AuthenticationInfo, Credential, ErrorResponse, DeleteQueryRequest}
+import net.shrine.protocol.{AuthenticationInfo, BaseShrineResponse, BroadcastMessage, Credential, DeleteQueryRequest, DeleteQueryResponse, ErrorResponse, RunQueryRequest}
 import org.junit.Test
 
 /**

@@ -17,7 +17,6 @@ class DashboardProblemDatabaseTest extends FlatSpec with BeforeAndAfter with Sca
   val connector = Problems.DatabaseConnector
   val IO = connector.IO
   val problemDigests = Seq(
-    // Not actually sure what examples of ProblemDigests look like
     ProblemDigest("MJPG", "01:01:01", "summary here", "description here"     , <details>uh not sure</details>     , 2),
     ProblemDigest("wewu", "01:02:01", "coffee spill", "coffee everywhere"    , <details>He chose decaf</details>  , 1),
     ProblemDigest("wuwu", "02:01:01", "squirrel"    , "chewed all the cables", <details>Like ALL of them</details>, 0),
@@ -31,9 +30,9 @@ class DashboardProblemDatabaseTest extends FlatSpec with BeforeAndAfter with Sca
   }
 
   after {
-//    connector.runBlocking(IO.tableExists) shouldBe true
-//    connector.runBlocking(IO.dropIfExists >> IO.tableExists) shouldBe false
-//    connector.runBlocking(IO.dropIfExists) shouldBe NoOperation
+    connector.runBlocking(IO.tableExists) shouldBe true
+    connector.runBlocking(IO.dropIfExists >> IO.tableExists) shouldBe false
+    connector.runBlocking(IO.dropIfExists) shouldBe NoOperation
   }
 
   "The Database" should "Connect without any problems" in {
@@ -78,5 +77,15 @@ class DashboardProblemDatabaseTest extends FlatSpec with BeforeAndAfter with Sca
     val resultOverLength = connector.runBlocking(IO.sizeAndProblemDigest(10))
     resultOverLength._1 should have length 4
     resultOverLength._1 should contain theSameElementsAs problemDigests
+
+    connector.runBlocking(IO.problems.size.result) shouldBe problemDigests.size
+
+    val testProblem = ProblemDatabaseTestProblem(ProblemSources.Unknown)
+    connector.runBlocking(IO.problems.size.result) shouldBe problemDigests.size + 1
   }
+}
+
+case class ProblemDatabaseTestProblem(source: ProblemSources.ProblemSource) extends AbstractProblem(source: ProblemSources.ProblemSource) {
+  override def summary: String = "This is a test problem! No user should ever see this."
+  override def description: String = "Wow, this is a nice looking problem. I mean really, just look at it."
 }

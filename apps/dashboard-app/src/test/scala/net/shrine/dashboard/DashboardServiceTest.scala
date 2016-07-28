@@ -205,13 +205,12 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
 
   "DashboardService" should "return an OK for admin/status/problems with queries" in {
 
-    Get("/admin/status/problems/offset=5") ~>
+    Get("/admin/status/problems?offset=2") ~>
       addCredentials(adminCredentials) ~>
       route ~> check {
       assertResult(OK)(status)
 
       val problems = new String(body.data.toByteArray)
-      println(problems)
     }
   }
 

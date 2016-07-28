@@ -1,14 +1,15 @@
 package net.shrine.authorization
 
 import net.shrine.log.Loggable
-import net.shrine.problem.{LoggingProblemHandler, Problem, ProblemSources, AbstractProblem, ProblemDigest}
 
 import scala.util.{Failure, Success, Try}
 import net.shrine.client.HttpResponse
 import net.shrine.i2b2.protocol.pm.GetUserConfigurationRequest
 import net.shrine.i2b2.protocol.pm.User
+import net.shrine.problem._
 import net.shrine.protocol.AuthenticationInfo
 import net.shrine.protocol.ErrorResponse
+
 import scala.util.control.NonFatal
 
 /**

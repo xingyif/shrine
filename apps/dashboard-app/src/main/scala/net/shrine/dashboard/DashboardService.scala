@@ -10,7 +10,6 @@ import net.shrine.status.protocol.{Config => StatusProtocolConfig}
 import net.shrine.dashboard.httpclient.HttpClientDirectives.{forwardUnmatchedPath, requestUriThenRoute}
 import net.shrine.log.Loggable
 import net.shrine.problem.{ProblemDigest, Problems}
-import net.shrine.problem.Problems._
 import net.shrine.serialization.NodeSeqSerializer
 import shapeless.HNil
 import spray.http.{HttpRequest, HttpResponse, StatusCodes, Uri}
@@ -237,9 +236,9 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
         // todo: Figure out logging
         0
       }
-      lazy val db = Problems.DatabaseConnector
-      lazy val timeout: Duration = new FiniteDuration(15, SECONDS)
-      lazy val problemsAndSize: (Seq[ProblemDigest], Int) = db.runBlocking(db.IO.sizeAndProblemDigest(n, offset))(timeout)
+      val db = Problems.DatabaseConnector
+      val timeout: Duration = new FiniteDuration(15, SECONDS)
+      val problemsAndSize: (Seq[ProblemDigest], Int) = db.runBlocking(db.IO.sizeAndProblemDigest(n, offset))(timeout)
       complete(problemsToJsonString(problemsAndSize._1, problemsAndSize._2, offset, n))
     }
   }

@@ -1,11 +1,11 @@
 package net.shrine.aggregation
 
-import java.net.{UnknownHostException, ConnectException}
+import java.net.{ConnectException, UnknownHostException}
 
 import com.sun.jersey.api.client.ClientHandlerException
 import net.shrine.broadcaster.CouldNotParseResultsException
 import net.shrine.log.Loggable
-import net.shrine.problem.{ProblemNotYetEncoded, ProblemSources, AbstractProblem}
+import net.shrine.problem.{AbstractProblem, ProblemNotYetEncoded, ProblemSources}
 
 import scala.concurrent.duration.Duration
 import net.shrine.protocol.ErrorResponse

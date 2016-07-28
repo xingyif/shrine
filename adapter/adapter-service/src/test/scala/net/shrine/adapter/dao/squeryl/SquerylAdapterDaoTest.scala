@@ -1,6 +1,5 @@
 package net.shrine.adapter.dao.squeryl
 
-import net.shrine.problem.TestProblem
 import net.shrine.util.ShouldMatchersForJUnit
 import net.shrine.protocol.AuthenticationInfo
 import net.shrine.protocol.query.QueryDefinition
@@ -19,6 +18,7 @@ import net.shrine.adapter.dao.model.QueryResultRow
 import net.shrine.protocol.DefaultBreakdownResultOutputTypes
 import net.shrine.adapter.dao.model.squeryl.SquerylShrineQuery
 import net.shrine.dao.DateHelpers
+import net.shrine.problem.TestProblem
 
 /**
  * @author clint

@@ -2,8 +2,8 @@ package net.shrine.adapter
 
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
+
 import net.shrine.adapter.audit.AdapterAuditDb
-import net.shrine.problem.{AbstractProblem, ProblemSources}
 
 import scala.Option.option2Iterable
 import scala.concurrent.Await
@@ -17,12 +17,14 @@ import net.shrine.adapter.Obfuscator.obfuscateResults
 import net.shrine.adapter.dao.AdapterDao
 import net.shrine.adapter.dao.model.Breakdown
 import net.shrine.adapter.dao.model.ShrineQueryResult
-import net.shrine.protocol.{HiveCredentials, AuthenticationInfo, BroadcastMessage, ErrorResponse, HasQueryResults, QueryResult, ReadResultRequest, ReadResultResponse, ResultOutputType, ShrineRequest, ShrineResponse, BaseShrineRequest}
+import net.shrine.protocol.{AuthenticationInfo, BaseShrineRequest, BroadcastMessage, ErrorResponse, HasQueryResults, HiveCredentials, QueryResult, ReadResultRequest, ReadResultResponse, ResultOutputType, ShrineRequest, ShrineResponse}
 import net.shrine.protocol.query.QueryDefinition
 import net.shrine.util.StackTrace
 import net.shrine.util.Tries.sequence
+
 import scala.concurrent.duration.Duration
 import net.shrine.client.Poster
+import net.shrine.problem.{AbstractProblem, ProblemSources}
 
 /**
  * @author clint

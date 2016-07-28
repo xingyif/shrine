@@ -33,11 +33,8 @@
         <tr ng-repeat-start="problem in vm.problems track by $index"
             ng-click="problem.showDetails = !problem.showDetails"
             style="cursor: pointer;">
-            <td>
-                <a href="{{vm.url}}{{problem.codec}}">
-                    <pre style="background: inherit;border: none;text-decoration: underline;"
-                    >{{vm.formatCodec(problem.codec)}}</pre>
-                </a>
+            <td><pre style="background: inherit;border: none;text-decoration: underline;"
+                    ><a href="{{vm.url}}{{problem.codec}}" target="_blank">{{vm.formatCodec(problem.codec)}}</a></pre>
             </td>
             <td>
                 {{problem.stampText}}

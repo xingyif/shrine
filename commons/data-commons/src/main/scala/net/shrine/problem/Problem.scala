@@ -16,7 +16,7 @@ import scala.xml.{Elem, Node, NodeSeq}
  * @author david 
  * @since 8/6/15
  */
-trait Problem {
+trait Problem extends DelayedInit {
   def summary:String
 
   def problemName = getClass.getName
@@ -42,6 +42,11 @@ trait Problem {
   def detailsXml: NodeSeq = NodeSeq.fromSeq(<details>{throwableDetail.getOrElse("")}</details>)
 
   def toDigest:ProblemDigest = ProblemDigest(problemName,stamp.pretty,summary,description,detailsXml, stamp.time)
+
+  override def delayedInit(code: => Unit): Unit = {
+    code
+    Problems.DatabaseConnector.insertProblem(toDigest)
+  }
 
 }
 
@@ -121,8 +126,6 @@ object Stamp {
 
 abstract class AbstractProblem(source:ProblemSources.ProblemSource) extends Problem {
   val stamp = Stamp(source)
-  // The terrible way to do onCreate:
-  // val terrible = Future {Thread.sleep(2000)}.foreach(_ => Problems.DatabaseConnector.insertProblem(this.toDigest))
 }
 
 trait ProblemHandler {

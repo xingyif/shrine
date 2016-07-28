@@ -150,7 +150,7 @@
          * @returns {*}
          */
         function getProblems(n) {
-            var url = urlGetter(Config.ProblemEndpoint+'/offset='+n, '.json');
+            var url = urlGetter(Config.ProblemEndpoint+'?offset='+n);
             return h.get(url)
                 .then(parseJsonResult, onFail);
         }

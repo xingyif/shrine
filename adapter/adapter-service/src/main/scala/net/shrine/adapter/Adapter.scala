@@ -3,8 +3,8 @@ package net.shrine.adapter
 import java.sql.SQLException
 
 import net.shrine.log.Loggable
-import net.shrine.problem.{Problem, ProblemNotYetEncoded, LoggingProblemHandler, ProblemSources, AbstractProblem}
-import net.shrine.protocol.{ShrineRequest, BroadcastMessage, ErrorResponse, BaseShrineResponse, AuthenticationInfo}
+import net.shrine.problem._
+import net.shrine.protocol._
 
 /**
  * @author Bill Simons

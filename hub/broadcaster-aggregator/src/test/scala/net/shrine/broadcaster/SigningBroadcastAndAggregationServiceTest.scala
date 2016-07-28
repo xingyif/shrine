@@ -1,7 +1,5 @@
 package net.shrine.broadcaster
 
-import net.shrine.problem.TestProblem
-
 import scala.concurrent.Await
 import org.junit.Test
 import net.shrine.util.ShouldMatchersForJUnit
@@ -21,6 +19,7 @@ import net.shrine.protocol.SingleNodeResult
 import net.shrine.protocol.Timeout
 import net.shrine.crypto.SigningCertStrategy
 import net.shrine.broadcaster.dao.MockHubDao
+import net.shrine.problem.TestProblem
 
 /**
  * @author clint

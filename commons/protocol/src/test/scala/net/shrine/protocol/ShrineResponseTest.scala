@@ -9,6 +9,7 @@ import net.shrine.protocol.query.QueryDefinition
 import net.shrine.protocol.query.Term
 import net.shrine.util.XmlDateHelper
 import net.shrine.util.XmlUtil
+
 import scala.util.Success
 
 /**

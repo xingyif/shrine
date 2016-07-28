@@ -22,7 +22,7 @@ import scala.xml.XML
   * @since 07/16
   */
 object Problems {
-  val config:Config = ProblemConfigSource.config.getConfig("shrine.problem.database")
+  val config:Config = ProblemConfigSource.config.getConfig("shrine.dashboard.database")
   val slickProfileClassName = config.getString("slickProfileClassName")
   // TODO: Can we not pay this 2 second cost here?
   val slickProfile:JdbcProfile = ProblemConfigSource.objectForName(slickProfileClassName)
@@ -41,7 +41,7 @@ object Problems {
     * The Problems Table. This is the table schema.
     */
   class ProblemsT(tag: Tag) extends Table[ProblemDigest](tag, Queries.tableName) {
-    def id = column[Int]("id", O.PrimaryKey, O.AutoInc, O.Default(0))
+    def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
     def codec = column[String]("codec")
     def stampText = column[String]("stampText")
     def summary = column[String]("summary")
@@ -83,7 +83,7 @@ object Problems {
     /**
       * The table name
       */
-    val tableName = "PROBLEMS"
+    val tableName = "problems"
 
     /**
       * Equivalent to Select * from Problems;
@@ -170,7 +170,7 @@ object Problems {
       * Inserts a problem into the database
       * @param problem the ProblemDigest
       */
-    def insertProblem(problem: ProblemDigest): Unit = {
+    def insertProblem(problem: ProblemDigest) = {
       run(Queries += problem)
     }
   }

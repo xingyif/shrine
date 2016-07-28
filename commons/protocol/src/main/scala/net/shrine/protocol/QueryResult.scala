@@ -1,13 +1,15 @@
 package net.shrine.protocol
 
 import javax.xml.datatype.XMLGregorianCalendar
+
 import net.shrine.log.Loggable
-import net.shrine.problem.{ProblemSources, AbstractProblem, Problem, ProblemDigest}
+import net.shrine.problem.{AbstractProblem, Problem, ProblemDigest, ProblemSources}
 import net.shrine.protocol.QueryResult.StatusType
 
 import scala.xml.NodeSeq
-import net.shrine.util.{Tries, XmlUtil, NodeSeqEnrichments, SEnum, XmlDateHelper, OptionEnrichments}
-import net.shrine.serialization.{ I2b2Marshaller, XmlMarshaller }
+import net.shrine.util.{NodeSeqEnrichments, OptionEnrichments, SEnum, Tries, XmlDateHelper, XmlUtil}
+import net.shrine.serialization.{I2b2Marshaller, XmlMarshaller}
+
 import scala.util.Try
 
 /**
@@ -372,7 +374,7 @@ object QueryResult {
   //todo remove and replace with real Problems
   def errorResult(description:Option[String], statusMessage:String, codec:String,stampText:String, summary:String, digestDescription:String,detailsXml:NodeSeq): QueryResult = {
     // This would require parsing the stamp text to change, and without a standard locale that's nigh impossible.
-    // If this i replaced with real problems, then this can be addressed then. For now, passing on zero is the best bet.
+    // If this is replaced with real problems, then this can be addressed then. For now, passing on zero is the best bet.
     // TODO: REFACTOR SQUERYL ERRORS TO USE REAL PROBLEMS
     val problemDigest = ProblemDigest(codec,stampText,summary,digestDescription,detailsXml,0)
 

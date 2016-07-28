@@ -1,7 +1,7 @@
 package net.shrine.adapter.components
 
 import net.shrine.adapter.dao.AdapterDao
-import net.shrine.problem.{ProblemSources, AbstractProblem}
+import net.shrine.problem.{AbstractProblem, ProblemSources}
 import net.shrine.protocol.ShrineResponse
 import net.shrine.protocol.ReadQueryDefinitionRequest
 import net.shrine.protocol.ReadQueryDefinitionResponse

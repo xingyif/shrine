@@ -3,9 +3,7 @@ package net.shrine.protocol
 import net.shrine.problem.ProblemDigest
 
 import scala.xml.NodeSeq
-
 import org.junit.Test
-
 import net.shrine.protocol.query.QueryDefinition
 import net.shrine.protocol.query.Term
 import net.shrine.util.XmlDateHelper

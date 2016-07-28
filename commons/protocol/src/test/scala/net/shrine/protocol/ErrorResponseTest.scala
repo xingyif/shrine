@@ -4,6 +4,7 @@ import junit.framework.TestCase
 import net.shrine.problem.TestProblem
 import net.shrine.util.ShouldMatchersForJUnit
 import org.junit.Test
+
 import scala.xml.NodeSeq
 import net.shrine.util.XmlUtil
 

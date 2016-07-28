@@ -1,4 +1,4 @@
-{"size":63,"offset":0,"n":20,"problems":
+{"size":20,"offset":0,"n":20,"problems":
 [{
   "codec":"net.shrine.protocol.ErrorStatusFromCrc",
   "description": "Proin risus.",
@@ -476,7 +476,7 @@
     }
   }
 }, {
-  "codec":"net.shrine.problem.ProblemNotYetEncoded",
+  "codec":"ProblemNotYetEncoded",
   "description": "In hac habitasse platea dictumst.",
   "summary": "Quisque arcu libero, rutrum ac, lobortis vel, dapibus at, diam. Nam tristique tortor eu pede.",
   "stampText": "2016-04-14T19:38:30Z",

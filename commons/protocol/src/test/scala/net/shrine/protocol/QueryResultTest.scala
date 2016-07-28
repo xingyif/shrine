@@ -1,6 +1,6 @@
 package net.shrine.protocol
 
-import net.shrine.problem.{TestProblem, ProblemSources, AbstractProblem}
+import net.shrine.problem.TestProblem
 import net.shrine.util.ShouldMatchersForJUnit
 import org.junit.Test
 import net.shrine.util.XmlUtil
