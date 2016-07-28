@@ -34,6 +34,11 @@ i2b2.CRC.view.status.showDisplay = function() {
 	// set us as active
 	$('infoQueryStatusText').parentNode.parentNode.select('DIV.tabBox.tabQueryStatus')[0].addClassName('active');
 	$('infoQueryStatusText').show();
+	//BG
+	$('infoQueryStatusChart').hide(); 
+	$('infoQueryStatusReport').hide();
+	$('infoDownloadStatusData').hide();
+	//BG
 }
 
 // ================================================================================================== //
@@ -138,8 +143,8 @@ i2b2.CRC.view.status.ResizeHeight = function()
 {
 	var viewObj = i2b2.CRC.view.status;
 	if (viewObj.visible) {
-		var ds = document.viewport.getDimensions();
-		var h = ds.height;
+		///var ds = document.viewport.getDimensions();
+ 	    var h =  window.innerHeight || (window.document.documentElement.clientHeight || window.document.body.clientHeight);
 		if (h < 517) {h = 517;}
 		// resize our visual components
 		var ve = $('crcStatusBox');
@@ -149,19 +154,52 @@ i2b2.CRC.view.status.ResizeHeight = function()
 				ve = ve.style;
 				if (i2b2.WORK && i2b2.WORK.isLoaded) 
 				{
-					$('infoQueryStatusText').style.height = '100px';
-					ve.top = h-152; //196+44;
+					if (i2b2.CRC.view.status.isZoomed) {
+						$('infoQueryStatusText').style.height = h - 97;
+						$('infoQueryStatusChart').style.height = h - 97;
+						$('infoQueryStatusReport').style.height = h - 97;
+						ve.top = 45;
+						$('crcQueryToolBox').hide();
+					} else {
+						$('infoQueryStatusText').style.height = '100px';
+						$('infoQueryStatusChart').style.height = '100px';//BG
+						$('infoQueryStatusReport').style.height = '100px';//BG
+						$('infoDownloadStatusData').style.height = '100px';//BG
+						ve.top = h-198;
+						$('crcQueryToolBox').show();
+						
+					}				
 				} 
 				else 
 				{
-					$('infoQueryStatusText').style.height = '144px';
-					ve.top = h-196;
+					if (i2b2.CRC.view.status.isZoomed) {
+						$('infoQueryStatusText').style.height = h - 97;
+						$('infoQueryStatusChart').style.height = h - 97;
+						$('infoQueryStatusReport').style.height = h - 97;
+						$('infoDownloadStatusData').style.height = h - 97;
+						ve.top = 45;
+						$('crcQueryToolBox').hide();
+					} else {
+						$('infoQueryStatusText').style.height = '144px';
+						$('infoQueryStatusChart').style.height = '144px';//BG
+						$('infoQueryStatusReport').style.height = '144px';//BG
+						$('infoDownloadStatusData').style.height = '144px';//BG
+						ve.top = h-196;
+						$('crcQueryToolBox').show();
+					}
+					
 				}
 				break;
 			default:
 				ve.hide();
 		}
 	}
+}
+
+// ================================================================================================== //
+
+i2b2.CRC.view.status.ZoomView = function() {
+	i2b2.hive.MasterView.toggleZoomWindow("status");
 }
 
 // ================================================================================================== //
@@ -216,6 +254,10 @@ i2b2.events.changedZoomWindows.subscribe((function(eventTypeName, zoomMsg) {
 				this.visible = false;
 				this.isZoomed = false;
 				i2b2.CRC.view.status.hide();
+				break;
+			case "status":
+				this.isZoomed = true;
+				this.visible = true;
 		}
 	} else {
 		switch (newMode.window) {
@@ -223,11 +265,16 @@ i2b2.events.changedZoomWindows.subscribe((function(eventTypeName, zoomMsg) {
 				this.isZoomed = false;
 				this.visible = true;
 				i2b2.CRC.view.status.show();
+				break;
+			case "status":
+				this.isZoomed = false;
+				this.visible = true;
 		}
 	}
 	this.ResizeHeight();
 	//this.Resize();		// tdw9
 }),'',i2b2.CRC.view.status);
+
 
 
 console.timeEnd('execute time');
