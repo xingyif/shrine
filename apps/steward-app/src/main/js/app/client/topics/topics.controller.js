@@ -5,8 +5,8 @@
         .module('shrine.steward.topics')
         .controller('TopicsController', TopicsController);
 
-    TopicsController.$inject = ['TopicsService', 'TopicsModel', '$uibModal'];
-    function TopicsController(TopicsService, TopicsModel, $uibModal) {
+    TopicsController.$inject = ['TopicsService', 'TopicsModel', '$uibModal', '$scope'];
+    function TopicsController(TopicsService, TopicsModel, $uibModal, $scope) {
 
         // -- set up locals --//
         var topics = this;
@@ -109,9 +109,19 @@
                 });
         }
 
+        function startMenuWatch() {
+            $scope.sortData = topics.sortData;
+            $scope.$watch('sortData.state', function (newVal, oldVal) {
+                if (oldVal !== newVal) {
+                    refreshTopics();
+                }
+            });
+        }
+
         function init() {
             setDefaultState();
             refreshTopics();
+            startMenuWatch();
         }
 
         function update(column) {

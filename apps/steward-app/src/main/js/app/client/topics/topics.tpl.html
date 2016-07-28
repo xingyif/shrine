@@ -3,9 +3,7 @@
             <div>
                 <div>
                     <span ng-if="topics.showStewardMenu">
-                        <steward-menu>
-                            STEWARD MENU
-
+                        <steward-menu menu="topics.sortData">
                         </steward-menu>
                     </span>
                     
@@ -20,19 +18,10 @@
                                 open="topics.openTopic(topic)",
                                 new="topics.createTopic()">
                             </topics-result>
-                            <!--topic-table sorted-by="changeDate" sort="sort">
-                            </topic-table-->
                         </p>
                     </div>
-
-                   {{topics.sortData.sortDirection}}
-                   {{topics.sortData.column}}
                 </div>
-                <!-- /.panel-heading -->
-
-                <!-- /.panel-body -->
             </div>
-
         </div>
     </div>
 
