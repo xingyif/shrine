@@ -126,6 +126,7 @@ object Problems {
     * Entry point for interacting with the database. Runs IO actions.
     */
   object DatabaseConnector {
+    val p = Problems
     val IO = IOActions
     /**
       * Executes a series of IO actions as a single transactions
