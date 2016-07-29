@@ -231,8 +231,21 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
 
     parameter("offset" ? "0") { offsetString =>
       val n = 20
+      // TODO: Once Bamboo/Deploy is running Java 8, switch to using Math.floorMod
+
+      def floorDiv(x: Int, y: Int) {
+        var r: Int = x / y
+        if ((x ^ y) < 0 && (r * y != x)) r -= 1
+        r
+      }
+
+      def floorMod(x: Int, y: Int): Int = {
+          val r: Int = x - floorDiv(x, y) * y
+          r
+      }
+
       // Try and grab the offset. If a number wasn't passed in, just default to 0
-      val offset = try { Math.floorMod(offsetString.toInt, n) } catch { case a:java.lang.NumberFormatException =>
+      val offset = try { floorMod(offsetString.toInt, n) } catch { case a:java.lang.NumberFormatException =>
         // todo: Figure out logging
         0
       }
