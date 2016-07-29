@@ -1,6 +1,6 @@
 package net.shrine.protocol
 
-import net.shrine.problem.TestProblem
+import net.shrine.problem.{TestProblem, TurnOffProblemConnector}
 
 import scala.xml.NodeSeq
 import org.junit.Test
@@ -17,7 +17,7 @@ import scala.util.Success
  * @since Nov 5, 2012
  */
 //noinspection UnitMethodIsParameterless,NameBooleanParameters,ScalaUnnecessaryParentheses
-final class ShrineResponseTest extends ShouldMatchersForJUnit {
+final class ShrineResponseTest extends ShouldMatchersForJUnit with TurnOffProblemConnector {
   @Test
   def testFromXml {
     //ShrineResponse.fromXml(null: String).isFailure should be(true)

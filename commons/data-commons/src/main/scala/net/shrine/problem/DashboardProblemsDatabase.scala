@@ -157,7 +157,7 @@ object Problems {
     /**
       * Synchronized copy of db.run
       */
-    def runBlocking[R](dbio: DBIOAction[R, NoStream, _])(implicit timeout: Duration): R = {
+    def runBlocking[R](dbio: DBIOAction[R, NoStream, _])(implicit timeout: Duration = new FiniteDuration(15, SECONDS)): R = {
       try {
         Await.result(this.run(dbio), timeout)
       } catch {
@@ -174,8 +174,8 @@ object Problems {
       run(Queries += problem)
     }
   }
-
 }
+
 
 // For SuccessAction, just a no_op.
 case object NoOperation

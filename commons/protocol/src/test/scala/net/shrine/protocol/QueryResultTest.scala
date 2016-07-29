@@ -1,6 +1,6 @@
 package net.shrine.protocol
 
-import net.shrine.problem.TestProblem
+import net.shrine.problem.{TestProblem, TurnOffProblemConnector}
 import net.shrine.util.ShouldMatchersForJUnit
 import org.junit.Test
 import net.shrine.util.XmlUtil
@@ -21,7 +21,9 @@ import scala.xml.NodeSeq
  * @see http://www.gnu.org/licenses/lgpl.html
  */
 //noinspection EmptyParenMethodAccessedAsParameterless,NameBooleanParameters
-final class QueryResultTest extends ShouldMatchersForJUnit with XmlRoundTripper[QueryResult] with I2b2SerializableValidator {
+final class QueryResultTest extends ShouldMatchersForJUnit with XmlRoundTripper[QueryResult]
+  with I2b2SerializableValidator with TurnOffProblemConnector
+{
   private val date = XmlDateHelper.now
   private val resultId = 1L
   private val instanceId = 2L

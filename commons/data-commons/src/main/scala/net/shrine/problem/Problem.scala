@@ -45,7 +45,8 @@ trait Problem extends DelayedInit {
 
   override def delayedInit(code: => Unit): Unit = {
     code
-    Problems.DatabaseConnector.insertProblem(toDigest)
+    if (!ProblemConfigSource.turnOffConnector)
+      Problems.DatabaseConnector.insertProblem(toDigest)
   }
 
 }

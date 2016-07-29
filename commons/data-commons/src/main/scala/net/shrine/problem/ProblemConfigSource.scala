@@ -1,5 +1,6 @@
 package net.shrine.problem
 
+import com.typesafe.config.{ConfigValue, ConfigValueFactory}
 import net.shrine.config.ConfigSource
 
 /**
@@ -10,4 +11,8 @@ import net.shrine.config.ConfigSource
   */
 object ProblemConfigSource extends ConfigSource {
   override val configName: String = "problem"
+  var turnOffConnector = false
+  override def config = {
+    atomicConfig.config.withValue("turnOffConnector", ConfigValueFactory.fromAnyRef(turnOffConnector))
+  }
 }
