@@ -15,36 +15,55 @@
         </div>
         <div class="col-sm-4">
             <div class="shrine-panel">
+                
                 <div class="panel-body">
-                    <form name="form" ng-submit="login()" role="form">
+                    <form name="form" 
+                    ng-submit="login.checkLogin()" 
+                    role="form">
+                        
                         <fieldset>
                             <div class="form-group">
                                 <label class="pull-right shrine-copy-bold"
-                                       ng-show="form.username.$error.required ||
-                                form.password.$error.required">
+                                       ng-show="form.username.$error.required ||form.password.$error.required">
                                     *<small>Required Field</small>
                                 </label>
                                 <span>Username*</span>
-
-                                <input class="form-control" type="text" name="username"
-                                       id="username" class="form-control"
-                                       ng-model="username" autofocus required novalidate/>
+                                <!-- ng username -->
+                                <input class="form-control" 
+                                    type="text" 
+                                    name="username"
+                                    id="username" 
+                                    class="form-control"
+                                    ng-model="login.username" 
+                                    autofocus required novalidate/>
                             </div>
+
                             <div class="form-group">
                                 <span>Password*</span>
-                                <input class="form-control" type="password"
-                                       name="password" id="password" ng-model="password"
-                                       required novalidate/>
+                                <!-- ng password -->
+                                <input class="form-control" 
+                                    type="password"
+                                    name="password" 
+                                    id="password" 
+                                    ng-model="login.password"
+                                    required novalidate/>
                             </div>
-                            <div class="form-group has-error" style="text-align: center">
-                                <label ng-show="loginFail === true"
-                                       class="control-label" for="inputError">Invalid Login</label>
+
+                            <div class="form-group has-error" 
+                                style="text-align: center">
+                                <!-- ng status -->
+                                <label ng-show="login.loginFail === true"
+                                       class="control-label" 
+                                       for="inputError">Invalid Login</label>
                             </div>
+
+                            <!-- ng submit -->
                             <div>
                                 <button type="submit"
                                         class="pull-right fa fa-chevron-right fa-3x shrine-button"
                                         ng-disabled="!form.$valid"></button>
                             </div>
+
                         </fieldset>
                     </form>
                 </div>

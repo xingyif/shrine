@@ -1,66 +1,61 @@
 {
-  "name": "Data Steward 2.0",
-  "version": 6,
+  "name": "shrine-data-steward-2.0",
+  "description": "HMS Data Steward",
+  "main": "start.js",
   "authors": [
-    "Ben Carmen <benjamin_carmen@hms.harvard.edu>"
-  ],
-  "description": "Angular JS version of Shrine Data Steward",
-  "main": "app.js",
-  "keywords": [
-    "Harvard",
-    "Shrine",
-    "Data",
-    "Steward"
+    "Ben Carmen"
   ],
   "license": "MIT",
+  "keywords": [
+    "hms",
+    "steward",
+    "app"
+  ],
+  "moduleType": [],
+  "homepage": "https://open.med.harvard.edu/project/shrine/",
   "ignore": [
     "**/.*",
     "node_modules",
     "bower_components",
+    "src/vendor",
     "test",
     "tests"
   ],
   "dependencies": {
-    "angular": "^1.3.15",
-    "angular-cookies": "^1.3.13",
-    "angular-foundation": "^0.5.1",
-    "angular-mocks": "^1.3.15",
-    "angular-route": "^1.3.15",
-    "angular-ui-router": "^0.2.13",
-    "d3": "^3.5.5",
-    "fastclick": "^1.0.3",
-    "foundation": "^5.5.0",
-    "foundation-datepicker": "1.3.0",
-    "jquery.cookie": "^1.4.1",
-    "jquery-placeholder": "^2.0.9",
-    "jquery": "^2.1.3",
-    "lodash": "^3.2.0",
-    "modernizr": "^2.8.3"
-  },
-  "resolutions": {
-    "angular": "^1.3.15"
+    "bootstrap": "v3.3.6",
+    "metisMenu": "v2.5.2",
+    "angular-loading-bar": "v0.9.0",
+    "font-awesome": "v4.6.3",
+    "jquery": "v2.2.4",
+    "angular": "v1.5.7",
+    "json3": "v3.3.2",
+    "angular-ui-router": "v0.3.1",
+    "angular-route": "v1.5.7",
+    "angular-cookies": "v1.5.7",
+    "oclazyload": "ocLazyLoad#v1.0.9",
+    "lodash": "v4.13.1",
+    "angular-bootstrap": "v1.3.3",
+    "Chart.js": "v2.1.6",
+    "x2js": "x2js#v1.2.0"
   },
   "devDependencies": {
-    "angular": "~1.4.0",
-    "json3": "~3.3.2",
-    "es5-shim": "~4.1.5",
-    "angular-chart.js": "~0.7.2",
-    "angular-resource": "~1.4.0",
-    "angular-cookies": "~1.4.0",
-    "angular-sanitize": "~1.4.0",
-    "angular-animate": "~1.4.0",
-    "angular-touch": "~1.4.0",
-    "angular-route": "~1.4.0",
-    "font-awesome": "~4.3.0",
-    "angular-bootstrap": "~0.13.0",
-    "oclazyload": "~1.0.1",
-    "angular-loading-bar": "~0.7.1",
-    "angular-ui-router": "~0.2.15",
-    "angular-toggle-switch": "~1.3.0",
-    "metisMenu": "~2.0.2",
-    "sb-admin-2": "*",
-    "bootstrap": "~3.3.5",
-    "angular-chart.js": "~0.7.2",
-    "Chart.js": "~1.0.2"
+    "angular-mocks": "v1.5.7",
+    "font-awesome": "v4.6.3"
+  },
+  "overrides": {
+    "bootstrap": {
+      "main": [
+        "dist/js/boostrap.js",
+        "dist/css/bootstrap.css",
+        "less/bootstrap.less"
+      ]
+    },
+    "font-awesome": {
+      "main": [
+        "css/font-awesome.css",
+        "less/font-awesome.less",
+        "scss/font-awesome.scss"
+      ]
+    }
   }
 }

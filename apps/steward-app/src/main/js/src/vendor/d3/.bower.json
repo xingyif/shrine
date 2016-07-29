@@ -1,6 +1,6 @@
 {
   "name": "d3",
-  "version": "3.5.5",
+  "version": "3.5.0",
   "main": "d3.js",
   "scripts": [
     "d3.js"
@@ -23,14 +23,14 @@
     "src",
     "test"
   ],
-  "homepage": "https://github.com/mbostock/d3",
-  "_release": "3.5.5",
+  "homepage": "https://github.com/mbostock-bower/d3-bower",
+  "_release": "3.5.0",
   "_resolution": {
     "type": "version",
-    "tag": "v3.5.5",
-    "commit": "9628a923cb9df82058a4a2fcc8d415e45b6d5d2f"
+    "tag": "v3.5.0",
+    "commit": "3c7a0dcb8e24b3561d44e12a8221910451728fc6"
   },
-  "_source": "git://github.com/mbostock/d3.git",
-  "_target": "^3.5.5",
+  "_source": "https://github.com/mbostock-bower/d3-bower.git",
+  "_target": "<=3.5.0",
   "_originalSource": "d3"
 }

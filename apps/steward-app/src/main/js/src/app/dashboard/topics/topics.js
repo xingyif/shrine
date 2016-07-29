@@ -110,10 +110,6 @@ angular.module('stewardApp')
 
             var state, sortBy, sortDirection;
 
-            if ($scope.state !== "ALL") {
-                state = $scope.state;
-            }
-
             if ($scope.sort && $scope.sort.currentColumn !== "") {
                 sortBy          = $scope.sort.currentColumn;
                 sortDirection   = ($scope.sort.descending) ? "descending" : "ascending";

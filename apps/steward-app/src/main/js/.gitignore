@@ -1,0 +1,20 @@
+*.class
+*.log
+
+# mvn
+target/
+
+# emacs cruft
+*.*~
+
+# javascript artifacts
+./node_modules/
+**/*/node_modules/
+./app/server/node_modules/
+
+# idea
+.idea/
+*.iml
+
+# osx cruft
+.DS_Store
