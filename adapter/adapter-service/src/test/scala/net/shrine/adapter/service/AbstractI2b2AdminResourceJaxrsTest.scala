@@ -5,7 +5,7 @@ import net.shrine.adapter.AdapterTestHelpers
 import net.shrine.adapter.dao.squeryl.AbstractSquerylAdapterTest
 import net.shrine.client.{HttpClient, HttpResponse, JerseyHttpClient}
 import net.shrine.crypto.TrustParam.AcceptAllCerts
-import net.shrine.problem.{TestProblem, ProblemSources, AbstractProblem}
+import net.shrine.problem.TestProblem
 import net.shrine.protocol.{DefaultBreakdownResultOutputTypes, ErrorResponse, I2b2AdminReadQueryDefinitionRequest, I2b2AdminRequestHandler, QueryMaster, ReadI2b2AdminPreviousQueriesRequest, ReadPreviousQueriesResponse, ReadQueryDefinitionResponse}
 import net.shrine.protocol.query.QueryDefinition
 import net.shrine.util.{ShouldMatchersForJUnit, XmlUtil}

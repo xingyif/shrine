@@ -7,9 +7,9 @@ import net.shrine.authentication.{AuthenticationResult, Authenticator}
 import net.shrine.authorization.{AuthorizationResult, QueryAuthorizationService}
 import net.shrine.client.EndpointConfig
 import net.shrine.log.Loggable
-import net.shrine.problem.{AbstractProblem, ProblemSources}
-import net.shrine.protocol.{CredentialConfig, AuthenticationInfo, ErrorResponse, ReadApprovedQueryTopicsRequest, ReadApprovedQueryTopicsResponse, RunQueryRequest}
+import net.shrine.protocol.{AuthenticationInfo, CredentialConfig, ErrorResponse, ReadApprovedQueryTopicsRequest, ReadApprovedQueryTopicsResponse, RunQueryRequest}
 import net.shrine.config.ConfigExtensions
+import net.shrine.problem.{AbstractProblem, ProblemSources}
 
 /**
  * @author Bill Simons

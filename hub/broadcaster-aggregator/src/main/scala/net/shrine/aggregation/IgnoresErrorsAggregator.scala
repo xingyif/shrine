@@ -1,7 +1,7 @@
 package net.shrine.aggregation
 
-import net.shrine.aggregation.BasicAggregator.{Invalid, Error, Valid}
-import net.shrine.problem.{ProblemSources, AbstractProblem}
+import net.shrine.aggregation.BasicAggregator.{Error, Invalid, Valid}
+import net.shrine.problem.{AbstractProblem, ProblemSources}
 import net.shrine.protocol.ErrorResponse
 import net.shrine.protocol.BaseShrineResponse
 

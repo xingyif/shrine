@@ -8,6 +8,7 @@ import net.shrine.util.XmlUtil
 import net.shrine.serialization.XmlUnmarshaller
 import net.shrine.serialization.I2b2Unmarshaller
 import net.shrine.util.NodeSeqEnrichments
+
 import scala.util.Try
 import scala.util.control.NonFatal
 

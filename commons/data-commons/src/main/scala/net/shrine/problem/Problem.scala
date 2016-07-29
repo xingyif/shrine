@@ -1,11 +1,13 @@
 package net.shrine.problem
 
 import java.net.InetAddress
+import java.text.SimpleDateFormat
 import java.util.Date
 
 import net.shrine.log.Loggable
-import net.shrine.serialization.{XmlUnmarshaller, XmlMarshaller}
+import net.shrine.serialization.{XmlMarshaller, XmlUnmarshaller}
 
+import scala.concurrent.Future
 import scala.xml.{Elem, Node, NodeSeq}
 
 /**
@@ -14,7 +16,7 @@ import scala.xml.{Elem, Node, NodeSeq}
  * @author david 
  * @since 8/6/15
  */
-trait Problem {
+trait Problem extends DelayedInit {
   def summary:String
 
   def problemName = getClass.getName
@@ -39,11 +41,17 @@ trait Problem {
 
   def detailsXml: NodeSeq = NodeSeq.fromSeq(<details>{throwableDetail.getOrElse("")}</details>)
 
-  def toDigest:ProblemDigest = ProblemDigest(problemName,stamp.pretty,summary,description,detailsXml)
+  def toDigest:ProblemDigest = ProblemDigest(problemName,stamp.pretty,summary,description,detailsXml, stamp.time)
+
+  override def delayedInit(code: => Unit): Unit = {
+    code
+    if (!ProblemConfigSource.turnOffConnector)
+      Problems.DatabaseConnector.insertProblem(toDigest)
+  }
 
 }
 
-case class ProblemDigest(codec: String, stampText: String, summary: String, description: String, detailsXml: NodeSeq) extends XmlMarshaller {
+case class ProblemDigest(codec: String, stampText: String, summary: String, description: String, detailsXml: NodeSeq, epoch: Long) extends XmlMarshaller {
 
   override def toXml: Node = {
     <problem>
@@ -51,6 +59,7 @@ case class ProblemDigest(codec: String, stampText: String, summary: String, desc
       <stamp>{stampText}</stamp>
       <summary>{summary}</summary>
       <description>{description}</description>
+      <epoch>{epoch}</epoch>
       {detailsXml}
     </problem>
   }
@@ -66,7 +75,8 @@ case class ProblemDigest(codec: String, stampText: String, summary: String, desc
           codec == that.codec &&
           stampText == that.stampText &&
           summary == that.summary &&
-          description == that.description
+          description == that.description &&
+          epoch == that.epoch
       case _ => false
     }
 
@@ -75,12 +85,11 @@ case class ProblemDigest(codec: String, stampText: String, summary: String, desc
    */
   override def hashCode: Int = {
     val prime = 67
-    codec.hashCode + prime * (stampText.hashCode + prime *(summary.hashCode + prime * description.hashCode))
+    codec.hashCode + prime * (stampText.hashCode + prime *(summary.hashCode + prime * (description.hashCode + prime * epoch.hashCode())))
   }
 }
 
 object ProblemDigest extends XmlUnmarshaller[ProblemDigest] with Loggable {
-
   override def fromXml(xml: NodeSeq): ProblemDigest = {
     val problemNode = xml \ "problem"
     require(problemNode.nonEmpty,s"No problem tag in $xml")
@@ -92,9 +101,18 @@ object ProblemDigest extends XmlUnmarshaller[ProblemDigest] with Loggable {
     val summary = extractText("summary")
     val description = extractText("description")
     val detailsXml: NodeSeq = problemNode \ "details"
+    val epoch =
+      try { extractText("epoch").toLong }
+      catch { case nx:NumberFormatException =>
+        error(s"While parsing xml representing a ProblemDigest, the epoch could not be parsed into a long", nx)
+        0
+      }
 
-    ProblemDigest(codec,stampText,summary,description,detailsXml)
+
+    ProblemDigest(codec,stampText,summary,description,detailsXml,epoch)
   }
+
+
 }
 
 case class Stamp(host:InetAddress,time:Long,source:ProblemSources.ProblemSource) {
@@ -102,11 +120,14 @@ case class Stamp(host:InetAddress,time:Long,source:ProblemSources.ProblemSource)
 }
 
 object Stamp {
-  def apply(source:ProblemSources.ProblemSource): Stamp = Stamp(InetAddress.getLocalHost,System.currentTimeMillis(),source)
+  //TODO: val dateFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS")?
+  //TODO: Currently the stamp text is locale specific, which can change depending on the jre/computer running it...
+  def apply(source:ProblemSources.ProblemSource, timer: => Long): Stamp = Stamp(InetAddress.getLocalHost, timer,source)
 }
 
 abstract class AbstractProblem(source:ProblemSources.ProblemSource) extends Problem {
-  val stamp = Stamp(source)
+  def timer = System.currentTimeMillis
+  val stamp = Stamp(source, timer)
 }
 
 trait ProblemHandler {

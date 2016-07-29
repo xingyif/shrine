@@ -7,10 +7,10 @@ import javax.sql.DataSource
 import com.typesafe.config.Config
 import net.shrine.audit.{NetworkQueryId, QueryName, Time, UserName}
 import net.shrine.log.Loggable
-import net.shrine.problem.{AbstractProblem, ProblemSources, ProblemDigest}
-import net.shrine.protocol.{ResultOutputTypes, DeleteQueryRequest, RenameQueryRequest, I2b2ResultEnvelope, QueryResult, ResultOutputType, DefaultBreakdownResultOutputTypes, UnFlagQueryRequest, FlagQueryRequest, QueryMaster, ReadPreviousQueriesRequest, ReadPreviousQueriesResponse, RunQueryRequest}
+import net.shrine.problem.{AbstractProblem, ProblemDigest, ProblemSources}
+import net.shrine.protocol.{DefaultBreakdownResultOutputTypes, DeleteQueryRequest, FlagQueryRequest, I2b2ResultEnvelope, QueryMaster, QueryResult, ReadPreviousQueriesRequest, ReadPreviousQueriesResponse, RenameQueryRequest, ResultOutputType, ResultOutputTypes, RunQueryRequest, UnFlagQueryRequest}
 import net.shrine.qep.QepConfigSource
-import net.shrine.slick.TestableDataSourceCreator
+import net.shrine.slick.{CouldNotRunDbIoActionException, TestableDataSourceCreator}
 import net.shrine.util.XmlDateHelper
 import slick.driver.JdbcProfile
 
@@ -18,7 +18,6 @@ import scala.collection.immutable.Iterable
 import scala.concurrent.duration.{Duration, DurationInt}
 import scala.concurrent.{Await, Future, blocking}
 import scala.language.postfixOps
-
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.control.NonFatal
 import scala.xml.XML
@@ -518,13 +517,11 @@ case class QepProblemDigestRow(
       summary,
       description,
       if(!details.isEmpty) XML.loadString(details)
-      else <details/>
+      else <details/>,
+      //TODO: FIGURE OUT HOW TO GET AN ACUTAL EPOCH INTO HERE
+      0
     )
   }
-}
-
-case class CouldNotRunDbIoActionException(dataSource: DataSource, exception: Throwable) extends RuntimeException(exception) {
-  override def getMessage:String = s"Could not use the database defined by $dataSource due to ${exception.getLocalizedMessage}"
 }
 
 case class QepDatabaseProblem(x:Exception) extends AbstractProblem(ProblemSources.Qep){

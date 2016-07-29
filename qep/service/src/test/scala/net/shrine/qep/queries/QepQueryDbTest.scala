@@ -1,10 +1,10 @@
 package net.shrine.qep.queries
 
-import net.shrine.protocol.QueryResult.StatusType
-import net.shrine.protocol.{I2b2ResultEnvelope, DefaultBreakdownResultOutputTypes, QueryResult, ResultOutputType}
-import net.shrine.util.{XmlDateHelper, ShouldMatchersForJUnit}
-import org.junit.{After, Before, Test}
 import net.shrine.problem.TestProblem
+import net.shrine.protocol.QueryResult.StatusType
+import net.shrine.protocol.{DefaultBreakdownResultOutputTypes, I2b2ResultEnvelope, QueryResult, ResultOutputType}
+import net.shrine.util.{ShouldMatchersForJUnit, XmlDateHelper}
+import org.junit.{After, Before, Test}
 
 /**
   * @author david 

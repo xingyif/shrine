@@ -1,16 +1,15 @@
 package net.shrine.adapter
 
-import net.shrine.problem.{TestProblem, ProblemSources, AbstractProblem}
-
 import scala.xml.NodeSeq
 import net.shrine.util.ShouldMatchersForJUnit
 import ObfuscatorTest.within3
 import javax.xml.datatype.XMLGregorianCalendar
+
 import net.shrine.adapter.dao.AdapterDao
 import net.shrine.adapter.dao.squeryl.AbstractSquerylAdapterTest
 import net.shrine.client.HttpClient
 import net.shrine.client.HttpResponse
-import net.shrine.protocol.{HiveCredentials, AuthenticationInfo, BroadcastMessage, CrcRequest, Credential, ErrorResponse, I2b2ResultEnvelope, QueryResult, ReadResultRequest, ReadResultResponse, ResultOutputType, ShrineRequest, ShrineResponse, BaseShrineResponse, BaseShrineRequest, RunQueryRequest, RunQueryResponse, DefaultBreakdownResultOutputTypes}
+import net.shrine.protocol.{AuthenticationInfo, BaseShrineRequest, BaseShrineResponse, BroadcastMessage, CrcRequest, Credential, DefaultBreakdownResultOutputTypes, ErrorResponse, HiveCredentials, I2b2ResultEnvelope, QueryResult, ReadResultRequest, ReadResultResponse, ResultOutputType, RunQueryRequest, RunQueryResponse, ShrineRequest, ShrineResponse}
 import net.shrine.protocol.DefaultBreakdownResultOutputTypes.PATIENT_AGE_COUNT_XML
 import net.shrine.protocol.ResultOutputType.PATIENT_COUNT_XML
 import net.shrine.protocol.DefaultBreakdownResultOutputTypes.PATIENT_GENDER_COUNT_XML
@@ -21,6 +20,8 @@ import net.shrine.util.XmlGcEnrichments
 import net.shrine.client.Poster
 import net.shrine.adapter.translators.QueryDefinitionTranslator
 import net.shrine.adapter.translators.ExpressionTranslator
+import net.shrine.problem.TestProblem
+
 import scala.util.Success
 
 /**

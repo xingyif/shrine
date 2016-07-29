@@ -1,7 +1,7 @@
 package net.shrine.adapter.dao.model
 
-import net.shrine.util.ShouldMatchersForJUnit
 import net.shrine.problem.TestProblem
+import net.shrine.util.ShouldMatchersForJUnit
 import net.shrine.protocol.QueryResult
 
 /**

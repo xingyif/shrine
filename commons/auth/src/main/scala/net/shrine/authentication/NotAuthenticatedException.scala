@@ -1,7 +1,7 @@
 package net.shrine.authentication
 
 import net.shrine.authentication.AuthenticationResult.NotAuthenticated
-import net.shrine.problem.{ProblemSources, AbstractProblem}
+import net.shrine.problem.{AbstractProblem, ProblemSources}
 
 import scala.xml.NodeSeq
 

@@ -1,7 +1,5 @@
 package net.shrine.adapter
 
-import net.shrine.problem.{ProblemSources, AbstractProblem, TestProblem}
-
 import scala.concurrent.duration.DurationInt
 import org.junit.Test
 import net.shrine.util.ShouldMatchersForJUnit
@@ -13,7 +11,7 @@ import net.shrine.adapter.translators.QueryDefinitionTranslator
 import net.shrine.client.HttpClient
 import net.shrine.client.HttpResponse
 import net.shrine.client.Poster
-import net.shrine.protocol.{HiveCredentials, AuthenticationInfo, BroadcastMessage, CrcRequest, Credential, I2b2ResultEnvelope, QueryResult, RawCrcRunQueryResponse, ReadResultRequest, ReadResultResponse, ResultOutputType, RunQueryRequest, RunQueryResponse, ErrorResponse, BaseShrineResponse, DefaultBreakdownResultOutputTypes}
+import net.shrine.protocol.{AuthenticationInfo, BaseShrineResponse, BroadcastMessage, CrcRequest, Credential, DefaultBreakdownResultOutputTypes, ErrorResponse, HiveCredentials, I2b2ResultEnvelope, QueryResult, RawCrcRunQueryResponse, ReadResultRequest, ReadResultResponse, ResultOutputType, RunQueryRequest, RunQueryResponse}
 import net.shrine.protocol.RawCrcRunQueryResponse.toQueryResultMap
 import net.shrine.protocol.DefaultBreakdownResultOutputTypes.PATIENT_AGE_COUNT_XML
 import net.shrine.protocol.ResultOutputType.PATIENT_COUNT_XML
@@ -25,11 +23,14 @@ import net.shrine.protocol.query.QueryDefinition
 import net.shrine.protocol.query.Term
 import net.shrine.util.XmlDateHelper
 import net.shrine.util.XmlUtil
+
 import scala.util.Success
 import net.shrine.dao.squeryl.SquerylEntryPoint
+
 import scala.concurrent.duration.Duration
 import net.shrine.adapter.dao.model.ShrineError
 import net.shrine.adapter.dao.model.QueryResultRow
+import net.shrine.problem.TestProblem
 
 /**
  * @author Bill Simons

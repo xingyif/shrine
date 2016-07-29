@@ -1,9 +1,10 @@
 package net.shrine.protocol
 
 import junit.framework.TestCase
-import net.shrine.problem.TestProblem
+import net.shrine.problem.{TestProblem, TurnOffProblemConnector}
 import net.shrine.util.ShouldMatchersForJUnit
 import org.junit.Test
+
 import scala.xml.NodeSeq
 import net.shrine.util.XmlUtil
 
@@ -11,7 +12,7 @@ import net.shrine.util.XmlUtil
  * @author clint
  * @since Apr 5, 2013
  */
-final class ErrorResponseTest extends TestCase with ShouldMatchersForJUnit {
+final class ErrorResponseTest extends TestCase with ShouldMatchersForJUnit with TurnOffProblemConnector {
   val message = "foo"
   val problem = TestProblem(message)
 

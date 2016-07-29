@@ -1,6 +1,7 @@
 package net.shrine.status
 
 import com.typesafe.config.ConfigFactory
+import net.shrine.problem.TurnOffProblemConnector
 import net.shrine.util.ShouldMatchersForJUnit
 import org.json4s.{DefaultFormats, Formats}
 import org.junit.Test
@@ -14,7 +15,7 @@ import scala.collection.immutable.Map
   * @author david 
   * @since 12/2/15
   */
-class StatusJaxrsTest extends ShouldMatchersForJUnit {
+class StatusJaxrsTest extends ShouldMatchersForJUnit with TurnOffProblemConnector {
 
   implicit def json4sFormats: Formats = DefaultFormats
   val expectedConfig = ConfigFactory.load("shrine")

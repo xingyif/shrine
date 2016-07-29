@@ -18,17 +18,19 @@
             OptionsEndpoint:  'admin/status/options',
             ConfigEndpoint:   'admin/status/config',
             SummaryEndpoint:  'admin/status/summary',
-            HapyAllEndpoint:  'admin/happy/all'
+            ProblemEndpoint:  'admin/status/problems',
+            HappyAllEndpoint: 'admin/happy/all'
         };
 
 
         // -- public -- //
         return {
-            getOptions: getOptions,
-            getConfig:  getConfig,
-            getSummary: getSummary,
-            getHappyAll:getHappyAll,
-            cache:      cache
+            getOptions:  getOptions,
+            getConfig:   getConfig,
+            getSummary:  getSummary,
+            getProblems: getProblems,
+            getHappyAll: getHappyAll,
+            cache:       cache
         };
 
         /**
@@ -142,13 +144,24 @@
                 .then(parseJsonResult, onFail);
         }
 
+        /**
+         * //todo
+         * ProblemEndpoint:  'admin/status/problems',
+         * @returns {*}
+         */
+        function getProblems(n) {
+            var url = urlGetter(Config.ProblemEndpoint+'?offset='+n);
+            return h.get(url)
+                .then(parseJsonResult, onFail);
+        }
+
 
         /**
          *
          * @returns {*}
          */
         function getHappyAll() {
-            var url = urlGetter(Config.HapyAllEndpoint, '.xml')
+            var url = urlGetter(Config.HappyAllEndpoint, '.xml')
             return h.get(url)
                 .then(parseHappyAllResult, onFail);
         }

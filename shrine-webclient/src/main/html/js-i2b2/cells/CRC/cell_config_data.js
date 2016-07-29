@@ -8,6 +8,7 @@
 		"CRC_ctrlr_QryPanel.js",
 		"CRC_ctrlr_QryTool.js",
 		"CRC_ctrlr_QryStatus.js",
+		"CRC_ctrlr_QryResults.js",//BG
 		"CRC_sdx_QM.js",
 		"CRC_sdx_QI.js",
 		"CRC_sdx_PRC.js",
@@ -19,6 +20,9 @@
 		"CRC_view_History.js",
 		"CRC_view_QryTool.js",
 		"CRC_view_Status.js",
+		"CRC_view_Graphs.js",//BG
+		"CRC_view_QueryReport.js",//BG
+		"CRC_view_DownloadData.js",//BG
 		"CRC_view_modLabRange.js",
 		"i2b2_msgs.js"
 	],

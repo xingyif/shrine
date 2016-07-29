@@ -9,8 +9,9 @@ import net.shrine.authentication.NotAuthenticatedException
 import net.shrine.log.Loggable
 import net.shrine.problem.ProblemNotYetEncoded
 import net.shrine.protocol.{ErrorResponse, HandleableI2b2Request, I2b2RequestHandler, ResultOutputType, ShrineRequest}
-import net.shrine.qep.queries.{CouldNotRunDbIoActionException, QepDatabaseProblem}
+import net.shrine.qep.queries.QepDatabaseProblem
 import net.shrine.serialization.I2b2Marshaller
+import net.shrine.slick.CouldNotRunDbIoActionException
 import net.shrine.util.XmlUtil
 
 import scala.util.Try
