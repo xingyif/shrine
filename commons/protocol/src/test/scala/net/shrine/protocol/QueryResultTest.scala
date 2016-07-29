@@ -472,6 +472,7 @@ final class QueryResultTest extends ShouldMatchersForJUnit with XmlRoundTripper[
             <stamp>{testProblem.stamp.pretty}</stamp>
             <summary>{testProblem.summary}</summary>
             <description>{testProblem.description}</description>
+            <epoch>{testProblem.stamp.time}</epoch>
             {testProblem.detailsXml}
           </problem>
         </query_status_type>
