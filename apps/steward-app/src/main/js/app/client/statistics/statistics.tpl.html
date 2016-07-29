@@ -1,0 +1,61 @@
+<div>
+    <div class="col-sm-12 shrine-modal" style="margin-bottom: 50px;">
+            <fieldset>
+                <div class="col-sm-4">
+                    <label>
+                        Start Date:&nbsp;&nbsp;
+                    </label>
+                    <br/>
+                    <input type="text" readonly class="shrine-calendar-input"
+                           datepicker-popup="{{format}}"
+                           max-date="endDate"
+                           ng-model="startDate"
+                           is-open="startOpened"
+                           ng-required="true"
+                           close-text="Close"/>
+                    <button type="button"
+                            class="shrine-button"
+                            ng-click="openStart($event)">
+                        <i class="glyphicon glyphicon-calendar"></i>
+                    </button>
+                </div>
+
+                <div class="col-sm-4">
+
+                    <label>
+                        End Date:&nbsp;&nbsp;
+                    </label>
+                    <br/>
+                    <input type="text" readonly class="shrine-calendar-input"
+                           datepicker-popup="{{format}}"
+                           ng-model="endDate"
+                           min-date="startDate"
+                           is-open="endOpened"
+                           ng-required="true"
+                           close-text="Close"/>
+                    <button type="button"
+                            class="shrine-button"
+                                 ng-click="openEnd($event)">
+                        <i class="glyphicon glyphicon-calendar"></i>
+                    </button>
+
+                </div>
+            <div class="col-sm-4">
+                <br/>
+                <button type="submit"
+                        class="shrine-button shrine-submit"
+                        ng-disabled="!validateRange()"
+                        ng-click="addDateRange()">
+                    <span>APPLY RANGE</span>
+                    <i class="fa fa-chevron-right fa-2x"></i>
+                </button>
+            </div>
+        </fieldset>
+    </div>
+
+    <br/>
+    <topic-status></topic-status>
+    <br/>
+    <br/>
+    <query-counts></query-counts>
+</div>
