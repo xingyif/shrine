@@ -1,0 +1,27 @@
+<div>
+        <div class="col-sm-12">
+            <div>
+                <div>
+                    <span ng-if="topics.showStewardMenu">
+                        <steward-menu menu="topics.sortData">
+                        </steward-menu>
+                    </span>
+                    
+                    <div>
+                        <p>
+                            <topics-result 
+                                show-steward="{{topics.showStewardMenu}}"
+                                sort-data="topics.sortData"
+                                sort="topics.update(column)"
+                                topics="topics.topics"
+                                date-formatter="topics.dateFormatter(utc)",
+                                open="topics.openTopic(topic)",
+                                new="topics.createTopic()">
+                            </topics-result>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+

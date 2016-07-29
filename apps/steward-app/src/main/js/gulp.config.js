@@ -1,17 +1,17 @@
-    
+
 module.exports = function () {
     // -- dependencies -- //
     var wiredep = require('wiredep');
-    
-    var bowerJS = wiredep({devDependencies:true})['js'];//grab .js dev depenencies.
-    var bowerCSS = wiredep({devDependencies:true})['css'];
+
+    var bowerJS = wiredep({ devDependencies: true })['js'];//grab .js dev depenencies.
+    var bowerCSS = wiredep({ devDependencies: true })['css'];
     var bowerFnt = ['./bower_components/font-awesome/fonts/**/*'];
 
     // -- directories -- //
     var src = './app/';
     var clientDir = src + 'client/';
     var assets = src + 'assets/';
-    var build = './build/';
+    var build = '../resources/client/';
     var lintFiles = clientDir + '**/*.js';
     var srcFiles = clientDir + '**/!(*.spec)+(.js)';
     var moduleFiles = clientDir + '**/*.module.js';
@@ -35,14 +35,14 @@ module.exports = function () {
         cssFiles: [
             assets + '**/*.css'
         ],
-        assetFiles: [assets + '**/*',src + 'config/**/*'],
+        assetFiles: [assets + '**/*', src + 'config/**/*'],
         clientDir: clientDir,
         bower: {
             json: require('./bower.json'),
             directory: './bower_components/',
             ignorePath: '../..',
             jsFiles: bowerJS,
-             cssFiles: bowerCSS,
+            cssFiles: bowerCSS,
             fontFiles: bowerFnt
         }
     };
@@ -63,14 +63,14 @@ module.exports = function () {
 
     return config;
 
-    function getKarmaOptions () {
+    function getKarmaOptions() {
         var options = {
             files: config.bower.jsFiles.concat([moduleFiles, srcFiles, specFiles]),
             exclude: [],
             coverage: {
                 reporters: [
-                    {type: 'html', subdir: 'report-html'},
-                    {type: 'text-summary'} //outputs to console.
+                    { type: 'html', subdir: 'report-html' },
+                    { type: 'text-summary' } //outputs to console.
                 ]
             },
             preprocessors: {}

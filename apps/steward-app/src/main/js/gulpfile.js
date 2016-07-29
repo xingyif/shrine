@@ -34,7 +34,9 @@ gulp.task('clean-build', function () {
     var del = require('del');
     return del([
         config.buildDir + '**/*'
-    ]);
+    ], {
+        force: true
+    });
 });
 
 gulp.task('watch-src', function () {
@@ -46,7 +48,7 @@ gulp.task('build', function (callback) {
 });
 
 gulp.task('default', function (callback) {
-    $.sequence('build'/* todo, launch webserver and , 'webserver', 'watch-src'*/)(callback);
+    $.sequence('build')(callback);
 });
 
 gulp.task('build-index', function () {

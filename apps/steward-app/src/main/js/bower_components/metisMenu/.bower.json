@@ -41,6 +41,6 @@
     "commit": "ba21a8ea77bcecf8d23ec156ae8b2c0ae82167ba"
   },
   "_source": "https://github.com/onokumus/metisMenu.git",
-  "_target": "^2.5.2",
+  "_target": "v2.5.2",
   "_originalSource": "metisMenu"
 }
