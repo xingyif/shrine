@@ -233,7 +233,7 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
       val n = 20
       // TODO: Once Bamboo/Deploy is running Java 8, switch to using Math.floorMod
 
-      def floorDiv(x: Int, y: Int) {
+      def floorDiv(x: Int, y: Int): Int = {
         var r: Int = x / y
         if ((x ^ y) < 0 && (r * y != x)) r -= 1
         r
