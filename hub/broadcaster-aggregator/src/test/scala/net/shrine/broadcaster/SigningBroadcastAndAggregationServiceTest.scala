@@ -19,7 +19,7 @@ import net.shrine.protocol.SingleNodeResult
 import net.shrine.protocol.Timeout
 import net.shrine.crypto.SigningCertStrategy
 import net.shrine.broadcaster.dao.MockHubDao
-import net.shrine.problem.TestProblem
+import net.shrine.problem.{TestProblem, TurnOffProblemConnector}
 
 /**
  * @author clint
@@ -29,7 +29,10 @@ final class SigningBroadcastAndAggregationServiceTest extends ShouldMatchersForJ
   import scala.concurrent.duration._
   import MockBroadcasters._
 
-  private def result(description: Char) = Result(NodeId(description.toString), 1.second, ErrorResponse(TestProblem(summary = "blah blah blah")))
+  private def result(description: Char) = {
+    val problem: TestProblem = TestProblem(summary = "blah blah blah")
+    Result(NodeId(description.toString), 1.second, ErrorResponse(problem))
+  }
 
   private val results = "abcde".map(result)
 
@@ -64,7 +67,10 @@ final class SigningBroadcastAndAggregationServiceTest extends ShouldMatchersForJ
     val aggregatedResult = Await.result(broadcastService.sendAndAggregate(broadcastMessage, aggregator, true), 5.minutes)
 
     mockBroadcaster.messageParam.signature.isDefined should be(true)
-    
+
+    val testProblem = TestProblem(s"${results.size}")
+    //testProblem.stamp.time = aggregatedResult.
+
     aggregatedResult should equal(ErrorResponse(TestProblem(s"${results.size}")))
   }
 

@@ -122,11 +122,12 @@ case class Stamp(host:InetAddress,time:Long,source:ProblemSources.ProblemSource)
 object Stamp {
   //TODO: val dateFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS")?
   //TODO: Currently the stamp text is locale specific, which can change depending on the jre/computer running it...
-  def apply(source:ProblemSources.ProblemSource): Stamp = Stamp(InetAddress.getLocalHost,System.currentTimeMillis(),source)
+  def apply(source:ProblemSources.ProblemSource, timer: => Long): Stamp = Stamp(InetAddress.getLocalHost, timer,source)
 }
 
 abstract class AbstractProblem(source:ProblemSources.ProblemSource) extends Problem {
-  val stamp = Stamp(source)
+  def timer = System.currentTimeMillis
+  val stamp = Stamp(source, timer)
 }
 
 trait ProblemHandler {

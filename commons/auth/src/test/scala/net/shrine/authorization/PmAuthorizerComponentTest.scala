@@ -9,13 +9,14 @@ import net.shrine.protocol.AuthenticationInfo
 import net.shrine.protocol.Credential
 import net.shrine.util.XmlUtil
 import net.shrine.client.Poster
+import net.shrine.problem.TurnOffProblemConnector
 
 /**
  * @author clint
  * @since Apr 5, 2013
  */
 //noinspection UnitMethodIsParameterless,UnitMethodIsParameterless,EmptyParenMethodAccessedAsParameterless,ScalaUnnecessaryParentheses
-final class PmAuthorizerComponentTest extends ShouldMatchersForJUnit {
+final class PmAuthorizerComponentTest extends ShouldMatchersForJUnit with TurnOffProblemConnector {
   import PmAuthorizerComponentTest._
   
   import PmAuthorizerComponent._
