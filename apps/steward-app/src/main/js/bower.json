@@ -36,7 +36,9 @@
     "lodash": "v4.13.1",
     "angular-bootstrap": "v1.3.3",
     "Chart.js": "v2.1.6",
-    "x2js": "x2js#v1.2.0"
+    "x2js": "x2js#v1.2.0",
+    "ngAnimate": "*",
+    "angular-animate": "^1.5.8"
   },
   "devDependencies": {
     "angular-mocks": "v1.5.7",
