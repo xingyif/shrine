@@ -32,7 +32,7 @@ object Problems {
   val dataSource: DataSource = TestableDataSourceCreator.dataSource(config)
   lazy val db = {
     val db = Database.forDataSource(dataSource)
-    if (config.getBoolean("createTablesOnStart"))
+    if (config.hasPath("createTablesOnStart") && config.getBoolean("createTablesOnStart"))
       Await.ready(db.run(IOActions.createIfNotExists), FiniteDuration(3, SECONDS))
     db
   }
@@ -126,6 +126,7 @@ object Problems {
     * Entry point for interacting with the database. Runs IO actions.
     */
   object DatabaseConnector {
+    val p = Problems
     val IO = IOActions
     /**
       * Executes a series of IO actions as a single transactions
