@@ -1,8 +1,10 @@
 (function() {
     'use strict';
     
-    var dependencies = ['shrine.steward',
-            'ui.bootstrap',
+    var dependencies = [
+        'shrine.steward',
+        'ngAnimate',
+        'ui.bootstrap',
         'ui.bootstrap.modal'
     ];
 

@@ -18,6 +18,22 @@
                                 open="topics.openTopic(topic)",
                                 new="topics.createTopic()">
                             </topics-result>
+                            
+                             <div class="form-group text-center" ng-show="topics.sortData.length > topics.sortData.limit">
+                                <ul uib-pagination 
+                                    class="pagination-sm"
+                                    max-size="topics.sortData.limit"
+                                    boundary-link-numbers="true"
+                                    total-items="topics.sortData.length" 
+                                    ng-model="topics.sortData.pageIndex" 
+                                    ng-change="topics.onPageSelected()">
+                                </ul>
+                                <div class="col-sm-3">
+                                    <pre >Page: {{topics.sortData.pageIndex}} / {{topics.sortData.totalPages}}</pre>
+                                </div>
+                                
+                             </div>
+    
                         </p>
                     </div>
                 </div>

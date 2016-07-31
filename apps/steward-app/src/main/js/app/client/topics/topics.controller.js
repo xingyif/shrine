@@ -35,6 +35,7 @@
         topics.dateFormatter = service.dateFormatter;
         topics.openTopic = openTopic;
         topics.createTopic = createTopic;
+        topics.onPageSelected = onPageSelected;
 
         if (!topics.showStewardMenu) {
             modelUpdate = model.getResearcherTopics;
@@ -96,8 +97,8 @@
 
             mult = (sortData.pageIndex > 0) ? sortData.pageIndex - 1 : 0;
             sortData.skip = sortData.limit * mult;
-            // -- todo?:  refreshTopics(topics.sortData.skip, topics.sortData.limit);
-        };
+            refreshTopics(topics.sortData.skip, topics.sortData.limit);
+        }
 
         function refreshTopics() {
             var sortData = topics.sortData;
@@ -106,6 +107,8 @@
                 .then(function (data) {
                     topics.topics = data.topics;
                     topics.length = data.totalCount;
+                    sortData.length = data.totalCount;
+                    sortData.totalPages = Math.ceil(sortData.length / sortData.limit);
                 });
         }
 
