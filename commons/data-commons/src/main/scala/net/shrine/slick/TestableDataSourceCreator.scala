@@ -24,6 +24,8 @@ object TestableDataSourceCreator {
       val initialContext:InitialContext = new InitialContext()
       // check to see what part blows up
       val secondaryContext = initialContext.lookup("java:comp/env/")
+      for (a <- initialContext.getEnvironment.keys()) {println(s"key: $a")}
+      for (b <- initialContext.getEnvironment.elements()) {println(s"element: $b")}
       println(initialContext.getEnvironment)
       initialContext.lookup(jndiDataSourceName).asInstanceOf[DataSource]
 
