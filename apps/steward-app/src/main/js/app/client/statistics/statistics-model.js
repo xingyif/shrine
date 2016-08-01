@@ -1,5 +1,9 @@
-(function() {
+    (function() {
     'use strict';
+
+    angular
+        .module('shrine.steward.statistics')
+        .factory('StatisticsModel', StatisticsModel);
 
     StatisticsModel.$inject = ['$http','StewardService'];
     function StatisticsModel($http, StewardService) {

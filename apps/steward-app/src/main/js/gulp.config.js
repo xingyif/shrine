@@ -5,7 +5,10 @@ module.exports = function () {
 
     var bowerJS = wiredep({ devDependencies: true })['js'];//grab .js dev depenencies.
     var bowerCSS = wiredep({ devDependencies: true })['css'];
-    var bowerFnt = ['./bower_components/font-awesome/fonts/**/*'];
+    var bowerFnt = [
+            './bower_components/font-awesome/fonts/**/*', 
+            './bower_components/bootstrap/dist/**/*'
+        ];
 
     // -- directories -- //
     var src = './app/';
