@@ -1,7 +1,8 @@
 package net.shrine.slick
 
 import java.io.PrintWriter
-import java.sql.{DriverManager, Connection}
+import java.sql.{Connection, DriverManager}
+import java.util.function.BiConsumer
 import java.util.logging.Logger
 import javax.naming.InitialContext
 import javax.sql.DataSource
@@ -21,7 +22,6 @@ object TestableDataSourceCreator {
     if(dataSourceFrom == "JNDI") {
       val jndiDataSourceName = config.getString("jndiDataSourceName")
       val initialContext:InitialContext = new InitialContext()
-
       initialContext.lookup(jndiDataSourceName).asInstanceOf[DataSource]
 
     }

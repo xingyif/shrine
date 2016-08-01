@@ -10,7 +10,7 @@ import net.shrine.config.ConfigSource
   * @since 7/22/16
   */
 object ProblemConfigSource extends ConfigSource {
-  override val configName: String = "problem"
+  override val configName: String = "dashboard"
 
   // Makes it so constructing a problem in this context won't log it to the connector
   // Does not stop you from constructing the connector and using it manually
