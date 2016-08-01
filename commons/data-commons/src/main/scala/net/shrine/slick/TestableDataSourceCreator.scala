@@ -24,7 +24,7 @@ object TestableDataSourceCreator {
       val initialContext:InitialContext = new InitialContext()
       // check to see what part blows up
       val secondaryContext = initialContext.lookup("java:comp/env/").asInstanceOf[Context]
-      val printKeyValues = (a: java.util.Enumeration[_]) => while (a.hasMoreElements) { println(a) }
+      val printKeyValues = (a: java.util.Enumeration[_]) => while (a.hasMoreElements) { println(a.nextElement()) }
       println("Seconday keys:")
       printKeyValues(secondaryContext.getEnvironment.keys())
       println("Secondary values")
