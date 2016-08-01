@@ -249,7 +249,9 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
         // todo: Figure out logging
         0
       }
-      val db = Problems.DatabaseConnector
+
+      val p = Problems
+      val db = p.DatabaseConnector
       val timeout: Duration = new FiniteDuration(15, SECONDS)
       val problemsAndSize: (Seq[ProblemDigest], Int) = db.runBlocking(db.IO.sizeAndProblemDigest(n, offset))(timeout)
       complete(problemsToJsonString(problemsAndSize._1, problemsAndSize._2, offset, n))

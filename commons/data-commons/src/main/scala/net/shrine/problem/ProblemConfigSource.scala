@@ -11,8 +11,8 @@ import net.shrine.config.ConfigSource
   */
 object ProblemConfigSource extends ConfigSource {
   override val configName: String = "problem"
+
+  // Makes it so constructing a problem in this context won't log it to the connector
+  // Does not stop you from constructing the connector and using it manually
   var turnOffConnector = false
-  override def config = {
-    atomicConfig.config.withValue("turnOffConnector", ConfigValueFactory.fromAnyRef(turnOffConnector))
-  }
 }

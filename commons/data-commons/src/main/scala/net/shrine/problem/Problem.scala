@@ -47,7 +47,7 @@ trait Problem extends DelayedInit {
     code
     if (!ProblemConfigSource.turnOffConnector) {
       val problem = Problems
-      Problems.DatabaseConnector.insertProblem(toDigest)
+      problem.DatabaseConnector.insertProblem(toDigest)
     }
   }
 
