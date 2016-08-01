@@ -22,6 +22,7 @@ object TestableDataSourceCreator {
     if(dataSourceFrom == "JNDI") {
       val jndiDataSourceName = config.getString("jndiDataSourceName")
       val initialContext:InitialContext = new InitialContext()
+      println(initialContext.getEnvironment)
       initialContext.lookup(jndiDataSourceName).asInstanceOf[DataSource]
 
     }
