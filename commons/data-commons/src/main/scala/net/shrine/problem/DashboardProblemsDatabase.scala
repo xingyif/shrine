@@ -32,8 +32,13 @@ object Problems {
   val dataSource: DataSource = TestableDataSourceCreator.dataSource(config)
   lazy val db = {
     val db = Database.forDataSource(dataSource)
+    val problems = Seq(
+      ProblemDigest("MJPG", "01:01:01", "summary here", "description here"     , <details>uh not sure</details>     , 2),
+      ProblemDigest("wewu", "01:02:01", "coffee spill", "coffee everywhere"    , <details>He chose decaf</details>  , 1),
+      ProblemDigest("wuwu", "02:01:01", "squirrel"    , "chewed all the cables", <details>Like ALL of them</details>, 0),
+      ProblemDigest("code", "10:01:02", "such summary", "such description"     , <details>Wow</details>             , 3))
     if (config.hasPath("createTablesOnStart") && config.getBoolean("createTablesOnStart"))
-      Await.ready(db.run(IOActions.createIfNotExists), FiniteDuration(3, SECONDS))
+      Await.ready(db.run(IOActions.createIfNotExists >> (Queries ++= problems)), FiniteDuration(3, SECONDS))
     db
   }
 

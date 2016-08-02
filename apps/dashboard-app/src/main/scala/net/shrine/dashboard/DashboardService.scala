@@ -222,12 +222,8 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
   // table based view, can see N problems at a time. Front end sends how many problems that they want
   // to skip, and it will take N the 'nearest N' ie with n = 20, 0-19 -> 20, 20-39 -> 20-40
   lazy val getProblems:Route = {
-    val formats = DefaultFormats + new NodeSeqSerializer
 
-    def problemsToJsonString(problems: Seq[ProblemDigest], numProblems: Int, offset: Int, n: Int) = {
-      // where size is the total number of problems in the database.
-      s"""{"size":$numProblems,"problems":${write(problems)(formats)},"offset":$offset,"n":$n}"""
-    }
+    val formats = DefaultFormats + new NodeSeqSerializer
 
     parameter("offset" ? "0") { offsetString =>
       val n = 20
@@ -254,7 +250,9 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
       val db = p.DatabaseConnector
       val timeout: Duration = new FiniteDuration(15, SECONDS)
       val problemsAndSize: (Seq[ProblemDigest], Int) = db.runBlocking(db.IO.sizeAndProblemDigest(n, offset))(timeout)
-      complete(problemsToJsonString(problemsAndSize._1, problemsAndSize._2, offset, n))
+      val response = ProblemResponse(problemsAndSize._2, offset, n, problemsAndSize._1)
+      //todo: Find a better way to do this besdies writing and parsing the json response
+      complete(json4sParse(write(response)(formats)))
     }
   }
 
@@ -308,6 +306,8 @@ object DownstreamNode {
       yield DownstreamNode(k.split('.').last,v.split("\"").mkString(""))
   }
 }
+
+case class ProblemResponse(size: Int, offset: Int, n: Int, problems: Seq[ProblemDigest])
 
 //todo replace with the actual config, scrubbed of passwords
 case class ShrineConfig(isHub:Boolean,
