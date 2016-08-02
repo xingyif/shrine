@@ -3,7 +3,7 @@
 
   var server = 'http://localhost';
   var restBase = 'steward/';
-  var port = ':8080/';
+  var port = ':6443/';
   var baseUrl = server + port + restBase;
   var homeRoute = '/researcher/topics';
   var defaultRoute = '/login';

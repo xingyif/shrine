@@ -97,7 +97,7 @@
 
             mult = (sortData.pageIndex > 0) ? sortData.pageIndex - 1 : 0;
             sortData.skip = sortData.limit * mult;
-            refreshTopics(topics.sortData.skip, topics.sortData.limit);
+            refreshTopics(sortData.skip, sortData.limit);
         }
 
         function refreshTopics() {

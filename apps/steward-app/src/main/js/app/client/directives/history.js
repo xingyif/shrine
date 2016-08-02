@@ -114,17 +114,21 @@
          * Handler for when pagination page is changed.
          */
         function onPageSelected() {
+             var mult;
             var sortData = history.sortData;
-            var mult;
+           
             mult = (sortData.pageIndex > 0) ? sortData.pageIndex - 1 : 0;
             sortData.skip = sortData.limit * mult;
-            ///todo?   $scope.refreshHistory($scope.skip, $scope.limit);
+            refreshHistory(sortData.skip, sortData.limit);
         }
 
 
         function setViewData(result) {
+            var sortData = history.sortData;
             history.queries = result.queryRecords;
             history.length = result.totalCount;
+            sortData.length = result.totalCount;
+            sortData.totalPages = Math.ceil(sortData.length / sortData.limit);
         }
 
         /*
