@@ -525,9 +525,9 @@ case class QepProblemDigestRow(
 }
 
 case class QepDatabaseProblem(x:Exception) extends AbstractProblem(ProblemSources.Qep){
-  override val summary = "A problem encountered while using a database."
+  override lazy val summary = "A problem encountered while using a database."
 
-  override val throwable = Some(x)
+  override lazy val throwable = Some(x)
 
-  override val description = x.getMessage
+  override lazy val description = x.getMessage
 }

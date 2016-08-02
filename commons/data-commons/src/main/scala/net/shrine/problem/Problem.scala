@@ -27,7 +27,10 @@ trait Problem extends DelayedInit {
 
   def description:String
 
-  def exceptionXml(exception:Option[Throwable]): Option[Elem] = exception.map{x =>
+  def exceptionXml(exception:Option[Throwable]): Option[Elem] = {
+    println("Hello!")
+    println(exception)
+    exception.map{x =>
     <exception>
       <name>{x.getClass.getName}</name>
       <message>{x.getMessage}</message>
@@ -35,9 +38,9 @@ trait Problem extends DelayedInit {
         {x.getStackTrace.map(line => <line>{line}</line>)}{exceptionXml(Option(x.getCause)).getOrElse("")}
       </stacktrace>
     </exception>
-  }
+  }}
 
-  def throwableDetail = exceptionXml(throwable)
+  def throwableDetail: Option[Elem] = exceptionXml(throwable)
 
   def detailsXml: NodeSeq = NodeSeq.fromSeq(<details>{throwableDetail.getOrElse("")}</details>)
 
@@ -46,8 +49,10 @@ trait Problem extends DelayedInit {
   override def delayedInit(code: => Unit): Unit = {
     code
     if (!ProblemConfigSource.turnOffConnector) {
+      println(s"Yello! ${this.throwable}")
+      println(s"Red! ${this.summary}")
       val problem = Problems
-      problem.DatabaseConnector.insertProblem(toDigest)
+      problem.DatabaseConnector.insertProblem(this.toDigest)
     }
   }
 
@@ -127,9 +132,15 @@ object Stamp {
   def apply(source:ProblemSources.ProblemSource, timer: => Long): Stamp = Stamp(InetAddress.getLocalHost, timer,source)
 }
 
+/**
+  * An abstract problem to enable easy creation of Problems. Note that when overriding fields,
+  * you should only use def or lazy val, and not val.
+  * See: http://stackoverflow.com/questions/15346600/field-inside-object-which-extends-app-trait-is-set-to-null-why-is-that-so
+  * @param source
+  */
 abstract class AbstractProblem(source:ProblemSources.ProblemSource) extends Problem {
   def timer = System.currentTimeMillis
-  val stamp = Stamp(source, timer)
+  lazy val stamp = Stamp(source, timer)
 }
 
 trait ProblemHandler {

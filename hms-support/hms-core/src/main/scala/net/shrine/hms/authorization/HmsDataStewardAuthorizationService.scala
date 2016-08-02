@@ -83,7 +83,7 @@ object HmsDataStewardAuthorizationService {
 }
 
 case class HMSNotAuthenticatedProblem(authn: AuthenticationInfo) extends AbstractProblem(ProblemSources.Qep){
-  override val summary = s"Can not authenticate ${authn.domain}:${authn.username}."
+  override lazy val summary = s"Can not authenticate ${authn.domain}:${authn.username}."
 
-  override val description = s"Can not authenticate ${authn.domain}:${authn.username}."
+  override lazy val description = s"Can not authenticate ${authn.domain}:${authn.username}."
 }

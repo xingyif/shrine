@@ -2,7 +2,6 @@ package net.shrine.slick
 
 import java.io.PrintWriter
 import java.sql.{Connection, DriverManager}
-import java.util.function.BiConsumer
 import java.util.logging.Logger
 import javax.naming.{Context, InitialContext}
 import javax.sql.DataSource

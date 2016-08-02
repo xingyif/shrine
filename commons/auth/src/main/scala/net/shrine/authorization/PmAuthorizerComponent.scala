@@ -88,24 +88,24 @@ object PmAuthorizerComponent {
 }
 
 case class MissingRequiredRoles(projectId: String, neededRoles: Set[String], authn: AuthenticationInfo) extends AbstractProblem(ProblemSources.Qep) {
-  override val summary: String = s"User ${authn.domain}:${authn.username} is missing roles in project '$projectId'"
+  override lazy val summary: String = s"User ${authn.domain}:${authn.username} is missing roles in project '$projectId'"
 
-  override val description:String = s"User ${authn.domain}:${authn.username} does not have all the needed roles: ${neededRoles.map("'" + _ + "'").mkString(", ")} in the project '$projectId'"
+  override lazy val description:String = s"User ${authn.domain}:${authn.username} does not have all the needed roles: ${neededRoles.map("'" + _ + "'").mkString(", ")} in the project '$projectId'"
 }
 
 case class CouldNotReachPmCell(pmUrl:String,authn: AuthenticationInfo,x:Throwable) extends AbstractProblem(ProblemSources.Qep) {
-  override val throwable = Some(x)
-  override val summary: String = s"Could not reach PM cell."
-  override val description:String = s"Shrine encountered ${throwable.get} while attempting to reach the PM cell at $pmUrl for ${authn.domain}:${authn.username}."
+  override lazy val throwable = Some(x)
+  override lazy val summary: String = s"Could not reach PM cell."
+  override lazy val description:String = s"Shrine encountered ${throwable.get} while attempting to reach the PM cell at $pmUrl for ${authn.domain}:${authn.username}."
 }
 
 case class CouldNotInterpretResponseFromPmCell(pmUrl:String,authn: AuthenticationInfo,httpResponse: HttpResponse,x:Throwable) extends AbstractProblem(ProblemSources.Qep) {
-  override val throwable = Some(x)
+  override lazy val throwable = Some(x)
   override def summary: String = s"Could not interpret response from PM cell."
 
   override def description: String = s"Shrine could not interpret the response from the PM cell at ${pmUrl} for ${authn.domain}:${authn.username}: due to ${throwable.get}"
 
-  override val detailsXml = <details>
+  override lazy val detailsXml = <details>
                               Response is {httpResponse}
                               {throwableDetail.getOrElse("")}
                             </details>
