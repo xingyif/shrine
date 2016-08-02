@@ -20,7 +20,7 @@
         // -- public -- //
         topics.sortData = {
             sortDirection: 'ascending',
-            arrowClass: 'fa-caret-down',
+            arrowClass: 'fa-caret-up',
             column: 'id',
             pageIndex: service.viewConfig.index, // -- current page number --//
             range: service.viewConfig.range, // -- range of paging numbers at bottom --//
@@ -49,7 +49,7 @@
             var sortData = topics.sortData;
             sortData.state = service.states.state1; // -- pending, approved, rejected --//
             sortData.sortDirection = 'ascending';
-            sortData.arrowClass = 'fa-caret-down';
+            sortData.arrowClass = 'fa-caret-up';
             sortData.column = 'id';
             sortData.pageIndex = service.viewConfig.index; // -- current page number --//
             sortData.range = service.viewConfig.range; // -- range of paging numbers at bottom --//

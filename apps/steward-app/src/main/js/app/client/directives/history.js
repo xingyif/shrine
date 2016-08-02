@@ -35,7 +35,7 @@
         history.xmlFormatter = xmlFormatter;
         history.sortData = {
             sortDirection: 'ascending',
-            arrowClass: 'fa-caret-down',
+            arrowClass: 'fa-caret-up',
             column: 'date',
             pageIndex: service.viewConfig.index, // -- current page number --//
             range: service.viewConfig.range, // -- range of paging numbers at bottom --//
@@ -75,7 +75,7 @@
             // -- local vars -- //
             var sortData = history.sortData;
             sortData.sortDirection = 'ascending';
-            sortData.arrowClass = 'fa-caret-down';
+            sortData.arrowClass = 'fa-caret-up';
             sortData.column = 'date';
             sortData.pageIndex = service.viewConfig.index; // -- current page number --//
             sortData.range = service.viewConfig.range; // -- range of paging numbers at bottom --//
