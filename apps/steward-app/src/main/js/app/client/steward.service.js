@@ -121,6 +121,7 @@
         }
 
         function getUrl(restSegment, skip, limit, state, sortBy, sortDirection, minDate, maxDate) {
+            restSegment = restSegment || '';
             var url = getDeployUrl('steward') + restSegment +
                 getQueryString(skip, limit, state, sortBy, sortDirection, minDate, maxDate);
 
