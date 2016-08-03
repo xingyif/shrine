@@ -1,11 +1,12 @@
-(function() {
+(function () {
     'use strict';
-    
+
     var dependencies = [
         'shrine.steward',
         'ngAnimate',
         'ui.bootstrap',
-        'ui.bootstrap.modal'
+        'ui.bootstrap.modal',
+        'angular-loading-bar'
     ];
 
     angular

@@ -6,7 +6,8 @@
         'ngAnimate',
         'ui.bootstrap',
         'ui.bootstrap.modal',
-        'ui.bootstrap.datepicker'
+        'ui.bootstrap.datepicker',
+        'angular-loading-bar'
     ];
 
     angular.module('shrine.steward.statistics', dependencies);

@@ -13,9 +13,9 @@
         this.constants = constants;
 
         // -- provide steward service --//
-        get.$inject = ['CommonService'];
-        function get(CommonService) {
-            return new StewardService(CommonService, constants);
+        get.$inject = ['CommonService', '$location'];
+        function get(CommonService, $location) {
+            return new StewardService(CommonService, constants, $location);
         }
 
         /**
@@ -52,7 +52,7 @@
     /**
      * Steward Servcice.
      */
-    function StewardService(CommonService, constants) {
+    function StewardService(CommonService, constants, $location) {
 
         // -- private vars -- //
         var appTitle = null;
@@ -73,9 +73,15 @@
         this.getUrl = getUrl;
         this.isSteward = isSteward;
         this.setLoginSubscriber = setLoginSubscriber;
+        this.logoutUser = logoutUser;
 
         function setLoginSubscriber(subscriber) {
             loginSubscriber = subscriber;
+        }
+
+        function logoutUser() {
+            deleteAppUser();
+            $location.path('/login');
         }
 
         /**
