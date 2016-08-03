@@ -28,8 +28,6 @@ trait Problem extends DelayedInit {
   def description:String
 
   def exceptionXml(exception:Option[Throwable]): Option[Elem] = {
-    println("Hello!")
-    println(exception)
     exception.map{x =>
     <exception>
       <name>{x.getClass.getName}</name>
@@ -49,8 +47,6 @@ trait Problem extends DelayedInit {
   override def delayedInit(code: => Unit): Unit = {
     code
     if (!ProblemConfigSource.turnOffConnector) {
-      println(s"Yello! ${this.throwable}")
-      println(s"Red! ${this.summary}")
       val problem = Problems
       problem.DatabaseConnector.insertProblem(this.toDigest)
     }

@@ -223,26 +223,20 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
   // to skip, and it will take N the 'nearest N' ie with n = 20, 0-19 -> 20, 20-39 -> 20-40
   lazy val getProblems:Route = {
 
+    def floorMod(x: Int, y: Int) = {
+      x - (x % y)
+    }
+
     val formats = DefaultFormats + new NodeSeqSerializer
 
-    parameter("offset" ? "0") { offsetString =>
+    parameter("offset" ? "0") { offsetString: String =>
       val n = 20
       // TODO: Once Bamboo/Deploy is running Java 8, switch to using Math.floorMod
 
-      def floorDiv(x: Int, y: Int): Int = {
-        var r: Int = x / y
-        if ((x ^ y) < 0 && (r * y != x)) r -= 1
-        r
-      }
-
-      def floorMod(x: Int, y: Int): Int = {
-          val r: Int = x - floorDiv(x, y) * y
-          r
-      }
 
       // Try and grab the offset. If a number wasn't passed in, just default to 0
-      val offset = try { floorMod(offsetString.toInt, n) } catch { case a:java.lang.NumberFormatException =>
-        // todo: Figure out logging
+      val offset = try { floorMod(Math.max(0, offsetString.toInt), n) } catch { case a:java.lang.NumberFormatException =>
+        println(s"Could not parse problems GET request parameter, received $offsetString, threw $a")
         0
       }
 
@@ -251,7 +245,7 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
       val timeout: Duration = new FiniteDuration(15, SECONDS)
       val problemsAndSize: (Seq[ProblemDigest], Int) = db.runBlocking(db.IO.sizeAndProblemDigest(n, offset))(timeout)
       val response = ProblemResponse(problemsAndSize._2, offset, n, problemsAndSize._1)
-      //todo: Find a better way to do this besdies writing and parsing the json response
+      //todo: Find a better way to do this besides writing and parsing the json response
       complete(json4sParse(write(response)(formats)))
     }
   }
