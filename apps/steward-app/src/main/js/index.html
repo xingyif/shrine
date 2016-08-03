@@ -9,12 +9,12 @@
     <!-- bower:css -->
     <!-- endbower -->
 
-    
+
     <!-- inject:css -->
     <!-- endinject -->
 </head>
 
-<body class="main-app">
+<body class="main-app" style="display:none">
     <div ng-controller="StewardController as steward" ng-cloak>
         <nav class="navbar navbar-default navbar-static-top shrine-navbar" role="navigation" style="margin-bottom: 0">
 
@@ -101,7 +101,21 @@
 
     <!-- inject:js -->
     <!-- endinject -->
+    <script>
 
+        (function () {
+            'use strict';
+            
+            $( document )
+                .ready(setContentVisible);
+
+            function setContentVisible() {
+                $('.main-app').show();
+            }
+        })();
+
+    </script>
 </body>
+
 
 </html>
