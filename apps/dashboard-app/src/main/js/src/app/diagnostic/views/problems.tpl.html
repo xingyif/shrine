@@ -1,0 +1,82 @@
+<div>
+    <table class="table table-striped">
+        <colgroup>
+            <col style="width:27%">
+            <col>
+            <col>
+            <col>
+        </colgroup>
+
+        <thead>
+        <tr>
+            <td colspan="4">
+                Problems: Total = {{vm.probsSize}}
+            </td>
+        </tr>
+        <tr>
+            <td data-width="25%">
+                Codec
+            </td>
+            <td>
+                Time Logged
+            </td>
+            <td>
+                Summary
+            </td>
+            <td>
+                Description
+            </td>
+        </tr>
+        </thead>
+
+        <tbody>
+        <tr ng-repeat-start="problem in vm.problems track by $index"
+            ng-click="problem.showDetails = !problem.showDetails"
+            style="cursor: pointer;">
+            <td><pre style="background: inherit;border: none;text-decoration: underline;"
+                    ><a href="{{vm.url}}{{problem.codec}}" target="_blank">{{vm.formatCodec(problem.codec)}}</a></pre>
+            </td>
+            <td>
+                {{problem.stampText}}
+            </td>
+            <td>
+                {{problem.summary}}
+            </td>
+            <td>
+                {{problem.description}}
+            </td>
+        </tr>
+        <tr ng-repeat-end>
+            <td colspan="4" ng-show="problem.showDetails">
+                <pre>
+                    {{vm.stringify(problem.detailsXml)}}
+                </pre>
+            </td>
+        </tr>
+        <thead>
+        <tr>
+            <td colspan="4" style="width:100%;text-align:center">
+                <h5 style="display:inline-block;float:left;font-weight: bolder">
+                        <span style="cursor:pointer" ng-click="vm.newPage(vm.probsOffset - vm.probsN)">
+                            &#8592;
+                        </span>
+                        |
+                        <span style="cursor:pointer" ng-click="vm.newPage(vm.probsOffset + vm.probsN)">
+                            &#8594;
+                        </span>
+                </h5>
+                <h5 style="display:inline-block">
+                    {{vm.floorMod(vm.probsOffset, vm.probsN) + 1}}-{{vm.min(vm.probsSize, vm.floorMod(vm.probsOffset, vm.probsN) + vm.probsN)}} / {{vm.probsSize}}
+                </h5>
+                <form style="display:inline-block;float:right" ng-submit="vm.newPage(vm.numCheck(vm.num))">
+                    <label>
+                        Go to Problem:
+                        <input type="number" name="vm.num" ng-model="vm.num">
+                    </label>
+                </form>
+            </td>
+        </tr>
+        </thead>
+        </tbody>
+    </table>
+</div>

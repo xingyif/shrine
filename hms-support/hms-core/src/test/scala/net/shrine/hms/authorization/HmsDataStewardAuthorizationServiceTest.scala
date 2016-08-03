@@ -2,6 +2,7 @@ package net.shrine.hms.authorization
 
 import net.shrine.authentication.{AuthenticationResult, Authenticator}
 import net.shrine.authorization.AuthorizationResult.{Authorized, NotAuthorized}
+import net.shrine.problem.TurnOffProblemConnector
 import net.shrine.protocol.{ApprovedTopic, AuthenticationInfo, Credential, ErrorResponse, ReadApprovedQueryTopicsRequest, ReadApprovedQueryTopicsResponse, RunQueryRequest}
 import net.shrine.protocol.query.{QueryDefinition, Term}
 import net.shrine.util.ShouldMatchersForJUnit
@@ -17,7 +18,7 @@ import org.junit.Test
  *       licensed as Lgpl Open Source
  * @see http://www.gnu.org/licenses/lgpl.html
  */
-final class HmsDataStewardAuthorizationServiceTest extends ShouldMatchersForJUnit {
+final class HmsDataStewardAuthorizationServiceTest extends ShouldMatchersForJUnit with TurnOffProblemConnector {
   @Test
   def testIdentifyEcommonsUsername(): Unit = {
     import AuthenticationResult._

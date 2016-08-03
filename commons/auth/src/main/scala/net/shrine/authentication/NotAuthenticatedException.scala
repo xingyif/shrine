@@ -1,7 +1,7 @@
 package net.shrine.authentication
 
 import net.shrine.authentication.AuthenticationResult.NotAuthenticated
-import net.shrine.problem.{ProblemSources, AbstractProblem}
+import net.shrine.problem.{AbstractProblem, ProblemSources}
 
 import scala.xml.NodeSeq
 
@@ -22,13 +22,13 @@ object NotAuthenticatedException {
 }
 
 case class NotAuthenticatedProblem(nax:NotAuthenticatedException) extends AbstractProblem(ProblemSources.Qep){
-  override val summary = s"Can not authenticate ${nax.domain}:${nax.username}."
+  override lazy val summary = s"Can not authenticate ${nax.domain}:${nax.username}."
 
-  override val throwable = Some(nax)
+  override lazy val throwable = Some(nax)
 
-  override val description = s"Can not authenticate ${nax.domain}:${nax.username}. ${nax.getLocalizedMessage}"
+  override lazy val description = s"Can not authenticate ${nax.domain}:${nax.username}. ${nax.getLocalizedMessage}"
 
-  override val detailsXml: NodeSeq = NodeSeq.fromSeq(
+  override lazy val detailsXml: NodeSeq = NodeSeq.fromSeq(
     <details>
       {throwableDetail.getOrElse("")}
     </details>

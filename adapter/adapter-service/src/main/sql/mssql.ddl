@@ -2,3 +2,4 @@ create table "queriesReceived" ("shrineNodeId" TEXT NOT NULL,"userName" TEXT NOT
 create table "executionsStarted" ("networkQueryId" BIGINT NOT NULL,"queryName" TEXT NOT NULL,"timeExecutionStarted" BIGINT NOT NULL);
 create table "executionsCompleted" ("networkQueryId" BIGINT NOT NULL,"replyId" BIGINT NOT NULL,"queryName" TEXT NOT NULL,"timeExecutionCompleted" BIGINT NOT NULL);
 create table "resultsSent" ("networkQueryId" BIGINT NOT NULL,"replyId" BIGINT NOT NULL,"queryName" TEXT NOT NULL,"timeResultsSent" BIGINT NOT NULL);
+create table "problems" ("id" BIGINT NOT NULL, "codec" TEXT NOT NULL,"stampText" TEXT NOT NULL,"summary" TEXT NOT NULL,"description" TEXT NOT NULL,"detailsXml" TEXT NOT NULL,"epoch" BIGINT NOT NULL);

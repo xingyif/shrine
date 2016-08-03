@@ -1,19 +1,21 @@
 package net.shrine.protocol
 
-import net.shrine.problem.TestProblem
 import net.shrine.util.ShouldMatchersForJUnit
 import org.junit.Test
+
 import scala.xml.NodeSeq
 import net.shrine.protocol.query.QueryDefinition
 import net.shrine.protocol.query.Term
 import net.shrine.util.XmlDateHelper
 import java.math.BigInteger
 
+import net.shrine.problem.{TestProblem, TurnOffProblemConnector}
+
 /**
  * @author clint
  * @since Feb 24, 2014
  */
-final class ShrineMessageTest extends ShouldMatchersForJUnit {
+final class ShrineMessageTest extends ShouldMatchersForJUnit with TurnOffProblemConnector {
   @Test
   def testRoundTrips {
     val projectId = "salkdjksaljdkla"

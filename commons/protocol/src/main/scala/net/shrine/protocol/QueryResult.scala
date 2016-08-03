@@ -1,13 +1,15 @@
 package net.shrine.protocol
 
 import javax.xml.datatype.XMLGregorianCalendar
+
 import net.shrine.log.Loggable
-import net.shrine.problem.{ProblemSources, AbstractProblem, Problem, ProblemDigest}
+import net.shrine.problem.{AbstractProblem, Problem, ProblemDigest, ProblemSources}
 import net.shrine.protocol.QueryResult.StatusType
 
 import scala.xml.NodeSeq
-import net.shrine.util.{Tries, XmlUtil, NodeSeqEnrichments, SEnum, XmlDateHelper, OptionEnrichments}
-import net.shrine.serialization.{ I2b2Marshaller, XmlMarshaller }
+import net.shrine.util.{NodeSeqEnrichments, OptionEnrichments, SEnum, Tries, XmlDateHelper, XmlUtil}
+import net.shrine.serialization.{I2b2Marshaller, XmlMarshaller}
+
 import scala.util.Try
 
 /**
@@ -371,8 +373,10 @@ object QueryResult {
    */
   //todo remove and replace with real Problems
   def errorResult(description:Option[String], statusMessage:String, codec:String,stampText:String, summary:String, digestDescription:String,detailsXml:NodeSeq): QueryResult = {
-
-    val problemDigest = ProblemDigest(codec,stampText,summary,digestDescription,detailsXml)
+    // This would require parsing the stamp text to change, and without a standard locale that's nigh impossible.
+    // If this is replaced with real problems, then this can be addressed then. For now, passing on zero is the best bet.
+    // TODO: REFACTOR SQUERYL ERRORS TO USE REAL PROBLEMS
+    val problemDigest = ProblemDigest(codec,stampText,summary,digestDescription,detailsXml,0)
 
     QueryResult(
       resultId = 0L,
@@ -389,9 +393,9 @@ object QueryResult {
 }
 
 case class ErrorStatusFromCrc(messageFromCrC:Option[String], xmlResponseFromCrc: String) extends AbstractProblem(ProblemSources.Adapter) {
-  override val summary: String = "The I2B2 CRC reported an internal error."
-  override val description:String = s"The I2B2 CRC responded with status type ERROR ${messageFromCrC.fold(" but no message")(message => s"and a message of '$message'")}"
-  override val detailsXml = <details>
+  override lazy val summary: String = "The I2B2 CRC reported an internal error."
+  override lazy val description:String = s"The I2B2 CRC responded with status type ERROR ${messageFromCrC.fold(" but no message")(message => s"and a message of '$message'")}"
+  override lazy val detailsXml = <details>
     CRC's Response is {xmlResponseFromCrc}
   </details>
 }

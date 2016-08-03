@@ -1,7 +1,7 @@
 package net.shrine.adapter.components
 
 import net.shrine.adapter.dao.AdapterDao
-import net.shrine.problem.{ProblemSources, AbstractProblem}
+import net.shrine.problem.{AbstractProblem, ProblemSources}
 import net.shrine.protocol.ShrineResponse
 import net.shrine.protocol.ReadQueryDefinitionRequest
 import net.shrine.protocol.ReadQueryDefinitionResponse
@@ -34,6 +34,6 @@ final case class QueryDefinitions[Req <: AbstractReadQueryDefinitionRequest](dao
 }
 
 case class QueryNotInDatabase(request:AbstractReadQueryDefinitionRequest) extends AbstractProblem(ProblemSources.Hub) {
-  override val summary: String = s"Couldn't find query definition."
-  override val description:String = s"The query definition with network id: ${request.queryId} does not exist at this site."
+  override lazy val summary: String = s"Couldn't find query definition."
+  override lazy val description:String = s"The query definition with network id: ${request.queryId} does not exist at this site."
 }

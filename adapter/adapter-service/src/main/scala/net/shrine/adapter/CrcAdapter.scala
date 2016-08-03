@@ -1,13 +1,14 @@
 package net.shrine.adapter
 
-import net.shrine.problem.{ProblemSources, AbstractProblem}
 import org.xml.sax.SAXParseException
 
 import scala.xml.NodeSeq
 import scala.xml.XML
-import net.shrine.protocol.{HiveCredentials, AuthenticationInfo, BroadcastMessage, Credential, ShrineRequest, ShrineResponse, TranslatableRequest, BaseShrineRequest, ErrorResponse, BaseShrineResponse}
+import net.shrine.protocol.{AuthenticationInfo, BaseShrineRequest, BaseShrineResponse, BroadcastMessage, Credential, ErrorResponse, HiveCredentials, ShrineRequest, ShrineResponse, TranslatableRequest}
 import net.shrine.util.XmlDateHelper
 import net.shrine.client.Poster
+import net.shrine.problem.{AbstractProblem, ProblemSources}
+
 import scala.util.Try
 import scala.util.control.NonFatal
 
@@ -87,20 +88,20 @@ abstract class CrcAdapter[T <: ShrineRequest, V <: ShrineResponse](
 }
 
 case class CannotParseXmlFromCrc(saxx:SAXParseException,xmlResponseFromCrc: String) extends AbstractProblem(ProblemSources.Adapter) {
-  override val throwable = Some(saxx)
-  override val summary: String = "Could not parse response from CRC."
-  override val description:String = s"${saxx.getMessage} while parsing the response from the CRC."
-  override val detailsXml = <details>
+  override lazy val throwable = Some(saxx)
+  override lazy val summary: String = "Could not parse response from CRC."
+  override lazy val description:String = s"${saxx.getMessage} while parsing the response from the CRC."
+  override lazy val detailsXml = <details>
     {throwableDetail.getOrElse("")}
     Response is {xmlResponseFromCrc}
   </details>
 }
 
 case class ExceptionWhileLoadingCrcResponse(t:Throwable,xmlResponseFromCrc: String) extends AbstractProblem(ProblemSources.Adapter) {
-  override val throwable = Some(t)
-  override val summary: String = "Unanticipated exception with response from CRC."
-  override val description:String = s"${t.getMessage} while parsing the response from the CRC."
-  override val detailsXml = <details>
+  override lazy val throwable = Some(t)
+  override lazy val summary: String = "Unanticipated exception with response from CRC."
+  override lazy val description:String = s"${t.getMessage} while parsing the response from the CRC."
+  override lazy val detailsXml = <details>
     {throwableDetail.getOrElse("")}
     Response is {xmlResponseFromCrc}
   </details>

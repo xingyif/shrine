@@ -18,15 +18,20 @@ $hrine.EnhancedError =
          */
         function simulateI2b2Obj() {
 
-            var self = {},
-                errorObject = {
-                    summary:     "SHRINE Failed to Start",
-                    description: "The SHRINE software is not running at the queried" +
-                    " site. This error must be corrected at the queried site.Check network status or contact your local SHRINE administrator. For faster assistance, expand this window and provide all text below this line to your local SHRINE administrator.",
-                    details:     "There is a fatal syntax error in the remote site's" +
-                    " shrine.conf or another .conf file. The remote site admin should check to make sure that there are no stray/missing quotes or brackets, and that URLs are entered correctly.",
-                    codec:       ""
-                };
+            var self = {};
+            var errorObject = {
+                summary:     "SHRINE Failed to Start",
+
+                description: "The SHRINE software is not running at the queried site. This error must be corrected at the queried site." +
+                             "Check network status or contact your local SHRINE administrator. " +
+                             "For faster assistance, expand this window and provide all text below this line to your local SHRINE administrator.",
+
+                details:     "There is a fatal syntax error in the remote site's shrine.conf or another .conf file. " +
+                             "The remote site admin should check to make sure that there are no stray/missing quotes or brackets, " +
+                             "and that URLs are entered correctly.",
+
+                codec:       ""
+            };
 
             self.errorObject = errorObject;
 
@@ -107,7 +112,7 @@ $hrine.EnhancedError =
              */
             function getRetractedHtml () {
 
-                var wikiBaseUrl = (i2b2.hive.cfg.wikiBaseUrl || 'https://open.med.harvard.edu/wiki/display/SHRINE/');
+                var wikiBaseUrl = (cei2b2.hive.cfg.wikiBaseUrl || 'https://open.med.harvard.edu/wiki/display/SHRINE/');
 
                 if(wikiBaseUrl.lastIndexOf('/') !== wikiBaseUrl.length -1){
                     wikiBaseUrl += '/';
@@ -210,10 +215,10 @@ $hrine.EnhancedError =
          * @returns {{exception: {}}}
          */
         EnhancedError.parseProblem = function (qriNode) {
-            var details,
-                problem = {
+            var details;
+            var problem = {
                     exception: {}
-                };
+            };
 
             problem.codec       = grabXmlNodeData(qriNode, 'descendant-or-self::query_status_type/problem/codec');
             problem.summary     = grabXmlNodeData(qriNode, 'descendant-or-self::query_status_type/problem/summary');

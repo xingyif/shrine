@@ -1,7 +1,7 @@
 package net.shrine.adapter.client
 
-import java.net.{URL, SocketTimeoutException}
-import net.shrine.problem.{ProblemNotYetEncoded, ProblemSources, AbstractProblem}
+import java.net.{SocketTimeoutException, URL}
+
 import org.xml.sax.SAXParseException
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -12,11 +12,13 @@ import scala.concurrent.duration.DurationInt
 import scala.util.control.NonFatal
 import scala.xml.{NodeSeq, XML}
 import com.sun.jersey.api.client.ClientHandlerException
-import net.shrine.client.{HttpResponse, TimeoutException, Poster}
+import net.shrine.client.{HttpResponse, Poster, TimeoutException}
+import net.shrine.problem.{AbstractProblem, ProblemNotYetEncoded, ProblemSources}
 import net.shrine.protocol.BroadcastMessage
 import net.shrine.protocol.ErrorResponse
 import net.shrine.protocol.NodeId
 import net.shrine.protocol.Result
+
 import scala.util.{Failure, Success, Try}
 import net.shrine.protocol.ResultOutputType
 

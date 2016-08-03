@@ -9,15 +9,19 @@ import net.shrine.i2b2.protocol.pm.User
 import net.shrine.status.protocol.{Config => StatusProtocolConfig}
 import net.shrine.dashboard.httpclient.HttpClientDirectives.{forwardUnmatchedPath, requestUriThenRoute}
 import net.shrine.log.Loggable
+import net.shrine.problem.{ProblemDigest, Problems}
+import net.shrine.serialization.NodeSeqSerializer
 import shapeless.HNil
 import spray.http.{HttpRequest, HttpResponse, StatusCodes, Uri}
 import spray.httpx.Json4sSupport
 import spray.routing.directives.LogEntry
-import spray.routing.{AuthenticationFailedRejection, Directive0, HttpService, Rejected, Route, RouteConcatenation}
+import spray.routing._
 import org.json4s.{DefaultFormats, Formats}
 import org.json4s.native.JsonMethods.{parse => json4sParse}
+import org.json4s.native.Serialization._
 
 import scala.collection.immutable.Iterable
+import scala.concurrent.duration.{Duration, FiniteDuration, SECONDS}
 import scala.concurrent.ExecutionContext.Implicits.global
 
 /**
@@ -172,7 +176,8 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
     pathPrefix("config"){getConfig}~
     pathPrefix("classpath"){getClasspath}~
     pathPrefix("options"){getOptionalParts}~  //todo rename path to optionalParts
-    pathPrefix("summary"){getSummary}
+    pathPrefix("summary"){getSummary}~
+    pathPrefix("problems"){getProblems}
   }
 
   val statusBaseUrl = DashboardConfigSource.config.getString("shrine.dashboard.statusBaseUrl")
@@ -212,6 +217,37 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
 
   lazy val getSummary:Route = {
     requestUriThenRoute(statusBaseUrl + "/summary")
+  }
+
+  // table based view, can see N problems at a time. Front end sends how many problems that they want
+  // to skip, and it will take N the 'nearest N' ie with n = 20, 0-19 -> 20, 20-39 -> 20-40
+  lazy val getProblems:Route = {
+
+    def floorMod(x: Int, y: Int) = {
+      x - (x % y)
+    }
+
+    val formats = DefaultFormats + new NodeSeqSerializer
+
+    parameter("offset" ? "0") { offsetString: String =>
+      val n = 20
+      // TODO: Once Bamboo/Deploy is running Java 8, switch to using Math.floorMod
+
+
+      // Try and grab the offset. If a number wasn't passed in, just default to 0
+      val offset = try { floorMod(Math.max(0, offsetString.toInt), n) } catch { case a:java.lang.NumberFormatException =>
+        println(s"Could not parse problems GET request parameter, received $offsetString, threw $a")
+        0
+      }
+
+      val p = Problems
+      val db = p.DatabaseConnector
+      val timeout: Duration = new FiniteDuration(15, SECONDS)
+      val problemsAndSize: (Seq[ProblemDigest], Int) = db.runBlocking(db.IO.sizeAndProblemDigest(n, offset))(timeout)
+      val response = ProblemResponse(problemsAndSize._2, offset, n, problemsAndSize._1)
+      //todo: Find a better way to do this besides writing and parsing the json response
+      complete(json4sParse(write(response)(formats)))
+    }
   }
 
 }
@@ -264,6 +300,8 @@ object DownstreamNode {
       yield DownstreamNode(k.split('.').last,v.split("\"").mkString(""))
   }
 }
+
+case class ProblemResponse(size: Int, offset: Int, n: Int, problems: Seq[ProblemDigest])
 
 //todo replace with the actual config, scrubbed of passwords
 case class ShrineConfig(isHub:Boolean,

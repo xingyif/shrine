@@ -1,6 +1,7 @@
 package net.shrine.protocol
 
 import junit.framework.TestCase
+import net.shrine.problem.TurnOffProblemConnector
 import net.shrine.util.ShouldMatchersForJUnit
 import org.junit.Test
 
@@ -8,7 +9,7 @@ import org.junit.Test
  * @author clint
  * @date Apr 30, 2013
  */
-final class NonI2b2ableResponseTest extends TestCase with ShouldMatchersForJUnit {
+final class NonI2b2ableResponseTest extends TestCase with ShouldMatchersForJUnit with TurnOffProblemConnector {
   object TestResponse extends ShrineResponse with NonI2b2ableResponse {
     def messageBody = i2b2MessageBody
     

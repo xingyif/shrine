@@ -1,6 +1,6 @@
 package net.shrine.protocol
 
-import net.shrine.problem.{ProblemSources, AbstractProblem}
+import net.shrine.problem.{AbstractProblem, ProblemSources}
 
 import scala.xml.NodeSeq
 

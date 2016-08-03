@@ -1,7 +1,7 @@
 package net.shrine.aggregation
 
-import net.shrine.aggregation.BasicAggregator.{Invalid, Error, Valid}
-import net.shrine.problem.{ProblemSources, AbstractProblem}
+import net.shrine.aggregation.BasicAggregator.{Error, Invalid, Valid}
+import net.shrine.problem.{AbstractProblem, ProblemSources}
 import net.shrine.protocol.ErrorResponse
 import net.shrine.protocol.BaseShrineResponse
 
@@ -37,7 +37,7 @@ abstract class IgnoresErrorsAggregator[T <: BaseShrineResponse : Manifest] exten
 }
 
 case class NoValidResponsesToAggregate() extends AbstractProblem(ProblemSources.Hub) {
-  override val summary: String = "No valid responses to aggregate."
+  override lazy val summary: String = "No valid responses to aggregate."
 
-  override val description:String = "The hub received no valid responses to aggregate."
+  override lazy val description:String = "The hub received no valid responses to aggregate."
 }
