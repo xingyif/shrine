@@ -58,12 +58,21 @@
     </table>
 
     <div class="form-group text-center" ng-show="history.sortData.length > history.sortData.limit">
-        <ul uib-pagination class="pagination-sm" items-per-page="history.sortData.limit" boundary-link-numbers="true" total-items="history.sortData.length"
-            ng-model="history.sortData.pageIndex" ng-change="history.onPageSelected()">
+        <ul uib-pagination class="pagination-sm" 
+        items-per-page="history.sortData.limit" 
+        boundary-links="true"
+        previous-text="&lsaquo;"
+                    next-text="&rsaquo;"
+                    first-text="&laquo;"
+                    last-text="&raquo;" 
+        max-size="history.sortData.range"
+            total-items="history.sortData.length"
+            ng-model="history.sortData.pageIndex" 
+            ng-change="history.onPageSelected()">
         </ul>
 
         <div class="col-sm-12">
-            Page: {{topics.sortData.pageIndex}} / {{topics.sortData.totalPages}}
+            Page: {{history.sortData.pageIndex}} / {{history .sortData.totalPages}}
         </div>
         <br/>
         <br/>

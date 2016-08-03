@@ -239,8 +239,8 @@ angular
 
     })
     .controller('AppCtrl', ['$rootScope', '$scope', '$location', '$app', 'AppMdl', function ($rootScope, $scope, $location, $app, AppMdl) {
-        $scope.bannerUrl = '';
         $scope.helpUrl   = '';
+        $scope.bannerUrl = '';
 
         $scope.$app = $app;
 
