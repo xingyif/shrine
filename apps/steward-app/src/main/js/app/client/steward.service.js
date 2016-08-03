@@ -57,6 +57,7 @@
         // -- private vars -- //
         var appTitle = null;
         var appUser = null;
+        var loginSubscriber;
 
         // -- public members -- //
         this.commonService = CommonService;
@@ -70,6 +71,12 @@
         this.getUsername = getUsername;
         this.getRole = getRole;
         this.getUrl = getUrl;
+        this.isSteward = isSteward;
+        this.setLoginSubscriber = setLoginSubscriber;
+
+        function setLoginSubscriber(subscriber) {
+            loginSubscriber = subscriber;
+        }
 
         /**
          * -- set app user. --
@@ -85,6 +92,10 @@
                 isLoggedIn: true,
                 role: primaryRole
             };
+
+            if (loginSubscriber) {
+                loginSubscriber(appUser);
+            }
         }
 
         /**
@@ -168,15 +179,15 @@
             var href = '';
 
             //no DOM, abandon ship!
-            if(!document) {
+            if (!document) {
                 return constants.baseUrl;
             }
 
             href = document.location.href;
             startIndex = href.indexOf(urlKey);
-            
+
             // -- wrong url, abandon ship! --//
-            if(startIndex < 0) {
+            if (startIndex < 0) {
                 return constants.baseUrl;
             }
 

@@ -55,7 +55,6 @@
                 </li>
             </ul>
         </nav>
-
         <div class="row">
             <div class="col-sm-2" ng-if="steward.isUserLoggedIn()">
                 <div class="navbar-default sidebar" role="navigation">
@@ -71,14 +70,13 @@
                                     <i class="fa fa-history fa-fw fa-2x"></i> History
                                 </a>
                             </li>
-                            <li ui-sref-active="shrine-on" ng-cloak>
+                            <li ng-if="steward.showStewardMenuOptions" ui-sref-active="shrine-on" ng-cloak>
                                 <a ui-sref="statistics" class="shrine-off">
                                     <i class="fa fa-bar-chart-o fa-fw fa-2x"></i> Statistics
                                 </a>
                             </li>
                         </ul>
                     </div>
-                    <!-- /.sidebar-collapse -->
                 </div>
             </div>
             <div class="col-sm-10 shrine-content">
