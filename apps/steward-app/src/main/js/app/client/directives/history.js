@@ -47,7 +47,9 @@
         // -- public -- //
         history.sort = sort;
         history.open = openQuery;
+        history.onPageSelected = onPageSelected;
 
+        // -- start --//
         init();
 
         // -- private -- //
