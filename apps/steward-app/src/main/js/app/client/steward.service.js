@@ -57,6 +57,7 @@
         // -- private vars -- //
         var appTitle = null;
         var appUser = null;
+        var loginSubscriber;
 
         // -- public members -- //
         this.commonService = CommonService;
@@ -70,6 +71,12 @@
         this.getUsername = getUsername;
         this.getRole = getRole;
         this.getUrl = getUrl;
+        this.isSteward = isSteward;
+        this.setLoginSubscriber = setLoginSubscriber;
+
+        function setLoginSubscriber(subscriber) {
+            loginSubscriber = subscriber;
+        }
 
         /**
          * -- set app user. --
@@ -85,6 +92,10 @@
                 isLoggedIn: true,
                 role: primaryRole
             };
+
+            if (loginSubscriber) {
+                loginSubscriber(appUser);
+            }
         }
 
         /**
@@ -121,7 +132,8 @@
         }
 
         function getUrl(restSegment, skip, limit, state, sortBy, sortDirection, minDate, maxDate) {
-            var url = constants.baseUrl + restSegment +
+            restSegment = restSegment || '';
+            var url = getDeployUrl('steward') + restSegment +
                 getQueryString(skip, limit, state, sortBy, sortDirection, minDate, maxDate);
 
             return url;
@@ -151,6 +163,37 @@
                 queryString += interpolator.replace(option, value);
             }
             return queryString;
+        }
+
+
+
+        /**
+         *
+         * @param urlKey
+         * @returns baseUrl of current site or baseUrl specified in steward.constants.
+         */
+        function getDeployUrl(urlKey) {
+
+            // -- local vars. -- //
+            var startIndex = 0, urlIndex = 0;
+            var href = '';
+
+            //no DOM, abandon ship!
+            if (!document) {
+                return constants.baseUrl;
+            }
+
+            href = document.location.href;
+            startIndex = href.indexOf(urlKey);
+
+            // -- wrong url, abandon ship! --//
+            if (startIndex < 0) {
+                return constants.baseUrl;
+            }
+
+            // -- parse url from location.
+            urlIndex = startIndex + urlKey.length;
+            return href.substring(0, urlIndex) + '/';
         }
     }
 })();

@@ -55,11 +55,17 @@ gulp.task('build-index', function () {
     var options = config.getWiredepDefaultOptions();
     var wiredep = require('wiredep').stream;
 
+    console.log(config.jsFiles);
+
     return gulp
         .src(config.index)
         .pipe(wiredep(options))
-        .pipe($.inject(gulp.src(config.jsFiles)))
-        .pipe($.inject(gulp.src(config.cssFiles)))
+        .pipe($.inject(gulp.src(config.jsFiles), {
+               addRootSlash: false
+        }))
+        .pipe($.inject(gulp.src(config.cssFiles), {
+               addRootSlash: false
+        }))
         .pipe(gulp.dest(config.buildDir));
 });
 
