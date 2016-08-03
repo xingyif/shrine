@@ -14,9 +14,13 @@
                         </topics-result>
 
                         <div class="form-group text-center" ng-show="topics.sortData.length > topics.sortData.limit">
-                            <ul uib-pagination class="pagination-sm" 
+                            <ul uib-pagination class="pagination-sm"
+                            previous-text="&lsaquo;"
+                    next-text="&rsaquo;"
+                    first-text="&laquo;"
+                    last-text="&raquo;" 
                             items-per-page="topics.sortData.limit" 
-                            boundary-link-numbers="true" 
+                            boundary-links="true" 
                             max-size="topics.sortData.range"
                             total-items="topics.sortData.length"
                                 ng-model="topics.sortData.pageIndex" 

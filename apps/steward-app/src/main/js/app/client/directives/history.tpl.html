@@ -60,7 +60,11 @@
     <div class="form-group text-center" ng-show="history.sortData.length > history.sortData.limit">
         <ul uib-pagination class="pagination-sm" 
         items-per-page="history.sortData.limit" 
-        boundary-link-numbers="true" 
+        boundary-links="true"
+        previous-text="&lsaquo;"
+                    next-text="&rsaquo;"
+                    first-text="&laquo;"
+                    last-text="&raquo;" 
         max-size="history.sortData.range"
             total-items="history.sortData.length"
             ng-model="history.sortData.pageIndex" 
