@@ -171,6 +171,7 @@ object Problems {
       * @param problem the ProblemDigest
       */
     def insertProblem(problem: ProblemDigest) = {
+      println(s"Inserting problem ${problem.codec} with stamp: ${problem.stampText}")
       run(Queries += problem)
     }
   }
