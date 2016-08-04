@@ -30,10 +30,20 @@ object Problems {
   import slickProfile.api._
 
   val dataSource: DataSource = TestableDataSourceCreator.dataSource(config)
+
   lazy val db = {
     val db = Database.forDataSource(dataSource)
-    if (config.hasPath("createTablesOnStart") && config.getBoolean("createTablesOnStart"))
-      Await.ready(db.run(IOActions.createIfNotExists), FiniteDuration(3, SECONDS))
+    val createTables: String = "createTablesOnStart"
+    if (config.hasPath(createTables) && config.getBoolean(createTables)) {
+      val duration = FiniteDuration(3, SECONDS)
+      Await.ready(db.run(IOActions.createIfNotExists), duration)
+      val testValues: String = "insertTestValuesOnStart"
+      if (config.hasPath(testValues) && config.getBoolean(testValues)) {
+        def dumb(id: Int) = ProblemDigest(s"codec($id)", s"stamp($id)", s"sum($id)", s"desc($id)", <details>{id}</details>, id)
+        val dummyValues: Seq[ProblemDigest] = Seq(0, 1, 2, 3, 4, 5, 6).map(dumb)
+        Await.ready(db.run(Queries ++= dummyValues), duration)
+      }
+    }
     db
   }
 

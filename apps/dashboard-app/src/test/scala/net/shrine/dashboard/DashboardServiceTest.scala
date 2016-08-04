@@ -200,6 +200,7 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
         assertResult(OK)(status)
 
         val problems = new String(body.data.toByteArray)
+        println(problems)
       }
   }
 
