@@ -125,10 +125,7 @@ object Problems {
       if (_) problems.schema.drop else SuccessAction(NoOperation))
     val resetTable = createIfNotExists >> problems.selectAll.delete
     val selectAll = problems.result
-    def sizeAndProblemDigest(n: Int, offset: Int = 0) = for {
-      length <- problems.length.result
-      allProblems <- problems.lastNProblems(n, offset).result
-    } yield (allProblems, length)
+    def sizeAndProblemDigest(n: Int, offset: Int = 0) = problems.lastNProblems(n, offset).result.zip(problems.size.result)
   }
 
 
