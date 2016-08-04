@@ -1,7 +1,6 @@
 (function () {
     'use strict';
 
-
     // -- register controller with angular -- //
     angular.module('shrine-tools')
         .controller('HubController', HubController);
