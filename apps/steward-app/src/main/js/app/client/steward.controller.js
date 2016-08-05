@@ -12,15 +12,28 @@
         steward.getRole = StewardService.getRole;
         steward.isSteward = StewardService.isSteward;
         steward.showStewardMenuOptions = false;
-        steward.layoutWidth = 12;
-        steward.logout = StewardService.logoutUser;
+        setLoggedOutLayout();
+        steward.logout = logout;
 
         // -- set login callback. todo: investigate advantage of broadcaster instead.  -- //
         StewardService.setLoginSubscriber(loginSubscriber);
 
+        function setLoggedInLayout() {
+            steward.layoutWidth = 10;
+        }
+
+        function setLoggedOutLayout() {
+            steward.layoutWidth = 12;
+        }
+
+        function logout() {
+            setLoggedOutLayout();
+            StewardService.logoutUser();
+        }
+
         function loginSubscriber(appUser) {
             steward.showStewardMenuOptions = steward.isSteward();
-            steward.layoutWidth = 10;
+            setLoggedInLayout();
         }
     }
 })();
