@@ -290,7 +290,7 @@
 
         function canViewHistory() {
 
-            var stewardCanViewApprovedAndRejected = isSteward && $scope.loadedState !== 'Pending';
+            var stewardCanViewApprovedAndRejected = isSteward && loadedState !== 'Pending';
             var researcherCanViewOnlyApproved = loadedState === 'Approved';
             var ifEditingDenyAll = detail.tabState === 'edit';
 
