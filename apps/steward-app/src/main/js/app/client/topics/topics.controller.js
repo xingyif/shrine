@@ -50,7 +50,7 @@
             sortData.state = service.states.state1; // -- pending, approved, rejected --//
             sortData.sortDirection = 'ascending';
             sortData.arrowClass = 'fa-caret-up';
-            sortData.column = 'id';
+            sortData.column = 'changeDate';
             sortData.pageIndex = service.viewConfig.index; // -- current page number --//
             sortData.range = service.viewConfig.range; // -- range of paging numbers at bottom --//
             sortData.limit = service.viewConfig.limit; // -- number of results to show in table per page --//
@@ -70,19 +70,19 @@
             if (sortData.column === column) {
 
                 // -- todo, dislike nested ifs --//
-                if (topics.sortData.sortDirection != 'ascending') {
+                if (topics.sortData.sortDirection !== 'ascending') {
                     topics.sortData.sortDirection = 'ascending';
-                    topics.sortData.arrowClass = 'fa-caret-down'
+                    topics.sortData.arrowClass = 'fa-caret-up';
                 }
                 else {
                     topics.sortData.sortDirection = 'descending';
-                    topics.sortData.arrowClass = 'fa-caret-up';
+                    topics.sortData.arrowClass = 'fa-caret-down';
                 }
             }
 
             //default is descending.
             else {
-                topics.sortData.sortDirection = 'descending';
+                topics.sortData.sortDirection = 'ascending';
                 topics.sortData.arrowClass = 'fa-caret-up';
                 sortData.column = column;
             }

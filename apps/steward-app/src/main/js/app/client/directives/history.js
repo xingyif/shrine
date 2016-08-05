@@ -94,19 +94,19 @@
             if (sortData.column === column) {
 
                 // -- todo, dislike nested ifs --//
-                if (history.sortData.sortDirection != 'ascending') {
+                if (history.sortData.sortDirection !== 'ascending') {
                     history.sortData.sortDirection = 'ascending';
-                    history.sortData.arrowClass = 'fa-caret-down';
+                    history.sortData.arrowClass = 'fa-caret-up';
                 }
                 else {
                     history.sortData.sortDirection = 'descending';
-                    history.sortData.arrowClass = 'fa-caret-up';
+                    history.sortData.arrowClass = 'fa-caret-down';
                 }
             }
 
             //default is descending.
             else {
-                history.sortData.sortDirection = 'descending';
+                history.sortData.sortDirection = 'ascending';
                 history.sortData.arrowClass = 'fa-caret-up';
                 sortData.column = column;
             }
