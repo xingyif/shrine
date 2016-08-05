@@ -2,4 +2,4 @@ create table "queriesReceived" ("shrineNodeId" VARCHAR2(256) NOT NULL,"userName"
 create table "executionsStarted" ("networkQueryId" NUMBER NOT NULL,"queryName" VARCHAR2(256) NOT NULL,"timeExecutionStarted" NUMBER NOT NULL);
 create table "executionsCompleted" ("networkQueryId" NUMBER NOT NULL,"replyId" NUMBER NOT NULL,"queryName" VARCHAR2(256) NOT NULL,"timeExecutionCompleted" NUMBER NOT NULL);
 create table "resultsSent" ("networkQueryId" NUMBER NOT NULL,"replyId" NUMBER NOT NULL,"queryName" VARCHAR2(256) NOT NULL,"timeResultsSent" NUMBER NOT NULL);
-create table "problems" ("id" NUMBER NOT NULL, "codec" VARCHAR2(256) NOT NULL,"stampText" VARCHAR2(256) NOT NULL,"summary" VARCHAR2(256) NOT NULL,"description" VARCHAR2(256) NOT NULL,"detailsXml" VARCHAR2(256) NOT NULL,"epoch" NUMBER NOT NULL);
+create table "problems" ("id" NUMBER NOT NULL, "codec" VARCHAR2(256) NOT NULL,"stampText" VARCHAR2(256) NOT NULL,"summary" VARCHAR2(256) NOT NULL,"description" VARCHAR2(512) NOT NULL,"detailsXml" CLOB NOT NULL,"epoch" NUMBER NOT NULL);
