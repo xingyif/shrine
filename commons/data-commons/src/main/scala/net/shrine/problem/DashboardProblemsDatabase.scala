@@ -47,6 +47,7 @@ object Problems {
         Await.ready(db.run(Queries ++= dummyValues), duration)
       }
     }
+    println(s"Db class name: ${db.getClass}, source: ${db.source}")
     db
   }
 
