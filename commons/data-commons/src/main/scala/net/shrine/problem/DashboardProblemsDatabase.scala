@@ -29,7 +29,6 @@ object Problems {
   val slickProfile:JdbcProfile = ProblemConfigSource.objectForName(slickProfileClassName)
 
   import slickProfile.api._
-  println(s"CLASS FOR DRIVER = ${slickProfile.getClass}")
 
   val dataSource: DataSource = TestableDataSourceCreator.dataSource(config)
 
@@ -168,6 +167,7 @@ object Problems {
       */
     def runBlocking[R](dbio: DBIOAction[R, NoStream, _])(implicit timeout: Duration = new FiniteDuration(15, SECONDS)): R = {
       try {
+        println(s"CLASS FOR DRIVER = ${slickProfile.getClass}")
         Await.result(this.run(dbio), timeout)
       } catch {
         case tx:TimeoutException => throw CouldNotRunDbIoActionException(Problems.dataSource, tx)
