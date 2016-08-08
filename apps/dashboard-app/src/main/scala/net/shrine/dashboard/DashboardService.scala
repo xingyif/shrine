@@ -239,7 +239,6 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
         println(s"Could not parse problems GET request parameter, received $offsetString, threw $a")
         0
       }
-
       val p = Problems
       val db = p.DatabaseConnector
       val timeout: Duration = new FiniteDuration(15, SECONDS)
