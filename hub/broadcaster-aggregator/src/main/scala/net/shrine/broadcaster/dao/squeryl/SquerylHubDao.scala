@@ -2,22 +2,17 @@ package net.shrine.broadcaster.dao.squeryl
 
 import net.shrine.broadcaster.dao.HubDao
 import net.shrine.log.Loggable
-import net.shrine.protocol.SingleNodeResult
-import net.shrine.protocol.BroadcastMessage
+import net.shrine.protocol.{AuthenticationInfo, BroadcastMessage, ErrorResponse, FailureResult, FailureResult$, Result, SingleNodeResult, Timeout}
 import net.shrine.broadcaster.dao.squeryl.tables.Tables
 import net.shrine.dao.squeryl.SquerylInitializer
 import net.shrine.broadcaster.dao.model.squeryl.SquerylHubQueryRow
 import net.shrine.dao.DateHelpers
 import net.shrine.util.XmlDateHelper
-import net.shrine.protocol.AuthenticationInfo
 import net.shrine.protocol.query.QueryDefinition
 import net.shrine.dao.squeryl.SquerylEntryPoint
 import net.shrine.broadcaster.dao.model.squeryl.SquerylHubQueryResultRow
 import java.sql.Timestamp
-import net.shrine.protocol.Result
-import net.shrine.protocol.Timeout
-import net.shrine.protocol.Failure
-import net.shrine.protocol.ErrorResponse
+
 import net.shrine.broadcaster.dao.model.HubQueryStatus
 
 /**
@@ -56,7 +51,7 @@ final class SquerylHubDao(initializer: SquerylInitializer, tables: Tables) exten
     import net.shrine.broadcaster.dao.model.{HubQueryStatus => hqs}
     
     val status = result match {
-      case _: Failure => hqs.Failure
+      case _: FailureResult => hqs.Failure
       case Result(_, _, e: ErrorResponse) => hqs.DownstreamFailure
       case _: Result => hqs.Success
       case _: Timeout => hqs.Timeout

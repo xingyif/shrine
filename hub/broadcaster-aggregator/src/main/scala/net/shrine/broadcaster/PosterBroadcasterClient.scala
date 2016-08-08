@@ -31,7 +31,7 @@ final case class PosterBroadcasterClient(poster: Poster, breakdownTypes: Set[Res
           //todo where to get a real nodeId?
           val x = CouldNotParseResultsException(response.statusCode,poster.url,response.body,ex)
           x.fillInStackTrace()
-          Seq(net.shrine.protocol.Failure(NodeId(poster.url),x))
+          Seq(net.shrine.protocol.FailureResult(NodeId(poster.url),x))
         }
       }
     }

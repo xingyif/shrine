@@ -10,7 +10,7 @@ import net.shrine.protocol.DeleteQueryRequest
 import net.shrine.protocol.NodeId
 import net.shrine.protocol.Result
 import net.shrine.protocol.Timeout
-import net.shrine.protocol.Failure
+import net.shrine.protocol.FailureResult$
 import net.shrine.protocol.DeleteQueryResponse
 import net.shrine.protocol.MultiplexedResults
 import net.shrine.protocol.DefaultBreakdownResultOutputTypes

@@ -8,12 +8,12 @@ import scala.xml.XML
  * @author clint
  * @date Mar 3, 2014
  */
-final class FailureTest extends ShouldMatchersForJUnit {
+final class FailureResultTest extends ShouldMatchersForJUnit {
   @Test
   def testXmlRoundTrip {
-    val failure = Failure(NodeId("X"), new Exception("foo") with scala.util.control.NoStackTrace)
+    val failure = FailureResult(NodeId("X"), new Exception("foo") with scala.util.control.NoStackTrace)
     
-    val unmarshalled = Failure.fromXml(Set.empty)(XML.loadString(failure.toXmlString)).get
+    val unmarshalled = FailureResult.fromXml(Set.empty)(XML.loadString(failure.toXmlString)).get
     
     unmarshalled.origin should equal(failure.origin)
     unmarshalled.cause.getMessage.contains("foo") should be(true)

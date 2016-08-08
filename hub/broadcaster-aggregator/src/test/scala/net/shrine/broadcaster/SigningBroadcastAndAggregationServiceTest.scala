@@ -6,17 +6,7 @@ import net.shrine.util.ShouldMatchersForJUnit
 import net.shrine.aggregation.Aggregator
 import net.shrine.crypto.DefaultSignerVerifier
 import net.shrine.crypto.TestKeystore
-import net.shrine.protocol.AuthenticationInfo
-import net.shrine.protocol.BroadcastMessage
-import net.shrine.protocol.Credential
-import net.shrine.protocol.DeleteQueryRequest
-import net.shrine.protocol.ErrorResponse
-import net.shrine.protocol.Failure
-import net.shrine.protocol.NodeId
-import net.shrine.protocol.Result
-import net.shrine.protocol.ShrineResponse
-import net.shrine.protocol.SingleNodeResult
-import net.shrine.protocol.Timeout
+import net.shrine.protocol.{AuthenticationInfo, BroadcastMessage, Credential, DeleteQueryRequest, ErrorResponse, FailureResult, FailureResult$, NodeId, Result, ShrineResponse, SingleNodeResult, Timeout}
 import net.shrine.crypto.SigningCertStrategy
 import net.shrine.broadcaster.dao.MockHubDao
 import net.shrine.problem.{TestProblem, TurnOffProblemConnector}
@@ -78,10 +68,10 @@ final class SigningBroadcastAndAggregationServiceTest extends ShouldMatchersForJ
   def testAggregateHandlesFailures {
     def toResult(description: Char) = Result(NodeId(description.toString), 1.second, ErrorResponse(TestProblem("blah blah blah")))
 
-    def toFailure(description: Char) = Failure(NodeId(description.toString), new Exception with scala.util.control.NoStackTrace)
+    def toFailure(description: Char) = FailureResult(NodeId(description.toString), new Exception with scala.util.control.NoStackTrace)
 
     val failuresByOrigin: Map[NodeId, SingleNodeResult] = {
-      "UV".map(toFailure).map { case f @ Failure(origin, _) => origin -> f }.toMap
+      "UV".map(toFailure).map { case f @ FailureResult(origin, _) => origin -> f }.toMap
     }
     
     val timeoutsByOrigin: Map[NodeId, SingleNodeResult] = Map(NodeId("Z") -> Timeout(NodeId("Z")))

@@ -1,51 +1,39 @@
 <div>
     <div class="col-sm-12 shrine-modal" style="margin-bottom: 50px;">
-            <fieldset>
-                <div class="col-sm-4">
-                    <label>
+        <fieldset>
+            <div class="col-sm-4">
+                <label>
                         Start Date:&nbsp;&nbsp;
+                </label>
+                <p class="input-group" style="display: block">
+                    <input type="text" class="form-control shrine-calendar-input" uib-datepicker-popup="{{stats.format}}" ng-model="stats.startDate"
+                        is-open="stats.startOpened" ng-required="true" close-text="Close" max-date="stats.endDate" />
+                    <span class="input-group-btn">
+                        <button type="button" class="btn btn-default shrine-button" ng-click="stats.openStart()">
+                            <i class="glyphicon glyphicon-calendar"></i>
+                        </button>
+                    </span>
+                </p>
+            </div>
+
+            <div class="col-sm-4">
+                <label>
+                    End Date:&nbsp;&nbsp;
                     </label>
-                    <br/>
-                    <input type="text" readonly class="shrine-calendar-input"
-                           datepicker-popup="{{format}}"
-                           max-date="endDate"
-                           ng-model="startDate"
-                           is-open="startOpened"
-                           ng-required="true"
-                           close-text="Close"/>
-                    <button type="button"
-                            class="shrine-button"
-                            ng-click="openStart($event)">
-                        <i class="glyphicon glyphicon-calendar"></i>
-                    </button>
-                </div>
+                <p class="input-group" style="display: block">
 
-                <div class="col-sm-4">
-
-                    <label>
-                        End Date:&nbsp;&nbsp;
-                    </label>
-                    <br/>
-                    <input type="text" readonly class="shrine-calendar-input"
-                           datepicker-popup="{{format}}"
-                           ng-model="endDate"
-                           min-date="startDate"
-                           is-open="endOpened"
-                           ng-required="true"
-                           close-text="Close"/>
-                    <button type="button"
-                            class="shrine-button"
-                                 ng-click="openEnd($event)">
-                        <i class="glyphicon glyphicon-calendar"></i>
-                    </button>
-
-                </div>
+                    <input type="text" class="form-control shrine-calendar-input" uib-datepicker-popup="{{stats.format}}" ng-model="stats.endDate"
+                        is-open="stats.endOpened" ng-required="true" close-text="Close" min-date="stats.startDate" />
+                    <span class="input-group-btn">
+                        <button type="button" class="btn btn-default shrine-button" ng-click="stats.openEnd()">
+                            <i class="glyphicon glyphicon-calendar"></i>
+                        </button>
+                    </span>
+                </p>
+            </div>
             <div class="col-sm-4">
                 <br/>
-                <button type="submit"
-                        class="shrine-button shrine-submit"
-                        ng-disabled="!validateRange()"
-                        ng-click="addDateRange()">
+                <button type="submit" class="shrine-button shrine-submit" ng-disabled="!stats.validateRange()" ng-click="stats.addDateRange()">
                     <span>APPLY RANGE</span>
                     <i class="fa fa-chevron-right fa-2x"></i>
                 </button>
@@ -54,8 +42,62 @@
     </div>
 
     <br/>
-    <topic-status></topic-status>
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <td colspan="2" style="text-align: center">
+                    Query Topics By Status
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    Status
+                </td>
+                <td>
+                    Query Topic Count
+                </td>
+            </tr>
+        </thead>
+        <tbody>
+            <tr ng-repeat="state in stats.topicsPerState.states">
+                <td>{{stats.parseStateTitle(state)}}</td>
+                <td>{{stats.parseStateCount(state)}}</td>
+            </tr>
+        </tbody>
+        <tfoot>
+            <tr>
+                <td>Total: </td>
+                <td>{{stats.topicsPerState.total}}</td>
+            </tr>
+        </tfoot>
+    </table>
     <br/>
     <br/>
-    <query-counts></query-counts>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <td colspan="2" style="text-align: center">
+                    Query Counts By User
+                </td>
+            </tr>
+            <tr>
+                <td>User</td>
+                <td>Query Count</td>
+            </tr>
+
+        </thead>
+        <tbody>
+            <tr ng-repeat="user in stats.queriesPerUser.users">
+                <td>{{user._1.userName}}</td>
+                <td>{{user._2}}</td>
+            </tr>
+        </tbody>
+        <tfoot>
+            <tr>
+                <td>Total: </td>
+                <td>{{stats.queriesPerUser.total}}</td>
+            </tr>
+        </tfoot>
+    </table>
 </div>

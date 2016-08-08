@@ -21,7 +21,7 @@ final class MultiplexedResultsTest extends ShouldMatchersForJUnit {
   def testXmlRoundTrip {
     val resultNodeId0 = Result(nodeId0, 1.second, DeleteQueryResponse(masterId))
     val timeoutNodeId1 = Timeout(nodeId1)
-    val failureNodeId2 = Failure(nodeId2, new Exception("blarg") with scala.util.control.NoStackTrace)
+    val failureNodeId2 = FailureResult(nodeId2, new Exception("blarg") with scala.util.control.NoStackTrace)
     val resultNodeId3 = Result(nodeId3, 2.seconds, DeleteQueryResponse(masterId))
 
     val multiResults = MultiplexedResults(Seq(
@@ -40,9 +40,9 @@ final class MultiplexedResultsTest extends ShouldMatchersForJUnit {
 
     unmarshalled.results(1) should equal(timeoutNodeId1)
 
-    unmarshalled.results(2).isInstanceOf[Failure] should equal(true)
-    unmarshalled.results(2).asInstanceOf[Failure].origin should equal(nodeId2)
-    unmarshalled.results(2).asInstanceOf[Failure].cause.getMessage.contains("blarg") should equal(true)
+    unmarshalled.results(2).isInstanceOf[FailureResult] should equal(true)
+    unmarshalled.results(2).asInstanceOf[FailureResult].origin should equal(nodeId2)
+    unmarshalled.results(2).asInstanceOf[FailureResult].cause.getMessage.contains("blarg") should equal(true)
 
     unmarshalled.results(3) should equal(resultNodeId3)
   }

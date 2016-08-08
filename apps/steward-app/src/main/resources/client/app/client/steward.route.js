@@ -39,7 +39,7 @@
                 templateUrl:'./app/client/statistics/statistics.tpl.html',
                 url:'/statistics',
                 controller: 'StatisticsController',
-                controllerAs: 'statistics'
+                controllerAs: 'stats'
             });
 
     }

@@ -10,7 +10,7 @@ import net.shrine.util.NodeSeqEnrichments
 
 /**
  * @author clint
- * @date Aug 17, 2012
+ * @since Aug 17, 2012
  */
 final case class ReadResultResponse(xmlResultId: Long, metadata: QueryResult, data: I2b2ResultEnvelope) extends ShrineResponse {
   override protected def i2b2MessageBody: NodeSeq = XmlUtil.stripWhitespace {
@@ -59,7 +59,11 @@ object ReadResultResponse extends HasRootTagName {
 
   private[this] def responseXml(x: NodeSeq) = messageBodyXml(x).withChild("response")
 
-  private[this] def crcResultXml(x: NodeSeq) = responseXml(x).withChild("crc_xml_result")
+  private[this] def crcResultXml(x: NodeSeq): Try[NodeSeq] = {
+    val crcXmlResult: Try[NodeSeq] = responseXml(x).withChild("crc_xml_result")
+//    crcXmlResult.transform({xml:NodeSeq => Success(xml)},{e:Throwable => FailureResult(x)})
+    crcXmlResult
+  }
 
   def fromI2b2(breakdownTypes: Set[ResultOutputType])(xml: NodeSeq): Try[ReadResultResponse] = {
     def getEnvelope(x: NodeSeq): Try[I2b2ResultEnvelope] = {

@@ -22,7 +22,7 @@ import scala.collection.immutable.{Map, Seq, Set}
 import net.shrine.config.ConfigExtensions
 import net.shrine.crypto.{KeyStoreCertCollection, KeyStoreDescriptor, SigningCertStrategy}
 import net.shrine.protocol.query.{OccuranceLimited, QueryDefinition, Term}
-import net.shrine.protocol.{AuthenticationInfo, BroadcastMessage, Credential, Failure, Result, ResultOutputType, RunQueryRequest, Timeout}
+import net.shrine.protocol.{AuthenticationInfo, BroadcastMessage, Credential, FailureResult, FailureResult$, Result, ResultOutputType, RunQueryRequest, Timeout}
 import net.shrine.util.Versions
 
 import scala.concurrent.Await
@@ -339,7 +339,7 @@ object Summary {
       //todo just use fold()() in scala 2.12
       triedMultiplexer.toOption.fold(false) { multiplexer =>
         val responses = Await.result(multiplexer.responses, maxQueryWaitTime).toSeq
-        val failures = responses.collect { case f: Failure => f }
+        val failures = responses.collect { case f: FailureResult => f }
         val timeouts = responses.collect { case t: Timeout => t }
         val validResults = responses.collect { case r: Result => r }
 

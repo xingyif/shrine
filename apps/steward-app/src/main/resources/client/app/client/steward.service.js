@@ -13,9 +13,9 @@
         this.constants = constants;
 
         // -- provide steward service --//
-        get.$inject = ['CommonService'];
-        function get(CommonService) {
-            return new StewardService(CommonService, constants);
+        get.$inject = ['CommonService', '$location'];
+        function get(CommonService, $location) {
+            return new StewardService(CommonService, constants, $location);
         }
 
         /**
@@ -52,11 +52,12 @@
     /**
      * Steward Servcice.
      */
-    function StewardService(CommonService, constants) {
+    function StewardService(CommonService, constants, $location) {
 
         // -- private vars -- //
         var appTitle = null;
         var appUser = null;
+        var loginSubscriber;
 
         // -- public members -- //
         this.commonService = CommonService;
@@ -70,6 +71,18 @@
         this.getUsername = getUsername;
         this.getRole = getRole;
         this.getUrl = getUrl;
+        this.isSteward = isSteward;
+        this.setLoginSubscriber = setLoginSubscriber;
+        this.logoutUser = logoutUser;
+
+        function setLoginSubscriber(subscriber) {
+            loginSubscriber = subscriber;
+        }
+
+        function logoutUser() {
+            deleteAppUser();
+            $location.path('/login');
+        }
 
         /**
          * -- set app user. --
@@ -85,6 +98,10 @@
                 isLoggedIn: true,
                 role: primaryRole
             };
+
+            if (loginSubscriber) {
+                loginSubscriber(appUser);
+            }
         }
 
         /**
@@ -121,7 +138,8 @@
         }
 
         function getUrl(restSegment, skip, limit, state, sortBy, sortDirection, minDate, maxDate) {
-            var url = constants.baseUrl + restSegment +
+            restSegment = restSegment || '';
+            var url = getDeployUrl('steward') + restSegment +
                 getQueryString(skip, limit, state, sortBy, sortDirection, minDate, maxDate);
 
             return url;
@@ -151,6 +169,37 @@
                 queryString += interpolator.replace(option, value);
             }
             return queryString;
+        }
+
+
+
+        /**
+         *
+         * @param urlKey
+         * @returns baseUrl of current site or baseUrl specified in steward.constants.
+         */
+        function getDeployUrl(urlKey) {
+
+            // -- local vars. -- //
+            var startIndex = 0, urlIndex = 0;
+            var href = '';
+
+            //no DOM, abandon ship!
+            if (!document) {
+                return constants.baseUrl;
+            }
+
+            href = document.location.href;
+            startIndex = href.indexOf(urlKey);
+
+            // -- wrong url, abandon ship! --//
+            if (startIndex < 0) {
+                return constants.baseUrl;
+            }
+
+            // -- parse url from location.
+            urlIndex = startIndex + urlKey.length;
+            return href.substring(0, urlIndex) + '/';
         }
     }
 })();

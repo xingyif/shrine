@@ -20,7 +20,7 @@
         // -- public -- //
         topics.sortData = {
             sortDirection: 'ascending',
-            arrowClass: 'fa-caret-down',
+            arrowClass: 'fa-caret-up',
             column: 'id',
             pageIndex: service.viewConfig.index, // -- current page number --//
             range: service.viewConfig.range, // -- range of paging numbers at bottom --//
@@ -35,6 +35,7 @@
         topics.dateFormatter = service.dateFormatter;
         topics.openTopic = openTopic;
         topics.createTopic = createTopic;
+        topics.onPageSelected = onPageSelected;
 
         if (!topics.showStewardMenu) {
             modelUpdate = model.getResearcherTopics;
@@ -48,8 +49,8 @@
             var sortData = topics.sortData;
             sortData.state = service.states.state1; // -- pending, approved, rejected --//
             sortData.sortDirection = 'ascending';
-            sortData.arrowClass = 'fa-caret-down';
-            sortData.column = 'id';
+            sortData.arrowClass = 'fa-caret-up';
+            sortData.column = 'changeDate';
             sortData.pageIndex = service.viewConfig.index; // -- current page number --//
             sortData.range = service.viewConfig.range; // -- range of paging numbers at bottom --//
             sortData.limit = service.viewConfig.limit; // -- number of results to show in table per page --//
@@ -69,19 +70,19 @@
             if (sortData.column === column) {
 
                 // -- todo, dislike nested ifs --//
-                if (topics.sortData.sortDirection != 'ascending') {
+                if (topics.sortData.sortDirection !== 'ascending') {
                     topics.sortData.sortDirection = 'ascending';
-                    topics.sortData.arrowClass = 'fa-caret-down'
+                    topics.sortData.arrowClass = 'fa-caret-up';
                 }
                 else {
                     topics.sortData.sortDirection = 'descending';
-                    topics.sortData.arrowClass = 'fa-caret-up';
+                    topics.sortData.arrowClass = 'fa-caret-down';
                 }
             }
 
             //default is descending.
             else {
-                topics.sortData.sortDirection = 'descending';
+                topics.sortData.sortDirection = 'ascending';
                 topics.sortData.arrowClass = 'fa-caret-up';
                 sortData.column = column;
             }
@@ -96,8 +97,8 @@
 
             mult = (sortData.pageIndex > 0) ? sortData.pageIndex - 1 : 0;
             sortData.skip = sortData.limit * mult;
-            // -- todo?:  refreshTopics(topics.sortData.skip, topics.sortData.limit);
-        };
+            refreshTopics(sortData.skip, sortData.limit);
+        }
 
         function refreshTopics() {
             var sortData = topics.sortData;
@@ -106,6 +107,8 @@
                 .then(function (data) {
                     topics.topics = data.topics;
                     topics.length = data.totalCount;
+                    sortData.length = data.totalCount;
+                    sortData.totalPages = Math.ceil(sortData.length / sortData.limit);
                 });
         }
 
@@ -287,7 +290,7 @@
 
         function canViewHistory() {
 
-            var stewardCanViewApprovedAndRejected = isSteward && $scope.loadedState !== 'Pending';
+            var stewardCanViewApprovedAndRejected = isSteward && loadedState !== 'Pending';
             var researcherCanViewOnlyApproved = loadedState === 'Approved';
             var ifEditingDenyAll = detail.tabState === 'edit';
 
