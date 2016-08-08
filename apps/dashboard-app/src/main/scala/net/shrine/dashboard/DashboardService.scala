@@ -239,14 +239,14 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
         println(s"Could not parse problems GET request parameter, received $offsetString, threw $a")
         0
       }
+
       val p = Problems
       val db = p.DatabaseConnector
       val timeout: Duration = new FiniteDuration(15, SECONDS)
-      complete(Problems.slickProfile.getClass)
-//      val problemsAndSize: (Seq[ProblemDigest], Int) = db.runBlocking(db.IO.sizeAndProblemDigest(n, offset))(timeout)
-//      val response = ProblemResponse(problemsAndSize._2, offset, n, problemsAndSize._1)
+      val problemsAndSize: (Seq[ProblemDigest], Int) = db.runBlocking(db.IO.sizeAndProblemDigest(n, offset))(timeout)
+      val response = ProblemResponse(problemsAndSize._2, offset, n, problemsAndSize._1)
       //todo: Find a better way to do this besides writing and parsing the json response
-      //complete(json4sParse(write(response)(formats)))
+      complete(json4sParse(write(response)(formats)))
     }
   }
 
