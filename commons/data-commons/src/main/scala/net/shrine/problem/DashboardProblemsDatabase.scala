@@ -12,6 +12,7 @@ import slick.jdbc.meta.MTable
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
+import scala.util.{Failure, Success}
 import scala.util.control.NonFatal
 import scala.xml.XML
 
@@ -135,7 +136,6 @@ object Problems {
     * Entry point for interacting with the database. Runs IO actions.
     */
   object DatabaseConnector {
-    println(s"CLASS FOR DRIVER = ${slickProfile.getClass}")
     val IO = IOActions
     /**
       * Executes a series of IO actions as a single transactions
@@ -183,7 +183,10 @@ object Problems {
       */
     def insertProblem(problem: ProblemDigest) = {
       println(s"Inserting problem ${problem.codec} with stamp: ${problem.stampText}")
-      run(Queries += problem)
+      run(Queries += problem).onComplete {
+        case Success(r) => println(s"Successful insertion of ${(problem.codec, problem.stampText)}, with result $r")
+        case Failure(f) => println(s"Failed insertion of ${(problem.codec, problem.stampText)}, with result $f")
+      }
     }
   }
 }
