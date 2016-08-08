@@ -27,6 +27,7 @@ object Problems {
   println(slickProfileClassName)
   // TODO: Can we not pay this 2 second cost here?
   val slickProfile:JdbcProfile = ProblemConfigSource.objectForName(slickProfileClassName)
+  println(s"CLASS FOR DRIVER = ${slickProfile.getClass}")
 
   import slickProfile.api._
 
@@ -134,6 +135,7 @@ object Problems {
     * Entry point for interacting with the database. Runs IO actions.
     */
   object DatabaseConnector {
+    println(s"CLASS FOR DRIVER = ${slickProfile.getClass}")
     val IO = IOActions
     /**
       * Executes a series of IO actions as a single transactions
