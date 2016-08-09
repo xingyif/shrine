@@ -24,7 +24,7 @@ import scala.xml.XML
   */
 object Problems {
   val config:Config = ProblemConfigSource.config.getConfig("shrine.dashboard.database")
-  val slickProfileClassName = config.getString("slickProfileClassName")]
+  val slickProfileClassName = config.getString("slickProfileClassName")
   // TODO: Can we not pay this 2 second cost here?
   val slickProfile:JdbcProfile = ProblemConfigSource.objectForName(slickProfileClassName)
 
