@@ -47,7 +47,7 @@ object Problems {
         Await.ready(db.run(Queries ++= dummyValues), duration)
       }
     }
-    println(s"Db class name: ${db.getClass}, source: ${db.source}")
+
     db
   }
 
@@ -86,7 +86,7 @@ object Problems {
     def problemToRow(problem: ProblemDigest): Option[(Int, String, String, String, String, String, Long)] = problem match {
       case ProblemDigest(codec, stampText, summary, description, detailsXml, epoch) =>
         // 0 is ignored on insert and replaced with an auto incremented id
-        Some((0, codec, stampText, summary, description, detailsXml.toString, epoch))
+        Some((7, codec, stampText, summary, description, detailsXml.toString, epoch))
     }
   }
 
@@ -170,7 +170,6 @@ object Problems {
       */
     def runBlocking[R](dbio: DBIOAction[R, NoStream, _])(implicit timeout: Duration = new FiniteDuration(15, SECONDS)): R = {
       try {
-        println(s"CLASS FOR DRIVER = ${slickProfile.getClass}")
         Await.result(this.run(dbio), timeout)
       } catch {
         case tx:TimeoutException => throw CouldNotRunDbIoActionException(Problems.dataSource, tx)
