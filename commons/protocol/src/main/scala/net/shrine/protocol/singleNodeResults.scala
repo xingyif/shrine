@@ -20,9 +20,9 @@ object SingleNodeResult {
   
   private val unmarshallers: Map[String, Unmarshaller] = Map(
     Timeout.rootTagName -> Timeout.fromXml _,
-    Failure.rootTagName -> Failure.fromXml _,
+    FailureResult.rootTagName -> FailureResult.fromXml _,
     Result.rootTagName -> Result.fromXml _)
-  
+
   //TODO: TEST!
   def fromXml(breakdownTypes: Set[ResultOutputType])(xml: NodeSeq): Try[SingleNodeResult] = {
     for {
@@ -42,7 +42,7 @@ sealed abstract class SingleNodeResultCompanion[R](override val rootTagName: Str
 
 /**
  * @author clint
- * @date Nov 1, 2013
+ * @since Nov 1, 2013
  */
 final case class Timeout(override val origin: NodeId) extends SingleNodeResult(origin) {
   override def toXml: NodeSeq = XmlUtil.stripWhitespace {
@@ -68,11 +68,10 @@ object Timeout extends SingleNodeResultCompanion[Timeout]("shrineTimeout") {
  * @author clint
  * @since Nov 1, 2013
  */
-//todo rename to something not in scala.util
-final case class Failure(override val origin: NodeId, cause: Throwable) extends SingleNodeResult(origin) {
-  //NB: Sidestep serializing throwables by just serializing the cause's message and stack trace as a big string 
+final case class FailureResult(override val origin: NodeId, cause: Throwable) extends SingleNodeResult(origin) {
+  //NB: Sidestep serializing throwables by just serializing the cause's message and stack trace as a big string
   override def toXml: NodeSeq = XmlUtil.stripWhitespace {
-    XmlUtil.renameRootTag(Failure.rootTagName) {
+    XmlUtil.renameRootTag(FailureResult.rootTagName) {
       <shrineFailure>
         { origin.toXml }
         <cause>{ s"$cause : ${StackTrace.stackTraceAsString(cause)}" }</cause>
@@ -81,8 +80,8 @@ final case class Failure(override val origin: NodeId, cause: Throwable) extends 
   }
 }
 
-object Failure extends SingleNodeResultCompanion[Failure]("shrineFailure") {
-  override def fromXml(breakdownTypes: Set[ResultOutputType])(xml: NodeSeq): Try[Failure] = {
+object FailureResult extends SingleNodeResultCompanion[FailureResult]("shrineFailure") {
+  override def fromXml(breakdownTypes: Set[ResultOutputType])(xml: NodeSeq): Try[FailureResult] = {
     import NodeSeqEnrichments.Strictness._
 
     for {
@@ -90,13 +89,13 @@ object Failure extends SingleNodeResultCompanion[Failure]("shrineFailure") {
     //TODO see SHRINE-1486
       //NB: Sidestep serializing throwables by just serializing the cause's message and stack trace as a big string
       cause <- xml.withChild("cause").map(_.text)
-    } yield Failure(origin, new Exception(cause) with scala.util.control.NoStackTrace) //todo looks like the stack trace gets dropped here
+    } yield FailureResult(origin, new Exception(cause) with scala.util.control.NoStackTrace) //todo looks like the stack trace gets dropped here
   }
 }
 
 /**
  * @author clint
- * @date Nov 1, 2013
+ * @since Nov 1, 2013
  */
 final case class Result(override val origin: NodeId, elapsed: Duration, response: BaseShrineResponse) extends SingleNodeResult(origin) {
   override def toXml: NodeSeq = XmlUtil.stripWhitespace {

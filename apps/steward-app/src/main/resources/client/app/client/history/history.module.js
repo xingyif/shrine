@@ -3,7 +3,8 @@
 
     var dependencies = ['shrine.steward',
             'ui.bootstrap',
-        'ui.bootstrap.modal'
+        'ui.bootstrap.modal',
+        'angular-loading-bar'
     ];
 
     angular

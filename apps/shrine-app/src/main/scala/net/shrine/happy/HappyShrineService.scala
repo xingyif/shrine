@@ -5,7 +5,7 @@ import net.shrine.crypto.SigningCertStrategy
 import net.shrine.i2b2.protocol.pm.{GetUserConfigurationRequest, HiveConfig}
 import net.shrine.log.Loggable
 import net.shrine.protocol.query.{OccuranceLimited, QueryDefinition, Term}
-import net.shrine.protocol.{AuthenticationInfo, BroadcastMessage, Credential, Failure, NodeId, Result, ResultOutputType, RunQueryRequest, Timeout}
+import net.shrine.protocol.{AuthenticationInfo, BroadcastMessage, Credential, FailureResult, FailureResult$, NodeId, Result, ResultOutputType, RunQueryRequest, Timeout}
 import net.shrine.util.{StackTrace, Versions, XmlUtil}
 import net.shrine.wiring.ShrineOrchestrator
 
@@ -103,7 +103,7 @@ object HappyShrineService extends HappyShrineRequestHandler with Loggable {
     else notAnAdapter
   }
 
-  private def failureToXml(failure: Failure): NodeSeq = {
+  private def failureToXml(failure: FailureResult): NodeSeq = {
     <failure>
       <origin>{ failure.origin }</origin>
       <description>{ StackTrace.stackTraceAsString(failure.cause) }</description>
@@ -124,7 +124,7 @@ object HappyShrineService extends HappyShrineRequestHandler with Loggable {
       val message = newBroadcastMessageWithRunQueryRequest
       val multiplexer = broadcaster.broadcast(message)
       val responses = Await.result(multiplexer.responses, maxQueryWaitTime).toSeq
-      val failures = responses.collect { case f: Failure => f }
+      val failures = responses.collect { case f: FailureResult => f }
       val timeouts = responses.collect { case t: Timeout => t }
       val validResults = responses.collect { case r: Result => r }
       val noProblems = failures.isEmpty && timeouts.isEmpty
@@ -201,7 +201,7 @@ object HappyShrineService extends HappyShrineRequestHandler with Loggable {
         <adapter>
           {
             resultAttempt match {
-              case scala.util.Failure(cause) => failureToXml(Failure(NodeId("Local"), cause))
+              case scala.util.Failure(cause) => failureToXml(FailureResult(NodeId("Local"), cause))
               case scala.util.Success(Result(origin, elapsed, response)) => {
                 <result>
                   <description>{ origin }</description>

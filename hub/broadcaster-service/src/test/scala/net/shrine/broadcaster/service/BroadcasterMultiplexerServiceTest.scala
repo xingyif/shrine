@@ -2,18 +2,10 @@ package net.shrine.broadcaster.service
 
 import net.shrine.util.ShouldMatchersForJUnit
 import org.junit.Test
-import net.shrine.broadcaster.{NodeHandle, Broadcaster, Multiplexer}
-import net.shrine.protocol.BroadcastMessage
-import net.shrine.protocol.SingleNodeResult
-import net.shrine.protocol.Result
-import net.shrine.protocol.DeleteQueryResponse
-import net.shrine.protocol.NodeId
-import net.shrine.protocol.Timeout
-import net.shrine.protocol.Failure
+import net.shrine.broadcaster.{Broadcaster, Multiplexer, NodeHandle}
+import net.shrine.protocol.{AuthenticationInfo, BroadcastMessage, Credential, DeleteQueryRequest, DeleteQueryResponse, FailureResult, FailureResult$, NodeId, Result, SingleNodeResult, Timeout}
+
 import scala.concurrent.Future
-import net.shrine.protocol.AuthenticationInfo
-import net.shrine.protocol.Credential
-import net.shrine.protocol.DeleteQueryRequest
 
 /**
  * @author clint
@@ -31,7 +23,7 @@ final class BroadcasterMultiplexerServiceTest extends ShouldMatchersForJUnit {
     val expectedResults = Seq(
       Result(NodeId("X"), 1.second, DeleteQueryResponse(12345)),
       Timeout(NodeId("Y")),
-      Failure(NodeId("Z"), new Exception with scala.util.control.NoStackTrace))
+      FailureResult(NodeId("Z"), new Exception with scala.util.control.NoStackTrace))
 
     val mockBroadcaster = new Broadcaster {
       var messageParam: BroadcastMessage = _

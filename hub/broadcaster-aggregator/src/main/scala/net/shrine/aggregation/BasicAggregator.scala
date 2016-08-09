@@ -8,19 +8,12 @@ import net.shrine.log.Loggable
 import net.shrine.problem.{AbstractProblem, ProblemNotYetEncoded, ProblemSources}
 
 import scala.concurrent.duration.Duration
-import net.shrine.protocol.ErrorResponse
-import net.shrine.protocol.Failure
-import net.shrine.protocol.NodeId
-import net.shrine.protocol.Result
-import net.shrine.protocol.SingleNodeResult
-import net.shrine.protocol.Timeout
-import net.shrine.protocol.BaseShrineResponse
+import net.shrine.protocol.{BaseShrineResponse, ErrorResponse, FailureResult, FailureResult$, NodeId, Result, SingleNodeResult, Timeout}
 
 /**
  *
  * @author Clint Gilbert
  * @since Sep 16, 2011
- *
  * @see http://cbmi.med.harvard.edu
  *
  * This software is licensed under the LGPL
@@ -54,7 +47,7 @@ abstract class BasicAggregator[T <: BaseShrineResponse: Manifest] extends Aggreg
           case Result(origin, _, errorResponse: ErrorResponse) => Error(Option(origin), errorResponse)
           case Result(origin, elapsed, response: T) if isAggregatable(response) => Valid(origin, elapsed, response)
           case Timeout(origin) => Error(Option(origin), ErrorResponse(TimedOutWithAdapter(origin)))
-          case Failure(origin, cause) => cause match {
+          case FailureResult(origin, cause) => cause match {
             case cx: ConnectException => Error(Option(origin), ErrorResponse(CouldNotConnectToAdapter(origin, cx)))
             case uhx: UnknownHostException => Error(Option(origin), ErrorResponse(CouldNotConnectToAdapter(origin, uhx)))
             case chx: ClientHandlerException => Error(Option(origin), ErrorResponse(CouldNotConnectToAdapter(origin, chx)))

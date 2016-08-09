@@ -1,44 +1,44 @@
-<div>   
+<div>
     <table class="table table-striped thin-col">
         <thead>
-        <tr>
-            <td class="thin-col">
-                <a ng-click="history.sort('stewardId')">
+            <tr>
+                <td class="thin-col">
+                    <a ng-click="history.sort('stewardId')">
                     ID
                     <li ng-show="history.sortData.column === 'stewardId'" class="fa {{history.sortData.arrowClass}}"></li>
                 </a>
-            </td>
-             <td>
-                <a ng-click="history.sort('topicName')">
+                </td>
+                <td>
+                    <a ng-click="history.sort('topicName')">
                     Query Topic
                     <li ng-show="history.sortData.column === 'topicName'" class="fa {{history.sortData.arrowClass}}"></li>
                 </a>
-            </td>
-            <td>
-                <a ng-click="history.sort('researcherId')">
+                </td>
+                <td>
+                    <a ng-click="history.sort('researcherId')">
                     Username
                     <li ng-show="history.sortData.column === 'researcherId'" class="fa {{history.sortData.arrowClass}}"></li>
                 </a>
-            </td>
-            <td>
-                <a ng-click="history.sort('name')">
+                </td>
+                <td>
+                    <a ng-click="history.sort('name')">
                     Query Text
                     <li ng-show="history.sortData.column === 'name'" class="fa {{history.sortData.arrowClass}}"></li>
                 </a>
-            </td>
-            <td>
-                <a ng-click="history.sort('stewardResponse')">
+                </td>
+                <td>
+                    <a ng-click="history.sort('stewardResponse')">
                     Status
                    <li ng-show="history.sortData.column === 'stewardResponse'" class="fa {{history.sortData.arrowClass}}"></li>
                 </a>
-            </td>
-            <td>
-                <a ng-click="history.sort('date')">
+                </td>
+                <td>
+                    <a ng-click="history.sort('date')">
                     Date
                     <li ng-show="history.sortData.column === 'date'" class="fa {{history.sortData.arrowClass}}"></li>
                 </a>
-            </td>
-        </tr>
+                </td>
+            </tr>
         </thead>
 
         <tbody>
@@ -56,23 +56,25 @@
         </tbody>
 
     </table>
-    <!--
-    https://angular-ui.github.io/bootstrap/
-    http://getbootstrap.com/components/
-    -->
-    <div class="form-group text-center" ng-show="length > limit">
-        <pagination boundary-links="true"
-                    ng-change="onPageSelected()"
-                    total-items="length"
-                    ng-model="pageIndex"
-                    class="pagination-sm"
-                    items-per-page="limit"
-                    previous-text="&lsaquo;"
+
+    <div class="form-group text-center" ng-show="history.sortData.length > history.sortData.limit">
+        <ul uib-pagination class="pagination-sm" 
+        items-per-page="history.sortData.limit" 
+        boundary-links="true"
+        previous-text="&lsaquo;"
                     next-text="&rsaquo;"
                     first-text="&laquo;"
-                    last-text="&raquo;">
+                    last-text="&raquo;" 
+        max-size="history.sortData.range"
+            total-items="history.sortData.length"
+            ng-model="history.sortData.pageIndex" 
+            ng-change="history.onPageSelected()">
+        </ul>
 
-        </pagination>
-
+        <div class="col-sm-12">
+            Page: {{history.sortData.pageIndex}} / {{history .sortData.totalPages}}
+        </div>
+        <br/>
+        <br/>
     </div>
 </div>

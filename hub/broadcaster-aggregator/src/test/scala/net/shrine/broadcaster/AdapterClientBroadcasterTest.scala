@@ -4,21 +4,13 @@ import java.net.URL
 
 import net.shrine.util.ShouldMatchersForJUnit
 import org.junit.Test
-import net.shrine.protocol.Result
-import net.shrine.protocol.NodeId
-import net.shrine.protocol.DeleteQueryResponse
-import net.shrine.protocol.BroadcastMessage
-import net.shrine.protocol.AuthenticationInfo
-import net.shrine.protocol.Credential
-import net.shrine.protocol.DeleteQueryRequest
+import net.shrine.protocol.{AuthenticationInfo, BroadcastMessage, Credential, DeleteQueryRequest, DeleteQueryResponse, FailureResult, FailureResult$, NodeId, Result, SingleNodeResult, Timeout}
 import net.shrine.adapter.client.AdapterClient
-import net.shrine.protocol.Failure
+
 import scala.concurrent.Future
 import scala.concurrent.blocking
 import scala.concurrent.Await
-import net.shrine.protocol.SingleNodeResult
 import net.shrine.client.TimeoutException
-import net.shrine.protocol.Timeout
 import net.shrine.broadcaster.dao.MockHubDao
 
 /**
@@ -127,6 +119,6 @@ final class AdapterClientBroadcasterTest extends ShouldMatchersForJUnit {
     
     expectedResults.forall(responses.contains) should be(true)
     
-    responses.collect { case Failure(origin, _) => origin } should be(failingDestinations.map(_.nodeId))
+    responses.collect { case FailureResult(origin, _) => origin } should be(failingDestinations.map(_.nodeId))
   }
 }
