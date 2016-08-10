@@ -4,7 +4,7 @@ import net.shrine.adapter.client.{AdapterClient, RemoteAdapterClient}
 import net.shrine.broadcaster.dao.HubDao
 import net.shrine.client.TimeoutException
 import net.shrine.log.Loggable
-import net.shrine.protocol.{BroadcastMessage, Failure, RunQueryRequest, SingleNodeResult, Timeout}
+import net.shrine.protocol.{BroadcastMessage, FailureResult, FailureResult$, RunQueryRequest, SingleNodeResult, Timeout}
 
 import scala.concurrent.Future
 import scala.util.control.NonFatal
@@ -45,7 +45,7 @@ final case class AdapterClientBroadcaster(destinations: Set[NodeHandle], dao: Hu
 
       case NonFatal(e) =>
         error(s"Broadcasting to $nodeId failed with ", e)
-        Failure(nodeId, e)
+        FailureResult(nodeId, e)
 
     }
   }

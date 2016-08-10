@@ -134,13 +134,13 @@ final case class RunQueryAdapter(
 
     val (originalBreakdownResults, originalNonBreakDownResults) = originalResults.partition(isBreakdown)
 
-    val originalBreakdownCountAttempts = attemptToRetrieveBreakdowns(request, originalBreakdownResults)
+    val originalBreakdownCountAttempts: Seq[(QueryResult, Try[QueryResult])] = attemptToRetrieveBreakdowns(request, originalBreakdownResults)
     
     val (successfulBreakdownCountAttempts, failedBreakdownCountAttempts) = originalBreakdownCountAttempts.partition { case (_, t) => t.isSuccess }
 
     logBreakdownFailures(rawRunQueryResponse, failedBreakdownCountAttempts)
 
-    val originalMergedBreakdowns = {
+    val originalMergedBreakdowns: Map[ResultOutputType, I2b2ResultEnvelope] = {
       val withBreakdownCounts = successfulBreakdownCountAttempts.collect { case (_, Success(queryResultWithBreakdowns)) => queryResultWithBreakdowns }
 
       withBreakdownCounts.map(_.breakdowns).fold(Map.empty)(_ ++ _)

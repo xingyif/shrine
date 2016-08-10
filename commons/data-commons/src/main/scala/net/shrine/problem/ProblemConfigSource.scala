@@ -15,4 +15,9 @@ object ProblemConfigSource extends ConfigSource {
   // Makes it so constructing a problem in this context won't log it to the connector
   // Does not stop you from constructing the connector and using it manually
   var turnOffConnector = false
+
+  override def objectForName[T](objectName: String): T = {
+    println(s"Called with: $objectName")
+    super.objectForName(objectName)
+  }
 }

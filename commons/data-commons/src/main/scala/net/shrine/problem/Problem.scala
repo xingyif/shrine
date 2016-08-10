@@ -47,8 +47,8 @@ trait Problem extends DelayedInit {
   override def delayedInit(code: => Unit): Unit = {
     code
     if (!ProblemConfigSource.turnOffConnector) {
-      val problem = Problems
-      problem.DatabaseConnector.insertProblem(this.toDigest)
+      val problems = Problems
+      problems.DatabaseConnector.insertProblem(this.toDigest)
     }
   }
 
@@ -135,6 +135,7 @@ object Stamp {
   * @param source
   */
 abstract class AbstractProblem(source:ProblemSources.ProblemSource) extends Problem {
+  println(s"Problem $getClass created")
   def timer = System.currentTimeMillis
   lazy val stamp = Stamp(source, timer)
 }

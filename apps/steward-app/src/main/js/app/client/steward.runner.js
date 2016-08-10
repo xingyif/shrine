@@ -17,14 +17,11 @@
         $rootScope.$on('$locationChangeStart', verifyIdentity);
 
         function verifyIdentity(event, next, current) {
-            if (isUserNotLoggedIn() && isRedirectNecessary()) {
+            if (isUserNotLoggedIn()) {
                 $location.path(defaultRoute);
             }
         }
 
-        function isRedirectNecessary() {
-            return path !== defaultRoute;
-        }
         function isUserNotLoggedIn() {
             var currentUser = StewardService.getAppUser();
             return (!currentUser || !currentUser.isLoggedIn);

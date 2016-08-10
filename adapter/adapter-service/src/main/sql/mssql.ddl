@@ -1,5 +1,6 @@
-create table "queriesReceived" ("shrineNodeId" TEXT NOT NULL,"userName" TEXT NOT NULL,"networkQueryId" BIGINT NOT NULL,"queryName" TEXT NOT NULL,"topicId" TEXT,"topicName" TEXT,"timeQuerySent" BIGINT NOT NULL,"timeReceived" BIGINT NOT NULL);
-create table "executionsStarted" ("networkQueryId" BIGINT NOT NULL,"queryName" TEXT NOT NULL,"timeExecutionStarted" BIGINT NOT NULL);
-create table "executionsCompleted" ("networkQueryId" BIGINT NOT NULL,"replyId" BIGINT NOT NULL,"queryName" TEXT NOT NULL,"timeExecutionCompleted" BIGINT NOT NULL);
-create table "resultsSent" ("networkQueryId" BIGINT NOT NULL,"replyId" BIGINT NOT NULL,"queryName" TEXT NOT NULL,"timeResultsSent" BIGINT NOT NULL);
-create table "problems" ("id" BIGINT NOT NULL, "codec" TEXT NOT NULL,"stampText" TEXT NOT NULL,"summary" TEXT NOT NULL,"description" TEXT NOT NULL,"detailsXml" TEXT NOT NULL,"epoch" BIGINT NOT NULL);
+create table "queriesReceived" ("shrineNodeId" VARCHAR(MAX) NOT NULL,"userName" VARCHAR(MAX) NOT NULL,"networkQueryId" BIGINT NOT NULL,"queryName" VARCHAR(MAX) NOT NULL,"topicId" VARCHAR(MAX),"topicName" VARCHAR(MAX),"timeQuerySent" BIGINT NOT NULL,"timeReceived" BIGINT NOT NULL);
+create table "executionsStarted" ("networkQueryId" BIGINT NOT NULL,"queryName" VARCHAR(MAX) NOT NULL,"timeExecutionStarted" BIGINT NOT NULL);
+create table "executionsCompleted" ("networkQueryId" BIGINT NOT NULL,"replyId" BIGINT NOT NULL,"queryName" VARCHAR(MAX) NOT NULL,"timeExecutionCompleted" BIGINT NOT NULL);
+create table "resultsSent" ("networkQueryId" BIGINT NOT NULL,"replyId" BIGINT NOT NULL,"queryName" VARCHAR(MAX) NOT NULL,"timeResultsSent" BIGINT NOT NULL);
+create table "problems" ("id" INTEGER NOT NULL PRIMARY KEY IDENTITY, "codec" VARCHAR(254) NOT NULL,"stampText" VARCHAR(500) NOT NULL,"summary" VARCHAR(254) NOT NULL,"description" VARCHAR(500) NOT NULL,"detailsXml" VARCHAR(MAX) NOT NULL,"epoch" BIGINT NOT NULL);
+create index "idx_epoch" on "problems" ("epoch");

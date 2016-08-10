@@ -12,6 +12,7 @@ import slick.jdbc.meta.MTable
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
+import scala.util.{Failure, Success}
 import scala.util.control.NonFatal
 import scala.xml.XML
 
@@ -30,10 +31,21 @@ object Problems {
   import slickProfile.api._
 
   val dataSource: DataSource = TestableDataSourceCreator.dataSource(config)
+
   lazy val db = {
     val db = Database.forDataSource(dataSource)
-    if (config.hasPath("createTablesOnStart") && config.getBoolean("createTablesOnStart"))
-      Await.ready(db.run(IOActions.createIfNotExists), FiniteDuration(3, SECONDS))
+    val createTables: String = "createTablesOnStart"
+    if (config.hasPath(createTables) && config.getBoolean(createTables)) {
+      val duration = FiniteDuration(3, SECONDS)
+      Await.ready(db.run(IOActions.createIfNotExists), duration)
+      val testValues: String = "insertTestValuesOnStart"
+      if (config.hasPath(testValues) && config.getBoolean(testValues)) {
+        def dumb(id: Int) = ProblemDigest(s"codec($id)", s"stamp($id)", s"sum($id)", s"desc($id)", <details>{id}</details>, id)
+        val dummyValues: Seq[ProblemDigest] = Seq(0, 1, 2, 3, 4, 5, 6).map(dumb)
+        Await.ready(db.run(Queries ++= dummyValues), duration)
+      }
+    }
+
     db
   }
 
@@ -72,7 +84,7 @@ object Problems {
     def problemToRow(problem: ProblemDigest): Option[(Int, String, String, String, String, String, Long)] = problem match {
       case ProblemDigest(codec, stampText, summary, description, detailsXml, epoch) =>
         // 0 is ignored on insert and replaced with an auto incremented id
-        Some((0, codec, stampText, summary, description, detailsXml.toString, epoch))
+        Some((7, codec, stampText, summary, description, detailsXml.toString, epoch))
     }
   }
 
@@ -115,10 +127,7 @@ object Problems {
       if (_) problems.schema.drop else SuccessAction(NoOperation))
     val resetTable = createIfNotExists >> problems.selectAll.delete
     val selectAll = problems.result
-    def sizeAndProblemDigest(n: Int, offset: Int = 0) = for {
-      length <- problems.length.result
-      allProblems <- problems.lastNProblems(n, offset).result
-    } yield (allProblems, length)
+    def sizeAndProblemDigest(n: Int, offset: Int = 0) = problems.lastNProblems(n, offset).result.zip(problems.size.result)
   }
 
 
@@ -172,7 +181,10 @@ object Problems {
       */
     def insertProblem(problem: ProblemDigest) = {
       println(s"Inserting problem ${problem.codec} with stamp: ${problem.stampText}")
-      run(Queries += problem)
+      run(Queries += problem).onComplete {
+        case Success(r) => println(s"Successful insertion of ${(problem.codec, problem.stampText)}, with result $r")
+        case Failure(f) => println(s"Failed insertion of ${(problem.codec, problem.stampText)}, with result $f")
+      }
     }
   }
 }

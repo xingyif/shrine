@@ -2,7 +2,7 @@ package net.shrine.broadcaster
 
 import net.shrine.aggregation.Aggregator
 import net.shrine.problem.TestProblem
-import net.shrine.protocol.{AuthenticationInfo, BroadcastMessage, Credential, DeleteQueryRequest, ErrorResponse, Failure, NodeId, Result, ShrineResponse, SingleNodeResult, Timeout}
+import net.shrine.protocol.{AuthenticationInfo, BroadcastMessage, Credential, DeleteQueryRequest, ErrorResponse, FailureResult, FailureResult$, NodeId, Result, ShrineResponse, SingleNodeResult, Timeout}
 import net.shrine.util.ShouldMatchersForJUnit
 import org.junit.Test
 
@@ -59,10 +59,10 @@ final class HubBroadcastAndAggregationServiceTest extends AbstractSquerylHubDaoT
   def testAggregateHandlesFailures {
     def toResult(description: Char) = Result(NodeId(description.toString), 1.second, ErrorResponse(TestProblem(summary = "blah blah blah")))
 
-    def toFailure(description: Char) = Failure(NodeId(description.toString), new Exception with scala.util.control.NoStackTrace)
+    def toFailure(description: Char) = FailureResult(NodeId(description.toString), new Exception with scala.util.control.NoStackTrace)
 
     val failuresByOrigin: Map[NodeId, SingleNodeResult] = {
-      "UV".map(toFailure).map { case f @ Failure(origin, _) => origin -> f }.toMap
+      "UV".map(toFailure).map { case f @ FailureResult(origin, _) => origin -> f }.toMap
     }
     
     val timeoutsByOrigin: Map[NodeId, SingleNodeResult] = Map(NodeId("Z") -> Timeout(NodeId("Z")))

@@ -5,13 +5,13 @@
         .module('shrine.steward.login')
         .factory('LoginModel', LoginModel);
 
-    LoginModel.$inject = ['$http', '$q', 'constants'];
-    function LoginModel($http, $q, constants) {
+    LoginModel.$inject = ['$http', '$q', 'StewardService'];
+    function LoginModel($http, $q, service) {
 
         // -- private --//
         var loginModel = this;
         var authFail = 'AuthenticationFailed';
-        var url = constants.baseUrl + 'user/whoami/';
+        var url = service.getUrl() + 'user/whoami/';
 
         return {
             login: authenticate

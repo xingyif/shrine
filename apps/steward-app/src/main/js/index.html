@@ -14,7 +14,7 @@
     <!-- endinject -->
 </head>
 
-<body class="main-app" style="display:none">
+<body class="main-app" style="display:none; overflow-x:hidden">
     <div ng-controller="StewardController as steward" ng-cloak>
         <nav class="navbar navbar-default navbar-static-top shrine-navbar" role="navigation" style="margin-bottom: 0">
 
@@ -28,7 +28,7 @@
             <ul class="nav navbar-top-links navbar-right" ng-show="steward.isUserLoggedIn()" style="margin-top: 8px" ng-cloak>
                 <li>
                     <span style="color:#1a1a1a;
-                        text-transform: capitalize; margin-right: 10px" ng-cloak>
+                        margin-right: 10px" ng-cloak>
                         Hello,
                         {{steward.getUsername()}}</span>
                 </li>
@@ -40,11 +40,11 @@
                     </a>
                     <ul class="dropdown-menu dropdown-user">
                         <li style="text-align: center">
-                            Role
+                            {{steward.getRole()}}
                         </li>
                         <li class="divider"></li>
                         <li>
-                            <a href="link to help" target="_blank" ng-cloak>
+                            <a href="./app/assets/img/SHRINE-Data-Steward-Help.pdf" target="_blank" ng-cloak>
                                 <i class="fa fa-file fa-fw"></i> Help</a>
                         </li>
 
