@@ -19,14 +19,6 @@ object TestableDataSourceCreator {
 
     val dataSourceFrom = config.getString("dataSourceFrom")
     if(dataSourceFrom == "JNDI") {
-      println("===== BEGINNING TO PRINT CONFIG DEBUG INFORMATION =====")
-      println("CONFIG ROOT:\n")
-      println(config.root.render)
-      println("CONFIG OBJECT SOURCE")
-      println(config.root.origin.description)
-      println(config.root.origin.filename)
-      println("===== ENDING PRINTING OF CONFIG DEBUG INFORMATION =====")
-
       val jndiDataSourceName = config.getString("jndiDataSourceName")
       val initialContext:InitialContext = new InitialContext()
       val dataSource = initialContext.lookup(jndiDataSourceName).asInstanceOf[DataSource]

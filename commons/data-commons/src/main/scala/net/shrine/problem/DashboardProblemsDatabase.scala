@@ -180,11 +180,7 @@ object Problems {
       * @param problem the ProblemDigest
       */
     def insertProblem(problem: ProblemDigest) = {
-      println(s"Inserting problem ${problem.codec} with stamp: ${problem.stampText}")
-      run(Queries += problem).onComplete {
-        case Success(r) => println(s"Successful insertion of ${(problem.codec, problem.stampText)}, with result $r")
-        case Failure(f) => println(s"Failed insertion of ${(problem.codec, problem.stampText)}, with result $f")
-      }
+      run(Queries += problem)
     }
   }
 }
