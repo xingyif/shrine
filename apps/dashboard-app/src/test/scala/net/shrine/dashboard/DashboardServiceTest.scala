@@ -201,7 +201,7 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
         assertResult(OK)(status)
 
         val problems = new String(body.data.toByteArray)
-      }
+    }
   }
 
   "DashboardService" should "return an OK for admin/status/problems with queries" in {
