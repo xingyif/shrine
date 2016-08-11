@@ -241,7 +241,6 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
       val problemsAndSize: (Seq[ProblemDigest], Int) = db.runBlocking(db.IO.sizeAndProblemDigest(n, offset))(timeout)
       val response = ProblemResponse(problemsAndSize._2, offset, n, problemsAndSize._1)
       implicit val formats = response.json4sMarshaller
-      //todo: Find a better way to do this besides writing and parsing the json response
       complete(response)
     }
   }
