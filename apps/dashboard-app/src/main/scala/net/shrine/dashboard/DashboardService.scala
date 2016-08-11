@@ -227,7 +227,9 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
       x - (x % y)
     }
 
-    val formats = DefaultFormats + new NodeSeqSerializer
+    case class ProblemResponse(size: Int, offset: Int, n: Int, problems: Seq[ProblemDigest]) extends Json4sSupport {
+      override implicit def json4sFormats: Formats = DefaultFormats + new NodeSeqSerializer
+    }
 
     parameter("offset" ? "0") { offsetString: String =>
       val n = 20
@@ -244,7 +246,7 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
       val problemsAndSize: (Seq[ProblemDigest], Int) = db.runBlocking(db.IO.sizeAndProblemDigest(n, offset))(timeout)
       val response = ProblemResponse(problemsAndSize._2, offset, n, problemsAndSize._1)
       //todo: Find a better way to do this besides writing and parsing the json response
-      complete(json4sParse(write(response)(formats)))
+      complete(response)
     }
   }
 
@@ -298,8 +300,6 @@ object DownstreamNode {
       yield DownstreamNode(k.split('.').last,v.split("\"").mkString(""))
   }
 }
-
-case class ProblemResponse(size: Int, offset: Int, n: Int, problems: Seq[ProblemDigest])
 
 //todo replace with the actual config, scrubbed of passwords
 case class ShrineConfig(isHub:Boolean,
