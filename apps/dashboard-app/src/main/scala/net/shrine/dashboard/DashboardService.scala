@@ -231,8 +231,6 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
 
     parameter("offset" ? "0") { offsetString: String =>
       val n = 20
-      // TODO: Once Bamboo/Deploy is running Java 8, switch to using Math.floorMod
-
 
       // Try and grab the offset. If a number wasn't passed in, just default to 0
       val offset = try { floorMod(Math.max(0, offsetString.toInt), n) } catch { case a:java.lang.NumberFormatException =>
