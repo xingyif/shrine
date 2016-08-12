@@ -148,8 +148,8 @@ final case class RunQueryAdapter(
           case Failure(x) => //noinspection RedundantBlock
           {
             val problem:Problem = x match {
-              case e: ErrorFromCrcException => ErrorFromCrc(e)
-              case e: MissingCrCXmlResultException => CannotInterpretCrcXml(e)
+              case e: ErrorFromCrcException => ErrorFromCrcBreakdown(e)
+              case e: MissingCrCXmlResultException => CannotInterpretCrcBreakdownXml(e)
               case NonFatal(e) => {
                 val summary = s"Unexpected exception while interpreting breakdown response"
                 ProblemNotYetEncoded(summary, e)
@@ -178,7 +178,7 @@ final case class RunQueryAdapter(
     val obfuscatedMergedBreakdowns = obfuscateBreakdowns(originalMergedBreakdowns)
 
     val failedBreakdownTypes = failedBreakdownCountAttemptsWithProblems.flatMap { case (qr, _) => qr.resultType }
-    
+
     dao.storeResults(
       authn = authnToUse,
       masterId = rawRunQueryResponse.queryId.toString,
@@ -202,9 +202,9 @@ final case class RunQueryAdapter(
 
     if(debugEnabled) {
       def justBreakdowns(breakdowns: Map[ResultOutputType, I2b2ResultEnvelope]) = breakdowns.mapValues(_.data)
-      
+
       val obfuscationMessage = s"obfuscation is ${if(doObfuscation) "ON" else "OFF"}"
-      
+
       debug(s"Returning QueryResult with count ${resultWithBreakdowns.setSize} (original count: ${originalNonBreakDownResults.headOption.map(_.setSize)} ; $obfuscationMessage)")
       debug(s"Returning QueryResult with breakdowns ${justBreakdowns(resultWithBreakdowns.breakdowns)} (original breakdowns: ${justBreakdowns(originalMergedBreakdowns)} ; $obfuscationMessage)")
       debug(s"Full QueryResult: $resultWithBreakdowns")
@@ -220,10 +220,10 @@ final case class RunQueryAdapter(
 
   private def getResultFromCrc(parentRequest: RunQueryRequest, networkResultId: Long): Try[ReadResultResponse] = {
     def readResultRequest(runQueryReq: RunQueryRequest, networkResultId: Long) = ReadResultRequest(hiveCredentials.projectId, runQueryReq.waitTime, hiveCredentials.toAuthenticationInfo, networkResultId.toString)
-    
+
     Try(XML.loadString(callCrc(readResultRequest(parentRequest, networkResultId)))).flatMap(ReadResultResponse.fromI2b2(breakdownTypes))
   }
-  
+
   private[adapter] def attemptToRetrieveCount(runQueryReq: RunQueryRequest, originalCountQueryResult: QueryResult): (QueryResult, Try[QueryResult]) = {
     originalCountQueryResult -> (for {
       countData <- getResultFromCrc(runQueryReq, originalCountQueryResult.resultId)
@@ -270,15 +270,14 @@ object RunQueryAdapter {
   }
 }
 
-//todo add these to the wiki if they survive the day
-case class ErrorFromCrc(x:ErrorFromCrcException) extends AbstractProblem(ProblemSources.Adapter) {
+case class ErrorFromCrcBreakdown(x:ErrorFromCrcException) extends AbstractProblem(ProblemSources.Adapter) {
 
   override lazy val throwable = Some(x)
   override lazy val summary: String = "The CRC reported an error."
   override lazy val description = "The CRC reported an internal error."
 }
 
-case class CannotInterpretCrcXml(x:MissingCrCXmlResultException) extends AbstractProblem(ProblemSources.Adapter) {
+case class CannotInterpretCrcBreakdownXml(x:MissingCrCXmlResultException) extends AbstractProblem(ProblemSources.Adapter) {
 
   override lazy val throwable = Some(x)
   override lazy val summary: String = "SHRINE cannot interpret the CRC response."
