@@ -18,7 +18,6 @@ import spray.routing.directives.LogEntry
 import spray.routing._
 import org.json4s.{DefaultFormats, Formats}
 import org.json4s.native.JsonMethods.{parse => json4sParse}
-import org.json4s.native.Serialization._
 
 import scala.collection.immutable.Iterable
 import scala.concurrent.duration.{Duration, FiniteDuration, SECONDS}
@@ -227,12 +226,8 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
       x - (x % y)
     }
 
-    val formats = DefaultFormats + new NodeSeqSerializer
-
     parameter("offset" ? "0") { offsetString: String =>
       val n = 20
-      // TODO: Once Bamboo/Deploy is running Java 8, switch to using Math.floorMod
-
 
       // Try and grab the offset. If a number wasn't passed in, just default to 0
       val offset = try { floorMod(Math.max(0, offsetString.toInt), n) } catch { case a:java.lang.NumberFormatException =>
@@ -245,11 +240,15 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
       val timeout: Duration = new FiniteDuration(15, SECONDS)
       val problemsAndSize: (Seq[ProblemDigest], Int) = db.runBlocking(db.IO.sizeAndProblemDigest(n, offset))(timeout)
       val response = ProblemResponse(problemsAndSize._2, offset, n, problemsAndSize._1)
-      //todo: Find a better way to do this besides writing and parsing the json response
-      complete(json4sParse(write(response)(formats)))
+      implicit val formats = response.json4sMarshaller
+      complete(response)
     }
   }
 
+}
+
+case class ProblemResponse(size: Int, offset: Int, n: Int, problems: Seq[ProblemDigest]) extends Json4sSupport {
+  override implicit def json4sFormats: Formats = DefaultFormats + new NodeSeqSerializer
 }
 
 /**
@@ -300,8 +299,6 @@ object DownstreamNode {
       yield DownstreamNode(k.split('.').last,v.split("\"").mkString(""))
   }
 }
-
-case class ProblemResponse(size: Int, offset: Int, n: Int, problems: Seq[ProblemDigest])
 
 //todo replace with the actual config, scrubbed of passwords
 case class ShrineConfig(isHub:Boolean,

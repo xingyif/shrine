@@ -18,6 +18,7 @@ import spray.http.StatusCodes.{OK, PermanentRedirect, Unauthorized}
 import spray.http.{BasicHttpCredentials, OAuth2BearerToken}
 import spray.testkit.ScalatestRouteTest
 
+
 import scala.language.postfixOps
 
 @RunWith(classOf[JUnitRunner])
@@ -200,8 +201,7 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
         assertResult(OK)(status)
 
         val problems = new String(body.data.toByteArray)
-        println(problems)
-      }
+    }
   }
 
   "DashboardService" should "return an OK for admin/status/problems with queries" in {

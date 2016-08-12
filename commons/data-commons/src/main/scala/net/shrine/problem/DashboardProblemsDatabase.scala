@@ -25,10 +25,8 @@ import scala.xml.XML
 object Problems {
   val config:Config = ProblemConfigSource.config.getConfig("shrine.dashboard.database")
   val slickProfileClassName = config.getString("slickProfileClassName")
-  println(slickProfileClassName)
   // TODO: Can we not pay this 2 second cost here?
   val slickProfile:JdbcProfile = ProblemConfigSource.objectForName(slickProfileClassName)
-  println(s"CLASS FOR DRIVER = ${slickProfile.getClass}")
 
   import slickProfile.api._
 
@@ -40,14 +38,14 @@ object Problems {
     if (config.hasPath(createTables) && config.getBoolean(createTables)) {
       val duration = FiniteDuration(3, SECONDS)
       Await.ready(db.run(IOActions.createIfNotExists), duration)
-      val testValues: String = "insertTestValuesOnStart"
+      val testValues: String = "createTestValuesOnStart"
       if (config.hasPath(testValues) && config.getBoolean(testValues)) {
         def dumb(id: Int) = ProblemDigest(s"codec($id)", s"stamp($id)", s"sum($id)", s"desc($id)", <details>{id}</details>, id)
         val dummyValues: Seq[ProblemDigest] = Seq(0, 1, 2, 3, 4, 5, 6).map(dumb)
         Await.ready(db.run(Queries ++= dummyValues), duration)
       }
     }
-    println(s"Db class name: ${db.getClass}, source: ${db.source}")
+
     db
   }
 
@@ -86,7 +84,7 @@ object Problems {
     def problemToRow(problem: ProblemDigest): Option[(Int, String, String, String, String, String, Long)] = problem match {
       case ProblemDigest(codec, stampText, summary, description, detailsXml, epoch) =>
         // 0 is ignored on insert and replaced with an auto incremented id
-        Some((0, codec, stampText, summary, description, detailsXml.toString, epoch))
+        Some((7, codec, stampText, summary, description, detailsXml.toString, epoch))
     }
   }
 
@@ -170,7 +168,6 @@ object Problems {
       */
     def runBlocking[R](dbio: DBIOAction[R, NoStream, _])(implicit timeout: Duration = new FiniteDuration(15, SECONDS)): R = {
       try {
-        println(s"CLASS FOR DRIVER = ${slickProfile.getClass}")
         Await.result(this.run(dbio), timeout)
       } catch {
         case tx:TimeoutException => throw CouldNotRunDbIoActionException(Problems.dataSource, tx)
@@ -183,11 +180,7 @@ object Problems {
       * @param problem the ProblemDigest
       */
     def insertProblem(problem: ProblemDigest) = {
-      println(s"Inserting problem ${problem.codec} with stamp: ${problem.stampText}")
-      run(Queries += problem).onComplete {
-        case Success(r) => println(s"Successful insertion of ${(problem.codec, problem.stampText)}, with result $r")
-        case Failure(f) => println(s"Failed insertion of ${(problem.codec, problem.stampText)}, with result $f")
-      }
+      run(Queries += problem)
     }
   }
 }

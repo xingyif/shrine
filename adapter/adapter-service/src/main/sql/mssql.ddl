@@ -2,4 +2,5 @@ create table "queriesReceived" ("shrineNodeId" VARCHAR(MAX) NOT NULL,"userName" 
 create table "executionsStarted" ("networkQueryId" BIGINT NOT NULL,"queryName" VARCHAR(MAX) NOT NULL,"timeExecutionStarted" BIGINT NOT NULL);
 create table "executionsCompleted" ("networkQueryId" BIGINT NOT NULL,"replyId" BIGINT NOT NULL,"queryName" VARCHAR(MAX) NOT NULL,"timeExecutionCompleted" BIGINT NOT NULL);
 create table "resultsSent" ("networkQueryId" BIGINT NOT NULL,"replyId" BIGINT NOT NULL,"queryName" VARCHAR(MAX) NOT NULL,"timeResultsSent" BIGINT NOT NULL);
-create table "problems" ("id" BIGINT NOT NULL, "codec" VARCHAR(MAX) NOT NULL,"stampText" VARCHAR(MAX) NOT NULL,"summary" VARCHAR(MAX) NOT NULL,"description" VARCHAR(MAX) NOT NULL,"detailsXml" VARCHAR(MAX) NOT NULL,"epoch" BIGINT NOT NULL);
+create table "problems" ("id" INTEGER NOT NULL PRIMARY KEY IDENTITY, "codec" VARCHAR(254) NOT NULL,"stampText" VARCHAR(500) NOT NULL,"summary" VARCHAR(254) NOT NULL,"description" VARCHAR(500) NOT NULL,"detailsXml" VARCHAR(MAX) NOT NULL,"epoch" BIGINT NOT NULL);
+create index "idx_epoch" on "problems" ("epoch");
