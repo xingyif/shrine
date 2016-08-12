@@ -3,8 +3,10 @@ package net.shrine.adapter
 import java.sql.SQLException
 
 import net.shrine.log.Loggable
-import net.shrine.problem._
-import net.shrine.protocol._
+import net.shrine.problem.{AbstractProblem, LoggingProblemHandler, Problem, ProblemNotYetEncoded, ProblemSources}
+import net.shrine.protocol.{AuthenticationInfo, BaseShrineResponse, BroadcastMessage, ErrorResponse, ShrineRequest}
+
+import scala.util.control.NonFatal
 
 /**
  * @author Bill Simons
@@ -18,6 +20,7 @@ import net.shrine.protocol._
  */
 abstract class Adapter extends Loggable {
   
+  //noinspection RedundantBlock
   final def perform(message: BroadcastMessage): BaseShrineResponse = {
     def problemToErrorResponse(problem:Problem):ErrorResponse = {
       LoggingProblemHandler.handleProblem(problem)
@@ -35,8 +38,7 @@ abstract class Adapter extends Loggable {
 
       case e: SQLException => problemToErrorResponse(AdapterDatabaseProblem(e))
 
-      //noinspection RedundantBlock
-      case e: Exception => {
+      case NonFatal(e) => {
         val summary = if(message == null) "Unknown problem in Adapter.perform with null BroadcastMessage"
                       else s"Unexpected exception in Adapter"
         problemToErrorResponse(ProblemNotYetEncoded(summary,e))
