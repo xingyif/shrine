@@ -1,7 +1,7 @@
 package net.shrine.steward
 
 import net.shrine.authorization.steward.TopicState
-import net.shrine.config.ConfigSource
+import net.shrine.source.ConfigSource
 
 /**
   * Source of typesafe config for the data steward app.

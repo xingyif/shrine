@@ -1,7 +1,7 @@
 package net.shrine.problem
 
 import com.typesafe.config.{ConfigValue, ConfigValueFactory}
-import net.shrine.config.ConfigSource
+import net.shrine.source.ConfigSource
 
 /**
   * Source of typesafe config for the problems database

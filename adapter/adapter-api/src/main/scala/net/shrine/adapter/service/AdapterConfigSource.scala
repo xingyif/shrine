@@ -1,6 +1,6 @@
 package net.shrine.adapter.service
 
-import net.shrine.config.ConfigSource
+import net.shrine.source.ConfigSource
 
 /**
  * Source of config for the Adapter. Put new config fields here, not in AdapterConfig, to enable Config-based apply() methods.

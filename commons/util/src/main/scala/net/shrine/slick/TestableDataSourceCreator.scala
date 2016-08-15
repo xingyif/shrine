@@ -7,7 +7,6 @@ import javax.naming.{Context, InitialContext}
 import javax.sql.DataSource
 
 import com.typesafe.config.Config
-import net.shrine.config.ConfigExtensions
 
 /**
   * @author david 
@@ -33,7 +32,9 @@ object TestableDataSourceCreator {
       case class Credentials(username: String,password:String)
       def configToCredentials(config:Config) = new Credentials(config.getString("username"),config.getString("password"))
 
-      val credentials: Option[Credentials] = testDataSourceConfig.getOptionConfigured("credentials",configToCredentials)
+      val credentials: Option[Credentials] = if (testDataSourceConfig.hasPath("credentials"))
+        Some(configToCredentials(testDataSourceConfig.getConfig("credentials")))
+        else None
 
       //Creating an instance of the driver register it. (!) From a previous epoch, but it works.
       Class.forName(driverClassName).newInstance()

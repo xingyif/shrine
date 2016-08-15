@@ -1,7 +1,7 @@
 package net.shrine.qep
 
-import net.shrine.config.ConfigSource
 import net.shrine.log.Log
+import net.shrine.source.ConfigSource
 
 /**
  * Source of config for the Qep. Put new config fields here, not in QepConfig, to enable Config-based apply() methods.

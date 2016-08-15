@@ -1,4 +1,5 @@
-package net.shrine.config
+package net.shrine.source
+
 import com.typesafe.config.{Config, ConfigFactory}
 
 /**

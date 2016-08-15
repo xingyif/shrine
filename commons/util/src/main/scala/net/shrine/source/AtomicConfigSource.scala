@@ -1,8 +1,8 @@
-package net.shrine.config
+package net.shrine.source
 
 import java.util.concurrent.atomic.AtomicReference
 
-import com.typesafe.config.{ConfigFactory, Config}
+import com.typesafe.config.{Config, ConfigFactory}
 
 import scala.util.{Failure, Success, Try}
 
