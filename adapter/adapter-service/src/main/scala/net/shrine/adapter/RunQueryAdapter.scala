@@ -8,10 +8,13 @@ import scala.util.Try
 import scala.xml.NodeSeq
 import net.shrine.adapter.dao.AdapterDao
 import net.shrine.adapter.translators.QueryDefinitionTranslator
-import net.shrine.protocol.{HiveCredentials, AuthenticationInfo, BroadcastMessage, Credential, I2b2ResultEnvelope, QueryResult, RawCrcRunQueryResponse, ReadResultRequest, ReadResultResponse, ResultOutputType, RunQueryRequest, RunQueryResponse, ErrorResponse,  ShrineResponse}
+import net.shrine.protocol.{AuthenticationInfo, BroadcastMessage, Credential, ErrorFromCrcException, ErrorResponse, HiveCredentials, I2b2ResultEnvelope, MissingCrCXmlResultException, QueryResult, RawCrcRunQueryResponse, ReadResultRequest, ReadResultResponse, ResultOutputType, RunQueryRequest, RunQueryResponse, ShrineResponse}
 import net.shrine.client.Poster
+import net.shrine.problem.{AbstractProblem, LoggingProblemHandler, Problem, ProblemNotYetEncoded, ProblemSources}
+
 import scala.util.control.NonFatal
 import net.shrine.util.XmlDateHelper
+
 import scala.xml.XML
 
 /**
@@ -65,7 +68,7 @@ final case class RunQueryAdapter(
     //of previous queries on deployed systems where the credentials in the identity param to this method and the authn
     //field of the incoming request are different, like the HMS Shrine deployment.
     //NB: Credential field is wiped out to preserve old behavior -Clint 14 Nov, 2013
-    val authnToUse = message.networkAuthn.copy(credential = Credential("", false))
+    val authnToUse = message.networkAuthn.copy(credential = Credential("", isToken = false))
 
     if (!runQueriesImmediately) {
       debug(s"Queueing query from user ${message.networkAuthn.domain}:${message.networkAuthn.username}")
@@ -118,9 +121,7 @@ final case class RunQueryAdapter(
     //See: https://open.med.harvard.edu/jira/browse/SHRINE-794
     val result = super.processRequest(message) match {
       case e: ErrorResponse => e
-      case rawRunQueryResponse: RawCrcRunQueryResponse => {
-        processRawCrcRunQueryResponse(authnToUse, request, rawRunQueryResponse)
-      }
+      case rawRunQueryResponse: RawCrcRunQueryResponse => processRawCrcRunQueryResponse(authnToUse, request, rawRunQueryResponse)
     }
     if (collectAdapterAudit) AdapterAuditDb.db.insertExecutionCompletedShrineResponse(request,result)
 
@@ -128,17 +129,41 @@ final case class RunQueryAdapter(
   }
 
   private[adapter] def processRawCrcRunQueryResponse(authnToUse: AuthenticationInfo, request: RunQueryRequest, rawRunQueryResponse: RawCrcRunQueryResponse): RunQueryResponse = {
-    def isBreakdown(result: QueryResult) = result.resultType.map(_.isBreakdown).getOrElse(false)
+    def isBreakdown(result: QueryResult) = result.resultType.exists(_.isBreakdown)
 
-    val originalResults = rawRunQueryResponse.results
+    val originalResults: Seq[QueryResult] = rawRunQueryResponse.results
 
-    val (originalBreakdownResults, originalNonBreakDownResults) = originalResults.partition(isBreakdown)
+    val (originalBreakdownResults, originalNonBreakDownResults): (Seq[QueryResult],Seq[QueryResult]) = originalResults.partition(isBreakdown)
 
     val originalBreakdownCountAttempts: Seq[(QueryResult, Try[QueryResult])] = attemptToRetrieveBreakdowns(request, originalBreakdownResults)
     
     val (successfulBreakdownCountAttempts, failedBreakdownCountAttempts) = originalBreakdownCountAttempts.partition { case (_, t) => t.isSuccess }
 
-    logBreakdownFailures(rawRunQueryResponse, failedBreakdownCountAttempts)
+    val failedBreakdownCountAttemptsWithProblems = failedBreakdownCountAttempts.map { attempt =>
+      val originalResult: QueryResult = attempt._1
+      val queryResult:QueryResult = if (originalResult.problemDigest.isDefined) originalResult
+      else {
+        attempt._2 match {
+          case Success(_) => originalResult
+          case Failure(x) => //noinspection RedundantBlock
+          {
+            val problem:Problem = x match {
+              case e: ErrorFromCrcException => ErrorFromCrcBreakdown(e)
+              case e: MissingCrCXmlResultException => CannotInterpretCrcBreakdownXml(e)
+              case NonFatal(e) => {
+                val summary = s"Unexpected exception while interpreting breakdown response"
+                ProblemNotYetEncoded(summary, e)
+              }
+            }
+            LoggingProblemHandler.handleProblem(problem)
+            originalResult.copy(problemDigest = Some(problem.toDigest))
+          }
+        }
+      }
+      (queryResult,attempt._2)
+    }
+
+    logBreakdownFailures(rawRunQueryResponse, failedBreakdownCountAttemptsWithProblems)
 
     val originalMergedBreakdowns: Map[ResultOutputType, I2b2ResultEnvelope] = {
       val withBreakdownCounts = successfulBreakdownCountAttempts.collect { case (_, Success(queryResultWithBreakdowns)) => queryResultWithBreakdowns }
@@ -152,8 +177,8 @@ final case class RunQueryAdapter(
 
     val obfuscatedMergedBreakdowns = obfuscateBreakdowns(originalMergedBreakdowns)
 
-    val failedBreakdownTypes = failedBreakdownCountAttempts.flatMap { case (queryResult, _) => queryResult.resultType }
-    
+    val failedBreakdownTypes = failedBreakdownCountAttemptsWithProblems.flatMap { case (qr, _) => qr.resultType }
+
     dao.storeResults(
       authn = authnToUse,
       masterId = rawRunQueryResponse.queryId.toString,
@@ -165,32 +190,40 @@ final case class RunQueryAdapter(
       mergedBreakdowns = originalMergedBreakdowns,
       obfuscatedBreakdowns = obfuscatedMergedBreakdowns)
 
+    // at this point the queryResult could be a mix of successes and failures.
+    // SHRINE reports only the successes. See SHRINE-1567 for details
     val queryResults: Seq[QueryResult] = if (doObfuscation) obfuscatedNonBreakdownQueryResults else originalNonBreakDownResults
 
     val breakdownsToReturn: Map[ResultOutputType, I2b2ResultEnvelope] = if (doObfuscation) obfuscatedMergedBreakdowns else originalMergedBreakdowns
 
     //TODO: Will fail in the case of NO non-breakdown QueryResults.  Can this ever happen, and is it worth protecting against here?
-    val resultWithBreakdowns = queryResults.head.withBreakdowns(breakdownsToReturn)
+    //can failedBreakdownCountAttempts be mixed back in here?
+    val resultWithBreakdowns: QueryResult = queryResults.head.withBreakdowns(breakdownsToReturn)
 
     if(debugEnabled) {
       def justBreakdowns(breakdowns: Map[ResultOutputType, I2b2ResultEnvelope]) = breakdowns.mapValues(_.data)
-      
+
       val obfuscationMessage = s"obfuscation is ${if(doObfuscation) "ON" else "OFF"}"
-      
+
       debug(s"Returning QueryResult with count ${resultWithBreakdowns.setSize} (original count: ${originalNonBreakDownResults.headOption.map(_.setSize)} ; $obfuscationMessage)")
       debug(s"Returning QueryResult with breakdowns ${justBreakdowns(resultWithBreakdowns.breakdowns)} (original breakdowns: ${justBreakdowns(originalMergedBreakdowns)} ; $obfuscationMessage)")
       debug(s"Full QueryResult: $resultWithBreakdowns")
     }
+
+    //if any results had problems, this commented out code can turn it into an error QueryResult
+    //See SHRINE-1619
+    //val problem: Option[ProblemDigest] = failedBreakdownCountAttemptsWithProblems.headOption.flatMap(x => x._1.problemDigest)
+    //val queryResult = problem.fold(resultWithBreakdowns)(pd => QueryResult.errorResult(Some(pd.description),"Error with CRC",pd))
 
     rawRunQueryResponse.toRunQueryResponse.withResult(resultWithBreakdowns)
   }
 
   private def getResultFromCrc(parentRequest: RunQueryRequest, networkResultId: Long): Try[ReadResultResponse] = {
     def readResultRequest(runQueryReq: RunQueryRequest, networkResultId: Long) = ReadResultRequest(hiveCredentials.projectId, runQueryReq.waitTime, hiveCredentials.toAuthenticationInfo, networkResultId.toString)
-    
+
     Try(XML.loadString(callCrc(readResultRequest(parentRequest, networkResultId)))).flatMap(ReadResultResponse.fromI2b2(breakdownTypes))
   }
-  
+
   private[adapter] def attemptToRetrieveCount(runQueryReq: RunQueryRequest, originalCountQueryResult: QueryResult): (QueryResult, Try[QueryResult]) = {
     originalCountQueryResult -> (for {
       countData <- getResultFromCrc(runQueryReq, originalCountQueryResult.resultId)
@@ -235,4 +268,18 @@ object RunQueryAdapter {
   private[adapter] def obfuscateBreakdowns(breakdowns: Map[ResultOutputType, I2b2ResultEnvelope]): Map[ResultOutputType, I2b2ResultEnvelope] = {
     breakdowns.mapValues(_.mapValues(Obfuscator.obfuscate))
   }
+}
+
+case class ErrorFromCrcBreakdown(x:ErrorFromCrcException) extends AbstractProblem(ProblemSources.Adapter) {
+
+  override lazy val throwable = Some(x)
+  override lazy val summary: String = "The CRC reported an error."
+  override lazy val description = "The CRC reported an internal error."
+}
+
+case class CannotInterpretCrcBreakdownXml(x:MissingCrCXmlResultException) extends AbstractProblem(ProblemSources.Adapter) {
+
+  override lazy val throwable = Some(x)
+  override lazy val summary: String = "SHRINE cannot interpret the CRC response."
+  override lazy val description = "The CRC responded, but SHRINE could not interpret that response."
 }

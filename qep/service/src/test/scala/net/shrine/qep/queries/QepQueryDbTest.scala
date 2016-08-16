@@ -210,6 +210,7 @@ class QepQueryDbTest extends ShouldMatchersForJUnit {
 
     val results = QepQueryDb.db.selectMostRecentQepResultsFor(2L)
 
+    //Had a sporadic failure 8-9-2016 on David's lap top. Did not fail on rerun.
     results should equal(Seq(queryResultWithBreakdowns))
   }
 

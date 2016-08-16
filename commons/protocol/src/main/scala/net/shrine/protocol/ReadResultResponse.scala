@@ -3,10 +3,10 @@ package net.shrine.protocol
 import scala.xml.NodeSeq
 import net.shrine.serialization.I2b2Unmarshaller
 import net.shrine.serialization.XmlUnmarshaller
-import net.shrine.util.XmlUtil
-import scala.util.Try
-import scala.util.Success
-import net.shrine.util.NodeSeqEnrichments
+import net.shrine.util.{MissingChildNodeException, NodeSeqEnrichments, XmlUtil}
+
+import scala.util.control.NonFatal
+import scala.util.{Failure, Success, Try}
 
 /**
  * @author clint
@@ -59,10 +59,22 @@ object ReadResultResponse extends HasRootTagName {
 
   private[this] def responseXml(x: NodeSeq) = messageBodyXml(x).withChild("response")
 
-  private[this] def crcResultXml(x: NodeSeq): Try[NodeSeq] = {
-    val crcXmlResult: Try[NodeSeq] = responseXml(x).withChild("crc_xml_result")
-//    crcXmlResult.transform({xml:NodeSeq => Success(xml)},{e:Throwable => FailureResult(x)})
-    crcXmlResult
+  //noinspection RedundantBlock
+  private[this] def crcResultXml(nodeSeq: NodeSeq): Try[NodeSeq] = {
+    val crcXmlResult: Try[NodeSeq] = responseXml(nodeSeq).withChild("crc_xml_result")
+    crcXmlResult.transform({xml:NodeSeq => Success(xml)},{
+      x:Throwable => x match {
+        case mcnx: MissingChildNodeException => {
+          val digForError: Try[ErrorFromCrcException] = for{
+            conditionElement <- nodeSeq.withChild("status").withChild("condition")
+            conditionType <- conditionElement.attribute("type") if conditionType == "ERROR"
+          } yield new ErrorFromCrcException(conditionElement.text)
+
+          digForError.transform({interpreted => Failure(interpreted)},{unknown => Failure(MissingCrCXmlResultException(nodeSeq,mcnx))})
+        }
+        case NonFatal(throwable) => Failure(throwable)
+      }
+    })
   }
 
   def fromI2b2(breakdownTypes: Set[ResultOutputType])(xml: NodeSeq): Try[ReadResultResponse] = {
@@ -101,3 +113,7 @@ object ReadResultResponse extends HasRootTagName {
     } yield ReadResultResponse(xmlResultId, metadata, data)
   }
 }
+
+case class MissingCrCXmlResultException(x:NodeSeq,cause:Throwable) extends Exception("No crc_xml_result element",cause)
+
+case class ErrorFromCrcException(message:String) extends Exception(s"Error from CRC: $message")
