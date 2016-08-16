@@ -21,6 +21,7 @@ target/
 # idea
 .idea/
 *.iml
-
+*.ipr
+*.iws
 # osx cruft
 .DS_Store
