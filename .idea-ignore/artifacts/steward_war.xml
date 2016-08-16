@@ -1,8 +1,0 @@
-<component name="ArtifactManager">
-  <artifact type="war" name="steward:war">
-    <output-path>$PROJECT_DIR$/apps/steward-war/target</output-path>
-    <root id="archive" name="steward.war">
-      <element id="artifact" artifact-name="steward:war exploded" />
-    </root>
-  </artifact>
-</component>
