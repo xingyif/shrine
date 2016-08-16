@@ -172,9 +172,9 @@ object ProblemSources{
 }
 
 case class ProblemNotYetEncoded(internalSummary:String,t:Option[Throwable] = None) extends AbstractProblem(ProblemSources.Unknown){
-  override val summary = "An unanticipated problem encountered."
+  override lazy val summary = "An unanticipated problem encountered."
 
-  override val throwable = {
+  override lazy val throwable = {
     val rx = t.fold(new IllegalStateException(s"$summary"))(
       new IllegalStateException(s"$summary",_)
       )
@@ -182,11 +182,11 @@ case class ProblemNotYetEncoded(internalSummary:String,t:Option[Throwable] = Non
     Some(rx)
   }
 
-  val reportedAtStackTrace = new IllegalStateException("Capture reporting stack trace.")
+  lazy val reportedAtStackTrace = new IllegalStateException("Capture reporting stack trace.")
 
-  override val description = "This problem is not yet classified in Shrine source code. Please report the details to the Shrine dev team."
+  override lazy val description = "This problem is not yet classified in Shrine source code. Please report the details to the Shrine dev team."
 
-  override val detailsXml: NodeSeq = NodeSeq.fromSeq(
+  override lazy val detailsXml: NodeSeq = NodeSeq.fromSeq(
     <details>
       {internalSummary}
       {throwableDetail.getOrElse("")}
