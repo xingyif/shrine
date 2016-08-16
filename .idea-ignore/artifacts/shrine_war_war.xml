@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="war" name="shrine-war:war">
+    <output-path>$PROJECT_DIR$/apps/war/target</output-path>
+    <root id="archive" name="shrine-cell.war">
+      <element id="artifact" artifact-name="shrine-war:war exploded" />
+    </root>
+  </artifact>
+</component>

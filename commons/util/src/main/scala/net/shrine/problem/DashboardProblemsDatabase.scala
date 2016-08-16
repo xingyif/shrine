@@ -1,5 +1,6 @@
 package net.shrine.problem
 
+import java.sql.Clob
 import java.util.concurrent.TimeoutException
 import javax.sql.DataSource
 
@@ -57,7 +58,7 @@ object Problems {
     def stampText = column[String]("stampText")
     def summary = column[String]("summary")
     def description = column[String]("description")
-    def xml = column[String]("detailsXml")
+    def xml = column[String]("detailsXml", O.SqlType("Clob"))
     def epoch= column[Long]("epoch")
     // projection between table row and problem digest
     def * = (id, codec, stampText, summary, description, xml, epoch) <> (rowToProblem, problemToRow)
