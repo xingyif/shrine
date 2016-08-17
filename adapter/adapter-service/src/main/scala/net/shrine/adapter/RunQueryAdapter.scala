@@ -272,14 +272,16 @@ object RunQueryAdapter {
 
 case class ErrorFromCrcBreakdown(x:ErrorFromCrcException) extends AbstractProblem(ProblemSources.Adapter) {
 
-  override lazy val throwable = Some(x)
-  override lazy val summary: String = "The CRC reported an error."
-  override lazy val description = "The CRC reported an internal error."
+  override val throwable = Some(x)
+  override val summary: String = "The CRC reported an error."
+  override val description = "The CRC reported an internal error."
+  createAndLog
 }
 
 case class CannotInterpretCrcBreakdownXml(x:MissingCrCXmlResultException) extends AbstractProblem(ProblemSources.Adapter) {
 
-  override lazy val throwable = Some(x)
-  override lazy val summary: String = "SHRINE cannot interpret the CRC response."
-  override lazy val description = "The CRC responded, but SHRINE could not interpret that response."
+  override val throwable = Some(x)
+  override val summary: String = "SHRINE cannot interpret the CRC response."
+  override val description = "The CRC responded, but SHRINE could not interpret that response."
+  createAndLog
 }

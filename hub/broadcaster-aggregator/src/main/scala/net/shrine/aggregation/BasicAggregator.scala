@@ -89,34 +89,37 @@ object BasicAggregator {
 }
 
 case class CouldNotConnectToAdapter(origin:NodeId,cx: Exception) extends AbstractProblem(ProblemSources.Hub) {
-  override lazy val throwable = Some(cx)
-  override lazy val summary: String = "Shrine could not connect to the adapter."
-  override lazy val description: String = s"Shrine could not connect to the adapter at ${origin.name} due to ${throwable.get}."
+  override val throwable = Some(cx)
+  override val summary: String = "Shrine could not connect to the adapter."
+  override val description: String = s"Shrine could not connect to the adapter at ${origin.name} due to ${throwable.get}."
+  createAndLog
 }
 
 case class TimedOutWithAdapter(origin:NodeId) extends AbstractProblem(ProblemSources.Hub) {
-  override lazy val throwable = None
-  override lazy val summary: String = "Timed out with adapter."
-  override lazy val description: String = s"Shrine observed a timeout with the adapter at ${origin.name}."
+  override val throwable = None
+  override val summary: String = "Timed out with adapter."
+  override val description: String = s"Shrine observed a timeout with the adapter at ${origin.name}."
+  createAndLog
 }
 
 case class CouldNotParseResultsProblem(cnrpx:CouldNotParseResultsException) extends AbstractProblem(ProblemSources.Hub) {
-  override lazy val throwable = Some(cnrpx)
-  override lazy val summary: String = "Could not parse response."
-  override lazy val description = s"While parsing a response from ${cnrpx.url} with http code ${cnrpx.statusCode} caught '${cnrpx.cause}'"
-  override lazy val detailsXml = <details>
+  override val throwable = Some(cnrpx)
+  override val summary: String = "Could not parse response."
+  override val description = s"While parsing a response from ${cnrpx.url} with http code ${cnrpx.statusCode} caught '${cnrpx.cause}'"
+  override val detailsXml = <details>
                               Message body is {cnrpx.body}
                               {throwableDetail.getOrElse("")}
                             </details>
+  createAndLog
 }
 
 case class HttpErrorResponseProblem(cnrpx:CouldNotParseResultsException) extends AbstractProblem(ProblemSources.Hub) {
-  override lazy val throwable = Some(cnrpx)
-  override lazy val summary: String = "Adapter error."
-  override lazy val description = s"Observed http status code ${cnrpx.statusCode} from ${cnrpx.url} and caught ${cnrpx.cause}."
-  override lazy val detailsXml = <details>
+  override val throwable = Some(cnrpx)
+  override val summary: String = "Adapter error."
+  override val description = s"Observed http status code ${cnrpx.statusCode} from ${cnrpx.url} and caught ${cnrpx.cause}."
+  override val detailsXml = <details>
                               Message body is {cnrpx.body}
                               {throwableDetail.getOrElse("")}
                             </details>
-
+  createAndLog
 }

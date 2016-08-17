@@ -55,36 +55,40 @@ abstract class Adapter extends Loggable {
 }
 
 case class AdapterLockout(authn:AuthenticationInfo,x:AdapterLockoutException) extends AbstractProblem(ProblemSources.Adapter) {
-  override lazy val throwable = Some(x)
-  override lazy val summary: String = s"User '${authn.domain}:${authn.username}' locked out."
-  override lazy val description:String = s"User '${authn.domain}:${authn.username}' has run too many queries that produce the same result at ${x.url} ."
+  override val throwable = Some(x)
+  override val summary: String = s"User '${authn.domain}:${authn.username}' locked out."
+  override val description:String = s"User '${authn.domain}:${authn.username}' has run too many queries that produce the same result at ${x.url} ."
+  createAndLog
 }
 
 case class CrcCouldNotBeInvoked(crcUrl:String,request:ShrineRequest,x:CrcInvocationException) extends AbstractProblem(ProblemSources.Adapter) {
-  override lazy val throwable = Some(x)
-  override lazy val summary: String = s"Error communicating with I2B2 CRC."
-  override lazy val description: String = s"Error invoking the CRC at '$crcUrl' with a ${request.getClass.getSimpleName} due to ${throwable.get}."
-  override lazy val detailsXml = <details>
+  override val throwable = Some(x)
+  override val summary: String = s"Error communicating with I2B2 CRC."
+  override val description: String = s"Error invoking the CRC at '$crcUrl' with a ${request.getClass.getSimpleName} due to ${throwable.get}."
+  override val detailsXml = <details>
                               Request is {request}
                               {throwableDetail.getOrElse("")}
                             </details>
+  createAndLog
 }
 
 case class AdapterMappingProblem(x:AdapterMappingException) extends AbstractProblem(ProblemSources.Adapter) {
 
-  override lazy val throwable = Some(x)
-  override lazy val summary: String = "Could not map query term(s)."
-  override lazy val description = s"The Shrine Adapter on ${stamp.host.getHostName} cannot map this query to its local terms."
-  override lazy val detailsXml = <details>
+  override val throwable = Some(x)
+  override val summary: String = "Could not map query term(s)."
+  override val description = s"The Shrine Adapter on ${stamp.host.getHostName} cannot map this query to its local terms."
+  override val detailsXml = <details>
                               Query Defitiontion is {x.runQueryRequest.queryDefinition}
                               RunQueryRequest is ${x.runQueryRequest.elideAuthenticationInfo}
                               {throwableDetail.getOrElse("")}
                             </details>
+  createAndLog
 }
 
 case class AdapterDatabaseProblem(x:SQLException) extends AbstractProblem(ProblemSources.Adapter) {
 
-  override lazy val throwable = Some(x)
-  override lazy val summary: String = "Problem using the Adapter database."
-  override lazy val description = "The Shrine Adapter encountered a problem using a database."
+  override val throwable = Some(x)
+  override val summary: String = "Problem using the Adapter database."
+  override val description = "The Shrine Adapter encountered a problem using a database."
+  createAndLog
 }

@@ -226,11 +226,11 @@ object StewardQueryAuthorizationService {
 }
 
 case class ErrorStatusFromDataStewardApp(response:HttpResponse,stewardBaseUrl:URL) extends AbstractProblem(ProblemSources.Qep) {
-  override lazy val summary: String = s"Data Steward App responded with status ${response.status}"
-  override lazy val description:String = s"The Data Steward App at ${stewardBaseUrl} responded with status ${response.status}, not OK."
-  override lazy val detailsXml = <details>
+  override val summary: String = s"Data Steward App responded with status ${response.status}"
+  override val description:String = s"The Data Steward App at ${stewardBaseUrl} responded with status ${response.status}, not OK."
+  override val detailsXml = <details>
     Response is {response}
     {throwableDetail.getOrElse("")}
   </details>
-
+  createAndLog
 }

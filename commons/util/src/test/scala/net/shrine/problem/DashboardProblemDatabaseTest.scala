@@ -88,4 +88,5 @@ class DashboardProblemDatabaseTest extends FlatSpec with BeforeAndAfter with Sca
 case class ProblemDatabaseTestProblem(source: ProblemSources.ProblemSource) extends AbstractProblem(source: ProblemSources.ProblemSource) {
   override def summary: String = "This is a test problem! No user should ever see this."
   override def description: String = "Wow, this is a nice looking problem. I mean really, just look at it."
+  createAndLog
 }

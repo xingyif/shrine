@@ -37,7 +37,8 @@ abstract class IgnoresErrorsAggregator[T <: BaseShrineResponse : Manifest] exten
 }
 
 case class NoValidResponsesToAggregate() extends AbstractProblem(ProblemSources.Hub) {
-  override lazy val summary: String = "No valid responses to aggregate."
+  override val summary: String = "No valid responses to aggregate."
 
-  override lazy val description:String = "The hub received no valid responses to aggregate."
+  override val description:String = "The hub received no valid responses to aggregate."
+  createAndLog
 }

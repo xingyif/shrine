@@ -19,4 +19,5 @@ case class NoI2b2AnalogExists(claz:Class[_ <: NonI2b2ableResponse]) extends Abst
   override def summary: String = s"${ claz.getSimpleName } can't be marshalled to i2b2 XML, as it has no i2b2 analog"
 
   override def description: String = s"${ claz.getSimpleName } can't be marshalled to i2b2 XML, as it has no i2b2 analog"
+  createAndLog
 }

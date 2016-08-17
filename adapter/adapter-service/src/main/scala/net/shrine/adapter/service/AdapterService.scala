@@ -85,19 +85,21 @@ case class CouldNotVerifySignature(message: BroadcastMessage) extends AbstractPr
 
   val signature: Option[Signature] = message.signature
 
-  override lazy val summary: String = signature.fold("A message was not signed")(sig => s"The trust relationship with ${sig.signedBy} is not properly configured.")
-  override lazy val description: String = signature.fold(s"The Adapter at ${stamp.host.getHostName} could not properly validate a request because it had no signature.")(sig => s"The Adapter at ${stamp.host.getHostName} could not properly validate the request from ${sig.signedBy}. An incoming message from the hub had an invalid signature.")
-  override lazy val detailsXml = signature.fold(
+  override val summary: String = signature.fold("A message was not signed")(sig => s"The trust relationship with ${sig.signedBy} is not properly configured.")
+  override val description: String = signature.fold(s"The Adapter at ${stamp.host.getHostName} could not properly validate a request because it had no signature.")(sig => s"The Adapter at ${stamp.host.getHostName} could not properly validate the request from ${sig.signedBy}. An incoming message from the hub had an invalid signature.")
+  override val detailsXml = signature.fold(
     <details/>
   )(
       sig =>  <details>
                 Signature is {sig}
               </details>
     )
+  createAndLog
 }
 
 case class UnknownRequestType(requestType: RequestType) extends AbstractProblem(ProblemSources.Adapter){
 
-  override lazy val summary: String = s"Unknown request type $requestType"
-  override lazy val description: String = s"The Adapter at ${stamp.host.getHostName} received a request of type $requestType that it cannot process."
+  override val summary: String = s"Unknown request type $requestType"
+  override val description: String = s"The Adapter at ${stamp.host.getHostName} received a request of type $requestType that it cannot process."
+  createAndLog
 }

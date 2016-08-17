@@ -15,7 +15,7 @@ import net.shrine.problem.{TestProblem, TurnOffProblemConnector}
  * @author clint
  * @since Nov 19, 2013
  */
-final class SigningBroadcastAndAggregationServiceTest extends ShouldMatchersForJUnit {
+final class SigningBroadcastAndAggregationServiceTest extends ShouldMatchersForJUnit with TurnOffProblemConnector {
   import scala.concurrent.duration._
   import MockBroadcasters._
 

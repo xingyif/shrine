@@ -391,10 +391,11 @@ object QueryResult {
 }
 
 case class ErrorStatusFromCrc(messageFromCrC:Option[String], xmlResponseFromCrc: String) extends AbstractProblem(ProblemSources.Adapter) {
-  override lazy val summary: String = "The I2B2 CRC reported an internal error."
-  override lazy val description:String = s"The I2B2 CRC responded with status type ERROR ${messageFromCrC.fold(" but no message")(message => s"and a message of '$message'")}"
-  override lazy val detailsXml = <details>
+  override val summary: String = "The I2B2 CRC reported an internal error."
+  override val description:String = s"The I2B2 CRC responded with status type ERROR ${messageFromCrC.fold(" but no message")(message => s"and a message of '$message'")}"
+  override val detailsXml = <details>
     CRC's Response is {xmlResponseFromCrc}
   </details>
+  createAndLog
 }
 

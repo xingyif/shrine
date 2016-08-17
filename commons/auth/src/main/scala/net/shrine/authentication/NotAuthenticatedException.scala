@@ -22,15 +22,16 @@ object NotAuthenticatedException {
 }
 
 case class NotAuthenticatedProblem(nax:NotAuthenticatedException) extends AbstractProblem(ProblemSources.Qep){
-  override lazy val summary = s"Can not authenticate ${nax.domain}:${nax.username}."
+  override val summary = s"Can not authenticate ${nax.domain}:${nax.username}."
 
-  override lazy val throwable = Some(nax)
+  override val throwable = Some(nax)
 
-  override lazy val description = s"Can not authenticate ${nax.domain}:${nax.username}. ${nax.getLocalizedMessage}"
+  override val description = s"Can not authenticate ${nax.domain}:${nax.username}. ${nax.getLocalizedMessage}"
 
-  override lazy val detailsXml: NodeSeq = NodeSeq.fromSeq(
+  override val detailsXml: NodeSeq = NodeSeq.fromSeq(
     <details>
       {throwableDetail.getOrElse("")}
     </details>
   )
+  createAndLog
 }

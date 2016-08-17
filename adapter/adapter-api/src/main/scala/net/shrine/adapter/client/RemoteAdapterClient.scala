@@ -114,6 +114,7 @@ case class HttpErrorCodeFromAdapter(url:String,statusCode:Int,responseBody:Strin
   override def description: String = s"Hub received error code $statusCode from the adapter at $url"
 
   override def detailsXml:NodeSeq = <details>{s"Http response body was $responseBody"}</details>
+  createAndLog
 }
 
 case class CouldNotParseXmlFromAdapter(url:String,statusCode:Int,responseBody:String,saxx: SAXParseException) extends AbstractProblem(ProblemSources.Adapter) {
@@ -128,4 +129,5 @@ case class CouldNotParseXmlFromAdapter(url:String,statusCode:Int,responseBody:St
     {s"Http response code was $statusCode and the body was $responseBody"}
     {throwableDetail}
   </details>
+  createAndLog
 }

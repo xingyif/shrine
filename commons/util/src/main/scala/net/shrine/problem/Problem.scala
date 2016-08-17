@@ -16,7 +16,7 @@ import scala.xml.{Elem, Node, NodeSeq}
  * @author david 
  * @since 8/6/15
  */
-trait Problem extends DelayedInit {
+trait Problem {
   def summary:String
 
   def problemName = getClass.getName
@@ -44,12 +44,18 @@ trait Problem extends DelayedInit {
 
   def toDigest:ProblemDigest = ProblemDigest(problemName,stamp.pretty,summary,description,detailsXml, stamp.time)
 
-  override def delayedInit(code: => Unit): Unit = {
-    code
+  def logDigest:Problem = {
     if (!ProblemConfigSource.turnOffConnector) {
       val problems = Problems
-      problems.DatabaseConnector.insertProblem(this.toDigest)
+      problems.DatabaseConnector.insertProblem(toDigest)
     }
+    this
+  }
+
+  def createAndLog:Problem = {
+    if (!ProblemConfigSource.turnOffConnector)
+      Problems.DatabaseConnector.insertProblem(toDigest)
+    this
   }
 
 }
@@ -138,6 +144,7 @@ abstract class AbstractProblem(source:ProblemSources.ProblemSource) extends Prob
   println(s"Problem $getClass created")
   def timer = System.currentTimeMillis
   lazy val stamp = Stamp(source, timer)
+
 }
 
 trait ProblemHandler {
@@ -156,6 +163,13 @@ object LoggingProblemHandler extends ProblemHandler with Loggable {
   }
 }
 
+//object DatabaseProblemhandler extends ProblemHandler {
+//  override def handleProblem(problem: Problem): Unit = {
+//    Problems.DatabaseConnector.insertProblem(problem.toDigest)
+//  }
+//
+//}
+
 object ProblemSources{
 
   sealed trait ProblemSource {
@@ -172,9 +186,9 @@ object ProblemSources{
 }
 
 case class ProblemNotYetEncoded(internalSummary:String,t:Option[Throwable] = None) extends AbstractProblem(ProblemSources.Unknown){
-  override lazy val summary = "An unanticipated problem encountered."
+  override val summary = "An unanticipated problem encountered."
 
-  override lazy val throwable = {
+  override val throwable = {
     val rx = t.fold(new IllegalStateException(s"$summary"))(
       new IllegalStateException(s"$summary",_)
       )
@@ -182,16 +196,18 @@ case class ProblemNotYetEncoded(internalSummary:String,t:Option[Throwable] = Non
     Some(rx)
   }
 
-  lazy val reportedAtStackTrace = new IllegalStateException("Capture reporting stack trace.")
+  val reportedAtStackTrace = new IllegalStateException("Capture reporting stack trace.")
 
-  override lazy val description = "This problem is not yet classified in Shrine source code. Please report the details to the Shrine dev team."
+  override val description = "This problem is not yet classified in Shrine source code. Please report the details to the Shrine dev team."
 
-  override lazy val detailsXml: NodeSeq = NodeSeq.fromSeq(
+  override val detailsXml: NodeSeq = NodeSeq.fromSeq(
     <details>
       {internalSummary}
       {throwableDetail.getOrElse("")}
     </details>
   )
+
+  createAndLog
 }
 
 object ProblemNotYetEncoded {
