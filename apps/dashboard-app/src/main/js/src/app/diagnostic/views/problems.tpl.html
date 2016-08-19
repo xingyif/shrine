@@ -10,9 +10,14 @@
         <thead>
         <tr>
             <td colspan="4">
-                Problems: Total = {{vm.probsSize}}
+                <span>Problems Total: {{vm.probsSize}}</span>
+                <span ng-click="vm.newPage(vm.offset, 20)" style="text-decoration: underline;cursor:pointer;float:right;margin-right:3%">20</span>
+                <span ng-click="vm.newPage(vm.offset, 10)" style="text-decoration: underline;cursor:pointer;float:right;margin-right:3%">10</span>
+                <span ng-click="vm.newPage(vm.offset, 5)" style="text-decoration: underline;cursor:pointer;float:right;margin-right:3%">5</span>
+                <span style="float:right;margin-right:3%">Problems Per Page:</span>
             </td>
         </tr>
+        <tr my-pagination></tr>
         <tr>
             <td data-width="25%">
                 Codec
@@ -34,7 +39,8 @@
             ng-click="problem.showDetails = !problem.showDetails"
             style="cursor: pointer;">
             <td><pre style="background: inherit;border: none;text-decoration: underline;"
-                    ><a href="{{vm.url}}{{problem.codec}}" target="_blank">{{vm.formatCodec(problem.codec)}}</a></pre>
+                    ><a href="{{vm.url}}{{problem.codec}}" target="_blank" ng-click="$event.stopPropagation()"
+                    >{{vm.formatCodec(problem.codec)}}</a></pre>
             </td>
             <td>
                 {{problem.stampText}}
@@ -54,28 +60,7 @@
             </td>
         </tr>
         <thead>
-        <tr>
-            <td colspan="4" style="width:100%;text-align:center">
-                <h5 style="display:inline-block;float:left;font-weight: bolder">
-                        <span style="cursor:pointer" ng-click="vm.newPage(vm.probsOffset - vm.probsN)">
-                            &#8592;
-                        </span>
-                        |
-                        <span style="cursor:pointer" ng-click="vm.newPage(vm.probsOffset + vm.probsN)">
-                            &#8594;
-                        </span>
-                </h5>
-                <h5 style="display:inline-block">
-                    {{vm.floorMod(vm.probsOffset, vm.probsN) + 1}}-{{vm.min(vm.probsSize, vm.floorMod(vm.probsOffset, vm.probsN) + vm.probsN)}} / {{vm.probsSize}}
-                </h5>
-                <form style="display:inline-block;float:right" ng-submit="vm.newPage(vm.numCheck(vm.num))">
-                    <label>
-                        Go to Problem:
-                        <input type="number" name="vm.num" ng-model="vm.num">
-                    </label>
-                </form>
-            </td>
-        </tr>
+            <tr my-pagination></tr>
         </thead>
         </tbody>
     </table>

@@ -226,14 +226,9 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
       x - (x % y)
     }
 
-    parameter("offset" ? "0") { offsetString: String =>
-      val n = 20
-
-      // Try and grab the offset. If a number wasn't passed in, just default to 0
-      val offset = try { floorMod(Math.max(0, offsetString.toInt), n) } catch { case a:java.lang.NumberFormatException =>
-        println(s"Could not parse problems GET request parameter, received $offsetString, threw $a")
-        0
-      }
+    parameters("offset" ? 0, "n" ? 20) { (offsetPreMod: Int, nPreMax: Int) =>
+      val n = Math.max(0, nPreMax)
+      val offset = floorMod(Math.max(0, offsetPreMod), n)
 
       val p = Problems
       val db = p.DatabaseConnector

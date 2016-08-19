@@ -4,15 +4,38 @@
 
     // -- register controller with angular -- //
     angular.module('shrine-tools')
-        .controller('ProblemsController', ProblemsController);
+        .controller('ProblemsController', ProblemsController)
+        .directive('myPagination', function () {
+            return {
+                restrict:  'A',
+                replace: true,
+                template: '<tr>' +
+                '<td colspan="4" style="width:100%;text-align:center">' +
+                '<h5 style="display:inline-block;float:left;font-weight: bolder">' +
+                '<span style="cursor:pointer" ng-click="vm.newPage(vm.probsOffset - vm.probsN)">' +
+                '&#8592;' +
+                '</span>' +
+                '|' +
+                '<span style="cursor:pointer" ng-click="vm.newPage(vm.probsOffset + vm.probsN)">' +
+                '&#8594;' +
+                '</span>' +
+                '</h5>' +
+                '<h5 style="display:inline-block">' +
+                '{{int(vm.probsOffset / vm.probsN) + 1}} / {{int(vm.probsSize / vm.probsN) + 1}}' +
+                '</h5>' +
+                '<form style="display:inline-block;float:right" ng-submit="vm.newPage(vm.numCheck(vm.num))">' +
+                '<label>' +
+                'Go to page:' +
+                '<input type="number" name="vm.num" ng-model="vm.num">' +
+                '</label>' +
+                '</form>' +
+                '</td>' +
+                '</tr>'
+            }
+        });
 
-
-    /**
-     *
-     * @type {string[]}
-     */
-    ProblemsController.$inject = ['$app', '$log'];
-    function ProblemsController ($app, $log) {
+    ProblemsController.$inject = ['$app']; //, '$log'];
+    function ProblemsController ($app) {
         var vm = this;
 
         init();
@@ -25,7 +48,7 @@
             vm.url = "https://open.med.harvard.edu/wiki/display/SHRINE/";
             vm.newPage = newPage;
             vm.floorMod = floorMod;
-            vm.numCheck = function(any) {return isFinite(any)? any - 1: vm.probsOffset};
+            vm.numCheck = function(any) {return isFinite(any)? (any - 1) * vm.probsN: vm.probsOffset};
             vm.formatCodec = function(word) {
                 var index = word.lastIndexOf('.');
                 var arr = word.trim().split("");
@@ -49,8 +72,11 @@
         }
 
 
-        function newPage(n) {
-            if (!isFinite(n)) {
+        function newPage(offset, n) {
+            if (!n || !isFinite(n)) {
+                n = 20;
+            }
+            if (!isFinite(offset)) {
                 return;
             }
             var clamp = function(num1) {
@@ -61,8 +87,8 @@
                     return Math.max(0, Math.min(vm.probsSize, num1));
                 }
             };
-            var num = vm.floorMod(clamp(n), vm.probsN);
-            $app.model.getProblems(num)
+            var num = vm.floorMod(clamp(offset), vm.probsN);
+            $app.model.getProblems(num, n)
                 .then(setProblems)
         }
 
