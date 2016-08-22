@@ -12,18 +12,18 @@
                 template: '<tr>' +
                 '<td colspan="4" style="width:100%;text-align:center">' +
                 '<h5 style="display:inline-block;float:left;font-weight: bolder">' +
-                '<span style="cursor:pointer" ng-click="vm.newPage(vm.probsOffset - vm.probsN)">' +
+                '<span style="cursor:pointer" ng-click="vm.newPage(vm.probsOffset - vm.probsN, vm.probsN)">' +
                 '&#8592;' +
                 '</span>' +
                 '|' +
-                '<span style="cursor:pointer" ng-click="vm.newPage(vm.probsOffset + vm.probsN)">' +
+                '<span style="cursor:pointer" ng-click="vm.newPage(vm.probsOffset + vm.probsN, vm.probsN)">' +
                 '&#8594;' +
                 '</span>' +
                 '</h5>' +
                 '<h5 style="display:inline-block">' +
-                '{{int(vm.probsOffset / vm.probsN) + 1}} / {{int(vm.probsSize / vm.probsN) + 1}}' +
+                '{{Math.floor(vm.probsOffset / vm.probsN) + 1}} / {{Math.floor(vm.probsSize / vm.probsN) + 1}}' +
                 '</h5>' +
-                '<form style="display:inline-block;float:right" ng-submit="vm.newPage(vm.numCheck(vm.num))">' +
+                '<form style="display:inline-block;float:right" ng-submit="vm.newPage(vm.numCheck(vm.num), vm.probsN)">' +
                 '<label>' +
                 'Go to page:' +
                 '<input type="number" name="vm.num" ng-model="vm.num">' +
