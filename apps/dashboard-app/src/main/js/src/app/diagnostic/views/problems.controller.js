@@ -21,7 +21,7 @@
                 '</span>' +
                 '</h5>' +
                 '<h5 style="display:inline-block">' +
-                '{{vm.floor(vm.probsOffset / vm.probsN)}} / {{vm.floor(vm.probsSize / vm.probsN)}}' +
+                '{{vm.floor(vm.probsOffset / vm.probsN) + 1}} / {{vm.floor(vm.probsSize / vm.probsN) + 1}}' +
                 '</h5>' +
                 '<form style="display:inline-block;float:right" ng-submit="vm.newPage(vm.numCheck(vm.num), vm.probsN)">' +
                 '<label>' +
