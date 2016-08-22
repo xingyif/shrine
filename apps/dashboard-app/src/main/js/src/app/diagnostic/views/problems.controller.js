@@ -12,7 +12,7 @@
                 template: '<tr>' +
                 '<td colspan="4" style="width:100%;text-align:center">' +
                 '<h5 style="display:inline-block;float:left;font-weight: bolder">' +
-                '<span style="cursor:pointer" ng-click="vm.newPage(vm.probsOffset - vm.probsN, vm.probsN)">' +
+                '<span style="cursor:pointer" ng-click="vm.alert(vm);vm.newPage(vm.probsOffset - vm.probsN, vm.probsN)">' +
                 '&#8592;' +
                 '</span>' +
                 '|' +
@@ -34,8 +34,8 @@
             }
         });
 
-    ProblemsController.$inject = ['$app']; //, '$log'];
-    function ProblemsController ($app) {
+    ProblemsController.$inject = ['$app', '$window']; //, '$log'];
+    function ProblemsController ($app, $window) {
         var vm = this;
 
         init();
@@ -57,6 +57,10 @@
             };
             vm.min = Math.min;
             vm.stringify = function(arg) { return JSON.stringify(arg, null, 2); };
+            vm.alert = function(arg) {
+                arg = JSON.stringify(arg, null, 2);
+                $window.alert(arg)
+            };
             newPage(0)
         }
 
