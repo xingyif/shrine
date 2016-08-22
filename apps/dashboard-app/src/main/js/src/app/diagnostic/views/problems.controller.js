@@ -12,7 +12,7 @@
                 template: '<tr>' +
                 '<td colspan="4" style="width:100%;text-align:center">' +
                 '<h5 style="display:inline-block;float:left;font-weight: bolder">' +
-                '<span style="cursor:pointer" ng-click="vm.alert(vm);vm.newPage(vm.probsOffset - vm.probsN, vm.probsN)">' +
+                '<span style="cursor:pointer" ng-click="vm.newPage(vm.probsOffset - vm.probsN, vm.probsN)">' +
                 '&#8592;' +
                 '</span>' +
                 '|' +
@@ -21,7 +21,7 @@
                 '</span>' +
                 '</h5>' +
                 '<h5 style="display:inline-block">' +
-                '{{Math.floor(vm.probsOffset / vm.probsN) + 1}} / {{Math.floor(vm.probsSize / vm.probsN) + 1}}' +
+                '{{vm.floor(vm.probsOffset / vm.probsN)}} / {{vm.floor(vm.probsSize / vm.probsN)}}' +
                 '</h5>' +
                 '<form style="display:inline-block;float:right" ng-submit="vm.newPage(vm.numCheck(vm.num), vm.probsN)">' +
                 '<label>' +
@@ -34,8 +34,8 @@
             }
         });
 
-    ProblemsController.$inject = ['$app', '$window']; //, '$log'];
-    function ProblemsController ($app, $window) {
+    ProblemsController.$inject = ['$app', '$window', '$scope']; //, '$log'];
+    function ProblemsController ($app, $window, $scope) {
         var vm = this;
 
         init();
@@ -48,6 +48,7 @@
             vm.url = "https://open.med.harvard.edu/wiki/display/SHRINE/";
             vm.newPage = newPage;
             vm.floorMod = floorMod;
+            vm.floor = Math.floor;
             vm.numCheck = function(any) {return isFinite(any)? (any - 1) * vm.probsN: vm.probsOffset};
             vm.formatCodec = function(word) {
                 var index = word.lastIndexOf('.');
@@ -101,6 +102,10 @@
             vm.probsSize = probs.size;
             vm.probsOffset = probs.offset;
             vm.probsN = probs.n;
+            $scope.probsOffset = vm.probsOffset;
+            $scope.probsN = vm.probsN;
+            $scope.probsSize = vm.probsSize;
+
         }
 
     }

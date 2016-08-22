@@ -1,4 +1,4 @@
-{"size":20,"offset":0,"n":20,"problems":
+{"size":60,"offset":0,"n":22,"problems":
 [{
   "codec":"net.shrine.protocol.ErrorStatusFromCrc",
   "description": "Proin risus.",
