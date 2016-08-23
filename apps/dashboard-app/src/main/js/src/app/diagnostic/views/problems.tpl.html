@@ -11,9 +11,9 @@
         <tr>
             <td colspan="4">
                 <span>Problems Total: {{vm.probsSize}}</span>
-                <span ng-click="vm.newPage(vm.offset, 20)" style="text-decoration: underline;cursor:pointer;float:right;margin-right:3%">20</span>
-                <span ng-click="vm.newPage(vm.offset, 10)" style="text-decoration: underline;cursor:pointer;float:right;margin-right:3%">10</span>
-                <span ng-click="vm.newPage(vm.offset, 5)" style="text-decoration: underline;cursor:pointer;float:right;margin-right:3%">5</span>
+                <button ng-click="vm.newPage(vm.probsOffset, 20)" style="text-decoration: underline;cursor:pointer;float:right;margin-right:3%">20</button>
+                <button ng-click="vm.newPage(vm.probsOffset, 10)" style="text-decoration: underline;cursor:pointer;float:right;margin-right:3%">10</button>
+                <button ng-click="vm.newPage(vm.probsOffset, 5)" style="text-decoration: underline;cursor:pointer;float:right;margin-right:3%">5</button>
                 <span style="float:right;margin-right:3%">Problems Per Page:</span>
             </td>
         </tr>
@@ -39,7 +39,7 @@
             ng-click="problem.showDetails = !problem.showDetails"
             style="cursor: pointer;">
             <td><pre style="background: inherit;border: none;text-decoration: underline;"
-                    ><a href="{{vm.url}}{{problem.codec}}" target="_blank" ng-click="$event.stopPropagation()"
+                    ><a href="{{vm.url + problem.codec}}" target="_blank" ng-click="$event.stopPropagation()"
                     >{{vm.formatCodec(problem.codec)}}</a></pre>
             </td>
             <td>

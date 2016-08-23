@@ -12,13 +12,13 @@
                 template: '<tr>' +
                 '<td colspan="4" style="width:100%;text-align:center">' +
                 '<h5 style="display:inline-block;float:left;font-weight: bolder">' +
-                '<span style="cursor:pointer" ng-click="vm.newPage(vm.probsOffset - vm.probsN, vm.probsN)">' +
+                '<button style="cursor:pointer" ng-click="vm.newPage(vm.probsOffset - vm.probsN, vm.probsN)">' +
                 '&#8592;' +
-                '</span>' +
+                '</button>' +
                 '|' +
-                '<span style="cursor:pointer" ng-click="vm.newPage(vm.probsOffset + vm.probsN, vm.probsN)">' +
+                '<button style="cursor:pointer" ng-click="vm.newPage(vm.probsOffset + vm.probsN, vm.probsN)">' +
                 '&#8594;' +
-                '</span>' +
+                '</button>' +
                 '</h5>' +
                 '<h5 style="display:inline-block">' +
                 '{{vm.floor(vm.probsOffset / vm.probsN) + 1}} / {{vm.floor(vm.probsSize / vm.probsN) + 1}}' +
@@ -62,7 +62,7 @@
                 arg = JSON.stringify(arg, null, 2);
                 $window.alert(arg)
             };
-            newPage(0)
+            newPage(0, 20)
         }
 
         function floorMod(num1, num2) {
@@ -78,7 +78,7 @@
 
 
         function newPage(offset, n) {
-            if (!n || !isFinite(n)) {
+            if (!(n && isFinite(n))) {
                 n = 20;
             }
             if (!isFinite(offset)) {

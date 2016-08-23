@@ -149,8 +149,8 @@
          * ProblemEndpoint:  'admin/status/problems',
          * @returns {*}
          */
-        function getProblems(n) {
-            var url = urlGetter(Config.ProblemEndpoint+'?offset='+n);
+        function getProblems(offset, n) {
+            var url = urlGetter(Config.ProblemEndpoint+'?offset='+offset+'&n='+n);
             return h.get(url)
                 .then(parseJsonResult, onFail);
         }
