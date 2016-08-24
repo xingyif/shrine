@@ -1,13 +1,11 @@
 <tr>
     <td colspan="4" style="width:100%;text-align:center">
-        <div style="display:inline-block;float:left;font-weight: bolder;">
-            <button style="cursor:pointer" ng-click="vm.newPage(vm.probsOffset - vm.probsN, vm.probsN)">
-                &#8592;
-            </button>
-            <button style="cursor:pointer" ng-click="vm.newPage(vm.probsOffset + vm.probsN, vm.probsN)">
-                &#8594;
-            </button>
-        </div>
+        <my-pages max-page="vm.floor((vm.probsSize - 1) / vm.probsN + 1)"
+                  active-page="vm.floor(vm.probsOffset / vm.probsN + 1)"
+                  handle-button="vm.callback"
+                  check-page="vm.checkPage"
+                  range-gen="vm.rangeGen"
+        ></my-pages>
         <span style="display:inline-block;">
                             {{vm.floor(vm.probsOffset / vm.probsN) + 1}} / {{vm.floor((vm.probsSize - 1) / vm.probsN) + 1}}
                         </span>

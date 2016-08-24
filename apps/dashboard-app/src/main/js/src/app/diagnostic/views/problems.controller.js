@@ -11,7 +11,19 @@
                 replace: true,
                 templateUrl: 'src/app/diagnostic/templates/my-pagination-template.html'
             }
-        });
+        }).directive('myPages', function() {
+            return {
+                restrict: 'E',
+                scope: {
+                    maxPage:    '=',
+                    callBack:   '=',
+                    checkPage:  '=',
+                    activePage: '=',
+                    rangeGen:   '='
+                },
+                templateUrl: 'src/app/diagnostic/templates/pages.html'
+            }
+    });
 
     ProblemsController.$inject = ['$app', '$log'];
     function ProblemsController ($app, $log) {
@@ -25,13 +37,16 @@
         function init () {
             vm.num = 0;
             vm.showDateError = false;
-            vm.epoch = "falserrd";
+            vm.rangeArray = [];
             vm.submitDate = submitDate;
             vm.url = "https://open.med.harvard.edu/wiki/display/SHRINE/";
             vm.newPage = newPage;
             vm.floorMod = floorMod;
             vm.floor = Math.floor;
+            vm.handleButton = handleButton;
+            vm.checkPage = checkPage;
             vm.numCheck = function(any) {return isFinite(any)? (any - 1) * vm.probsN: vm.probsOffset};
+            vm.rangeGen = rangeGen;
             vm.formatCodec = function(word) {
                 var index = word.lastIndexOf('.');
                 var arr = word.trim().split("");
@@ -41,6 +56,55 @@
             vm.min = Math.min;
             vm.stringify = function(arg) { return JSON.stringify(arg, null, 2); };
             newPage(0, 20)
+        }
+
+        function handleButton(value) {
+            ['',''].concat(rangeGen(maxPage)).concat(['&rsaquo;','&raquo;']);
+            switch(value) {
+                case '&laquo;':
+                    newPage(0, vm.probsN);
+                    break;
+                case '&lsaquo;':
+                    newPage(vm.probsOffset - vm.probsN, vm.probsN);
+                    break;
+                case '&rsaquo;':
+                    newPage(vm.probsOffset + vm.probsN, vm.probsN);
+                    break;
+                case '&raquo;':
+                    newPage(vm.probsSize, vm.probsN);
+                    break;
+                default:
+                    newPage((value - 1) * vm.probsN, vm.probsN)
+            }
+        }
+
+        function checkPage(value, activePage, maxPage) {
+            if (!isFinite(value)) {
+                return !!value;
+            } else if (activePage == 1 || activePage == 2) {
+                return value <= 4;
+            } else if (activePage == maxPage || activePage == maxPage - 1) {
+                return maxPage - value < 4;
+            } else {
+                var diff = value - activePage;
+                return diff >= -2 && diff < 2;
+            }
+        };
+
+        function rangeGen(max) {
+            if (vm.rangeArray.length < max) {
+                // using rangeArray instead of new array because of: https://docs.angularjs.org/error/$rootScope/infdig
+                var toPush = vm.rangeArray.length === 0 ? 1 : vm.rangeArray[vm.rangeArray.length - 1] + 1;
+                for (toPush; toPush <= max; toPush++) {
+                    vm.rangeArray.push(toPush);
+                }
+            } else if (vm.rangeArray.length > max) {
+                for (var diff = vm.rangeArray.length - num; diff > 0; diff--) {
+                    vm.rangeArray.pop();
+                }
+            }
+            return vm.rangeArray;
+
         }
 
         function floorMod(num1, num2) {
