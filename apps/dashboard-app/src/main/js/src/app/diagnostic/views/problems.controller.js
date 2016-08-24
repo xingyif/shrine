@@ -57,7 +57,7 @@
         // todo
         function submitDate(dateString) {
             if (checkDate(dateString)) {
-                var epoch = new Date(dateString).getTime();
+                var epoch = new Date(dateString).getTime() + 86400000; // + a day
                 vm.showDateError = false;
                 newPage(vm.probsOffset, vm.probsN, epoch);
             } else {
