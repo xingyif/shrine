@@ -226,15 +226,27 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
       x - (x % y)
     }
 
-    parameters("offset" ? 0, "n" ? 20) { (offsetPreMod: Int, nPreMax: Int) =>
-      val n = Math.max(0, nPreMax)
-      val offset = floorMod(Math.max(0, offsetPreMod), n)
+    val db = Problems.DatabaseConnector
 
-      val p = Problems
-      val db = p.DatabaseConnector
-      val timeout: Duration = new FiniteDuration(15, SECONDS)
-      val problemsAndSize: (Seq[ProblemDigest], Int) = db.runBlocking(db.IO.sizeAndProblemDigest(n, offset))(timeout)
-      val response = ProblemResponse(problemsAndSize._2, offset, n, problemsAndSize._1)
+    parameters("offset" ? 0, "n" ? 20, "epoch" ? -1l) { (offsetPreMod: Int, nPreMax: Int, epoch: Long) =>
+      val n = Math.max(0, nPreMax)
+      val moddedOffset = floorMod(Math.max(0, offsetPreMod), n)
+
+      // Constructing the query with comprehension means we only use one database connection.
+      // TODO: review with Dave to see if it's too clever
+      val query =
+        if (epoch == -1l)
+          for {
+            result <- db.IO.sizeAndProblemDigest(n, moddedOffset)
+          } yield (result._2, floorMod(Math.max(0, moddedOffset), n), n, result._1)
+        else
+          for {
+            dateOffset <- db.IO.findIndexOfDate(epoch)
+            moddedOffset = floorMod(dateOffset, n)
+            result <- db.IO.sizeAndProblemDigest(n, moddedOffset)
+          } yield (result._2, moddedOffset, n, result._1)
+
+      val response: ProblemResponse = ProblemResponse.tupled(db.runBlocking(query)(new FiniteDuration(15, SECONDS)))
       implicit val formats = response.json4sMarshaller
       complete(response)
     }

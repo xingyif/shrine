@@ -9,33 +9,12 @@
             return {
                 restrict:  'A',
                 replace: true,
-                template: '<tr>' +
-                '<td colspan="4" style="width:100%;text-align:center">' +
-                '<h5 style="display:inline-block;float:left;font-weight: bolder">' +
-                '<button style="cursor:pointer" ng-click="vm.newPage(vm.probsOffset - vm.probsN, vm.probsN)">' +
-                '&#8592;' +
-                '</button>' +
-                '|' +
-                '<button style="cursor:pointer" ng-click="vm.newPage(vm.probsOffset + vm.probsN, vm.probsN)">' +
-                '&#8594;' +
-                '</button>' +
-                '</h5>' +
-                '<h5 style="display:inline-block">' +
-                '{{vm.floor(vm.probsOffset / vm.probsN) + 1}} / {{vm.floor(vm.probsSize / vm.probsN) + 1}}' +
-                '</h5>' +
-                '<form style="display:inline-block;float:right" ng-submit="vm.newPage(vm.numCheck(vm.num), vm.probsN)">' +
-                '<label>' +
-                'Go to page:' +
-                '<input type="number" name="vm.num" ng-model="vm.num">' +
-                '</label>' +
-                '</form>' +
-                '</td>' +
-                '</tr>'
+                templateUrl: 'src/app/diagnostic/templates/my-pagination-template.html'
             }
         });
 
-    ProblemsController.$inject = ['$app', '$window', '$scope']; //, '$log'];
-    function ProblemsController ($app, $window, $scope) {
+    ProblemsController.$inject = ['$app', '$log'];
+    function ProblemsController ($app, $log) {
         var vm = this;
 
         init();
@@ -45,6 +24,9 @@
          */
         function init () {
             vm.num = 0;
+            vm.showDateError = false;
+            vm.epoch = "falserrd";
+            vm.submitDate = submitDate;
             vm.url = "https://open.med.harvard.edu/wiki/display/SHRINE/";
             vm.newPage = newPage;
             vm.floorMod = floorMod;
@@ -58,10 +40,6 @@
             };
             vm.min = Math.min;
             vm.stringify = function(arg) { return JSON.stringify(arg, null, 2); };
-            vm.alert = function(arg) {
-                arg = JSON.stringify(arg, null, 2);
-                $window.alert(arg)
-            };
             newPage(0, 20)
         }
 
@@ -76,13 +54,67 @@
             }
         }
 
+        // todo
+        function submitDate(dateString) {
+            if (checkDate(dateString)) {
+                var epoch = new Date(dateString).getTime();
+                vm.showDateError = false;
+                newPage(vm.probsOffset, vm.probsN, epoch);
+            } else {
+                vm.showDateError = true;
+            }
+        }
 
-        function newPage(offset, n) {
+        function checkDate(dateString) {
+            try {
+                var split = dateString.split("-");
+                var month = parseInt(split[1]);
+                var day = parseInt(split[2]);
+                var year = parseInt(split[0]);
+                return split.length == 3 && month <= 12 && month >= 1 &&
+                    year >= 0 && validDay(day, month, year);
+            } catch (err) {
+                return false;
+            }
+        }
+
+        function validDay(day, month, year) {
+            var thirtyOne = [1, 3, 5, 7, 8, 10, 12];
+            var thirty    = [4, 6, 9, 11];
+
+            if (contains(thirtyOne, month)) {
+                return day <= 31 && day >= 1;
+            } else if (contains(thirty, month)) {
+                return day <= 30 && day >= 1;
+            } else if (month == 2 && year % 4 == 0 && (!(year % 100 == 0) || year % 400 == 0)) {
+                // Leap year is every year that is divisible by 4. If it's also divisible by 100, then it's only
+                // A leap year if it is also divisible by 400.
+                return day <= 29 && day >= 1;
+            } else {
+                return day <= 28 && day >= 1;
+            }
+
+        }
+
+        function contains(arr, elem) {
+            for (var i = 0; i < arr.length; i++) {
+                if (arr[i] === elem) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+
+        function newPage(offset, n, epoch) {
+            if (!(epoch && isFinite(epoch))) {
+                epoch = -1;
+            }
             if (!(n && isFinite(n))) {
                 n = 20;
             }
-            if (!isFinite(offset)) {
-                return;
+            if (!(offset && isFinite(offset))) {
+                offset = 0;
             }
             var clamp = function(num1) {
                 if (!vm.probsSize) {
@@ -93,7 +125,7 @@
                 }
             };
             var num = vm.floorMod(clamp(offset), vm.probsN);
-            $app.model.getProblems(num, n)
+            $app.model.getProblems(num, n, epoch)
                 .then(setProblems)
         }
 
@@ -102,10 +134,6 @@
             vm.probsSize = probs.size;
             vm.probsOffset = probs.offset;
             vm.probsN = probs.n;
-            $scope.probsOffset = vm.probsOffset;
-            $scope.probsN = vm.probsN;
-            $scope.probsSize = vm.probsSize;
-
         }
 
     }

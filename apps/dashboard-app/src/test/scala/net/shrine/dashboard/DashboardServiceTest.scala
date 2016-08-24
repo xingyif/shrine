@@ -197,11 +197,11 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
 
     Get("/admin/status/problems") ~>
       addCredentials(adminCredentials) ~>
-        route ~> check {
+      route ~> check {
         assertResult(OK)(status)
 
         val problems = new String(body.data.toByteArray)
-    }
+      }
   }
 
   "DashboardService" should "return an OK for admin/status/problems with queries" in {
@@ -209,10 +209,21 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
     Get("/admin/status/problems?offset=2&n=1") ~>
       addCredentials(adminCredentials) ~>
       route ~> check {
-      assertResult(OK)(status)
+        assertResult(OK)(status)
 
-      val problems = new String(body.data.toByteArray)
-    }
+        val problems = new String(body.data.toByteArray)
+      }
+  }
+
+  "DashboardService" should "return an OK for admin/status/problems with queries and an epoch filter" in {
+
+    Get("/admin/status/problems?offset=2&n=3&epoch=3") ~>
+      addCredentials(adminCredentials) ~>
+      route ~> check {
+        assertResult(OK)(status)
+
+        val problems = new String(body.data.toByteArray)
+      }
   }
 
   val dashboardCredentials = BasicHttpCredentials(adminUserName,"shh!")
