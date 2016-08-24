@@ -121,7 +121,7 @@
                     // Can't clamp, since probsSize isn't set yet.
                     return num1;
                 } else {
-                    return Math.max(0, Math.min(vm.probsSize, num1));
+                    return Math.max(0, Math.min(vm.probsSize - 1, num1));
                 }
             };
             var num = vm.floorMod(clamp(offset), vm.probsN);
