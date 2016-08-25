@@ -13,27 +13,18 @@
             }
         }).directive('myPages', function() {
 
-        var rangeArray = [];
-
         function rangeGen(max) {
-            if (rangeArray.length < max) {
-                // using rangeArray instead of new array because of: https://docs.angularjs.org/error/$rootScope/infdig
-                var toPush = rangeArray.length === 0 ? 1 : rangeArray[rangeArray.length - 1] + 1;
-                for (toPush; toPush <= max; toPush++) {
-                    rangeArray.push(toPush);
-                }
-            } else if (rangeArray.length > max) {
-                for (var diff = rangeArray.length - num; diff > 0; diff--) {
-                    rangeArray.pop();
-                }
+            var result = [];
+            for (var i = 0; i < max; i++) {
+                result[i] = i + 1;
             }
-            return rangeArray;
-
+            return result;
         }
 
 
         function checkPage(value, activePage, maxPage) {
             if (!isFinite(value)) {
+                // Anything that's not a number and not an error is fine as a button
                 return !!value;
             } else if (activePage == 1 || activePage == 2) {
                 return value <= 4;
@@ -46,18 +37,18 @@
         }
 
         return {
-                restrict: 'E',
-                scope: {
-                    maxPage:      '=',
-                    handleButton: '=',
-                    activePage:   '='
-                },
-                link: function(scope) {
-                    scope.rangeGen = rangeGen;
-                    scope.checkPage = checkPage;
-                },
-                templateUrl: 'src/app/diagnostic/templates/pages.html'
+            restrict: 'E',
+            templateUrl: 'src/app/diagnostic/templates/pages.html',
+            scope: {
+                maxPage:      '=',
+                handleButton: '=',
+                activePage:   '='
+            },
+            link: function(scope) {
+                scope.rangeGen = rangeGen;
+                scope.checkPage = checkPage;
             }
+        }
     });
 
     ProblemsController.$inject = ['$app', '$log'];
@@ -106,7 +97,7 @@
                     page(vm.probsSize);
                     break;
                 default:
-                    page((value - 1) * vm.probsN)
+                    page((value - 1) * vm.probsN);
             }
         }
 
