@@ -15,11 +15,11 @@
             return {
                 restrict: 'E',
                 scope: {
-                    maxPage:    '=',
-                    callBack:   '=',
-                    checkPage:  '=',
-                    activePage: '=',
-                    rangeGen:   '='
+                    maxPage:      '=',
+                    handleButton: '=',
+                    checkPage:    '=',
+                    activePage:   '=',
+                    rangeGen:     '='
                 },
                 templateUrl: 'src/app/diagnostic/templates/pages.html'
             }
@@ -59,22 +59,23 @@
         }
 
         function handleButton(value) {
-            ['',''].concat(rangeGen(maxPage)).concat(['&rsaquo;','&raquo;']);
+            $log.warn("Made it here! " + value);
+            var page = function(offset) { newPage(offset, vm.probsN) };
             switch(value) {
                 case '&laquo;':
-                    newPage(0, vm.probsN);
+                    page(0);
                     break;
                 case '&lsaquo;':
-                    newPage(vm.probsOffset - vm.probsN, vm.probsN);
+                    page(vm.probsOffset - vm.probsN);
                     break;
                 case '&rsaquo;':
-                    newPage(vm.probsOffset + vm.probsN, vm.probsN);
+                    page(vm.probsOffset + vm.probsN);
                     break;
                 case '&raquo;':
-                    newPage(vm.probsSize, vm.probsN);
+                    page(vm.probsSize);
                     break;
                 default:
-                    newPage((value - 1) * vm.probsN, vm.probsN)
+                    page((value - 1) * vm.probsN)
             }
         }
 
@@ -89,7 +90,7 @@
                 var diff = value - activePage;
                 return diff >= -2 && diff < 2;
             }
-        };
+        }
 
         function rangeGen(max) {
             if (vm.rangeArray.length < max) {
