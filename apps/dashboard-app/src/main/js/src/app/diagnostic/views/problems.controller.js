@@ -38,7 +38,7 @@
 
         return {
             restrict: 'E',
-            templateUrl: 'src/app/diagnostic/templates/pages.html',
+            templateUrl: 'src/app/diagnostic/templates/paginator-template.html',
             scope: {
                 maxPage:      '=',
                 handleButton: '=',
