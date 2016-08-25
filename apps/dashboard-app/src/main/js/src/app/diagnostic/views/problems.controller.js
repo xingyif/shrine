@@ -51,8 +51,8 @@
         }
     });
 
-    ProblemsController.$inject = ['$app', '$log'];
-    function ProblemsController ($app, $log) {
+    ProblemsController.$inject = ['$app', '$log', '$sce'];
+    function ProblemsController ($app, $log, $sce) {
         var vm = this;
 
         init();
@@ -66,6 +66,7 @@
             vm.newPage = newPage;
             vm.floor = Math.floor;
             vm.handleButton = handleButton;
+            vm.parseDetails = function(details) { return $sce.trustAsHtml(parseDetails(details)) };
             vm.stringify = function(arg) { return JSON.stringify(arg, null, 2); };
             vm.numCheck = function(any) {return isFinite(any)? (any - 1) * vm.probsN: vm.probsOffset};
 
@@ -192,6 +193,43 @@
             vm.probsSize = probs.size;
             vm.probsOffset = probs.offset;
             vm.probsN = probs.n;
+        }
+
+        function parseDetails(detailsObject) {
+            var detailsTag = '<h3>details</h3>';
+            var detailsField = detailsObject['details'];
+            if (typeof(detailsObject['details']) === 'string') {
+                return detailsTag + '<p>'+detailsField+'</p>';
+            } else if ('exception' in detailsObject) {
+                return detailsTag + parseException(detailsObject['exception']);
+            } else {
+                return detailsTag + '<pre>'+detailsField+'</pre>'
+            }
+        }
+
+        function parseException(exceptionObject) {
+            var exceptionTag = '<h4>exception</h4>';
+            var nameTag = '<h5>'+exceptionObject['name']+'</h5>';
+            var messageTag = '<p>'+exceptionObject['message']+'</p>';
+            var stackTrace = exceptionObject['stacktrace'];
+            return exceptionTag + nameTag + messageTag + parseStackTrace(stackTrace);
+        }
+
+        function parseStackTrace(stackTraceObject) {
+            if ('exception' in stackTraceObject) {
+                return '<p>'+stackTraceObject['line']+'</p>' + parseException(stackTraceObject['exception']);
+            } else {
+                return '<h4>stack trace</h4>' + parseLines(stackTraceObject['line']);
+            }
+        }
+
+        function parseLines(lineArray) {
+            var result = '<p>';
+            for (var i =0; i < lineArray.length; i++) {
+                result += lineArray[i] + '<br>';
+            }
+            result += '</p>';
+            return result;
         }
 
     }

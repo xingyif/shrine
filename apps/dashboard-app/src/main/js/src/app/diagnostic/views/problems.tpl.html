@@ -51,7 +51,7 @@
             ng-click="problem.showDetails = !problem.showDetails"
             style="cursor: pointer;">
             <td><pre style="background: inherit;border: none;text-decoration: underline;"
-                    ><a href="{{vm.url + problem.codec}}" target="_blank" ng-click="$event.stopPropagation()"
+                    ><a href="{{vm.url + problem.codec}}" target="_blank" rel="noopener noreferrer" ng-click="$event.stopPropagation()"
                     >{{vm.formatCodec(problem.codec)}}</a></pre>
             </td>
             <td>
@@ -65,10 +65,7 @@
             </td>
         </tr>
         <tr ng-repeat-end>
-            <td colspan="4" ng-show="problem.showDetails">
-                <pre>
-                    {{vm.stringify(problem.detailsXml)}}
-                </pre>
+            <td colspan="4" ng-show="problem.showDetails" ng-bind-html="vm.parseDetails(problem.detailsXml)">
             </td>
         </tr>
         <thead>
