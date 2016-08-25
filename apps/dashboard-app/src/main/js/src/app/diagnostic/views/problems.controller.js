@@ -12,14 +12,49 @@
                 templateUrl: 'src/app/diagnostic/templates/my-pagination-template.html'
             }
         }).directive('myPages', function() {
-            return {
+
+        var rangeArray = [];
+
+        function rangeGen(max) {
+            if (rangeArray.length < max) {
+                // using rangeArray instead of new array because of: https://docs.angularjs.org/error/$rootScope/infdig
+                var toPush = rangeArray.length === 0 ? 1 : rangeArray[rangeArray.length - 1] + 1;
+                for (toPush; toPush <= max; toPush++) {
+                    rangeArray.push(toPush);
+                }
+            } else if (rangeArray.length > max) {
+                for (var diff = rangeArray.length - num; diff > 0; diff--) {
+                    rangeArray.pop();
+                }
+            }
+            return rangeArray;
+
+        }
+
+
+        function checkPage(value, activePage, maxPage) {
+            if (!isFinite(value)) {
+                return !!value;
+            } else if (activePage == 1 || activePage == 2) {
+                return value <= 4;
+            } else if (activePage == maxPage || activePage == maxPage - 1) {
+                return maxPage - value < 4;
+            } else {
+                var diff = value - activePage;
+                return diff >= -2 && diff < 2;
+            }
+        }
+
+        return {
                 restrict: 'E',
                 scope: {
                     maxPage:      '=',
                     handleButton: '=',
-                    checkPage:    '=',
-                    activePage:   '=',
-                    rangeGen:     '='
+                    activePage:   '='
+                },
+                link: function(scope) {
+                    scope.rangeGen = rangeGen;
+                    scope.checkPage = checkPage;
                 },
                 templateUrl: 'src/app/diagnostic/templates/pages.html'
             }
@@ -37,16 +72,13 @@
         function init () {
             vm.num = 0;
             vm.showDateError = false;
-            vm.rangeArray = [];
             vm.submitDate = submitDate;
             vm.url = "https://open.med.harvard.edu/wiki/display/SHRINE/";
             vm.newPage = newPage;
             vm.floorMod = floorMod;
             vm.floor = Math.floor;
             vm.handleButton = handleButton;
-            vm.checkPage = checkPage;
             vm.numCheck = function(any) {return isFinite(any)? (any - 1) * vm.probsN: vm.probsOffset};
-            vm.rangeGen = rangeGen;
             vm.formatCodec = function(word) {
                 var index = word.lastIndexOf('.');
                 var arr = word.trim().split("");
@@ -59,53 +91,23 @@
         }
 
         function handleButton(value) {
-            $log.warn("Made it here! " + value);
             var page = function(offset) { newPage(offset, vm.probsN) };
             switch(value) {
-                case '&laquo;':
+                case '«':
                     page(0);
                     break;
-                case '&lsaquo;':
+                case '‹':
                     page(vm.probsOffset - vm.probsN);
                     break;
-                case '&rsaquo;':
+                case '›':
                     page(vm.probsOffset + vm.probsN);
                     break;
-                case '&raquo;':
+                case '»':
                     page(vm.probsSize);
                     break;
                 default:
                     page((value - 1) * vm.probsN)
             }
-        }
-
-        function checkPage(value, activePage, maxPage) {
-            if (!isFinite(value)) {
-                return !!value;
-            } else if (activePage == 1 || activePage == 2) {
-                return value <= 4;
-            } else if (activePage == maxPage || activePage == maxPage - 1) {
-                return maxPage - value < 4;
-            } else {
-                var diff = value - activePage;
-                return diff >= -2 && diff < 2;
-            }
-        }
-
-        function rangeGen(max) {
-            if (vm.rangeArray.length < max) {
-                // using rangeArray instead of new array because of: https://docs.angularjs.org/error/$rootScope/infdig
-                var toPush = vm.rangeArray.length === 0 ? 1 : vm.rangeArray[vm.rangeArray.length - 1] + 1;
-                for (toPush; toPush <= max; toPush++) {
-                    vm.rangeArray.push(toPush);
-                }
-            } else if (vm.rangeArray.length > max) {
-                for (var diff = vm.rangeArray.length - num; diff > 0; diff--) {
-                    vm.rangeArray.pop();
-                }
-            }
-            return vm.rangeArray;
-
         }
 
         function floorMod(num1, num2) {
