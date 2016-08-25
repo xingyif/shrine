@@ -85,18 +85,23 @@
             var page = function(offset) { newPage(offset, vm.probsN) };
             switch(value) {
                 case '«':
+                    $log.warn("leftmost");
                     page(0);
                     break;
                 case '‹':
+                    $log.warn("left");
                     page(vm.probsOffset - vm.probsN);
                     break;
                 case '›':
+                    $log.warn("right");
                     page(vm.probsOffset + vm.probsN);
                     break;
                 case '»':
+                    $log.warn("rightmost");
                     page(vm.probsSize);
                     break;
                 default:
+                    $log.warn("num");
                     page((value - 1) * vm.probsN);
             }
         }
