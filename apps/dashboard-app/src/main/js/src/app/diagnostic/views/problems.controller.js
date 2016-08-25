@@ -202,8 +202,8 @@
                 return '<h3>No details associated with this problem</h3>'
             } else if (typeof(detailsField) === 'string') {
                 return detailsTag + '<p>'+detailsField+'</p>';
-            } else if ('exception' in detailsObject) {
-                return detailsTag + parseException(detailsObject['exception']);
+            } else if (typeof(detailsField) === 'object' && 'exception' in detailsField) {
+                return detailsTag + parseException(detailsField['exception']);
             } else {
                 return detailsTag + '<pre>'+detailsField+'</pre>'
             }
