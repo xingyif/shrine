@@ -61,23 +61,22 @@
          *
          */
         function init () {
-            vm.num = 0;
-            vm.showDateError = false;
-            vm.submitDate = submitDate;
             vm.url = "https://open.med.harvard.edu/wiki/display/SHRINE/";
+            vm.submitDate = submitDate;
             vm.newPage = newPage;
-            vm.floorMod = floorMod;
             vm.floor = Math.floor;
             vm.handleButton = handleButton;
+            vm.stringify = function(arg) { return JSON.stringify(arg, null, 2); };
             vm.numCheck = function(any) {return isFinite(any)? (any - 1) * vm.probsN: vm.probsOffset};
+
+            //todo: Get rid of this and figure out something less hacky
             vm.formatCodec = function(word) {
                 var index = word.lastIndexOf('.');
                 var arr = word.trim().split("");
                 arr[index] = '\n';
                 return arr.join("");
             };
-            vm.min = Math.min;
-            vm.stringify = function(arg) { return JSON.stringify(arg, null, 2); };
+
             newPage(0, 20)
         }
 
@@ -85,23 +84,18 @@
             var page = function(offset) { newPage(offset, vm.probsN) };
             switch(value) {
                 case '«':
-                    $log.warn("leftmost");
                     page(0);
                     break;
                 case '‹':
-                    $log.warn("left");
                     page(vm.probsOffset - vm.probsN);
                     break;
                 case '›':
-                    $log.warn("right");
                     page(vm.probsOffset + vm.probsN);
                     break;
                 case '»':
-                    $log.warn("rightmost");
                     page(vm.probsSize);
                     break;
                 default:
-                    $log.warn("num");
                     page((value - 1) * vm.probsN);
             }
         }
@@ -117,7 +111,6 @@
             }
         }
 
-        // todo
         function submitDate(dateString) {
             if (checkDate(dateString)) {
                 var epoch = new Date(dateString).getTime() + 86400000; // + a day
@@ -130,6 +123,8 @@
 
         function checkDate(dateString) {
             try {
+                // Using a try catch here since there are a lot of errors that can happen
+                // that I don't want to deal with
                 var split = dateString.split("-");
                 var month = parseInt(split[1]);
                 var day = parseInt(split[2]);
@@ -187,7 +182,7 @@
                     return Math.max(0, Math.min(vm.probsSize - 1, num1));
                 }
             };
-            var num = vm.floorMod(clamp(offset), vm.probsN);
+            var num = floorMod(clamp(offset), vm.probsN);
             $app.model.getProblems(num, n, epoch)
                 .then(setProblems)
         }
