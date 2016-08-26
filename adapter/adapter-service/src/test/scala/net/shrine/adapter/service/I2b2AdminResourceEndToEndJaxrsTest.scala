@@ -55,15 +55,16 @@ final class I2b2AdminResourceEndToEndJaxrsTest extends AbstractI2b2AdminResource
     })
     
     RunQueryAdapter(
-      poster,
-      dao,
-      HiveCredentials("d", "u", "pwd", "pid"),
-      translator,
-      1000,
-      false,
-      true,
-      DefaultBreakdownResultOutputTypes.toSet,
-      collectAdapterAudit = false
+      poster = poster,
+      dao = dao,
+      hiveCredentials = HiveCredentials("d", "u", "pwd", "pid"),
+      conceptTranslator = translator,
+      adapterLockoutAttemptsThreshold = 1000,
+      doObfuscation = false,
+      runQueriesImmediately = true,
+      breakdownTypes = DefaultBreakdownResultOutputTypes.toSet,
+      collectAdapterAudit = false,
+      botCountTimeThresholds = Map.empty
     )
   }
   

@@ -354,15 +354,16 @@ object AbstractQueryRetrievalTestCase {
     val translator = new QueryDefinitionTranslator(new ExpressionTranslator(Map("foo" -> Set("bar"))))
 
     new RunQueryAdapter(
-      poster,
-      dao,
-      AbstractQueryRetrievalTestCase.hiveCredentials,
-      translator,
-      10000,
-      doObfuscation,
+      poster = poster,
+      dao = dao,
+      hiveCredentials = AbstractQueryRetrievalTestCase.hiveCredentials,
+      conceptTranslator = translator,
+      adapterLockoutAttemptsThreshold = 10000,
+      doObfuscation = doObfuscation,
       runQueriesImmediately = true,
-      DefaultBreakdownResultOutputTypes.toSet,
-      collectAdapterAudit = false
+      breakdownTypes = DefaultBreakdownResultOutputTypes.toSet,
+      collectAdapterAudit = false,
+      botCountTimeThresholds = Map.empty
     )
   }
 

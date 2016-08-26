@@ -1,7 +1,9 @@
 package net.shrine.adapter
 
 import java.sql.SQLException
+import java.util.Date
 
+import net.shrine.adapter.dao.BotDetectedException
 import net.shrine.log.Loggable
 import net.shrine.problem.{AbstractProblem, LoggingProblemHandler, Problem, ProblemNotYetEncoded, ProblemSources}
 import net.shrine.protocol.{AuthenticationInfo, BaseShrineResponse, BroadcastMessage, ErrorResponse, ShrineRequest}
@@ -31,6 +33,8 @@ abstract class Adapter extends Loggable {
       processRequest(message)
     } catch {
       case e: AdapterLockoutException => problemToErrorResponse(AdapterLockout(message.request.authn,e))
+
+      case e: BotDetectedException => problemToErrorResponse(BotDetected(e))
 
       case e @ CrcInvocationException(invokedCrcUrl, request, cause) => problemToErrorResponse(CrcCouldNotBeInvoked(invokedCrcUrl,request,e))
 
@@ -91,4 +95,10 @@ case class AdapterDatabaseProblem(x:SQLException) extends AbstractProblem(Proble
   override val summary: String = "Problem using the Adapter database."
   override val description = "The Shrine Adapter encountered a problem using a database."
   createAndLog
+}
+
+case class BotDetected(bdx:BotDetectedException) extends AbstractProblem(ProblemSources.Adapter) {
+  override val summary: String = s"A user has run enough queries in a short period of time the adapter suspects a bot."
+
+  override val description: String = s"${bdx.domain}:${bdx.username} has run ${bdx.detectedCount} queries since ${new Date(bdx.sinceMs)}, more than the limit of ${bdx.limit} allowed in this time frame."
 }

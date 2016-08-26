@@ -128,7 +128,8 @@ final class RunQueryAdapterTest extends AbstractSquerylAdapterTest with ShouldMa
       doObfuscation = false,
       runQueriesImmediately = true,
       breakdownTypes = DefaultBreakdownResultOutputTypes.toSet,
-      collectAdapterAudit = false
+      collectAdapterAudit = false,
+      botCountTimeThresholds = Map.empty //todo this might be the right place to test bot defense
     )
 
     val request = RunQueryRequest(projectId, 1.second, authn, expectedNetworkQueryId, Option(topicId), Option(topicName), outputTypes, queryDef)
@@ -236,16 +237,17 @@ final class RunQueryAdapterTest extends AbstractSquerylAdapterTest with ShouldMa
       }
     })
     
-    val adapter = new RunQueryAdapter(
-      poster,
-      dao,
-      hiveCredentials,
-      translator,
-      adapterLockoutThreshold,
+    val adapter = RunQueryAdapter(
+      poster = poster,
+      dao = dao,
+      hiveCredentials = hiveCredentials,
+      conceptTranslator = translator,
+      adapterLockoutAttemptsThreshold = adapterLockoutThreshold,
       doObfuscation = false,
       runQueriesImmediately = true,
       breakdownTypes = DefaultBreakdownResultOutputTypes.toSet,
-      collectAdapterAudit = false
+      collectAdapterAudit = false,
+      botCountTimeThresholds = Map.empty //todo this might be the right place to test bot defense
     )
         
     val resp = adapter.processRawCrcRunQueryResponse(networkAuthn, request, rawRunQueryResponse).asInstanceOf[RunQueryResponse]
@@ -322,16 +324,17 @@ final class RunQueryAdapterTest extends AbstractSquerylAdapterTest with ShouldMa
   //NB: See https://open.med.harvard.edu/jira/browse/SHRINE-745
   @Test
   def testParseAltErrorXml {
-    val adapter = new RunQueryAdapter(
-      Poster("crc-url", null),
-      null,
-      hiveCredentials,
-      null,
-      adapterLockoutThreshold,
+    val adapter = RunQueryAdapter(
+      poster = Poster("crc-url", null),
+      dao = null,
+      hiveCredentials = hiveCredentials,
+      conceptTranslator = null,
+      adapterLockoutAttemptsThreshold = adapterLockoutThreshold,
       doObfuscation = false,
       runQueriesImmediately = false,
-      DefaultBreakdownResultOutputTypes.toSet,
-      collectAdapterAudit = false
+      breakdownTypes = DefaultBreakdownResultOutputTypes.toSet,
+      collectAdapterAudit = false,
+      botCountTimeThresholds = Map.empty
     )
 
     val resp: ErrorResponse = adapter.parseShrineErrorResponseWithFallback(altI2b2ErrorXml).asInstanceOf[ErrorResponse]
@@ -411,16 +414,17 @@ final class RunQueryAdapterTest extends AbstractSquerylAdapterTest with ShouldMa
       </ns5:response>
     }.toString
 
-    val adapter = new RunQueryAdapter(
-      Poster("crc-url", null),
-      null,
-      hiveCredentials,
-      null,
-      adapterLockoutThreshold,
+    val adapter = RunQueryAdapter(
+      poster = Poster("crc-url", null),
+      dao = null,
+      hiveCredentials = hiveCredentials,
+      conceptTranslator = null,
+      adapterLockoutAttemptsThreshold = adapterLockoutThreshold,
       doObfuscation = false,
       runQueriesImmediately = true,
-      DefaultBreakdownResultOutputTypes.toSet,
-      collectAdapterAudit = false
+      breakdownTypes = DefaultBreakdownResultOutputTypes.toSet,
+      collectAdapterAudit = false,
+      botCountTimeThresholds = Map.empty //todo this might be the right place to test bot defense
     )
 
     val resp = adapter.parseShrineErrorResponseWithFallback(xml).asInstanceOf[ErrorResponse]
@@ -467,16 +471,17 @@ final class RunQueryAdapterTest extends AbstractSquerylAdapterTest with ShouldMa
 
     val translator = new QueryDefinitionTranslator(new ExpressionTranslator(mappings))
 
-    val adapter = new RunQueryAdapter(
-      Poster("crc-url", MockHttpClient),
-      null,
-      null,
-      translator,
-      adapterLockoutThreshold,
+    val adapter = RunQueryAdapter(
+      poster = Poster("crc-url", MockHttpClient),
+      dao = null,
+      hiveCredentials = null,
+      conceptTranslator = translator,
+      adapterLockoutAttemptsThreshold = adapterLockoutThreshold,
       doObfuscation = false,
       runQueriesImmediately = true,
-      DefaultBreakdownResultOutputTypes.toSet,
-      collectAdapterAudit = false
+      breakdownTypes = DefaultBreakdownResultOutputTypes.toSet,
+      collectAdapterAudit = false,
+      botCountTimeThresholds = Map.empty
     )
 
     val queryDefinition = QueryDefinition("foo", Term("blah"))
@@ -505,16 +510,17 @@ final class RunQueryAdapterTest extends AbstractSquerylAdapterTest with ShouldMa
 
     val translator = new QueryDefinitionTranslator(new ExpressionTranslator(mappings))
 
-    val adapter = new RunQueryAdapter(
-      Poster("crc-url", MockHttpClient),
-      null,
-      null,
-      translator,
-      adapterLockoutThreshold,
+    val adapter = RunQueryAdapter(
+      poster = Poster("crc-url", MockHttpClient),
+      dao = null,
+      hiveCredentials = null,
+      conceptTranslator = translator,
+      adapterLockoutAttemptsThreshold = adapterLockoutThreshold,
       doObfuscation = false,
       runQueriesImmediately = true,
-      DefaultBreakdownResultOutputTypes.toSet,
-      collectAdapterAudit = false
+      breakdownTypes = DefaultBreakdownResultOutputTypes.toSet,
+      collectAdapterAudit = false,
+      botCountTimeThresholds = Map.empty //todo this might be the right place to test bot defense
     )
 
     val queryDefinition = QueryDefinition("10-17 years old@14:39:20", OccuranceLimited(1, Term("network")))
@@ -529,15 +535,16 @@ final class RunQueryAdapterTest extends AbstractSquerylAdapterTest with ShouldMa
   @Test
   def testQueuedRegularCountQuery: Unit = afterCreatingTables {
     val adapter = RunQueryAdapter(
-      Poster("crc-url", MockHttpClient),
-      dao,
-      null,
-      null,
-      adapterLockoutThreshold,
+      poster = Poster("crc-url", MockHttpClient),
+      dao = dao,
+      hiveCredentials = null,
+      conceptTranslator = null,
+      adapterLockoutAttemptsThreshold = adapterLockoutThreshold,
       doObfuscation = false,
       runQueriesImmediately = false,
-      DefaultBreakdownResultOutputTypes.toSet,
-      collectAdapterAudit = false
+      breakdownTypes = DefaultBreakdownResultOutputTypes.toSet,
+      collectAdapterAudit = false,
+      botCountTimeThresholds = Map.empty //todo this might be the right place to test bot defense
     )
 
     val networkAuthn = AuthenticationInfo("nd", "nu", Credential("np", false))
@@ -941,16 +948,17 @@ final class RunQueryAdapterTest extends AbstractSquerylAdapterTest with ShouldMa
     val translator = new QueryDefinitionTranslator(new ExpressionTranslator(Map("foo" -> Set("bar"))))
 
     //NB: Don't obfuscate, for simpler testing
-    val adapter = new RunQueryAdapter(
-      Poster("crc-url", httpClient),
-      adapterDao,
-      hiveCredentials,
-      translator,
-      adapterLockoutThreshold,
+    val adapter = RunQueryAdapter(
+      poster = Poster("crc-url", httpClient),
+      dao = adapterDao,
+      hiveCredentials = hiveCredentials,
+      conceptTranslator = translator,
+      adapterLockoutAttemptsThreshold = adapterLockoutThreshold,
       doObfuscation = false,
       runQueriesImmediately = true,
-      DefaultBreakdownResultOutputTypes.toSet,
-      collectAdapterAudit = false
+      breakdownTypes = DefaultBreakdownResultOutputTypes.toSet,
+      collectAdapterAudit = false,
+      botCountTimeThresholds = Map.empty
     )
 
     import scala.concurrent.duration._
