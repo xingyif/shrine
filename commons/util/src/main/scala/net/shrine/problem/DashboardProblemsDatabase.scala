@@ -82,7 +82,7 @@ object Problems {
       */
     def problemToRow(problem: ProblemDigest): Option[(Int, String, String, String, String, String, Long)] = problem match {
       case ProblemDigest(codec, stampText, summary, description, detailsXml, epoch) =>
-        // 0 is ignored on insert and replaced with an auto incremented id
+        // 7 is ignored on insert and replaced with an auto incremented id
         Some((7, codec, stampText, summary, description, detailsXml.toString, epoch))
     }
   }
@@ -107,9 +107,15 @@ object Problems {
     val selectDetails = this.map(_.xml)
 
     /**
+      * Sorts the problems in descending order
+      */
+    val descending = this.sortBy(_.epoch.desc)
+
+    /**
       * Selects the last N problems, after the offset
       */
-    def lastNProblems(n: Int, offset: Int = 0) = this.sortBy(_.epoch.desc).drop(offset).take(n)
+    def lastNProblems(n: Int, offset: Int = 0) = this.descending.drop(offset).take(n)
+
   }
 
 
@@ -127,6 +133,7 @@ object Problems {
     val resetTable = createIfNotExists >> problems.selectAll.delete
     val selectAll = problems.result
     def sizeAndProblemDigest(n: Int, offset: Int = 0) = problems.lastNProblems(n, offset).result.zip(problems.size.result)
+    def findIndexOfDate(date: Long) = (problems.size - problems.filter(_.epoch <= date).size).result
   }
 
 

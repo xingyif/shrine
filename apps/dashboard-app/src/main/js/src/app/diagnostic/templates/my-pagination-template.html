@@ -1,0 +1,18 @@
+<tr>
+    <td colspan="4" style="width:100%;text-align:center">
+        <my-pages max-page="vm.floor((vm.probsSize - 1) / vm.probsN + 1)"
+                  active-page="vm.floor(vm.probsOffset / vm.probsN + 1)"
+                  handle-button="vm.handleButton">
+        </my-pages>
+        <span style="display:inline-block;">
+                            {{vm.floor(vm.probsOffset / vm.probsN) + 1}} / {{vm.floor((vm.probsSize - 1) / vm.probsN) + 1}}
+                        </span>
+        <form style="display:inline-block;float:right;"
+              ng-submit="vm.newPage(vm.numCheck(vm.num), vm.probsN)">
+            <label>
+                <span style="display:inline-block">Go to page:</span>
+                <input type="number" name="vm.num" ng-model="vm.num">
+            </label>
+        </form>
+    </td>
+</tr>

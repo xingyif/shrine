@@ -1,4 +1,16 @@
 <div>
+
+    <br><br>
+    <form ng-submit="vm.submitDate(vm.epoch)">
+        <label for="dateInput">Go to page with date</label>
+        <input type="text" id="dateInput" name="input" ng-model="vm.epoch"
+               placeholder="yyyy-MM-dd"/>
+        <div role="alert">
+            <span ng-show="vm.showDateError">
+                Please input a valid date: yyyy-MM-dd
+            </span>
+        </div>
+    </form>
     <table class="table table-striped">
         <colgroup>
             <col style="width:27%">
@@ -10,20 +22,25 @@
         <thead>
         <tr>
             <td colspan="4">
-                Problems: Total = {{vm.probsSize}}
+                <span>Problems Total: {{vm.probsSize}}</span>
+                <button ng-click="vm.newPage(vm.probsOffset, 20)" style="float:right;margin-right:3%">20</button>
+                <button ng-click="vm.newPage(vm.probsOffset, 10)" style="float:right;margin-right:3%">10</button>
+                <button ng-click="vm.newPage(vm.probsOffset, 5)" style="float:right;margin-right:3%">5</button>
+                <span style="float:right;margin-right:3%">Problems Per Page:</span>
             </td>
         </tr>
+        <tr my-pagination></tr>
         <tr>
             <td data-width="25%">
                 Codec
             </td>
-            <td>
+            <td data-width="15%">
                 Time Logged
             </td>
-            <td>
+            <td data-width="25%">
                 Summary
             </td>
-            <td>
+            <td data-width="25%">
                 Description
             </td>
         </tr>
@@ -34,7 +51,8 @@
             ng-click="problem.showDetails = !problem.showDetails"
             style="cursor: pointer;">
             <td><pre style="background: inherit;border: none;text-decoration: underline;"
-                    ><a href="{{vm.url}}{{problem.codec}}" target="_blank">{{vm.formatCodec(problem.codec)}}</a></pre>
+                    ><a href="{{vm.url + problem.codec}}" target="_blank" rel="noopener noreferrer" ng-click="$event.stopPropagation()"
+                    >{{vm.formatCodec(problem.codec)}}</a></pre>
             </td>
             <td>
                 {{problem.stampText}}
@@ -47,35 +65,11 @@
             </td>
         </tr>
         <tr ng-repeat-end>
-            <td colspan="4" ng-show="problem.showDetails">
-                <pre>
-                    {{vm.stringify(problem.detailsXml)}}
-                </pre>
+            <td colspan="4" ng-show="problem.showDetails" ng-bind-html="vm.parseDetails(problem.detailsXml)">
             </td>
         </tr>
         <thead>
-        <tr>
-            <td colspan="4" style="width:100%;text-align:center">
-                <h5 style="display:inline-block;float:left;font-weight: bolder">
-                        <span style="cursor:pointer" ng-click="vm.newPage(vm.probsOffset - vm.probsN)">
-                            &#8592;
-                        </span>
-                        |
-                        <span style="cursor:pointer" ng-click="vm.newPage(vm.probsOffset + vm.probsN)">
-                            &#8594;
-                        </span>
-                </h5>
-                <h5 style="display:inline-block">
-                    {{vm.floorMod(vm.probsOffset, vm.probsN) + 1}}-{{vm.min(vm.probsSize, vm.floorMod(vm.probsOffset, vm.probsN) + vm.probsN)}} / {{vm.probsSize}}
-                </h5>
-                <form style="display:inline-block;float:right" ng-submit="vm.newPage(vm.numCheck(vm.num))">
-                    <label>
-                        Go to Problem:
-                        <input type="number" name="vm.num" ng-model="vm.num">
-                    </label>
-                </form>
-            </td>
-        </tr>
+            <tr my-pagination></tr>
         </thead>
         </tbody>
     </table>

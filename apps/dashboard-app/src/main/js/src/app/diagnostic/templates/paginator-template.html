@@ -1,0 +1,9 @@
+<ul style="list-style-type:none">
+    <li ng-repeat="buttonValue in ['&laquo;','&lsaquo;'].concat(rangeGen(maxPage)).concat(['&rsaquo;','&raquo;'])"
+        style="float:left">
+        <button ng-click="handleButton(buttonValue)" ng-show="checkPage(buttonValue, activePage, maxPage)">
+            <span ng-hide="buttonValue == activePage">{{buttonValue}}</span>
+            <span ng-show="buttonValue == activePage" style="font-weight:bold;">{{buttonValue}}</span>
+        </button>
+    </li>
+</ul>

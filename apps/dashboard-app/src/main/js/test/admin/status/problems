@@ -1,4 +1,4 @@
-{"size":20,"offset":0,"n":20,"problems":
+{"size":100,"offset":0,"n":20,"problems":
 [{
   "codec":"net.shrine.protocol.ErrorStatusFromCrc",
   "description": "Proin risus.",
@@ -6,72 +6,15 @@
   "stampText": "2016-07-25T17:42:42Z",
   "epoch": "1464931235",
   "detailsXml": {
-    "exception": {
-      "name": "PellentesqueEget.js",
-      "message": "Vivamus vestibulum sagittis sapien. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus.",
-      "stacktrace": {
-        "line": [
-          "Sed ante.",
-          "Morbi non quam nec dui luctus rutrum.",
-          "Praesent blandit lacinia erat.",
-          "Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Duis faucibus accumsan odio.",
-          "Nulla facilisi.",
-          "Integer tincidunt ante vel ipsum.",
-          "Aenean fermentum.",
-          "Nam nulla.",
-          "Fusce consequat.",
-          "Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Mauris viverra diam vitae quam.",
-          "Duis bibendum, felis sed interdum venenatis, turpis enim blandit mi, in porttitor pede justo eu massa.",
-          "Proin at turpis a pede posuere nonummy.",
-          "In hac habitasse platea dictumst.",
-          "Integer pede justo, lacinia eget, tincidunt eget, tempus vel, pede.",
-          "Mauris ullamcorper purus sit amet nulla.",
-          "Mauris lacinia sapien quis libero.",
-          "Mauris sit amet eros.",
-          "Morbi non lectus.",
-          "Fusce consequat.",
-          "Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus.",
-          "Maecenas rhoncus aliquam lacus.",
-          "Donec ut mauris eget massa tempor convallis.",
-          "Praesent blandit lacinia erat.",
-          "Pellentesque eget nunc.",
-          "Maecenas leo odio, condimentum id, luctus nec, molestie sed, justo.",
-          "Quisque porta volutpat erat.",
-          "Quisque porta volutpat erat.",
-          "Nunc nisl.",
-          "Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Donec pharetra, magna vestibulum aliquet ultrices, erat tortor sollicitudin mi, sit amet lobortis sapien sapien non mi.",
-          "Maecenas ut massa quis augue luctus tincidunt.",
-          "Integer aliquet, massa id lobortis convallis, tortor risus dapibus augue, vel accumsan tellus nisi eu orci.",
-          "In tempor, turpis nec euismod scelerisque, quam turpis adipiscing lorem, vitae mattis nibh ligula nec sem.",
-          "Duis at velit eu est congue elementum.",
-          "Vivamus in felis eu sapien cursus vestibulum.",
-          "Proin at turpis a pede posuere nonummy.",
-          "Vivamus metus arcu, adipiscing molestie, hendrerit at, vulputate vitae, nisl.",
-          "Donec vitae nisi.",
-          "Nullam varius.",
-          "Morbi non lectus.",
-          "Sed sagittis.",
-          "Integer a nibh.",
-          "Nunc nisl.",
-          "Phasellus in felis.",
-          "Pellentesque ultrices mattis odio.",
-          "Cras mi pede, malesuada in, imperdiet et, commodo vulputate, justo.",
-          "Proin interdum mauris non ligula pellentesque ultrices.",
-          "Donec dapibus.",
-          "Praesent blandit.",
-          "Morbi non lectus.",
-          "Nullam porttitor lacus at turpis."
-        ]
-      }
-    }
-  }
+              "details": "Http response body was <html><head><title>Apache Tomcat/7.0.59 - Error report</title><style><!--H1 {font-family:Tahoma,Arial,sans-serif;color:white;background-color:#525D76;font-size:22px;} H2 {font-family:Tahoma,Arial,sans-serif;color:white;background-color:#525D76;font-size:16px;} H3 {font-family:Tahoma,Arial,sans-serif;color:white;background-color:#525D76;font-size:14px;} BODY {font-family:Tahoma,Arial,sans-serif;color:black;background-color:white;} B {font-family:Tahoma,Arial,sans-serif;color:white;background-color:#525D76;} P {font-family:Tahoma,Arial,sans-serif;background:white;color:black;font-size:12px;}A {color : black;}A.name {color : black;}HR {color : #525D76;}--></style> </head><body><h1>HTTP Status 500 - </h1><HR size=\"1\" noshade=\"noshade\"><p><b>type</b> Exception report</p><p><b>message</b> <u></u></p><p><b>description</b> <u>The server encountered an internal error that prevented it from fulfilling this request.</u></p><p><b>exception</b> <pre>java.lang.NullPointerException\n\tnet.shrine.problem.Problem$class.exceptionXml(Problem.scala:30)\n\tnet.shrine.problem.AbstractProblem.exceptionXml(Problem.scala:130)\n\tnet.shrine.problem.Problem$class.throwableDetail(Problem.scala:40)\n\tnet.shrine.problem.AbstractProblem.throwableDetail(Problem.scala:130)\n\tnet.shrine.problem.Problem$class.detailsXml(Problem.scala:42)\n\tnet.shrine.problem.AbstractProblem.detailsXml(Problem.scala:130)\n\tnet.shrine.problem.Problem$class.toDigest(Problem.scala:44)\n\tnet.shrine.problem.AbstractProblem.toDigest(Problem.scala:130)\n\tnet.shrine.problem.Problem$class.delayedInit(Problem.scala:50)\n\tnet.shrine.problem.AbstractProblem.delayedInit(Problem.scala:130)\n\tnet.shrine.problem.AbstractProblem.&lt;init&gt;(Problem.scala:130)\n\tnet.shrine.adapter.AdapterLockout.&lt;init&gt;(Adapter.scala:55)\n\tnet.shrine.adapter.Adapter.perform(Adapter.scala:30)\n\tnet.shrine.adapter.service.AdapterService$$anonfun$handleRequest$1$$anonfun$apply$1$$anonfun$apply$2.apply(AdapterService.scala:33)\n\tnet.shrine.adapter.service.AdapterService$$anonfun$handleRequest$1$$anonfun$apply$1$$anonfun$apply$2.apply(AdapterService.scala:33)\n\tnet.shrine.adapter.service.AdapterService$.time(AdapterService.scala:70)\n\tnet.shrine.adapter.service.AdapterService$.time(AdapterService.scala:78)\n\tnet.shrine.adapter.service.AdapterService$$anonfun$handleRequest$1$$anonfun$apply$1.apply(AdapterService.scala:32)\n\tnet.shrine.adapter.service.AdapterService$$anonfun$handleRequest$1$$anonfun$apply$1.apply(AdapterService.scala:31)\n\tscala.Option.map(Option.scala:146)\n\tnet.shrine.adapter.service.AdapterService$$anonfun$handleRequest$1.apply(AdapterService.scala:31)\n\tnet.shrine.adapter.service.AdapterService$$anonfun$handleRequest$1.apply(AdapterService.scala:31)\n\tscala.Option.orElse(Option.scala:289)\n\tnet.shrine.adapter.service.AdapterService.handleRequest(AdapterService.scala:29)\n\tnet.shrine.adapter.service.AdapterResource$$anonfun$net$shrine$adapter$service$AdapterResource$$handleRequest$1$2.apply(AdapterResource.scala:33)\n\tnet.shrine.adapter.service.AdapterResource$$anonfun$net$shrine$adapter$service$AdapterResource$$handleRequest$1$2.apply(AdapterResource.scala:30)\n\tscala.util.Try$.apply(Try.scala:192)\n\tnet.shrine.adapter.service.AdapterResource.net$shrine$adapter$service$AdapterResource$$handleRequest$1(AdapterResource.scala:30)\n\tnet.shrine.adapter.service.AdapterResource$$anonfun$2.apply(AdapterResource.scala:58)\n\tnet.shrine.adapter.service.AdapterResource$$anonfun$2.apply(AdapterResource.scala:58)\n\tscala.util.Try.transform(Try.scala:178)\n\tnet.shrine.adapter.service.AdapterResource.handleRequest(AdapterResource.scala:58)\n\tsun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\n\tsun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)\n\tsun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\n\tjava.lang.reflect.Method.invoke(Method.java:498)\n\tcom.sun.jersey.spi.container.JavaMethodInvokerFactory$1.invoke(JavaMethodInvokerFactory.java:60)\n\tcom.sun.jersey.server.impl.model.method.dispatch.AbstractResourceMethodDispatchProvider$ResponseOutInvoker._dispatch(AbstractResourceMethodDispatchProvider.java:205)\n\tcom.sun.jersey.server.impl.model.method.dispatch.ResourceJavaMethodDispatcher.dispatch(ResourceJavaMethodDispatcher.java:75)\n\tcom.sun.jersey.server.impl.uri.rules.HttpMethodRule.accept(HttpMethodRule.java:302)\n\tcom.sun.jersey.server.impl.uri.rules.RightHandPathRule.accept(RightHandPathRule.java:147)\n\tcom.sun.jersey.server.impl.uri.rules.ResourceObjectRule.accept(ResourceObjectRule.java:100)\n\tcom.sun.jersey.server.impl.uri.rules.RightHandPathRule.accept(RightHandPathRule.java:147)\n\tcom.sun.jersey.server.impl.uri.rules.RootResourceClassesRule.accept(RootResourceClassesRule.java:84)\n\tcom.sun.jersey.server.impl.application.WebApplicationImpl._handleRequest(WebApplicationImpl.java:1542)\n\tcom.sun.jersey.server.impl.application.WebApplicationImpl._handleRequest(WebApplicationImpl.java:1473)\n\tcom.sun.jersey.server.impl.application.WebApplicationImpl.handleRequest(WebApplicationImpl.java:1419)\n\tcom.sun.jersey.server.impl.application.WebApplicationImpl.handleRequest(WebApplicationImpl.java:1409)\n\tcom.sun.jersey.spi.container.servlet.WebComponent.service(WebComponent.java:409)\n\tcom.sun.jersey.spi.container.servlet.ServletContainer.service(ServletContainer.java:558)\n\tcom.sun.jersey.spi.container.servlet.ServletContainer.service(ServletContainer.java:733)\n\tjavax.servlet.http.HttpServlet.service(HttpServlet.java:727)\n\torg.apache.tomcat.websocket.server.WsFilter.doFilter(WsFilter.java:52)\n\torg.apache.catalina.filters.CorsFilter.handleNonCORS(CorsFilter.java:439)\n\torg.apache.catalina.filters.CorsFilter.doFilter(CorsFilter.java:178)\n</pre></p><p><b>note</b> <u>The full stack trace of the root cause is available in the Apache Tomcat/7.0.59 logs.</u></p><HR size=\"1\" noshade=\"noshade\"><h3>Apache Tomcat/7.0.59</h3></body></html>"
+          }
 }, {
   "codec":"net.shrine.adapter.CannotParseXmlFromCrc",
   "description": "Aenean sit amet justo.",
   "summary": "Donec ut dolor. Morbi vel lectus in quam fringilla rhoncus.",
   "stampText": "2015-09-20T04:34:50Z",
   "epoch": "1467940628",
-  "detailsXml": {
+  "detailsXml": { "details": {
     "exception": {
       "name": "InAnte.js",
       "message": "Mauris lacinia sapien quis libero. Nullam sit amet turpis elementum ligula vehicula consequat. Morbi a ipsum.",
@@ -98,7 +41,7 @@
           "In congue.",
           "Nulla facilisi.",
           "Vivamus tortor."
-        ]
+        ]}
       }
     }
   }
@@ -108,7 +51,7 @@
   "summary": "Donec posuere metus vitae ipsum.",
   "stampText": "2015-08-30T15:48:40Z",
   "epoch": "1467096518",
-  "detailsXml": {
+  "detailsXml": { "details": {
     "exception": {
       "name": "Eget.css",
       "message": "Curabitur gravida nisi at nibh.",
@@ -157,7 +100,7 @@
           "Pellentesque eget nunc.",
           "Duis ac nibh.",
           "Nulla mollis molestie lorem."
-        ]
+        ]}
       }
     }
   }
@@ -167,7 +110,7 @@
   "summary": "Fusce congue, diam id ornare imperdiet, sapien urna pretium nisl, ut volutpat sapien arcu sed augue.",
   "stampText": "2015-11-15T20:17:04Z",
   "epoch": "1467123461",
-  "detailsXml": {
+  "detailsXml": { "details": {
     "exception": {
       "name": "Id.js",
       "message": "Quisque ut erat. Curabitur gravida nisi at nibh. In hac habitasse platea dictumst.",
@@ -215,7 +158,7 @@
           "Quisque id justo sit amet sapien dignissim vestibulum.",
           "Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Nulla dapibus dolor vel est.",
           "Quisque ut erat."
-        ]
+        ]}
       }
     }
   }
@@ -225,7 +168,7 @@
   "summary": "Vivamus vel nulla eget eros elementum pellentesque.",
   "stampText": "2016-03-01T14:48:34Z",
   "epoch": "1469226821",
-  "detailsXml": {
+  "detailsXml": { "details": {
     "exception": {
       "name": "IdSapienIn.java",
       "message": "Curabitur in libero ut massa volutpat convallis. Morbi odio odio, elementum eu, interdum eu, tincidunt in, leo.",
@@ -272,7 +215,7 @@
           "Nam dui.",
           "Sed vel enim sit amet nunc viverra dapibus.",
           "In quis justo."
-        ]
+        ]}
       }
     }
   }
@@ -282,7 +225,7 @@
   "summary": "Curabitur in libero ut massa volutpat convallis. Morbi odio odio, elementum eu, interdum eu, tincidunt in, leo.",
   "stampText": "2016-05-12T22:27:05Z",
   "epoch": "1446949742",
-  "detailsXml": {
+  "detailsXml": { "details": {
     "exception": {
       "name": "PedeUllamcorper.js",
       "message": "Pellentesque eget nunc. Donec quis orci eget orci vehicula condimentum.",
@@ -321,7 +264,7 @@
           "Nulla mollis molestie lorem.",
           "Morbi non quam nec dui luctus rutrum.",
           "Pellentesque ultrices mattis odio."
-        ]
+        ]}
       }
     }
   }
@@ -331,7 +274,7 @@
   "summary": "Integer a nibh. In quis justo. Maecenas rhoncus aliquam lacus.",
   "stampText": "2015-10-19T01:39:35Z",
   "epoch": "1451699738",
-  "detailsXml": {
+  "detailsXml": { "details": {
     "exception": {
       "name": "NatoquePenatibus.java",
       "message": "Curabitur in libero ut massa volutpat convallis. Morbi odio odio, elementum eu, interdum eu, tincidunt in, leo. Maecenas pulvinar lobortis est.",
@@ -367,7 +310,7 @@
           "Pellentesque eget nunc.",
           "In tempor, turpis nec euismod scelerisque, quam turpis adipiscing lorem, vitae mattis nibh ligula nec sem.",
           "Etiam justo."
-        ]
+        ]}
       }
     }
   }
@@ -377,7 +320,7 @@
   "summary": "Etiam justo. Etiam pretium iaculis justo.",
   "stampText": "2015-12-18T19:40:27Z",
   "epoch": "1457212349",
-  "detailsXml": {
+  "detailsXml": { "details": {
     "exception": {
       "name": "CrasMiPede.js",
       "message": "Morbi a ipsum.",
@@ -413,7 +356,7 @@
           "Integer ac leo.",
           "Morbi odio odio, elementum eu, interdum eu, tincidunt in, leo.",
           "Donec odio justo, sollicitudin ut, suscipit a, feugiat et, eros."
-        ]
+        ]}
       }
     }
   }
@@ -423,7 +366,7 @@
   "summary": "Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Mauris viverra diam vitae quam. Suspendisse potenti.",
   "stampText": "2016-02-04T18:18:08Z",
   "epoch": "1463644845",
-  "detailsXml": {
+  "detailsXml": { "details": {
     "exception": {
       "name": "MorbiNon.css",
       "message": "Nulla suscipit ligula in lacus.",
@@ -471,7 +414,7 @@
           "Duis bibendum, felis sed interdum venenatis, turpis enim blandit mi, in porttitor pede justo eu massa.",
           "Nulla nisl.",
           "Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Duis faucibus accumsan odio."
-        ]
+        ]}
       }
     }
   }
@@ -481,7 +424,7 @@
   "summary": "Quisque arcu libero, rutrum ac, lobortis vel, dapibus at, diam. Nam tristique tortor eu pede.",
   "stampText": "2016-04-14T19:38:30Z",
   "epoch": "1438484431",
-  "detailsXml": {
+  "detailsXml": { "details": {
     "exception": {
       "name": "UltricesAliquet.js",
       "message": "Maecenas tristique, est et tempus semper, est quam pharetra magna, ac consequat metus sapien ut nunc. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Mauris viverra diam vitae quam.",
@@ -512,7 +455,7 @@
           "Aenean fermentum.",
           "Morbi porttitor lorem id ligula.",
           "Integer tincidunt ante vel ipsum."
-        ]
+        ]}
       }
     }
   }
@@ -522,7 +465,7 @@
   "summary": "Aenean sit amet justo. Morbi ut odio.",
   "stampText": "2016-06-18T19:41:42Z",
   "epoch": "1442204097",
-  "detailsXml": {
+  "detailsXml": { "details": {
     "exception": {
       "name": "NonLectusAliquam.js",
       "message": "Morbi non lectus. Aliquam sit amet diam in magna bibendum imperdiet.",
@@ -577,7 +520,7 @@
           "Nulla ut erat id mauris vulputate elementum.",
           "Cras in purus eu magna vulputate luctus.",
           "Phasellus sit amet erat."
-        ]
+        ]}
       }
     }
   }
@@ -587,7 +530,7 @@
   "summary": "Nunc nisl.",
   "stampText": "2015-11-01T01:07:51Z",
   "epoch": "1464352796",
-  "detailsXml": {
+  "detailsXml": { "details": {
     "exception": {
       "name": "MaurisSit.css",
       "message": "Morbi odio odio, elementum eu, interdum eu, tincidunt in, leo. Maecenas pulvinar lobortis est. Phasellus sit amet erat.",
@@ -615,7 +558,7 @@
           "Proin risus.",
           "Suspendisse potenti.",
           "Quisque id justo sit amet sapien dignissim vestibulum."
-        ]
+        ]}
       }
     }
   }
@@ -625,7 +568,7 @@
   "summary": "Nam congue, risus semper porta volutpat, quam pede lobortis ligula, sit amet eleifend pede libero quis orci.",
   "stampText": "2016-06-30T18:59:38Z",
   "epoch": "1439625535",
-  "detailsXml": {
+  "detailsXml": { "details": {
     "exception": {
       "name": "NullaSuspendisse.js",
       "message": "Phasellus in felis. Donec semper sapien a libero. Nam dui.",
@@ -655,7 +598,7 @@
           "Suspendisse accumsan tortor quis turpis.",
           "Mauris ullamcorper purus sit amet nulla.",
           "Duis bibendum."
-        ]
+        ]}
       }
     }
   }
@@ -665,7 +608,7 @@
   "summary": "Sed sagittis. Nam congue, risus semper porta volutpat, quam pede lobortis ligula, sit amet eleifend pede libero quis orci.",
   "stampText": "2016-06-21T10:22:12Z",
   "epoch": "1439450598",
-  "detailsXml": {
+  "detailsXml": { "details": {
     "exception": {
       "name": "OdioOdioElementum.css",
       "message": "Quisque erat eros, viverra eget, congue eget, semper rutrum, nulla. Nunc purus. Phasellus in felis.",
@@ -691,7 +634,7 @@
           "Praesent lectus.",
           "Curabitur convallis.",
           "Donec posuere metus vitae ipsum."
-        ]
+        ]}
       }
     }
   }
@@ -701,7 +644,7 @@
   "summary": "Suspendisse ornare consequat lectus. In est risus, auctor sed, tristique in, tempus sit amet, sem. Fusce consequat.",
   "stampText": "2015-09-17T07:23:28Z",
   "epoch": "1452735093",
-  "detailsXml": {
+  "detailsXml": { "details": {
     "exception": {
       "name": "VestibulumVelitId.css",
       "message": "Aliquam non mauris.",
@@ -744,7 +687,7 @@
           "Maecenas ut massa quis augue luctus tincidunt.",
           "In hac habitasse platea dictumst.",
           "In blandit ultrices enim."
-        ]
+        ]}
       }
     }
   }
@@ -754,7 +697,7 @@
   "summary": "In hac habitasse platea dictumst. Aliquam augue quam, sollicitudin vitae, consectetuer eget, rutrum at, lorem. Integer tincidunt ante vel ipsum.",
   "stampText": "2015-09-06T09:08:14Z",
   "epoch": "1456823507",
-  "detailsXml": {
+  "detailsXml": { "details": {
     "exception": {
       "name": "Nulla.java",
       "message": "Nulla tellus.",
@@ -808,7 +751,7 @@
           "Morbi non quam nec dui luctus rutrum.",
           "In congue.",
           "Morbi non quam nec dui luctus rutrum."
-        ]
+        ]}
       }
     }
   }
@@ -818,7 +761,7 @@
   "summary": "Donec diam neque, vestibulum eget, vulputate ut, ultrices vel, augue. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Donec pharetra, magna vestibulum aliquet ultrices, erat tortor sollicitudin mi, sit amet lobortis sapien sapien non mi.",
   "stampText": "2016-07-02T13:17:38Z",
   "epoch": "1446474669",
-  "detailsXml": {
+  "detailsXml": { "details": {
     "exception": {
       "name": "Pellentesque.js",
       "message": "Maecenas ut massa quis augue luctus tincidunt. Nulla mollis molestie lorem.",
@@ -846,7 +789,7 @@
           "Nulla neque libero, convallis eget, eleifend luctus, ultricies eu, nibh.",
           "Donec vitae nisi.",
           "Etiam faucibus cursus urna."
-        ]
+        ]}
       }
     }
   }
@@ -856,7 +799,7 @@
   "summary": "Nam congue, risus semper porta volutpat, quam pede lobortis ligula, sit amet eleifend pede libero quis orci. Nullam molestie nibh in lectus.",
   "stampText": "2016-06-07T12:59:14Z",
   "epoch": "1445545358",
-  "detailsXml": {
+  "detailsXml": { "details": {
     "exception": {
       "name": "VolutpatDui.js",
       "message": "Integer aliquet, massa id lobortis convallis, tortor risus dapibus augue, vel accumsan tellus nisi eu orci. Mauris lacinia sapien quis libero.",
@@ -883,7 +826,7 @@
           "Vivamus vestibulum sagittis sapien.",
           "Donec ut dolor.",
           "Mauris enim leo, rhoncus sed, vestibulum sit amet, cursus id, turpis."
-        ]
+        ]}
       }
     }
   }
@@ -893,7 +836,7 @@
   "summary": "Proin interdum mauris non ligula pellentesque ultrices. Phasellus id sapien in sapien iaculis congue. Vivamus metus arcu, adipiscing molestie, hendrerit at, vulputate vitae, nisl.",
   "stampText": "2015-09-16T18:57:53Z",
   "epoch": "1461038223",
-  "detailsXml": {
+  "detailsXml": { "details": {
     "exception": {
       "name": "ConsectetuerAdipiscing.js",
       "message": "Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Duis faucibus accumsan odio. Curabitur convallis.",
@@ -934,7 +877,7 @@
           "Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus.",
           "In blandit ultrices enim.",
           "Aliquam non mauris."
-        ]
+        ]}
       }
     }
   }
@@ -944,7 +887,7 @@
   "summary": "Quisque ut erat. Curabitur gravida nisi at nibh.",
   "stampText": "2015-10-16T20:29:48Z",
   "epoch": "1445211251",
-  "detailsXml": {
+  "detailsXml": { "details": {
     "exception": {
       "name": "TristiqueIn.js",
       "message": "Proin leo odio, porttitor id, consequat in, consequat ut, nulla.",
@@ -988,7 +931,7 @@
           "Morbi vel lectus in quam fringilla rhoncus.",
           "Praesent lectus.",
           "Praesent blandit."
-        ]
+        ]}
       }
     }
   }
