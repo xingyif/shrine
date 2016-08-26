@@ -5,66 +5,9 @@
   "summary": "Vivamus in felis eu sapien cursus vestibulum.",
   "stampText": "2016-07-25T17:42:42Z",
   "epoch": "1464931235",
-  "detailsXml": { "details": {
-    "exception": {
-      "name": "PellentesqueEget.js",
-      "message": "Vivamus vestibulum sagittis sapien. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus.",
-      "stacktrace": {
-        "line": [
-          "Sed ante.",
-          "Morbi non quam nec dui luctus rutrum.",
-          "Praesent blandit lacinia erat.",
-          "Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Duis faucibus accumsan odio.",
-          "Nulla facilisi.",
-          "Integer tincidunt ante vel ipsum.",
-          "Aenean fermentum.",
-          "Nam nulla.",
-          "Fusce consequat.",
-          "Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Mauris viverra diam vitae quam.",
-          "Duis bibendum, felis sed interdum venenatis, turpis enim blandit mi, in porttitor pede justo eu massa.",
-          "Proin at turpis a pede posuere nonummy.",
-          "In hac habitasse platea dictumst.",
-          "Integer pede justo, lacinia eget, tincidunt eget, tempus vel, pede.",
-          "Mauris ullamcorper purus sit amet nulla.",
-          "Mauris lacinia sapien quis libero.",
-          "Mauris sit amet eros.",
-          "Morbi non lectus.",
-          "Fusce consequat.",
-          "Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus.",
-          "Maecenas rhoncus aliquam lacus.",
-          "Donec ut mauris eget massa tempor convallis.",
-          "Praesent blandit lacinia erat.",
-          "Pellentesque eget nunc.",
-          "Maecenas leo odio, condimentum id, luctus nec, molestie sed, justo.",
-          "Quisque porta volutpat erat.",
-          "Quisque porta volutpat erat.",
-          "Nunc nisl.",
-          "Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Donec pharetra, magna vestibulum aliquet ultrices, erat tortor sollicitudin mi, sit amet lobortis sapien sapien non mi.",
-          "Maecenas ut massa quis augue luctus tincidunt.",
-          "Integer aliquet, massa id lobortis convallis, tortor risus dapibus augue, vel accumsan tellus nisi eu orci.",
-          "In tempor, turpis nec euismod scelerisque, quam turpis adipiscing lorem, vitae mattis nibh ligula nec sem.",
-          "Duis at velit eu est congue elementum.",
-          "Vivamus in felis eu sapien cursus vestibulum.",
-          "Proin at turpis a pede posuere nonummy.",
-          "Vivamus metus arcu, adipiscing molestie, hendrerit at, vulputate vitae, nisl.",
-          "Donec vitae nisi.",
-          "Nullam varius.",
-          "Morbi non lectus.",
-          "Sed sagittis.",
-          "Integer a nibh.",
-          "Nunc nisl.",
-          "Phasellus in felis.",
-          "Pellentesque ultrices mattis odio.",
-          "Cras mi pede, malesuada in, imperdiet et, commodo vulputate, justo.",
-          "Proin interdum mauris non ligula pellentesque ultrices.",
-          "Donec dapibus.",
-          "Praesent blandit.",
-          "Morbi non lectus.",
-          "Nullam porttitor lacus at turpis."
-        ]}
-      }
-    }
-  }
+  "detailsXml": {
+              "details": "Http response body was <html><head><title>Apache Tomcat/7.0.59 - Error report</title><style><!--H1 {font-family:Tahoma,Arial,sans-serif;color:white;background-color:#525D76;font-size:22px;} H2 {font-family:Tahoma,Arial,sans-serif;color:white;background-color:#525D76;font-size:16px;} H3 {font-family:Tahoma,Arial,sans-serif;color:white;background-color:#525D76;font-size:14px;} BODY {font-family:Tahoma,Arial,sans-serif;color:black;background-color:white;} B {font-family:Tahoma,Arial,sans-serif;color:white;background-color:#525D76;} P {font-family:Tahoma,Arial,sans-serif;background:white;color:black;font-size:12px;}A {color : black;}A.name {color : black;}HR {color : #525D76;}--></style> </head><body><h1>HTTP Status 500 - </h1><HR size=\"1\" noshade=\"noshade\"><p><b>type</b> Exception report</p><p><b>message</b> <u></u></p><p><b>description</b> <u>The server encountered an internal error that prevented it from fulfilling this request.</u></p><p><b>exception</b> <pre>java.lang.NullPointerException\n\tnet.shrine.problem.Problem$class.exceptionXml(Problem.scala:30)\n\tnet.shrine.problem.AbstractProblem.exceptionXml(Problem.scala:130)\n\tnet.shrine.problem.Problem$class.throwableDetail(Problem.scala:40)\n\tnet.shrine.problem.AbstractProblem.throwableDetail(Problem.scala:130)\n\tnet.shrine.problem.Problem$class.detailsXml(Problem.scala:42)\n\tnet.shrine.problem.AbstractProblem.detailsXml(Problem.scala:130)\n\tnet.shrine.problem.Problem$class.toDigest(Problem.scala:44)\n\tnet.shrine.problem.AbstractProblem.toDigest(Problem.scala:130)\n\tnet.shrine.problem.Problem$class.delayedInit(Problem.scala:50)\n\tnet.shrine.problem.AbstractProblem.delayedInit(Problem.scala:130)\n\tnet.shrine.problem.AbstractProblem.&lt;init&gt;(Problem.scala:130)\n\tnet.shrine.adapter.AdapterLockout.&lt;init&gt;(Adapter.scala:55)\n\tnet.shrine.adapter.Adapter.perform(Adapter.scala:30)\n\tnet.shrine.adapter.service.AdapterService$$anonfun$handleRequest$1$$anonfun$apply$1$$anonfun$apply$2.apply(AdapterService.scala:33)\n\tnet.shrine.adapter.service.AdapterService$$anonfun$handleRequest$1$$anonfun$apply$1$$anonfun$apply$2.apply(AdapterService.scala:33)\n\tnet.shrine.adapter.service.AdapterService$.time(AdapterService.scala:70)\n\tnet.shrine.adapter.service.AdapterService$.time(AdapterService.scala:78)\n\tnet.shrine.adapter.service.AdapterService$$anonfun$handleRequest$1$$anonfun$apply$1.apply(AdapterService.scala:32)\n\tnet.shrine.adapter.service.AdapterService$$anonfun$handleRequest$1$$anonfun$apply$1.apply(AdapterService.scala:31)\n\tscala.Option.map(Option.scala:146)\n\tnet.shrine.adapter.service.AdapterService$$anonfun$handleRequest$1.apply(AdapterService.scala:31)\n\tnet.shrine.adapter.service.AdapterService$$anonfun$handleRequest$1.apply(AdapterService.scala:31)\n\tscala.Option.orElse(Option.scala:289)\n\tnet.shrine.adapter.service.AdapterService.handleRequest(AdapterService.scala:29)\n\tnet.shrine.adapter.service.AdapterResource$$anonfun$net$shrine$adapter$service$AdapterResource$$handleRequest$1$2.apply(AdapterResource.scala:33)\n\tnet.shrine.adapter.service.AdapterResource$$anonfun$net$shrine$adapter$service$AdapterResource$$handleRequest$1$2.apply(AdapterResource.scala:30)\n\tscala.util.Try$.apply(Try.scala:192)\n\tnet.shrine.adapter.service.AdapterResource.net$shrine$adapter$service$AdapterResource$$handleRequest$1(AdapterResource.scala:30)\n\tnet.shrine.adapter.service.AdapterResource$$anonfun$2.apply(AdapterResource.scala:58)\n\tnet.shrine.adapter.service.AdapterResource$$anonfun$2.apply(AdapterResource.scala:58)\n\tscala.util.Try.transform(Try.scala:178)\n\tnet.shrine.adapter.service.AdapterResource.handleRequest(AdapterResource.scala:58)\n\tsun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\n\tsun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)\n\tsun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\n\tjava.lang.reflect.Method.invoke(Method.java:498)\n\tcom.sun.jersey.spi.container.JavaMethodInvokerFactory$1.invoke(JavaMethodInvokerFactory.java:60)\n\tcom.sun.jersey.server.impl.model.method.dispatch.AbstractResourceMethodDispatchProvider$ResponseOutInvoker._dispatch(AbstractResourceMethodDispatchProvider.java:205)\n\tcom.sun.jersey.server.impl.model.method.dispatch.ResourceJavaMethodDispatcher.dispatch(ResourceJavaMethodDispatcher.java:75)\n\tcom.sun.jersey.server.impl.uri.rules.HttpMethodRule.accept(HttpMethodRule.java:302)\n\tcom.sun.jersey.server.impl.uri.rules.RightHandPathRule.accept(RightHandPathRule.java:147)\n\tcom.sun.jersey.server.impl.uri.rules.ResourceObjectRule.accept(ResourceObjectRule.java:100)\n\tcom.sun.jersey.server.impl.uri.rules.RightHandPathRule.accept(RightHandPathRule.java:147)\n\tcom.sun.jersey.server.impl.uri.rules.RootResourceClassesRule.accept(RootResourceClassesRule.java:84)\n\tcom.sun.jersey.server.impl.application.WebApplicationImpl._handleRequest(WebApplicationImpl.java:1542)\n\tcom.sun.jersey.server.impl.application.WebApplicationImpl._handleRequest(WebApplicationImpl.java:1473)\n\tcom.sun.jersey.server.impl.application.WebApplicationImpl.handleRequest(WebApplicationImpl.java:1419)\n\tcom.sun.jersey.server.impl.application.WebApplicationImpl.handleRequest(WebApplicationImpl.java:1409)\n\tcom.sun.jersey.spi.container.servlet.WebComponent.service(WebComponent.java:409)\n\tcom.sun.jersey.spi.container.servlet.ServletContainer.service(ServletContainer.java:558)\n\tcom.sun.jersey.spi.container.servlet.ServletContainer.service(ServletContainer.java:733)\n\tjavax.servlet.http.HttpServlet.service(HttpServlet.java:727)\n\torg.apache.tomcat.websocket.server.WsFilter.doFilter(WsFilter.java:52)\n\torg.apache.catalina.filters.CorsFilter.handleNonCORS(CorsFilter.java:439)\n\torg.apache.catalina.filters.CorsFilter.doFilter(CorsFilter.java:178)\n</pre></p><p><b>note</b> <u>The full stack trace of the root cause is available in the Apache Tomcat/7.0.59 logs.</u></p><HR size=\"1\" noshade=\"noshade\"><h3>Apache Tomcat/7.0.59</h3></body></html>"
+          }
 }, {
   "codec":"net.shrine.adapter.CannotParseXmlFromCrc",
   "description": "Aenean sit amet justo.",

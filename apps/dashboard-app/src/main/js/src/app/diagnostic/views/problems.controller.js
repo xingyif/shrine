@@ -205,21 +205,21 @@
             } else if (typeof(detailsField) === 'object' && 'exception' in detailsField) {
                 return detailsTag + parseException(detailsField['exception']);
             } else {
-                return detailsTag + '<pre>'+detailsField+'</pre>'
+                return detailsTag + '<pre>'+sanitizeString(JSON.stringify(detailsField))+'</pre>'
             }
         }
 
         function parseException(exceptionObject) {
-            var exceptionTag = '<h4>exception</h4>';
-            var nameTag = '<h5>'+exceptionObject['name']+'</h5>';
-            var messageTag = '<p>'+exceptionObject['message']+'</p>';
+            var exceptionTag = '<h4>sanitizeString(exception)</h4>';
+            var nameTag = '<h5>'+sanitizeString(exceptionObject['name'])+'</h5>';
+            var messageTag = '<p>'+sanitizeString(exceptionObject['message'])+'</p>';
             var stackTrace = exceptionObject['stacktrace'];
             return exceptionTag + nameTag + messageTag + parseStackTrace(stackTrace);
         }
 
         function parseStackTrace(stackTraceObject) {
             if ('exception' in stackTraceObject) {
-                return '<p>'+stackTraceObject['line']+'</p>' + parseException(stackTraceObject['exception']);
+                return '<p>'+sanitizeString(stackTraceObject['line'])+'</p>' + parseException(stackTraceObject['exception']);
             } else {
                 return '<h4>stack trace</h4>' + parseLines(stackTraceObject['line']);
             }
@@ -228,7 +228,7 @@
         function parseLines(lineArray) {
             var result = '<p>';
             for (var i =0; i < lineArray.length; i++) {
-                result += lineArray[i] + '<br>';
+                result += sanitizeString(lineArray[i]) + '<br>';
             }
             result += '</p>';
             return result;
