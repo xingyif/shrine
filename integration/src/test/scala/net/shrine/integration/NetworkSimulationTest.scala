@@ -87,15 +87,16 @@ final class NetworkSimulationTest extends AbstractSquerylAdapterTest with Should
     val translator = new QueryDefinitionTranslator(new ExpressionTranslator(Map("n1" -> Set("l1"))))
 
     RunQueryAdapter(
-      mockPoster,
-      dao,
-      hiveCredentials,
-      translator,
-      10000,
+      poster = mockPoster,
+      dao = dao,
+      hiveCredentials = hiveCredentials,
+      conceptTranslator = translator,
+      adapterLockoutAttemptsThreshold = 10000,
       doObfuscation = false,
       runQueriesImmediately = false,
-      DefaultBreakdownResultOutputTypes.toSet,
-      collectAdapterAudit = false
+      breakdownTypes = DefaultBreakdownResultOutputTypes.toSet,
+      collectAdapterAudit = false,
+      botCountTimeThresholds = Map.empty //todo this might be the right place to test bot defense
     )
   }
 

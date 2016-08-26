@@ -70,7 +70,8 @@ object AdapterComponents {
       doObfuscation,
       adapterConfig.getOption("immediatelyRunIncomingQueries", _.getBoolean).getOrElse(true), //todo use reference.conf
       breakdownTypes,
-      collectAdapterAudit
+      collectAdapterAudit,
+      Map.empty  //todo pull the map out of config
     )
 
     val readInstanceResultsAdapter: Adapter = new ReadInstanceResultsAdapter(

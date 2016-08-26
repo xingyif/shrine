@@ -15,6 +15,7 @@ import net.shrine.problem.{AbstractProblem, LoggingProblemHandler, Problem, Prob
 import scala.util.control.NonFatal
 import net.shrine.util.XmlDateHelper
 
+import scala.concurrent.duration.Duration
 import scala.xml.XML
 
 /**
@@ -37,7 +38,8 @@ final case class RunQueryAdapter(
   doObfuscation: Boolean,
   runQueriesImmediately: Boolean,
   breakdownTypes: Set[ResultOutputType],
-  collectAdapterAudit:Boolean
+  collectAdapterAudit:Boolean,
+  botCountTimeThresholds:Map[Long,Duration]
 ) extends CrcAdapter[RunQueryRequest, RunQueryResponse](poster, hiveCredentials) {
 
   logStartup()
@@ -60,6 +62,8 @@ final case class RunQueryAdapter(
     if (isLockedOut(message.networkAuthn)) {
       throw new AdapterLockoutException(message.networkAuthn,poster.url)
     }
+
+    dao.checkIfBot(message.networkAuthn,botCountTimeThresholds)
 
     val runQueryReq = message.request.asInstanceOf[RunQueryRequest]
 
