@@ -201,7 +201,7 @@
             if (detailsField === '') {
                 return '<h3>No details associated with this problem</h3>'
             } else if (typeof(detailsField) === 'string') {
-                return detailsTag + '<p>'+detailsField+'</p>';
+                return detailsTag + '<p>'+sanitizeString(detailsField)+'</p>';
             } else if (typeof(detailsField) === 'object' && 'exception' in detailsField) {
                 return detailsTag + parseException(detailsField['exception']);
             } else {
@@ -232,6 +232,24 @@
             }
             result += '</p>';
             return result;
+        }
+
+        function sanitizeString(str) {
+            var chars = str.split('');
+            var escapes = {
+                '<': '&#60;', '>': '&#62;', '&': '&#38;', '"': '&#34;',
+                "'": '&#39;', ' ': '&#32;', '!': '&#33;', '@': '&#64;',
+                '$': '&#36;', '%': '&#37;', '(': '&#40;', ')': '&#41;',
+                '=': '&#61;', '+': '&#43;', '{': '&#123;', '}': '&#125;',
+                '[': '&#91;', ']': '&#93;'
+            };
+            for (var i = 0; i < chars.length; i++) {
+                var c = chars[i];
+                if (c in escapes) {
+                    chars[i] = escapes[c]
+                }
+            }
+            return chars.join('');
         }
 
     }
