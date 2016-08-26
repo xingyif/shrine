@@ -61,17 +61,17 @@ object AdapterComponents {
     val doObfuscation = adapterConfig.getBoolean("setSizeObfuscation")
     val collectAdapterAudit = adapterConfig.getBoolean("audit.collectAdapterAudit")
 
-    val runQueryAdapter = new RunQueryAdapter(
-      crcPoster,
-      adapterDao,
-      crcHiveCredentials,
-      queryDefinitionTranslator,
-      adapterConfig.getInt("adapterLockoutAttemptsThreshold"),
-      doObfuscation,
-      adapterConfig.getOption("immediatelyRunIncomingQueries", _.getBoolean).getOrElse(true), //todo use reference.conf
-      breakdownTypes,
-      collectAdapterAudit,
-      Map.empty  //todo pull the map out of config
+    val runQueryAdapter = RunQueryAdapter(
+      poster = crcPoster,
+      dao = adapterDao,
+      hiveCredentials = crcHiveCredentials,
+      conceptTranslator = queryDefinitionTranslator,
+      adapterLockoutAttemptsThreshold = adapterConfig.getInt("adapterLockoutAttemptsThreshold"),
+      doObfuscation = doObfuscation,
+      runQueriesImmediately = adapterConfig.getOption("immediatelyRunIncomingQueries", _.getBoolean).getOrElse(true), //todo use reference.conf
+      breakdownTypes = breakdownTypes,
+      collectAdapterAudit = collectAdapterAudit,
+      botCountTimeThresholds = Map.empty  //todo pull the map out of config
     )
 
     val readInstanceResultsAdapter: Adapter = new ReadInstanceResultsAdapter(
