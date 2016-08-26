@@ -94,12 +94,10 @@ case class CouldNotVerifySignature(message: BroadcastMessage) extends AbstractPr
                 Signature is {sig}
               </details>
     )
-  createAndLog
 }
 
 case class UnknownRequestType(requestType: RequestType) extends AbstractProblem(ProblemSources.Adapter){
 
   override val summary: String = s"Unknown request type $requestType"
   override val description: String = s"The Adapter at ${stamp.host.getHostName} received a request of type $requestType that it cannot process."
-  createAndLog
 }

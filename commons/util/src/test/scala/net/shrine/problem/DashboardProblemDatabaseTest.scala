@@ -81,6 +81,7 @@ class DashboardProblemDatabaseTest extends FlatSpec with BeforeAndAfter with Sca
     connector.runBlocking(IO.problems.size.result) shouldBe problemDigests.size
 
     val testProblem = ProblemDatabaseTestProblem(ProblemSources.Unknown)
+    Thread.sleep(50)
     connector.runBlocking(IO.problems.size.result) shouldBe problemDigests.size + 1
   }
 }
@@ -88,5 +89,4 @@ class DashboardProblemDatabaseTest extends FlatSpec with BeforeAndAfter with Sca
 case class ProblemDatabaseTestProblem(source: ProblemSources.ProblemSource) extends AbstractProblem(source: ProblemSources.ProblemSource) {
   override def summary: String = "This is a test problem! No user should ever see this."
   override def description: String = "Wow, this is a nice looking problem. I mean really, just look at it."
-  createAndLog
 }

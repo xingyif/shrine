@@ -86,5 +86,4 @@ case class HMSNotAuthenticatedProblem(authn: AuthenticationInfo) extends Abstrac
   override val summary = s"Can not authenticate ${authn.domain}:${authn.username}."
 
   override val description = s"Can not authenticate ${authn.domain}:${authn.username}."
-  createAndLog
 }

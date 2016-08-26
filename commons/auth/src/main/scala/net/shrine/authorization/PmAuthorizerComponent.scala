@@ -91,14 +91,12 @@ case class MissingRequiredRoles(projectId: String, neededRoles: Set[String], aut
   override val summary: String = s"User ${authn.domain}:${authn.username} is missing roles in project '$projectId'"
 
   override val description:String = s"User ${authn.domain}:${authn.username} does not have all the needed roles: ${neededRoles.map("'" + _ + "'").mkString(", ")} in the project '$projectId'"
-  createAndLog
 }
 
 case class CouldNotReachPmCell(pmUrl:String,authn: AuthenticationInfo,x:Throwable) extends AbstractProblem(ProblemSources.Qep) {
   override val throwable = Some(x)
   override val summary: String = s"Could not reach PM cell."
   override val description:String = s"Shrine encountered ${throwable.get} while attempting to reach the PM cell at $pmUrl for ${authn.domain}:${authn.username}."
-  createAndLog
 }
 
 case class CouldNotInterpretResponseFromPmCell(pmUrl:String,authn: AuthenticationInfo,httpResponse: HttpResponse,x:Throwable) extends AbstractProblem(ProblemSources.Qep) {
@@ -111,5 +109,4 @@ case class CouldNotInterpretResponseFromPmCell(pmUrl:String,authn: Authenticatio
                               Response is {httpResponse}
                               {throwableDetail.getOrElse("")}
                             </details>
-  createAndLog
 }

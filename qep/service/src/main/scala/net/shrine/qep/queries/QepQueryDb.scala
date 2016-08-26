@@ -530,5 +530,4 @@ case class QepDatabaseProblem(x:Exception) extends AbstractProblem(ProblemSource
   override val throwable = Some(x)
 
   override val description = x.getMessage
-  createAndLog
 }

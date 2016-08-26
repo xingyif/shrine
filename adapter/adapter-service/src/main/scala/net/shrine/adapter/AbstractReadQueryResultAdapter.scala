@@ -284,18 +284,15 @@ abstract class AbstractReadQueryResultAdapter[Req <: BaseShrineRequest, Rsp <: S
 case class QueryNotFound(queryId:Long) extends AbstractProblem(ProblemSources.Adapter) {
   override def summary: String = s"Query not found"
   override def description:String = s"No query with id $queryId found on ${stamp.host.getHostName}"
-  createAndLog
 }
 
 case class QueryResultNotAvailable(queryId:Long) extends AbstractProblem(ProblemSources.Adapter) {
   override def summary: String = s"Query $queryId found but its results are not available yet"
   override def description:String = s"Query $queryId found but its results are not available yet on ${stamp.host.getHostName}"
-  createAndLog
 }
 
 case class CouldNotRetrieveQueryFromCrc(queryId:Long,x: Throwable) extends AbstractProblem(ProblemSources.Adapter) {
   override def summary: String = s"Could not retrieve query $queryId from the CRC"
   override def description:String = s"Unhandled exception while retrieving query $queryId while retrieving it from the CRC on ${stamp.host.getHostName}"
   override def throwable = Some(x)
-  createAndLog
 }

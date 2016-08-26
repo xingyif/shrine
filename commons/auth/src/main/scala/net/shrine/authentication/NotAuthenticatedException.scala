@@ -33,5 +33,4 @@ case class NotAuthenticatedProblem(nax:NotAuthenticatedException) extends Abstra
       {throwableDetail.getOrElse("")}
     </details>
   )
-  createAndLog
 }

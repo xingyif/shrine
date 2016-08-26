@@ -396,6 +396,5 @@ case class ErrorStatusFromCrc(messageFromCrC:Option[String], xmlResponseFromCrc:
   override val detailsXml = <details>
     CRC's Response is {xmlResponseFromCrc}
   </details>
-  createAndLog
 }
 

@@ -7,7 +7,8 @@ import java.util.Date
 import net.shrine.log.Loggable
 import net.shrine.serialization.{XmlMarshaller, XmlUnmarshaller}
 
-import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.{Future, Promise}
 import scala.xml.{Elem, Node, NodeSeq}
 
 /**
@@ -58,6 +59,31 @@ trait Problem {
     this
   }
 
+  /**
+    * The hack that will get us through until onCreate in 2.13
+    * The problem is that we want to insert the createAndLog call after a problem is constructed.
+    * The only way to currently do that is with DelayedInit... which is just no.
+    * Thus, the hack (that's still better than DelayedInit) is to watch the summary, description,
+    * and throwable field, and call createAndLog once we know they've been initialized. The one
+    * caveat is that creating throwable is optional, so in the worst case we wait 25 ms then decide
+    * it's not gettting initialized.
+    * @return
+    */
+  def logAfterInitialization:Future[Problem] = {
+    Future {
+      while (synchronized(summary) == null || synchronized(description) == null) {
+        Thread.sleep(10)
+      }
+
+      var count = 0
+      while(count < 5 && synchronized(throwable).isEmpty) {
+        Thread.sleep(5)
+        count += 1
+      }
+
+      createAndLog
+    }
+  }
 }
 
 case class ProblemDigest(codec: String, stampText: String, summary: String, description: String, detailsXml: NodeSeq, epoch: Long) extends XmlMarshaller {
@@ -143,8 +169,9 @@ object Stamp {
 abstract class AbstractProblem(source:ProblemSources.ProblemSource) extends Problem {
   println(s"Problem $getClass created")
   def timer = System.currentTimeMillis
-  lazy val stamp = Stamp(source, timer)
+  override val stamp = Stamp(source, System.currentTimeMillis)
 
+  logAfterInitialization
 }
 
 trait ProblemHandler {
@@ -207,7 +234,6 @@ case class ProblemNotYetEncoded(internalSummary:String,t:Option[Throwable] = Non
     </details>
   )
 
-  createAndLog
 }
 
 object ProblemNotYetEncoded {
