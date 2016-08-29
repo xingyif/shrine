@@ -3,20 +3,20 @@ package net.shrine.problem
 import java.net.InetAddress
 import java.text.SimpleDateFormat
 import java.util.Date
+import java.util.concurrent.Executors
 
 import net.shrine.log.Loggable
 import net.shrine.serialization.{XmlMarshaller, XmlUnmarshaller}
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.{Future, Promise}
+import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.xml.{Elem, Node, NodeSeq}
 
 /**
- * Describes what information we have about a problem at the site in code where we discover it.
- *
- * @author david 
- * @since 8/6/15
- */
+  * Describes what information we have about a problem at the site in code where we discover it.
+  *
+  * @author david
+  * @since 8/6/15
+  */
 trait Problem {
   def summary:String
 
@@ -30,28 +30,20 @@ trait Problem {
 
   def exceptionXml(exception:Option[Throwable]): Option[Elem] = {
     exception.map{x =>
-    <exception>
-      <name>{x.getClass.getName}</name>
-      <message>{x.getMessage}</message>
-      <stacktrace>
-        {x.getStackTrace.map(line => <line>{line}</line>)}{exceptionXml(Option(x.getCause)).getOrElse("")}
-      </stacktrace>
-    </exception>
-  }}
+      <exception>
+        <name>{x.getClass.getName}</name>
+        <message>{x.getMessage}</message>
+        <stacktrace>
+          {x.getStackTrace.map(line => <line>{line}</line>)}{exceptionXml(Option(x.getCause)).getOrElse("")}
+        </stacktrace>
+      </exception>
+    }}
 
   def throwableDetail: Option[Elem] = exceptionXml(throwable)
 
   def detailsXml: NodeSeq = NodeSeq.fromSeq(<details>{throwableDetail.getOrElse("")}</details>)
 
   def toDigest:ProblemDigest = ProblemDigest(problemName,stamp.pretty,summary,description,detailsXml, stamp.time)
-
-  def logDigest:Problem = {
-    if (!ProblemConfigSource.turnOffConnector) {
-      val problems = Problems
-      problems.DatabaseConnector.insertProblem(toDigest)
-    }
-    this
-  }
 
   def createAndLog:Problem = {
     if (!ProblemConfigSource.turnOffConnector)
@@ -70,18 +62,35 @@ trait Problem {
     * @return
     */
   def logAfterInitialization:Future[Problem] = {
+    import MyExecutionContext.ioThreadPool
     Future {
-      while (synchronized(summary) == null || synchronized(description) == null) {
-        Thread.sleep(10)
+      var continue = true
+      while (continue) {
+        Thread.sleep(5)
+        try {
+          continue = synchronized(summary) == null || synchronized(description) == null
+        } catch {
+          case a:UninitializedFieldError => continue = true
+        }
       }
-
       var count = 0
-      while(count < 5 && synchronized(throwable).isEmpty) {
+      while (count < 5 && synchronized(throwable).isEmpty) {
         Thread.sleep(5)
         count += 1
       }
-
-      createAndLog
+      continue = true
+      var p: Option[Problem] = None
+      while (continue) {
+        try {
+          p = Some(createAndLog)
+          continue = false
+        } catch {
+          case a:UninitializedFieldError =>
+            Thread.sleep(5)
+            continue = true
+        }
+      }
+      p.get
     }
   }
 }
@@ -100,24 +109,24 @@ case class ProblemDigest(codec: String, stampText: String, summary: String, desc
   }
 
   /**
-   * Ignores detailXml. equals with scala.xml is impossible. See http://www.scala-lang.org/api/2.10.3/index.html#scala.xml.Equality$
-   */
+    * Ignores detailXml. equals with scala.xml is impossible. See http://www.scala-lang.org/api/2.10.3/index.html#scala.xml.Equality$
+    */
   override def equals(other: Any): Boolean =
-    other match {
+  other match {
 
-      case that: ProblemDigest =>
-        (that canEqual this) &&
-          codec == that.codec &&
-          stampText == that.stampText &&
-          summary == that.summary &&
-          description == that.description &&
-          epoch == that.epoch
-      case _ => false
-    }
+    case that: ProblemDigest =>
+      (that canEqual this) &&
+        codec == that.codec &&
+        stampText == that.stampText &&
+        summary == that.summary &&
+        description == that.description &&
+        epoch == that.epoch
+    case _ => false
+  }
 
   /**
-   * Ignores detailXml
-   */
+    * Ignores detailXml
+    */
   override def hashCode: Int = {
     val prime = 67
     codec.hashCode + prime * (stampText.hashCode + prime *(summary.hashCode + prime * (description.hashCode + prime * epoch.hashCode())))
@@ -167,9 +176,8 @@ object Stamp {
   * @param source
   */
 abstract class AbstractProblem(source:ProblemSources.ProblemSource) extends Problem {
-  println(s"Problem $getClass created")
   def timer = System.currentTimeMillis
-  override val stamp = Stamp(source, System.currentTimeMillis)
+  override val stamp = Stamp(source, timer)
 
   logAfterInitialization
 }
@@ -179,8 +187,8 @@ trait ProblemHandler {
 }
 
 /**
- * An example problem handler
- */
+  * An example problem handler
+  */
 object LoggingProblemHandler extends ProblemHandler with Loggable {
   override def handleProblem(problem: Problem): Unit = {
 
@@ -218,7 +226,7 @@ case class ProblemNotYetEncoded(internalSummary:String,t:Option[Throwable] = Non
   override val throwable = {
     val rx = t.fold(new IllegalStateException(s"$summary"))(
       new IllegalStateException(s"$summary",_)
-      )
+    )
     rx.fillInStackTrace()
     Some(rx)
   }
@@ -238,4 +246,13 @@ case class ProblemNotYetEncoded(internalSummary:String,t:Option[Throwable] = Non
 
 object ProblemNotYetEncoded {
   def apply(summary:String,x:Throwable):ProblemNotYetEncoded = ProblemNotYetEncoded(summary,Some(x))
+}
+
+object MyExecutionContext {
+
+  private val processes = Runtime.getRuntime.availableProcessors()
+  private val factor =  3
+  private val threads = processes * factor
+  implicit val ioThreadPool: ExecutionContext = ExecutionContext.fromExecutor(Executors.newFixedThreadPool(threads))
+
 }
