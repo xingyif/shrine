@@ -147,7 +147,7 @@ abstract class AbstractProblem(source:ProblemSources.ProblemSource) extends Prob
   override val stamp = Stamp(source, timer)
 
   private val config = ProblemConfigSource.config.getConfig("shrine.problem")
-  hackToHandleAfterInitialization(ProblemConfigSource.get("problemHandler", config))
+  hackToHandleAfterInitialization(ProblemConfigSource.getObject("problemHandler", config))
 }
 
 trait ProblemHandler {

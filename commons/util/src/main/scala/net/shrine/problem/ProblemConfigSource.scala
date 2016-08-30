@@ -16,7 +16,7 @@ object ProblemConfigSource extends ConfigSource {
   // Does not stop you from constructing the connector and using it manually
   var turnOffConnector = false
 
-  def get[T](path: String, config:Config):T = {
+  def getObject[T](path: String, config:Config):T = {
     objectForName(config.getString(path))
   }
 }

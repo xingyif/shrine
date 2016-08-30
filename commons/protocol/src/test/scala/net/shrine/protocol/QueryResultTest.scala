@@ -22,7 +22,7 @@ import scala.xml.NodeSeq
  */
 //noinspection EmptyParenMethodAccessedAsParameterless,NameBooleanParameters
 final class QueryResultTest extends ShouldMatchersForJUnit with XmlRoundTripper[QueryResult]
-  with I2b2SerializableValidator with TurnOffProblemConnector
+  with I2b2SerializableValidator
 {
   private val date = XmlDateHelper.now
   private val resultId = 1L

@@ -9,7 +9,6 @@ import slick.dbio.SuccessAction
 import slick.driver.JdbcProfile
 import slick.jdbc.meta.MTable
 
-import scala.collection.mutable
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
@@ -24,7 +23,7 @@ import scala.xml.XML
   */
 object Problems {
   val config:Config = ProblemConfigSource.config.getConfig("shrine.dashboard.database")
-  val slickProfile:JdbcProfile = ProblemConfigSource.get("slickProfileClassName", config)
+  val slickProfile:JdbcProfile = ProblemConfigSource.getObject("slickProfileClassName", config)
 
   import slickProfile.api._
 
@@ -171,7 +170,7 @@ object Problems {
     /**
       * Synchronized copy of db.run
       */
-    def runBlocking[R](dbio: DBIOAction[R, NoStream, _])(implicit timeout: Duration = new FiniteDuration(15, SECONDS)): R = {
+    def runBlocking[R](dbio: DBIOAction[R, NoStream, _], timeout: Duration = new FiniteDuration(15, SECONDS)): R = {
       try {
         Await.result(this.run(dbio), timeout)
       } catch {
@@ -181,7 +180,7 @@ object Problems {
     }
 
     def insertProblem(problem: ProblemDigest, timeout: Duration = new FiniteDuration(15, SECONDS)) = {
-      runBlocking(Queries += problem)(timeout)
+      runBlocking(Queries += problem, timeout)
     }
   }
 }
