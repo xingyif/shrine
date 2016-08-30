@@ -54,7 +54,7 @@ trait Problem {
       var continue = true
       while (continue) {
         try {
-          handler.handleProblem(this)
+          synchronized(handler.handleProblem(this))
           continue = false
         } catch {
           case un:UninitializedFieldError =>
@@ -146,7 +146,8 @@ abstract class AbstractProblem(source:ProblemSources.ProblemSource) extends Prob
   def timer = System.currentTimeMillis
   override val stamp = Stamp(source, timer)
 
-  hackToHandleAfterInitialization(DatabaseProblemHandler)
+  private val config = ProblemConfigSource.config.getConfig("shrine.problem")
+  hackToHandleAfterInitialization(ProblemConfigSource.get("problemHandler", config))
 }
 
 trait ProblemHandler {
@@ -167,6 +168,7 @@ object LoggingProblemHandler extends ProblemHandler with Loggable {
 
 object DatabaseProblemHandler extends ProblemHandler {
   override def handleProblem(problem: Problem): Unit = {
+    Thread.sleep(5)
     if (!ProblemConfigSource.turnOffConnector)
       Problems.DatabaseConnector.insertProblem(problem.toDigest)
   }

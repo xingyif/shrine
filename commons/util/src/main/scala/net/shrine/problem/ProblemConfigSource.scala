@@ -1,6 +1,6 @@
 package net.shrine.problem
 
-import com.typesafe.config.{ConfigValue, ConfigValueFactory}
+import com.typesafe.config.{Config, ConfigValue, ConfigValueFactory}
 import net.shrine.source.ConfigSource
 
 /**
@@ -15,5 +15,8 @@ object ProblemConfigSource extends ConfigSource {
   // Makes it so constructing a problem in this context won't log it to the connector
   // Does not stop you from constructing the connector and using it manually
   var turnOffConnector = false
-  // var turnOffConnector = config.getProblemHandler
+
+  def get[T](path: String, config:Config):T = {
+    objectForName(config.getString(path))
+  }
 }
