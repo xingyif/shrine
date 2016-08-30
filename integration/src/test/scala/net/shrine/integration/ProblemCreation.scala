@@ -28,6 +28,10 @@ import scala.xml.{NodeSeq, SAXParseException}
 
 /**
   * Created by ty on 8/29/16.
+  * Tests that we can successfully log every problem in the codebase.
+  * Due to the time nature of logging problems, we create the succeed
+  * early loop at the bottom to give every problem a chance at being
+  * created on time.
   */
 class ProblemCreation extends FlatSpec with Matchers {
   val throwable = new IllegalArgumentException("Boo")
@@ -48,10 +52,12 @@ class ProblemCreation extends FlatSpec with Matchers {
   val readyQueryResponse = ReadQueryResultResponse(5l, queryResult)
   val foo: NonI2b2ableResponse = new Foo()
 
-  "Problems" should "all be successfully created" in {
+  "Problems" should "all be successfully created and logged" in {
 
     URL.setURLStreamHandlerFactory(new BogusUrlFactory)
-    val problemSize = () => Problems.DatabaseConnector.runBlocking(Problems.Queries.size.result)
+    val db = Problems.DatabaseConnector
+    val queries = Problems.Queries
+    val problemSize = () => db.runBlocking(queries.size.result)
 
     problemSize() shouldBe 0
 
@@ -101,13 +107,13 @@ class ProblemCreation extends FlatSpec with Matchers {
 
     var count = 0
     // give it up to 1 second to finish
-    while(problemSize() != problems.length && count < 10) {
-      Thread.sleep(100)
+    while(problemSize() != problems.length && count < 20) {
+      Thread.sleep(50)
       count+=1
     }
 
     problemSize() shouldBe problems.length
-    Problems.DatabaseConnector.runBlocking(Problems.Queries.result) should contain theSameElementsAs problems.map(_.toDigest)
+    db.runBlocking(queries.result) should contain theSameElementsAs problems.map(_.toDigest)
 
 
     }

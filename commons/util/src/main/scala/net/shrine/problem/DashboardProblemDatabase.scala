@@ -135,7 +135,6 @@ object Problems {
     val selectAll = problems.result
     def sizeAndProblemDigest(n: Int, offset: Int = 0) = problems.lastNProblems(n, offset).result.zip(problems.size.result)
     def findIndexOfDate(date: Long) = (problems.size - problems.filter(_.epoch <= date).size).result
-    def ++=(sequence: Seq[ProblemDigest]) = problems ++= sequence
   }
 
 
@@ -183,7 +182,7 @@ object Problems {
       }
     }
 
-    def insertProblem(problem: ProblemDigest)(implicit timeout: Duration = new FiniteDuration(15, SECONDS)) = {
+    def insertProblem(problem: ProblemDigest, timeout: Duration = new FiniteDuration(15, SECONDS)) = {
       runBlocking(Queries += problem)(timeout)
     }
   }
@@ -192,18 +191,3 @@ object Problems {
 
 // For SuccessAction, just a no_op.
 case object NoOperation
-
-object ProblemConsumer {
-  val problems:mutable.Stack[ProblemDigest] = mutable.Stack()
-
-  def put(p:ProblemDigest) {
-    synchronized(problems.push(p))
-  }
-
-  def batchInsert() = {
-    Problems.DatabaseConnector.runBlocking(Problems.IOActions ++= problems.elems)
-    problems.clear()
-  }
-
-
-}

@@ -1,7 +1,6 @@
 package net.shrine.problem
 
 import java.net.InetAddress
-import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.concurrent.Executors
 
@@ -43,57 +42,31 @@ trait Problem {
 
   def detailsXml: NodeSeq = NodeSeq.fromSeq(<details>{throwableDetail.getOrElse("")}</details>)
 
-  def toDigest:ProblemDigest = ProblemDigest(problemName,stamp.pretty,summary,description,detailsXml, stamp.time)
-
-  def createAndLog:Problem = {
-    if (!ProblemConfigSource.turnOffConnector)
-      Problems.DatabaseConnector.insertProblem(toDigest)
-    this
-  }
+  def toDigest:ProblemDigest = ProblemDigest(problemName,stamp.pretty,summary,description,detailsXml,stamp.time)
 
   /**
-    * The hack that will get us through until onCreate in 2.13
-    * The problem is that we want to insert the createAndLog call after a problem is constructed.
-    * The only way to currently do that is with DelayedInit... which is just no.
-    * Thus, the hack (that's still better than DelayedInit) is to watch the summary, description,
-    * and throwable field, and call createAndLog once we know they've been initialized. The one
-    * caveat is that creating throwable is optional, so in the worst case we wait 25 ms then decide
-    * it's not gettting initialized.
-    * @return
+    * Temporary replacement for onCreate, which will be released come Scala 2.13
+    * TODO: remove when Scala 2.13 releases
     */
-  def logAfterInitialization:Future[Problem] = {
-    import MyExecutionContext.ioThreadPool
+  def hackToHandleAfterInitialization(handler:ProblemHandler):Future[Unit] = {
+    import ProblemExecutionContext.ioThreadPool
     Future {
       var continue = true
       while (continue) {
-        Thread.sleep(5)
         try {
-          continue = synchronized(summary) == null || synchronized(description) == null
-        } catch {
-          case a:UninitializedFieldError => continue = true
-        }
-      }
-      var count = 0
-      while (count < 5 && synchronized(throwable).isEmpty) {
-        Thread.sleep(5)
-        count += 1
-      }
-      continue = true
-      var p: Option[Problem] = None
-      while (continue) {
-        try {
-          p = Some(createAndLog)
+          handler.handleProblem(this)
           continue = false
         } catch {
-          case a:UninitializedFieldError =>
+          case un:UninitializedFieldError =>
             Thread.sleep(5)
             continue = true
         }
       }
-      p.get
+      Unit
     }
   }
 }
+
 
 case class ProblemDigest(codec: String, stampText: String, summary: String, description: String, detailsXml: NodeSeq, epoch: Long) extends XmlMarshaller {
 
@@ -166,20 +139,14 @@ case class Stamp(host:InetAddress,time:Long,source:ProblemSources.ProblemSource)
 object Stamp {
   //TODO: val dateFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS")?
   //TODO: Currently the stamp text is locale specific, which can change depending on the jre/computer running it...
-  def apply(source:ProblemSources.ProblemSource, timer: => Long): Stamp = Stamp(InetAddress.getLocalHost, timer,source)
+  def apply(source:ProblemSources.ProblemSource, timer: => Long): Stamp = Stamp(InetAddress.getLocalHost, timer, source)
 }
 
-/**
-  * An abstract problem to enable easy creation of Problems. Note that when overriding fields,
-  * you should only use def or lazy val, and not val.
-  * See: http://stackoverflow.com/questions/15346600/field-inside-object-which-extends-app-trait-is-set-to-null-why-is-that-so
-  * @param source
-  */
 abstract class AbstractProblem(source:ProblemSources.ProblemSource) extends Problem {
   def timer = System.currentTimeMillis
   override val stamp = Stamp(source, timer)
 
-  logAfterInitialization
+  hackToHandleAfterInitialization(DatabaseProblemHandler)
 }
 
 trait ProblemHandler {
@@ -198,12 +165,12 @@ object LoggingProblemHandler extends ProblemHandler with Loggable {
   }
 }
 
-//object DatabaseProblemhandler extends ProblemHandler {
-//  override def handleProblem(problem: Problem): Unit = {
-//    Problems.DatabaseConnector.insertProblem(problem.toDigest)
-//  }
-//
-//}
+object DatabaseProblemHandler extends ProblemHandler {
+  override def handleProblem(problem: Problem): Unit = {
+    if (!ProblemConfigSource.turnOffConnector)
+      Problems.DatabaseConnector.insertProblem(problem.toDigest)
+  }
+}
 
 object ProblemSources{
 
@@ -248,7 +215,7 @@ object ProblemNotYetEncoded {
   def apply(summary:String,x:Throwable):ProblemNotYetEncoded = ProblemNotYetEncoded(summary,Some(x))
 }
 
-object MyExecutionContext {
+object ProblemExecutionContext {
 
   private val processes = Runtime.getRuntime.availableProcessors()
   private val factor =  3

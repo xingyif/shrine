@@ -81,7 +81,7 @@ class DashboardProblemDatabaseTest extends FlatSpec with BeforeAndAfter with Sca
     connector.runBlocking(IO.problems.size.result) shouldBe problemDigests.size
 
     val testProblem = ProblemDatabaseTestProblem(ProblemSources.Unknown)
-    Thread.sleep(50)
+    Thread.sleep(15)
     connector.runBlocking(IO.problems.size.result) shouldBe problemDigests.size + 1
   }
 }
