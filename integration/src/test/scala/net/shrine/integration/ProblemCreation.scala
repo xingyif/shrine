@@ -20,6 +20,8 @@ import net.shrine.protocol.QueryResult.StatusType
 import net.shrine.protocol.query.QueryDefinition
 import net.shrine.protocol._
 import net.shrine.qep.queries.QepDatabaseProblem
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
 import org.scalatest.{FlatSpec, Matchers}
 import slick.driver.H2Driver.api._
 
@@ -33,6 +35,7 @@ import scala.xml.{NodeSeq, SAXParseException}
   * early loop at the bottom to give every problem a chance at being
   * created on time.
   */
+@RunWith(classOf[JUnitRunner])
 class ProblemCreation extends FlatSpec with Matchers {
   val throwable = new IllegalArgumentException("Boo")
   val credential: Credential = Credential("string", isToken = true)

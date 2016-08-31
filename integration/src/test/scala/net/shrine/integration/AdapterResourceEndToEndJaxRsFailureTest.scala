@@ -9,14 +9,12 @@ import scala.concurrent.Await
 import com.sun.jersey.api.client.UniformInterfaceException
 import net.shrine.adapter.service.AdapterResource
 import net.shrine.crypto.SigningCertStrategy
-import net.shrine.problem.TurnOffProblemConnector
 
 /**
  * @author clint
  * @since Dec 17, 2013
  */
 final class AdapterResourceEndToEndJaxRsFailureTest extends AbstractAdapterResourceJaxRsTest
-  with TurnOffProblemConnector
 {
   
   override val makeHandler = AlwaysThrowsAdapterRequestHandler

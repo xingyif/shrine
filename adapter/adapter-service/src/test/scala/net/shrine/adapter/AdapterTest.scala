@@ -1,6 +1,6 @@
 package net.shrine.adapter
 
-import net.shrine.problem.{ProblemNotYetEncoded, TurnOffProblemConnector}
+import net.shrine.problem.ProblemNotYetEncoded
 import net.shrine.protocol.query.QueryDefinition
 import net.shrine.util.ShouldMatchersForJUnit
 import net.shrine.protocol.{AuthenticationInfo, BaseShrineResponse, BroadcastMessage, Credential, DeleteQueryRequest, DeleteQueryResponse, ErrorResponse, RunQueryRequest}
@@ -11,7 +11,7 @@ import org.junit.Test
  * @since Mar 31, 2014
  */
 //noinspection UnitMethodIsParameterless
-final class AdapterTest extends ShouldMatchersForJUnit with TurnOffProblemConnector {
+final class AdapterTest extends ShouldMatchersForJUnit {
   private final class MockAdapter(toReturn: => BaseShrineResponse) extends Adapter {
     override protected[adapter] def processRequest(message: BroadcastMessage): BaseShrineResponse = toReturn
   }

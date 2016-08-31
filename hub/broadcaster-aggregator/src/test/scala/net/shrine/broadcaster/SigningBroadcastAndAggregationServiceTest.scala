@@ -9,13 +9,13 @@ import net.shrine.crypto.TestKeystore
 import net.shrine.protocol.{AuthenticationInfo, BroadcastMessage, Credential, DeleteQueryRequest, ErrorResponse, FailureResult, FailureResult$, NodeId, Result, ShrineResponse, SingleNodeResult, Timeout}
 import net.shrine.crypto.SigningCertStrategy
 import net.shrine.broadcaster.dao.MockHubDao
-import net.shrine.problem.{TestProblem, TurnOffProblemConnector}
+import net.shrine.problem.TestProblem
 
 /**
  * @author clint
  * @since Nov 19, 2013
  */
-final class SigningBroadcastAndAggregationServiceTest extends ShouldMatchersForJUnit with TurnOffProblemConnector {
+final class SigningBroadcastAndAggregationServiceTest extends ShouldMatchersForJUnit {
   import scala.concurrent.duration._
   import MockBroadcasters._
 

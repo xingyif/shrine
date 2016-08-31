@@ -1,6 +1,6 @@
 package net.shrine.protocol
 
-import net.shrine.problem.{TestProblem, TurnOffProblemConnector}
+import net.shrine.problem.TestProblem
 
 import scala.xml.NodeSeq
 import org.junit.Test
@@ -18,7 +18,7 @@ import net.shrine.util.XmlUtil
  */
 //noinspection EmptyParenMethodOverridenAsParameterless,EmptyParenMethodAccessedAsParameterless,UnitMethodIsParameterless
 
-final class AggregatedRunQueryResponseTest extends ShrineResponseI2b2SerializableValidator with TurnOffProblemConnector {
+final class AggregatedRunQueryResponseTest extends ShrineResponseI2b2SerializableValidator {
   private val queryId = 1L
   private val queryName = "queryName"
   private val userId = "user"
