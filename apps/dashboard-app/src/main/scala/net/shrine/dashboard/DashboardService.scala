@@ -234,21 +234,19 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
 
       // Constructing the query with comprehension means we only use one database connection.
       // TODO: review with Dave to see if it's too clever
-//      val query =
-//        if (epoch == -1l)
-//          for {
-//            result <- db.IO.sizeAndProblemDigest(n, moddedOffset)
-//          } yield (result._2, floorMod(Math.max(0, moddedOffset), n), n, result._1)
-//        else
-//          for {
-//            dateOffset <- db.IO.findIndexOfDate(epoch)
-//            moddedOffset = floorMod(dateOffset, n)
-//            result <- db.IO.sizeAndProblemDigest(n, moddedOffset)
-//          } yield (result._2, moddedOffset, n, result._1)
+      val query =
+        if (epoch == -1l)
+          for {
+            result <- db.IO.sizeAndProblemDigest(n, moddedOffset)
+          } yield (result._2, floorMod(Math.max(0, moddedOffset), n), n, result._1)
+        else
+          for {
+            dateOffset <- db.IO.findIndexOfDate(epoch)
+            moddedOffset = floorMod(dateOffset, n)
+            result <- db.IO.sizeAndProblemDigest(n, moddedOffset)
+          } yield (result._2, moddedOffset, n, result._1)
 
-      val query = (10, 10, 10, Seq[ProblemDigest]())
-
-      val response: ProblemResponse = ProblemResponse.tupled(query)
+      val response: ProblemResponse = ProblemResponse.tupled(db.runBlocking(query))
       implicit val formats = response.json4sMarshaller
       complete(response)
     }
