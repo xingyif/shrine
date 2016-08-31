@@ -145,7 +145,6 @@ object Stamp {
 abstract class AbstractProblem(source:ProblemSources.ProblemSource) extends Problem {
   def timer = System.currentTimeMillis
   override val stamp = Stamp(source, timer)
-
   private val config = ProblemConfigSource.config.getConfig("shrine.problem")
   hackToHandleAfterInitialization(ProblemConfigSource.getObject("problemHandler", config))
 }
@@ -168,9 +167,8 @@ object LoggingProblemHandler extends ProblemHandler with Loggable {
 
 object DatabaseProblemHandler extends ProblemHandler {
   override def handleProblem(problem: Problem): Unit = {
-    Thread.sleep(5)
-    if (!ProblemConfigSource.turnOffConnector)
-      Problems.DatabaseConnector.insertProblem(problem.toDigest)
+    Thread.sleep(10)
+    Problems.DatabaseConnector.insertProblem(problem.toDigest)
   }
 }
 
