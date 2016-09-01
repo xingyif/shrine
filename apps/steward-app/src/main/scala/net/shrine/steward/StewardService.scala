@@ -240,7 +240,9 @@ trait StewardService extends HttpService with Json4sSupport {
 
   def queryHistoryWithJson(history: QueryHistory):QueryHistory = {
     history.copy(queryRecords = history.queryRecords.map((record: OutboundShrineQuery) => {
-      record.copy(queryContents = org.json4s.native.Serialization.write(scala.xml.XML.loadString(record.queryContents)))
+      val xml = scala.xml.XML.loadString(record.queryContents)
+      val newContents = org.json4s.native.Serialization.write(org.json4s.Xml.toJson(xml))
+      record.copy(queryContents = newContents)
     }))
   }
 

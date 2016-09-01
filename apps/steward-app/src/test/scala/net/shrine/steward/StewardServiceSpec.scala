@@ -436,6 +436,30 @@ class StewardServiceTest extends FlatSpec with ScalatestRouteTest with TestWithD
       }
     }
 
+  "StewardService" should "return the list of a researcher's query history as Json, with query bodies as Json" in {
+
+    StewardDatabase.db.upsertUser(researcherUser)
+    StewardDatabase.db.upsertUser(stewardUser)
+
+    StewardDatabase.db.createRequestForTopicAccess(researcherUser,InboundTopicRequest(uncontroversialTopic.name,uncontroversialTopic.description))
+    StewardDatabase.db.changeTopicState(1,TopicState.approved,stewardUserName)
+    StewardDatabase.db.logAndCheckQuery(researcherUserName,Some(1),InboundShrineQuery(0,"test query","<content>Can we get it back?</content>"))
+
+    Get(s"/researcher/queryHistory?asJson=true") ~>
+      addCredentials(researcherCredentials) ~> route ~> check {
+      assertResult(OK)(status)
+
+      val queriesJson = new String(body.data.toByteArray)
+      val queries = parse(queriesJson).extract[QueryHistory]
+
+      assertResult(Vector(("queryContents", "Can we get it back?", "{\"content\":\"Can we get it back?\"}")))(QueryHistory(1,0,List(
+        OutboundShrineQuery(1,0,"test query",researcherOutboundUser,Some(
+          OutboundTopic(1,uncontroversialTopic.name,uncontroversialTopic.description,researcherOutboundUser,0,TopicState.approved.name,stewardOutboundUser,0)
+        ),"Can we get it back?",TopicState.approved.name,0)
+      )).differencesExceptTimes(queries))
+    }
+  }
+
     "StewardService" should "return the list of a researcher's query history as Json, filtered by state" in {
 
       StewardDatabase.db.upsertUser(researcherUser)
