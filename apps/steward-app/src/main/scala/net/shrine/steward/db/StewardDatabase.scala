@@ -234,7 +234,8 @@ case class StewardDatabase(schemaDef:StewardSchema,dataSource: DataSource) exten
       queryRecord.createOutboundShrineQuery(outboundTopic, outboundUser)
     }
 
-    QueryHistory(count,queryParameters.skipOption.getOrElse(0),shrineQueries.map(toOutboundShrineQuery))
+    val result = QueryHistory(count,queryParameters.skipOption.getOrElse(0),shrineQueries.map(toOutboundShrineQuery))
+    result
   }
 
   private def outboundUsersForNamesAction(userNames:Set[UserName]):DBIOAction[Map[UserName, OutboundUser], NoStream, Read] = {

@@ -65,7 +65,7 @@ class StewardServiceTest extends FlatSpec with ScalatestRouteTest with TestWithD
 
   val uncontroversialTopic = OutboundTopic(1,"UncontroversialKidneys","Study kidneys without controversy",researcherOutboundUser,0L,TopicState.pending.name,researcherOutboundUser,0L)
   val forbiddenTopicId = 0
-  val queryContent: QueryContents = "<a>Can we get it back?</a>"
+  private val queryContent: QueryContents = "<queryDefinition><name>18-34 years old@18:31:51</name><expr><term>\\\\SHRINE\\SHRINE\\Demographics\\Age\\18-34 years old\\</term></expr></queryDefinition>"
   val diffs = List.empty
   val getItBack:NodeSeq = scala.xml.XML.loadString(queryContent)
 

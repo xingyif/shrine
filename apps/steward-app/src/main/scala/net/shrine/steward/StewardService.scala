@@ -13,7 +13,7 @@ import spray.http.{HttpRequest, HttpResponse, StatusCodes}
 import spray.httpx.Json4sSupport
 import spray.routing.directives.LogEntry
 import spray.routing._
-import org.json4s.{DefaultFormats, Formats}
+import org.json4s.{DefaultFormats, DefaultJsonFormats, Formats}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.{Failure, Success, Try}
@@ -231,13 +231,9 @@ trait StewardService extends HttpService with Json4sSupport {
 
   def getQueryHistoryForUserByTopic(userIdOption:Option[UserName],topicIdOption:Option[TopicId],jsonOption:Option[Boolean] = None) = get {
     matchQueryParameters(userIdOption) { queryParameters:QueryParameters =>
-      try {
-        val queryHistory = StewardDatabase.db.selectQueryHistory(queryParameters, topicIdOption)
-        implicit val formats = queryHistory.json4sMarshaller
-        complete(queryHistory)
-      } catch {
-        case a:Throwable => println(a); throw a;
-      }
+      val queryHistory = StewardDatabase.db.selectQueryHistory(queryParameters, topicIdOption)
+      implicit val formats = queryHistory.json4sMarshaller
+      complete(queryHistory)
     }
   }
 
