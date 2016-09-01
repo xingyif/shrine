@@ -5,6 +5,7 @@ import akka.event.Logging
 import net.shrine.authentication.UserAuthenticator
 import net.shrine.authorization.steward._
 import net.shrine.i2b2.protocol.pm.User
+import net.shrine.serialization.NodeSeqSerializer
 import net.shrine.steward.db._
 import net.shrine.steward.pmauth.Authorizer
 import shapeless.HNil
@@ -35,7 +36,7 @@ class StewardServiceActor extends Actor with StewardService {
 
 // this trait defines our service behavior independently from the service actor
 trait StewardService extends HttpService with Json4sSupport {
-  implicit def json4sFormats: Formats = DefaultFormats
+  implicit def json4sFormats: Formats = DefaultFormats + new NodeSeqSerializer
 
   val userAuthenticator = UserAuthenticator(StewardConfigSource.config)
 
@@ -230,26 +231,21 @@ trait StewardService extends HttpService with Json4sSupport {
 
   def getQueryHistoryForUserByTopic(userIdOption:Option[UserName],topicIdOption:Option[TopicId],jsonOption:Option[Boolean] = None) = get {
     matchQueryParameters(userIdOption) { queryParameters:QueryParameters =>
-      val queryHistory = StewardDatabase.db.selectQueryHistory(queryParameters, topicIdOption)
-      if (jsonOption.getOrElse(false))
-        complete(queryHistoryWithJson(queryHistory))
-      else
+      try {
+        val queryHistory = StewardDatabase.db.selectQueryHistory(queryParameters, topicIdOption)
+        implicit val formats = queryHistory.json4sMarshaller
         complete(queryHistory)
+      } catch {
+        case a:Throwable => println(a); throw a;
+      }
     }
-  }
-
-  def queryHistoryWithJson(history: QueryHistory):QueryHistory = {
-    history.copy(queryRecords = history.queryRecords.map((record: OutboundShrineQuery) => {
-      val xml = scala.xml.XML.loadString(record.queryContents)
-      val newContents = org.json4s.native.Serialization.write(org.json4s.Xml.toJson(xml))
-      record.copy(queryContents = newContents)
-    }))
   }
 
   def requestTopicAccess(user:User):Route = post {
     entity(as[InboundTopicRequest]) { topicRequest: InboundTopicRequest =>
       //todo notify the data stewards
       StewardDatabase.db.createRequestForTopicAccess(user,topicRequest)
+
       complete(StatusCodes.Accepted)
     }
   }
