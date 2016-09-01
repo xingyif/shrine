@@ -98,7 +98,7 @@ class ProblemCreation extends FlatSpec with Matchers {
       HttpErrorResponseProblem(couldNotParseException),
       NoValidResponsesToAggregate(),
       // Difficult to test since I can't grab private value:
-      // InvalidResultProblem(Invalid(None, "error")),
+      //InvalidResultProblem(Invalid(None, "error")),
       HMSNotAuthenticatedProblem(authInfo),
       ErrorStatusFromCrc(None, "<xml></xml>"),
       QepDatabaseProblem(throwable),

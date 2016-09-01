@@ -7,6 +7,7 @@ import java.util.concurrent.Executors
 import net.shrine.log.Loggable
 import net.shrine.serialization.{XmlMarshaller, XmlUnmarshaller}
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.xml.{Elem, Node, NodeSeq}
 
@@ -49,12 +50,12 @@ trait Problem {
     * TODO: remove when Scala 2.13 releases
     */
   def hackToHandleAfterInitialization(handler:ProblemHandler):Future[Unit] = {
-    import ProblemExecutionContext.ioThreadPool
+    import scala.concurrent.blocking
     Future {
       var continue = true
       while (continue) {
         try {
-          synchronized(handler.handleProblem(this))
+          blocking(synchronized(handler.handleProblem(this)))
           continue = false
         } catch {
           case un:UninitializedFieldError =>
@@ -167,7 +168,6 @@ object LoggingProblemHandler extends ProblemHandler with Loggable {
 
 object DatabaseProblemHandler extends ProblemHandler {
   override def handleProblem(problem: Problem): Unit = {
-    Thread.sleep(10)
     Problems.DatabaseConnector.insertProblem(problem.toDigest)
   }
 }
@@ -213,13 +213,4 @@ case class ProblemNotYetEncoded(internalSummary:String,t:Option[Throwable] = Non
 
 object ProblemNotYetEncoded {
   def apply(summary:String,x:Throwable):ProblemNotYetEncoded = ProblemNotYetEncoded(summary,Some(x))
-}
-
-object ProblemExecutionContext {
-
-  private val processes = Runtime.getRuntime.availableProcessors()
-  private val factor =  3
-  private val threads = processes * factor
-  implicit val ioThreadPool: ExecutionContext = ExecutionContext.fromExecutor(Executors.newFixedThreadPool(threads))
-
 }

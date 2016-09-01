@@ -71,12 +71,12 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
           pathPrefix("user") {
             userRoute(user)
           } ~
-          pathPrefix("admin") {
-            adminRoute(user)
-          } ~
-          pathPrefix("toDashboard") {
-            toDashboardRoute(user)
-          }
+            pathPrefix("admin") {
+              adminRoute(user)
+            } ~
+            pathPrefix("toDashboard") {
+              toDashboardRoute(user)
+            }
         }
       }
     }
@@ -103,10 +103,10 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
 
   lazy val redirectToIndex = pathEnd {
     redirect("shrine-dashboard/client/index.html", StatusCodes.PermanentRedirect) //todo pick up "shrine-dashboard" programatically
-    } ~
+  } ~
     ( path("index.html") | pathSingleSlash) {
       redirect("client/index.html", StatusCodes.PermanentRedirect)
-  }
+    }
 
   lazy val staticResources = pathPrefix("client") {
     pathEnd {
@@ -137,20 +137,20 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
 
       forwardUnmatchedPath(happyBaseUrl)
     } ~
-    pathPrefix("messWithHappyVersion") { //todo is this used?
+      pathPrefix("messWithHappyVersion") { //todo is this used?
       val happyBaseUrl: String = DashboardConfigSource.config.getString("shrine.dashboard.happyBaseUrl")
 
-      def pullClasspathFromConfig(httpResponse:HttpResponse,uri:Uri):Route = {
-        ctx => {
-          val result = httpResponse.entity.asString
-          ctx.complete(s"Got '$result' from $uri")
+        def pullClasspathFromConfig(httpResponse:HttpResponse,uri:Uri):Route = {
+          ctx => {
+            val result = httpResponse.entity.asString
+            ctx.complete(s"Got '$result' from $uri")
+          }
         }
-      }
 
-      requestUriThenRoute(happyBaseUrl+"/version",pullClasspathFromConfig)
-    } ~
-    pathPrefix("ping") {complete("pong")}~
-    pathPrefix("status"){statusRoute(user)}
+        requestUriThenRoute(happyBaseUrl+"/version",pullClasspathFromConfig)
+      } ~
+      pathPrefix("ping") {complete("pong")}~
+      pathPrefix("status"){statusRoute(user)}
   }
 
   //Manually test this by running a curl command
@@ -173,10 +173,10 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
 
   def statusRoute(user:User):Route = get {
     pathPrefix("config"){getConfig}~
-    pathPrefix("classpath"){getClasspath}~
-    pathPrefix("options"){getOptionalParts}~  //todo rename path to optionalParts
-    pathPrefix("summary"){getSummary}~
-    pathPrefix("problems"){getProblems}
+      pathPrefix("classpath"){getClasspath}~
+      pathPrefix("options"){getOptionalParts}~  //todo rename path to optionalParts
+      pathPrefix("summary"){getSummary}~
+      pathPrefix("problems"){getProblems}
   }
 
   val statusBaseUrl = DashboardConfigSource.config.getString("shrine.dashboard.statusBaseUrl")
@@ -228,27 +228,28 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
 
     val db = Problems.DatabaseConnector
 
-    parameters("offset" ? 0, "n" ? 20, "epoch" ? -1l) { (offsetPreMod: Int, nPreMax: Int, epoch: Long) =>
-      val n = Math.max(0, nPreMax)
-      val moddedOffset = floorMod(Math.max(0, offsetPreMod), n)
+    parameters("offset" ? 0, "n" ? 20, "epoch" ? -1l) {
+      (offsetPreMod: Int, nPreMax: Int, epoch: Long) => {
+        val n = Math.max(0, nPreMax)
+        val moddedOffset = floorMod(Math.max(0, offsetPreMod), n)
 
-      // Constructing the query with comprehension means we only use one database connection.
-      // TODO: review with Dave to see if it's too clever
-      val query =
-        if (epoch == -1l)
-          for {
-            result <- db.IO.sizeAndProblemDigest(n, moddedOffset)
-          } yield (result._2, floorMod(Math.max(0, moddedOffset), n), n, result._1)
-        else
-          for {
-            dateOffset <- db.IO.findIndexOfDate(epoch)
-            moddedOffset = floorMod(dateOffset, n)
-            result <- db.IO.sizeAndProblemDigest(n, moddedOffset)
-          } yield (result._2, moddedOffset, n, result._1)
+        // Constructing the query with comprehension means we only use one database connection.
+        // TODO: review with Dave to see if it's too clever
+        val query = for {
+          result <- db.IO.sizeAndProblemDigest(n, moddedOffset)
+        } yield (result._2, floorMod(Math.max(0, moddedOffset), n), n, result._1)
 
-      val response: ProblemResponse = ProblemResponse.tupled(db.runBlocking(query))
-      implicit val formats = response.json4sMarshaller
-      complete(response)
+
+        val query2 = for {
+          dateOffset <- db.IO.findIndexOfDate(epoch)
+          moddedOffset = floorMod(dateOffset, n)
+          result <- db.IO.sizeAndProblemDigest(n, moddedOffset)
+        } yield (result._2, moddedOffset, n, result._1)
+
+        val response: ProblemResponse = ProblemResponse.tupled(db.runBlocking(if (epoch == -1l) query else query2))
+        implicit val formats = response.json4sMarshaller
+        complete(response)
+      }
     }
   }
 
@@ -259,9 +260,9 @@ case class ProblemResponse(size: Int, offset: Int, n: Int, problems: Seq[Problem
 }
 
 /**
- * Centralized parsing logic for map of shrine.conf
- * the class literal `T.class` in Java.
- */
+  * Centralized parsing logic for map of shrine.conf
+  * the class literal `T.class` in Java.
+  */
 //todo most of this info should come directly from the status service in Shrine, not from reading the config
 case class ParsedConfig(configMap:Map[String, String]){
 
@@ -423,16 +424,16 @@ object Audit{
   }
 }
 case class QEP(
-            maxQueryWaitTimeMinutes:Int,
-            create:Boolean,
-            attachSigningCert:Boolean,
-            authorizationType:String,
-            includeAggregateResults:Boolean,
-            authenticationType:String,
-            audit:Audit,
-            shrineSteward:Steward,
-            broadcasterServiceEndpointUrl:Option[String]
-)
+                maxQueryWaitTimeMinutes:Int,
+                create:Boolean,
+                attachSigningCert:Boolean,
+                authorizationType:String,
+                includeAggregateResults:Boolean,
+                authenticationType:String,
+                audit:Audit,
+                shrineSteward:Steward,
+                broadcasterServiceEndpointUrl:Option[String]
+              )
 
 object QEP{
   val key = "shrine.queryEntryPoint."

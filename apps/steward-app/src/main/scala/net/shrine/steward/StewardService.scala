@@ -3,18 +3,15 @@ package net.shrine.steward
 import akka.actor.Actor
 import akka.event.Logging
 import net.shrine.authentication.UserAuthenticator
-
-import net.shrine.authorization.steward.{TopicIdAndName, Date, TopicId, InboundTopicRequest, InboundShrineQuery, StewardsTopics, TopicState, OutboundUser, OutboundTopic, UserName}
+import net.shrine.authorization.steward._
 import net.shrine.i2b2.protocol.pm.User
-import net.shrine.steward.db.{DetectedAttemptByWrongUserToChangeTopic, ApprovedTopicCanNotBeChanged, TopicDoesNotExist, SortOrder, QueryParameters, StewardDatabase}
+import net.shrine.steward.db._
 import net.shrine.steward.pmauth.Authorizer
 import shapeless.HNil
-
-import spray.http.{HttpResponse, HttpRequest, StatusCodes}
+import spray.http.{HttpRequest, HttpResponse, StatusCodes}
 import spray.httpx.Json4sSupport
 import spray.routing.directives.LogEntry
-import spray.routing.{AuthenticationFailedRejection, Rejected, RouteConcatenation, Directive0, Route, HttpService}
-
+import spray.routing._
 import org.json4s.{DefaultFormats, Formats}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -223,18 +220,28 @@ trait StewardService extends HttpService with Json4sSupport {
   }
 
   def getUserQueryHistory(userIdOption:Option[UserName]):Route = get {
-    path("topic"/IntNumber) { topicId:TopicId =>
-      getQueryHistoryForUserByTopic(userIdOption,Some(topicId))
-    } ~
-      getQueryHistoryForUserByTopic(userIdOption,None)
+    parameter('asJson.as[Boolean].?) { (asJson:Option[Boolean]) =>
+      path("topic" / IntNumber) { topicId: TopicId =>
+        getQueryHistoryForUserByTopic(userIdOption, Some(topicId), asJson)
+      } ~
+        getQueryHistoryForUserByTopic(userIdOption, None, asJson)
+    }
   }
 
-  def getQueryHistoryForUserByTopic(userIdOption:Option[UserName],topicIdOption:Option[TopicId]) = get {
+  def getQueryHistoryForUserByTopic(userIdOption:Option[UserName],topicIdOption:Option[TopicId],jsonOption:Option[Boolean] = None) = get {
     matchQueryParameters(userIdOption) { queryParameters:QueryParameters =>
       val queryHistory = StewardDatabase.db.selectQueryHistory(queryParameters, topicIdOption)
-
-      complete(queryHistory)
+      if (jsonOption.getOrElse(false))
+        complete(queryHistoryWithJson(queryHistory))
+      else
+        complete(queryHistory)
     }
+  }
+
+  def queryHistoryWithJson(history: QueryHistory):QueryHistory = {
+    history.copy(queryRecords = history.queryRecords.map((record: OutboundShrineQuery) => {
+      record.copy(queryContents = org.json4s.native.Serialization.write(scala.xml.XML.loadString(record.queryContents)))
+    }))
   }
 
   def requestTopicAccess(user:User):Route = post {
