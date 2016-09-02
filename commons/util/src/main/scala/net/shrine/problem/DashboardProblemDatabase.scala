@@ -32,7 +32,7 @@ object Problems {
   lazy val db = {
     val db = Database.forDataSource(dataSource)
     val createTables: String = "createTablesOnStart"
-    if (config.hasPath(createTables) && config.getBoolean(createTables)) {
+    if (true){//config.hasPath(createTables) && config.getBoolean(createTables)) {
       val duration = FiniteDuration(3, SECONDS)
       Await.ready(db.run(IOActions.createIfNotExists), duration)
       val testValues: String = "createTestValuesOnStart"
