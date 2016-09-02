@@ -166,9 +166,6 @@
 
 
         function newPage(offset, n, epoch) {
-            if (!(epoch && isFinite(epoch))) {
-                epoch = -1;
-            }
             if (!(n && isFinite(n))) {
                 n = 20;
             }

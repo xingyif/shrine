@@ -458,6 +458,7 @@ class StewardServiceTest extends FlatSpec with ScalatestRouteTest with TestWithD
 
       val queriesJson = new String(body.data.toByteArray)
       val queries = parse(queriesJson).extract[QueryHistory]
+      println(queries)
 
       assertResult(diffs)(QueryHistory(1,0,List(
         OutboundShrineQuery(1,0,"test query",researcherOutboundUser,Some(

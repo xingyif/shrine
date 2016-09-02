@@ -228,29 +228,24 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
 
     val db = Problems.DatabaseConnector
 
-    parameters("offset" ? 0, "n" ? 20, "epoch" ? -1l) {
-      (offsetPreMod: Int, nPreMax: Int, epoch: Long) => {
-        val n = Math.max(0, nPreMax)
-        val moddedOffset = floorMod(Math.max(0, offsetPreMod), n)
+    parameters("offset".as[Int].?(0), "n".as[Int].?(20), "epoch".as[Long].?) {(offsetPreMod, nPreMax, epoch: Option[Long]) => {
+      val n = Math.max(0, nPreMax)
+      val moddedOffset = floorMod(Math.max(0, offsetPreMod), n)
 
-        // Constructing the query with comprehension means we only use one database connection.
-        // TODO: review with Dave to see if it's too clever
-        val query = for {
-          result <- db.IO.sizeAndProblemDigest(n, moddedOffset)
-        } yield (result._2, floorMod(Math.max(0, moddedOffset), n), n, result._1)
+      val query = for {
+        result <- db.IO.sizeAndProblemDigest(n, moddedOffset)
+      } yield (result._2, floorMod(Math.max(0, moddedOffset), n), n, result._1)
 
+      val query2 = for {
+        dateOffset <- db.IO.findIndexOfDate(epoch.getOrElse(0))
+        moddedOffset = floorMod(dateOffset, n)
+        result <- db.IO.sizeAndProblemDigest(n, moddedOffset)
+      } yield (result._2, moddedOffset, n, result._1)
 
-        val query2 = for {
-          dateOffset <- db.IO.findIndexOfDate(epoch)
-          moddedOffset = floorMod(dateOffset, n)
-          result <- db.IO.sizeAndProblemDigest(n, moddedOffset)
-        } yield (result._2, moddedOffset, n, result._1)
-
-        val response: ProblemResponse = ProblemResponse.tupled(db.runBlocking(if (epoch == -1l) query else query2))
-        implicit val formats = response.json4sMarshaller
-        complete(response)
-      }
-    }
+      val response: ProblemResponse = ProblemResponse.tupled(db.runBlocking(if (epoch.isEmpty) query else query2))
+      implicit val formats = response.json4sMarshaller
+      complete(response)
+    }}
   }
 
 }
