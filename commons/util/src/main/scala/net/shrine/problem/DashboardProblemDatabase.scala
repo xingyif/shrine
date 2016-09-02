@@ -34,7 +34,8 @@ object Problems {
     val createTables: String = "createTablesOnStart"
     if (true){//config.hasPath(createTables) && config.getBoolean(createTables)) {
       val duration = FiniteDuration(3, SECONDS)
-      Await.ready(db.run(IOActions.createIfNotExists), duration)
+      try {Await.ready(db.run(Queries.schema.create), duration) }
+      catch { case t:Throwable =>}
       val testValues: String = "createTestValuesOnStart"
       if (config.hasPath(testValues) && config.getBoolean(testValues)) {
         def dumb(id: Int) = ProblemDigest(s"codec($id)", s"stamp($id)", s"sum($id)", s"desc($id)", <details>{id}</details>, id)
