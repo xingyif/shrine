@@ -53,8 +53,8 @@ object Problems {
     def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
     def codec = column[String]("codec")
     def stampText = column[String]("stampText")
-    def summary = column[String]("summary")
-    def description = column[String]("description")
+    def summary = column[String]("summary", O.SqlType("Clob"))
+    def description = column[String]("description", O.SqlType("Clob"))
     def xml = column[String]("detailsXml", O.SqlType("Clob"))
     def epoch= column[Long]("epoch")
     // projection between table row and problem digest
