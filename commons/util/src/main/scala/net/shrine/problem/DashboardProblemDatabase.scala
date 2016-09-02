@@ -32,10 +32,9 @@ object Problems {
   lazy val db = {
     val db = Database.forDataSource(dataSource)
     val createTables: String = "createTablesOnStart"
-    if (true){//config.hasPath(createTables) && config.getBoolean(createTables)) {
+    if (config.hasPath(createTables) && config.getBoolean(createTables)) {
       val duration = FiniteDuration(3, SECONDS)
-      try {Await.ready(db.run(Queries.schema.create), duration) }
-      catch { case t:Throwable =>}
+      Await.ready(db.run(IOActions.createIfNotExists), duration)
       val testValues: String = "createTestValuesOnStart"
       if (config.hasPath(testValues) && config.getBoolean(testValues)) {
         def dumb(id: Int) = ProblemDigest(s"codec($id)", s"stamp($id)", s"sum($id)", s"desc($id)", <details>{id}</details>, id)
@@ -54,8 +53,8 @@ object Problems {
     def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
     def codec = column[String]("codec")
     def stampText = column[String]("stampText")
-    def summary = column[String]("summary", O.SqlType("Clob"))
-    def description = column[String]("description", O.SqlType("Clob"))
+    def summary = column[String]("summary")
+    def description = column[String]("description")
     def xml = column[String]("detailsXml", O.SqlType("Clob"))
     def epoch= column[Long]("epoch")
     // projection between table row and problem digest
