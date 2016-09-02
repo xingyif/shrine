@@ -221,15 +221,13 @@ trait StewardService extends HttpService with Json4sSupport {
   }
 
   def getUserQueryHistory(userIdOption:Option[UserName]):Route = get {
-    parameter('asJson.as[Boolean].?) { (asJson:Option[Boolean]) =>
-      path("topic" / IntNumber) { topicId: TopicId =>
-        getQueryHistoryForUserByTopic(userIdOption, Some(topicId), asJson)
-      } ~
-        getQueryHistoryForUserByTopic(userIdOption, None, asJson)
-    }
+    path("topic" / IntNumber) { topicId: TopicId =>
+      getQueryHistoryForUserByTopic(userIdOption, Some(topicId))
+    } ~
+      getQueryHistoryForUserByTopic(userIdOption, None)
   }
 
-  def getQueryHistoryForUserByTopic(userIdOption:Option[UserName],topicIdOption:Option[TopicId],jsonOption:Option[Boolean] = None) = get {
+  def getQueryHistoryForUserByTopic(userIdOption:Option[UserName],topicIdOption:Option[TopicId]) = get {
     matchQueryParameters(userIdOption) { queryParameters:QueryParameters =>
       val queryHistory = StewardDatabase.db.selectQueryHistory(queryParameters, topicIdOption)
       implicit val formats = queryHistory.json4sMarshaller
