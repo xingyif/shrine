@@ -4,7 +4,7 @@ import java.util.concurrent.TimeoutException
 import javax.sql.DataSource
 
 import com.typesafe.config.Config
-import net.shrine.slick.{CouldNotRunDbIoActionException, TestableDataSourceCreator}
+import net.shrine.slick.{CouldNotRunDbIoActionException, NeedsWarmUp, TestableDataSourceCreator}
 import slick.dbio.SuccessAction
 import slick.driver.JdbcProfile
 import slick.jdbc.meta.MTable
@@ -21,7 +21,7 @@ import scala.xml.XML
   * @author ty
   * @since 07/16
   */
-object Problems {
+object Problems extends NeedsWarmUp {
   val config:Config = ProblemConfigSource.config.getConfig("shrine.dashboard.database")
   val slickProfile:JdbcProfile = ProblemConfigSource.getObject("slickProfileClassName", config)
 
@@ -45,6 +45,9 @@ object Problems {
 
     db
   }
+
+
+  def warmUp = DatabaseConnector.runBlocking(Queries.length.result)
 
   /**
     * The Problems Table. This is the table schema.
@@ -183,7 +186,6 @@ object Problems {
       runBlocking(Queries += problem, timeout)
     }
 
-    def warmup = runBlocking(Queries.length.result)
   }
 }
 

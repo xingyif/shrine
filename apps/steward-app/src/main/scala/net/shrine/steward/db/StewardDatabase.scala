@@ -8,7 +8,7 @@ import com.typesafe.config.Config
 import net.shrine.authorization.steward.{Date, ExternalQueryId, InboundShrineQuery, InboundTopicRequest, OutboundShrineQuery, OutboundTopic, OutboundUser, QueriesPerUser, QueryContents, QueryHistory, ResearchersTopics, StewardQueryId, StewardsTopics, TopicId, TopicIdAndName, TopicState, TopicStateName, TopicsPerState, UserName, researcherRole, stewardRole}
 import net.shrine.i2b2.protocol.pm.User
 import net.shrine.log.Loggable
-import net.shrine.slick.TestableDataSourceCreator
+import net.shrine.slick.{NeedsWarmUp, TestableDataSourceCreator}
 import net.shrine.steward.{CreateTopicsMode, StewardConfigSource}
 import slick.dbio.Effect.Read
 import slick.driver.JdbcProfile
@@ -44,7 +44,7 @@ case class StewardDatabase(schemaDef:StewardSchema,dataSource: DataSource) exten
   }
 
   def warmUp = {
-    dbRun(allUserQuery.size.result)
+    dbRun(allUserQuery.size.result)dbRun(allUserQuery.size.result)
   }
 
   def selectUsers:Seq[UserRecord] = {
@@ -503,7 +503,7 @@ object StewardSchema {
   val schema = StewardSchema(slickProfile)
 }
 
-object StewardDatabase {
+object StewardDatabase extends NeedsWarmUp {
 
   val dataSource:DataSource = TestableDataSourceCreator.dataSource(StewardSchema.config)
 
@@ -512,6 +512,7 @@ object StewardDatabase {
   val createTablesOnStart = StewardSchema.config.getBoolean("createTablesOnStart")
   if(createTablesOnStart) StewardDatabase.db.createTables()
 
+  override def warmUp() = StewardDatabase.db.warmUp
 }
 
 //API help

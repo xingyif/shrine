@@ -9,7 +9,7 @@ import spray.servlet.WebBoot
 // the spray.servlet.WebBoot trait
 class Boot extends WebBoot {
 
-  val warmUp = Problems.DatabaseConnector.warmup
+  val warmUp:Unit = Problems.warmUp()
 
   // we need an ActorSystem to host our application in
   val system = ActorSystem("DashboardActors",DashboardConfigSource.config)

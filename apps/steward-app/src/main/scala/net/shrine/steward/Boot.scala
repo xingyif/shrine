@@ -12,7 +12,7 @@ class Boot extends WebBoot with Loggable {
 
   info(s"StewardActors akka daemonic config is ${StewardConfigSource.config.getString("akka.daemonic")}")
 
-  val warmUp = StewardDatabase.db.warmUp
+  val warmUp:Unit = StewardDatabase.warmUp()
 
   // we need an ActorSystem to host our application in
   val system = ActorSystem("StewardActors",StewardConfigSource.config)
