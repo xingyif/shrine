@@ -182,6 +182,8 @@ object Problems {
     def insertProblem(problem: ProblemDigest, timeout: Duration = new FiniteDuration(15, SECONDS)) = {
       runBlocking(Queries += problem, timeout)
     }
+
+    def warmup = runBlocking(Queries.length.result)
   }
 }
 

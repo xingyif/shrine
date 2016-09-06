@@ -1,11 +1,5 @@
 package net.shrine.proxy
 
-import java.io.BufferedReader
-import java.io.File
-import java.io.FileReader
-import java.io.IOException
-import java.util.ArrayList
-import java.util.List
 import net.shrine.log.Loggable
 
 import scala.xml.XML
@@ -13,7 +7,6 @@ import scala.xml.NodeSeq
 import net.shrine.client.JerseyHttpClient
 import net.shrine.client.HttpResponse
 import net.shrine.crypto.TrustParam.AcceptAllCerts
-import scala.util.control.NonFatal
 import net.shrine.client.HttpClient
 
 /**

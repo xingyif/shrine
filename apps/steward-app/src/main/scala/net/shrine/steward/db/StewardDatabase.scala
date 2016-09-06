@@ -43,6 +43,10 @@ case class StewardDatabase(schemaDef:StewardSchema,dataSource: DataSource) exten
     }
   }
 
+  def warmUp = {
+    dbRun(allUserQuery.size.result)
+  }
+
   def selectUsers:Seq[UserRecord] = {
     dbRun(allUserQuery.result)
   }
