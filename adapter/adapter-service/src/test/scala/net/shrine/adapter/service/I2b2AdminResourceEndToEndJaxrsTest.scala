@@ -64,7 +64,7 @@ final class I2b2AdminResourceEndToEndJaxrsTest extends AbstractI2b2AdminResource
       runQueriesImmediately = true,
       breakdownTypes = DefaultBreakdownResultOutputTypes.toSet,
       collectAdapterAudit = false,
-      botCountTimeThresholds = Map.empty
+      botCountTimeThresholds = Seq.empty
     )
   }
   

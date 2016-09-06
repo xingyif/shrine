@@ -231,7 +231,7 @@ final class SquerylAdapterDao(initializer: SquerylInitializer, tables: Tables)(i
     }
   }.getOrElse(false)
 
-  override def checkIfBot(authn:AuthenticationInfo, botTimeThresholds:Map[Long,Duration]): Unit = {
+  override def checkIfBot(authn:AuthenticationInfo, botTimeThresholds:Seq[(Long,Duration)]): Unit = {
     val now = System.currentTimeMillis()
 
     botTimeThresholds.foreach{countDuration => inTransaction {

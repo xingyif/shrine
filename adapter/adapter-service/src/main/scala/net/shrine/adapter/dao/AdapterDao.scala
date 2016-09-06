@@ -52,7 +52,7 @@ trait AdapterDao {
   /**
     * @throws BotDetectedException if it detects a bot attack
     */
-  def checkIfBot(authn:AuthenticationInfo, countTimeThresholds:Map[Long,Duration]): Unit
+  def checkIfBot(authn:AuthenticationInfo, countTimeThresholds:Seq[(Long,Duration)]): Unit
 
   def renameQuery(networkQueryId: Long, newName: String): Unit
   
