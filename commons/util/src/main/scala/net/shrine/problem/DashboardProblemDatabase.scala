@@ -23,9 +23,7 @@ import scala.xml.XML
   */
 object Problems {
   val config:Config = ProblemConfigSource.config.getConfig("shrine.dashboard.database")
-  val slickProfileClassName = config.getString("slickProfileClassName")
-  // TODO: Can we not pay this 2 second cost here?
-  val slickProfile:JdbcProfile = ProblemConfigSource.objectForName(slickProfileClassName)
+  val slickProfile:JdbcProfile = ProblemConfigSource.getObject("slickProfileClassName", config)
 
   import slickProfile.api._
 
@@ -57,7 +55,7 @@ object Problems {
     def stampText = column[String]("stampText")
     def summary = column[String]("summary")
     def description = column[String]("description")
-    def xml = column[String]("detailsXml", O.SqlType("Clob"))
+    def xml = column[String]("detailsXml")
     def epoch= column[Long]("epoch")
     // projection between table row and problem digest
     def * = (id, codec, stampText, summary, description, xml, epoch) <> (rowToProblem, problemToRow)
@@ -172,7 +170,7 @@ object Problems {
     /**
       * Synchronized copy of db.run
       */
-    def runBlocking[R](dbio: DBIOAction[R, NoStream, _])(implicit timeout: Duration = new FiniteDuration(15, SECONDS)): R = {
+    def runBlocking[R](dbio: DBIOAction[R, NoStream, _], timeout: Duration = new FiniteDuration(15, SECONDS)): R = {
       try {
         Await.result(this.run(dbio), timeout)
       } catch {
@@ -181,13 +179,11 @@ object Problems {
       }
     }
 
-    /**
-      * Inserts a problem into the database
-      * @param problem the ProblemDigest
-      */
-    def insertProblem(problem: ProblemDigest) = {
-      run(Queries += problem)
+    def insertProblem(problem: ProblemDigest, timeout: Duration = new FiniteDuration(15, SECONDS)) = {
+      runBlocking(Queries += problem, timeout)
     }
+
+    def warmup = runBlocking(Queries.length.result)
   }
 }
 

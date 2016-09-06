@@ -3,19 +3,17 @@ package net.shrine.steward
 import akka.actor.Actor
 import akka.event.Logging
 import net.shrine.authentication.UserAuthenticator
-
-import net.shrine.authorization.steward.{TopicIdAndName, Date, TopicId, InboundTopicRequest, InboundShrineQuery, StewardsTopics, TopicState, OutboundUser, OutboundTopic, UserName}
+import net.shrine.authorization.steward._
 import net.shrine.i2b2.protocol.pm.User
-import net.shrine.steward.db.{DetectedAttemptByWrongUserToChangeTopic, ApprovedTopicCanNotBeChanged, TopicDoesNotExist, SortOrder, QueryParameters, StewardDatabase}
+import net.shrine.serialization.NodeSeqSerializer
+import net.shrine.steward.db._
 import net.shrine.steward.pmauth.Authorizer
 import shapeless.HNil
-
-import spray.http.{HttpResponse, HttpRequest, StatusCodes}
+import spray.http.{HttpRequest, HttpResponse, StatusCodes}
 import spray.httpx.Json4sSupport
 import spray.routing.directives.LogEntry
-import spray.routing.{AuthenticationFailedRejection, Rejected, RouteConcatenation, Directive0, Route, HttpService}
-
-import org.json4s.{DefaultFormats, Formats}
+import spray.routing._
+import org.json4s.{DefaultFormats, DefaultJsonFormats, Formats}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.{Failure, Success, Try}
@@ -38,7 +36,7 @@ class StewardServiceActor extends Actor with StewardService {
 
 // this trait defines our service behavior independently from the service actor
 trait StewardService extends HttpService with Json4sSupport {
-  implicit def json4sFormats: Formats = DefaultFormats
+  implicit def json4sFormats: Formats = DefaultFormats + new NodeSeqSerializer
 
   val userAuthenticator = UserAuthenticator(StewardConfigSource.config)
 
@@ -223,16 +221,16 @@ trait StewardService extends HttpService with Json4sSupport {
   }
 
   def getUserQueryHistory(userIdOption:Option[UserName]):Route = get {
-    path("topic"/IntNumber) { topicId:TopicId =>
-      getQueryHistoryForUserByTopic(userIdOption,Some(topicId))
+    path("topic" / IntNumber) { topicId: TopicId =>
+      getQueryHistoryForUserByTopic(userIdOption, Some(topicId))
     } ~
-      getQueryHistoryForUserByTopic(userIdOption,None)
+      getQueryHistoryForUserByTopic(userIdOption, None)
   }
 
   def getQueryHistoryForUserByTopic(userIdOption:Option[UserName],topicIdOption:Option[TopicId]) = get {
     matchQueryParameters(userIdOption) { queryParameters:QueryParameters =>
       val queryHistory = StewardDatabase.db.selectQueryHistory(queryParameters, topicIdOption)
-
+      implicit val formats = queryHistory.json4sMarshaller
       complete(queryHistory)
     }
   }
@@ -241,6 +239,7 @@ trait StewardService extends HttpService with Json4sSupport {
     entity(as[InboundTopicRequest]) { topicRequest: InboundTopicRequest =>
       //todo notify the data stewards
       StewardDatabase.db.createRequestForTopicAccess(user,topicRequest)
+
       complete(StatusCodes.Accepted)
     }
   }

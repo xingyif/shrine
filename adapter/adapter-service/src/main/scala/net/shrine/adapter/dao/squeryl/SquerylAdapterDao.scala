@@ -151,7 +151,6 @@ final class SquerylAdapterDao(initializer: SquerylInitializer, tables: Tables)(i
         object BreakdownFailure extends AbstractProblem(ProblemSources.Adapter) {
           override val summary: String = "Couldn't retrieve result breakdown"
           override val description:String = s"Couldn't retrieve result breakdown of type '$failedBreakdownType'"
-          createAndLog
         }
 
         val pd = BreakdownFailure.toDigest

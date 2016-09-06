@@ -43,6 +43,10 @@ case class StewardDatabase(schemaDef:StewardSchema,dataSource: DataSource) exten
     }
   }
 
+  def warmUp = {
+    dbRun(allUserQuery.size.result)
+  }
+
   def selectUsers:Seq[UserRecord] = {
     dbRun(allUserQuery.result)
   }
@@ -234,7 +238,8 @@ case class StewardDatabase(schemaDef:StewardSchema,dataSource: DataSource) exten
       queryRecord.createOutboundShrineQuery(outboundTopic, outboundUser)
     }
 
-    QueryHistory(count,queryParameters.skipOption.getOrElse(0),shrineQueries.map(toOutboundShrineQuery))
+    val result = QueryHistory(count,queryParameters.skipOption.getOrElse(0),shrineQueries.map(toOutboundShrineQuery))
+    result
   }
 
   private def outboundUsersForNamesAction(userNames:Set[UserName]):DBIOAction[Map[UserName, OutboundUser], NoStream, Read] = {
@@ -551,7 +556,7 @@ case class ShrineQueryRecord(stewardId: Option[StewardQueryId],
                              stewardResponse:TopicState,
                              date:Date) {
   def createOutboundShrineQuery(outboundTopic:Option[OutboundTopic],outboundUser:OutboundUser): OutboundShrineQuery = {
-    OutboundShrineQuery(stewardId.get,externalId,name,outboundUser,outboundTopic,queryContents,stewardResponse.name,date)
+    OutboundShrineQuery(stewardId.get,externalId,name,outboundUser,outboundTopic,scala.xml.XML.loadString(queryContents),stewardResponse.name,date)
   }
 }
 

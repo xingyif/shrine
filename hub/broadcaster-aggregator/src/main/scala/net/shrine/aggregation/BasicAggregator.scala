@@ -92,14 +92,12 @@ case class CouldNotConnectToAdapter(origin:NodeId,cx: Exception) extends Abstrac
   override val throwable = Some(cx)
   override val summary: String = "Shrine could not connect to the adapter."
   override val description: String = s"Shrine could not connect to the adapter at ${origin.name} due to ${throwable.get}."
-  createAndLog
 }
 
 case class TimedOutWithAdapter(origin:NodeId) extends AbstractProblem(ProblemSources.Hub) {
   override val throwable = None
   override val summary: String = "Timed out with adapter."
   override val description: String = s"Shrine observed a timeout with the adapter at ${origin.name}."
-  createAndLog
 }
 
 case class CouldNotParseResultsProblem(cnrpx:CouldNotParseResultsException) extends AbstractProblem(ProblemSources.Hub) {
@@ -110,7 +108,6 @@ case class CouldNotParseResultsProblem(cnrpx:CouldNotParseResultsException) exte
                               Message body is {cnrpx.body}
                               {throwableDetail.getOrElse("")}
                             </details>
-  createAndLog
 }
 
 case class HttpErrorResponseProblem(cnrpx:CouldNotParseResultsException) extends AbstractProblem(ProblemSources.Hub) {
@@ -121,5 +118,4 @@ case class HttpErrorResponseProblem(cnrpx:CouldNotParseResultsException) extends
                               Message body is {cnrpx.body}
                               {throwableDetail.getOrElse("")}
                             </details>
-  createAndLog
 }

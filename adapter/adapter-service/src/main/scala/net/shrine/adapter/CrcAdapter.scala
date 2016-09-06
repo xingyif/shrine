@@ -95,7 +95,6 @@ case class CannotParseXmlFromCrc(saxx:SAXParseException,xmlResponseFromCrc: Stri
     {throwableDetail.getOrElse("")}
     Response is {xmlResponseFromCrc}
   </details>
-  createAndLog
 }
 
 case class ExceptionWhileLoadingCrcResponse(t:Throwable,xmlResponseFromCrc: String) extends AbstractProblem(ProblemSources.Adapter) {
@@ -106,5 +105,4 @@ case class ExceptionWhileLoadingCrcResponse(t:Throwable,xmlResponseFromCrc: Stri
     {throwableDetail.getOrElse("")}
     Response is {xmlResponseFromCrc}
   </details>
-  createAndLog
 }

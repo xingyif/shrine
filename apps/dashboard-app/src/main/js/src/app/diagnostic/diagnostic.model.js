@@ -150,7 +150,8 @@
          * @returns {*}
          */
         function getProblems(offset, n, epoch) {
-            var url = urlGetter(Config.ProblemEndpoint+'?offset='+offset+'&n='+n+'&epoch='+epoch);
+            var epochString = epoch && isFinite(epoch)? '&epoch='+ epoch: '';
+            var url = urlGetter(Config.ProblemEndpoint+'?offset='+offset+'&n='+n+epochString);
             return h.get(url)
                 .then(parseJsonResult, onFail);
         }

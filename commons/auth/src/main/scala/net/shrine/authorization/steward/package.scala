@@ -8,6 +8,7 @@ package object steward {
 
   type StewardQueryId = Long
   type ExternalQueryId = Long
+  type NetworkId = Long
   type QueryContents = String
   type TopicId = Int
   type TopicStateName = String

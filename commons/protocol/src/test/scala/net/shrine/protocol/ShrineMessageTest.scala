@@ -9,13 +9,13 @@ import net.shrine.protocol.query.Term
 import net.shrine.util.XmlDateHelper
 import java.math.BigInteger
 
-import net.shrine.problem.{TestProblem, TurnOffProblemConnector}
+import net.shrine.problem.{TestProblem}
 
 /**
  * @author clint
  * @since Feb 24, 2014
  */
-final class ShrineMessageTest extends ShouldMatchersForJUnit with TurnOffProblemConnector {
+final class ShrineMessageTest extends ShouldMatchersForJUnit {
   @Test
   def testRoundTrips {
     val projectId = "salkdjksaljdkla"

@@ -1,21 +1,22 @@
 package net.shrine.problem
 
 import java.net.InetAddress
-import java.text.SimpleDateFormat
 import java.util.Date
+import java.util.concurrent.Executors
 
 import net.shrine.log.Loggable
 import net.shrine.serialization.{XmlMarshaller, XmlUnmarshaller}
 
-import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.xml.{Elem, Node, NodeSeq}
 
 /**
- * Describes what information we have about a problem at the site in code where we discover it.
- *
- * @author david 
- * @since 8/6/15
- */
+  * Describes what information we have about a problem at the site in code where we discover it.
+  *
+  * @author david
+  * @since 8/6/15
+  */
 trait Problem {
   def summary:String
 
@@ -29,36 +30,44 @@ trait Problem {
 
   def exceptionXml(exception:Option[Throwable]): Option[Elem] = {
     exception.map{x =>
-    <exception>
-      <name>{x.getClass.getName}</name>
-      <message>{x.getMessage}</message>
-      <stacktrace>
-        {x.getStackTrace.map(line => <line>{line}</line>)}{exceptionXml(Option(x.getCause)).getOrElse("")}
-      </stacktrace>
-    </exception>
-  }}
+      <exception>
+        <name>{x.getClass.getName}</name>
+        <message>{x.getMessage}</message>
+        <stacktrace>
+          {x.getStackTrace.map(line => <line>{line}</line>)}{exceptionXml(Option(x.getCause)).getOrElse("")}
+        </stacktrace>
+      </exception>
+    }}
 
   def throwableDetail: Option[Elem] = exceptionXml(throwable)
 
   def detailsXml: NodeSeq = NodeSeq.fromSeq(<details>{throwableDetail.getOrElse("")}</details>)
 
-  def toDigest:ProblemDigest = ProblemDigest(problemName,stamp.pretty,summary,description,detailsXml, stamp.time)
+  def toDigest:ProblemDigest = ProblemDigest(problemName,stamp.pretty,summary,description,detailsXml,stamp.time)
 
-  def logDigest:Problem = {
-    if (!ProblemConfigSource.turnOffConnector) {
-      val problems = Problems
-      problems.DatabaseConnector.insertProblem(toDigest)
+  /**
+    * Temporary replacement for onCreate, which will be released come Scala 2.13
+    * TODO: remove when Scala 2.13 releases
+    */
+  def hackToHandleAfterInitialization(handler:ProblemHandler):Future[Unit] = {
+    import scala.concurrent.blocking
+    Future {
+      var continue = true
+      while (continue) {
+        try {
+          blocking(synchronized(handler.handleProblem(this)))
+          continue = false
+        } catch {
+          case un:UninitializedFieldError =>
+            Thread.sleep(5)
+            continue = true
+        }
+      }
+      Unit
     }
-    this
   }
-
-  def createAndLog:Problem = {
-    if (!ProblemConfigSource.turnOffConnector)
-      Problems.DatabaseConnector.insertProblem(toDigest)
-    this
-  }
-
 }
+
 
 case class ProblemDigest(codec: String, stampText: String, summary: String, description: String, detailsXml: NodeSeq, epoch: Long) extends XmlMarshaller {
 
@@ -74,24 +83,24 @@ case class ProblemDigest(codec: String, stampText: String, summary: String, desc
   }
 
   /**
-   * Ignores detailXml. equals with scala.xml is impossible. See http://www.scala-lang.org/api/2.10.3/index.html#scala.xml.Equality$
-   */
+    * Ignores detailXml. equals with scala.xml is impossible. See http://www.scala-lang.org/api/2.10.3/index.html#scala.xml.Equality$
+    */
   override def equals(other: Any): Boolean =
-    other match {
+  other match {
 
-      case that: ProblemDigest =>
-        (that canEqual this) &&
-          codec == that.codec &&
-          stampText == that.stampText &&
-          summary == that.summary &&
-          description == that.description &&
-          epoch == that.epoch
-      case _ => false
-    }
+    case that: ProblemDigest =>
+      (that canEqual this) &&
+        codec == that.codec &&
+        stampText == that.stampText &&
+        summary == that.summary &&
+        description == that.description &&
+        epoch == that.epoch
+    case _ => false
+  }
 
   /**
-   * Ignores detailXml
-   */
+    * Ignores detailXml
+    */
   override def hashCode: Int = {
     val prime = 67
     codec.hashCode + prime * (stampText.hashCode + prime *(summary.hashCode + prime * (description.hashCode + prime * epoch.hashCode())))
@@ -131,20 +140,14 @@ case class Stamp(host:InetAddress,time:Long,source:ProblemSources.ProblemSource)
 object Stamp {
   //TODO: val dateFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS")?
   //TODO: Currently the stamp text is locale specific, which can change depending on the jre/computer running it...
-  def apply(source:ProblemSources.ProblemSource, timer: => Long): Stamp = Stamp(InetAddress.getLocalHost, timer,source)
+  def apply(source:ProblemSources.ProblemSource, timer: => Long): Stamp = Stamp(InetAddress.getLocalHost, timer, source)
 }
 
-/**
-  * An abstract problem to enable easy creation of Problems. Note that when overriding fields,
-  * you should only use def or lazy val, and not val.
-  * See: http://stackoverflow.com/questions/15346600/field-inside-object-which-extends-app-trait-is-set-to-null-why-is-that-so
-  * @param source
-  */
 abstract class AbstractProblem(source:ProblemSources.ProblemSource) extends Problem {
-  println(s"Problem $getClass created")
   def timer = System.currentTimeMillis
-  lazy val stamp = Stamp(source, timer)
-
+  override val stamp = Stamp(source, timer)
+  private val config = ProblemConfigSource.config.getConfig("shrine.problem")
+  hackToHandleAfterInitialization(ProblemConfigSource.getObject("problemHandler", config))
 }
 
 trait ProblemHandler {
@@ -152,8 +155,8 @@ trait ProblemHandler {
 }
 
 /**
- * An example problem handler
- */
+  * An example problem handler
+  */
 object LoggingProblemHandler extends ProblemHandler with Loggable {
   override def handleProblem(problem: Problem): Unit = {
 
@@ -163,12 +166,11 @@ object LoggingProblemHandler extends ProblemHandler with Loggable {
   }
 }
 
-//object DatabaseProblemhandler extends ProblemHandler {
-//  override def handleProblem(problem: Problem): Unit = {
-//    Problems.DatabaseConnector.insertProblem(problem.toDigest)
-//  }
-//
-//}
+object DatabaseProblemHandler extends ProblemHandler {
+  override def handleProblem(problem: Problem): Unit = {
+    Problems.DatabaseConnector.insertProblem(problem.toDigest)
+  }
+}
 
 object ProblemSources{
 
@@ -191,7 +193,7 @@ case class ProblemNotYetEncoded(internalSummary:String,t:Option[Throwable] = Non
   override val throwable = {
     val rx = t.fold(new IllegalStateException(s"$summary"))(
       new IllegalStateException(s"$summary",_)
-      )
+    )
     rx.fillInStackTrace()
     Some(rx)
   }
@@ -207,7 +209,6 @@ case class ProblemNotYetEncoded(internalSummary:String,t:Option[Throwable] = Non
     </details>
   )
 
-  createAndLog
 }
 
 object ProblemNotYetEncoded {

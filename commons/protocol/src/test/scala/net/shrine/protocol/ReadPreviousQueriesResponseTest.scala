@@ -5,7 +5,7 @@ import net.shrine.util.XmlUtil
 import net.shrine.util.XmlDateHelper
 import javax.xml.datatype.XMLGregorianCalendar
 
-import net.shrine.problem.{TestProblem, TurnOffProblemConnector}
+import net.shrine.problem.TestProblem
 
 /**
  * @author Bill Simons
@@ -17,9 +17,7 @@ import net.shrine.problem.{TestProblem, TurnOffProblemConnector}
  *       licensed as Lgpl Open Source
  * @see http://www.gnu.org/licenses/lgpl.html
  */
-final class ReadPreviousQueriesResponseTest extends ShrineResponseI2b2SerializableValidator
-  with TurnOffProblemConnector
-{
+final class ReadPreviousQueriesResponseTest extends ShrineResponseI2b2SerializableValidator {
 
   val queryMasterId1 = 1111111L
   val queryMasterId2 = 222222L

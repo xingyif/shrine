@@ -40,5 +40,4 @@ case class NoValidResponsesToAggregate() extends AbstractProblem(ProblemSources.
   override val summary: String = "No valid responses to aggregate."
 
   override val description:String = "The hub received no valid responses to aggregate."
-  createAndLog
 }

@@ -5,7 +5,7 @@
                   handle-button="vm.handleButton">
         </my-pages>
         <span style="display:inline-block;">
-                            {{vm.floor(vm.probsOffset / vm.probsN) + 1}} / {{vm.floor((vm.probsSize - 1) / vm.probsN) + 1}}
+                            {{vm.floor(vm.probsOffset / vm.probsN) + 1}} / {{vm.floor((vm.probsSize <= 0? 0: vm.probsSize -1) / vm.probsN) + 1}}
                         </span>
         <form style="display:inline-block;float:right;"
               ng-submit="vm.newPage(vm.numCheck(vm.num), vm.probsN)">

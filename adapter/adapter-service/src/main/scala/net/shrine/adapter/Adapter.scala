@@ -62,7 +62,6 @@ case class AdapterLockout(authn:AuthenticationInfo,x:AdapterLockoutException) ex
   override val throwable = Some(x)
   override val summary: String = s"User '${authn.domain}:${authn.username}' locked out."
   override val description:String = s"User '${authn.domain}:${authn.username}' has run too many queries that produce the same result at ${x.url} ."
-  createAndLog
 }
 
 case class CrcCouldNotBeInvoked(crcUrl:String,request:ShrineRequest,x:CrcInvocationException) extends AbstractProblem(ProblemSources.Adapter) {
@@ -73,7 +72,6 @@ case class CrcCouldNotBeInvoked(crcUrl:String,request:ShrineRequest,x:CrcInvocat
                               Request is {request}
                               {throwableDetail.getOrElse("")}
                             </details>
-  createAndLog
 }
 
 case class AdapterMappingProblem(x:AdapterMappingException) extends AbstractProblem(ProblemSources.Adapter) {
@@ -86,7 +84,6 @@ case class AdapterMappingProblem(x:AdapterMappingException) extends AbstractProb
                               RunQueryRequest is ${x.runQueryRequest.elideAuthenticationInfo}
                               {throwableDetail.getOrElse("")}
                             </details>
-  createAndLog
 }
 
 case class AdapterDatabaseProblem(x:SQLException) extends AbstractProblem(ProblemSources.Adapter) {
@@ -94,7 +91,6 @@ case class AdapterDatabaseProblem(x:SQLException) extends AbstractProblem(Proble
   override val throwable = Some(x)
   override val summary: String = "Problem using the Adapter database."
   override val description = "The Shrine Adapter encountered a problem using a database."
-  createAndLog
 }
 
 case class BotDetected(bdx:BotDetectedException) extends AbstractProblem(ProblemSources.Adapter) {

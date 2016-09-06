@@ -1,6 +1,8 @@
 package net.shrine.problem
 
+import org.junit.runner.RunWith
 import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.junit.JUnitRunner
 import org.scalatest.{BeforeAndAfter, FlatSpec, Matchers}
 import slick.driver.H2Driver.api._
 
@@ -11,9 +13,9 @@ import scala.concurrent.duration._
   * in-memory H2 database. Demonstrates proof of concept mapping of ProblemDigest
   * case class into a database.
   */
+@RunWith(classOf[JUnitRunner])
 class DashboardProblemDatabaseTest extends FlatSpec with BeforeAndAfter with ScalaFutures with Matchers {
   implicit val timeout = 10.seconds
-
   val connector = Problems.DatabaseConnector
   val IO = connector.IO
   val problemDigests = Seq(
@@ -81,6 +83,7 @@ class DashboardProblemDatabaseTest extends FlatSpec with BeforeAndAfter with Sca
     connector.runBlocking(IO.problems.size.result) shouldBe problemDigests.size
 
     val testProblem = ProblemDatabaseTestProblem(ProblemSources.Unknown)
+    Thread.sleep(20)
     connector.runBlocking(IO.problems.size.result) shouldBe problemDigests.size + 1
   }
 }
@@ -88,5 +91,4 @@ class DashboardProblemDatabaseTest extends FlatSpec with BeforeAndAfter with Sca
 case class ProblemDatabaseTestProblem(source: ProblemSources.ProblemSource) extends AbstractProblem(source: ProblemSources.ProblemSource) {
   override def summary: String = "This is a test problem! No user should ever see this."
   override def description: String = "Wow, this is a nice looking problem. I mean really, just look at it."
-  createAndLog
 }

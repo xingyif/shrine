@@ -232,5 +232,4 @@ case class ErrorStatusFromDataStewardApp(response:HttpResponse,stewardBaseUrl:UR
     Response is {response}
     {throwableDetail.getOrElse("")}
   </details>
-  createAndLog
 }

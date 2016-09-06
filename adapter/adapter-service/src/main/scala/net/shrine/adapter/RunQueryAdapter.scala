@@ -279,7 +279,6 @@ case class ErrorFromCrcBreakdown(x:ErrorFromCrcException) extends AbstractProble
   override val throwable = Some(x)
   override val summary: String = "The CRC reported an error."
   override val description = "The CRC reported an internal error."
-  createAndLog
 }
 
 case class CannotInterpretCrcBreakdownXml(x:MissingCrCXmlResultException) extends AbstractProblem(ProblemSources.Adapter) {
@@ -287,5 +286,4 @@ case class CannotInterpretCrcBreakdownXml(x:MissingCrCXmlResultException) extend
   override val throwable = Some(x)
   override val summary: String = "SHRINE cannot interpret the CRC response."
   override val description = "The CRC responded, but SHRINE could not interpret that response."
-  createAndLog
 }

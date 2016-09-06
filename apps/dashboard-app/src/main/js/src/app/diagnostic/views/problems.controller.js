@@ -166,9 +166,6 @@
 
 
         function newPage(offset, n, epoch) {
-            if (!(epoch && isFinite(epoch))) {
-                epoch = -1;
-            }
             if (!(n && isFinite(n))) {
                 n = 20;
             }
@@ -210,7 +207,7 @@
         }
 
         function parseException(exceptionObject) {
-            var exceptionTag = '<h4>sanitizeString(exception)</h4>';
+            var exceptionTag = '<h4>exception</h4>';
             var nameTag = '<h5>'+sanitizeString(exceptionObject['name'])+'</h5>';
             var messageTag = '<p>'+sanitizeString(exceptionObject['message'])+'</p>';
             var stackTrace = exceptionObject['stacktrace'];

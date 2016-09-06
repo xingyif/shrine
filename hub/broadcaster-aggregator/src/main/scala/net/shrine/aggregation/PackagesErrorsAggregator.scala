@@ -51,5 +51,4 @@ abstract class PackagesErrorsAggregator[T <: ShrineResponse : Manifest](
 case class InvalidResultProblem(invalid:Invalid) extends AbstractProblem(ProblemSources.Hub) {
   override def summary: String = s"Invalid response."
   override def description: String = s"${invalid.errorMessage} from ${invalid.origin.getOrElse("an unknown node")}"
-  createAndLog
 }
