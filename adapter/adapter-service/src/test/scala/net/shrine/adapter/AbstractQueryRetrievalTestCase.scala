@@ -363,7 +363,7 @@ object AbstractQueryRetrievalTestCase {
       runQueriesImmediately = true,
       breakdownTypes = DefaultBreakdownResultOutputTypes.toSet,
       collectAdapterAudit = false,
-      botCountTimeThresholds = Map.empty
+      botCountTimeThresholds = Seq.empty
     )
   }
 

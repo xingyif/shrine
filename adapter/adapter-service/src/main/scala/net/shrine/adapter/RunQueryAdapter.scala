@@ -39,7 +39,7 @@ final case class RunQueryAdapter(
   runQueriesImmediately: Boolean,
   breakdownTypes: Set[ResultOutputType],
   collectAdapterAudit:Boolean,
-  botCountTimeThresholds:Map[Long,Duration]
+  botCountTimeThresholds:Seq[(Long,Duration)]
 ) extends CrcAdapter[RunQueryRequest, RunQueryResponse](poster, hiveCredentials) {
 
   logStartup()

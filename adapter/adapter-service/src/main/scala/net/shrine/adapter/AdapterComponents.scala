@@ -1,5 +1,6 @@
 package net.shrine.adapter
 
+import scala.collection.JavaConverters._
 import com.typesafe.config.Config
 import net.shrine.adapter.dao.{AdapterDao, I2b2AdminDao}
 import net.shrine.adapter.dao.squeryl.{SquerylAdapterDao, SquerylI2b2AdminDao}
@@ -12,6 +13,8 @@ import net.shrine.crypto.{DefaultSignerVerifier, KeyStoreCertCollection}
 import net.shrine.dao.squeryl.SquerylInitializer
 import net.shrine.protocol.{HiveCredentials, NodeId, RequestType, ResultOutputType}
 import net.shrine.config.{ConfigExtensions, DurationConfigParser}
+
+import scala.concurrent.duration.Duration
 
 /**
   * All the parts required for an adapter.
@@ -61,6 +64,12 @@ object AdapterComponents {
     val doObfuscation = adapterConfig.getBoolean("setSizeObfuscation")
     val collectAdapterAudit = adapterConfig.getBoolean("audit.collectAdapterAudit")
 
+    val botCountTimeThresholds: Seq[(Long, Duration)] = {
+      import scala.concurrent.duration._
+      val countsAndMilliseconds: Seq[Config] = adapterConfig.getConfig("botDefense").getConfigList("countsAndMilliseconds").asScala
+      countsAndMilliseconds.map(pairConfig => (pairConfig.getLong("count"),pairConfig.getLong("milliseconds").milliseconds))
+    }
+
     val runQueryAdapter = RunQueryAdapter(
       poster = crcPoster,
       dao = adapterDao,
@@ -71,7 +80,7 @@ object AdapterComponents {
       runQueriesImmediately = adapterConfig.getOption("immediatelyRunIncomingQueries", _.getBoolean).getOrElse(true), //todo use reference.conf
       breakdownTypes = breakdownTypes,
       collectAdapterAudit = collectAdapterAudit,
-      botCountTimeThresholds = Map.empty  //todo pull the map out of config
+      botCountTimeThresholds = botCountTimeThresholds
     )
 
     val readInstanceResultsAdapter: Adapter = new ReadInstanceResultsAdapter(
