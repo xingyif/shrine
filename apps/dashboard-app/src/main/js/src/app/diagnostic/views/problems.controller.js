@@ -15,18 +15,25 @@
 
         function rangeGen(max) {
             var result = [];
-            for (var i = 0; i < max; i++) {
+            for (var i = 1; i < max - 1; i++) {
                 result[i] = i + 1;
             }
             return result;
         }
 
 
-        function checkPage(value, activePage, maxPage) {
-            if (!isFinite(value)) {
+        function checkPage(value, activePage, maxPage, minPage) {
+            if (value == '..') {
+                return activePage > 4;
+            } else if (value == '...') {
+                return maxPage - activePage > 4;
+            }
+            else if (!isFinite(value)) {
                 // Anything that's not a number and not an error is fine as a button
                 return !!value;
-            } else if (activePage == 1 || activePage == 2) {
+            } if (value == maxPage || value == minPage) {
+                return true;
+            } else if (activePage == minPage || activePage == minPage + 1) {
                 return value <= 4;
             } else if (activePage == maxPage || activePage == maxPage - 1) {
                 return maxPage - value < 4;
@@ -41,6 +48,7 @@
             templateUrl: 'src/app/diagnostic/templates/paginator-template.html',
             scope: {
                 maxPage:      '=',
+                minPage:      '=',
                 handleButton: '=',
                 activePage:   '='
             },
@@ -61,14 +69,18 @@
          *
          */
         function init () {
+            vm.pageSizes = [5, 10, 20];
             vm.url = "https://open.med.harvard.edu/wiki/display/SHRINE/";
             vm.submitDate = submitDate;
             vm.newPage = newPage;
             vm.floor = Math.floor;
             vm.handleButton = handleButton;
+            vm.pageSizeCheck = function(n) {return n < vm.probsSize};
             vm.parseDetails = function(details) { return $sce.trustAsHtml(parseDetails(details)) };
             vm.stringify = function(arg) { return JSON.stringify(arg, null, 2); };
             vm.numCheck = function(any) {return isFinite(any)? (any - 1) * vm.probsN: vm.probsOffset};
+            vm.changePage = function() {vm.newPage(vm.probsOffset, vm.pageSize > 20? 20: vm.pageSize < 0? 0: vm.pageSize)};
+
 
             //todo: Get rid of this and figure out something less hacky
             vm.formatCodec = function(word) {
@@ -190,6 +202,7 @@
             vm.probsSize = probs.size;
             vm.probsOffset = probs.offset;
             vm.probsN = probs.n;
+            vm.pageSize = vm.probsN;
         }
 
         function parseDetails(detailsObject) {

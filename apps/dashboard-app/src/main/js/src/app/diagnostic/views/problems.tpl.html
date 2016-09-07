@@ -1,16 +1,25 @@
 <div>
 
-    <br><br>
-    <form ng-submit="vm.submitDate(vm.epoch)">
-        <label for="dateInput">Go to page with date</label>
-        <input type="text" id="dateInput" name="input" ng-model="vm.epoch"
-               placeholder="yyyy-MM-dd"/>
-        <div role="alert">
+    <div style="display:flex;justify-content: space-between">
+        <form ng-submit="vm.submitDate(vm.epoch)" style="width:26%">
+            <label for="dateInput">Skip to date</label>
+            <input type="date" id="dateInput" name="input" ng-model="vm.epoch"
+                   placeholder="yyyy-MM-dd"/>
+            <div role="alert">
             <span ng-show="vm.showDateError">
                 Please input a valid date: yyyy-MM-dd
             </span>
-        </div>
-    </form>
+            </div>
+        </form>
+        <div my-pagination></div>
+        <form style="width:20%" ng-show="vm.probsSize > 5">
+            <label for="pageSize">Problems Per Page: </label>
+            <select id="pageSize"
+                    ng-options="x for x in vm.pageSizes | filter: vm.pageSizeCheck"
+                    ng-model="vm.pageSize"
+                    ng-change="vm.changePage()"></select>
+        </form>
+    </div>
     <table class="table table-striped">
         <colgroup>
             <col style="width:27%">
@@ -22,14 +31,10 @@
         <thead>
         <tr>
             <td colspan="4">
-                <span>Problems Total: {{vm.probsSize}}</span>
-                <button ng-click="vm.newPage(vm.probsOffset, 20)" style="float:right;margin-right:3%">20</button>
-                <button ng-click="vm.newPage(vm.probsOffset, 10)" style="float:right;margin-right:3%">10</button>
-                <button ng-click="vm.newPage(vm.probsOffset, 5)" style="float:right;margin-right:3%">5</button>
-                <span style="float:right;margin-right:3%">Problems Per Page:</span>
+                <span style="float:left">Problems Total: {{vm.probsSize}}</span>
+                <span style="float:right">Pages Total: {{vm.probsSize <= 0? 1: vm.floor((vm.probsSize - 1) / vm.probsN) + 1}}</span>
             </td>
         </tr>
-        <tr my-pagination></tr>
         <tr>
             <td data-width="25%">
                 Codec
@@ -68,9 +73,11 @@
             <td colspan="4" ng-show="problem.showDetails" ng-bind-html="vm.parseDetails(problem.detailsXml)">
             </td>
         </tr>
-        <thead>
-            <tr my-pagination></tr>
-        </thead>
         </tbody>
     </table>
+    <div style="display:flex;justify-content: center">
+        <div style="width:26%"></div>
+        <div my-pagination></div>
+        <div style="width:20%"></div>
+    </div>
 </div>
