@@ -238,7 +238,7 @@ final class SquerylAdapterDao(initializer: SquerylInitializer, tables: Tables)(i
       val sinceMs: Long = now - countDuration._2.toMillis
       val query: Query[Measures[Long]] = Queries.countQueriesForUserSince(authn.domain, authn.username, sinceMs)
       val queriesSince = query.headOption.map(_.measures).getOrElse(0L)
-      if (queriesSince > countDuration._1) throw new BotDetectedException(domain = authn.domain,
+      if (queriesSince >= countDuration._1) throw new BotDetectedException(domain = authn.domain,
                                                                           username = authn.username,
                                                                           detectedCount = queriesSince,
                                                                           sinceMs = sinceMs,
