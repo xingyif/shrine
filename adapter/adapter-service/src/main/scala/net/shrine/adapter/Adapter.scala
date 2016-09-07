@@ -94,7 +94,8 @@ case class AdapterDatabaseProblem(x:SQLException) extends AbstractProblem(Proble
 }
 
 case class BotDetected(bdx:BotDetectedException) extends AbstractProblem(ProblemSources.Adapter) {
-  override val summary: String = s"A user has run enough queries in a short period of time the adapter suspects a bot."
 
+  override val throwable = Some(bdx)
+  override val summary: String = s"A user has run so many queries in a period of time that the adapter suspects a bot."
   override val description: String = s"${bdx.domain}:${bdx.username} has run ${bdx.detectedCount} queries since ${new Date(bdx.sinceMs)}, more than the limit of ${bdx.limit} allowed in this time frame."
 }
