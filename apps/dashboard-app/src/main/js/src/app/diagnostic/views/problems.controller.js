@@ -27,11 +27,10 @@
                 return activePage > 4;
             } else if (value == '...') {
                 return maxPage - activePage > 4;
-            }
-            else if (!isFinite(value)) {
+            } else if (!isFinite(value)) {
                 // Anything that's not a number and not an error is fine as a button
                 return !!value;
-            } if (value == maxPage || value == minPage) {
+            } else if (value == maxPage || value == minPage) {
                 return true;
             } else if (activePage == minPage || activePage == minPage + 1) {
                 return value <= 4;
@@ -96,8 +95,7 @@
         function handleButton(value) {
             var page = function(offset) { newPage(offset, vm.probsN) };
             switch(value) {
-                case '«':
-                    page(0);
+                case '..':
                     break;
                 case '‹':
                     page(vm.probsOffset - vm.probsN);
@@ -105,8 +103,7 @@
                 case '›':
                     page(vm.probsOffset + vm.probsN);
                     break;
-                case '»':
-                    page(vm.probsSize);
+                case '...':
                     break;
                 default:
                     page((value - 1) * vm.probsN);
