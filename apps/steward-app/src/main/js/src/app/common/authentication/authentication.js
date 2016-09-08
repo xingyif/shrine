@@ -34,7 +34,7 @@ angular.module("hms-authentication", ['ngCookies', 'hms-authentication-model'])
             $http.defaults.headers.common.Authorization = ' Basic ';
         };
 
-        // -- auto logout on idle -- //
+        // todo: -- auto logout on idle -- //
         var logoutSeconds = 2*60*100;
         var actionSeen = false;
         var intervalCalled = true;

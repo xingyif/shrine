@@ -11,7 +11,7 @@
         $log.warn("hello!");
 
         // -- auto logout on idle -- //
-        var logoutSeconds = 2*60*100;
+        var twentyMinutes = 20*60*1000;
         var actionSeen = false;
         var intervalCalled = true;
         $rootScope.$watch(function detectIdle() {
@@ -32,7 +32,7 @@
             intervalCalled = true;
             // -- forces the logout check, instead of waiting for user -- //
             $log.warn("Ping!");
-        }, logoutSeconds);
+        }, twentyMinutes);
 
 
         // -- private const -- //
