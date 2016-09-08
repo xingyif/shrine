@@ -34,7 +34,7 @@ final case class RunQueryAdapter(
   dao: AdapterDao,
   override val hiveCredentials: HiveCredentials,
   conceptTranslator: QueryDefinitionTranslator,
-  adapterLockoutAttemptsThreshold: Int,
+  adapterLockoutAttemptsThreshold: Int, //Set to 0 to disable lockout. todo remove in SHRINE 1.24
   doObfuscation: Boolean,
   runQueriesImmediately: Boolean,
   breakdownTypes: Set[ResultOutputType],
