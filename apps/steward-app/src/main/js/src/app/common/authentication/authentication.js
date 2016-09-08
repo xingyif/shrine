@@ -7,7 +7,8 @@ angular.module("hms-authentication", ['ngCookies', 'hms-authentication-model'])
         ROLE2: "DataSteward",
         ROLE3: "Admin"
     })
-    .factory('HMSAuthenticationService', ['$http', '$q', '$app', 'HMSAuthenticationModel', function ($http, $q, $app, model) {
+    .factory('HMSAuthenticationService', ['$http', '$q', '$app', 'HMSAuthenticationModel', '$rootScope', '$log',
+        function ($http, $q, $app, model, $rootScope, $log) {
 
         var service     = {};
 
@@ -32,6 +33,30 @@ angular.module("hms-authentication", ['ngCookies', 'hms-authentication-model'])
             $app.utils.deleteAppUser();
             $http.defaults.headers.common.Authorization = ' Basic ';
         };
+
+        // -- auto logout on idle -- //
+        var logoutSeconds = 2*60*100;
+        var actionSeen = false;
+        var intervalCalled = true;
+        $rootScope.$watch(function detectIdle() {
+            $log.warn("Detected a change in the root scope");
+            if (intervalCalled) {
+                intervalCalled = false;
+            } else {
+                actionSeen = true;
+            }
+        });
+
+        $interval(function checkLogout() {
+            if (!actionSeen) {
+                $log.warn("I'd get called here!");
+                clearCredentials();
+            }
+            actionSeen = false;
+            intervalCalled = true;
+            // -- forces the logout check, instead of waiting for user -- //
+            $log.warn("Ping!");
+        }, logoutSeconds);
 
         return service;
     }])

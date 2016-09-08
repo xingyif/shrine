@@ -6,8 +6,33 @@
         .factory('AuthenticationService', AuthenticationService)
 
 
-    AuthenticationService.$inject = ['$http', '$q', '$app']
-    function AuthenticationService ($http, $q, $app) {
+    AuthenticationService.$inject = ['$http', '$q', '$app', '$log', '$rootScope', '$interval'];
+    function AuthenticationService ($http, $q, $app, $log, $rootScope, $interval) {
+        $log.warn("hello!");
+
+        // -- auto logout on idle -- //
+        var logoutSeconds = 2*60*100;
+        var actionSeen = false;
+        var intervalCalled = true;
+        $rootScope.$watch(function detectIdle() {
+            $log.warn("Detected a change in the root scope");
+            if (intervalCalled) {
+                intervalCalled = false;
+            } else {
+                actionSeen = true;
+            }
+        });
+
+        $interval(function checkLogout() {
+            if (!actionSeen) {
+                $log.warn("I'd get called here!");
+                clearCredentials();
+            }
+            actionSeen = false;
+            intervalCalled = true;
+            // -- forces the logout check, instead of waiting for user -- //
+            $log.warn("Ping!");
+        }, logoutSeconds);
 
 
         // -- private const -- //
