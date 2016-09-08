@@ -87,5 +87,5 @@ case class BotDetectedException(domain:String,
                                 sinceMs:Long,
                                 limit:Long) extends Exception() {
 
-  override def getMessage = s"$domain:$username has run $detectedCount queries since ${new Date(sinceMs)}, more than the limit of $limit"
+  override def getMessage = s"$domain:$username has already run $detectedCount queries since ${new Date(sinceMs)}. The limit is $limit"
 }
