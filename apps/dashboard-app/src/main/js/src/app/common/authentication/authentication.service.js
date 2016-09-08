@@ -6,8 +6,8 @@
         .factory('AuthenticationService', AuthenticationService)
 
 
-    AuthenticationService.$inject = ['$http', '$q', '$app', '$rootScope', '$interval'];
-    function AuthenticationService ($http, $q, $app, $rootScope, $interval) {
+    AuthenticationService.$inject = ['$http', '$q', '$app', '$rootScope', '$interval', '$location'];
+    function AuthenticationService ($http, $q, $app, $rootScope, $interval, $location) {
 
         // -- auto logout on idle -- //
         var twentyMinutes = 20*60*1000;
@@ -51,9 +51,14 @@
             return authenticate();
         }
 
+        /**
+         * When the interval is called, that means the user has gone idle, so we
+         * clear their credentials then navigate them back to the home page.
+         */
         function timeout() {
             intervalCalled = true;
             clearCredentials();
+            $location.url("/login")
         }
 
 
