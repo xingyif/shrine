@@ -3,7 +3,7 @@
 
 
     // -- register controller with angular -- //
-    angular.module('shrine-tools')
+    angular.module('shrine-tools', ['ui.bootstrap', 'ui.bootstrap.datepicker'])
         .controller('ProblemsController', ProblemsController)
         .directive('myPagination', function () {
             return {
@@ -11,7 +11,8 @@
                 replace: true,
                 templateUrl: 'src/app/diagnostic/templates/my-pagination-template.html'
             }
-        }).directive('myPages', function() {
+        })
+        .directive('myPages', function() {
 
         function rangeGen(max) {
             var result = [];
@@ -68,17 +69,20 @@
          *
          */
         function init () {
+            vm.date = new Date();
+            vm.isOpen = { 'open': true };
             vm.pageSizes = [5, 10, 20];
             vm.url = "https://open.med.harvard.edu/wiki/display/SHRINE/";
             vm.submitDate = submitDate;
             vm.newPage = newPage;
             vm.floor = Math.floor;
             vm.handleButton = handleButton;
-            vm.pageSizeCheck = function(n) {return n < vm.probsSize};
+            vm.open = function() { vm.isOpen.open = !vm.isOpen.open;};
+            vm.pageSizeCheck = function(n) { return n < vm.probsSize };
             vm.parseDetails = function(details) { return $sce.trustAsHtml(parseDetails(details)) };
             vm.stringify = function(arg) { return JSON.stringify(arg, null, 2); };
-            vm.numCheck = function(any) {return isFinite(any)? (any - 1) * vm.probsN: vm.probsOffset};
-            vm.changePage = function() {vm.newPage(vm.probsOffset, vm.pageSize > 20? 20: vm.pageSize < 0? 0: vm.pageSize)};
+            vm.numCheck = function(any) { return isFinite(any)? (any - 1) * vm.probsN: vm.probsOffset };
+            vm.changePage = function() { vm.newPage(vm.probsOffset, vm.pageSize > 20? 20: vm.pageSize < 0? 0: vm.pageSize) };
 
 
             //todo: Get rid of this and figure out something less hacky
