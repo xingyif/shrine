@@ -6,33 +6,25 @@
         .factory('AuthenticationService', AuthenticationService)
 
 
-    AuthenticationService.$inject = ['$http', '$q', '$app', '$log', '$rootScope', '$interval'];
-    function AuthenticationService ($http, $q, $app, $log, $rootScope, $interval) {
-        $log.warn("hello!");
+    AuthenticationService.$inject = ['$http', '$q', '$app', '$rootScope', '$interval'];
+    function AuthenticationService ($http, $q, $app, $rootScope, $interval) {
 
         // -- auto logout on idle -- //
         var twentyMinutes = 20*60*1000;
-        var actionSeen = false;
         var intervalCalled = true;
+        var logoutPromise = $interval(timeout, twentyMinutes);
+
         $rootScope.$watch(function detectIdle() {
-            $log.warn("Detected a change in the root scope");
             if (intervalCalled) {
                 intervalCalled = false;
             } else {
-                actionSeen = true;
+                $interval.cancel(logoutPromise);
+                logoutPromise = $interval(timeout, twentyMinutes);
+                intervalCalled = true;
             }
         });
 
-        $interval(function checkLogout() {
-            if (!actionSeen) {
-                $log.warn("I'd get called here!");
-                clearCredentials();
-            }
-            actionSeen = false;
-            intervalCalled = true;
-            // -- forces the logout check, instead of waiting for user -- //
-            $log.warn("Ping!");
-        }, twentyMinutes);
+        $rootScope.$on('$destroy', function() { $interval.cancel(logoutPromise); });
 
 
         // -- private const -- //
@@ -57,7 +49,12 @@
         */
         function login () {
             return authenticate();
-        };
+        }
+
+        function timeout() {
+            intervalCalled = true;
+            clearCredentials();
+        }
 
 
         /**
