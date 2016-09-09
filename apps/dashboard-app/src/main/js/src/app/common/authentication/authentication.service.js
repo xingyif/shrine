@@ -9,17 +9,7 @@
     AuthenticationService.$inject = ['$http', '$q', '$app', '$rootScope', '$interval', '$location', '$log'];
     function AuthenticationService ($http, $q, $app, $rootScope, $interval, $location, $log) {
 
-        // -- auto logout on idle -- //
-        var twentyMinutes = 5000;
-        var logoutPromise = $interval(timeout, twentyMinutes);
-
-        $rootScope.$on('$destroy', function() { $interval.cancel(logoutPromise); });
-        $rootScope.$on('$locationChangeStart', function(event) {
-            $log.warn('heyo!');
-            $interval.cancel(logoutPromise);
-            logoutPromise = $interval(timeout, twentyMinutes);
-        });
-
+        idleHandle();
 
         // -- private const -- //
         var Config = {
@@ -37,21 +27,43 @@
         };
 
 
+        function idleHandle() {
+            // -- auto logout on idle -- //
+            var twentyMinutes = 20*60*1000;
+            var logoutPromise = $interval(timeout, twentyMinutes);
+            var navigateBack = false;
+
+            $rootScope.$on('$destroy', function () {
+                $interval.cancel(logoutPromise);
+            });
+            $rootScope.$on('$locationChangeStart', function (event) {
+                if (navigateBack) {
+                    $location.url("/login");
+                    navigateBack = false;
+                }
+                $log.warn('heyo!');
+                $interval.cancel(logoutPromise);
+                logoutPromise = $interval(timeout, twentyMinutes);
+            });
+
+
+            /**
+             * When the interval is called, that means the user has gone idle, so we
+             * clear their credentials then navigate them back to the home page.
+             */
+            function timeout() {
+                clearCredentials();
+                navigateBack = true;
+            }
+        }
+
+
         // -- private methods -- //
         /**
         * Wrapper for authenticate call.
         */
         function login () {
             return authenticate();
-        }
-
-        /**
-         * When the interval is called, that means the user has gone idle, so we
-         * clear their credentials then navigate them back to the home page.
-         */
-        function timeout() {
-            clearCredentials();
-            $location.url("/login")
         }
 
 
