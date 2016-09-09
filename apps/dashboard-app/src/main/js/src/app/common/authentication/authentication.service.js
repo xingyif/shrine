@@ -29,18 +29,13 @@
 
         function idleHandle() {
             // -- auto logout on idle -- //
-            var twentyMinutes = 20*60*1000;
+            var twentyMinutes = 5000;
             var logoutPromise = $interval(timeout, twentyMinutes);
-            var navigateBack = false;
-
+            var idleEvent = 'idleEvent';
             $rootScope.$on('$destroy', function () {
                 $interval.cancel(logoutPromise);
             });
-            $rootScope.$on('$locationChangeStart', function (event) {
-                if (navigateBack) {
-                    $location.url("/login");
-                    navigateBack = false;
-                }
+            $rootScope.$on(idleEvent, function () {
                 $log.warn('heyo!');
                 $interval.cancel(logoutPromise);
                 logoutPromise = $interval(timeout, twentyMinutes);
@@ -53,7 +48,12 @@
              */
             function timeout() {
                 clearCredentials();
-                navigateBack = true;
+                $location.url("/login");
+            }
+
+            $rootScope.idleBroadcast = function() {
+                $rootScope.$broadcast(idleEvent);
+                $log.warn('hello');
             }
         }
 
