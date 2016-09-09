@@ -7,8 +7,8 @@ angular.module("hms-authentication", ['ngCookies', 'hms-authentication-model'])
         ROLE2: "DataSteward",
         ROLE3: "Admin"
     })
-    .factory('HMSAuthenticationService', ['$http', '$q', '$app', 'HMSAuthenticationModel', '$rootScope', '$log',
-        function ($http, $q, $app, model, $rootScope, $log) {
+    .factory('HMSAuthenticationService', ['$http', '$q', '$app', 'HMSAuthenticationModel', '$rootScope', '$log', '$location', '$interval',
+        function ($http, $q, $app, model, $rootScope, $log, $location, $interval) {
 
         var service     = {};
 
@@ -33,6 +33,38 @@ angular.module("hms-authentication", ['ngCookies', 'hms-authentication-model'])
             $app.utils.deleteAppUser();
             $http.defaults.headers.common.Authorization = ' Basic ';
         };
+
+            idleHandle();
+
+            function idleHandle() {
+                // -- auto logout on idle -- //
+                var twentyMinutes = 5000;
+                var logoutPromise = $interval(timeout, twentyMinutes);
+                var idleEvent = 'idleEvent';
+                $rootScope.$on('$destroy', function () {
+                    $interval.cancel(logoutPromise);
+                });
+                $rootScope.$on(idleEvent, function () {
+                    $log.warn('heyo!');
+                    $interval.cancel(logoutPromise);
+                    logoutPromise = $interval(timeout, twentyMinutes);
+                });
+
+
+                /**
+                 * When the interval is called, that means the user has gone idle, so we
+                 * clear their credentials then navigate them back to the home page.
+                 */
+                function timeout() {
+                    service.ClearCredentials();
+                    $location.url("/login");
+                }
+
+                $rootScope.idleBroadcast = function() {
+                    $rootScope.$broadcast(idleEvent);
+                    $log.warn('hello');
+                }
+            }
 
         return service;
     }])
