@@ -46,7 +46,7 @@
 
 
         /**
-:Q         *
+         *
          * @returns {*}
          */
         function getConfig() {

@@ -88,7 +88,7 @@
             summary.isHub           = !Boolean("" == all.notAHub);
             summary.shrineVersion   = all.versionInfo.shrineVersion;
             summary.shrineBuildDate = all.versionInfo.buildDate;
-            summary.ontologyVersion = all.versionInfo.ontologyVersion
+            summary.ontologyVersion = all.versionInfo.ontologyVersion;
             summary.ontologyTerm    = ""; //to be implemented in config.
             summary.adapterOk       = all.adapter.result.response.errorResponse === undefined;
             summary.keystoreOk      = true;
