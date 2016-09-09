@@ -6,25 +6,19 @@
         .factory('AuthenticationService', AuthenticationService)
 
 
-    AuthenticationService.$inject = ['$http', '$q', '$app', '$rootScope', '$interval', '$location'];
-    function AuthenticationService ($http, $q, $app, $rootScope, $interval, $location) {
+    AuthenticationService.$inject = ['$http', '$q', '$app', '$rootScope', '$interval', '$location', '$log'];
+    function AuthenticationService ($http, $q, $app, $rootScope, $interval, $location, $log) {
 
         // -- auto logout on idle -- //
-        var twentyMinutes = 20*60*1000;
-        var intervalCalled = true;
+        var twentyMinutes = 5000;
         var logoutPromise = $interval(timeout, twentyMinutes);
 
-        $rootScope.$watch(function detectIdle() {
-            if (intervalCalled) {
-                intervalCalled = false;
-            } else {
-                $interval.cancel(logoutPromise);
-                logoutPromise = $interval(timeout, twentyMinutes);
-                intervalCalled = true;
-            }
-        });
-
         $rootScope.$on('$destroy', function() { $interval.cancel(logoutPromise); });
+        $rootScope.$on('$locationChangeStart', function(event) {
+            $log.warn('heyo!');
+            $interval.cancel(logoutPromise);
+            logoutPromise = $interval(timeout, twentyMinutes);
+        });
 
 
         // -- private const -- //
@@ -56,7 +50,6 @@
          * clear their credentials then navigate them back to the home page.
          */
         function timeout() {
-            intervalCalled = true;
             clearCredentials();
             $location.url("/login")
         }
