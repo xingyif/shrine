@@ -29,7 +29,7 @@
 
         function idleHandle() {
             // -- auto logout on idle -- //
-            var twentyMinutes = 5000;
+            var twentyMinutes = 20*60*1000;
             var logoutPromise = $interval(timeout, twentyMinutes);
             var idleEvent = 'idleEvent';
             $rootScope.$on('$destroy', function () {
