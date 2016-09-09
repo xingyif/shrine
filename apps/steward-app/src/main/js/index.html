@@ -82,7 +82,7 @@
             </div>
             <div class="col-sm-{{steward.layoutWidth}} shrine-content">
                 <div id="page-wrapper" class="ng-view page-wrapper">
-                    <div ui-view></div>
+                    <div ui-view ng-mousedown="idleBroadcast()"></div>
                 </div>
             </div>
         </div>

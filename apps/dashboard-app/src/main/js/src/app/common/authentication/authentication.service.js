@@ -3,11 +3,11 @@
 
     // -- angular module -- //
     angular.module('shrine.commmon.authentication')
-        .factory('AuthenticationService', AuthenticationService)
+        .factory('AuthenticationService', AuthenticationService);
 
 
-    AuthenticationService.$inject = ['$http', '$q', '$app', '$rootScope', '$interval', '$location', '$log'];
-    function AuthenticationService ($http, $q, $app, $rootScope, $interval, $location, $log) {
+    AuthenticationService.$inject = ['$http', '$q', '$app', '$rootScope', '$interval', '$location'];
+    function AuthenticationService ($http, $q, $app, $rootScope, $interval, $location) {
 
         idleHandle();
 
@@ -36,7 +36,6 @@
                 $interval.cancel(logoutPromise);
             });
             $rootScope.$on(idleEvent, function () {
-                $log.warn('heyo!');
                 $interval.cancel(logoutPromise);
                 logoutPromise = $interval(timeout, twentyMinutes);
             });
@@ -53,7 +52,6 @@
 
             $rootScope.idleBroadcast = function() {
                 $rootScope.$broadcast(idleEvent);
-                $log.warn('hello');
             }
         }
 
