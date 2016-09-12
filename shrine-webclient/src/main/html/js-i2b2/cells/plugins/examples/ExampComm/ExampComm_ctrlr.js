@@ -8,6 +8,8 @@
  * updated 3-3-09: 	Initial Launch [Nick Benik] 
  */
 
+
+
 i2b2.ExampComm.Init = function(loadedDiv) {
 	// this function is called after the HTML is loaded into the viewer DIV
 	var selTrgt = $$("DIV#ExampComm-mainDiv SELECT#ExampComm-objList")[0];

@@ -453,8 +453,6 @@ function QueryToolController() {
 
         }
 
-        //@pcori_webclient
-        //result_output = '<result_output priority_index="11" name="patient_count_xml"/>';
         params.psm_result_output = '<result_output_list>'+result_output+'</result_output_list>\n';
 
         // create query object
