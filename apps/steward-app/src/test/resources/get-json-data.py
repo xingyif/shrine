@@ -7,6 +7,7 @@ def json_print(json_thing):
   print json.dumps(json_thing)
 
 def curl(url_after_steward, user, password):
+  print('called!')
   input = subprocess.check_output([
     "curl",
     "https://shrine-dev1.catalyst:6443/steward/" + url_after_steward,
@@ -14,8 +15,9 @@ def curl(url_after_steward, user, password):
     "--user",
     "%s:%s" % (user, password)
   ])
-  if input == "\"AuthenticationFailed\"":
-    sys.stderr.write("Authentication Failed!\n")
+  print(input)
+  if input == "Authentication Failed":
+    print("Authentication Failed", file=sys.stderr)
     sys.exit()
   else:
     return json.loads(input.decode("utf-8"))
