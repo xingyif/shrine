@@ -1,0 +1,16 @@
+{
+  "name": "shrine-webclient",
+  "version": "1.0.0",
+  "description": "Shrine Web Client Query Tool",
+  "main": "i2b2_config_data.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "‘Ben <benjamin_carmen@hms.harvard.edu>",
+  "license": "MIT",
+  "devDependencies": {
+    "gulp": "^3.9.1",
+    "gulp-server-livereload": "^1.8.2",
+    "xmldom": "^0.1.22"
+  }
+}
