@@ -11,6 +11,7 @@ trait ConfigSource {
   val configName: String
 
   lazy val atomicConfig = new AtomicConfigSource(ConfigFactory.load(configName))
+  atomicConfig.config.resolveWith()
 
   def config: Config = {
     atomicConfig.config

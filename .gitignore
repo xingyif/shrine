@@ -9,6 +9,9 @@ target/
 # emacs cruft
 *.*~
 
+# vim swap files
+*.swp
+
 # javascript artifacts
 **/src/main/js/build/
 **/js/node/
