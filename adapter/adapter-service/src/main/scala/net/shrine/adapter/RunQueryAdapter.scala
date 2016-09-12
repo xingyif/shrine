@@ -34,12 +34,12 @@ final case class RunQueryAdapter(
   dao: AdapterDao,
   override val hiveCredentials: HiveCredentials,
   conceptTranslator: QueryDefinitionTranslator,
-  adapterLockoutAttemptsThreshold: Int,
+  adapterLockoutAttemptsThreshold: Int, //Set to 0 to disable lockout. todo remove in SHRINE 1.24
   doObfuscation: Boolean,
   runQueriesImmediately: Boolean,
   breakdownTypes: Set[ResultOutputType],
   collectAdapterAudit:Boolean,
-  botCountTimeThresholds:Map[Long,Duration]
+  botCountTimeThresholds:Seq[(Long,Duration)]
 ) extends CrcAdapter[RunQueryRequest, RunQueryResponse](poster, hiveCredentials) {
 
   logStartup()

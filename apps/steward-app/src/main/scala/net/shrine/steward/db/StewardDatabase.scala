@@ -8,7 +8,7 @@ import com.typesafe.config.Config
 import net.shrine.authorization.steward.{Date, ExternalQueryId, InboundShrineQuery, InboundTopicRequest, OutboundShrineQuery, OutboundTopic, OutboundUser, QueriesPerUser, QueryContents, QueryHistory, ResearchersTopics, StewardQueryId, StewardsTopics, TopicId, TopicIdAndName, TopicState, TopicStateName, TopicsPerState, UserName, researcherRole, stewardRole}
 import net.shrine.i2b2.protocol.pm.User
 import net.shrine.log.Loggable
-import net.shrine.slick.TestableDataSourceCreator
+import net.shrine.slick.{NeedsWarmUp, TestableDataSourceCreator}
 import net.shrine.steward.{CreateTopicsMode, StewardConfigSource}
 import slick.dbio.Effect.Read
 import slick.driver.JdbcProfile
@@ -41,6 +41,10 @@ case class StewardDatabase(schemaDef:StewardSchema,dataSource: DataSource) exten
     blocking {
       Await.result(future, 10 seconds)
     }
+  }
+
+  def warmUp = {
+    dbRun(allUserQuery.size.result)
   }
 
   def selectUsers:Seq[UserRecord] = {
@@ -234,7 +238,8 @@ case class StewardDatabase(schemaDef:StewardSchema,dataSource: DataSource) exten
       queryRecord.createOutboundShrineQuery(outboundTopic, outboundUser)
     }
 
-    QueryHistory(count,queryParameters.skipOption.getOrElse(0),shrineQueries.map(toOutboundShrineQuery))
+    val result = QueryHistory(count,queryParameters.skipOption.getOrElse(0),shrineQueries.map(toOutboundShrineQuery))
+    result
   }
 
   private def outboundUsersForNamesAction(userNames:Set[UserName]):DBIOAction[Map[UserName, OutboundUser], NoStream, Read] = {
@@ -498,7 +503,7 @@ object StewardSchema {
   val schema = StewardSchema(slickProfile)
 }
 
-object StewardDatabase {
+object StewardDatabase extends NeedsWarmUp {
 
   val dataSource:DataSource = TestableDataSourceCreator.dataSource(StewardSchema.config)
 
@@ -507,6 +512,7 @@ object StewardDatabase {
   val createTablesOnStart = StewardSchema.config.getBoolean("createTablesOnStart")
   if(createTablesOnStart) StewardDatabase.db.createTables()
 
+  override def warmUp() = StewardDatabase.db.warmUp
 }
 
 //API help
@@ -551,7 +557,7 @@ case class ShrineQueryRecord(stewardId: Option[StewardQueryId],
                              stewardResponse:TopicState,
                              date:Date) {
   def createOutboundShrineQuery(outboundTopic:Option[OutboundTopic],outboundUser:OutboundUser): OutboundShrineQuery = {
-    OutboundShrineQuery(stewardId.get,externalId,name,outboundUser,outboundTopic,queryContents,stewardResponse.name,date)
+    OutboundShrineQuery(stewardId.get,externalId,name,outboundUser,outboundTopic,scala.xml.XML.loadString(queryContents),stewardResponse.name,date)
   }
 }
 

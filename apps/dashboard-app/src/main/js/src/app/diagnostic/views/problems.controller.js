@@ -3,7 +3,7 @@
 
 
     // -- register controller with angular -- //
-    angular.module('shrine-tools')
+    angular.module('shrine-tools', ['ui.bootstrap', 'ui.bootstrap.datepicker'])
         .controller('ProblemsController', ProblemsController)
         .directive('myPagination', function () {
             return {
@@ -11,22 +11,29 @@
                 replace: true,
                 templateUrl: 'src/app/diagnostic/templates/my-pagination-template.html'
             }
-        }).directive('myPages', function() {
+        })
+        .directive('myPages', function() {
 
         function rangeGen(max) {
             var result = [];
-            for (var i = 0; i < max; i++) {
+            for (var i = 1; i < max - 1; i++) {
                 result[i] = i + 1;
             }
             return result;
         }
 
 
-        function checkPage(value, activePage, maxPage) {
-            if (!isFinite(value)) {
+        function checkPage(value, activePage, maxPage, minPage) {
+            if (value == '..') {
+                return activePage > 4;
+            } else if (value == '...') {
+                return maxPage - activePage > 4;
+            } else if (!isFinite(value)) {
                 // Anything that's not a number and not an error is fine as a button
                 return !!value;
-            } else if (activePage == 1 || activePage == 2) {
+            } else if (value == maxPage || value == minPage) {
+                return true;
+            } else if (activePage == minPage || activePage == minPage + 1) {
                 return value <= 4;
             } else if (activePage == maxPage || activePage == maxPage - 1) {
                 return maxPage - value < 4;
@@ -41,6 +48,7 @@
             templateUrl: 'src/app/diagnostic/templates/paginator-template.html',
             scope: {
                 maxPage:      '=',
+                minPage:      '=',
                 handleButton: '=',
                 activePage:   '='
             },
@@ -61,14 +69,21 @@
          *
          */
         function init () {
+            vm.date = new Date();
+            vm.isOpen = { 'open': false };
+            vm.pageSizes = [5, 10, 20];
             vm.url = "https://open.med.harvard.edu/wiki/display/SHRINE/";
             vm.submitDate = submitDate;
             vm.newPage = newPage;
             vm.floor = Math.floor;
             vm.handleButton = handleButton;
+            vm.open = function() { vm.isOpen.open = !vm.isOpen.open;};
+            vm.pageSizeCheck = function(n) { return n < vm.probsSize };
             vm.parseDetails = function(details) { return $sce.trustAsHtml(parseDetails(details)) };
             vm.stringify = function(arg) { return JSON.stringify(arg, null, 2); };
-            vm.numCheck = function(any) {return isFinite(any)? (any - 1) * vm.probsN: vm.probsOffset};
+            vm.numCheck = function(any) { return isFinite(any)? (any - 1) * vm.probsN: vm.probsOffset };
+            vm.changePage = function() { vm.newPage(vm.probsOffset, vm.pageSize > 20? 20: vm.pageSize < 0? 0: vm.pageSize) };
+
 
             //todo: Get rid of this and figure out something less hacky
             vm.formatCodec = function(word) {
@@ -84,8 +99,7 @@
         function handleButton(value) {
             var page = function(offset) { newPage(offset, vm.probsN) };
             switch(value) {
-                case '«':
-                    page(0);
+                case '..':
                     break;
                 case '‹':
                     page(vm.probsOffset - vm.probsN);
@@ -93,8 +107,7 @@
                 case '›':
                     page(vm.probsOffset + vm.probsN);
                     break;
-                case '»':
-                    page(vm.probsSize);
+                case '...':
                     break;
                 default:
                     page((value - 1) * vm.probsN);
@@ -112,63 +125,14 @@
             }
         }
 
-        function submitDate(dateString) {
-            if (checkDate(dateString)) {
-                var epoch = new Date(dateString).getTime() + 86400000; // + a day
-                vm.showDateError = false;
-                newPage(vm.probsOffset, vm.probsN, epoch);
-            } else {
-                vm.showDateError = true;
-            }
-        }
-
-        function checkDate(dateString) {
-            try {
-                // Using a try catch here since there are a lot of errors that can happen
-                // that I don't want to deal with
-                var split = dateString.split("-");
-                var month = parseInt(split[1]);
-                var day = parseInt(split[2]);
-                var year = parseInt(split[0]);
-                return split.length == 3 && month <= 12 && month >= 1 &&
-                    year >= 0 && validDay(day, month, year);
-            } catch (err) {
-                return false;
-            }
-        }
-
-        function validDay(day, month, year) {
-            var thirtyOne = [1, 3, 5, 7, 8, 10, 12];
-            var thirty    = [4, 6, 9, 11];
-
-            if (contains(thirtyOne, month)) {
-                return day <= 31 && day >= 1;
-            } else if (contains(thirty, month)) {
-                return day <= 30 && day >= 1;
-            } else if (month == 2 && year % 4 == 0 && (!(year % 100 == 0) || year % 400 == 0)) {
-                // Leap year is every year that is divisible by 4. If it's also divisible by 100, then it's only
-                // A leap year if it is also divisible by 400.
-                return day <= 29 && day >= 1;
-            } else {
-                return day <= 28 && day >= 1;
-            }
-
-        }
-
-        function contains(arr, elem) {
-            for (var i = 0; i < arr.length; i++) {
-                if (arr[i] === elem) {
-                    return true;
-                }
-            }
-            return false;
+        function submitDate() {
+            var epoch = vm.date.getTime() + 86400000; // + a day
+            vm.showDateError = false;
+            newPage(vm.probsOffset, vm.probsN, epoch);
         }
 
 
         function newPage(offset, n, epoch) {
-            if (!(epoch && isFinite(epoch))) {
-                epoch = -1;
-            }
             if (!(n && isFinite(n))) {
                 n = 20;
             }
@@ -193,6 +157,7 @@
             vm.probsSize = probs.size;
             vm.probsOffset = probs.offset;
             vm.probsN = probs.n;
+            vm.pageSize = vm.probsN;
         }
 
         function parseDetails(detailsObject) {

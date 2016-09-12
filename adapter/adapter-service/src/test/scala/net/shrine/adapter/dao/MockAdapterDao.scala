@@ -40,7 +40,7 @@ trait MockAdapterDao extends AdapterDao {
 
   override def findResultsFor(networkQueryId: Long): Option[ShrineQueryResult] = None
 
-  override def checkIfBot(authn:AuthenticationInfo, botTimeThresholds:Map[Long,Duration]): Unit = {}
+  override def checkIfBot(authn:AuthenticationInfo, botTimeThresholds:Seq[(Long,Duration)]): Unit = {}
 
   override def isUserLockedOut(id: AuthenticationInfo, defaultThreshold: Int): Boolean = false
 

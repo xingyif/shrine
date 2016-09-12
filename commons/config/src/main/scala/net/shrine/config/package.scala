@@ -29,7 +29,6 @@ package object config {
       if(self.getBoolean(s"$key.$createFlag")) self.getOptionConfigured(key,constructor)
       else None
     }
-
   }
 
 }

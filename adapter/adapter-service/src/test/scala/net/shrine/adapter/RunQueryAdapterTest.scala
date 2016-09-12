@@ -129,7 +129,7 @@ final class RunQueryAdapterTest extends AbstractSquerylAdapterTest with ShouldMa
       runQueriesImmediately = true,
       breakdownTypes = DefaultBreakdownResultOutputTypes.toSet,
       collectAdapterAudit = false,
-      botCountTimeThresholds = Map.empty //todo this might be the right place to test bot defense
+      botCountTimeThresholds = Seq.empty
     )
 
     val request = RunQueryRequest(projectId, 1.second, authn, expectedNetworkQueryId, Option(topicId), Option(topicName), outputTypes, queryDef)
@@ -247,7 +247,7 @@ final class RunQueryAdapterTest extends AbstractSquerylAdapterTest with ShouldMa
       runQueriesImmediately = true,
       breakdownTypes = DefaultBreakdownResultOutputTypes.toSet,
       collectAdapterAudit = false,
-      botCountTimeThresholds = Map.empty //todo this might be the right place to test bot defense
+      botCountTimeThresholds = Seq.empty
     )
         
     val resp = adapter.processRawCrcRunQueryResponse(networkAuthn, request, rawRunQueryResponse).asInstanceOf[RunQueryResponse]
@@ -334,7 +334,7 @@ final class RunQueryAdapterTest extends AbstractSquerylAdapterTest with ShouldMa
       runQueriesImmediately = false,
       breakdownTypes = DefaultBreakdownResultOutputTypes.toSet,
       collectAdapterAudit = false,
-      botCountTimeThresholds = Map.empty
+      botCountTimeThresholds = Seq.empty
     )
 
     val resp: ErrorResponse = adapter.parseShrineErrorResponseWithFallback(altI2b2ErrorXml).asInstanceOf[ErrorResponse]
@@ -424,7 +424,7 @@ final class RunQueryAdapterTest extends AbstractSquerylAdapterTest with ShouldMa
       runQueriesImmediately = true,
       breakdownTypes = DefaultBreakdownResultOutputTypes.toSet,
       collectAdapterAudit = false,
-      botCountTimeThresholds = Map.empty //todo this might be the right place to test bot defense
+      botCountTimeThresholds = Seq.empty
     )
 
     val resp = adapter.parseShrineErrorResponseWithFallback(xml).asInstanceOf[ErrorResponse]
@@ -481,7 +481,7 @@ final class RunQueryAdapterTest extends AbstractSquerylAdapterTest with ShouldMa
       runQueriesImmediately = true,
       breakdownTypes = DefaultBreakdownResultOutputTypes.toSet,
       collectAdapterAudit = false,
-      botCountTimeThresholds = Map.empty
+      botCountTimeThresholds = Seq.empty
     )
 
     val queryDefinition = QueryDefinition("foo", Term("blah"))
@@ -520,7 +520,7 @@ final class RunQueryAdapterTest extends AbstractSquerylAdapterTest with ShouldMa
       runQueriesImmediately = true,
       breakdownTypes = DefaultBreakdownResultOutputTypes.toSet,
       collectAdapterAudit = false,
-      botCountTimeThresholds = Map.empty //todo this might be the right place to test bot defense
+      botCountTimeThresholds = Seq.empty
     )
 
     val queryDefinition = QueryDefinition("10-17 years old@14:39:20", OccuranceLimited(1, Term("network")))
@@ -544,7 +544,7 @@ final class RunQueryAdapterTest extends AbstractSquerylAdapterTest with ShouldMa
       runQueriesImmediately = false,
       breakdownTypes = DefaultBreakdownResultOutputTypes.toSet,
       collectAdapterAudit = false,
-      botCountTimeThresholds = Map.empty //todo this might be the right place to test bot defense
+      botCountTimeThresholds = Seq.empty
     )
 
     val networkAuthn = AuthenticationInfo("nd", "nu", Credential("np", false))
@@ -958,7 +958,7 @@ final class RunQueryAdapterTest extends AbstractSquerylAdapterTest with ShouldMa
       runQueriesImmediately = true,
       breakdownTypes = DefaultBreakdownResultOutputTypes.toSet,
       collectAdapterAudit = false,
-      botCountTimeThresholds = Map.empty
+      botCountTimeThresholds = Seq.empty
     )
 
     import scala.concurrent.duration._

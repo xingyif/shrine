@@ -52,7 +52,7 @@ trait AdapterDao {
   /**
     * @throws BotDetectedException if it detects a bot attack
     */
-  def checkIfBot(authn:AuthenticationInfo, countTimeThresholds:Map[Long,Duration]): Unit
+  def checkIfBot(authn:AuthenticationInfo, countTimeThresholds:Seq[(Long,Duration)]): Unit
 
   def renameQuery(networkQueryId: Long, newName: String): Unit
   
@@ -87,5 +87,5 @@ case class BotDetectedException(domain:String,
                                 sinceMs:Long,
                                 limit:Long) extends Exception() {
 
-  override def getMessage = s"$domain:$username has run $detectedCount queries since ${new Date(sinceMs)}, more than the limit of $limit"
+  override def getMessage = s"$domain:$username has already run $detectedCount queries since ${new Date(sinceMs)}. The limit is $limit"
 }

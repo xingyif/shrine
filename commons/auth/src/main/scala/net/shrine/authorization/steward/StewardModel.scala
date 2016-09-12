@@ -5,9 +5,13 @@ import java.lang.reflect.Field
 import net.shrine.i2b2.protocol.pm.User
 import net.shrine.log.Loggable
 import net.shrine.protocol.Credential
+import net.shrine.serialization.NodeSeqSerializer
+import org.json4s.{DefaultFormats, Formats}
 import spray.http.{StatusCode, StatusCodes}
+import spray.httpx.Json4sSupport
 
 import scala.util.{Failure, Try}
+import scala.xml.NodeSeq
 
 /**
  * Data model for the data steward.
@@ -105,9 +109,11 @@ case class OutboundShrineQuery(
                                 name:String,
                                 user:OutboundUser,
                                 topic:Option[OutboundTopic],
-                                queryContents: QueryContents,
+                                queryContents: NodeSeq,
                                 stewardResponse:TopicStateName,
-                                date:Date) {
+                                date:Date)
+extends Json4sSupport
+{
   def differences(other:OutboundShrineQuery):Seq[(String,Any,Any)] = {
     if (this == other) List()
     else {
@@ -125,7 +131,9 @@ case class OutboundShrineQuery(
       val tuples = names.zip(thisUnapplied.zip(otherUnapplied))
 
       def difference(name:String,one:Any,other:Any):Option[(String,Any,Any)] = {
-        if(one == other) None
+        // TODO: Remove this horrible string equality hack.
+        if(one == other || one.isInstanceOf[NodeSeq] && other.isInstanceOf[NodeSeq] && one.toString == other.toString)
+          None
         else {
           Some((name,one,other))
         }
@@ -135,16 +143,15 @@ case class OutboundShrineQuery(
   }
 
   def differencesExceptTimes(other:OutboundShrineQuery):Seq[(String,Any,Any)] = {
-    val diffWihtoutTimes = differences(other).filterNot(x => x._1 == "date").filterNot(x => x._1 == "topic")
-
+    val diffWithoutTimes = differences(other).filterNot(x => x._1 == "date").filterNot(x => x._1 == "topic")
     val topicDiffs:Seq[(String,Any,Any)] = (topic,other.topic) match {
       case (None,None) => Seq.empty[(String,Any,Any)]
       case (Some(thisTopic),Some(otherTopic)) => thisTopic.differencesExceptTimes(otherTopic)
       case _ => Seq(("topic",this.topic,other.topic))
     }
-    diffWihtoutTimes ++ topicDiffs
+    diffWithoutTimes ++ topicDiffs
   }
-
+  override implicit def json4sFormats: Formats = DefaultFormats + new NodeSeqSerializer
 }
 
 case class QueriesPerUser(total:Int,queriesPerUser:Seq[(OutboundUser,Int)]) //todo rename QueriesPerResearcher
@@ -170,7 +177,8 @@ case class StewardsTopics(totalCount:Int,skipped:Int,topics:Seq[OutboundTopic]) 
   }
 }
 
-case class QueryHistory(totalCount:Int,skipped:Int,queryRecords:Seq[OutboundShrineQuery]){
+case class QueryHistory(totalCount:Int,skipped:Int,queryRecords:Seq[OutboundShrineQuery]) extends Json4sSupport {
+
   def sameExceptForTimes(queryResponse: QueryHistory):Boolean = {
     (totalCount == queryResponse.totalCount) &&
       (skipped == queryResponse.skipped) &&
@@ -207,10 +215,9 @@ case class QueryHistory(totalCount:Int,skipped:Int,queryRecords:Seq[OutboundShri
   def differencesExceptTimes(other:QueryHistory):Seq[(String,Any,Any)] = {
     val normalDiffs:Seq[(String,Any,Any)] = differences(other).filterNot(x => x._1 == "queryRecords")
     val timeDiffs:Seq[(String,Any,Any)] = queryRecords.zip(other.queryRecords).flatMap(x => x._1.differencesExceptTimes(x._2))
-
     normalDiffs ++ timeDiffs
   }
-
+  override implicit def json4sFormats: Formats = DefaultFormats + new NodeSeqSerializer
 }
 
 case class TopicIdAndName(id:String,name:String)

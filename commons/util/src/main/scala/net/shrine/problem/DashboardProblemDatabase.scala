@@ -4,7 +4,7 @@ import java.util.concurrent.TimeoutException
 import javax.sql.DataSource
 
 import com.typesafe.config.Config
-import net.shrine.slick.{CouldNotRunDbIoActionException, TestableDataSourceCreator}
+import net.shrine.slick.{CouldNotRunDbIoActionException, NeedsWarmUp, TestableDataSourceCreator}
 import slick.dbio.SuccessAction
 import slick.driver.JdbcProfile
 import slick.jdbc.meta.MTable
@@ -21,7 +21,7 @@ import scala.xml.XML
   * @author ty
   * @since 07/16
   */
-object Problems {
+object Problems extends NeedsWarmUp {
   val config:Config = ProblemConfigSource.config.getConfig("shrine.dashboard.database")
   val slickProfile:JdbcProfile = ProblemConfigSource.getObject("slickProfileClassName", config)
 
@@ -46,6 +46,9 @@ object Problems {
     db
   }
 
+
+  def warmUp = DatabaseConnector.runBlocking(Queries.length.result)
+
   /**
     * The Problems Table. This is the table schema.
     */
@@ -55,7 +58,7 @@ object Problems {
     def stampText = column[String]("stampText")
     def summary = column[String]("summary")
     def description = column[String]("description")
-    def xml = column[String]("detailsXml", O.SqlType("Clob"))
+    def xml = column[String]("detailsXml")
     def epoch= column[Long]("epoch")
     // projection between table row and problem digest
     def * = (id, codec, stampText, summary, description, xml, epoch) <> (rowToProblem, problemToRow)
@@ -182,6 +185,7 @@ object Problems {
     def insertProblem(problem: ProblemDigest, timeout: Duration = new FiniteDuration(15, SECONDS)) = {
       runBlocking(Queries += problem, timeout)
     }
+
   }
 }
 

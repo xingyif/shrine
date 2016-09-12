@@ -96,10 +96,11 @@ final class NetworkSimulationTest extends AbstractSquerylAdapterTest with Should
       runQueriesImmediately = false,
       breakdownTypes = DefaultBreakdownResultOutputTypes.toSet,
       collectAdapterAudit = false,
-      botCountTimeThresholds = Map.empty //todo this might be the right place to test bot defense
+      botCountTimeThresholds = Seq.empty
     )
   }
 
+  //todo this looks unused
   private def immediatelyRunsQueriesRunQueryAdapter(setSize: Long): RunQueryAdapter = {
     val mockCrcPoster = Poster("http://example.com", new HttpClient {
       override def post(input: String, url: String): HttpResponse = {

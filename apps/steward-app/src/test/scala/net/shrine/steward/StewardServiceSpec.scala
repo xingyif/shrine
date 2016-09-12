@@ -1,18 +1,19 @@
 package net.shrine.steward
 
-import net.shrine.authorization.steward.{TopicsPerState, QueriesPerUser, InboundTopicRequest, InboundShrineQuery, QueryHistory, StewardsTopics, ResearchersTopics, OutboundShrineQuery, TopicState, OutboundUser, OutboundTopic, stewardRole}
+import net.shrine.authorization.steward._
 import net.shrine.i2b2.protocol.pm.User
 import net.shrine.protocol.Credential
-import net.shrine.steward.db.{QueryParameters, UserRecord, StewardDatabase}
+import net.shrine.steward.db.{QueryParameters, StewardDatabase, UserRecord}
 import org.json4s.native.JsonMethods.parse
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
-import org.scalatest.{Suite, BeforeAndAfterEach, FlatSpec}
+import org.scalatest.{BeforeAndAfterEach, FlatSpec, Suite}
 import spray.http.BasicHttpCredentials
 import spray.routing.MalformedRequestContentRejection
-
 import spray.testkit.ScalatestRouteTest
-import spray.http.StatusCodes.{OK,UnavailableForLegalReasons,Accepted,Unauthorized,UnprocessableEntity,NotFound,Forbidden,PermanentRedirect}
+import spray.http.StatusCodes._
+
+import scala.xml.{Elem, NodeSeq}
 
 
 @RunWith(classOf[JUnitRunner])
@@ -64,6 +65,9 @@ class StewardServiceTest extends FlatSpec with ScalatestRouteTest with TestWithD
 
   val uncontroversialTopic = OutboundTopic(1,"UncontroversialKidneys","Study kidneys without controversy",researcherOutboundUser,0L,TopicState.pending.name,researcherOutboundUser,0L)
   val forbiddenTopicId = 0
+  private val queryContent: QueryContents = "<queryDefinition><name>18-34 years old@18:31:51</name><expr><term>\\\\SHRINE\\SHRINE\\Demographics\\Age\\18-34 years old\\</term></expr></queryDefinition>"
+  val diffs = List.empty
+  val getItBack:NodeSeq = scala.xml.XML.loadString(queryContent)
 
   "StewardService" should  "return an OK and the correct createTopicsMode name" in {
 
@@ -412,6 +416,7 @@ class StewardServiceTest extends FlatSpec with ScalatestRouteTest with TestWithD
       }
     }
 
+
   "StewardService" should "return the list of a researcher's query history as Json" in {
 
       StewardDatabase.db.upsertUser(researcherUser)
@@ -419,8 +424,9 @@ class StewardServiceTest extends FlatSpec with ScalatestRouteTest with TestWithD
 
       StewardDatabase.db.createRequestForTopicAccess(researcherUser,InboundTopicRequest(uncontroversialTopic.name,uncontroversialTopic.description))
       StewardDatabase.db.changeTopicState(1,TopicState.approved,stewardUserName)
-      StewardDatabase.db.logAndCheckQuery(researcherUserName,Some(1),InboundShrineQuery(0,"test query","Can we get it back?"))
+      StewardDatabase.db.logAndCheckQuery(researcherUserName,Some(1),InboundShrineQuery(0,"test query",queryContent))
 
+      
       Get(s"/researcher/queryHistory") ~>
         addCredentials(researcherCredentials) ~> route ~> check {
         assertResult(OK)(status)
@@ -428,11 +434,12 @@ class StewardServiceTest extends FlatSpec with ScalatestRouteTest with TestWithD
         val queriesJson = new String(body.data.toByteArray)
         val queries = parse(queriesJson).extract[QueryHistory]
 
-        assertResult(List.empty)(QueryHistory(1,0,List(
-          OutboundShrineQuery(1,0,"test query",researcherOutboundUser,Some(
-            OutboundTopic(1,uncontroversialTopic.name,uncontroversialTopic.description,researcherOutboundUser,0,TopicState.approved.name,stewardOutboundUser,0)
-          ),"Can we get it back?",TopicState.approved.name,0)
-        )).differencesExceptTimes(queries))
+        val history: QueryHistory = QueryHistory(1, 0, List(
+          OutboundShrineQuery(1, 0, "test query", researcherOutboundUser, Some(
+            OutboundTopic(1, uncontroversialTopic.name, uncontroversialTopic.description, researcherOutboundUser, 0, TopicState.approved.name, stewardOutboundUser, 0)
+          ), getItBack, TopicState.approved.name, 0)
+        ))
+        assertResult(diffs)(history.differencesExceptTimes(queries))
       }
     }
 
@@ -443,7 +450,7 @@ class StewardServiceTest extends FlatSpec with ScalatestRouteTest with TestWithD
 
     StewardDatabase.db.createRequestForTopicAccess(researcherUser,InboundTopicRequest(uncontroversialTopic.name,uncontroversialTopic.description))
     StewardDatabase.db.changeTopicState(1,TopicState.approved,stewardUserName)
-    StewardDatabase.db.logAndCheckQuery(researcherUserName,Some(1),InboundShrineQuery(0,"test query","<content>Can we get it back?</content>"))
+    StewardDatabase.db.logAndCheckQuery(researcherUserName,Some(1),InboundShrineQuery(0,"test query",queryContent))
 
     Get(s"/researcher/queryHistory?asJson=true") ~>
       addCredentials(researcherCredentials) ~> route ~> check {
@@ -452,10 +459,10 @@ class StewardServiceTest extends FlatSpec with ScalatestRouteTest with TestWithD
       val queriesJson = new String(body.data.toByteArray)
       val queries = parse(queriesJson).extract[QueryHistory]
 
-      assertResult(Vector(("queryContents", "Can we get it back?", "{\"content\":\"Can we get it back?\"}")))(QueryHistory(1,0,List(
+      assertResult(diffs)(QueryHistory(1,0,List(
         OutboundShrineQuery(1,0,"test query",researcherOutboundUser,Some(
           OutboundTopic(1,uncontroversialTopic.name,uncontroversialTopic.description,researcherOutboundUser,0,TopicState.approved.name,stewardOutboundUser,0)
-        ),"Can we get it back?",TopicState.approved.name,0)
+        ),getItBack,TopicState.approved.name,0)
       )).differencesExceptTimes(queries))
     }
   }
@@ -470,8 +477,8 @@ class StewardServiceTest extends FlatSpec with ScalatestRouteTest with TestWithD
       StewardDatabase.db.createRequestForTopicAccess(researcherUser,InboundTopicRequest("Forbidden topic","No way is the data steward going for this"))
       StewardDatabase.db.changeTopicState(2,TopicState.rejected,stewardUserName)
 
-      StewardDatabase.db.logAndCheckQuery(researcherUserName,Some(1),InboundShrineQuery(0,"test query","Can we get it back?"))
-      StewardDatabase.db.logAndCheckQuery(researcherUserName,Some(2),InboundShrineQuery(1,"forbidden query","Can we get it back?"))
+      StewardDatabase.db.logAndCheckQuery(researcherUserName,Some(1),InboundShrineQuery(0,"test query",queryContent))
+      StewardDatabase.db.logAndCheckQuery(researcherUserName,Some(2),InboundShrineQuery(1,"forbidden query",queryContent))
 
       Get(s"/researcher/queryHistory?state=Approved") ~>
         addCredentials(researcherCredentials) ~> route ~> check {
@@ -480,7 +487,11 @@ class StewardServiceTest extends FlatSpec with ScalatestRouteTest with TestWithD
         val queriesJson = new String(body.data.toByteArray)
         val queries = parse(queriesJson).extract[QueryHistory]
 
-        assertResult(List.empty)(QueryHistory(1,0,List(OutboundShrineQuery(1,0,"test query",researcherOutboundUser,Some(OutboundTopic(1,uncontroversialTopic.name,uncontroversialTopic.description,researcherOutboundUser,0,TopicState.approved.name,stewardOutboundUser,0)),"Can we get it back?",TopicState.approved.name,0))).differencesExceptTimes(queries))
+        assertResult(diffs)(
+          QueryHistory(1,0,List(OutboundShrineQuery(1,0,"test query",researcherOutboundUser,Some(OutboundTopic(
+            1,uncontroversialTopic.name,uncontroversialTopic.description,researcherOutboundUser,0,
+            TopicState.approved.name,stewardOutboundUser,0)),getItBack,TopicState.approved.name,0)))
+            .differencesExceptTimes(queries))
       }
     }
 
@@ -748,7 +759,7 @@ class StewardServiceTest extends FlatSpec with ScalatestRouteTest with TestWithD
       StewardDatabase.db.upsertUser(researcherUser)
       StewardDatabase.db.upsertUser(stewardUser)
 
-      StewardDatabase.db.logAndCheckQuery(researcherUserName,Some(1),InboundShrineQuery(0,"test query for unknown topic","Can we get it back?"))
+      StewardDatabase.db.logAndCheckQuery(researcherUserName,Some(1),InboundShrineQuery(0,"test query for unknown topic",queryContent))
 
       Get(s"/researcher/queryHistory") ~>
         addCredentials(researcherCredentials) ~> route ~> check {
@@ -757,7 +768,7 @@ class StewardServiceTest extends FlatSpec with ScalatestRouteTest with TestWithD
         val queriesJson = new String(body.data.toByteArray)
         val queries = parse(queriesJson).extract[QueryHistory]
 
-        assertResult(List.empty)(QueryHistory(1,0,List(OutboundShrineQuery(1,0,"test query for unknown topic",researcherOutboundUser,None,"Can we get it back?",TopicState.unknownForUser.name,0))).differencesExceptTimes(queries))
+        assertResult(diffs)(QueryHistory(1,0,List(OutboundShrineQuery(1,0,"test query for unknown topic",researcherOutboundUser,None,getItBack,TopicState.unknownForUser.name,0))).differencesExceptTimes(queries))
       }
     }
 
@@ -986,7 +997,7 @@ class StewardServiceTest extends FlatSpec with ScalatestRouteTest with TestWithD
 
     StewardDatabase.db.createRequestForTopicAccess(researcherUser,InboundTopicRequest(uncontroversialTopic.name,uncontroversialTopic.description))
     StewardDatabase.db.changeTopicState(1,TopicState.approved,stewardUserName)
-    StewardDatabase.db.logAndCheckQuery(researcherUserName,Some(1),InboundShrineQuery(0,"test query","Can we get it back?"))
+    StewardDatabase.db.logAndCheckQuery(researcherUserName,Some(1),InboundShrineQuery(0,"test query",queryContent))
 
     Get(s"/steward/queryHistory") ~>
       addCredentials(stewardCredentials) ~>
@@ -997,8 +1008,11 @@ class StewardServiceTest extends FlatSpec with ScalatestRouteTest with TestWithD
         val queriesJson = new String(body.data.toByteArray)
         val queries = parse(queriesJson).extract[QueryHistory]
 
-        assertResult(List.empty)(QueryHistory(1,0,List(OutboundShrineQuery(1,0,"test query",researcherOutboundUser,Some(
-          OutboundTopic(1,uncontroversialTopic.name,uncontroversialTopic.description,researcherOutboundUser,0,TopicState.approved.name,stewardOutboundUser,0)),"Can we get it back?",TopicState.approved.name,0))).differencesExceptTimes(queries))
+        assertResult(diffs) (
+          QueryHistory(1,0,List(OutboundShrineQuery(1,0,"test query",researcherOutboundUser,Some(
+          OutboundTopic(1,uncontroversialTopic.name,uncontroversialTopic.description,researcherOutboundUser,0,
+            TopicState.approved.name,stewardOutboundUser,0)),getItBack,TopicState.approved.name,0)))
+            .differencesExceptTimes(queries))
       }
     }
 
@@ -1009,7 +1023,7 @@ class StewardServiceTest extends FlatSpec with ScalatestRouteTest with TestWithD
 
     StewardDatabase.db.createRequestForTopicAccess(researcherUser,InboundTopicRequest(uncontroversialTopic.name,uncontroversialTopic.description))
     StewardDatabase.db.changeTopicState(1,TopicState.approved,stewardUserName)
-    StewardDatabase.db.logAndCheckQuery(researcherUserName,Some(1),InboundShrineQuery(0,"test query","Can we get it back?"))
+    StewardDatabase.db.logAndCheckQuery(researcherUserName,Some(1),InboundShrineQuery(0,"test query",queryContent))
 
     Get(s"/steward/queryHistory/user/${researcherUserName}") ~>
       addCredentials(stewardCredentials) ~>
@@ -1019,7 +1033,11 @@ class StewardServiceTest extends FlatSpec with ScalatestRouteTest with TestWithD
         val queriesJson = new String(body.data.toByteArray)
         val queries = parse(queriesJson).extract[QueryHistory]
 
-        assertResult(List.empty)(QueryHistory(1,0,List(OutboundShrineQuery(1,0,"test query",researcherOutboundUser,Some(OutboundTopic(1,uncontroversialTopic.name,uncontroversialTopic.description,researcherOutboundUser,0,TopicState.approved.name,stewardOutboundUser,0)),"Can we get it back?",TopicState.approved.name,0))).differencesExceptTimes(queries))
+        assertResult(diffs)(
+          QueryHistory(1,0,List(OutboundShrineQuery(1,0,"test query",researcherOutboundUser,Some(OutboundTopic(
+            1,uncontroversialTopic.name,uncontroversialTopic.description,researcherOutboundUser,0,
+            TopicState.approved.name,stewardOutboundUser,0)),getItBack,TopicState.approved.name,0)))
+            .differencesExceptTimes(queries))
       }
     }
 
@@ -1315,12 +1333,12 @@ not an actual .war or .jar. Works on the actual server.
     StewardDatabase.db.createRequestForTopicAccess(researcherUser,InboundTopicRequest("Forbidden topic","No way is the data steward going for this"))
     StewardDatabase.db.changeTopicState(2,TopicState.rejected,stewardUserName)
 
-    StewardDatabase.db.logAndCheckQuery(researcherUserName,Some(1),InboundShrineQuery(0,"A test query","Can we get it back?"))
-    StewardDatabase.db.logAndCheckQuery(researcherUserName,Some(2),InboundShrineQuery(1,"B forbidden query","Can we get it back?"))
-    StewardDatabase.db.logAndCheckQuery(researcherUserName,Some(1),InboundShrineQuery(2," C test query","Can we get it back?"))
-    StewardDatabase.db.logAndCheckQuery(researcherUserName,Some(2),InboundShrineQuery(3,"4 forbidden query","Can we get it back?"))
-    StewardDatabase.db.logAndCheckQuery(researcherUserName,Some(1),InboundShrineQuery(4,"7 test query","Can we get it back?"))
-    StewardDatabase.db.logAndCheckQuery(researcherUserName,Some(2),InboundShrineQuery(5,"% forbidden query","Can we get it back?"))
+    StewardDatabase.db.logAndCheckQuery(researcherUserName,Some(1),InboundShrineQuery(0,"A test query",queryContent))
+    StewardDatabase.db.logAndCheckQuery(researcherUserName,Some(2),InboundShrineQuery(1,"B forbidden query",queryContent))
+    StewardDatabase.db.logAndCheckQuery(researcherUserName,Some(1),InboundShrineQuery(2," C test query",queryContent))
+    StewardDatabase.db.logAndCheckQuery(researcherUserName,Some(2),InboundShrineQuery(3,"4 forbidden query",queryContent))
+    StewardDatabase.db.logAndCheckQuery(researcherUserName,Some(1),InboundShrineQuery(4,"7 test query",queryContent))
+    StewardDatabase.db.logAndCheckQuery(researcherUserName,Some(2),InboundShrineQuery(5,"% forbidden query",queryContent))
   }
 
 }
