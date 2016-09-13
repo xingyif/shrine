@@ -60,6 +60,7 @@ class ProblemCreation extends FlatSpec with Matchers {
     URL.setURLStreamHandlerFactory(new BogusUrlFactory)
     val db = Problems.DatabaseConnector
     val queries = Problems.Queries
+    db.runBlocking(db.IO.resetTable)
     val problemSize = () => db.runBlocking(queries.size.result)
 
     problemSize() shouldBe 0

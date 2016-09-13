@@ -11,7 +11,7 @@ import net.shrine.source.ConfigSource
   */
 
 object StewardConfigSource extends ConfigSource {
-  override val configName = "steward"
+  override val configName = "shrine"
   val createTopicsModeConfigKey = "shrine.steward.createTopicsMode"
   def createTopicsInState:CreateTopicsMode = CreateTopicsMode.namesToCreateTopicsMode(config.getString(createTopicsModeConfigKey))
 

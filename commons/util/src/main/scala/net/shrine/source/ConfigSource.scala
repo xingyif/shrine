@@ -8,7 +8,7 @@ import com.typesafe.config.{Config, ConfigFactory}
   */
 trait ConfigSource {
 
-  val configName: String
+  val configName: String = "shrine"
 
   lazy val atomicConfig = new AtomicConfigSource(ConfigFactory.load(configName))
 

@@ -10,5 +10,5 @@ import net.shrine.source.ConfigSource
  */
 
 object DashboardConfigSource extends ConfigSource {
-  override val configName = "dashboard"
+  override val configName = "shrine"
 }

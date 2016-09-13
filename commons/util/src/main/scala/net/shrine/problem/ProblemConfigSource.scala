@@ -10,7 +10,7 @@ import net.shrine.source.ConfigSource
   * @since 7/22/16
   */
 object ProblemConfigSource extends ConfigSource {
-  override val configName: String = "dashboard"
+  override val configName: String = "shrine"
 
   def getObject[T](path: String, config:Config):T = {
     objectForName(config.getString(path))
