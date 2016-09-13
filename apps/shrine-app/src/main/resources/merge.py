@@ -28,6 +28,14 @@ def scan_errors(config1, config2, path="", output=sys.stderr):
     if key in config2:
       compare_fields(value, config2[key], key if path == "" else path + "." + key)
 
+def check_error(conf1, conf2):
+  io = StringIO()
+  scan_errors(conf1, conf2, output=io)
+  a = str(io.read())
+  if a:
+    print(a, file=sys.stderr)
+    sys.exit()
+
 
 def compare_fields(field1, field2, path, output=sys.stderr):
   if is_dict(field1) and is_dict(field2):
@@ -55,14 +63,25 @@ def merge(config1, config2):
 def write_file(config, file_name):
   print(HOCONConverter.convert(config, 'hocon'), file=open(file_name, 'w'))
 
+def split_period(string):
+  return string.split(".")[0]
 
-conf1 = parse_file(sys.argv[1])
-conf2 = parse_file(sys.argv[2])
-io = StringIO()
-scan_errors(conf1, conf2, output=io)
-a = str(io.read())
-if a:
-  print(a)
+if len(sys.argv) < 3:
+  print("Please enter the conf files to merge", file=sys.stderr)
   sys.exit()
+
+arg1 = sys.argv[1]
+arg2 = sys.argv[2]
+arg3 = sys.argv[3] if len(sys.argv) > 3 else None
+conf1 = parse_file(arg1)
+conf2 = parse_file(arg2)
+conf3 = parse_file(arg3) if arg3 else None
+check_error(conf1, conf2)
+if conf3:
+  check_error(conf1, conf3)
+  check_error(conf2, conf3)
+
+if not conf3:
+  write_file(merge(conf1, conf2), split_period(arg1) + '+' + arg2)
 else:
-  write_file(merge(conf1, conf2), sys.argv[1].split(".")[0] + '+' + sys.argv[2])
+  write_file(merge(merge(conf1, conf2), conf3), "{}+{}+{}".format(split_period(arg1), split_period(arg2), arg3))
