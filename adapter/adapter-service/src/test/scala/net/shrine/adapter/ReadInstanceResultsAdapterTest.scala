@@ -20,7 +20,8 @@ final class ReadInstanceResultsAdapterTest extends
         dao,
         true,
         DefaultBreakdownResultOutputTypes.toSet,
-        collectAdapterAudit = false
+        collectAdapterAudit = false,
+        obfuscator = Obfuscator(1,1.3,3)
       ),
 	    (queryId, authn) => ReadInstanceResultsRequest("some-project-id", 10.seconds, authn, queryId), 
 	    ReadInstanceResultsResponse.unapply) {

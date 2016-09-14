@@ -1,10 +1,8 @@
 package net.shrine.adapter
 
 import net.shrine.adapter.dao.AdapterDao
-import net.shrine.protocol.{HiveCredentials, BroadcastMessage, ErrorResponse, ReadQueryResultRequest, ReadQueryResultResponse, ResultOutputType}
-import net.shrine.serialization.XmlMarshaller
-import net.shrine.client.HttpClient
 import net.shrine.client.Poster
+import net.shrine.protocol.{HiveCredentials, ReadQueryResultRequest, ReadQueryResultResponse, ResultOutputType}
 
 
 /**
@@ -18,16 +16,18 @@ final class ReadQueryResultAdapter(
 	dao: AdapterDao,
 	doObfuscation: Boolean,
 	breakdownTypes: Set[ResultOutputType],
-	collectAdapterAudit:Boolean
+	collectAdapterAudit:Boolean,
+	obfuscator: Obfuscator
 ) extends AbstractReadQueryResultAdapter[ReadQueryResultRequest, ReadQueryResultResponse](
-	poster,
-	hiveCredentials,
-	dao,
-	doObfuscation,
-	_.queryId,
-	_.projectId,
-	ReadQueryResultResponse(_, _),
-	breakdownTypes,
-	collectAdapterAudit
+	poster = poster,
+	hiveCredentials = hiveCredentials,
+	dao = dao,
+	doObfuscation = doObfuscation,
+	getQueryId = _.queryId,
+	getProjectId = _.projectId,
+	toResponse = ReadQueryResultResponse(_, _),
+	breakdownTypes = breakdownTypes,
+	collectAdapterAudit = collectAdapterAudit,
+	obfuscator = obfuscator
 )
 

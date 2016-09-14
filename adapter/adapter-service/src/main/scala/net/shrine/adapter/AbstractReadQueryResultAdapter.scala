@@ -13,13 +13,11 @@ import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
 import scala.xml.NodeSeq
-import net.shrine.adapter.Obfuscator.obfuscateResults
 import net.shrine.adapter.dao.AdapterDao
 import net.shrine.adapter.dao.model.Breakdown
 import net.shrine.adapter.dao.model.ShrineQueryResult
 import net.shrine.protocol.{AuthenticationInfo, BaseShrineRequest, BroadcastMessage, ErrorResponse, HasQueryResults, HiveCredentials, QueryResult, ReadResultRequest, ReadResultResponse, ResultOutputType, ShrineRequest, ShrineResponse}
 import net.shrine.protocol.query.QueryDefinition
-import net.shrine.util.StackTrace
 import net.shrine.util.Tries.sequence
 
 import scala.concurrent.duration.Duration
@@ -47,7 +45,8 @@ abstract class AbstractReadQueryResultAdapter[Req <: BaseShrineRequest, Rsp <: S
   getProjectId: Req => String,
   toResponse: (Long, QueryResult) => Rsp,
   breakdownTypes: Set[ResultOutputType],
-  collectAdapterAudit:Boolean
+  collectAdapterAudit:Boolean,
+  obfuscator:Obfuscator
 ) extends WithHiveCredentialsAdapter(hiveCredentials) {
 
   //TODO: Make this configurable 
@@ -229,7 +228,7 @@ abstract class AbstractReadQueryResultAdapter[Req <: BaseShrineRequest, Rsp <: S
 
       val queryResultWithBreakdowns = countQueryResult.withBreakdowns(breakdownsByType)
 
-      val queryResultToReturn = if(doObfuscation) Obfuscator.obfuscate(queryResultWithBreakdowns) else queryResultWithBreakdowns 
+      val queryResultToReturn = if(doObfuscation) obfuscator.obfuscate(queryResultWithBreakdowns) else queryResultWithBreakdowns
       
       toResponse(queryId, queryResultToReturn)
     }
@@ -253,7 +252,7 @@ abstract class AbstractReadQueryResultAdapter[Req <: BaseShrineRequest, Rsp <: S
 
   private def storeResult(shrineQueryResult: ShrineQueryResult, response: Rsp, authn: AuthenticationInfo, queryId: Long, failedBreakdownTypes: Set[ResultOutputType]) {
     val rawResults = response.results
-    val obfuscatedResults = obfuscateResults(doObfuscation)(response.results)
+    val obfuscatedResults = obfuscator.obfuscateResults(doObfuscation)(response.results)
 
     for {
       shrineQuery <- dao.findQueryByNetworkId(queryId)
@@ -278,7 +277,7 @@ abstract class AbstractReadQueryResultAdapter[Req <: BaseShrineRequest, Rsp <: S
     override protected def parseShrineResponse(xml: NodeSeq): ShrineResponse = unmarshaller(breakdownTypes)(xml).get //TODO: Avoid .get call
   }
 
-  private lazy val delegateResultRetrievingAdapter = new DelegateAdapter[ReadResultRequest, ReadResultResponse](ReadResultResponse.fromI2b2 _)
+  private lazy val delegateResultRetrievingAdapter = new DelegateAdapter[ReadResultRequest, ReadResultResponse](ReadResultResponse.fromI2b2)
 }
 
 case class QueryNotFound(queryId:Long) extends AbstractProblem(ProblemSources.Adapter) {

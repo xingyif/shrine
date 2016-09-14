@@ -39,7 +39,8 @@ final case class RunQueryAdapter(
   runQueriesImmediately: Boolean,
   breakdownTypes: Set[ResultOutputType],
   collectAdapterAudit:Boolean,
-  botCountTimeThresholds:Seq[(Long,Duration)]
+  botCountTimeThresholds:Seq[(Long,Duration)],
+  obfuscator: Obfuscator
 ) extends CrcAdapter[RunQueryRequest, RunQueryResponse](poster, hiveCredentials) {
 
   logStartup()
@@ -175,11 +176,11 @@ final case class RunQueryAdapter(
       withBreakdownCounts.map(_.breakdowns).fold(Map.empty)(_ ++ _)
     }
 
-    val obfuscatedQueryResults = originalResults.map(Obfuscator.obfuscate)
+    val obfuscatedQueryResults = originalResults.map(obfuscator.obfuscate)
 
     val obfuscatedNonBreakdownQueryResults = obfuscatedQueryResults.filterNot(isBreakdown)
 
-    val obfuscatedMergedBreakdowns = obfuscateBreakdowns(originalMergedBreakdowns)
+    val obfuscatedMergedBreakdowns = originalMergedBreakdowns.mapValues(_.mapValues(obfuscator.obfuscate))
 
     val failedBreakdownTypes = failedBreakdownCountAttemptsWithProblems.flatMap { case (qr, _) => qr.resultType }
 
@@ -265,12 +266,6 @@ final case class RunQueryAdapter(
     }
 
     info(message)
-  }
-}
-
-object RunQueryAdapter {
-  private[adapter] def obfuscateBreakdowns(breakdowns: Map[ResultOutputType, I2b2ResultEnvelope]): Map[ResultOutputType, I2b2ResultEnvelope] = {
-    breakdowns.mapValues(_.mapValues(Obfuscator.obfuscate))
   }
 }
 

@@ -1,11 +1,8 @@
 package net.shrine.adapter
 
-import xml.NodeSeq
 import net.shrine.adapter.dao.AdapterDao
-import net.shrine.protocol.{HiveCredentials, ReadInstanceResultsResponse, ReadInstanceResultsRequest, BroadcastMessage, ShrineResponse, ErrorResponse, ResultOutputType}
-import net.shrine.serialization.XmlMarshaller
-import net.shrine.client.HttpClient
 import net.shrine.client.Poster
+import net.shrine.protocol.{HiveCredentials, ReadInstanceResultsRequest, ReadInstanceResultsResponse, ResultOutputType}
 
 /**
  * @author Bill Simons
@@ -23,16 +20,18 @@ final class ReadInstanceResultsAdapter(
 	dao: AdapterDao,
 	doObfuscation: Boolean,
 	breakdownTypes: Set[ResultOutputType],
-	collectAdapterAudit:Boolean
+	collectAdapterAudit:Boolean,
+	obfuscator: Obfuscator
 ) extends AbstractReadQueryResultAdapter[ReadInstanceResultsRequest, ReadInstanceResultsResponse](
-    	    poster,
-    	    hiveCredentials,
-    		dao,
-    		doObfuscation,
-    		_.shrineNetworkQueryId,
-    		_.projectId,
-    		ReadInstanceResultsResponse(_, _),
-    		breakdownTypes,
-				collectAdapterAudit
+		poster = poster,
+		hiveCredentials = hiveCredentials,
+		dao = dao,
+		doObfuscation = doObfuscation,
+		getQueryId = _.shrineNetworkQueryId,
+		getProjectId = _.projectId,
+		toResponse = ReadInstanceResultsResponse(_, _),
+		breakdownTypes = breakdownTypes,
+		collectAdapterAudit = collectAdapterAudit,
+	  obfuscator = obfuscator
 )
 

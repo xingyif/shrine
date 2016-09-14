@@ -70,6 +70,8 @@ object AdapterComponents {
       countsAndMilliseconds.map(pairConfig => (pairConfig.getLong("count"),pairConfig.getLong("milliseconds").milliseconds))
     }
 
+    val obfuscator:Obfuscator = adapterConfig.getConfigured("obfucscation",Obfuscator(_))
+
     val runQueryAdapter = RunQueryAdapter(
       poster = crcPoster,
       dao = adapterDao,
@@ -80,16 +82,18 @@ object AdapterComponents {
       runQueriesImmediately = adapterConfig.getOption("immediatelyRunIncomingQueries", _.getBoolean).getOrElse(true), //todo use reference.conf
       breakdownTypes = breakdownTypes,
       collectAdapterAudit = collectAdapterAudit,
-      botCountTimeThresholds = botCountTimeThresholds
+      botCountTimeThresholds = botCountTimeThresholds,
+      obfuscator = obfuscator
     )
 
     val readInstanceResultsAdapter: Adapter = new ReadInstanceResultsAdapter(
-      crcPoster,
-      crcHiveCredentials,
-      adapterDao,
-      doObfuscation,
-      breakdownTypes,
-      collectAdapterAudit
+      poster = crcPoster,
+      hiveCredentials = crcHiveCredentials,
+      dao = adapterDao,
+      doObfuscation = doObfuscation,
+      breakdownTypes = breakdownTypes,
+      collectAdapterAudit = collectAdapterAudit,
+      obfuscator = obfuscator
     )
 
     val readQueryResultAdapter: Adapter = new ReadQueryResultAdapter(
@@ -98,7 +102,8 @@ object AdapterComponents {
       adapterDao,
       doObfuscation,
       breakdownTypes,
-      collectAdapterAudit
+      collectAdapterAudit,
+      obfuscator = obfuscator
     )
 
     val readPreviousQueriesAdapter: Adapter = new ReadPreviousQueriesAdapter(adapterDao)
