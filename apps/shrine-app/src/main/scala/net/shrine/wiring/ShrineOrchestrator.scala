@@ -46,7 +46,7 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
   lazy val config: Config = {
     val config = ConfigFactory.load("shrine")
     println("========PRINTING CONFIG INFORMATION==========")
-    println(config.entrySet())
+    println(config.getConfig("shrine").entrySet())
     println("========END PRINTING CONFIG INFORMATION===========")
     config
   }
