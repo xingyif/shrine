@@ -1,15 +1,15 @@
 package net.shrine.adapter.service
 
 import org.junit.Test
-import net.shrine.adapter.HasI2b2AdminDao
-import net.shrine.protocol.{HiveCredentials, ReadI2b2AdminPreviousQueriesRequest, ReadI2b2AdminQueryingUsersRequest, ReadI2b2AdminQueryingUsersResponse, I2b2AdminUserWithRole, ErrorResponse, RunHeldQueryRequest, RunQueryResponse, RunQueryRequest, ResultOutputType, QueryResult, BroadcastMessage, AuthenticationInfo, Credential, DefaultBreakdownResultOutputTypes}
+import net.shrine.adapter.{HasI2b2AdminDao, Obfuscator, RunQueryAdapter}
+import net.shrine.protocol.{AuthenticationInfo, BroadcastMessage, Credential, DefaultBreakdownResultOutputTypes, ErrorResponse, HiveCredentials, I2b2AdminUserWithRole, QueryResult, ReadI2b2AdminPreviousQueriesRequest, ReadI2b2AdminQueryingUsersRequest, ReadI2b2AdminQueryingUsersResponse, ResultOutputType, RunHeldQueryRequest, RunQueryRequest, RunQueryResponse}
 import net.shrine.client.Poster
-import net.shrine.adapter.RunQueryAdapter
 import net.shrine.adapter.translators.QueryDefinitionTranslator
 import net.shrine.adapter.translators.ExpressionTranslator
 import net.shrine.client.HttpClient
 import net.shrine.client.HttpResponse
 import net.shrine.protocol.query.Term
+
 import scala.util.Success
 import net.shrine.util.XmlDateHelper
 import net.shrine.protocol.query.QueryDefinition
@@ -64,7 +64,8 @@ final class I2b2AdminResourceEndToEndJaxrsTest extends AbstractI2b2AdminResource
       runQueriesImmediately = true,
       breakdownTypes = DefaultBreakdownResultOutputTypes.toSet,
       collectAdapterAudit = false,
-      botCountTimeThresholds = Seq.empty
+      botCountTimeThresholds = Seq.empty,
+      obfuscator = Obfuscator(5,6.5,10)
     )
   }
   

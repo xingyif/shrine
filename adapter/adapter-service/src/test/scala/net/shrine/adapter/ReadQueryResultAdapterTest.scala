@@ -21,7 +21,8 @@ final class ReadQueryResultAdapterTest extends
         dao,
         true,
         DefaultBreakdownResultOutputTypes.toSet,
-        collectAdapterAudit = false
+        collectAdapterAudit = false,
+        obfuscator = Obfuscator(1,1.3,3)
       ),
 	    (queryId, authn) => ReadQueryResultRequest("some-project-id", 10.seconds, authn, queryId), 
 	    ReadQueryResultResponse.unapply) {

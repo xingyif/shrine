@@ -8,8 +8,7 @@ import scala.concurrent.Future
 import scala.concurrent.duration.DurationInt
 import org.junit.Test
 import net.shrine.util.ShouldMatchersForJUnit
-import net.shrine.adapter.AdapterMap
-import net.shrine.adapter.DeleteQueryAdapter
+import net.shrine.adapter.{AdapterMap, DeleteQueryAdapter, FlagQueryAdapter, Obfuscator, ReadQueryResultAdapter, RunQueryAdapter, UnFlagQueryAdapter}
 import net.shrine.adapter.client.AdapterClient
 import net.shrine.adapter.dao.squeryl.AbstractSquerylAdapterTest
 import net.shrine.adapter.service.AdapterRequestHandler
@@ -18,22 +17,18 @@ import net.shrine.broadcaster.AdapterClientBroadcaster
 import net.shrine.broadcaster.NodeHandle
 import net.shrine.crypto.DefaultSignerVerifier
 import net.shrine.crypto.TestKeystore
-import net.shrine.protocol.{HiveCredentials, AuthenticationInfo, BroadcastMessage, Credential, DeleteQueryRequest, DeleteQueryResponse, NodeId, Result, RunQueryRequest, CertId, RequestType, FlagQueryRequest, FlagQueryResponse, RawCrcRunQueryResponse, ResultOutputType, QueryResult, RunQueryResponse, AggregatedRunQueryResponse, UnFlagQueryRequest, UnFlagQueryResponse, DefaultBreakdownResultOutputTypes}
+import net.shrine.protocol.{AggregatedRunQueryResponse, AuthenticationInfo, BroadcastMessage, CertId, Credential, DefaultBreakdownResultOutputTypes, DeleteQueryRequest, DeleteQueryResponse, FlagQueryRequest, FlagQueryResponse, HiveCredentials, NodeId, QueryResult, RawCrcRunQueryResponse, RequestType, Result, ResultOutputType, RunQueryRequest, RunQueryResponse, UnFlagQueryRequest, UnFlagQueryResponse}
 import net.shrine.qep.QepService
 import net.shrine.broadcaster.SigningBroadcastAndAggregationService
 import net.shrine.broadcaster.InJvmBroadcasterClient
-import net.shrine.adapter.FlagQueryAdapter
 import net.shrine.protocol.query.Term
-import net.shrine.adapter.RunQueryAdapter
 import net.shrine.client.Poster
 import net.shrine.client.HttpClient
 import net.shrine.client.HttpResponse
 import net.shrine.adapter.translators.QueryDefinitionTranslator
 import net.shrine.adapter.translators.ExpressionTranslator
 import net.shrine.util.XmlDateHelper
-import net.shrine.adapter.ReadQueryResultAdapter
 import net.shrine.protocol.query.QueryDefinition
-import net.shrine.adapter.UnFlagQueryAdapter
 import net.shrine.crypto.SigningCertStrategy
 
 /**
@@ -96,7 +91,8 @@ final class NetworkSimulationTest extends AbstractSquerylAdapterTest with Should
       runQueriesImmediately = false,
       breakdownTypes = DefaultBreakdownResultOutputTypes.toSet,
       collectAdapterAudit = false,
-      botCountTimeThresholds = Seq.empty
+      botCountTimeThresholds = Seq.empty,
+      obfuscator = Obfuscator(5,6.5,10)
     )
   }
 
@@ -126,7 +122,8 @@ final class NetworkSimulationTest extends AbstractSquerylAdapterTest with Should
       dao,
       doObfuscation = false,
       DefaultBreakdownResultOutputTypes.toSet,
-      collectAdapterAudit = false
+      collectAdapterAudit = false,
+      obfuscator = Obfuscator(5,6.5,10)
     )
   }
 
