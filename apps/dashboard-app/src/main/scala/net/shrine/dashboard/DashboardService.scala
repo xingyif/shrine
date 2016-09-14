@@ -185,12 +185,9 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
 
     def completeConfigRoute(httpResponse:HttpResponse,uri:Uri):Route = {
       ctx => {
-        val str = httpResponse.entity.asString
-        println("===DASHBOARD CONFIG PRINTING===")
-        println(str)
         val config = ParsedConfig(httpResponse.entity.asString)
         ctx.complete(
-          ShrineConfig({println(config); config})
+          ShrineConfig(config)
         )
       }
     }
@@ -325,7 +322,7 @@ object ShrineConfig{
     val hiveCredentials   = HiveCredentials(config)
     val adapter           = Adapter(config)
     val queryEntryPoint   = QEP(config)
-    val networkStatusQuery = config.configMap("shrine.networkStatusQuery")
+    val networkStatusQuery = config.configMap("networkStatusQuery")
 
     ShrineConfig(isHub, hub, pmEndpoint, ontEndpoint, hiveCredentials, adapter, queryEntryPoint, networkStatusQuery)
   }
