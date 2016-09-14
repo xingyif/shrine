@@ -1,7 +1,6 @@
 package net.shrine.status.protocol
 
-import com.typesafe.config.{Config => TsConfig, ConfigRenderOptions}
-import net.liftweb.json.Serialization
+import com.typesafe.config.{Config => TsConfig}
 
 
 import scala.collection.immutable.{Set, Map}
@@ -17,7 +16,7 @@ case class Config(keyValues:Map[String,String]){
 
 }
 
-object Config{
+object Config {
   def isPassword(key:String):Boolean = {
     key.toLowerCase.contains("password")
   }
