@@ -389,6 +389,9 @@ object Json4sConfig{
   def apply(config:TsConfig):Json4sConfig = {
 
     val entries: Set[(String, String)] = config.entrySet.asScala.to[Set].map(x => (x.getKey,x.getValue.render())).filterNot(x => isPassword(x._1))
+    println("=======More debug info======")
+    println(entries)
+    println("=======End debug info ======")
     val sortedMap: Map[String, String] = entries.toMap
     Json4sConfig(sortedMap)
   }
