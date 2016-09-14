@@ -186,7 +186,7 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
     def completeConfigRoute(httpResponse:HttpResponse,uri:Uri):Route = {
       ctx => {
         val config = ParsedConfig(httpResponse.entity.asString)
-
+        println(s"======Dashboard Service Config=======\n$config")
         ctx.complete(
           ShrineConfig(config)
         )
