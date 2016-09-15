@@ -73,7 +73,7 @@ object AdapterComponents {
 
     val obfuscator:Obfuscator = adapterConfig.getConfigured("obfucscation",Obfuscator(_))
 
-    Log.info(s"obruscator is $obfuscator")
+    Log.info(s"obfuscator is $obfuscator")
 
     val runQueryAdapter = RunQueryAdapter(
       poster = crcPoster,
