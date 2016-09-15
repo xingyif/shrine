@@ -1,5 +1,6 @@
 package net.shrine.wiring
 
+import java.io.File
 import javax.sql.DataSource
 
 import com.typesafe.config.{Config, ConfigFactory}

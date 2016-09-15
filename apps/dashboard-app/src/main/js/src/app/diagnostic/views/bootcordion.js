@@ -65,7 +65,7 @@
             }
         }
 
-        var html    = buildHtmlFromJson(vm.data);
+        var html    = buildHtmlFromJson(preProcessJson(vm.data['configMap']));
         e.append(htmlStart + html + htmlEnd);
         compileRef(e.contents())(s);
     }
@@ -124,6 +124,29 @@
         }
 
         return html;
+    }
+
+    function preProcessJson (object) {
+        var result = {};
+        for (key in object) {
+            if (object.hasOwnProperty(key)) {
+                if (!(key.includes("."))) {
+                    result[key] = object[key]
+                } else {
+                    var split = key.split(".");
+                    var prev = result;
+                    for (var i = 1; i < split.length; i++) {
+                        var cur = split[i];
+                        if (!(cur in prev)) {
+                            prev[cur] = {}
+                        }
+                        prev = prev[cur]
+                    }
+                    prev[split[split.length - 1]] = object[key]
+                }
+            }
+        }
+        return result;
     }
 
     function isPrimitive (element) {
