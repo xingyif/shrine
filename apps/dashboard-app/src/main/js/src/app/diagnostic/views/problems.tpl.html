@@ -1,9 +1,11 @@
 <div>
 
     <div style="display:flex;justify-content: space-between">
-        <form ng-submit="vm.submitDate(vm.date)" class="input-group">
+        <form ng-submit="vm.submitDate(vm.date)" class="input-group" style="width:18.5%">
             <input type="text" datepicker-popup datepicker-options="{}" class="form-required"
                    ng-model="vm.date" is-open='vm.isOpen["open"]' ng-click="vm.open()">
+            <button type="submit" class="glyphicon glyphicon-search">
+            </button>
         </form>
         <div my-pagination></div>
         <form style="width:20%" ng-show="vm.probsSize > 5">
@@ -70,7 +72,7 @@
         </tbody>
     </table>
     <div style="display:flex;justify-content: center">
-        <div style="width:26%"></div>
+        <div style="width:18.5%"></div>
         <div my-pagination></div>
         <div style="width:20%"></div>
     </div>
