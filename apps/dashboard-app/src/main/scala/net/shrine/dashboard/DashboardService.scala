@@ -286,8 +286,9 @@ object ParsedConfig {
   def apply(jsonString:String):ParsedConfig = {
 
     implicit def json4sFormats: Formats = DefaultFormats
-
-    ParsedConfig(json4sParse(jsonString).extract[StatusProtocolConfig].keyValues.filterKeys(_.toLowerCase.startsWith("shrine")))
+    println("======INCOMING JSON=======")
+    println(jsonString)
+    ParsedConfig(json4sParse(jsonString).extract[StatusProtocolConfig].keyValues)//.filterKeys(_.toLowerCase.startsWith("shrine")))
   }
 
 }
