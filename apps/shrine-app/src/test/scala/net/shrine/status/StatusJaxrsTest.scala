@@ -35,7 +35,6 @@ class StatusJaxrsTest extends ShouldMatchersForJUnit {
     val expectedJson4sConfig = Json4sConfig(expectedConfig)
 
     val configString = statusJaxrs.config
-    println(configString)
     val config = Serialization.read[Json4sConfig](configString)
 
     config should equal(expectedJson4sConfig)
