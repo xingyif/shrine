@@ -13,6 +13,7 @@ import net.shrine.crypto.{DefaultSignerVerifier, KeyStoreCertCollection}
 import net.shrine.dao.squeryl.SquerylInitializer
 import net.shrine.protocol.{HiveCredentials, NodeId, RequestType, ResultOutputType}
 import net.shrine.config.{ConfigExtensions, DurationConfigParser}
+import net.shrine.log.Log
 
 import scala.concurrent.duration.Duration
 
@@ -71,6 +72,8 @@ object AdapterComponents {
     }
 
     val obfuscator:Obfuscator = adapterConfig.getConfigured("obfucscation",Obfuscator(_))
+
+    Log.info(s"obfuscator is $obfuscator")
 
     val runQueryAdapter = RunQueryAdapter(
       poster = crcPoster,

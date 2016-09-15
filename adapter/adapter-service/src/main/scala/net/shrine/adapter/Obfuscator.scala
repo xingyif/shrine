@@ -1,6 +1,7 @@
 package net.shrine.adapter
 
 import com.typesafe.config.Config
+import net.shrine.log.Log
 import net.shrine.protocol.QueryResult
 
 import scala.util.Random
@@ -14,6 +15,10 @@ import scala.util.Random
   * @see http://cbmi.med.harvard.edu
  */
 case class Obfuscator(binSize:Int,stdDev:Double,noiseClamp:Int) {
+
+  //todo a problem instead?
+  if((stdDev < 6.5) || (noiseClamp < 10) || (binSize < 5)) Log.warn(s"$this does not include enough obfuscation to prevent an unobservable reidentificaiton attack. We recommend stdDev >= 6.5, noiseClamp >= 10, and binSize >= 5")
+
   val random = new Random
 
   def obfuscateResults(doObfuscation: Boolean)(results: Seq[QueryResult]): Seq[QueryResult] = {
