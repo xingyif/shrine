@@ -84,9 +84,15 @@
         // -- local vars -- //
         var html    = '';
         var indent  = '&nbsp;&nbsp&nbsp;&nbsp';
-
-        for(var el in json){
-
+        var sortedKeys = [];
+        for (var k in json) {
+            if (json.hasOwnProperty(k)) {
+                sortedKeys.push(k)
+            }
+        }
+        sortedKeys.sort();
+        for(var i = 0; i < sortedKeys.length; i++){
+            var el = sortedKeys[i];
             var openingTag = '<ul>',
                 closingTag = '</ul>'
 
@@ -135,7 +141,7 @@
                 } else {
                     var split = key.split(".");
                     var prev = result;
-                    for (var i = 1; i < split.length; i++) {
+                    for (var i = 0; i < split.length; i++) {
                         var cur = split[i];
                         if (!(cur in prev)) {
                             prev[cur] = {}
