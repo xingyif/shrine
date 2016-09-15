@@ -53,6 +53,7 @@ case class StatusJaxrs(shrineConfig:TsConfig) extends Loggable {
   @Path("config")
   def config: String = {
     //todo probably better to reach out and grab the config from ManuallyWiredShrineJaxrsResources once it is a singleton
+    println(Serialization.write(Json4sConfig(shrineConfig)))
     Serialization.write(Json4sConfig(shrineConfig))
   }
 
