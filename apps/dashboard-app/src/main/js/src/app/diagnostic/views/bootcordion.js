@@ -140,9 +140,12 @@
                         if (!(cur in prev)) {
                             prev[cur] = {}
                         }
-                        prev = prev[cur]
+                        if (i == split.length - 1) {
+                            prev[cur] = object[key];
+                        } else {
+                            prev = prev[cur]
+                        }
                     }
-                    prev[split[split.length - 1]] = object[key]
                 }
             }
         }
