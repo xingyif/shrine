@@ -152,7 +152,6 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
         assertResult(OK)(status)
 
         val configString = new String(body.data.toByteArray)
-        //println(configString)
       }
   }
 

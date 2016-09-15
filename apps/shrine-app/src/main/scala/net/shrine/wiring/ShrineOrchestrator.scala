@@ -138,7 +138,7 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
 
   protected lazy val happyResource: HappyShrineResource = new HappyShrineResource(HappyShrineService)
 
-  protected lazy val statusJaxrs: StatusJaxrs = StatusJaxrs(config)
+  protected lazy val statusJaxrs: StatusJaxrs = StatusJaxrs(config.getConfig("shrine"))
 
   protected lazy val shrineResource: Option[ShrineResource] = queryEntryPointComponents.map(x => ShrineResource(x.shrineService))
 
