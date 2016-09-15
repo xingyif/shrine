@@ -53,6 +53,7 @@ case class StatusJaxrs(shrineConfig:TsConfig) extends Loggable {
   @Path("config")
   def config: String = {
     //todo probably better to reach out and grab the config from ManuallyWiredShrineJaxrsResources once it is a singleton
+    println("=======STATUS JAXRS DEBUG ==========")
     println(Serialization.write(Json4sConfig(shrineConfig)))
     Serialization.write(Json4sConfig(shrineConfig))
   }
@@ -388,7 +389,7 @@ object Json4sConfig{
   }
 
   def apply(config:TsConfig):Json4sConfig = {
-    val entries: Set[(String, String)] = config.getConfig("shrine").entrySet.asScala.to[Set].map(x => (x.getKey,x.getValue.render())).filterNot(x => isPassword(x._1))
+    val entries: Set[(String, String)] = config.entrySet.asScala.to[Set].map(x => (x.getKey,x.getValue.render())).filterNot(x => isPassword(x._1))
     val sortedMap: Map[String, String] = entries.toMap
     Json4sConfig(sortedMap)
   }

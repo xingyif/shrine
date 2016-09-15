@@ -1,5 +1,7 @@
 package net.shrine.status
 
+import java.io.File
+
 import com.typesafe.config.ConfigFactory
 import net.shrine.util.ShouldMatchersForJUnit
 import org.json4s.{DefaultFormats, Formats}
@@ -17,7 +19,7 @@ import scala.collection.immutable.Map
 class StatusJaxrsTest extends ShouldMatchersForJUnit {
 
   implicit def json4sFormats: Formats = DefaultFormats
-  val expectedConfig = ConfigFactory.load("shrine")
+  val expectedConfig = ConfigFactory.parseResourcesAnySyntax("shrine") //new File("/Users/ty/shrine/apps/shrine-app/src/test/resources/shrine.conf"))
   val statusJaxrs = StatusJaxrs(expectedConfig)
 
   @Test
