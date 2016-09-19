@@ -4,7 +4,7 @@
         <form ng-submit="vm.submitDate(vm.date)" class="input-group" style="width:18.5%">
             <input type="text" datepicker-popup class="form-required"
                    ng-model="vm.date" is-open='vm.isOpen["open"]' ng-click="vm.open()"
-                   close-text="Close">
+                   close-text="Close" placeholder="yyyy-MM-dd">
             <button type="submit" class="glyphicon glyphicon-search">
             </button>
         </form>
