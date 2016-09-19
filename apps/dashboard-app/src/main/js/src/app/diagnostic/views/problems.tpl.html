@@ -2,8 +2,9 @@
 
     <div style="display:flex;justify-content: space-between">
         <form ng-submit="vm.submitDate(vm.date)" class="input-group" style="width:18.5%">
-            <input type="text" datepicker-popup datepicker-options="{}" class="form-required"
-                   ng-model="vm.date" is-open='vm.isOpen["open"]' ng-click="vm.open()">
+            <input type="text" datepicker-popup class="form-required"
+                   ng-model="vm.date" is-open='vm.isOpen["open"]' ng-click="vm.open()"
+                   close-text="Close">
             <button type="submit" class="glyphicon glyphicon-search">
             </button>
         </form>
