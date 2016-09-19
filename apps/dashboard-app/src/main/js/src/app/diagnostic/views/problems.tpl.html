@@ -1,15 +1,17 @@
 <div>
 
     <div style="display:flex;justify-content: space-between;vertical-align: text-top">
-        <form ng-submit="vm.submitDate(vm.date)" class="input-group" style="width:18.5%">
+        <form ng-submit="vm.submitDate(vm.date)" class="input-group" style="width:18.5%;white-space:nowrap">
             <input type="text" datepicker-popup class="form-required"
                    ng-model="vm.date" is-open='vm.isOpen["open"]' ng-click="vm.open()"
                    close-text="Close" placeholder="yyyy-MM-dd">
-            <button type="submit" class="glyphicon glyphicon-search">
+            <button type="submit" class="glyphicon glyphicon-search" ng-show="vm.date.getTime != undefined">
             </button>
+            <button class="glyphicon glyphicon-search" ng-hide="vm.checkDate(vm.date)"
+                    style="opacity:.25;cursor: default" disabled></button>
         </form>
         <div my-pagination></div>
-        <form style="width:20%;font-size:large;" ng-show="vm.probsSize > 5">
+        <form style="width:20%;font-size:large;white-space: nowrap" ng-show="vm.probsSize > 5">
             <label for="pageSize">Problems Per Page: </label>
             <select id="pageSize"
                     ng-options="x for x in vm.pageSizes | filter: vm.pageSizeCheck"
