@@ -77,6 +77,7 @@
             vm.newPage = newPage;
             vm.floor = Math.floor;
             vm.handleButton = handleButton;
+            vm.showP =         function(target)  { return vm.probsSize > target};
             vm.checkDate =     function(date)    { return date != undefined };
             vm.open =          function()        { vm.isOpen.open = !vm.isOpen.open;};
             vm.pageSizeCheck = function(n)       { return n < vm.probsSize };
