@@ -1,0 +1,41 @@
+<div>
+    <div class="col-sm-12">
+        <div>
+            <div>
+                <span ng-if="topics.showStewardMenu">
+                        <steward-menu menu="topics.sortData">
+                        </steward-menu>
+                    </span>
+
+                <div>
+                    <p>
+                        <topics-result show-steward="{{topics.showStewardMenu}}" sort-data="topics.sortData" sort="topics.update(column)" topics="topics.topics"
+                            date-formatter="topics.dateFormatter(utc)" , open="topics.openTopic(topic)" , new="topics.createTopic()">
+                        </topics-result>
+
+                        <div class="form-group text-center" ng-show="topics.sortData.length > topics.sortData.limit">
+                            <ul uib-pagination class="pagination-sm"
+                            previous-text="&lsaquo;"
+                    next-text="&rsaquo;"
+                    first-text="&laquo;"
+                    last-text="&raquo;" 
+                            items-per-page="topics.sortData.limit" 
+                            boundary-links="true" 
+                            max-size="topics.sortData.range"
+                            total-items="topics.sortData.length"
+                                ng-model="topics.sortData.pageIndex" 
+                                ng-change="topics.onPageSelected()">
+                            </ul>
+
+                            <div class="col-sm-12">
+                                Page: {{topics.sortData.pageIndex}} / {{topics.sortData.totalPages}}
+                            </div>
+                            <br/>
+                            <br/>
+                        </div>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
