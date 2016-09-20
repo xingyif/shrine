@@ -15,11 +15,22 @@ target/
 # javascript artifacts
 **/src/main/js/build/
 **/js/node/
-**/js/node_modules/
+# **/js/node_modules/
 **/resources/client/config/
 **/resources/client/happy/happy-whoami.xml
 **/resources/client/index.html
 **/resources/client/src/
+
+# Ignore Node & Bower regardless of context
+###################
+**/node_modules/
+**/bower_components/
+**/build/
+**/*.tmp
+**/npm-debug.log
+
+# Ignore Client Build
+**/src/main/resources/client/
 
 # idea
 .idea/
