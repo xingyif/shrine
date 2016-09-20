@@ -14,55 +14,55 @@
         })
         .directive('myPages', function() {
 
-        function rangeGen(max) {
-            var result = [];
-            for (var i = 1; i < max - 1; i++) {
-                result[i] = i + 1;
+            function rangeGen(max) {
+                var result = [];
+                for (var i = 1; i < max - 1; i++) {
+                    result[i] = i + 1;
+                }
+                return result;
             }
-            return result;
-        }
 
-        function abs(num) {
-            if (num < 0) {
-                return num * -1;
-            } else {
-                return num;
+            function abs(num) {
+                if (num < 0) {
+                    return num * -1;
+                } else {
+                    return num;
+                }
             }
-        }
 
-        function checkPage(value, activePage, maxPage, minPage) {
-            if (maxPage == minPage) {
-                return false;
-            } else if (maxPage - minPage <= 5) {
-                return isFinite(value) && value <= maxPage && value >= minPage;
-            } else if (value == maxPage || value == minPage || value == activePage) {
-                return true;
-            } else if (value == "..") {
-                return activePage > 5;
-            } else if (value == "...") {
-                return maxPage - activePage > 4;
-            } else if (value < activePage) {
-                return activePage <= 5 || activePage - value <= 2;
-            } else if (value > activePage) {
-                return maxPage - activePage >= 4 || value - activePage <= 2;
+            function checkPage(value, activePage, maxPage, minPage) {
+                if (maxPage == minPage) {
+                    return false;
+                } else if (maxPage - minPage <= 5) {
+                    return isFinite(value) && value <= maxPage && value >= minPage;
+                } else if (value == maxPage || value == minPage || value == activePage) {
+                    return true;
+                } else if (value == "..") {
+                    return activePage > 5;
+                } else if (value == "...") {
+                    return maxPage - activePage > 4;
+                } else if (value < activePage) {
+                    return activePage <= 5 || activePage - value <= 2;
+                } else if (value > activePage) {
+                    return maxPage - activePage >= 4 || value - activePage <= 2;
+                }
             }
-        }
 
-        return {
-            restrict: 'E',
-            templateUrl: 'src/app/diagnostic/templates/paginator-template.html',
-            scope: {
-                maxPage:      '=',
-                minPage:      '=',
-                handleButton: '=',
-                activePage:   '='
-            },
-            link: function(scope) {
-                scope.rangeGen = rangeGen;
-                scope.checkPage = checkPage;
+            return {
+                restrict: 'E',
+                templateUrl: 'src/app/diagnostic/templates/paginator-template.html',
+                scope: {
+                    maxPage:      '=',
+                    minPage:      '=',
+                    handleButton: '=',
+                    activePage:   '='
+                },
+                link: function(scope) {
+                    scope.rangeGen = rangeGen;
+                    scope.checkPage = checkPage;
+                }
             }
-        }
-    });
+        });
 
     ProblemsController.$inject = ['$app', '$log', '$sce'];
     function ProblemsController ($app, $log, $sce) {
@@ -188,7 +188,7 @@
         }
 
         function parseStackTrace(stackTraceObject) {
-            if ('exception' in stackTraceObject) {
+            if (stackTraceObject.hasOwnProperty('exception')) {
                 return '<p>'+sanitizeString(stackTraceObject['line'])+'</p>' + parseException(stackTraceObject['exception']);
             } else {
                 return '<h4>stack trace</h4>' + parseLines(stackTraceObject['line']);
@@ -215,7 +215,7 @@
             };
             for (var i = 0; i < chars.length; i++) {
                 var c = chars[i];
-                if (c in escapes) {
+                if (escapes.hasOwnProperty(c)) {
                     chars[i] = escapes[c]
                 }
             }
