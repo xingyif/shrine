@@ -59,8 +59,8 @@
         }
     });
 
-    ProblemsController.$inject = ['$app', '$log', '$sce', '$scope'];
-    function ProblemsController ($app, $log, $sce, $scope) {
+    ProblemsController.$inject = ['$app', '$log', '$sce'];
+    function ProblemsController ($app, $log, $sce) {
         var vm = this;
 
         init();
@@ -70,7 +70,7 @@
          */
         function init () {
             vm.$log = $log;
-            vm.date = new Date();
+            //vm.date = new Date();
             vm.isOpen = { 'open': false };
             vm.pageSizes = [5, 10, 20];
             vm.url = "https://open.med.harvard.edu/wiki/display/SHRINE/";
@@ -85,8 +85,6 @@
             vm.stringify =     function(arg)     { return JSON.stringify(arg, null, 2); };
             vm.numCheck =      function(any)     { return isFinite(any)? (any - 1) * vm.probsN: vm.probsOffset };
             vm.changePage =    function()        { vm.newPage(vm.probsOffset, vm.pageSize > 20? 20: vm.pageSize < 0? 0: vm.pageSize) };
-
-            $scope.$watch('date', function() {$scope.$apply()});
 
             //todo: Get rid of this and figure out something less hacky
             vm.formatCodec = function(word) {
