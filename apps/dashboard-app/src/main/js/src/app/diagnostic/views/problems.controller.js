@@ -188,7 +188,7 @@
         }
 
         function parseStackTrace(stackTraceObject) {
-            if ('exception' in stackTraceObject) {
+            if (stackTraceObject.hasOwnProperty('exception')) {
                 return '<p>'+sanitizeString(stackTraceObject['line'])+'</p>' + parseException(stackTraceObject['exception']);
             } else {
                 return '<h4>stack trace</h4>' + parseLines(stackTraceObject['line']);
@@ -215,7 +215,7 @@
             };
             for (var i = 0; i < chars.length; i++) {
                 var c = chars[i];
-                if (c in escapes) {
+                if (escapes.hasOwnProperty(c)) {
                     chars[i] = escapes[c]
                 }
             }
