@@ -22,24 +22,29 @@
             return result;
         }
 
+        function abs(num) {
+            if (num < 0) {
+                return num * -1;
+            } else {
+                return num;
+            }
+        }
 
         function checkPage(value, activePage, maxPage, minPage) {
-            if (value == '..') {
-                return activePage > 4;
-            } else if (value == '...') {
-                return maxPage - activePage > 4;
-            } else if (!isFinite(value)) {
-                // Anything that's not a number and not an error is fine as a button
-                return !!value;
-            } else if (value == maxPage || value == minPage) {
+            if (maxPage == minPage) {
+                return false;
+            } else if (maxPage - minPage <= 5) {
+                return isFinite(value) && value <= maxPage && value >= minPage;
+            } else if (value == maxPage || value == minPage || value == activePage) {
                 return true;
-            } else if (activePage == minPage || activePage == minPage + 1) {
-                return value <= 4;
-            } else if (activePage == maxPage || activePage == maxPage - 1) {
-                return maxPage - value < 4;
-            } else {
-                var diff = value - activePage;
-                return diff >= -2 && diff < 2;
+            } else if (value == "..") {
+                return activePage > 5;
+            } else if (value == "...") {
+                return maxPage - activePage > 4;
+            } else if (value < activePage) {
+                return activePage <= 5 || activePage - value <= 2;
+            } else if (value > activePage) {
+                return maxPage - activePage >= 4 || value - activePage <= 2;
             }
         }
 
