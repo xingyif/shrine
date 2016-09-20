@@ -69,7 +69,7 @@
          *
          */
         function init () {
-            vm.date = new Date();
+            //vm.date = new Date();
             vm.isOpen = { 'open': false };
             vm.pageSizes = [5, 10, 20];
             vm.url = "https://open.med.harvard.edu/wiki/display/SHRINE/";
@@ -77,13 +77,12 @@
             vm.newPage = newPage;
             vm.floor = Math.floor;
             vm.handleButton = handleButton;
-            vm.open = function() { vm.isOpen.open = !vm.isOpen.open;};
-            vm.pageSizeCheck = function(n) { return n < vm.probsSize };
-            vm.parseDetails = function(details) { return $sce.trustAsHtml(parseDetails(details)) };
-            vm.stringify = function(arg) { return JSON.stringify(arg, null, 2); };
-            vm.numCheck = function(any) { return isFinite(any)? (any - 1) * vm.probsN: vm.probsOffset };
-            vm.changePage = function() { vm.newPage(vm.probsOffset, vm.pageSize > 20? 20: vm.pageSize < 0? 0: vm.pageSize) };
-
+            vm.checkDate =     function(date)    { return date != undefined };
+            vm.open =          function()        { vm.isOpen.open = !vm.isOpen.open;};
+            vm.pageSizeCheck = function(n)       { return n < vm.probsSize };
+            vm.parseDetails =  function(details) { return $sce.trustAsHtml(parseDetails(details)) };
+            vm.numCheck =      function(any)     { return isFinite(any)? (any - 1) * vm.probsN: vm.probsOffset };
+            vm.changePage =    function()        { vm.newPage(vm.probsOffset, vm.pageSize > 20? 20: vm.pageSize < 0? 0: vm.pageSize) };
 
             //todo: Get rid of this and figure out something less hacky
             vm.formatCodec = function(word) {

@@ -3,8 +3,7 @@
         style="float:left;">
         <a href="#" ng-click="handleButton(buttonValue)" ng-show="checkPage(buttonValue, activePage, maxPage, minPage)"
            ng-style="buttonValue == activePage? {'background-color':'#eaecec'}: {'background-color':'white'}">
-            <span ng-hide="buttonValue == activePage">{{buttonValue}}</span>
-            <span ng-show="buttonValue == activePage" style="font-weight:bold;">{{buttonValue}}</span>
+            <span ng-style="buttonValue == activePage? {'font-weight':'bold'}:{'font-weight':'none'}">{{buttonValue}}</span>
         </a>
     </li>
 </ul>
