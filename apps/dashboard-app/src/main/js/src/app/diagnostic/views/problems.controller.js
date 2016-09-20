@@ -35,7 +35,7 @@
                 return false;
             } else if (maxPage - minPage <= 5) {
                 return isFinite(value) && value <= maxPage && value >= minPage;
-            } else if (value == maxPage || value == minPage || value == activePage) {
+            } else if (value == maxPage || value == minPage || value == activePage || value == '‹' || value == '›') {
                 return true;
             } else if (value == "..") {
                 return activePage > 5;
@@ -44,7 +44,7 @@
             } else if (value < activePage) {
                 return activePage <= 5 || activePage - value <= 2;
             } else if (value > activePage) {
-                return maxPage - activePage >= 4 || value - activePage <= 2;
+                return maxPage - activePage <= 4 || value - activePage <= 2;
             }
         }
 
