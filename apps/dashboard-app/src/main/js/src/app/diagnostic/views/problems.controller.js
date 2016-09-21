@@ -98,7 +98,7 @@
                 return arr.join("");
             };
 
-            newPage(0, 20)
+            $app.model.getProblems().then(setProblems)
         }
 
         function handleButton(value) {
