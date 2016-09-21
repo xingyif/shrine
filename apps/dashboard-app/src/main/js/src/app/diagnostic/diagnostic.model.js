@@ -28,7 +28,7 @@
             getOptions:  getOptions,
             getConfig:   getConfig,
             getSummary:  getSummary,
-            getProblems: getProblems,
+            getProblems: getProblemsMaker(),
             getHappyAll: getHappyAll,
             cache:       cache
         };
@@ -144,16 +144,40 @@
                 .then(parseJsonResult, onFail);
         }
 
-        /**
-         * //todo
-         * ProblemEndpoint:  'admin/status/problems',
-         * @returns {*}
-         */
-        function getProblems(offset, n, epoch) {
-            var epochString = epoch && isFinite(epoch)? '&epoch='+ epoch: '';
-            var url = urlGetter(Config.ProblemEndpoint+'?offset='+offset+'&n='+n+epochString);
-            return h.get(url)
-                .then(parseJsonResult, onFail);
+
+        function getProblemsMaker() {
+
+            var prevOffset = 0;
+            var prevN = 20;
+            var prevEpoch;
+
+            /**
+             * ProblemEndpoint:  'admin/status/problems',
+             * @returns {*}
+             */
+            return function(offset, n, epoch) {
+                if (offset) {
+                    prevOffset = offset;
+                } else {
+                    offset = prevOffset;
+                }
+                if (n) {
+                    prevN = n;
+                } else {
+                    n = prevN;
+                }
+                if (epoch) {
+                    prevEpoch = epoch;
+                } else {
+                    epoch = prevEpoch;
+                }
+
+                var epochString = epoch && isFinite(epoch) ? '&epoch=' + epoch : '';
+                var url = urlGetter(
+                    Config.ProblemEndpoint + '?offset=' + offset + '&n=' + n + epochString);
+                return h.get(url)
+                    .then(parseJsonResult, onFail);
+            }
         }
 
 
