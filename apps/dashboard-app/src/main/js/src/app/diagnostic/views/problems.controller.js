@@ -22,21 +22,17 @@
             return result;
         }
 
-        function abs(num) {
-            if (num < 0) {
-                return num * -1;
-            } else {
-                return num;
-            }
-        }
-
         function checkPage(value, activePage, maxPage, minPage) {
             if (maxPage == minPage) {
                 return false;
             } else if (maxPage - minPage <= 5) {
                 return isFinite(value) && value <= maxPage && value >= minPage;
-            } else if (value == maxPage || value == minPage || value == activePage || value == '‹' || value == '›') {
+            } else if (value == maxPage || value == minPage || value == activePage) {
                 return true;
+            } else if (value == '‹') {
+                return activePage != minPage;
+            } else if (value == '›') {
+                return activePage != maxPage;
             } else if (value == "..") {
                 return activePage > 5;
             } else if (value == "...") {
