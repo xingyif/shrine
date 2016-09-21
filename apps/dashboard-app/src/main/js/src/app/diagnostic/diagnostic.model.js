@@ -179,7 +179,7 @@
                     .then(parseJsonResult, onFail);
             }
         }
-        
+
 
         /**
          *
