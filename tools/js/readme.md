@@ -1,0 +1,1 @@
+This is a library of utility js tools not tied to a specific project.  Goal is to create npm packages for these tools.
