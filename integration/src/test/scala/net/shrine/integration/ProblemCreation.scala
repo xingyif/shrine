@@ -118,8 +118,6 @@ class ProblemCreation extends FlatSpec with Matchers {
 
     problemSize() shouldBe problems.length
     db.runBlocking(queries.result) should contain theSameElementsAs problems.map(_.toDigest)
-
-    (Problems.Queries ++= problems.map(_.toDigest)).statements.foreach(println)
     }
 
 }
