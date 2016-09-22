@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <title>Steward Ontolgoy Map</title>
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400' rel='stylesheet' type='text/css'>
+  <link href="./demo.css" rel="stylesheet">
+  <link href="./graph-horizontal.css" rel="stylesheet">
+  <link href="./dropdown.css" rel="stylesheet">
+  <link href="./color-codes.css" rel="stylesheet">
+  <link href="./tooltip.css" rel="stylesheet">
+</head>
+
+<body>
+  <h1>SHRINE Query Term Hierarchy by Ontology</h1>
+  <h2>A tree of used terms organized by their place within the ontology</h2>
+  <div class="stage" ng-app="app" ng-controller='AppCtrl as c' ng-init="c.showFilter = false">
+             <!-- use the template -->
+   
+    <script type="text/ng-template" id="ngDropdown">
+      <div class="container">
+        <!-- Btn-->
+        
+          <h2>
+          Filter By Topic:
+          </h2>
+
+        <button class="btn" style="max-width: 300px;">
+          
+          <span>{{c.tabs[c.tabIndex]}}</span>
+          <ul class="dropdown" style="max-width: 300px;">
+            <li ng-class="{'active': c.tabIndex === undefined}" ng-click="c.getData()"><a href="#">All</a></li>
+            <li ng-class="{'active': c.tabIndex === 18}" ng-click="c.getData(18)"><a href="#">Health impact of dietary related chronic diseases on HIV positive patients</a></li>
+            <li ng-class="{'active': c.tabIndex === 19}" ng-click="c.getData(19)"><a href="#">Identifying correlations between congenital anomalies and increased risk for chronic health conditions</a></li>
+            <li ng-class="{'active': c.tabIndex === 20}" ng-click="c.getData(20)"><a href="#">Comparing impact of medications for patients with multiple chronic health conditions</a></li>
+            <li ng-class="{'active': c.tabIndex === 21}" ng-click="c.getData(21)"><a href="#">Identifying Correlations between congenital anomalies and complications of labor and birth.</a></li>
+          </ul>
+        </button>
+    </div>
+  </script>
+    <div class="graph-cont" ">
+      
+      <div class="bar-bg ">
+        <div class="user ">
+          Ben
+        </div>
+        <div class="bar " style="max-width: 60% " >
+          60
+        </div>
+      </div>
+      <div class="bar-bg ">
+        <div class="user ">
+          Dave
+        </div>
+        <div class="bar result2 " >20</div>
+      </div>
+      <div class="bar-bg ">
+        <div class="user ">
+          Dr. Evil
+        </div>
+        <div class="bar result3 " >141</div>
+      </div>
+      <div class="bar-bg ">
+        <div class="user ">
+          Isha
+        </div>
+        <div class="bar result4 " >40</div>
+      </div>
+      <div class="bar-bg ">
+        <div class="user ">
+          Ty
+        </div>
+        <div class="bar result5 " >77</div>
+      </div>
+    </div>
+    <div class="graph-cont2 minimized2 " >
+      <!-- Recursive template -->
+      <script type="text/ng-template " id="categoryNode ">
+      <span class="test {{c.getStyleByFrequency(value.queryCount)}}" ng-show="value.hasChildren()" ng-click="show=!show">
+        {{(show)? '-' : '+'}}
+      </span>
+        <a 
+             ng-init="show=false " 
+             ng-click="show=!show;"
+             
+             class="{{c.getStyleByFrequency(value.queryCount)}}">
+              <span
+
+             
+             class="tooltip-toggle"
+             
+             aria-label="{{value.queryCount}} queries">  
+             {{value.key}} - {{c.getPct(value.queryCount)}}%   
+
+        </span>
+
+
+          
+
+        </a>
+       
+        <ul ng-if="value.hasChildren() && show ">
+          <li ng-repeat="(key, value) in value.children" ng-include=" 'categoryNode' ">
+          </li>
+        </ul>
+    </script>
+
+      <!--Start the recursion-->
+      <div class="tree ">
+        <ul>
+          <li>
+            <span class="test dark-red" ng-click="show=!show">{{(show)? '-' : '+'}}</span>
+            <a ng-init="show=false" ng-click="show=!show " class="dark-red">{{c.ontology.key + ' ( - ' + c.queryCount + ' queries)'}}</a>
+            <ul ng-if="show ">
+              <li ng-repeat="(key, value) in c.ontology.children" ng-include=" 'categoryNode' "></li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+  
+  </div>
+   <span ng-include=" 'ngDropdown' " style="z-index: 1000"></span>
+    </div>
+
+
+  <!-- src files -->
+  <script src="https://code.jquery.com/jquery-2.2.4.min.js "></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.5.5/angular.min.js "></script>
+  <script src="./demo.js ">
+ 
+
+   
+    </body>
+</html>
