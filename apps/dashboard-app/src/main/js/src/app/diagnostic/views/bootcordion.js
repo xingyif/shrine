@@ -132,11 +132,22 @@
         return html;
     }
 
+    // IE11 doesn't support
+    function stringIncludes(haystack, needle) {
+        var arr = haystack.split("");
+        for (var i = 0; i < arr.length; i++) {
+            if (arr[i] == needle) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     function preProcessJson (object) {
         var result = {};
         for (key in object) {
             if (object.hasOwnProperty(key)) {
-                if (!(key.includes("."))) {
+                if (!stringIncludes(key, ".")) {
                     result[key] = object[key]
                 } else {
                     var split = key.split(".");
