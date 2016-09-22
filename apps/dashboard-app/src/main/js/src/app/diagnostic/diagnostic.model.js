@@ -7,8 +7,8 @@
         .factory('DiagnosticModel', DiagnosticModel)
 
 
-    DiagnosticModel.$inject = ['$http', '$q', 'UrlGetter', 'XMLService'];
-    function DiagnosticModel (h, q, urlGetter, xmlService) {
+    DiagnosticModel.$inject = ['$http', '$q', 'UrlGetter', 'XMLService', '$log'];
+    function DiagnosticModel (h, q, urlGetter, xmlService, $log) {
 
 
         var cache = {};
@@ -81,7 +81,7 @@
          * @returns {{}}
          */
         function parseSummaryFromAll (all) {
-
+            $log.warn("Summay called");
             //
             var summary             = {};
 
@@ -156,6 +156,7 @@
              * @returns {*}
              */
             return function(offset, n, epoch) {
+                $log.warn("problems called");
                 if (offset != null) {
                     prevOffset = offset;
                 } else {
