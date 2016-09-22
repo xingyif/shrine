@@ -187,6 +187,7 @@
          * @returns {*}
          */
         function getHappyAll() {
+            $log.warn("Happy called");
             var url = urlGetter(Config.HappyAllEndpoint, '.xml')
             return h.get(url)
                 .then(parseHappyAllResult, onFail);
