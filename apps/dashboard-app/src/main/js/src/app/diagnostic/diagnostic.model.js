@@ -156,17 +156,17 @@
              * @returns {*}
              */
             return function(offset, n, epoch) {
-                if (offset) {
+                if (offset != null) {
                     prevOffset = offset;
                 } else {
                     offset = prevOffset;
                 }
-                if (n) {
+                if (n != null) {
                     prevN = n;
                 } else {
                     n = prevN;
                 }
-                if (epoch) {
+                if (epoch != null) {
                     prevEpoch = epoch;
                 } else {
                     epoch = prevEpoch;
