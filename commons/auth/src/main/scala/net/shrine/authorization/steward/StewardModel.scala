@@ -177,7 +177,7 @@ case class StewardsTopics(totalCount:Int,skipped:Int,topics:Seq[OutboundTopic]) 
   }
 }
 
-case class QueryHistory(totalCount:Int,skipped:Int,queryRecords:Seq[OutboundShrineQuery]) extends Json4sSupport {
+case class QueryHistory(totalCount:Int,skipped:Int,queryRecords:Seq[OutboundShrineQuery]) {//extends Json4sSupport {
 
   def sameExceptForTimes(queryResponse: QueryHistory):Boolean = {
     (totalCount == queryResponse.totalCount) &&
@@ -217,7 +217,7 @@ case class QueryHistory(totalCount:Int,skipped:Int,queryRecords:Seq[OutboundShri
     val timeDiffs:Seq[(String,Any,Any)] = queryRecords.zip(other.queryRecords).flatMap(x => x._1.differencesExceptTimes(x._2))
     normalDiffs ++ timeDiffs
   }
-  override implicit def json4sFormats: Formats = DefaultFormats + new NodeSeqSerializer
+  def json4sFormats: Formats = DefaultFormats + new NodeSeqSerializer
 }
 
 case class TopicIdAndName(id:String,name:String)

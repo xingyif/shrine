@@ -3,10 +3,10 @@
     <div style="display:flex;justify-content: space-between;vertical-align: text-top">
         <form ng-submit="vm.submitDate(vm.date)" class="input-group"
               style="width:18.5%;white-space:nowrap;">
-            <input type="text" datepicker-popup value="2015/08/05" class="form-required"
-                   ng-model="vm.date" is-open='vm.isOpen["open"]' ng-click="vm.open()"
-                   close-text="Close" placeholder="yyyy-MM-dd" orientation="top">
-            <button type="submit" class="glyphicon glyphicon-search" ng-show="vm.checkDate(vm.date)">
+            <input datepicker-popup="{{vm.format}}" class="form-control"
+                   ng-model="vm.date.dateObject" is-open='vm.isOpen["open"]' ng-click="vm.open()"
+                   close-text="Close" placeholder="yyyy/MM/dd" orientation="top">
+            <button type="submit" class="glyphicon glyphicon-search" ng-show="vm.checkDate(vm.date.dateObject)">
             </button>
             <button class="glyphicon glyphicon-search" ng-hide="vm.checkDate(vm.date)"
                     style="opacity:.25;cursor: default" disabled></button>

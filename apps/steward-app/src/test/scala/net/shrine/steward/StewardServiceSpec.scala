@@ -427,11 +427,12 @@ class StewardServiceTest extends FlatSpec with ScalatestRouteTest with TestWithD
       StewardDatabase.db.logAndCheckQuery(researcherUserName,Some(1),InboundShrineQuery(0,"test query",queryContent))
 
       
-      Get(s"/researcher/queryHistory") ~>
+      Get(s"/researcher/queryHistory?asJson=false") ~>
         addCredentials(researcherCredentials) ~> route ~> check {
         assertResult(OK)(status)
 
         val queriesJson = new String(body.data.toByteArray)
+        println(queriesJson)
         val queries = parse(queriesJson).extract[QueryHistory]
 
         val history: QueryHistory = QueryHistory(1, 0, List(
@@ -457,6 +458,7 @@ class StewardServiceTest extends FlatSpec with ScalatestRouteTest with TestWithD
       assertResult(OK)(status)
 
       val queriesJson = new String(body.data.toByteArray)
+      println(queriesJson)
       val queries = parse(queriesJson).extract[QueryHistory]
 
       assertResult(diffs)(QueryHistory(1,0,List(

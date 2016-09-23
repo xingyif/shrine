@@ -72,15 +72,17 @@
         function init () {
             //vm.date = new Date();
             vm.isOpen = { 'open': false };
+            vm.date = {'dateObject': new Date()};
             vm.pageSizes = [5, 10, 20];
+            vm.format = "yyyy/M/dd";
             vm.url = "https://open.med.harvard.edu/wiki/display/SHRINE/";
             vm.submitDate = submitDate;
             vm.newPage = newPage;
             vm.floor = Math.floor;
             vm.handleButton = handleButton;
             vm.showP =         function(target)  { return vm.probsSize > target};
-            vm.checkDate =     function(date)    { return date != undefined };
-            vm.open =          function()        { vm.isOpen.open = !vm.isOpen.open;};
+            vm.checkDate =     function(date)    { $log.warn(date);return vm.date.dateObject != undefined };
+            vm.open =          function()        { $log.warn(vm.date.dateObject); vm.isOpen.open = !vm.isOpen.open;};
             vm.pageSizeCheck = function(n)       { return n < vm.probsSize };
             vm.parseDetails =  function(details) { return $sce.trustAsHtml(parseDetails(details)) };
             vm.numCheck =      function(any)     { return isFinite(any)? (any - 1) * vm.probsN: vm.probsOffset };
@@ -168,7 +170,7 @@
                 return '<h3>No details associated with this problem</h3>'
             } else if (typeof(detailsField) === 'string') {
                 return detailsTag + '<p>'+sanitizeString(detailsField)+'</p>';
-            } else if (typeof(detailsField) === 'object' && 'exception' in detailsField) {
+            } else if (typeof(detailsField) === 'object' && detailsField.hasOwnProperty('exception')) {
                 return detailsTag + parseException(detailsField['exception']);
             } else {
                 return detailsTag + '<pre>'+sanitizeString(JSON.stringify(detailsField))+'</pre>'
@@ -180,13 +182,13 @@
             var nameTag = '<h5>'+sanitizeString(exceptionObject['name'])+'</h5>';
             var messageTag = '<p>'+sanitizeString(exceptionObject['message'])+'</p>';
             var stackTrace = exceptionObject['stacktrace'];
-            return exceptionTag + nameTag + messageTag + parseStackTrace(stackTrace);
+            return exceptionTag + nameTag + messageTag + (stackTrace == null? '': parseStackTrace(stackTrace));
         }
 
         function parseStackTrace(stackTraceObject) {
             if (stackTraceObject.hasOwnProperty('exception')) {
                 return '<p>'+sanitizeString(stackTraceObject['line'])+'</p>' + parseException(stackTraceObject['exception']);
-            } else if (stackTraceObject.hasOwnProperty('lines')) {
+            } else if (stackTraceObject.hasOwnProperty('line')) {
                 return '<h4>stack trace</h4>' + parseLines(stackTraceObject['line']);
             } else {
                 return '';
