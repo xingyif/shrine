@@ -186,8 +186,10 @@
         function parseStackTrace(stackTraceObject) {
             if (stackTraceObject.hasOwnProperty('exception')) {
                 return '<p>'+sanitizeString(stackTraceObject['line'])+'</p>' + parseException(stackTraceObject['exception']);
-            } else {
+            } else if (stackTraceObject.hasOwnProperty('lines')) {
                 return '<h4>stack trace</h4>' + parseLines(stackTraceObject['line']);
+            } else {
+                return '';
             }
         }
 
