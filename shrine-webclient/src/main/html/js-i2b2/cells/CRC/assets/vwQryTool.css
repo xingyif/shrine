@@ -290,3 +290,28 @@ DIV#crcQueryToolBox DIV.queryBalloonAnd {
 	/*margin:10px 27px;*/
 	display:none;
 }
+
+DIV#crcQueryToolBox DIV.temporalControl {
+    width: 200px;
+    float: none;
+    position: relative;
+    background: #6677AA;
+    border: 1px solid #667788;
+    font-weight: bold;
+    font-family: arial,helvetica;
+    font-size: 11px;
+    height: 16px;
+    line-height: 16px;
+    text-align: center;
+    color: #FFF;
+    cursor: pointer;
+    display: inline-block;
+}
+
+div.temporalControl a {
+    color: #FFF;
+    text-decoration: none;
+    display: inline-block;
+    width: 100%;
+    height: 100%;
+}
