@@ -37,6 +37,7 @@
   /* FONT-FAMILY: Arial, Helvetica, sans-serif; */
   BACKGROUND-COLOR: #6699CC;
   TEXT-ALIGN: center;
+  border: 1px solid #ccc !important;
 }
 
 .titleDivs
@@ -52,9 +53,9 @@
     width: 100%; 
 	color: #6699CC;
 	font-family: Open Sans;
-	font-size: 16px;
+	font-size: 20px;
 	font-weight: bold;
-	padding-left: 60px;
+	/* padding-left: 60px; */
 	padding-bottom: 5px;
 }
 
@@ -231,7 +232,7 @@ table.qrPanelItemTable
 	border-collapse: collapse;
 	font-size:15px;
     TEXT-ALIGN: center;
-	margin-left: 60px;
+	/* margin-left: 60px; */
 }
 
 .reultsTable td
@@ -259,7 +260,7 @@ table.qrPanelItemTable
 }
 
 #queryResultsContainer {
-	padding-left: 60px;
+	padding-left: 20px;
 }
 
 
