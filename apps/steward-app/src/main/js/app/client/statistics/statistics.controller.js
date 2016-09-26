@@ -11,13 +11,14 @@
         var stats = this;
         var startDate = new Date();
         var endDate = new Date();
-
+        startDate.setDate(endDate.getDate() - 7);
 
         stats.getDateString = service.commonService.dateService.utcToMMDDYYYY;
         stats.timestampToUtc = service.commonService.dateService.timestampToUtc;
 
-        stats.startDate = startDate; //stats.getDateString(startDate);
-        stats.endDate = endDate; //stats.getDateString(endDate);
+        stats.startDate = startDate; 
+        stats.endDate = endDate;
+
         stats.isValid = true;
         stats.startOpened = false;
         stats.endOpened = false;
