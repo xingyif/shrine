@@ -7,7 +7,7 @@
  * Controller of the sbAdminApp
  */
 angular.module('stewardApp')
-    .controller('StatisticsCtrl', ['$scope', '$timeout', '$app', 'StatisticsModel', function ($scope, $timeout, $app, model) {
+    .controller('StatisticsCtrl', ['$scope', '$timeout', '$app', 'StatisticsModel', '$log', function ($scope, $timeout, $app, model, $log) {
 
         //existing date range logic.
         var startDate = new Date(),
@@ -18,7 +18,10 @@ angular.module('stewardApp')
         $scope.getDateString = function (date) {
             return $app.utils.utcToMMDDYYYY(date);
         };
-
+        $scope.watch("startDate",  function(newValue, oldValue) {
+            var valueOf = function(value) { return value == null? "null": JSON.stringify(value)};
+            $log.warn("date changed from " + valueOf(newValue) + " to " + valueOf(oldValue));
+        });
         $scope.startDate        = $scope.getDateString(startDate);
         $scope.endDate          = $scope.getDateString(endDate);
         $scope.isValid          = true;

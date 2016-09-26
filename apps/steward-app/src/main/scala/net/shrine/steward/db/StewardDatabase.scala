@@ -557,7 +557,7 @@ case class ShrineQueryRecord(stewardId: Option[StewardQueryId],
                              stewardResponse:TopicState,
                              date:Date) {
   def createOutboundShrineQuery(outboundTopic:Option[OutboundTopic],outboundUser:OutboundUser): OutboundShrineQuery = {
-    OutboundShrineQuery(stewardId.get,externalId,name,outboundUser,outboundTopic,scala.xml.XML.loadString(queryContents),stewardResponse.name,date)
+    OutboundShrineQuery(stewardId.get,externalId,name,outboundUser,outboundTopic,queryContents,stewardResponse.name,date)
   }
 }
 

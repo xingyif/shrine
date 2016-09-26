@@ -7,8 +7,8 @@
         .factory('DiagnosticModel', DiagnosticModel)
 
 
-    DiagnosticModel.$inject = ['$http', '$q', 'UrlGetter', 'XMLService', '$log'];
-    function DiagnosticModel (h, q, urlGetter, xmlService, $log) {
+    DiagnosticModel.$inject = ['$http', '$q', 'UrlGetter', 'XMLService'];
+    function DiagnosticModel (h, q, urlGetter, xmlService) {
 
 
         var cache = {};
@@ -81,7 +81,7 @@
          * @returns {{}}
          */
         function parseSummaryFromAll (all) {
-            $log.warn("Summay called");
+
             //
             var summary             = {};
 
@@ -156,7 +156,6 @@
              * @returns {*}
              */
             return function(offset, n, epoch) {
-                $log.warn("problems called");
                 if (offset != null) {
                     prevOffset = offset;
                 } else {
@@ -187,7 +186,6 @@
          * @returns {*}
          */
         function getHappyAll() {
-            $log.warn("Happy called");
             var url = urlGetter(Config.HappyAllEndpoint, '.xml')
             return h.get(url)
                 .then(parseHappyAllResult, onFail);

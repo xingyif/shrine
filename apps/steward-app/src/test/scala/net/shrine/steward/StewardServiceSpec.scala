@@ -67,7 +67,7 @@ class StewardServiceTest extends FlatSpec with ScalatestRouteTest with TestWithD
   val forbiddenTopicId = 0
   private val queryContent: QueryContents = "<queryDefinition><name>18-34 years old@18:31:51</name><expr><term>\\\\SHRINE\\SHRINE\\Demographics\\Age\\18-34 years old\\</term></expr></queryDefinition>"
   val diffs = List.empty
-  val getItBack:NodeSeq = scala.xml.XML.loadString(queryContent)
+  val getItBack = scala.xml.XML.loadString(queryContent).toString
 
   "StewardService" should  "return an OK and the correct createTopicsMode name" in {
 
@@ -427,7 +427,7 @@ class StewardServiceTest extends FlatSpec with ScalatestRouteTest with TestWithD
       StewardDatabase.db.logAndCheckQuery(researcherUserName,Some(1),InboundShrineQuery(0,"test query",queryContent))
 
       
-      Get(s"/researcher/queryHistory") ~>
+      Get(s"/researcher/queryHistory?asJson=false") ~>
         addCredentials(researcherCredentials) ~> route ~> check {
         assertResult(OK)(status)
 
@@ -456,14 +456,14 @@ class StewardServiceTest extends FlatSpec with ScalatestRouteTest with TestWithD
       addCredentials(researcherCredentials) ~> route ~> check {
       assertResult(OK)(status)
 
-      val queriesJson = new String(body.data.toByteArray)
-      val queries = parse(queriesJson).extract[QueryHistory]
+      val queriesString = new String(body.data.toByteArray)
+      val queriesJson = parse(queriesString).extract[QueryHistoryWithJson]
 
       assertResult(diffs)(QueryHistory(1,0,List(
         OutboundShrineQuery(1,0,"test query",researcherOutboundUser,Some(
           OutboundTopic(1,uncontroversialTopic.name,uncontroversialTopic.description,researcherOutboundUser,0,TopicState.approved.name,stewardOutboundUser,0)
         ),getItBack,TopicState.approved.name,0)
-      )).differencesExceptTimes(queries))
+      )).differencesExceptTimes(queriesJson.convertToXml))
     }
   }
 

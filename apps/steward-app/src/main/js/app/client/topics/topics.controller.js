@@ -27,7 +27,7 @@
             limit: service.viewConfig.limit, // -- number of results to show in table per page --//
             length: 0, // -- total number of topic results --//
             skip: 0, // -- number of results to skip --//
-            state: null // -- pending, approved, rejected --//
+            state: service.states.state1 // -- pending, approved, rejected --//
         };
 
         topics.showStewardMenu = service.isSteward();
@@ -36,10 +36,6 @@
         topics.openTopic = openTopic;
         topics.createTopic = createTopic;
         topics.onPageSelected = onPageSelected;
-
-        if (!topics.showStewardMenu) {
-            modelUpdate = model.getResearcherTopics;
-        }
 
         init();
 
@@ -58,7 +54,8 @@
             sortData.skip = 0; // -- number of results to skip --//
 
             if (!topics.showStewardMenu) {
-                service.state = 'all';
+                modelUpdate = model.getResearcherTopics;
+                sortData.state = undefined;
             }
         }
 
