@@ -60,8 +60,8 @@
         }
     });
 
-    ProblemsController.$inject = ['$app', '$log', '$sce'];
-    function ProblemsController ($app, $log, $sce) {
+    ProblemsController.$inject = ['$app', '$log', '$sce', '$scope'];
+    function ProblemsController ($app, $log, $sce, $scope) {
         var vm = this;
 
         init();
@@ -70,23 +70,33 @@
          *
          */
         function init () {
-            //vm.date = new Date();
-            vm.isOpen = { 'open': false };
-            vm.date = {'dateObject': new Date()};
+            $scope.isOpen = false;
+            $scope.date = new Date();
+            $scope.open = function() {$scope.isOpen = ! $scope.isOpen};
+            $scope.checkDate = function() { return $scope.date != undefined };
+
             vm.pageSizes = [5, 10, 20];
-            vm.format = "yyyy/M/dd";
+            vm.format = "dd/MM/yyyy";
             vm.url = "https://open.med.harvard.edu/wiki/display/SHRINE/";
             vm.submitDate = submitDate;
             vm.newPage = newPage;
             vm.floor = Math.floor;
             vm.handleButton = handleButton;
             vm.showP =         function(target)  { return vm.probsSize > target};
-            vm.checkDate =     function(date)    { $log.warn(date);return vm.date.dateObject != undefined };
-            vm.open =          function()        { $log.warn(vm.date.dateObject); vm.isOpen.open = !vm.isOpen.open;};
             vm.pageSizeCheck = function(n)       { return n < vm.probsSize };
             vm.parseDetails =  function(details) { return $sce.trustAsHtml(parseDetails(details)) };
             vm.numCheck =      function(any)     { return isFinite(any)? (any - 1) * vm.probsN: vm.probsOffset };
             vm.changePage =    function()        { vm.newPage(vm.probsOffset, vm.pageSize > 20? 20: vm.pageSize < 0? 0: vm.pageSize) };
+
+            $scope.$watch("vm.date.dateObject", function(newValue, oldValue) {
+                var valueOf = function(value) { return value == null? "null": JSON.stringify(value)};
+                $log.warn("date changed from " + valueOf(newValue) + " to " + valueOf(oldValue));
+            });
+
+            vm.formatDate = function(dateObject) {
+                var split = dateObject.toString().split(" ");
+                return split[1] + " " + split[2] + ", " + split[3];
+            };
 
             //todo: Get rid of this and figure out something less hacky
             vm.formatCodec = function(word) {
@@ -129,7 +139,7 @@
         }
 
         function submitDate() {
-            var epoch = vm.date.getTime() + 86400000; // + a day
+            var epoch = $scope.date.getTime() + 86400000; // + a day
             vm.showDateError = false;
             newPage(vm.probsOffset, vm.probsN, epoch);
         }
@@ -191,7 +201,7 @@
             } else if (stackTraceObject.hasOwnProperty('line')) {
                 return '<h4>stack trace</h4>' + parseLines(stackTraceObject['line']);
             } else {
-                return '';
+                return JSON.stringify(stackTraceObject);
             }
         }
 

@@ -8,12 +8,13 @@ import net.shrine.i2b2.protocol.pm.User
 import net.shrine.serialization.NodeSeqSerializer
 import net.shrine.steward.db._
 import net.shrine.steward.pmauth.Authorizer
+import org.json4s.native.Serialization
 import shapeless.HNil
 import spray.http.{HttpRequest, HttpResponse, StatusCodes}
 import spray.httpx.Json4sSupport
 import spray.routing.directives.LogEntry
 import spray.routing._
-import org.json4s.{DefaultFormats, DefaultJsonFormats, Formats}
+import org.json4s.{DefaultFormats, DefaultJsonFormats, Formats, Serialization}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.{Failure, Success, Try}
@@ -232,14 +233,8 @@ trait StewardService extends HttpService with Json4sSupport {
   def getQueryHistoryForUserByTopic(userIdOption:Option[UserName],topicIdOption:Option[TopicId], asJson: Option[Boolean]) = get {
     matchQueryParameters(userIdOption) { queryParameters:QueryParameters =>
       val queryHistory = StewardDatabase.db.selectQueryHistory(queryParameters, topicIdOption)
-      if (asJson.getOrElse(false)) {
-        println("true!")
-        complete(queryHistory)
-      } else {
-        println("false!")
-        val formats = queryHistory.json4sFormats
-        complete(queryHistory)(formats)
-      }
+
+      if (asJson.getOrElse(false)) complete(queryHistory.convertToJson) else complete(queryHistory)
     }
   }
 
