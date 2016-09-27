@@ -88,11 +88,6 @@
             vm.numCheck =      function(any)     { return isFinite(any)? (any - 1) * vm.probsN: vm.probsOffset };
             vm.changePage =    function()        { vm.newPage(vm.probsOffset, vm.pageSize > 20? 20: vm.pageSize < 0? 0: vm.pageSize) };
 
-            $scope.$watch("vm.date.dateObject", function(newValue, oldValue) {
-                var valueOf = function(value) { return value == null? "null": JSON.stringify(value)};
-                $log.warn("date changed from " + valueOf(newValue) + " to " + valueOf(oldValue));
-            });
-
             vm.formatDate = function(dateObject) {
                 var split = dateObject.toString().split(" ");
                 return split[1] + " " + split[2] + ", " + split[3];

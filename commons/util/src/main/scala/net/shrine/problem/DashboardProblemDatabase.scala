@@ -47,7 +47,7 @@ object Problems extends NeedsWarmUp {
   }
 
 
-  def warmUp = DatabaseConnector.runBlocking(Queries.length.result)
+  def warmUp = DatabaseConnector.runBlocking(Queries.map(_.xml).result)
 
   /**
     * The Problems Table. This is the table schema.
