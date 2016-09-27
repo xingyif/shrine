@@ -8,8 +8,9 @@
     /**
      *
      */
-    I2B2ConnectionsController.$inject = ['$app'];
-    function I2B2ConnectionsController($app) {
+    //todo: delete LOG
+    I2B2ConnectionsController.$inject = ['$app', '$log'];
+    function I2B2ConnectionsController($app, $log) {
         var vm = this;
 
         init();
@@ -30,14 +31,15 @@
 
             // @todo: make sure config exists in cache if so cull from cached config, if not make rest call to endpoint,
             var config      = $app.model.cache['config'];
+            $log.warn(JSON.stringify(config));
             vm.connections  = {
-                pmEndpointUrl:  config.pmEndpoint.url,
-                crcEndpointUrl: config.adapter.crcEndpointUrl,
-                ontEndpointUrl: config.ontEndpoint.url,
-                i2b2Domain:     config.hiveCredentials.domain,
-                username:       config.hiveCredentials.username,
-                crcProject:     config.hiveCredentials.crcProjectId,
-                ontProject:     config.hiveCredentials.ontProjectId
+                pmEndpointUrl:  config['shrine.pmEndpoint.url'],
+                crcEndpointUrl: config['shrine.adapter.crcEndpointUrl'],
+                ontEndpointUrl: config['shrine.ontEndpoint.url'],
+                i2b2Domain:     config['shrine.hiveCredentials.domain'],
+                username:       config['shrine.hiveCredentials.username'],
+                crcProject:     config['shrine.hiveCredentials.crcProjectId'],
+                ontProject:     config['shrine.hiveCredentials.ontProjectId']
             }
 
         }

@@ -117,7 +117,7 @@
          * @returns {*}
          */
         function getOptions() {
-            var url = urlGetter(Config.OptionsEndpoint)
+            var url = urlGetter(Config.OptionsEndpoint);
             return h.get(url)
                 .then(parseJsonResult, onFail);
         }
@@ -128,7 +128,7 @@
          * @returns {*}
          */
         function getConfig () {
-            var url = urlGetter(Config.ConfigEndpoint)
+            var url = urlGetter(Config.ConfigEndpoint);
             return h.get(url)
                 .then(parseJsonResult, onFail);
         }
@@ -139,7 +139,7 @@
          * @returns {*}
          */
         function getSummary () {
-            var url = urlGetter(Config.SummaryEndpoint)
+            var url = urlGetter(Config.SummaryEndpoint);
             return h.get(url)
                 .then(parseJsonResult, onFail);
         }
@@ -186,7 +186,7 @@
          * @returns {*}
          */
         function getHappyAll() {
-            var url = urlGetter(Config.HappyAllEndpoint, '.xml')
+            var url = urlGetter(Config.HappyAllEndpoint, '.xml');
             return h.get(url)
                 .then(parseHappyAllResult, onFail);
         }

@@ -10,8 +10,8 @@
      * Summary Controller.
      *
      */
-    SummaryController.$inject = ['$app', '$sce']
-    function SummaryController ($app, $sce) {
+    SummaryController.$inject = ['$app', '$sce', '$log']
+    function SummaryController ($app, $sce, $log) {
         var vm          = this;
 
         init();
@@ -21,7 +21,7 @@
          *
          */
         function init() {
-            $app.model.getHappyAll()
+            $app.model.getSummary()
                 .then(setSummary, onHappyFail);
 
             $app.model.getConfig()
@@ -34,13 +34,14 @@
          * @param summary
          */
         function setSummary(happyAll) {
-
+            $log.warn(JSON.stringify(happyAll));
+            //TODO FINISH
             // -- cache summary and all -- //
             $app.model.cache['all']     = happyAll.all;
-            $app.model.cache['summary'] = happyAll.summary;
+            $app.model.cache['summary'] = happyAll;
 
             // -- set viewmodel  -- //
-            vm.summary              = happyAll.summary;
+            vm.summary              = happyAll;
             return this;
         }
 

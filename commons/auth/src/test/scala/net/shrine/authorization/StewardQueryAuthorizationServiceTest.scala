@@ -2,12 +2,11 @@ package net.shrine.authorization
 
 import java.net.URL
 
-import net.shrine.authorization.AuthorizationResult.{NotAuthorized, Authorized}
+import net.shrine.authorization.AuthorizationResult.{Authorized, NotAuthorized}
 import net.shrine.util.ShouldMatchersForJUnit
 import org.junit.Test
 import spray.http.HttpResponse
-
-import spray.http.StatusCodes.{OK,UnavailableForLegalReasons,BadRequest,Unauthorized}
+import spray.http.StatusCodes.{BadRequest, OK, Unauthorized, UnavailableForLegalReasons}
 /**
  * @author david 
  * @since 4/6/15
@@ -15,7 +14,6 @@ import spray.http.StatusCodes.{OK,UnavailableForLegalReasons,BadRequest,Unauthor
 class StewardQueryAuthorizationServiceTest extends ShouldMatchersForJUnit {
 
   val baseUrl = new URL("https://localhost:6443")
-
   @Test
   def testAuthorizeRunQueryRequest {
     val stewardQueryAuthorizer = StewardQueryAuthorizationService("qep","trustme",baseUrl)

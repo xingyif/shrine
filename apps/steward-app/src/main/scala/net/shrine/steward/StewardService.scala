@@ -234,7 +234,11 @@ trait StewardService extends HttpService with Json4sSupport {
     matchQueryParameters(userIdOption) { queryParameters:QueryParameters =>
       val queryHistory = StewardDatabase.db.selectQueryHistory(queryParameters, topicIdOption)
 
-      if (asJson.getOrElse(false)) complete(queryHistory.convertToJson) else complete(queryHistory)
+      if (asJson.getOrElse(false)) {
+        complete(queryHistory.convertToJson)
+      } else {
+        complete(queryHistory)
+      }
     }
   }
 

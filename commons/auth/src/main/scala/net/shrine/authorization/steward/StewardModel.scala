@@ -128,7 +128,8 @@ case class OutboundShrineQuery(
                                 topic:Option[OutboundTopic],
                                 queryContents: QueryContents,
                                 stewardResponse:TopicStateName,
-                                date:Date) {
+                                date:Date)
+{
   def differences(other:OutboundShrineQuery):Seq[(String,Any,Any)] = {
     if (this == other) List()
     else {
