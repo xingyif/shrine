@@ -110,6 +110,56 @@
             return summary;
         }
 
+        /**
+         * Parses the json config map and turns it into a nested json object
+         * @param json the flat config map
+         */
+        function parseConfig (json) {
+            var configMap = json.data.configMap;
+            return preProcessJson(configMap);
+
+        }
+
+        // IE11 doesn't support string includes
+        function stringIncludes(haystack, needle) {
+            var arr = haystack.split("");
+            for (var i = 0; i < arr.length; i++) {
+                if (arr[i] == needle) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        // "explodes" the flag config map.
+        // e.g., {"key.foo": 10, "key.baz": 5} -> {"key": {"foo": 10, "baz": 5}}
+        function preProcessJson (object) {
+            var result = {};
+            for (var key in object) {
+                if (object.hasOwnProperty(key)) {
+                    if (!stringIncludes(key, ".")) {
+                        result[key] = object[key]
+                    } else {
+                        var split = key.split(".");
+                        var prev = result;
+                        for (var i = 0; i < split.length; i++) {
+                            var cur = split[i];
+                            if (!(cur in prev)) {
+                                prev[cur] = {}
+                            }
+                            if (i == split.length - 1) {
+                                prev[cur] = object[key];
+                            } else {
+                                prev = prev[cur]
+                            }
+                        }
+                    }
+                }
+            }
+            return result;
+        }
+
+
 
         /**
          * Get View Options, initial call from diagnostic.
@@ -130,7 +180,7 @@
         function getConfig () {
             var url = urlGetter(Config.ConfigEndpoint);
             return h.get(url)
-                .then(parseJsonResult, onFail);
+                .then(parseConfig, onFail);
         }
 
 
@@ -141,7 +191,7 @@
         function getSummary () {
             var url = urlGetter(Config.SummaryEndpoint);
             return h.get(url)
-                .then(parseJsonResult, onFail);
+                .then(parseConfig, onFail);
         }
 
 

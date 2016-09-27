@@ -34,7 +34,6 @@
          * @param summary
          */
         function setSummary(happyAll) {
-            $log.warn(JSON.stringify(happyAll));
             //TODO FINISH
             // -- cache summary and all -- //
             $app.model.cache['all']     = happyAll.all;
@@ -42,6 +41,7 @@
 
             // -- set viewmodel  -- //
             vm.summary              = happyAll;
+            $log.warn(JSON.stringify(vm.summary))
             return this;
         }
 
@@ -62,10 +62,12 @@
         function setConfig(config) {
 
             // -- cache the config --
-            $app.model.cache['config']  =  config;
+            $app.model.cache['config'] =  config;
             vm.config                   = config;
             return this;
         }
+
+
 
 
         /**

@@ -17,7 +17,7 @@
         init();
 
         function init () {
-            var config = $app.model.cache['config'];
+            var config = $app.model.cache['config']['shrine'];
             setIsDownstream(config);
             setStewardEnabled(config);
             setBroadcasterUrl(config);

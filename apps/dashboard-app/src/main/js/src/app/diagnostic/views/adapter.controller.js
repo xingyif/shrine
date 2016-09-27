@@ -17,19 +17,19 @@
 
         function init () {
             var all     = $app.model.cache['all'];
-            var config  = $app.model.cache['config'];
+            var config  = $app.model.cache['config']['shrine'];
 
-            setAdapter(all,config);
+            //setAdapter(all,config); todo fix this
             setConfiguration(config);
             setMappings(config);
         }
 
 
-
+        //TODO: figure out what this wants to accomplish
         function setAdapter (all,config) {
             vm.adapter  = {
                 term:           config.networkStatusQuery,
-                success:        all.adapter.result.response.errorResponse === undefined
+                success:        config.adapter.result.response.errorResponse === undefined
             };
 
             if (all.adapter.result.response.errorResponse) {
@@ -56,7 +56,7 @@
 
         function setMappings (config) {
             vm.mappings = {
-                mappsingsFilename:  config.adapter.adapterMappingsFilename
+                mappingsFilename:  config.adapter.adapterMappingsFileName
             };
         }
 
