@@ -103,7 +103,7 @@ object TopicState {
   }
 }
 
-case class OutboundShrineQuery(
+case class OutboundShrineQueryWithJson(
                                 stewardId:StewardQueryId,
                                 externalId:ExternalQueryId,
                                 name:String,
@@ -112,34 +112,53 @@ case class OutboundShrineQuery(
                                 queryContents: NodeSeq,
                                 stewardResponse:TopicStateName,
                                 date:Date)
-extends Json4sSupport
+  extends Json4sSupport
 {
+  override implicit def json4sFormats: Formats = DefaultFormats + new NodeSeqSerializer
+
+  def convertToXml:OutboundShrineQuery = {
+    OutboundShrineQuery(stewardId, externalId, name, user, topic, queryContents.toString, stewardResponse, date)
+  }
+}
+case class OutboundShrineQuery(
+                                stewardId:StewardQueryId,
+                                externalId:ExternalQueryId,
+                                name:String,
+                                user:OutboundUser,
+                                topic:Option[OutboundTopic],
+                                queryContents: QueryContents,
+                                stewardResponse:TopicStateName,
+                                date:Date) {
   def differences(other:OutboundShrineQuery):Seq[(String,Any,Any)] = {
     if (this == other) List()
     else {
       val fields = getClass.getDeclaredFields
       val names = fields.map(_.getName)
 
-      def getFromField(field:Field,thing:OutboundShrineQuery):Any = {
+      def getFromField(field: Field, thing: OutboundShrineQuery): Any = {
         field.setAccessible(true)
         field.get(thing)
       }
 
-      val thisUnapplied = fields.map(getFromField(_,this))
-      val otherUnapplied = fields.map(getFromField(_,other))
+      val thisUnapplied = fields.map(getFromField(_, this))
+      val otherUnapplied = fields.map(getFromField(_, other))
 
       val tuples = names.zip(thisUnapplied.zip(otherUnapplied))
 
-      def difference(name:String,one:Any,other:Any):Option[(String,Any,Any)] = {
+      def difference(name: String, one: Any, other: Any): Option[(String, Any, Any)] = {
         // TODO: Remove this horrible string equality hack.
-        if(one == other || one.isInstanceOf[NodeSeq] && other.isInstanceOf[NodeSeq] && one.toString == other.toString)
+        if (one == other)
           None
         else {
-          Some((name,one,other))
+          Some((name, one, other))
         }
       }
-      tuples.map(x => difference(x._1,x._2._1,x._2._2)).to[Seq].flatten
+      tuples.map(x => difference(x._1, x._2._1, x._2._2)).to[Seq].flatten
     }
+  }
+
+  def convertToJson:OutboundShrineQueryWithJson = {
+    OutboundShrineQueryWithJson(stewardId, externalId, name, user, topic, scala.xml.XML.loadString(queryContents), stewardResponse, date)
   }
 
   def differencesExceptTimes(other:OutboundShrineQuery):Seq[(String,Any,Any)] = {
@@ -151,7 +170,6 @@ extends Json4sSupport
     }
     diffWithoutTimes ++ topicDiffs
   }
-  override implicit def json4sFormats: Formats = DefaultFormats + new NodeSeqSerializer
 }
 
 case class QueriesPerUser(total:Int,queriesPerUser:Seq[(OutboundUser,Int)]) //todo rename QueriesPerResearcher
@@ -177,13 +195,13 @@ case class StewardsTopics(totalCount:Int,skipped:Int,topics:Seq[OutboundTopic]) 
   }
 }
 
-case class QueryHistory(totalCount:Int,skipped:Int,queryRecords:Seq[OutboundShrineQuery]) extends Json4sSupport {
+case class QueryHistory(totalCount:Int,skipped:Int,queryRecords:Seq[OutboundShrineQuery]) {
 
   def sameExceptForTimes(queryResponse: QueryHistory):Boolean = {
     (totalCount == queryResponse.totalCount) &&
       (skipped == queryResponse.skipped) &&
       (queryRecords.size == queryResponse.queryRecords.size) &&
-      queryRecords.zip(queryResponse.queryRecords).forall(x => x._1.differencesExceptTimes(x._2) == List.empty)
+      queryRecords.zip(queryResponse.queryRecords).forall(x => x._1.differencesExceptTimes(x._2).isEmpty)
   }
 
   def differences(other:QueryHistory):Seq[(String,Any,Any)] = {
@@ -217,7 +235,13 @@ case class QueryHistory(totalCount:Int,skipped:Int,queryRecords:Seq[OutboundShri
     val timeDiffs:Seq[(String,Any,Any)] = queryRecords.zip(other.queryRecords).flatMap(x => x._1.differencesExceptTimes(x._2))
     normalDiffs ++ timeDiffs
   }
-  override implicit def json4sFormats: Formats = DefaultFormats + new NodeSeqSerializer
+
+  def convertToJson = QueryHistoryWithJson(totalCount, skipped, queryRecords.map(_.convertToJson))
+}
+
+case class QueryHistoryWithJson(totalCount:Int,skipped:Int,queryRecords:Seq[OutboundShrineQueryWithJson]) extends Json4sSupport {
+  implicit def json4sFormats: Formats = DefaultFormats + new NodeSeqSerializer
+  def convertToXml = QueryHistory(totalCount, skipped, queryRecords.map(_.convertToXml))
 }
 
 case class TopicIdAndName(id:String,name:String)
