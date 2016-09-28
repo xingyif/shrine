@@ -149,7 +149,6 @@
 
             var prevOffset = 0;
             var prevN = 20;
-            var prevEpoch;
 
             /**
              * ProblemEndpoint:  'admin/status/problems',
@@ -165,11 +164,6 @@
                     prevN = n;
                 } else {
                     n = prevN;
-                }
-                if (epoch != null) {
-                    prevEpoch = epoch;
-                } else {
-                    epoch = prevEpoch;
                 }
 
                 var epochString = epoch && isFinite(epoch) ? '&epoch=' + epoch : '';
