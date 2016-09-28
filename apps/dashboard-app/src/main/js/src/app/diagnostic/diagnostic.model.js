@@ -7,8 +7,8 @@
         .factory('DiagnosticModel', DiagnosticModel)
 
 
-    DiagnosticModel.$inject = ['$http', '$q', 'UrlGetter', 'XMLService'];
-    function DiagnosticModel (h, q, urlGetter, xmlService) {
+    DiagnosticModel.$inject = ['$http', '$q', 'UrlGetter', 'XMLService', '$log'];
+    function DiagnosticModel (h, q, urlGetter, xmlService, $log) {
 
 
         var cache = {};
@@ -116,8 +116,9 @@
          */
         function parseConfig (json) {
             var configMap = json.data.configMap;
-            return preProcessJson(configMap);
-
+            var processed = preProcessJson(configMap);
+            $log.warn('processed: ' + processed);
+            return processed;
         }
 
         // IE11 doesn't support string includes
@@ -215,11 +216,6 @@
                     prevN = n;
                 } else {
                     n = prevN;
-                }
-                if (epoch != null) {
-                    prevEpoch = epoch;
-                } else {
-                    epoch = prevEpoch;
                 }
 
                 var epochString = epoch && isFinite(epoch) ? '&epoch=' + epoch : '';
