@@ -41,7 +41,7 @@
 
             // -- set viewmodel  -- //
             vm.summary              = happyAll;
-            $log.warn(JSON.stringify(vm.summary))
+            $log.warn(JSON.stringify(vm.summary));
             return this;
         }
 
