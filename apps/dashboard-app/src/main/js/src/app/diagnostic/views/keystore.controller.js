@@ -49,7 +49,7 @@
             vm.certificate = {
                 alias:          config.shrine.keystore.privateKeyAlias,
                 owner:          "UNKNOWN", //todo config.keystore.certId.name,
-                issuer:         "UNKNOWN", //@todo: verify the source,
+                issuer:         "UNKNOWN", //todo: verify the source,
                 privateKeyAlias: config.shrine.keystore.privateKeyAlias //todo: Why are these the same?
 
             }

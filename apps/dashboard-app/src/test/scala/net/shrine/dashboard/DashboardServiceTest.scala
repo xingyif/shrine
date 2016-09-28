@@ -167,9 +167,9 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
     }
   }
 
-  "DashboardService" should  "return an OK for admin/status/options" in {
+  "DashboardService" should  "return an OK for admin/status/optionalParts" in {
 
-    Get(s"/admin/status/options") ~>
+    Get(s"/admin/status/optionalParts") ~>
       addCredentials(adminCredentials) ~>
       route ~> check {
 
@@ -191,6 +191,65 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
     }
   }
 
+  "DashboardService" should  "return an OK for admin/status/adapter" in {
+
+    Get(s"/admin/status/adapter") ~>
+      addCredentials(adminCredentials) ~>
+      route ~> check {
+
+      assertResult(OK)(status)
+
+      val adapter = new String(body.data.toByteArray)
+    }
+  }
+
+  "DashboardService" should  "return an OK for admin/status/hub" in {
+
+    Get(s"/admin/status/hub") ~>
+      addCredentials(adminCredentials) ~>
+      route ~> check {
+
+      assertResult(OK)(status)
+
+      val hub = new String(body.data.toByteArray)
+    }
+  }
+
+  "DashboardService" should  "return an OK for admin/status/i2b2" in {
+
+    Get(s"/admin/status/i2b2") ~>
+      addCredentials(adminCredentials) ~>
+      route ~> check {
+
+      assertResult(OK)(status)
+
+      val i2b2 = new String(body.data.toByteArray)
+    }
+  }
+
+  "DashboardService" should  "return an OK for admin/status/keystore" in {
+
+    Get(s"/admin/status/keystore") ~>
+      addCredentials(adminCredentials) ~>
+      route ~> check {
+
+      assertResult(OK)(status)
+
+      val keystore = new String(body.data.toByteArray)
+    }
+  }
+
+  "DashboardService" should  "return an OK for admin/status/qep" in {
+
+    Get(s"/admin/status/qep") ~>
+      addCredentials(adminCredentials) ~>
+      route ~> check {
+
+      assertResult(OK)(status)
+
+      val qep = new String(body.data.toByteArray)
+    }
+  }
 
   "DashboardService" should "return an OK for admin/status/problems" in {
 

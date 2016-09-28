@@ -220,7 +220,8 @@ case class Adapter(crcEndpointUrl:String,
                    adapterMappingsDate:Option[Long]
                   )
 
-object Adapter{
+object
+Adapter{
   def apply():Adapter = {
     val crcEndpointUrl                  = ShrineOrchestrator.adapterComponents.fold("")(_.i2b2AdminService.crcUrl)
     val setSizeObfuscation              = ShrineOrchestrator.adapterComponents.fold(false)(_.i2b2AdminService.obfuscate)

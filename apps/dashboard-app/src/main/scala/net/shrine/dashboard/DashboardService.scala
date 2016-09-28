@@ -171,12 +171,20 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
     }
   }
 
+
   def statusRoute(user:User):Route = get {
-    pathPrefix("config"){getConfig}~
-      pathPrefix("classpath"){getClasspath}~
-      pathPrefix("options"){getOptionalParts}~  //todo rename path to optionalParts
-      pathPrefix("summary"){getSummary}~
-      pathPrefix("problems"){getProblems}
+    val (adapter,   hub,   i2b2,   keystore,   optionalParts,   qep,   summary) =
+       ("adapter", "hub", "i2b2", "keystore", "optionalParts", "qep", "summary")
+    pathPrefix("classpath")  {getClasspath}~
+    pathPrefix("config")     {getConfig}~
+    pathPrefix("problems")   {getProblems}~
+    pathPrefix(adapter)      {getFromSubService(adapter)}~
+    pathPrefix(hub)          {getFromSubService(hub)}~
+    pathPrefix(i2b2)         {getFromSubService(i2b2)}~
+    pathPrefix(keystore)     {getFromSubService(keystore)}~
+    pathPrefix(optionalParts){getFromSubService(optionalParts)}~
+    pathPrefix(qep)          {getFromSubService(qep)}~
+    pathPrefix(summary)      {getFromSubService(summary)}
   }
 
   val statusBaseUrl = DashboardConfigSource.config.getString("shrine.dashboard.statusBaseUrl")
@@ -209,12 +217,8 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
     requestUriThenRoute(statusBaseUrl + "/config",pullClasspathFromConfig)
   }
 
-  lazy val getOptionalParts:Route = {
-    requestUriThenRoute(statusBaseUrl + "/optionalParts")
-  }
-
-  lazy val getSummary:Route = {
-    requestUriThenRoute(statusBaseUrl + "/summary")
+  def getFromSubService(key: String):Route = {
+    requestUriThenRoute(s"$statusBaseUrl/$key")
   }
 
   // table based view, can see N problems at a time. Front end sends how many problems that they want

@@ -15,23 +15,34 @@
 
         // -- private const -- //
         var Config = {
-            OptionsEndpoint:  'admin/status/options',
+            AdapterEndpoint:  'admin/status/adapter',
             ConfigEndpoint:   'admin/status/config',
-            SummaryEndpoint:  'admin/status/summary',
+            HubEndpoint:      'admin/status/hub',
+            I2B2Endpoint:     'admin/status/i2b2',
+            KeystoreEndpoint: 'admin/status/keystore',
+            OptionsEndpoint:  'admin/status/optionalParts',
             ProblemEndpoint:  'admin/status/problems',
+            QepEndpoint:      'admin/status/qep',
+            SummaryEndpoint:  'admin/status/summary',
             HappyAllEndpoint: 'admin/happy/all'
         };
 
 
         // -- public -- //
         return {
-            getOptions:  getOptions,
+            getAdapter:  getJsonMaker(Config.AdapterEndpoint),
             getConfig:   getConfig,
-            getSummary:  getSummary,
+            getHub:      getJsonMaker(Config.HubEndpoint),
+            getI2B2:     getJsonMaker(Config.I2B2Endpoint),
+            getKeystore: getJsonMaker(Config.KeystoreEndpoint),
+            getOptions:  getOptions,
             getProblems: getProblemsMaker(),
+            getQep:      getJsonMaker(Config.QepEndpoint),
+            getSummary:  getSummary,
             getHappyAll: getHappyAll,
             cache:       cache
         };
+
 
         /**
          * Method for Handling a failed rest call.
@@ -49,6 +60,7 @@
          * @returns {*}
          */
         function parseJsonResult(result) {
+            $log.warn(JSON.stringify(result.data));
             return result.data;
         }
 
@@ -116,9 +128,7 @@
          */
         function parseConfig (json) {
             var configMap = json.data.configMap;
-            var processed = preProcessJson(configMap);
-            $log.warn('processed: ' + processed);
-            return processed;
+            return preProcessJson(configMap);
         }
 
         // IE11 doesn't support string includes
@@ -184,6 +194,14 @@
                 .then(parseConfig, onFail);
         }
 
+        function getJsonMaker(endpoint) {
+            return function() {
+                var url = urlGetter(Config[endpoint]);
+                return h.get(url)
+                    .then(parseJsonResult, onFail)
+            }
+        }
+
 
         /**
          *
@@ -192,7 +210,7 @@
         function getSummary () {
             var url = urlGetter(Config.SummaryEndpoint);
             return h.get(url)
-                .then(parseConfig, onFail);
+                .then(parseJsonResult, onFail);
         }
 
 

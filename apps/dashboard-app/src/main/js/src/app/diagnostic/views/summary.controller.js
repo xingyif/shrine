@@ -33,15 +33,14 @@
          *
          * @param summary
          */
-        function setSummary(happyAll) {
+        function setSummary(summary) {
             //TODO FINISH
             // -- cache summary and all -- //
-            $app.model.cache['all']     = happyAll.all;
-            $app.model.cache['summary'] = happyAll;
+            $app.model.cache['all']     = summary.all;
+            $app.model.cache['summary'] = summary;
 
             // -- set viewmodel  -- //
-            vm.summary              = happyAll;
-            $log.warn('summary: '+JSON.stringify(vm.summary));
+            vm.summary              = summary;
             return this;
         }
 
