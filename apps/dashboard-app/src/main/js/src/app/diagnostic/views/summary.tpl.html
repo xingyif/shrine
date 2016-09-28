@@ -1,5 +1,5 @@
 <div>
-    <table class="table table-striped" ng-show="vm.config && vm.summary">
+    <table class="table table-striped" ng-show="vm.summary">
         <thead>
         <tr>
             <td colspan="2">
@@ -17,20 +17,20 @@
         </tr>
         <tr>
             <td colspan="2">
-               This site is currently using <label>{{vm.config.hiveCredentials.ontProjectId}}</label> ontology version <label>{{vm.summary.ontologyVersion}}</label>
+               This site is currently using <label>{{"TODO: ONT PROJECT ID?"}}</label> ontology version <label>{{vm.summary.ontologyVersion}}</label>
                 <!--(based on concept term <label>{{vm.summary.ontologyTerm}}</label>)-->
             </td>
         </tr>
         <tr>
             <td colspan="2">
-                This site is currently using <label>{{vm.config.adapter.adapterMappingsFilename}}</label> for mappings.
+                This site is currently using <label>{{"TODO: ADAPTER FILE NAME??"}}</label> for mappings.
             </td>
         </tr>
         </tbody>
 
     </table>
 
-    <table class="table table-striped" ng-show="vm.config && vm.summary">
+    <table class="table table-striped" ng-show="vm.summary">
         <thead>
         <tr>
             <td colspan="2">
@@ -55,11 +55,11 @@
             <td>
                 <label>QEP:</label>
             </td>
-            <td ng-if="vm.summary.keystoreOk !== true" class="error">
+            <td ng-if="vm.summary.qepOk !== true" class="error">
                 Error: <a ui-sref="diagnostic.qep">click
                 here for more details.</a>
             </td>
-            <td ng-if="vm.summary.keystoreOk === true" class="ok">
+            <td ng-if="vm.summary.qepOk === true" class="ok">
                 OK
             </td>
         </tr>

@@ -9,54 +9,57 @@
      *
      * @type {string[]}
      */
-    AdapterController.$inject = ['$app'];
-    function AdapterController ($app) {
+    AdapterController.$inject = ['$app', '$log'];
+    function AdapterController ($app, $log) {
         var vm = this;
 
         init();
 
         function init () {
-            var all     = $app.model.cache['all'];
-            var config  = $app.model.cache['config']['shrine'];
+            $app.model.getAdapter()
+                .then(setAdapter, handleFailure);
+        }
 
-            //setAdapter(all,config); todo fix this
-            setConfiguration(config);
-            setMappings(config);
+        function handleFailure(failure) {
+            // TODO: HANDLE FAILURE
+            $log.error(JSON.stringify(failure));
         }
 
 
         //TODO: figure out what this wants to accomplish
-        function setAdapter (all,config) {
+        function setAdapter (adapter) {
             vm.adapter  = {
-                term:           config.networkStatusQuery,
-                success:        config.adapter.result.response.errorResponse === undefined
+                term:           "TODO: NETWORK STATUS QUERY", //config.networkStatusQuery,
+                success:        "TODO: ADAPTER RESULT SUCCESS" //config.adapter.result.response.errorResponse === undefined
             };
 
-            if (all.adapter.result.response.errorResponse) {
-                vm.adapter.errorData = all.adapter.result.response.errorResponse.problem;
-            }
-            else {
-                vm.adapter.description = all.adapter.result.response.runQueryResponse.queryResults.
-                    queryResult.setSize;
-                vm.adapter.description += ' ' + all.adapter.result.response.runQueryResponse.queryResults.
-                        queryResult.resultType.description;
-            }
+            // if (all.adapter.result.response.errorResponse) {
+            //     vm.adapter.errorData = all.adapter.result.response.errorResponse.problem;
+            // }
+            // else {
+            //     vm.adapter.description = all.adapter.result.response.runQueryResponse.queryResults.
+            //         queryResult.setSize;
+            //     vm.adapter.description += ' ' + all.adapter.result.response.runQueryResponse.queryResults.
+            //             queryResult.resultType.description;
+            // }
+            setConfiguration(adapter);
         }
 
-        function setConfiguration (config) {
+        function setConfiguration (adapter) {
             vm.configuration = {
-                crcEndpointURL:     config.adapter.crcEndpointUrl,
-                crcProjectId:       config.hiveCredentials.crcProjectId,
-                domain:             config.hiveCredentials.domain,
-                username:           config.hiveCredentials.username,
-                password:           config.hiveCredentials.password,
-                lockoutThreshold:   config.adapter.adapterLockoutAttemptsThreshold
-            }
+                crcEndpointURL:     adapter.crcEndpointUrl,
+                crcProjectId:       "TODO: CRC ID", //config.hiveCredentials.crcProjectId,
+                domain:             "TODO: HIVE CREDENTIALS DOMAIN", //config.hiveCredentials.domain,
+                username:           "TODO: HIVE CREDENTIALS USERNAME", //config.hiveCredentials.username,
+                password:           "TODO: HIVE CREDENTIALS PASSWORD", //config.hiveCredentials.password,
+                lockoutThreshold:   adapter.adapterLockoutAttemptsThreshold
+            };
+            setMappings(adapter);
         }
 
-        function setMappings (config) {
+        function setMappings (adapter) {
             vm.mappings = {
-                mappingsFilename:  config.adapter.adapterMappingsFileName
+                mappingsFilename:  adapter.adapterMappingsFilename
             };
         }
 

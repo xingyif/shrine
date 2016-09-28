@@ -38,7 +38,7 @@
             getOptions:  getOptions,
             getProblems: getProblemsMaker(),
             getQep:      getJsonMaker(Config.QepEndpoint),
-            getSummary:  getSummary,
+            getSummary:  getJsonMaker(Config.SummaryEndpoint),
             getHappyAll: getHappyAll,
             cache:       cache
         };
@@ -60,7 +60,6 @@
          * @returns {*}
          */
         function parseJsonResult(result) {
-            $log.warn(JSON.stringify(result.data));
             return result.data;
         }
 
@@ -196,29 +195,16 @@
 
         function getJsonMaker(endpoint) {
             return function() {
-                var url = urlGetter(Config[endpoint]);
+                var url = urlGetter(endpoint);
                 return h.get(url)
                     .then(parseJsonResult, onFail)
             }
         }
 
-
-        /**
-         *
-         * @returns {*}
-         */
-        function getSummary () {
-            var url = urlGetter(Config.SummaryEndpoint);
-            return h.get(url)
-                .then(parseJsonResult, onFail);
-        }
-
-
         function getProblemsMaker() {
 
             var prevOffset = 0;
             var prevN = 20;
-            var prevEpoch;
 
             /**
              * ProblemEndpoint:  'admin/status/problems',

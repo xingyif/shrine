@@ -4,12 +4,15 @@
         <form ng-submit="vm.submitDate(date)" style="width:18.5%;white-space:nowrap;">
             <button datepicker-popup="{{vm.format}}"
                     type="button"
-                class="btn btn-primary active"
-                ng-model="date"
-                is-open='isOpen'
-                ng-click="open()"
-                close-text="Close"
-                placeholder="{{vm.format}}">{{vm.formatDate(date)}}</button>
+                    class="btn btn-primary active"
+                    ng-model="date"
+                    is-open='isOpen'
+                    ng-click="open()"
+                    close-text="Close"
+                    placeholder="{{vm.format}}"
+                    datepicker-options="vm.dateOptions">
+                {{vm.formatDate(date)}}
+            </button>
             <button type="submit" class="glyphicon glyphicon-search" ng-show="checkDate()">
             </button>
             <button class="glyphicon glyphicon-search" ng-hide="checkDate()"

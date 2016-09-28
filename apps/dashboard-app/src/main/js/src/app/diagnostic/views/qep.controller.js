@@ -17,11 +17,24 @@
         init();
 
         function init () {
-            var config = $app.model.cache['config']['shrine'];
+            $app.model.getQep()
+                .then(setQep, handleFailure);
             setIsDownstream(config);
             setStewardEnabled(config);
             setBroadcasterUrl(config);
             setSteward(config);
+        }
+
+        function handleFailure(failure) {
+            //TODO: HANDLE FAILURE
+            $app.error(JSON.stringify(failure));
+        }
+
+        function setQep(qep) {
+            vm.isStewardEnabled = ;
+            vm.steward = ;
+            vm.isDownstream = ;
+            vm.broadcasterUrl = ;
         }
 
 

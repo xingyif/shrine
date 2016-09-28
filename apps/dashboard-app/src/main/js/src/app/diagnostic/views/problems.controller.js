@@ -75,6 +75,7 @@
             $scope.open = function() {$scope.isOpen = ! $scope.isOpen};
             $scope.checkDate = function() { return $scope.date != undefined };
 
+            vm.dateOptions = {maxDate: new Date()};
             vm.pageSizes = [5, 10, 20];
             vm.format = "dd/MM/yyyy";
             vm.url = "https://open.med.harvard.edu/wiki/display/SHRINE/";

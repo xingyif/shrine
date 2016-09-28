@@ -1,1 +1,3 @@
-{"isHub":true,"shrineVersion":"1.21.1-SNAPSHOT","shrineBuildDate":"2015-12-09 17:38:13","ontologyVersion":"UNKNOWN","ontologyTerm":"\\\\i2b2_DEMO\\i2b2\\Demographics\\Gender\\Male\\","adapterOk":true,"keystoreOk":true,"hubOk":true,"qepOk":true}
+{"isHub":true,"shrineVersion":"1.21.1-SNAPSHOT","shrineBuildDate":"2015-12-09 17:38:13",
+  "ontologyVersion":"UNKNOWN","ontologyTerm":"\\\\i2b2_DEMO\\i2b2\\Demographics\\Gender\\Male\\",
+  "adapterOk":true,"keystoreOk":true,"hubOk":true,"qepOk":true}

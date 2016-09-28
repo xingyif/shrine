@@ -1,0 +1,3 @@
+{"maxQueryWaitTimeMillis":300000000,"create":true,"attachSigningCert":true,"authorizationType":"StewardQueryAuthorizationService",
+  "includeAggregateResults":false,"authenticationType":"PmAuthenticator"}
+

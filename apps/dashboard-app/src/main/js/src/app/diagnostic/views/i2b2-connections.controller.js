@@ -9,8 +9,8 @@
      *
      */
     //todo: delete LOG
-    I2B2ConnectionsController.$inject = ['$app'];
-    function I2B2ConnectionsController($app) {
+    I2B2ConnectionsController.$inject = ['$app', '$log'];
+    function I2B2ConnectionsController($app, $log) {
         var vm = this;
 
         init();
@@ -20,26 +20,30 @@
          *
          */
         function init () {
-            setConnections();
+            $app.model.getI2B2()
+                .then(setConnections, handleFailure);
+        }
+
+        function handleFailure(failure) {
+            //TODO: HANDLE FAILURE BETTER
+            $log.error(JSON.stringify(failure));
         }
 
 
         /**
          *
          */
-        function setConnections () {
-
-            // @todo: make sure config exists in cache if so cull from cached config, if not make rest call to endpoint,
-            var config      = $app.model.cache['config']['shrine'];
+        function setConnections (i2b2) {
+            // @todo: make sure config existes in cache if so cull from cached config, if not make rest call to endpoint,
 
             vm.connections  = {
-                pmEndpointUrl:  config.pmEndpoint.url,
-                crcEndpointUrl: config.adapter.crcEndpoint.url,
-                ontEndpointUrl: config.ontEndpoint.url,
-                i2b2Domain:     config.hiveCredentials.domain,
-                username:       config.hiveCredentials.username,
-                crcProject:     config.hiveCredentials.crcProjectId,
-                ontProject:     config.hiveCredentials.ontProjectId
+                pmEndpointUrl:  i2b2.pmUrl,
+                crcEndpointUrl: i2b2.crcUrl,
+                ontEndpointUrl: i2b2.ontUrl,
+                i2b2Domain:     i2b2.i2b2Domain,
+                username:       i2b2.username,
+                crcProject:     i2b2.crcProject,
+                ontProject:     i2b2.ontProject
             }
 
         }

@@ -10,8 +10,8 @@
      *
      * @type {string[]}
      */
-    KeystoreController.$inject = ['$app']
-    function KeystoreController ($app) {
+    KeystoreController.$inject = ['$app', '$log'];
+    function KeystoreController ($app, $log) {
         var vm = this;
 
         init();
@@ -21,10 +21,8 @@
          *
          */
         function init() {
-            var all     = $app.model.cache['all'];
-            var config  = $app.model.cache['config'];
-            setKeystore(config);
-            setCertificate(all, config)
+            $app.model.getKeystore()
+                .then(setKeystore, handleFailure);
         }
 
 
@@ -32,27 +30,23 @@
          *
          * @param all
          */
-        function setKeystore (all) {
+        function setKeystore (keystore) {
             vm.keystore = {
-                file:       all.shrine.keystore.file,
+                file:       keystore.fileName,
                 password:   "REDACTED"
+            };
+            vm.certificate = {
+                alias:           keystore.privateKeyAlias,
+                owner:           keystore.owner, //todo config.keystore.certId.name,
+                issuer:          keystore.issuer, //todo: verify the source,
+                privateKeyAlias: keystore.caTrustedAlias //todo: Why are these the same?
+
             }
         }
 
-
-        /**
-         *
-         * @param all
-         * @param config
-         */
-        function setCertificate (all, config) {
-            vm.certificate = {
-                alias:          config.shrine.keystore.privateKeyAlias,
-                owner:          "UNKNOWN", //todo config.keystore.certId.name,
-                issuer:         "UNKNOWN", //todo: verify the source,
-                privateKeyAlias: config.shrine.keystore.privateKeyAlias //todo: Why are these the same?
-
-            }
+        //TODO: Good error handling
+        function handleFailure(failure) {
+            $log.error(JSON.stringify(failure));
         }
     }
 })();
