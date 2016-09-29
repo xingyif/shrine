@@ -71,7 +71,7 @@ object AdapterComponents {
       countsAndMilliseconds.map(pairConfig => (pairConfig.getLong("count"),pairConfig.getLong("milliseconds").milliseconds))
     }
 
-    val obfuscator:Obfuscator = adapterConfig.getConfigured("obfucscation",Obfuscator(_))
+    val obfuscator:Obfuscator = adapterConfig.getConfigured("obfuscation",Obfuscator(_))
 
     Log.info(s"obfuscator is $obfuscator")
 
