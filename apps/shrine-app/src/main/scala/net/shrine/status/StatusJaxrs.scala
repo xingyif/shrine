@@ -22,11 +22,12 @@ import scala.collection.immutable.{Map, Seq, Set}
 import net.shrine.config.ConfigExtensions
 import net.shrine.crypto.{KeyStoreCertCollection, KeyStoreDescriptor, SigningCertStrategy}
 import net.shrine.protocol.query.{OccuranceLimited, QueryDefinition, Term}
-import net.shrine.protocol.{AuthenticationInfo, BroadcastMessage, Credential, FailureResult, FailureResult$, Result, ResultOutputType, RunQueryRequest, Timeout}
+import net.shrine.protocol._
+import net.shrine.serialization.NodeSeqSerializer
 import net.shrine.util.Versions
 
 import scala.concurrent.Await
-import scala.util.Try
+import scala.util.{Success, Try}
 import scala.util.control.NonFatal
 
 /**
@@ -39,7 +40,7 @@ import scala.util.control.NonFatal
 @Produces(Array(MediaType.APPLICATION_JSON))
 case class StatusJaxrs(shrineConfig:TsConfig) extends Loggable {
 
-  implicit def json4sFormats: Formats = DefaultFormats
+  implicit def json4sFormats: Formats = DefaultFormats + new NodeSeqSerializer
 
   @GET
   @Path("version")
@@ -280,6 +281,7 @@ case class Summary(
                     shrineBuildDate:String,
                     ontologyVersion:String,
                     ontologyTerm:String,
+                    queryResult: Option[SingleNodeResult],
                     adapterMappingsFileName:Option[String],
                     adapterMappingsDate:Option[Long],
                     adapterOk:Boolean,
@@ -317,7 +319,7 @@ object Summary {
 
     val message = runQueryRequest
 
-    val adapterOk: Boolean = ShrineOrchestrator.adapterService.fold(true) { adapterService =>
+    val queryResult: Option[SingleNodeResult] = ShrineOrchestrator.adapterService.map{ adapterService =>
 
       import scala.concurrent.duration._
 
@@ -327,9 +329,14 @@ object Summary {
       val elapsed = (end - start).milliseconds
 
       resultAttempt match {
-        case scala.util.Failure(cause) => false
-        case scala.util.Success(response) => true
+        case scala.util.Success(result) => result
+        case scala.util.Failure(throwable) => FailureResult(NodeId("Local"), throwable)
       }
+    }
+
+    val adapterOk = queryResult.fold(true) {
+      case r:Result => true
+      case f:FailureResult => false
     }
 
     val hubOk = ShrineOrchestrator.hubComponents.fold(true){ hubComponents =>
@@ -366,6 +373,7 @@ object Summary {
       //todo in scala 2.12, do better
       ontologyVersion = ontologyVersion,
       ontologyTerm = term.value,
+      queryResult = queryResult,
       adapterMappingsFileName = adapterMappingInfo._1,
       adapterMappingsDate = adapterMappingInfo._2,
       adapterOk = adapterOk,

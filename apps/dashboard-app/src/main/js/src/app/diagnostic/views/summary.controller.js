@@ -34,12 +34,6 @@
          * @param summary
          */
         function setSummary(summary) {
-            $log.warn(JSON.stringify(summary));
-            //TODO FINISH
-            // -- cache summary and all -- //
-            // $app.model.cache['all']     = summary.all;
-            // $app.model.cache['summary'] = summary;
-
             // -- set viewmodel  -- //
             vm.summary              = summary;
             return this;

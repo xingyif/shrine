@@ -125,7 +125,6 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
       assertResult(OK)(status)
 
       val allString = new String(body.data.toByteArray)
-      //println(allString)
       //todo test it to see if it's right
     }
   }
@@ -236,7 +235,6 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
       assertResult(OK)(status)
 
       val keystore = new String(body.data.toByteArray)
-      println(keystore)
     }
   }
 

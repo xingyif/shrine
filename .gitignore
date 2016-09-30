@@ -5,6 +5,7 @@
 # mvn
 target/
 *.versionsBackup
+*.releaseBackup
 
 # emacs cruft
 *.*~

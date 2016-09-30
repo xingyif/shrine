@@ -37,9 +37,9 @@
             };
             vm.certificate = {
                 alias:           keystore.privateKeyAlias,
-                owner:           keystore.owner, //todo config.keystore.certId.name,
-                issuer:          keystore.issuer, //todo: verify the source,
-                privateKeyAlias: keystore.caTrustedAlias //todo: Why are these the same?
+                owner:           keystore.owner,
+                issuer:          keystore.issuer,
+                privateKeyAlias: keystore.caTrustedAlias
 
             }
         }

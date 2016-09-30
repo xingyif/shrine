@@ -51,7 +51,7 @@
                 crcProjectId:       "TODO: CRC ID", //config.hiveCredentials.crcProjectId,
                 domain:             "TODO: HIVE CREDENTIALS DOMAIN", //config.hiveCredentials.domain,
                 username:           "TODO: HIVE CREDENTIALS USERNAME", //config.hiveCredentials.username,
-                password:           "TODO: HIVE CREDENTIALS PASSWORD", //config.hiveCredentials.password,
+                password:           "REDACTED", //config.hiveCredentials.password,
                 lockoutThreshold:   adapter.adapterLockoutAttemptsThreshold
             };
             setMappings(adapter);
