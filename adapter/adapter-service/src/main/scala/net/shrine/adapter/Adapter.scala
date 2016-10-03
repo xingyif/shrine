@@ -25,7 +25,7 @@ abstract class Adapter extends Loggable {
   //noinspection RedundantBlock
   final def perform(message: BroadcastMessage): BaseShrineResponse = {
     def problemToErrorResponse(problem:Problem):ErrorResponse = {
-      LoggingProblemHandler.handleProblem(problem)
+      //TODO: Is this needed? LoggingProblemHandler.handleProblem(problem)
       ErrorResponse(problem)
     }
 

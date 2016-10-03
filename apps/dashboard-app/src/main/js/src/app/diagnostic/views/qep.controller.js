@@ -10,73 +10,37 @@
      *
      * @type {string[]}
      */
-    QEPController.$inject = ['$app'];
-    function QEPController ($app) {
+    QEPController.$inject = ['$app', '$log'];
+    function QEPController ($app, $log) {
         var vm = this;
 
         init();
 
         function init () {
-            $app.model.getQep()
+
+            $app.model.getOptions()
+                .then(setOptions, handleFailure)
+                .then($app.model.getQep, handleFailure)
                 .then(setQep, handleFailure);
-            setIsDownstream(config);
-            setStewardEnabled(config);
-            setBroadcasterUrl(config);
-            setSteward(config);
         }
 
         function handleFailure(failure) {
             //TODO: HANDLE FAILURE
-            $app.error(JSON.stringify(failure));
+            $log.error(JSON.stringify(failure));
+        }
+
+        function setOptions(options) {
+            vm.isStewardEnabled = options.stewardEnabled;
+            vm.isDownstream = !options.isHub;
+
         }
 
         function setQep(qep) {
-            vm.isStewardEnabled = ;
-            vm.steward = ;
-            vm.isDownstream = ;
-            vm.broadcasterUrl = ;
+            vm.steward = qep.steward;
+            vm.broadcasterUrl = (vm.isDownstream && qep.broadcasterUrl !== undefined)?
+                                    qep.broadcasterUrl:
+                                    'Unknown';
         }
 
-
-        /**
-         *
-         * @param config
-         */
-        function setIsDownstream (config) {
-            vm.isDownstream = config.isHub === false;
-        }
-
-
-        /**
-         *
-         * @param config
-         */
-        function setStewardEnabled (config) {
-            vm.isStewardEnabled = config.queryEntryPoint.shrineSteward !== undefined;
-        }
-
-
-        /**
-         *
-         */
-        function setBroadcasterUrl (config) {
-            vm.broadcasterUrl = (vm.isDownstream === true && config.queryEntryPoint.broadcasterServiceEndpointUrl !== undefined)?
-                config.queryEntryPoint.broadcasterServiceEndpointUrl : "UNKNOWN";
-        }
-
-
-        /**
-         *
-         */
-        function setSteward (config) {
-            if(vm.isStewardEnabled === true && vm.isStewardEnabled === true) {
-                vm.steward = {
-                    qepUsername:    config.queryEntryPoint.shrineSteward.qepUserName,
-                    stewardBaseUrl: config.queryEntryPoint.shrineSteward.stewardBaseUrl,
-                    password:       "REDACTED"
-                }
-            }
-
-        }
     }
 })();

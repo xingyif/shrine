@@ -17,7 +17,12 @@
 
         function init () {
             $app.model.getAdapter()
-                .then(setAdapter, handleFailure);
+                .then(setAdapter, handleFailure)
+                .then($app.model.getI2B2)
+                .then(setI2B2, handleFailure);
+
+            $app.model.getSummary()
+                .then(setSummary, handleFailure);
         }
 
         function handleFailure(failure) {
@@ -26,42 +31,43 @@
         }
 
 
-        //TODO: figure out what this wants to accomplish
-        function setAdapter (adapter) {
+        function setSummary (summary) {
             vm.adapter  = {
-                term:           "TODO: NETWORK STATUS QUERY", //config.networkStatusQuery,
-                success:        "TODO: ADAPTER RESULT SUCCESS" //config.adapter.result.response.errorResponse === undefined
+                term:           summary.ontologyTerm, //config.networkStatusQuery,
+                success:        summary.queryResult.response.problemDigest === undefined
             };
 
-            // if (all.adapter.result.response.errorResponse) {
-            //     vm.adapter.errorData = all.adapter.result.response.errorResponse.problem;
-            // }
-            // else {
-            //     vm.adapter.description = all.adapter.result.response.runQueryResponse.queryResults.
-            //         queryResult.setSize;
-            //     vm.adapter.description += ' ' + all.adapter.result.response.runQueryResponse.queryResults.
-            //             queryResult.resultType.description;
-            // }
-            setConfiguration(adapter);
+            if (summary.queryResult.response.problemDigest !== undefined) {
+                vm.adapter.errorData = summary.queryResult.response.problemDigest;
+            }
+            else {
+                //TODO FIGURE OUT THE CORRECT FIELDS FOR SUCCESSFUL QUERY RESULT
+                vm.adapter.description = summary.queryResult.response.runQueryResponse.queryResults.
+                    queryResult.setSize;
+                vm.adapter.description += ' ' + summary.queryResult.result.response.runQueryResponse.queryResults.
+                        queryResult.resultType.description;
+            }
         }
 
-        function setConfiguration (adapter) {
-            vm.configuration = {
-                crcEndpointURL:     adapter.crcEndpointUrl,
-                crcProjectId:       "TODO: CRC ID", //config.hiveCredentials.crcProjectId,
-                domain:             "TODO: HIVE CREDENTIALS DOMAIN", //config.hiveCredentials.domain,
-                username:           "TODO: HIVE CREDENTIALS USERNAME", //config.hiveCredentials.username,
-                password:           "REDACTED", //config.hiveCredentials.password,
-                lockoutThreshold:   adapter.adapterLockoutAttemptsThreshold
-            };
-            setMappings(adapter);
-        }
-
-        function setMappings (adapter) {
+        function setAdapter (adapter) {
             vm.mappings = {
                 mappingsFilename:  adapter.adapterMappingsFilename
             };
+
+            vm.configuration = {
+                crcEndpointURL:     adapter.crcEndpointUrl,
+                crcProjectId:       "", //config.hiveCredentials.crcProjectId,
+                domain:             "", //config.hiveCredentials.domain,
+                username:           "", //config.hiveCredentials.username,
+                password:           "REDACTED", //config.hiveCredentials.password,
+                lockoutThreshold:   adapter.adapterLockoutAttemptsThreshold
+            };
         }
 
+        function setI2B2 (i2b2) {
+            vm.configuration.crcProjectId = i2b2.crcProject;
+            vm.configuration.domain = i2b2.i2b2Domain;
+            vm.configuration.username = i2b2.username;
+        }
     }
 })();

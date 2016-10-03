@@ -1,3 +1,1 @@
-{"maxQueryWaitTimeMillis":300000000,"create":true,"attachSigningCert":true,"authorizationType":"StewardQueryAuthorizationService",
-  "includeAggregateResults":false,"authenticationType":"PmAuthenticator"}
-
+{"maxQueryWaitTimeMillis":300000000,"create":true,"attachSigningCert":true,"authorizationType":"StewardQueryAuthorizationService","includeAggregateResults":false,"authenticationType":"PmAuthenticator","steward":{"stewardBaseUrl":"https://localhost:6443","qepUsername":"qep","password":"REDACTED"}}

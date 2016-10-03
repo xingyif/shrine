@@ -1,2 +1,1 @@
-{"maxQueryWaitTimeMillis":300000000,"create":true,"attachSigningCert":true,"authorizationType":"StewardQueryAuthorizationService","includeAggregateResults":false,"authenticationType":"PmAuthenticator"}
-
+{"isHub":true,"stewardEnabled":true,"shouldQuerySelf":false,"downstreamNodes":[{"name":"some hospital","url":"http://example.com/foo/requests"},{"name":"PHS","url":"http://example.com/phs/requests"},{"name":"CHB","url":"http://example.com/chb/requests"},{"name":"SHRINE Cell","url":"not applicable"}]}

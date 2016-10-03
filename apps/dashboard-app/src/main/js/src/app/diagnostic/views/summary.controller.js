@@ -22,10 +22,15 @@
          */
         function init() {
             $app.model.getSummary()
-                .then(setSummary, onHappyFail);
+                .then(setSummary, handleFailure);
 
-            // $app.model.getConfig()
-            //     .then(setConfig, onConfigFail);
+            $app.model.getI2B2()
+                .then(setI2B2, handleFailure);
+        }
+
+        function handleFailure(failure) {
+            //TODO: HANDLE FAILURE
+            $log.error(JSON.stringify(failure));
         }
 
 
@@ -36,49 +41,14 @@
         function setSummary(summary) {
             // -- set viewmodel  -- //
             vm.summary              = summary;
+            if (vm.adapterMappingsFileName === undefined) {
+                vm.adapterMappingsFileName = 'UNKNOWN'
+            }
             return this;
         }
 
-
-        /**
-         *
-         * @returns {*}
-         */
-        function getConfig() {
-             return $app.model.getConfig();
-        }
-
-
-        /**
-         *
-         * @param config
-         */
-        function setConfig(config) {
-
-            // -- cache the config --
-            $app.model.cache['config'] =  config;
-            vm.config                   = config;
-            return this;
-        }
-
-
-
-
-        /**
-         *
-         * @param data
-         */
-        function onHappyFail(data) {
-            vm.trustedHtml  = $sce.trustAsHtml(data);
-        }
-
-
-        /**
-         *
-         * @param data
-         */
-        function onConfigFail (data) {
-            vm.trustedHtml  = $sce.trustAsHtml(data);
+        function setI2B2(i2b2) {
+            vm.ontProject = i2b2.ontProject;
         }
     }
 })();

@@ -9,8 +9,8 @@
      *
      */
     //todo: delete LOG
-    I2B2ConnectionsController.$inject = ['$app', '$log'];
-    function I2B2ConnectionsController($app, $log) {
+    I2B2ConnectionsController.$inject = ['$app'];
+    function I2B2ConnectionsController($app) {
         var vm = this;
 
         init();
@@ -35,7 +35,6 @@
          */
         function setConnections (i2b2) {
             // @todo: make sure config existes in cache if so cull from cached config, if not make rest call to endpoint,
-
             vm.connections  = {
                 pmEndpointUrl:  i2b2.pmUrl,
                 crcEndpointUrl: i2b2.crcUrl,

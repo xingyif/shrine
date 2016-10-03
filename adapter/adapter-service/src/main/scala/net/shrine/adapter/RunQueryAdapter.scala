@@ -160,7 +160,7 @@ final case class RunQueryAdapter(
                 ProblemNotYetEncoded(summary, e)
               }
             }
-            LoggingProblemHandler.handleProblem(problem)
+            //TODO: is this needed? LoggingProblemHandler.handleProblem(problem)
             originalResult.copy(problemDigest = Some(problem.toDigest))
           }
         }

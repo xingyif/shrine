@@ -1,1 +1,1 @@
-{"isHub":true,"stewardEnabled":true,"shouldQuerySelf":false,"downstreamNodes":[{"name":"shrine-dev2","url":"https://shrine-dev2.catalyst:6443/shrine/rest/adapter/requests"},{"name":"shrine-dev1","url":"not applicable"}]}
+{"isHub":true,"stewardEnabled":true,"shouldQuerySelf":false,"downstreamNodes":[{"name":"some hospital","url":"http://example.com/foo/requests"},{"name":"PHS","url":"http://example.com/phs/requests"},{"name":"CHB","url":"http://example.com/chb/requests"},{"name":"SHRINE Cell","url":"not applicable"}]}

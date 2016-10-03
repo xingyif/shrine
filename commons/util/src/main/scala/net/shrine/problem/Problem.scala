@@ -159,7 +159,6 @@ trait ProblemHandler {
   */
 object LoggingProblemHandler extends ProblemHandler with Loggable {
   override def handleProblem(problem: Problem): Unit = {
-
     problem.throwable.fold(error(problem.toString))(throwable =>
       error(problem.toString,throwable)
     )
@@ -170,6 +169,14 @@ object DatabaseProblemHandler extends ProblemHandler {
   override def handleProblem(problem: Problem): Unit = {
     Problems.DatabaseConnector.insertProblem(problem.toDigest)
   }
+}
+
+/**
+  * Mainly for testing, when you don't want problems to print a bunch
+  * to stdout
+  */
+object NoOpProblemHandler extends ProblemHandler {
+  override def handleProblem(problem: Problem): Unit = Unit
 }
 
 object ProblemSources{

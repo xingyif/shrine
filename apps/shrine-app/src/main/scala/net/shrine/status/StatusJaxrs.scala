@@ -1,6 +1,7 @@
 package net.shrine.status
 
 import java.io.File
+import java.net.URL
 import java.security.MessageDigest
 import java.security.cert.X509Certificate
 import java.util.Date
@@ -9,8 +10,8 @@ import javax.ws.rs.core.{MediaType, Response}
 
 import com.sun.jersey.spi.container.{ContainerRequest, ContainerRequestFilter}
 import com.typesafe.config.{Config => TsConfig}
-import net.shrine.authorization.StewardQueryAuthorizationService
-import net.shrine.broadcaster.{Broadcaster, NodeHandle}
+import net.shrine.authorization.{QueryAuthorizationService, StewardQueryAuthorizationService}
+import net.shrine.broadcaster._
 import net.shrine.client.PosterOntClient
 import net.shrine.wiring.ShrineOrchestrator
 import org.json4s.{DefaultFormats, Formats}
@@ -181,25 +182,46 @@ object I2b2 {
 
 case class DownstreamNode(name:String, url:String)
 
+// Replaces StewardQueryAuthorizationService so that we never transmit a password
+case class Steward(stewardBaseUrl: String, qepUsername: String, password:String = "REDACTED")
+
 case class Qep(
                 maxQueryWaitTimeMillis:Long,
                 create:Boolean,
                 attachSigningCert:Boolean,
                 authorizationType:String,
                 includeAggregateResults:Boolean,
-                authenticationType:String
+                authenticationType:String,
+                steward:Option[Steward],
+                broadcasterUrl:Option[String]
               )
 
 object Qep{
   val key = "shrine.queryEntryPoint."
+  import ShrineOrchestrator.queryEntryPointComponents
   def apply():Qep = new Qep(
-    maxQueryWaitTimeMillis = ShrineOrchestrator.queryEntryPointComponents.fold(0L)(_.i2b2Service.queryTimeout.toMicros),
-    create                  = ShrineOrchestrator.queryEntryPointComponents.isDefined,
-    attachSigningCert       = ShrineOrchestrator.queryEntryPointComponents.fold(false)(_.i2b2Service.broadcastAndAggregationService.attachSigningCert),
-    authorizationType       = ShrineOrchestrator.queryEntryPointComponents.fold("")(_.i2b2Service.authorizationService.getClass.getSimpleName),
-    includeAggregateResults = ShrineOrchestrator.queryEntryPointComponents.fold(false)(_.i2b2Service.includeAggregateResult),
-    authenticationType      = ShrineOrchestrator.queryEntryPointComponents.fold("")(_.i2b2Service.authenticator.getClass.getSimpleName)
-  )
+    maxQueryWaitTimeMillis  = queryEntryPointComponents.fold(0L)(_.i2b2Service.queryTimeout.toMicros),
+    create                  = queryEntryPointComponents.isDefined,
+    attachSigningCert       = queryEntryPointComponents.fold(false)(_.i2b2Service.broadcastAndAggregationService.attachSigningCert),
+    authorizationType       = queryEntryPointComponents.fold("")(_.i2b2Service.authorizationService.getClass.getSimpleName),
+    includeAggregateResults = queryEntryPointComponents.fold(false)(_.i2b2Service.includeAggregateResult),
+    authenticationType      = queryEntryPointComponents.fold("")(_.i2b2Service.authenticator.getClass.getSimpleName),
+    steward                 = queryEntryPointComponents.flatMap(qec => checkStewardAuthorization(qec.shrineService.authorizationService)),
+    broadcasterUrl          = queryEntryPointComponents.flatMap(qec => checkBroadcasterUrl(qec.i2b2Service.broadcastAndAggregationService)))
+
+  def checkStewardAuthorization(auth: QueryAuthorizationService): Option[Steward] = auth match {
+    case sa:StewardQueryAuthorizationService => Some(Steward(sa.stewardBaseUrl.toString, sa.qepUserName))
+    case _ => None
+  }
+
+  //TODO: Double check with Dave that this is the right url
+  def checkBroadcasterUrl(broadcaster: BroadcastAndAggregationService): Option[String] = broadcaster match {
+    case a:HubBroadcastAndAggregationService => a.broadcasterClient match {
+      case PosterBroadcasterClient(poster, _) => Some(poster.url)
+      case _ => None
+    }
+    case _ => None
+  }
 }
 
 object DownstreamNodes {
@@ -363,7 +385,7 @@ object Summary {
     catch {
       case NonFatal(x) =>
         Log.info("Problem while getting ontology version",x)
-        x.getMessage
+        "UNKNOWN" //x.getMessage
     }
 
     Summary(

@@ -30,15 +30,15 @@
 
         // -- public -- //
         return {
-            getAdapter:  getJsonMaker(Config.AdapterEndpoint),
-            getConfig:   getConfig,
-            getHub:      getJsonMaker(Config.HubEndpoint),
-            getI2B2:     getJsonMaker(Config.I2B2Endpoint),
-            getKeystore: getJsonMaker(Config.KeystoreEndpoint),
-            getOptions:  getOptions,
+            getAdapter:  getJsonMaker(Config.AdapterEndpoint, 'adapter'),
+            getConfig:   getJsonMaker(Config.ConfigEndpoint, 'config', parseConfig),
+            getHub:      getJsonMaker(Config.HubEndpoint, 'hub'),
+            getI2B2:     getJsonMaker(Config.I2B2Endpoint, 'i2b2'),
+            getKeystore: getJsonMaker(Config.KeystoreEndpoint, 'keystore'),
+            getOptions:  getJsonMaker(Config.OptionsEndpoint, 'options'),
             getProblems: getProblemsMaker(),
-            getQep:      getJsonMaker(Config.QepEndpoint),
-            getSummary:  getJsonMaker(Config.SummaryEndpoint),
+            getQep:      getJsonMaker(Config.QepEndpoint, 'qep'),
+            getSummary:  getJsonMaker(Config.SummaryEndpoint, 'summary'),
             getHappyAll: getHappyAll,
             cache:       cache
         };
@@ -57,9 +57,11 @@
         /***
          * Method for handling a successful rest call.
          * @param result
+         * @param cacheKey
          * @returns {*}
          */
-        function parseJsonResult(result) {
+        function parseJsonResult(result, cacheKey) {
+            cache[cacheKey] = result.data;
             return result.data;
         }
 
@@ -125,9 +127,11 @@
          * Parses the json config map and turns it into a nested json object
          * @param json the flat config map
          */
-        function parseConfig (json) {
+        function parseConfig (json, cacheKey) {
             var configMap = json.data.configMap;
-            return preProcessJson(configMap);
+            var processed =  preProcessJson(configMap);
+            cache[cacheKey] = processed;
+            return processed;
         }
 
         // IE11 doesn't support string includes
@@ -193,11 +197,32 @@
                 .then(parseConfig, onFail);
         }
 
-        function getJsonMaker(endpoint) {
+        /**
+         * There's a lot going on here. Essentially, this is a function factory that allows one to
+         * define backend calls just through the path. It also implements a simple caching strategy.
+         * Essentially the get function only needs to be called once, and from then on it will spit
+         * back a cached promise. This lets you write the code and not care whether it's cached or not,
+         * but also get the caching performance anyways. For this function to work, the resolver
+         * function has to take in the http response and the cache key to set, and make sure
+         * that it caches what it returns (see parseJsonResult or parseConfig).
+         * @param endpoint
+         * @param cacheKey
+         * @param resolverDefault
+         * @returns {Function}
+         */
+        function getJsonMaker(endpoint, cacheKey, resolverDefault) {
+            var resolver = (typeof resolver !== 'undefined')?
+                           function (response) { return resolver(response, cacheKey) }:
+                           function (response) { return parseJsonResult(response, cacheKey); };
             return function() {
-                var url = urlGetter(endpoint);
-                return h.get(url)
-                    .then(parseJsonResult, onFail)
+                var cachedValue = cache[cacheKey];
+                if (cachedValue === undefined) {
+                    var url = urlGetter(endpoint);
+                    return h.get(url)
+                        .then(resolver, onFail)
+                } else {
+                    return q(function(resolver) { resolver(cachedValue)});
+                }
             }
         }
 
