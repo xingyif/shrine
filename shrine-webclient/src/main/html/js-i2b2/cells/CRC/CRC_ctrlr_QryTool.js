@@ -453,6 +453,8 @@ function QueryToolController() {
 
         }
 
+        //@pcori_webclient
+        //result_output = '<result_output priority_index="11" name="patient_count_xml"/>';
         params.psm_result_output = '<result_output_list>'+result_output+'</result_output_list>\n';
 
         // create query object
@@ -2704,7 +2706,11 @@ function QueryToolController() {
 			{
 				jQuery('#tablesContainer').append("<br/>");
 				jQuery('#tablesContainer').append("<div class='subTitleDivs'>Total Number of Cases</div>" );
-				this.createTable(dataArray);
+				var sortArray = i2b2.CRC.ctrlr.QT.createShorterDataArray(dataArray);
+				if(sortArray && sortArray.length>0)
+					i2b2.CRC.ctrlr.QT.createTable(sortArray);
+				else
+					i2b2.CRC.ctrlr.QT.createTable(dataArray);
 			}
 			//Create tables for the breakdowns
 			allUniqueBreakDowns.each(function(brkDown)
@@ -2735,13 +2741,65 @@ function QueryToolController() {
 				{
 					jQuery('#tablesContainer').append("<br/>");
 					jQuery('#tablesContainer').append("<div class='subTitleDivs'>Total Unique Patients by " + category +"</div>" );
-					i2b2.CRC.ctrlr.QT.createTable(dataArray);
+					var sortArray = i2b2.CRC.ctrlr.QT.createShorterDataArray(dataArray);
+					if(sortArray && sortArray.length>0)
+						i2b2.CRC.ctrlr.QT.createTable(sortArray);
+					else
+						i2b2.CRC.ctrlr.QT.createTable(dataArray);
 				}
 			});
 			
 			//Populate charts
 			jQuery('#tablesContainer').append("<br/><br/>");
 			i2b2.CRC.view.graphs.createGraphs("graphsContainer", i2b2.CRC.ctrlr.currentQueryResults.resultString, true);
+		}
+	};
+	
+	this.createShorterDataArray = function(dataArray)
+	{
+		try{
+			if(dataArray.length>0)
+			{
+				var siteRow = dataArray[0];
+				var totalNumOfSites = siteRow.length - 1;
+				if(totalNumOfSites > 10)
+				{
+					var finalArr = [];
+					var loopNum = 0;
+					var totalLoopsRequired = Math.floor(totalNumOfSites/10);
+					if(totalNumOfSites%10 >0)
+						totalLoopsRequired++;
+					while(loopNum<totalLoopsRequired){
+						var newRow = new Array(11);
+						for(var i = 0; i < dataArray.length; i++) {
+							newRow = new Array(11);
+							//Decide the first column entry for current row
+							var thisRow = dataArray[i];
+							newRow[0] = thisRow[0];
+								
+							for(var j=1; j<=10; j++)
+							{
+								var actualCol = 10*loopNum + j;
+								if(actualCol < thisRow.length)
+									newRow[j] = thisRow[actualCol];
+								else
+									break;
+							}
+							finalArr.push(newRow);
+						}
+						loopNum++;
+					}
+					return finalArr;
+				}
+				else
+					return dataArray;
+			}
+			else
+				return dataArray;
+		}
+		catch(e)
+		{
+			console.error(e);
 		}
 	};
 	
@@ -2763,7 +2821,7 @@ function QueryToolController() {
 			else
 			{
 				content += "<tr>";
-				
+				var thisRowIsHeader = false;
 				for(var j = 0 ; j < thisRow.length ; j++)
 				{
 					var thisRowColItem = thisRow[j];
@@ -2774,14 +2832,31 @@ function QueryToolController() {
 						if(i==0 && j==0)
 							content += "<td class='descResults'>&nbsp;</td>";
 						else{
-							if(thisRowColItem==' ')
-								content += "<td class='descResults'>&nbsp;</td>";
-							else
-								content += "<td class='descResults'>" + thisRowColItem + "</td>";	
+							if(thisRowColItem==' '){
+								if(j == 0)
+									thisRowIsHeader = true;
+								
+								if(thisRowIsHeader)
+									content += "<td class='descResults descResultshead'>&nbsp;</td>";
+								else
+									content += "<td class='descResults'>&nbsp;</td>";
+							}
+							else{
+								if(thisRowIsHeader)
+									content += "<td class='descResults descResultshead'>" + thisRowColItem + "</td>";	
+								else
+									content += "<td class='descResults'>" + thisRowColItem + "</td>";	
+							}
 						}
 					}
-					else
-						content += "<td class='descResults'>&nbsp;</td>";
+					else{
+						if(j == 0)
+							thisRowIsHeader = true;
+						if(thisRowIsHeader)
+							content += "<td class='descResults descResultshead'>&nbsp;</td>";
+						else
+							content += "<td class='descResults'>&nbsp;</td>";
+					}
 				}
 				content += "</tr>";
 			}
