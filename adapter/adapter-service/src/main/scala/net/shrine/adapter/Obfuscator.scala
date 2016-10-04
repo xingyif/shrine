@@ -62,10 +62,16 @@ case class Obfuscator(binSize:Int,stdDev:Double,noiseClamp:Int) {
     val noised = binned + clampedGaussian(binned, noiseClamp)
 
     //bin again
-    roundToNearest(noised, binSize)
+    val rounded = roundToNearest(noised, binSize)
+
+    //finally, if rounded is clamp or smaller, report that the result is too small.
+    if(rounded > noiseClamp) rounded
+    else Obfuscator.LESS_THAN_CLAMP //will be reported as "$clamped or fewer" //todo this happens elsewhere in the code, too. But where?
   }
 }
 
 object Obfuscator {
   def apply(config:Config): Obfuscator = Obfuscator(config.getInt("binSize"),config.getDouble("sigma"),config.getInt("clamp"))
+
+  val LESS_THAN_CLAMP = -1L
 }
