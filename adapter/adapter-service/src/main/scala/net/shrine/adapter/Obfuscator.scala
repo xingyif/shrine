@@ -65,7 +65,7 @@ case class Obfuscator(binSize:Int,stdDev:Double,noiseClamp:Int) {
     val rounded = roundToNearest(noised, binSize)
 
     //finally, if rounded is clamp or smaller, report that the result is too small.
-    if(rounded > noiseClamp) rounded
+    if((rounded > noiseClamp) && (rounded > 10)) rounded //todo fix with SHRINE-1716
     else Obfuscator.LESS_THAN_CLAMP //will be reported as "$clamped or fewer" //todo this happens elsewhere in the code, too. But where?
   }
 }

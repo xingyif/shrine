@@ -42,9 +42,9 @@ i2b2.CRC.view.graphs.iObfuscatedFloorNumber = 3;  // this is the amount reported
 i2b2.CRC.view.graphs.sObfuscatedText = "<3";  // this is the text that is replaced for a small number in obfuscated mode
 //                            so that it can be cleaned up before the next display
 i2b2.CRC.view.graphs.sObfuscatedEnding = "&plusmn;3";  //this is the text that is added to all numbers in obfuscated mode
-i2b2.CRC.view.graphs.sObfuscatedSHRINEText = "10 patients or fewer";  // this is the text that is replaced for a small number in obfuscated mode
+i2b2.CRC.view.graphs.sObfuscatedSHRINEText = "10 patients or fewer";  // this is the text that is replaced for a small number in obfuscated mode //todo fix with SHRINE-1716
 //                            so that it can be cleaned up before the next display
-i2b2.CRC.view.graphs.sObfuscatedSHRINEEnding = "+-3 patients";  //this is the text that is added to all numbers in obfuscated mode
+i2b2.CRC.view.graphs.sObfuscatedSHRINEEnding = "+-10 patients";  //this is the text that is added to all numbers in obfuscated mode //todo fix with SHRINE-1716
 //i2b2.CRC.view.graphs.bIsSHRINE = false;  // this changes the way the graphs are made if the file is being run in SHRINE mode
 //                            NOTE THAT THIS IS DEMO ONLY IN THIS VERSION - IT DOES NOT REALLY WORK
 i2b2.CRC.view.graphs.asTitleOfShrineGroup = [];
