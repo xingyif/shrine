@@ -29,19 +29,6 @@
             $scope.logout = function () {
                 $location.path('/login');
             };
-
-            $app.model.getOptions()
-                .then(setOptions);
-
-            function setOptions(data) {
-                $scope.options = data;
-            }
-
-        }
-
-        DiagnosticLinker.$inject = ['scope'];
-        function DiagnosticLinker(s) {
-
         }
 })();
 

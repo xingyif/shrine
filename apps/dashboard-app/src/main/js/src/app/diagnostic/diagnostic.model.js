@@ -29,16 +29,16 @@
 
         // -- public -- //
         return {
-            getAdapter:  getJsonMaker(Config.AdapterEndpoint, 'adapter'),
-            getConfig:   getJsonMaker(Config.ConfigEndpoint, 'config', parseConfig),
-            getHub:      getJsonMaker(Config.HubEndpoint, 'hub'),
-            getI2B2:     getJsonMaker(Config.I2B2Endpoint, 'i2b2'),
-            getKeystore: getJsonMaker(Config.KeystoreEndpoint, 'keystore'),
-            getOptions:  getJsonMaker(Config.OptionsEndpoint, 'optionalParts'),
-            getProblems: getProblemsMaker(),
-            getQep:      getJsonMaker(Config.QepEndpoint, 'qep'),
-            getSummary:  getJsonMaker(Config.SummaryEndpoint, 'summary'),
-            cache:       cache
+            getAdapter:        getJsonMaker(Config.AdapterEndpoint, 'adapter'),
+            getConfig:         getJsonMaker(Config.ConfigEndpoint, 'config', parseConfig),
+            getHub:            getJsonMaker(Config.HubEndpoint, 'hub'),
+            getI2B2:           getJsonMaker(Config.I2B2Endpoint, 'i2b2'),
+            getKeystore:       getJsonMaker(Config.KeystoreEndpoint, 'keystore'),
+            getOptionalParts:  getJsonMaker(Config.OptionsEndpoint, 'optionalParts'),
+            getProblems:       getProblemsMaker(),
+            getQep:            getJsonMaker(Config.QepEndpoint, 'qep'),
+            getSummary:        getJsonMaker(Config.SummaryEndpoint, 'summary'),
+            cache:             cache
         };
 
 
