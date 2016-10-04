@@ -4,11 +4,11 @@
 
     // -- angular module -- //
     angular.module('shrine-tools')
-        .factory('DiagnosticModel', DiagnosticModel)
+        .factory('DiagnosticModel', DiagnosticModel);
 
 
-    DiagnosticModel.$inject = ['$http', '$q', 'UrlGetter', 'XMLService', '$log'];
-    function DiagnosticModel (h, q, urlGetter, xmlService, $log) {
+    DiagnosticModel.$inject = ['$http', '$q', 'UrlGetter'];
+    function DiagnosticModel (h, q, urlGetter) {
 
 
         var cache = {};
@@ -23,8 +23,7 @@
             OptionsEndpoint:  'admin/status/optionalParts',
             ProblemEndpoint:  'admin/status/problems',
             QepEndpoint:      'admin/status/qep',
-            SummaryEndpoint:  'admin/status/summary',
-            HappyAllEndpoint: 'admin/happy/all'
+            SummaryEndpoint:  'admin/status/summary'
         };
 
 
@@ -35,11 +34,10 @@
             getHub:      getJsonMaker(Config.HubEndpoint, 'hub'),
             getI2B2:     getJsonMaker(Config.I2B2Endpoint, 'i2b2'),
             getKeystore: getJsonMaker(Config.KeystoreEndpoint, 'keystore'),
-            getOptions:  getJsonMaker(Config.OptionsEndpoint, 'options'),
+            getOptions:  getJsonMaker(Config.OptionsEndpoint, 'optionalParts'),
             getProblems: getProblemsMaker(),
             getQep:      getJsonMaker(Config.QepEndpoint, 'qep'),
             getSummary:  getJsonMaker(Config.SummaryEndpoint, 'summary'),
-            getHappyAll: getHappyAll,
             cache:       cache
         };
 
@@ -65,67 +63,10 @@
             return result.data;
         }
 
-
-        /**
-         *
-         * @param result
-         * @returns {*}
-         */
-        function parseHappyAllResult(result) {
-
-            var happyObj = {};
-            if(isQEPError(result.data)) {
-                return $q.reject(result.data);
-            }
-
-            // -- append all -- //
-            happyObj.all = xmlService.xmlStringToJson(result.data).all;
-
-            // -- parse and append summary  -- //
-            happyObj.summary = parseSummaryFromAll(happyObj.all);
-
-            return happyObj;
-        }
-
-
-        /**
-         *
-         * @param all
-         * @returns {{}}
-         */
-        function parseSummaryFromAll (all) {
-
-            //
-            var summary             = {};
-
-            summary.isHub           = !Boolean("" == all.notAHub);
-            summary.shrineVersion   = all.versionInfo.shrineVersion;
-            summary.shrineBuildDate = all.versionInfo.buildDate;
-            summary.ontologyVersion = all.versionInfo.ontologyVersion;
-            summary.ontologyTerm    = ""; //to be implemented in config.
-            summary.adapterOk       = all.adapter.result.response.errorResponse === undefined;
-            summary.keystoreOk      = true;
-            summary.qepOk           = true;
-
-            // -- verify hub is operating, if necessary -- //
-            if(!summary.isHub) {
-                summary.hubOk = true;
-            }
-            else if(all.net !== undefined) {
-                var hasFailures         = Number(all.net.failureCount) > 0;
-                var hasInvalidResults   = Number(all.net.validResultCount) !=
-                    Number(all.net.expectedResultCount);
-
-                var hasTimeouts         = Number(all.net.timeoutCount) > 0;
-                summary.hubOk           = !hasFailures && !hasInvalidResults && !hasTimeouts;
-            }
-
-            return summary;
-        }
-
         /**
          * Parses the json config map and turns it into a nested json object
          * @param json the flat config map
+         * @param cacheKey a unique identifier for the function
          */
         function parseConfig (json, cacheKey) {
             var configMap = json.data.configMap;
@@ -173,47 +114,24 @@
             return result;
         }
 
-
-
-        /**
-         * Get View Options, initial call from diagnostic.
-         * @param verb
-         * @returns {*}
-         */
-        function getOptions() {
-            var url = urlGetter(Config.OptionsEndpoint);
-            return h.get(url)
-                .then(parseJsonResult, onFail);
-        }
-
-
-        /**
-         * Returns the Shrine Configuration object.
-         * @returns {*}
-         */
-        function getConfig () {
-            var url = urlGetter(Config.ConfigEndpoint);
-            return h.get(url)
-                .then(parseConfig, onFail);
-        }
-
         /**
          * There's a lot going on here. Essentially, this is a function factory that allows one to
-         * define backend calls just through the path. It also implements a simple caching strategy.
+         * define backend calls just through the path. It also implements a simple caching
+         * strategy.
          * Essentially the get function only needs to be called once, and from then on it will spit
-         * back a cached promise. This lets you write the code and not care whether it's cached or not,
-         * but also get the caching performance anyways. For this function to work, the resolver
-         * function has to take in the http response and the cache key to set, and make sure
-         * that it caches what it returns (see parseJsonResult or parseConfig).
+         * back a cached promise. This lets you write the code and not care whether it's cached or
+         * not, but also get the caching performance anyways. For this function to work, the
+         * resolver function has to take in the http response and the cache key to set, and make
+         * sure that it caches what it returns (see parseJsonResult or parseConfig).
          * @param endpoint
          * @param cacheKey
          * @param resolverDefault
          * @returns {Function}
          */
         function getJsonMaker(endpoint, cacheKey, resolverDefault) {
-            var resolver = (typeof resolver !== 'undefined')?
-                           function (response) { return resolver(response, cacheKey) }:
-                           function (response) { return parseJsonResult(response, cacheKey); };
+            var resolver = (typeof resolverDefault !== 'undefined')?
+                           function (response) { return resolverDefault(response, cacheKey) }:
+                           function (response) { return parseJsonResult(response, cacheKey) };
             return function() {
                 var cachedValue = cache[cacheKey];
                 if (cachedValue === undefined) {
@@ -227,7 +145,7 @@
         }
 
         function getProblemsMaker() {
-
+            // Caches the last offset and page size to hold onto it between different views
             var prevOffset = 0;
             var prevN = 20;
 
@@ -253,27 +171,6 @@
                 return h.get(url)
                     .then(parseJsonResult, onFail);
             }
-        }
-
-
-        /**
-         *
-         * @returns {*}
-         */
-        function getHappyAll() {
-            var url = urlGetter(Config.HappyAllEndpoint, '.xml');
-            return h.get(url)
-                .then(parseHappyAllResult, onFail);
-        }
-
-        /**
-         *
-         * @param resultXML
-         * @returns {boolean}
-         */
-        function isQEPError(resultXML) {
-            var result = resultXML.indexOf('<all>') + resultXML.indexOf('</all>');
-            return result == -2
         }
     }
 })();

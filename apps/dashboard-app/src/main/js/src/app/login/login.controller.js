@@ -39,7 +39,7 @@
          */
         function onLoginSuccess (response) {
 
-            // -- save uers credentials -- //
+            // -- save user's credentials -- //
             authService.setCredentials(vm.username, vm.password, response.roles);
 
             // -- go to default location -- //
