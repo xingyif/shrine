@@ -99,7 +99,7 @@ final case class RunQueryAdapter(
     //TODO: is this right?? Or maybe it's project id?
     val groupId = authnToUse.domain
 
-    val invalidSetSize = -1L //This might be where the results of 10 or fewer become -1
+    val invalidSetSize = -1L
     val now = XmlDateHelper.now
     val queryResult = QueryResult(resultId, queryInstanceId, Some(ResultOutputType.PATIENT_COUNT_XML), invalidSetSize, Some(now), Some(now), Some("Query enqueued for later processing"), QueryResult.StatusType.Held, Some("Query enqueued for later processing"))
 

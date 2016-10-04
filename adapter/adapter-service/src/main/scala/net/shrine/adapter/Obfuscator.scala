@@ -55,18 +55,21 @@ case class Obfuscator(binSize:Int,stdDev:Double,noiseClamp:Int) {
       else noise
     }
 
-    //bin
-    val binned = roundToNearest(l, binSize)
+    if((l > noiseClamp) && (l > 10)) { //todo fix with SHRINE-1716
+      //bin
+      val binned = roundToNearest(l, binSize)
 
-    //add noise
-    val noised = binned + clampedGaussian(binned, noiseClamp)
+      //add noise
+      val noised = binned + clampedGaussian(binned, noiseClamp)
 
-    //bin again
-    val rounded = roundToNearest(noised, binSize)
+      //bin again
+      val rounded = roundToNearest(noised, binSize)
 
-    //finally, if rounded is clamp or smaller, report that the result is too small.
-    if((rounded > noiseClamp) && (rounded > 10)) rounded //todo fix with SHRINE-1716
-    else Obfuscator.LESS_THAN_CLAMP //will be reported as "$clamped or fewer" //todo this happens elsewhere in the code, too. But where?
+      //finally, if rounded is clamp or smaller, report that the result is too small.
+      if ((rounded > noiseClamp) && (rounded > 10)) rounded //todo fix with SHRINE-1716
+      else Obfuscator.LESS_THAN_CLAMP //will be reported as "$clamped or fewer"
+    }
+    else Obfuscator.LESS_THAN_CLAMP
   }
 }
 
