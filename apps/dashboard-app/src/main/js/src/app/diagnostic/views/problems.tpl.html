@@ -1,21 +1,20 @@
 <div>
 
     <div style="display:flex;justify-content: space-between;vertical-align: text-top">
-        <form ng-submit="vm.submitDate(date)" style="width:18.5%;white-space:nowrap;">
+        <form ng-submit="vm.submitDate(vm.date)" style="width:18.5%;white-space:nowrap;">
             <button datepicker-popup="{{vm.format}}"
                     type="button"
                     class="btn btn-primary active"
-                    ng-model="date"
-                    is-open='isOpen'
-                    ng-click="open()"
+                    ng-model="vm.date"
+                    is-open='vm.isOpen'
+                    ng-click="vm.open()"
                     close-text="Close"
-                    placeholder="{{vm.format}}"
-                    datepicker-options="vm.dateOptions">
-                {{vm.formatDate(date)}}
+                    max-date="vm.date">
+                {{vm.formatDate(vm.date)}}
             </button>
-            <button type="submit" class="glyphicon glyphicon-search" ng-show="checkDate()">
+            <button type="submit" class="glyphicon glyphicon-search" ng-show="vm.checkDate()">
             </button>
-            <button class="glyphicon glyphicon-search" ng-hide="checkDate()"
+            <button class="glyphicon glyphicon-search" ng-hide="vm.checkDate()"
                     style="opacity:.25;cursor:default" disabled></button>
         </form>
         <div my-pagination ng-show="vm.showP(vm.probsN)"></div>
