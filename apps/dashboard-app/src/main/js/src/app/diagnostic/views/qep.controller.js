@@ -18,7 +18,7 @@
 
         function init () {
 
-            $app.model.getOptions()
+            $app.model.getOptionalParts()
                 .then(setOptions, handleFailure)
                 .then($app.model.getQep, handleFailure)
                 .then(setQep, handleFailure);

@@ -385,7 +385,7 @@ object Summary {
     catch {
       case NonFatal(x) =>
         Log.info("Problem while getting ontology version",x)
-        "UNKNOWN" //x.getMessage
+        s"Unavailable due to: ${x.getMessage}"
     }
 
     Summary(

@@ -42,10 +42,10 @@
             }
             else {
                 //TODO FIGURE OUT THE CORRECT FIELDS FOR SUCCESSFUL QUERY RESULT
-                vm.adapter.description = summary.queryResult.response.runQueryResponse.queryResults.
-                    queryResult.setSize;
-                vm.adapter.description += ' ' + summary.queryResult.result.response.runQueryResponse.queryResults.
-                        queryResult.resultType.description;
+                vm.adapter.description =  summary.queryResult.response.singleNodeResult.setSize;
+                vm.adapter.description += ' ';
+                vm.adapter.description += summary.queryResult.response.singleNodeResult.resultType
+                                            .i2b2Options.description;
             }
         }
 

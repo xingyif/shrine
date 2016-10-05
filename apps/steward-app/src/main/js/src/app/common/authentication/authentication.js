@@ -45,7 +45,6 @@ angular.module("hms-authentication", ['ngCookies', 'hms-authentication-model'])
                     $interval.cancel(logoutPromise);
                 });
                 $rootScope.$on(idleEvent, function () {
-                    $log.warn('heyo!');
                     $interval.cancel(logoutPromise);
                     logoutPromise = $interval(timeout, twentyMinutes);
                 });
@@ -62,7 +61,6 @@ angular.module("hms-authentication", ['ngCookies', 'hms-authentication-model'])
 
                 $rootScope.idleBroadcast = function() {
                     $rootScope.$broadcast(idleEvent);
-                    $log.warn('hello');
                 }
             }
 

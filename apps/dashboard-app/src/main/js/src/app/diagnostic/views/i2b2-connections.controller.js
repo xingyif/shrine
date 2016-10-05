@@ -9,8 +9,8 @@
      *
      */
     //todo: delete LOG
-    I2B2ConnectionsController.$inject = ['$app'];
-    function I2B2ConnectionsController($app) {
+    I2B2ConnectionsController.$inject = ['$app', '$log'];
+    function I2B2ConnectionsController($app, $log) {
         var vm = this;
 
         init();

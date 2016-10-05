@@ -6,6 +6,7 @@ import java.util.concurrent.Executors
 
 import net.shrine.log.Loggable
 import net.shrine.serialization.{XmlMarshaller, XmlUnmarshaller}
+import net.shrine.slick.NeedsWarmUp
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future, Promise}
@@ -150,7 +151,7 @@ abstract class AbstractProblem(source:ProblemSources.ProblemSource) extends Prob
   hackToHandleAfterInitialization(ProblemConfigSource.getObject("problemHandler", config))
 }
 
-trait ProblemHandler {
+trait ProblemHandler extends NeedsWarmUp {
   def handleProblem(problem:Problem)
 }
 
@@ -163,12 +164,16 @@ object LoggingProblemHandler extends ProblemHandler with Loggable {
       error(problem.toString,throwable)
     )
   }
+
+  override def warmUp(): Unit = Unit
 }
 
 object DatabaseProblemHandler extends ProblemHandler {
   override def handleProblem(problem: Problem): Unit = {
     Problems.DatabaseConnector.insertProblem(problem.toDigest)
   }
+
+  override def warmUp(): Unit = Problems.warmUp
 }
 
 /**
@@ -177,6 +182,8 @@ object DatabaseProblemHandler extends ProblemHandler {
   */
 object NoOpProblemHandler extends ProblemHandler {
   override def handleProblem(problem: Problem): Unit = Unit
+
+  override def warmUp(): Unit = Unit
 }
 
 object ProblemSources{
