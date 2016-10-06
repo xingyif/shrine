@@ -7,8 +7,8 @@ import javax.ws.rs.core.Response.ResponseBuilder
 
 import net.shrine.authentication.NotAuthenticatedException
 import net.shrine.log.Loggable
-import net.shrine.problem.ProblemNotYetEncoded
-import net.shrine.protocol.{ErrorResponse, HandleableI2b2Request, I2b2RequestHandler, ResultOutputType, ShrineRequest}
+import net.shrine.problem.{AbstractProblem, ProblemNotYetEncoded, ProblemSources}
+import net.shrine.protocol.{ErrorResponse, HandleableI2b2Request, I2B2MessageFormatException, I2b2RequestHandler, ResultOutputType, ShrineRequest}
 import net.shrine.qep.queries.QepDatabaseProblem
 import net.shrine.serialization.I2b2Marshaller
 import net.shrine.slick.CouldNotRunDbIoActionException
@@ -51,6 +51,7 @@ final case class I2b2BroadcastResource(i2b2RequestHandler: I2b2RequestHandler, b
       case nax:NotAuthenticatedException => ErrorResponse(nax.problem)
       case cnrdax:CouldNotRunDbIoActionException => ErrorResponse(QepDatabaseProblem(cnrdax))
       case sqlx:SQLException => ErrorResponse(QepDatabaseProblem(sqlx))
+      case imfx:I2B2MessageFormatException => ErrorResponse(QepCouldNotInterpretRequest(imfx))
       case _ => ErrorResponse(ProblemNotYetEncoded("The QEP encountered an unforeseen problem while processing an i2b2 request",e))
     }
 
@@ -94,4 +95,12 @@ final case class I2b2BroadcastResource(i2b2RequestHandler: I2b2RequestHandler, b
 
     builder.build()
   }
+}
+
+case class QepCouldNotInterpretRequest(x:Exception) extends AbstractProblem(ProblemSources.Qep){
+  override val summary = "The QEP could not interpret a request."
+
+  override val throwable = Some(x)
+
+  override val description = x.getMessage
 }
