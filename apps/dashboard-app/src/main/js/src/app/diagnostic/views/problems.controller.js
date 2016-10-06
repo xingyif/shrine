@@ -172,8 +172,10 @@
         function parseDetails(detailsObject) {
             var detailsTag = '<h3>details</h3>';
             var detailsField = detailsObject['details'];
-            if (detailsField === '') {
+            if (detailsField === '' && detailsObject == '') {
                 return '<h3>No details associated with this problem</h3>'
+            } else if (detailsField === '') {
+                return detailsTag + '<pre>'+sanitizeString(JSON.stringify(detailsObject))+'</pre>'
             } else if (typeof(detailsField) === 'string') {
                 return detailsTag + '<p>'+sanitizeString(detailsField)+'</p>';
             } else if (typeof(detailsField) === 'object' && detailsField.hasOwnProperty('exception')) {
@@ -188,7 +190,7 @@
             var nameTag = '<h5>'+sanitizeString(exceptionObject['name'])+'</h5>';
             var messageTag = '<p>'+sanitizeString(exceptionObject['message'])+'</p>';
             var stackTrace = exceptionObject['stacktrace'];
-            return exceptionTag + nameTag + messageTag + (stackTrace == null? '': parseStackTrace(stackTrace));
+            return exceptionTag + nameTag + messageTag + (stackTrace === undefined? '': parseStackTrace(stackTrace));
         }
 
         function parseStackTrace(stackTraceObject) {
