@@ -98,7 +98,7 @@ final class ObfuscatorTest extends ShouldMatchersForJUnit {
 
     val obfuscated = obfuscator65.obfuscate(l)
 
-    assertWithin(10L)(l,obfuscated)
+    assertWithin(15L)(l,obfuscated)
   }
 
 
