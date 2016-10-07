@@ -338,8 +338,7 @@ object QepQuerySchema {
   val allConfig:Config = QepConfigSource.config
   val config:Config = allConfig.getConfig("shrine.queryEntryPoint.audit.database")
 
-  val slickProfileClassName = config.getString("slickProfileClassName")
-  val slickProfile:JdbcProfile = QepConfigSource.objectForName(slickProfileClassName)
+  val slickProfile:JdbcProfile = QepConfigSource.getObject("slickProfileClassName", config)
 
   import net.shrine.config.{ConfigExtensions, Keys}
   val moreBreakdowns: Set[ResultOutputType] = config.getOptionConfigured("breakdownResultOutputTypes",ResultOutputTypes.fromConfig).getOrElse(Set.empty)

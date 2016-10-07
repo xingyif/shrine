@@ -497,8 +497,7 @@ object StewardSchema {
   val allConfig:Config = StewardConfigSource.config
   val config:Config = allConfig.getConfig("shrine.steward.database")
 
-  val slickProfileClassName = config.getString("slickProfileClassName")
-  val slickProfile:JdbcProfile = StewardConfigSource.objectForName(slickProfileClassName)
+  val slickProfile:JdbcProfile = StewardConfigSource.getObject("slickProfileClassName", config)
 
   val schema = StewardSchema(slickProfile)
 }

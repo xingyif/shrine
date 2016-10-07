@@ -1,6 +1,6 @@
 package net.shrine.source
 
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.{Config, ConfigException, ConfigFactory}
 
 /**
   * @author ty
@@ -34,4 +34,17 @@ trait ConfigSource {
 
     obj.asInstanceOf[T]
   }
+
+  def getObject[T](path: String, config:Config):T = {
+    try {
+      objectForName(config.getString(path))
+    } catch {
+      case cx:ConfigException => throw ConfigError(cx, path)
+    }
+  }
+}
+
+
+case class ConfigError(throwable: Throwable, path: String) extends Error {
+  override def getMessage:String = s"Malformed config file, could not retrieve path '$path'"
 }

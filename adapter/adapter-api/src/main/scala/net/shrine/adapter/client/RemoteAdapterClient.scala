@@ -22,6 +22,8 @@ import net.shrine.protocol.Result
 import scala.util.{Failure, Success, Try}
 import net.shrine.protocol.ResultOutputType
 
+import scala.collection.immutable.Stream.Empty
+
 /**
  * @author clint
  * @since Nov 15, 2013
@@ -116,8 +118,10 @@ case class HttpErrorCodeFromAdapter(url:String,statusCode:Int,responseBody:Strin
   override def detailsXml:NodeSeq = {
     if (responseBody.isEmpty)
       <details>"Error response contained no body"</details>
-    else
-      <details>{s"Http response body was $responseBody"}</details>
+    else {
+      val result = s"Http response body was $responseBody"
+      <details>{result}</details>
+    }
   }
 }
 

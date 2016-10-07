@@ -1,6 +1,6 @@
 package net.shrine.problem
 
-import com.typesafe.config.{Config, ConfigValue, ConfigValueFactory}
+import com.typesafe.config.{Config, ConfigException, ConfigValue, ConfigValueFactory}
 import net.shrine.source.ConfigSource
 
 /**
@@ -9,10 +9,6 @@ import net.shrine.source.ConfigSource
   * @author ty
   * @since 7/22/16
   */
-object ProblemConfigSource extends ConfigSource {
-  override val configName: String = "shrine"
+object ProblemConfigSource extends ConfigSource
 
-  def getObject[T](path: String, config:Config):T = {
-    objectForName(config.getString(path))
-  }
-}
+
