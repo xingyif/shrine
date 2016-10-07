@@ -1,9 +1,8 @@
 package net.shrine.aggregation
 
-import net.shrine.protocol.ShrineResponse
+import net.shrine.protocol.{BroadcastMessage, QueryResult, ShrineResponse}
 import net.shrine.aggregation.BasicAggregator.{Error, Invalid, Valid}
 import net.shrine.problem.{AbstractProblem, ProblemSources}
-import net.shrine.protocol.QueryResult
 
 /**
  *
@@ -41,7 +40,7 @@ abstract class PackagesErrorsAggregator[T <: ShrineResponse : Manifest](
     QueryResult.errorResult(desc, invalidMessage.getOrElse(errorMessage),InvalidResultProblem(invalid))
   }
   
-  private[aggregation] final override def makeResponseFrom(validResponses: Iterable[Valid[T]], errorResponses: Iterable[Error], invalidResponses: Iterable[Invalid]): ShrineResponse = {
+  private[aggregation] final override def makeResponseFrom(validResponses: Iterable[Valid[T]], errorResponses: Iterable[Error], invalidResponses: Iterable[Invalid],respondingTo: BroadcastMessage): ShrineResponse = {
     makeResponse(validResponses, errorResponses.map(makeErrorResult), invalidResponses.map(makeInvalidResult))
   }
   

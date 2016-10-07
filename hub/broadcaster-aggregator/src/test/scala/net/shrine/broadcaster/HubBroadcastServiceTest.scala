@@ -43,7 +43,7 @@ final class HubBroadcastAndAggregationServiceTest extends AbstractSquerylHubDaoT
     val broadcastService = new HubBroadcastAndAggregationService(InJvmBroadcasterClient(mockBroadcaster))
 
     val aggregator: Aggregator = new Aggregator {
-      override def aggregate(results: Iterable[SingleNodeResult], errors: Iterable[ErrorResponse]): ShrineResponse = {
+      override def aggregate(results: Iterable[SingleNodeResult], errors: Iterable[ErrorResponse], respondingTo: BroadcastMessage): ShrineResponse = {
         ErrorResponse(TestProblem(summary = results.size.toString))
       }
     }
@@ -74,7 +74,7 @@ final class HubBroadcastAndAggregationServiceTest extends AbstractSquerylHubDaoT
     val broadcastService = new HubBroadcastAndAggregationService(InJvmBroadcasterClient(mockBroadcaster))
 
     val aggregator: Aggregator = new Aggregator {
-      override def aggregate(results: Iterable[SingleNodeResult], errors: Iterable[ErrorResponse]): ShrineResponse = {
+      override def aggregate(results: Iterable[SingleNodeResult], errors: Iterable[ErrorResponse], respondingTo: BroadcastMessage): ShrineResponse = {
         ErrorResponse(TestProblem(summary = s"${results.size},${errors.size}"))
       }
     }

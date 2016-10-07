@@ -44,7 +44,7 @@ final class ReadInstanceResultsAggregatorTest extends ShouldMatchersForJUnit {
     val result2 = Result(NodeId(description2), 5.seconds, response2)
 
     {
-      val actual = aggregator.aggregate(Seq(result1, result2), Nil).asInstanceOf[AggregatedReadInstanceResultsResponse]
+      val actual = aggregator.aggregate(Seq(result1, result2), Nil,null).asInstanceOf[AggregatedReadInstanceResultsResponse]
 
       assertNotNull(actual)
       assertNotNull(actual.results)
@@ -59,7 +59,7 @@ final class ReadInstanceResultsAggregatorTest extends ShouldMatchersForJUnit {
     }
 
     {
-      val actual = aggregatorNoAggregate.aggregate(Seq(result1, result2), Nil).asInstanceOf[AggregatedReadInstanceResultsResponse]
+      val actual = aggregatorNoAggregate.aggregate(Seq(result1, result2), Nil,null).asInstanceOf[AggregatedReadInstanceResultsResponse]
 
       assertNotNull(actual)
       assertNotNull(actual.results)
@@ -89,7 +89,7 @@ final class ReadInstanceResultsAggregatorTest extends ShouldMatchersForJUnit {
     val result1 = Result(NodeId(patientCountNodeDescription), 1.minute, patientCountResponse)
     val result2 = Result(NodeId(errorNodeDescription), 1.hour, errorResponse)
 
-    val actual = aggregator.aggregate(Seq(result1, result2), Nil).asInstanceOf[AggregatedReadInstanceResultsResponse]
+    val actual = aggregator.aggregate(Seq(result1, result2), Nil,null).asInstanceOf[AggregatedReadInstanceResultsResponse]
 
     assertNotNull(actual)
     assertNotNull(actual.results)

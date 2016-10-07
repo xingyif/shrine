@@ -48,7 +48,7 @@ final class RunQueryAggregatorTest extends ShouldMatchersForJUnit {
 
     val aggregator = new RunQueryAggregator(queryId, userId, groupId, requestQueryDef, true)
     
-    val actual = aggregator.aggregate(Vector(result1), Nil).asInstanceOf[AggregatedRunQueryResponse]
+    val actual = aggregator.aggregate(Vector(result1), Nil,null).asInstanceOf[AggregatedRunQueryResponse]
 
     actual.queryId should equal(queryId)
     actual.queryInstanceId should equal(-1L)
@@ -72,7 +72,7 @@ final class RunQueryAggregatorTest extends ShouldMatchersForJUnit {
     val aggregator = new RunQueryAggregator(queryId, userId, groupId, requestQueryDef, true)
     
     //TODO: test handling error responses
-    val actual = aggregator.aggregate(Vector(result1, result2), Nil).asInstanceOf[AggregatedRunQueryResponse]
+    val actual = aggregator.aggregate(Vector(result1, result2), Nil,null).asInstanceOf[AggregatedRunQueryResponse]
     
     actual.results.filter(_.description.getOrElse("").equalsIgnoreCase("TOTAL COUNT")).head.setSize should equal(20)
   }
@@ -90,7 +90,7 @@ final class RunQueryAggregatorTest extends ShouldMatchersForJUnit {
 
     val aggregator = new RunQueryAggregator(queryId, userId, groupId, requestQueryDef, true)
     
-    val actual = aggregator.aggregate(Vector(result1, result2), Nil).asInstanceOf[AggregatedRunQueryResponse]
+    val actual = aggregator.aggregate(Vector(result1, result2), Nil,null).asInstanceOf[AggregatedRunQueryResponse]
     
     actual.results.size should equal(3)
     
@@ -124,7 +124,7 @@ final class RunQueryAggregatorTest extends ShouldMatchersForJUnit {
 
     val aggregator = new RunQueryAggregator(queryId, userId, groupId, requestQueryDef, true)
     
-    val actual = aggregator.aggregate(Seq(result1, result2), Nil).asInstanceOf[AggregatedRunQueryResponse]
+    val actual = aggregator.aggregate(Seq(result1, result2), Nil,null).asInstanceOf[AggregatedRunQueryResponse]
     
     actual.results.size should equal(3)
     actual.results.filter(hasTotalCount).size should equal(1)

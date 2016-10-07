@@ -8,7 +8,7 @@ import net.shrine.log.Loggable
 import net.shrine.problem.{AbstractProblem, ProblemNotYetEncoded, ProblemSources}
 
 import scala.concurrent.duration.Duration
-import net.shrine.protocol.{BaseShrineResponse, ErrorResponse, FailureResult, FailureResult$, NodeId, Result, SingleNodeResult, Timeout}
+import net.shrine.protocol.{BaseShrineResponse, BroadcastMessage, ErrorResponse, FailureResult, FailureResult$, NodeId, Result, SingleNodeResult, Timeout}
 
 /**
  *
@@ -38,7 +38,7 @@ abstract class BasicAggregator[T <: BaseShrineResponse: Manifest] extends Aggreg
 
   import BasicAggregator._
 
-  override def aggregate(results: Iterable[SingleNodeResult], errors: Iterable[ErrorResponse]): BaseShrineResponse = {
+  override def aggregate(results: Iterable[SingleNodeResult], errors: Iterable[ErrorResponse], respondingTo: BroadcastMessage): BaseShrineResponse = {
     val resultsOrErrors: Iterable[ParsedResult[T]] = {
       for {
         result <- results
@@ -74,10 +74,13 @@ abstract class BasicAggregator[T <: BaseShrineResponse: Manifest] extends Aggreg
 
     val previouslyDetectedErrors = errors.map(Error(None, _))
 
-    makeResponseFrom(validResponses, errorResponses ++ previouslyDetectedErrors, invalidResponses)
+    makeResponseFrom(validResponses, errorResponses ++ previouslyDetectedErrors, invalidResponses, respondingTo)
   }
 
-  private[aggregation] def makeResponseFrom(validResponses: Iterable[Valid[T]], errorResponses: Iterable[Error], invalidResponses: Iterable[Invalid]): BaseShrineResponse
+  private[aggregation] def makeResponseFrom(validResponses: Iterable[Valid[T]],
+                                            errorResponses: Iterable[Error],
+                                            invalidResponses: Iterable[Invalid],
+                                            respondingTo: BroadcastMessage): BaseShrineResponse
 }
 
 object BasicAggregator {

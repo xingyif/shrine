@@ -2,10 +2,7 @@ package net.shrine.aggregation
 
 import net.shrine.util.ShouldMatchersForJUnit
 import org.junit.Test
-import net.shrine.protocol.FlagQueryResponse
-import net.shrine.protocol.Result
-import net.shrine.protocol.NodeId
-import net.shrine.protocol.ErrorResponse
+import net.shrine.protocol.{AuthenticationInfo, BaseShrineRequest, BroadcastMessage, ErrorResponse, FlagQueryRequest, FlagQueryResponse, NodeId, Result}
 
 /**
  * @author clint
@@ -24,7 +21,7 @@ final class FlagQueryAggregatorTest extends ShouldMatchersForJUnit {
     val aggregator = new FlagQueryAggregator
     
     //TODO: test handling error responses
-    val aggregatedResponse = aggregator.aggregate(Vector(result1, result2), Nil).asInstanceOf[FlagQueryResponse]
+    val aggregatedResponse = aggregator.aggregate(Vector(result1, result2), Nil,null).asInstanceOf[FlagQueryResponse]
     
     aggregatedResponse should not be(null)
     
@@ -33,6 +30,9 @@ final class FlagQueryAggregatorTest extends ShouldMatchersForJUnit {
   
   @Test
   def testNoResults: Unit = {
-    (new FlagQueryAggregator).aggregate(Nil, Nil).isInstanceOf[ErrorResponse] should be(true)
+    val authenticationInfo = new AuthenticationInfo("runaround","sue",null)
+    val broadcastMessage = BroadcastMessage(authenticationInfo,new FlagQueryRequest("fake",null,authenticationInfo,1,None))
+
+    (new FlagQueryAggregator).aggregate(Nil, Nil,broadcastMessage).isInstanceOf[ErrorResponse] should be(true)
   }
 }

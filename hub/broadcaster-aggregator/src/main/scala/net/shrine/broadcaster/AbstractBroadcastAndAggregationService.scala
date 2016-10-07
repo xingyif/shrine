@@ -18,7 +18,7 @@ abstract class AbstractBroadcastAndAggregationService(broadcasterClient: Broadca
     for {
       responses <- futureResponses
     } yield {
-      aggregator.aggregate(responses.filter(_ != null), Nil)
+      aggregator.aggregate(responses.filter(_ != null), Nil,message)
     }
   }
 }
