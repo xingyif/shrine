@@ -182,8 +182,7 @@ object AdapterAuditSchema {
 
   val config:Config = allConfig.getConfig("shrine.adapter.audit.database")
 
-  val slickProfileClassName = config.getString("slickProfileClassName")
-  val slickProfile:JdbcProfile = AdapterConfigSource.objectForName(slickProfileClassName)
+  val slickProfile:JdbcProfile = AdapterConfigSource.getObject("slickProfileClassName", config)
 
   val schema = AdapterAuditSchema(slickProfile)
 }

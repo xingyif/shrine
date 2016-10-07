@@ -122,8 +122,7 @@ object QepAuditSchema {
   val allConfig:Config = QepConfigSource.config
   val config:Config = allConfig.getConfig("shrine.queryEntryPoint.audit.database")
 
-  val slickProfileClassName = config.getString("slickProfileClassName")
-  val slickProfile:JdbcProfile = QepConfigSource.objectForName(slickProfileClassName)
+  val slickProfile:JdbcProfile = QepConfigSource.getObject("slickProfileClassName", config)
 
   val schema = QepAuditSchema(slickProfile)
 }
