@@ -1,7 +1,7 @@
 package net.shrine.protocol
 
 import scala.concurrent.duration.Duration
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 import scala.xml.NodeSeq
 import net.shrine.util.XmlUtil
 import net.shrine.util.NodeSeqEnrichments
@@ -64,7 +64,9 @@ object DeleteQueryRequest extends I2b2XmlUnmarshaller[DeleteQueryRequest] with S
       projectId <- i2b2ProjectId(xml)
       waitTime <- i2b2WaitTime(xml)
       authn <- i2b2AuthenticationInfo(xml)
-      masterId <- (xml withChild "message_body" withChild "request" withChild "query_master_id").map(_.text.toLong)
+      masterIdString <- (xml withChild "message_body" withChild "request" withChild "query_master_id").map(_.text)
+      masterId <- Try(masterIdString.toLong).transform(id => Success(id),
+        x => Failure(I2B2MessageFormatException(s"query_master_id of $masterIdString could not be interpreted as a Long integer",x)))
     } yield {
       DeleteQueryRequest(projectId, waitTime, authn, masterId)
     }
@@ -83,3 +85,5 @@ object DeleteQueryRequest extends I2b2XmlUnmarshaller[DeleteQueryRequest] with S
     }
   }
 }
+
+case class I2B2MessageFormatException(message:String,cause:Throwable) extends Exception(message,cause)
