@@ -32,7 +32,7 @@ final class DeleteQueryAggregatorTest extends ShouldMatchersForJUnit {
     val aggregator = new DeleteQueryAggregator
     
     //TODO: test handling error responses
-    val deleteQueryResponse = aggregator.aggregate(Vector(result1, result2), Nil).asInstanceOf[DeleteQueryResponse]
+    val deleteQueryResponse = aggregator.aggregate(Vector(result1, result2), Nil,null).asInstanceOf[DeleteQueryResponse]
     
     deleteQueryResponse should not be(null)
     

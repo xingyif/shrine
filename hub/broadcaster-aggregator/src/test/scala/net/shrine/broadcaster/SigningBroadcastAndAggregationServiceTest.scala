@@ -49,7 +49,7 @@ final class SigningBroadcastAndAggregationServiceTest extends ShouldMatchersForJ
     val broadcastService = SigningBroadcastAndAggregationService(InJvmBroadcasterClient(mockBroadcaster), signer, SigningCertStrategy.Attach)
 
     val aggregator: Aggregator = new Aggregator {
-      override def aggregate(results: Iterable[SingleNodeResult], errors: Iterable[ErrorResponse]): ShrineResponse = {
+      override def aggregate(results: Iterable[SingleNodeResult], errors: Iterable[ErrorResponse], respondingTo: BroadcastMessage): ShrineResponse = {
         ErrorResponse(TestProblem(results.size.toString))
       }
     }
@@ -83,7 +83,7 @@ final class SigningBroadcastAndAggregationServiceTest extends ShouldMatchersForJ
     val broadcastService = SigningBroadcastAndAggregationService(InJvmBroadcasterClient(mockBroadcaster), signer, SigningCertStrategy.DontAttach)
 
     val aggregator: Aggregator = new Aggregator {
-      override def aggregate(results: Iterable[SingleNodeResult], errors: Iterable[ErrorResponse]): ShrineResponse = {
+      override def aggregate(results: Iterable[SingleNodeResult], errors: Iterable[ErrorResponse], respondingTo: BroadcastMessage): ShrineResponse = {
         ErrorResponse(TestProblem(s"${results.size},${errors.size}"))
       }
     }

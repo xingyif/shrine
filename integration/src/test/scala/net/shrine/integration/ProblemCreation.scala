@@ -97,7 +97,7 @@ class ProblemCreation extends FlatSpec with Matchers {
       TimedOutWithAdapter(nodeId),
       CouldNotParseResultsProblem(couldNotParseException),
       HttpErrorResponseProblem(couldNotParseException),
-      NoValidResponsesToAggregate(),
+      NoValidResponsesToAggregate(RequestType.GetResultOutputTypesRequest,"sue","runaround"),
       // Difficult to test since I can't grab private value:
       //InvalidResultProblem(Invalid(None, "error")),
       HMSNotAuthenticatedProblem(authInfo),

@@ -37,7 +37,7 @@ final class ReadQueryResultAggregatorTest extends ShouldMatchersForJUnit {
   def testAggregate {
     val aggregator = new ReadQueryResultAggregator(queryId, true)
 
-    val response = asAggregatedResponse(aggregator.aggregate(Seq(result1, result2), Nil))
+    val response = asAggregatedResponse(aggregator.aggregate(Seq(result1, result2), Nil,null))
 
     val Seq(actualQueryResult1, actualQueryResult2, aggregatedQueryResult) = response.results
 
@@ -53,7 +53,7 @@ final class ReadQueryResultAggregatorTest extends ShouldMatchersForJUnit {
   def testAggregateNoAggregatedResult {
     val aggregator = new ReadQueryResultAggregator(queryId, false)
 
-    val response = asAggregatedResponse(aggregator.aggregate(Seq(result1, result2), Nil))
+    val response = asAggregatedResponse(aggregator.aggregate(Seq(result1, result2), Nil,null))
 
     val Seq(actualQueryResult1, actualQueryResult2) = response.results
 
@@ -66,7 +66,7 @@ final class ReadQueryResultAggregatorTest extends ShouldMatchersForJUnit {
     for (doAggregation <- Seq(true, false)) {
       val aggregator = new ReadQueryResultAggregator(queryId, true)
 
-      val response = asAggregatedResponse(aggregator.aggregate(Nil, Nil))
+      val response = asAggregatedResponse(aggregator.aggregate(Nil, Nil,null))
 
       response.queryId should equal(queryId)
       response.results.isEmpty should be(true)
@@ -77,7 +77,7 @@ final class ReadQueryResultAggregatorTest extends ShouldMatchersForJUnit {
   def testAggregateOnlyErrorResponses {
     val aggregator = new ReadQueryResultAggregator(queryId, true)
 
-    val response = asAggregatedResponse(aggregator.aggregate(Nil, errors))
+    val response = asAggregatedResponse(aggregator.aggregate(Nil, errors,null))
 
     response.queryId should equal(queryId)
 
@@ -88,7 +88,7 @@ final class ReadQueryResultAggregatorTest extends ShouldMatchersForJUnit {
   def testAggregateSomeErrors {
     val aggregator = new ReadQueryResultAggregator(queryId, true)
 
-    val response = asAggregatedResponse(aggregator.aggregate(Seq(result1, result2), errors))
+    val response = asAggregatedResponse(aggregator.aggregate(Seq(result1, result2), errors,null))
 
     val Seq(actualQueryResult1, actualQueryResult2, aggregatedQueryResult, actualErrorQueryResults @ _*) = response.results
 
@@ -109,7 +109,7 @@ final class ReadQueryResultAggregatorTest extends ShouldMatchersForJUnit {
     val result3 = Result(NodeId("A"), 1.second, errors.head)
     val result4 = Result(NodeId("A"), 1.second, errors.last)
     
-    val response = asAggregatedResponse(aggregator.aggregate(Seq(result1, result2, result3, result4), Nil))
+    val response = asAggregatedResponse(aggregator.aggregate(Seq(result1, result2, result3, result4), Nil,null))
 
     val Seq(actualQueryResult1, actualQueryResult2, aggregatedQueryResult, actualErrorQueryResults @ _*) = response.results
 

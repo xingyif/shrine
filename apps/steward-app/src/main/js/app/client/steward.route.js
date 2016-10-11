@@ -41,6 +41,5 @@
                 controller: 'StatisticsController',
                 controllerAs: 'stats'
             });
-
     }
 })();

@@ -38,6 +38,7 @@ case class Obfuscator(binSize:Int,stdDev:Double,noiseClamp:Int) {
     }
   }
 
+//note that the bounds of this obfuscation are actually clamp + binSize/2
   def obfuscate(l: Long): Long = {
 
     def roundToNearest(i: Double, n: Double): Long = {
