@@ -1,19 +1,19 @@
-/*(function () {
+(function () {
     'use strict';
 
     describe('statistics model tests', StatisticsModelSpec);
 
     function StatisticsModelSpec() {
 
-        var historyModel, $httpBackend, historyService;
+        var statisticsModel, $httpBackend, statisticsService;
 
         function setup() {
             module('shrine.steward.statistics');
 
-            inject(function (_$httpBackend_, _HistoryModel_, _HistoryService_) {
+            inject(function (_$httpBackend_, _StatisticsModel_, _StatisticsService_) {
                 $httpBackend = _$httpBackend_;
-                historyModel = _HistoryModel_;
-                historyService = _HistoryService_;
+                statisticsModel = _StatisticsModel_;
+                statisticsService = _StatisticsService_;
                 $httpBackend.whenGET(/\.html$/).respond('');
             });
         }
@@ -84,4 +84,3 @@
         });
     }
 })();
-*/
