@@ -5,18 +5,20 @@
         .module('shrine.steward.statistics')
         .factory('StatisticsModel', StatisticsModel);
 
-    StatisticsModel.$inject = ['$http','StewardService'];
-    function StatisticsModel($http, StewardService) {
+    StatisticsModel.$inject = ['$http','StewardService', 'HistoryModel'];
+    function StatisticsModel($http, StewardService, HistoryModel) {
         var service = StewardService;
         var urls = {
             queriesPerUser: 'steward/statistics/queriesPerUser',
-            topicsPerState: 'steward/statistics/topicsPerState'
+            topicsPerState: 'steward/statistics/topicsPerState',
+            userQueryHistory: 'steward/queryHistory/user'
         };
 
         // -- public -- //
         return {
             getQueriesPerUser: getQueriesPerUser,
-            getTopicsPerState: getTopicsPerState
+            getTopicsPerState: getTopicsPerState,
+            getUserQueryHistory: getUserQueryHistory
         };
 
         // -- private -- //
@@ -40,6 +42,14 @@
 
             return $http.get(url)
                 .then(parseTopicsPerState, onFail);
+        }
+
+        function getUserQueryHistory(username) {
+            var queryString = '?asJson=true';
+            var url = service.getUrl(urls.userQueryHistory) + '/' +  username + queryString;
+
+            return $http.get(url)
+                .then(parseQueryHistory, onFail);
         }
 
         // -- private -- //
@@ -67,6 +77,10 @@
                 total:  total,
                 states: states
             };
+        }
+
+        function parseQueryHistory(result) {
+            return result.data;
         }
     }
 

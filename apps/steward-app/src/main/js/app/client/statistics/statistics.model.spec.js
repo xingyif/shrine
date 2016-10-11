@@ -52,5 +52,29 @@
 
             $httpBackend.flush();
         });
+
+        it('getUserQueryHistory Test', function () {
+
+
+            var mockData = { 
+                totalCount: 144, 
+                skipped: 0, 
+                queryRecords: []
+            };
+
+            var username = 'ben';
+            var queryString = '?asJson=true';
+            var url = stewardService.getUrl('steward/queryHistory/user') + '/' +  username + queryString;
+
+            $httpBackend.expectGET(url).respond(mockData);
+
+            statisticsModel.getUserQueryHistory(username)
+                .then(function (data) {
+                    expect(data.totalCount).toBe(mockData.totalCount);
+                });
+
+            $httpBackend.flush();
+
+        });
     }
 })();
