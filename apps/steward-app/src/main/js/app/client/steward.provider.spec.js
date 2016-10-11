@@ -28,7 +28,6 @@
         //-- setup --/
         beforeEach(setup);
 
-        
         it('StewardProvider should exist.', function () {
             expect(stewardProvider).toBeDefined();
         });

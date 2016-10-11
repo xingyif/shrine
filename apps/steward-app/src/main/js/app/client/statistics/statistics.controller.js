@@ -5,18 +5,15 @@
         .module('shrine.steward.statistics')
         .controller('StatisticsController', StatisticsController);
 
-    StatisticsController.$inject = ['StatisticsModel', 'StewardService', '$scope'];
-    function StatisticsController(model, service, $scope) {
+    StatisticsController.$inject = ['StatisticsService'];
+    function StatisticsController(service) {
 
         var stats = this;
         var startDate = new Date();
         var endDate = new Date();
         startDate.setDate(endDate.getDate() - 7);
 
-        stats.getDateString = service.commonService.dateService.utcToMMDDYYYY;
-        stats.timestampToUtc = service.commonService.dateService.timestampToUtc;
-
-        stats.startDate = startDate; 
+        stats.startDate = startDate;
         stats.endDate = endDate;
 
         stats.isValid = true;
@@ -32,7 +29,6 @@
         stats.addDateRange = addDateRange;
         stats.parseStateTitle = parseStateTitle;
         stats.parseStateCount = parseStateCount;
-        stats.getResults = getResults;
 
         // -- start -- //
         init();
@@ -52,34 +48,23 @@
 
         function validateRange() {
 
-            var startUtc, endUtc;
-            var secondsPerDay = 86400000;
-
-            if (stats.startDate === undefined || stats.endDate === undefined) {
-                stats.isValid = false;
-                return;
-            }
-
-            //can validate date range here.
-            startUtc = stats.timestampToUtc(stats.startDate);
-            endUtc = stats.timestampToUtc(stats.endDate) + secondsPerDay;
-
-             if (endUtc - startUtc <= 0) {
-                stats.isValid = false;
-            } else {
-                stats.isValid = true;
-            }
-
+            stats.isValid = service.validateRange(stats.startDate, stats.endDate);
             return stats.isValid;
         }
 
         function addDateRange() {
 
-            if (stats.validateRange()) {
-                var secondsPerDay = 86400000;
-                stats.getResults(stats.timestampToUtc(stats.startDate),
-                    stats.timestampToUtc(stats.endDate) + secondsPerDay);
+            if (stats.validateRange(stats.startDate, stats.endDate)) {
+                service.getResults(setQueriesPerUser, setTopicsPerState);
             }
+        }
+
+        function setQueriesPerUser(result) {
+            stats.queriesPerUser = result;
+        }
+
+        function setTopicsPerState(result) {
+            stats.topicsPerState = result;
         }
 
         function parseStateTitle(state) {
@@ -100,18 +85,6 @@
         function parseStateCount(state) {
             var member = stats.parseStateTitle(state);
             return state[member];
-        }
-
-        function getResults(startUtc, endUtc) {
-            model.getQueriesPerUser(startUtc, endUtc)
-                .then(function (result) {
-                    stats.queriesPerUser = result;
-                });
-
-            model.getTopicsPerState(startUtc, endUtc)
-                .then(function (result) {
-                    stats.topicsPerState = result;
-                });
         }
     }
 })();
