@@ -14,10 +14,9 @@ import org.json4s.native.JsonMethods.parse
 import org.junit.runner.RunWith
 import org.scalatest.FlatSpec
 import org.scalatest.junit.JUnitRunner
-import spray.http.StatusCodes.{OK, PermanentRedirect, Unauthorized}
+import spray.http.StatusCodes.{OK, PermanentRedirect, Unauthorized, NotFound}
 import spray.http.{BasicHttpCredentials, OAuth2BearerToken}
 import spray.testkit.ScalatestRouteTest
-
 
 import scala.language.postfixOps
 
@@ -365,7 +364,7 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
     }
   }
 
-  /*
+
   "DashboardService" should  "not find a bogus web service to talk to" in {
 
     Get(s"/toDashboard/bogus.harvard.edu/ping") ~>
@@ -377,7 +376,6 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
       assertResult(NotFound)(status)
     }
   }
-*/
 
 }
 

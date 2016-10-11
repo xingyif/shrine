@@ -154,7 +154,7 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
   }
 
   //Manually test this by running a curl command
-  //curl -k -w "\n%{response_code}\n" -u dave:kablam "https://shrine-dev1.catalyst:6443/shrine-dashboard/toDashboard/shrine-dev2.catalyst/shrine-dashboard/fromDashboard/ping"
+  //curl -k -w "\n%{response_code}\n" -u dave:kablam "https://shrine-dev1.catalyst:6443/shrine-dashboard/toDashboard/shrine-dev2.catalyst/ping"
   /**
     * Forward a request from this dashboard to a remote dashboard
     */
@@ -173,7 +173,7 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
 
 
   def statusRoute(user:User):Route = get {
-    val (adapter,   hub,   i2b2,   keystore,   optionalParts,   qep,   summary) =
+    val( adapter ,  hub ,  i2b2 ,  keystore ,  optionalParts ,  qep ,  summary ) =
        ("adapter", "hub", "i2b2", "keystore", "optionalParts", "qep", "summary")
     pathPrefix("classpath")  {getClasspath}~
     pathPrefix("config")     {getConfig}~
