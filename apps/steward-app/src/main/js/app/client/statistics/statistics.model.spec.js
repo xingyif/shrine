@@ -1,87 +1,56 @@
-/*(function () {
+(function () {
     'use strict';
 
     describe('statistics model tests', StatisticsModelSpec);
 
     function StatisticsModelSpec() {
 
-        var statisticsModel, $httpBackend, statisticsService;
+        var statisticsModel, $httpBackend, stewardService;
 
         function setup() {
             module('shrine.steward.statistics');
 
-            inject(function (_$httpBackend_, _StatisticsModel_, _StatisticsService_) {
+            inject(function (_$httpBackend_, _StatisticsModel_, _StewardService_) {
                 $httpBackend = _$httpBackend_;
                 statisticsModel = _StatisticsModel_;
-                statisticsService = _StatisticsService_;
+                stewardService = _StewardService_;
                 $httpBackend.whenGET(/\.html$/).respond('');
             });
         }
 
         beforeEach(setup);
 
-        it('historyModel.getStewardHistory - test', function () {
+        it('getQueriesPerUser Test', function () {
 
-            var mockHistory = {
-                date: 1440773077637,
-                externalId: -1,
-                name: '3 years old@10:44:20',
-                queryContents: '<queryDefinition><name>3 years old@10:44:20</name><expr><term>shrine expression here.</term></expr></queryDefinition>',
-                stewardId: 2,
-                stewardResponse: 'Approved',
-                topic: {},
-                user: {}
-            };
-
-            var mockData = {
-                queryRecords: [mockHistory],
-                numberSkipped: 0,
-                totalCount: 1
-            };
-
-            var expectedResult = {
-            }
-
-            var url = historyService.getUrl('steward/queryHistory', mockData.numberSkipped, mockData.totalCount);
-            $httpBackend.expectGET(url).respond(mockData);
-
-            historyModel.getStewardHistory(mockData.numberSkipped, mockData.totalCount)
-                .then(function (data) {
-                    expect(data.queryRecords.length).toBe(mockData.totalCount);
-                });
-            $httpBackend.flush();
-        });
-
-        it('historyModel.getResearcherHistory - test', function () {
-            var mockHistory = {
-                date: 1440773077637,
-                externalId: -1,
-                name: '3 years old@10:44:20',
-                queryContents: '<queryDefinition><name>3 years old@10:44:20</name><expr><term>shrine expression here.</term></expr></queryDefinition>',
-                stewardId: 2,
-                stewardResponse: 'Approved',
-                topic: {},
-                user: {}
-            };
+            var mockQueriesPerUser = [
+                {
+                    _1: {
+                        fullname: 'Steward Test Researcher Ben',
+                        roles: ['Researcher'],
+                        username: 'ben'
+                    },
+                    _2: 10
+                }
+            ];
 
             var mockData = {
-                queryRecords: [mockHistory],
-                numberSkipped: 0,
-                totalCount: 1
+                queriesPerUser: mockQueriesPerUser,
+                total: 10
             };
 
-            var expectedResult = {
-            }
+            var skip, limit, state, sortBy, sortDirection, startDate = 0, endDate = 300000;
+            var url = stewardService.getUrl('steward/statistics/queriesPerUser', skip, limit, state,
+                sortBy, sortDirection, startDate, endDate);
 
-            var url = historyService.getUrl('researcher/queryHistory', mockData.numberSkipped, mockData.totalCount);
             $httpBackend.expectGET(url).respond(mockData);
 
-            historyModel.getResearcherHistory(mockData.numberSkipped, mockData.totalCount)
+
+            statisticsModel.getQueriesPerUser(startDate,endDate)
                 .then(function (data) {
-                    expect(data.queryRecords.length).toBe(mockData.totalCount);
+                    expect(data.total).toBe(mockData.total);
                 });
+
             $httpBackend.flush();
         });
     }
 })();
-*/
