@@ -644,7 +644,7 @@ class StewardServiceTest extends FlatSpec with ScalatestRouteTest with TestWithD
       val queries = parse(queriesJson).extract[QueryHistory]
 
       assertResult(3)(queries.queryRecords.size)
-      assertResult(queries.queryRecords)(sixQueries.sortBy(_.name).drop(2).take(3))
+      assertResult(queries.queryRecords)(sixQueries.sortBy(_.name).slice(2, 5))
     }
 
   }
