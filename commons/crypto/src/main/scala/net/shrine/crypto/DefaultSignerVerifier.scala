@@ -1,21 +1,15 @@
 package net.shrine.crypto
 
-import java.security.PrivateKey
-import java.security.{ Signature => JSig }
-import java.security.cert.Certificate
+import java.security.{ Signature => JSig, PrivateKey, PublicKey }
+import java.security.cert.{Certificate, X509Certificate}
 import javax.xml.datatype.XMLGregorianCalendar
+
+import net.shrine.protocol.{BroadcastMessage, CertId, Signature, CertData}
 import net.shrine.log.Loggable
-import net.shrine.protocol.BroadcastMessage
-import net.shrine.protocol.CertId
-import net.shrine.protocol.Signature
 import net.shrine.util.{Tries, XmlDateHelper, XmlGcEnrichments}
+
 import scala.concurrent.duration.Duration
-import net.shrine.protocol.CertData
-import scala.util.Success
-import scala.util.Failure
-import java.security.cert.X509Certificate
-import scala.util.Try
-import java.security.PublicKey
+import scala.util.{Success, Failure, Try}
 
 /**
  * @author clint
@@ -65,7 +59,7 @@ final class DefaultSignerVerifier(certCollection: CertCollection) extends Signer
   private[crypto] def obtainAndValidateSigningCert(signature: Signature): Try[X509Certificate] = {
     signature.signingCert match {
       //If the signing cert was sent with the signature, and the signing cert was signed by a CA we trust 
-      case Some(signingCertData) => {
+      case Some(signingCertData) =>
         for {
           signingCert <- Try(signingCertData.toCertificate)
           signedByTrustedCA <- isSignedByTrustedCA(signingCert)
@@ -75,13 +69,12 @@ final class DefaultSignerVerifier(certCollection: CertCollection) extends Signer
             throw new Exception(s"Couldn't verify: signing cert with serial '${signingCert.getSerialNumber}' was part of the signature, but was not signed by any CA we trust.  Aliases of trusted CAs are: ${certCollection.caCertAliases.map(s => s"'$s'").mkString(",")}")
           }
         }
-      }
+
       //Otherwise, look up the signing cert in our keystore by its CertId 
-      case None => {
+      case None =>
         val signerCertOption = certCollection.get(signature.signedBy)
 
         toTry(signerCertOption)(new Exception(s"Couldn't verify: can't find signer key with CertId ${signature.signedBy}"))
-      }
     }
   }
 

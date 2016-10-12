@@ -91,7 +91,7 @@ object ShrineJwtAuthenticator extends Loggable {
 
   def createOAuthCredentials(user:User): OAuth2BearerToken = {
 
-    val base64Cert = new String(TextCodec.BASE64URL.encode(certCollection.myCert.get.getEncoded))
+    val base64Cert:String = TextCodec.BASE64URL.encode(certCollection.myCert.get.getEncoded)
 
     val key: PrivateKey = certCollection.myKeyPair.privateKey
     val expiration: Date = new Date(System.currentTimeMillis() + 30 * 1000) //good for 30 seconds
