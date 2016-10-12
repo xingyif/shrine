@@ -12,25 +12,42 @@ console.time('execute time');
 
 
 // create and save the screen objects
+//create base object and append view methods to it?
 i2b2.CRC.view['QT'] = new i2b2Base_cellViewController(i2b2.CRC, 'QT');
 
 var queryTimingButton;
 // define the option functions
 // ================================================================================================== //
+
+/**
+ * Options pop up at start of query.
+ */
 i2b2.CRC.view.QT.showOptions = function (subScreen) {
+
+    // if modal options does not exist create it and append event handlers.
     if (!this.modalOptions) {
+
+        /**
+         * submit handler.
+         */
         var handleSubmit = function () {
             // submit value(s)
             if (this.submit()) {
                 var tmpValue = parseInt($('QryTimeout').value, 10);
                 i2b2.CRC.view['QT'].params.queryTimeout = tmpValue;
-                //			var tmpValue = parseInt($('MaxChldDisp').value,10);
-                //			i2b2.CRC.view['QT'].params.maxChildren = tmpValue;
             }
         }
+
+        /**
+         * cancel handler
+         */
         var handleCancel = function () {
             this.cancel();
         }
+
+        /**
+         * wrap element as Yahoo widget.
+         */
         this.modalOptions = new YAHOO.widget.SimpleDialog("optionsQT",
             {
                 width: "400px",
@@ -41,14 +58,16 @@ i2b2.CRC.view.QT.showOptions = function (subScreen) {
                 buttons: [{ text: "OK", handler: handleSubmit, isDefault: true },
                     { text: "Cancel", handler: handleCancel }]
             });
+
         $('optionsQT').show();
+
+        /**
+         * method for validation on submit.
+         */
         this.modalOptions.validate = function () {
             // now process the form data
             var msgError = '';
-            //		var tmpValue = parseInt($('MaxChldDisp').value,10);
-            //		if (!isNaN(tmpValue) && tmpValue <= 0) {
-            //			msgError += "The max number of Children to display must be a whole number larger then zero.\n";
-            //		}
+
             var tmpValue = parseInt($('QryTimeout').value, 10);
             if (!isNaN(tmpValue) && tmpValue <= 0) {
                 msgError += "The the query timeout period must be a whole number larger then zero.\n";
@@ -61,13 +80,17 @@ i2b2.CRC.view.QT.showOptions = function (subScreen) {
         };
         this.modalOptions.render(document.body);
     }
+
+
     this.modalOptions.show();
     // load settings
-    //	$('MaxChldDisp').value = this.params.maxChildren;
     $('QryTimeout').value = this.params.queryTimeout;
-}
+};
 
-// ================================================================================================== //
+
+/**
+ * ??
+ */
 i2b2.CRC.view.QT.ContextMenuPreprocess = function (p_oEvent) {
     var clickId = false;
     var clickPanel = false;
@@ -103,7 +126,7 @@ i2b2.CRC.view.QT.ContextMenuPreprocess = function (p_oEvent) {
     if (tvNode) {
         if (!Object.isUndefined(tvNode.data.i2b2_SDX)) {
             // Make sure the clicked node is at the root level
-            if (tvNode.parent == clickPanel.yuiTree.getRoot()) {
+            if (tvNoBde.parent == clickPanel.yuiTree.getRoot()) {
                 if (p_oEvent == "beforeShow") {
                     i2b2.CRC.view.QT.contextRecord = tvNode.data.i2b2_SDX;
                     i2b2.CRC.view.QT.contextPanelCtrlr = clickPanel;
@@ -115,15 +138,12 @@ i2b2.CRC.view.QT.ContextMenuPreprocess = function (p_oEvent) {
                     if (i2b2.CRC.view.QT.contextRecord.origData.isModifier) {
 
                         //Get the blob for this now.
-                        //	if (i2b2.CRC.view.QT.contextRecord.origData.xmlOrig != null) {
                         var cdetails = i2b2.ONT.ajax.GetModifierInfo("CRC:QueryTool", { modifier_applied_path: i2b2.CRC.view.QT.contextRecord.origData.applied_path, modifier_key_value: i2b2.CRC.view.QT.contextRecord.origData.key, ont_synonym_records: true, ont_hidden_records: true });
                         // this is what comes out of the old AJAX call
                         var c = i2b2.h.XPath(cdetails.refXML, 'descendant::modifier');
                         if (c.length > 0) {
                             i2b2.CRC.view.QT.contextRecord.origData.xmlOrig = c[0];
                         }
-                        //	}
-
 
                         var lvMetaDatas1 = i2b2.h.XPath(i2b2.CRC.view.QT.contextRecord.origData.xmlOrig, 'metadataxml/ValueMetadata[string-length(Version)>0]');
                         if (lvMetaDatas1.length > 0) {
@@ -206,11 +226,6 @@ i2b2.CRC.view.QT.enableSameTiming = function () {
 
         var t = queryTimingButton.getMenu().getItems();
         if (t.length == 2) {
-            //	queryTimingButton.getMenu().clearContent();
-            //	queryTimingButton.getMenu().addItems([
-            //						{ text: "Treat Independently", value: "ANY"}]);
-            //	queryTimingButton.getMenu().addItems([
-            //						{ text: "Selected groups occur in the same financial encounter", value: "SAMEVISIT" }]);
             queryTimingButton.getMenu().addItems([
                 { text: "Items Instance will be the samer", value: "SAMEINSTANCENUM" }]);
             queryTimingButton.getMenu().render();
@@ -226,7 +241,6 @@ i2b2.CRC.view.QT.enableSameTiming = function () {
 
 i2b2.CRC.view.QT.setQueryTiming = function (sText) {
 
-    //TODO cleanup
 
     if (YAHOO.util.Dom.inDocument(queryTimingButton.getMenu().element)) {
 
@@ -310,16 +324,13 @@ i2b2.CRC.view.QT.Resize = function (e) {
     if (h < 517) { h = 517; }
 
     // resize our visual components
-    //var queryToolWidth = ds.width * 0.6;
-    //$('crcQueryToolBox').style.left = w-queryToolWidth;
-    //debugOnScreen("crcQueryToolBox.width = " + queryToolWidth );
-
     $('crcQueryToolBox').style.left = w - 550;
+
     if (i2b2.WORK && i2b2.WORK.isLoaded) {
         var z = h - 400; //392 + 44 - 17 - 25;
-        if (i2b2.CRC.view.QT.isZoomed) { z += 196 - 44; }
+        if (i2b2.CRC.view.QT.isZoomed) { z += 196 - 44; }//you mean 152?
     } else {
-        var z = h - 392 - 17 - 25;
+        var z = h - 392 - 17 - 25;// why not just: h - 350?
         if (i2b2.CRC.view.QT.isZoomed) { z += 196; }
     }
     // display the topic selector bar if we are in SHRINE-mode
@@ -333,8 +344,6 @@ i2b2.CRC.view.QT.Resize = function (e) {
     $('QPD3').style.height = z;
     $('temporalbuilders').style.height = z + 50;
 }
-//YAHOO.util.Event.addListener(window, "resize", i2b2.CRC.view.QT.Resize, i2b2.CRC.view.QT); // tdw9
-
 
 //================================================================================================== //
 i2b2.CRC.view.QT.splitterDragged = function () {
@@ -453,9 +462,6 @@ i2b2.CRC.view.QT.splitterDragged = function () {
 
 //================================================================================================== //
 i2b2.CRC.view.QT.ResizeHeight = function () {
-    //var ds = document.viewport.getDimensions();
-    //var h = ds.height;
-    //var h = window.document.documentElement.clientHeight;
     var h = window.innerHeight || (window.document.documentElement.clientHeight || window.document.body.clientHeight);
 
     if (h < 517) { h = 517; }
@@ -482,6 +488,46 @@ i2b2.CRC.view.QT.ResizeHeight = function () {
 
 }
 
+// not defined in CRC_view_QryTool.js
+i2b2.CRC.view.QT.addNewTemporalGroup = function() {
+
+    $('addDefineGroup-button').disable();
+    
+    i2b2.CRC.ctrlr.QT.temporalGroup = i2b2.CRC.model.queryCurrent.panels.length;
+    //i2b2.CRC.ctrlr.QT.temporalGroup = i2b2.CRC.ctrlr.QT.temporalGroup + 1;
+    
+    if (YAHOO.util.Dom.inDocument(defineTemporalButton.getMenu().element)) {					
+        defineTemporalButton.getMenu().addItems([ 	 
+                        { text: "Event " + (i2b2.CRC.ctrlr.QT.temporalGroup), value: i2b2.CRC.ctrlr.QT.temporalGroup}]);	 
+        defineTemporalButton.getMenu().render();	
+    } else {
+        var aMenuItemData=[];
+            aMenuItemData[0] = {text: "Event " + (i2b2.CRC.ctrlr.QT.temporalGroup), value: i2b2.CRC.ctrlr.QT.temporalGroup} ;
+        defineTemporalButton.getMenu().itemData = aMenuItemData;
+        }
+    
+    i2b2.CRC.model.queryCurrent.panels[i2b2.CRC.ctrlr.QT.temporalGroup] = {};
+    this.yuiTree = new YAHOO.widget.TreeView("QPD1");
+    i2b2.CRC.ctrlr.QT.panelAdd(this.yuiTree);
+    i2b2.CRC.ctrlr.QT._redrawAllPanels();	
+    
+    //Add to define a query	
+    for( var i = 0; i < i2b2.CRC.ctrlr.QT.tenporalBuilders + 1; i++){
+        var select = document.getElementById("instancevent1["+i+"]");
+        select.options[select.options.length] = new Option( 'Event '+i2b2.CRC.ctrlr.QT.temporalGroup, i2b2.CRC.ctrlr.QT.temporalGroup);
+
+        select = document.getElementById("instancevent2["+i+"]");
+        select.options[select.options.length] = new Option( 'Event '+i2b2.CRC.ctrlr.QT.temporalGroup, i2b2.CRC.ctrlr.QT.temporalGroup);
+    }
+
+    alert('New Event ' + i2b2.CRC.ctrlr.QT.temporalGroup + ' has been added.');
+    
+    $('addDefineGroup-button').enable();
+					
+					
+					
+};
+
 i2b2.CRC.view.QT.deleteLastTemporalGroup = function () {
 
     if (i2b2.CRC.model.queryCurrent.panels.length > 3) {
@@ -498,7 +544,6 @@ i2b2.CRC.view.QT.deleteLastTemporalGroup = function () {
         }
 
         alert('Event ' + currentPanels + ' has been removed.');
-        //i2b2.CRC.ctrlr.QT.temporalGroup = i2b2.CRC.model.queryCurrent.panels.length;
 
         defineTemporalButton.getMenu().getItem(0).element.click()
 
@@ -567,15 +612,11 @@ i2b2.events.afterCellInit.subscribe(
                     o.visual_attribute_type = i2b2.h.getXNodeVal(ps[i1], 'visual_attribute_type');
                     o.description = i2b2.h.getXNodeVal(ps[i1], 'description');
                     // need to process param columns
-                    //o. = i2b2.h.getXNodeVal(ps[i1],'');
-                    //this.model.events.push(o);
-
                     ///@todo: condition commented out for configurable result types if (o.visual_attribute_type == "LA") {
                     newHTML += "			<div id=\"crcDlgResultOutput" + o.name + "\"><input type=\"checkbox\" class=\"chkQueryType\" name=\"queryType\" value=\"" + o.name + "\" " + checked + "/> " + o.description + "</div>";
                     ///}
                 }
 
-                //commented out for @pcori_webclient.
                 $('dialogQryRunResultType').innerHTML = newHTML;
             }
 
@@ -910,43 +951,10 @@ i2b2.events.afterCellInit.subscribe(
             defineTemporalButton = new YAHOO.widget.Button("defineTemporal",
                 { lazyLoad: "false", type: "menu", menu: "menubutton2select", name: "definetemporal" });
 
-            //This is where addNewTemporalGroup() is used in live version.
-            var Group = new YAHOO.widget.Button("addDefineGroup");
+
+            var addDefineGroup = new YAHOO.widget.Button("addDefineGroup");
             addDefineGroup.on("click", function (event) {
-
-                // -- trying this as fix for SHRINE-1482
-                $('addDefineGroup-button').disable();
-
-                i2b2.CRC.ctrlr.QT.temporalGroup = i2b2.CRC.model.queryCurrent.panels.length;
-                //i2b2.CRC.ctrlr.QT.temporalGroup = i2b2.CRC.ctrlr.QT.temporalGroup + 1;
-
-                if (YAHOO.util.Dom.inDocument(defineTemporalButton.getMenu().element)) {
-                    defineTemporalButton.getMenu().addItems([
-                        { text: "Event " + (i2b2.CRC.ctrlr.QT.temporalGroup), value: i2b2.CRC.ctrlr.QT.temporalGroup }]);
-                    defineTemporalButton.getMenu().render();
-                } else {
-                    var aMenuItemData = [];
-                    aMenuItemData[0] = { text: "Event " + (i2b2.CRC.ctrlr.QT.temporalGroup), value: i2b2.CRC.ctrlr.QT.temporalGroup };
-                    defineTemporalButton.getMenu().itemData = aMenuItemData;
-                }
-
-                i2b2.CRC.model.queryCurrent.panels[i2b2.CRC.ctrlr.QT.temporalGroup] = {};
-                this.yuiTree = new YAHOO.widget.TreeView("QPD1");
-                i2b2.CRC.ctrlr.QT.panelAdd(this.yuiTree);
-                i2b2.CRC.ctrlr.QT._redrawAllPanels();
-
-                //Add to define a query	
-                for (var i = 0; i < i2b2.CRC.ctrlr.QT.tenporalBuilders + 1; i++) {
-                    var select = document.getElementById("instancevent1[" + i + "]");
-                    select.options[select.options.length] = new Option('Event ' + i2b2.CRC.ctrlr.QT.temporalGroup, i2b2.CRC.ctrlr.QT.temporalGroup);
-
-                    select = document.getElementById("instancevent2[" + i + "]");
-                    select.options[select.options.length] = new Option('Event ' + i2b2.CRC.ctrlr.QT.temporalGroup, i2b2.CRC.ctrlr.QT.temporalGroup);
-                }
-
-                alert('New Event ' + i2b2.CRC.ctrlr.QT.temporalGroup + ' has been added.');
-
-                $('addDefineGroup-button').enable();
+               i2b2.CRC.view.QT.addNewTemporalGroup(); 
             });
 
             var removeDefineGroup = new YAHOO.widget.Button("removeDefineGroup");
@@ -955,7 +963,7 @@ i2b2.events.afterCellInit.subscribe(
             });
 
             queryTimingButton.on("mousedown", function (event) {
-                //i2b2.CRC.ctrlr.QT.panelControllers[0].doTiming(p_oItem.value);
+
                 if ((i2b2.CRC.ctrlr.QT.hasModifier) && (queryTimingButton.getMenu().getItems().length == 3)) {
                     queryTimingButton.getMenu().addItems([
                         { text: "Items Instance will be the same", value: "SAMEINSTANCENUM" }]);

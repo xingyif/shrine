@@ -135,7 +135,7 @@
         }
 
         function submitDate() {
-            var epoch = vm.date.getTime() + 86400000; // + a day
+            var epoch = $scope.date.getTime() + 86400000; // + a day
             vm.showDateError = false;
             newPage(vm.probsOffset, vm.probsN, epoch);
         }
@@ -190,7 +190,11 @@
             var nameTag = '<h5>'+sanitizeString(exceptionObject['name'])+'</h5>';
             var messageTag = '<p>'+sanitizeString(exceptionObject['message'])+'</p>';
             var stackTrace = exceptionObject['stacktrace'];
+<<<<<<< HEAD
             return exceptionTag + nameTag + messageTag + (stackTrace === undefined? '': parseStackTrace(stackTrace));
+=======
+            return exceptionTag + nameTag + messageTag + (stackTrace == null? '': parseStackTrace(stackTrace));
+>>>>>>> release/1.22.1
         }
 
         function parseStackTrace(stackTraceObject) {

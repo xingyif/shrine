@@ -29,6 +29,7 @@
 
         // -- public -- //
         return {
+<<<<<<< HEAD
             getAdapter:        getJsonMaker(Config.AdapterEndpoint, 'adapter'),
             getConfig:         getJsonMaker(Config.ConfigEndpoint, 'config', parseConfig),
             getHub:            getJsonMaker(Config.HubEndpoint, 'hub'),
@@ -39,6 +40,14 @@
             getQep:            getJsonMaker(Config.QepEndpoint, 'qep'),
             getSummary:        getJsonMaker(Config.SummaryEndpoint, 'summary'),
             cache:             cache
+=======
+            getOptions:  getOptions,
+            getConfig:   getConfig,
+            getSummary:  getSummary,
+            getProblems: getProblemsMaker(),
+            getHappyAll: getHappyAll,
+            cache:       cache
+>>>>>>> release/1.22.1
         };
 
 
@@ -86,6 +95,7 @@
             return false;
         }
 
+<<<<<<< HEAD
         // "explodes" the flag config map.
         // e.g., {"key.foo": 10, "key.baz": 5} -> {"key": {"foo": 10, "baz": 5}}
         function preProcessJson (object) {
@@ -112,6 +122,70 @@
                 }
             }
             return result;
+=======
+
+        /**
+         * Get View Options, initial call from diagnostic.
+         * @param verb
+         * @returns {*}
+         */
+        function getOptions() {
+            var url = urlGetter(Config.OptionsEndpoint)
+            return h.get(url)
+                .then(parseJsonResult, onFail);
+        }
+
+
+        /**
+         * Returns the Shrine Configuration object.
+         * @returns {*}
+         */
+        function getConfig () {
+            var url = urlGetter(Config.ConfigEndpoint)
+            return h.get(url)
+                .then(parseJsonResult, onFail);
+        }
+
+
+        /**
+         *
+         * @returns {*}
+         */
+        function getSummary () {
+            var url = urlGetter(Config.SummaryEndpoint)
+            return h.get(url)
+                .then(parseJsonResult, onFail);
+        }
+
+
+        function getProblemsMaker() {
+
+            var prevOffset = 0;
+            var prevN = 20;
+
+            /**
+             * ProblemEndpoint:  'admin/status/problems',
+             * @returns {*}
+             */
+            return function(offset, n, epoch) {
+                if (offset != null) {
+                    prevOffset = offset;
+                } else {
+                    offset = prevOffset;
+                }
+                if (n != null) {
+                    prevN = n;
+                } else {
+                    n = prevN;
+                }
+
+                var epochString = epoch && isFinite(epoch) ? '&epoch=' + epoch : '';
+                var url = urlGetter(
+                    Config.ProblemEndpoint + '?offset=' + offset + '&n=' + n + epochString);
+                return h.get(url)
+                    .then(parseJsonResult, onFail);
+            }
+>>>>>>> release/1.22.1
         }
 
         /**
