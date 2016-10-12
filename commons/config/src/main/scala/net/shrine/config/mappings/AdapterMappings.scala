@@ -28,7 +28,7 @@ final case class AdapterMappings(source: String, version: String = AdapterMappin
 
   def networkTerms: Set[String] = mappings.keySet
 
-  def localTermsFor(networkTerm: String): Set[String] = mappings.get(networkTerm).getOrElse(Set.empty)
+  def localTermsFor(networkTerm: String): Set[String] = mappings.getOrElse(networkTerm, Set.empty)
 
   def size = mappings.size
 
