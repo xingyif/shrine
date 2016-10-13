@@ -13,7 +13,7 @@
     SummaryController.$inject = ['$app', '$sce', '$log']
     function SummaryController ($app, $sce, $log) {
         var vm          = this;
-
+        var unknown      = 'UNKNOWN';
         init();
 
         
@@ -26,11 +26,22 @@
 
             $app.model.getI2B2()
                 .then(setI2B2, handleFailure);
+
+            vm.formatDate = formatDate;
         }
 
         function handleFailure(failure) {
             //TODO: HANDLE FAILURE
             $log.error(JSON.stringify(failure));
+        }
+
+        function formatDate(maybeEpoch) {
+            if (!(maybeEpoch && isFinite(maybeEpoch))) {
+                return unknown;
+            } else {
+                var d = new Date(maybeEpoch);
+                return d.toUTCString();
+            }
         }
 
 
@@ -42,7 +53,9 @@
             // -- set viewmodel  -- //
             vm.summary              = summary;
             if (vm.adapterMappingsFileName === undefined) {
-                vm.adapterMappingsFileName = 'UNKNOWN'
+                vm.adapterMappingsFileName = unknown;
+            } else if (vm.adapterMappingsDate === undefined) {
+                vm.adapterMappingsDate = unknown;
             }
             return this;
         }
