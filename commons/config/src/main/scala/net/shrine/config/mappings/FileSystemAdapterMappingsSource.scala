@@ -10,13 +10,20 @@ import java.io.Reader
  */
 trait FileSystemAdapterMappingsSource extends ReaderAdapterMappingsSource {
   final def mappingFile: File = new File(mappingFileName)
-  
+
+  final override def lastModified: Long = {
+    requireHelp
+    mappingFile.lastModified
+  }
+
   //NB: Will blow up loudly if mapping file isn't found
   final override protected def reader: Reader = {
-    require(mappingFile != null)
-    
-    require(mappingFile.exists, s"Couldn't find adapter mapping file '${ mappingFile.getCanonicalPath }'")
-    
+    requireHelp
     new FileReader(mappingFile)
+  }
+
+  private final def requireHelp = {
+    require(mappingFile != null)
+    require(mappingFile.exists, s"Couldn't find adapter mapping file '${ mappingFile.getCanonicalPath }'")
   }
 }

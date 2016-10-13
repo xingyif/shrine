@@ -9,7 +9,6 @@ import net.shrine.client.OntClient
 final case class OntClientOntologyMetadata(client: OntClient) {
   def ontologyVersion: String = {
     import OntClientOntologyMetadata._
-
     val versionTermOption = for {
       versionTerm <- client.childrenOf(versionContainerTerm).headOption
       lastPathPart <- dropTrailingSlash(versionTerm).split(backslashRegex).lastOption
