@@ -5,4 +5,5 @@ package net.shrine.config.mappings
  * @date Sep 3, 2014
  */
 final case class ClasspathFormatDetectingAdapterMappingsSource(mappingFileName: String)
-  extends ClasspathAdapterMappingsSource with FormatDetectingAdapterMappingsSource
+  extends ClasspathAdapterMappingsSource with FormatDetectingAdapterMappingsSource {
+}

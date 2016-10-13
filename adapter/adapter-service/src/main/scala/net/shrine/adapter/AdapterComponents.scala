@@ -27,7 +27,9 @@ case class AdapterComponents(
                               adapterService: AdapterService,
                               i2b2AdminService: I2b2AdminService,
                               adapterDao: AdapterDao,
-                              adapterMappings: AdapterMappings)
+                              adapterMappings: AdapterMappings,
+                              lastModified: Long
+                            )
 
 object AdapterComponents {
   //todo try and trim this argument list back
@@ -149,6 +151,7 @@ object AdapterComponents {
         runQueryAdapter = runQueryAdapter
       ),
       adapterDao = adapterDao,
-      adapterMappings = adapterMappings)
+      adapterMappings = adapterMappings,
+      lastModified = adapterMappingsSource.lastModified)
   }
 }

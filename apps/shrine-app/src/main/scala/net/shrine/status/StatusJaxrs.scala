@@ -10,6 +10,7 @@ import javax.ws.rs.core.{MediaType, Response}
 
 import com.sun.jersey.spi.container.{ContainerRequest, ContainerRequestFilter}
 import com.typesafe.config.{Config => TsConfig}
+import net.shrine.adapter.AdapterComponents
 import net.shrine.authorization.{QueryAuthorizationService, StewardQueryAuthorizationService}
 import net.shrine.broadcaster._
 import net.shrine.client.PosterOntClient
@@ -249,22 +250,14 @@ Adapter{
     val crcEndpointUrl                  = ShrineOrchestrator.adapterComponents.fold("")(_.i2b2AdminService.crcUrl)
     val setSizeObfuscation              = ShrineOrchestrator.adapterComponents.fold(false)(_.i2b2AdminService.obfuscate)
     val adapterLockoutAttemptsThreshold = ShrineOrchestrator.adapterComponents.fold(0)(_.i2b2AdminService.adapterLockoutAttemptsThreshold)
-    val adapterMappingsFileInfo = mappingFileInfo
+    val adapterMappingsFileName         = mappingFileInfo.map(_._1)
+    val adapterMappingsFileDate         = mappingFileInfo.map(_._2)
 
-    Adapter(crcEndpointUrl, setSizeObfuscation, adapterLockoutAttemptsThreshold, adapterMappingsFileInfo._1, adapterMappingsFileInfo._2)
+    Adapter(crcEndpointUrl, setSizeObfuscation, adapterLockoutAttemptsThreshold, adapterMappingsFileName, adapterMappingsFileDate)
   }
 
-  def mappingFileInfo: (Option[String], Option[Long], Option[String]) = {
-    val adapterMappingsFileName = ShrineOrchestrator.adapterComponents.map(_.adapterMappings.source)
-    val adapterMappingsVersion = ShrineOrchestrator.adapterComponents.map(_.adapterMappings.version) //todo use this?
-  val noDate:Option[Long] = None
-    val adapterMappingsDate:Option[Long] = adapterMappingsFileName.fold(noDate){ fileName =>
-      val file:File = new File(fileName)
-      if(file.exists) Some(file.lastModified())
-      else None
-    }
-    (adapterMappingsFileName,adapterMappingsDate,adapterMappingsVersion)
-  }
+  def mappingFileInfo: Option[(String, Long, String)] =
+    ShrineOrchestrator.adapterComponents.map(ac => (ac.adapterMappings.source, ac.lastModified, ac.adapterMappings.version))
 }
 
 case class Hub(shouldQuerySelf:Boolean, //todo don't use this field any more. Drop it when possible

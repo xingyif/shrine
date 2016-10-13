@@ -2,9 +2,10 @@ package net.shrine.config.mappings
 
 import au.com.bytecode.opencsv.CSVReader
 import java.io.Reader
+
 import scala.collection.mutable.Buffer
 import scala.collection.mutable.ArrayBuffer
-import scala.collection.AbstractIterator
+import scala.collection.{AbstractIterator, mutable}
 import scala.util.control.NonFatal
 
 object Csv {
@@ -21,7 +22,7 @@ object Csv {
   def slurp(reader: Reader): Seq[(String, String)] = {
     val csvReader = makeCsvReader(reader)
 
-    val lines: Buffer[(String, String)] = new ArrayBuffer
+    val lines: mutable.Buffer[(String, String)] = new ArrayBuffer
 
     try {
       var rawLine = csvReader.readNext()
