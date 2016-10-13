@@ -23,6 +23,7 @@ import scala.collection.JavaConverters._
 import scala.collection.immutable.{Map, Seq, Set}
 import net.shrine.config.ConfigExtensions
 import net.shrine.crypto.{KeyStoreCertCollection, KeyStoreDescriptor, SigningCertStrategy}
+import net.shrine.ont.data.OntClientOntologyMetadata
 import net.shrine.protocol.query.{OccuranceLimited, QueryDefinition, Term}
 import net.shrine.protocol._
 import net.shrine.serialization.NodeSeqSerializer
@@ -295,6 +296,7 @@ case class Summary(
                     shrineVersion:String,
                     shrineBuildDate:String,
                     ontologyVersion:String,
+                    ontologyVersionTerm:String,
                     ontologyTerm:String,
                     queryResult: Option[SingleNodeResult],
                     adapterMappingsFileName:Option[String],
@@ -387,6 +389,7 @@ object Summary {
       shrineBuildDate = Versions.buildDate,
       //todo in scala 2.12, do better
       ontologyVersion = ontologyVersion,
+      ontologyVersionTerm = OntClientOntologyMetadata.versionContainerTerm,
       ontologyTerm = term.value,
       queryResult = queryResult,
       adapterMappingsFileName = adapterMappingInfo.map(_._1),

@@ -1,19 +1,20 @@
 {
   "isHub": true,
   "shrineVersion": "1.22.2.0-SNAPSHOT",
-  "shrineBuildDate": "2016-09-27 15:43:25",
-  "ontologyVersion": "UNKNOWN",
+  "shrineBuildDate": "2016-10-13 14:25:07",
+  "ontologyVersion": "Unavailable due to: java.net.SocketTimeoutException: connect timed out",
+  "ontologyVersionTerm": "\\\\SHRINE\\SHRINE\\ONTOLOGYVERSION",
   "ontologyTerm": "\\\\SHRINE\\SHRINE\\Diagnoses\\Mental Illness\\Disorders usually diagnosed in infancy, childhood, or adolescence\\Pervasive developmental disorders\\Infantile autism, current or active state\\",
   "queryResult": {
     "elapsed": {
-      "length": 2162,
+      "length": 2561,
       "unit": {}
     },
     "response": {
       "errorMessage": "An unanticipated problem encountered.",
       "problemDigest": {
         "codec": "net.shrine.problem.ProblemNotYetEncoded",
-        "stampText": "Mon Oct 03 15:51:14 EDT 2016 on TecRef-LT-7832AA Unknown",
+        "stampText": "Thu Oct 13 15:21:48 EDT 2016 on TecRef-LT-7832AA Unknown",
         "summary": "An unanticipated problem encountered.",
         "description": "This problem is not yet classified in Shrine source code. Please report the details to the Shrine dev team.",
         "detailsXml": {
@@ -22,8 +23,8 @@
               "name": "java.lang.IllegalStateException",
               "message": "An unanticipated problem encountered.",
               "stacktrace": {
-                "line": "net.shrine.problem.ProblemNotYetEncoded.<init>(Problem.scala:204)",
-                "line": "net.shrine.problem.ProblemNotYetEncoded$.apply(Problem.scala:222)",
+                "line": "net.shrine.problem.ProblemNotYetEncoded.<init>(Problem.scala:211)",
+                "line": "net.shrine.problem.ProblemNotYetEncoded$.apply(Problem.scala:229)",
                 "line": "net.shrine.adapter.Adapter.perform(Adapter.scala:48)",
                 "line": "net.shrine.adapter.service.AdapterService$$anonfun$handleRequest$1$$anonfun$apply$1$$anonfun$apply$2.apply(AdapterService.scala:33)",
                 "line": "net.shrine.adapter.service.AdapterService$$anonfun$handleRequest$1$$anonfun$apply$1$$anonfun$apply$2.apply(AdapterService.scala:33)",
@@ -36,14 +37,14 @@
                 "line": "net.shrine.adapter.service.AdapterService$$anonfun$handleRequest$1.apply(AdapterService.scala:31)",
                 "line": "scala.Option.orElse(Option.scala:289)",
                 "line": "net.shrine.adapter.service.AdapterService.handleRequest(AdapterService.scala:29)",
-                "line": "net.shrine.status.Summary$$anonfun$21$$anonfun$22.apply(StatusJaxrs.scala:349)",
-                "line": "net.shrine.status.Summary$$anonfun$21$$anonfun$22.apply(StatusJaxrs.scala:349)",
+                "line": "net.shrine.status.Summary$$anonfun$19$$anonfun$20.apply(StatusJaxrs.scala:344)",
+                "line": "net.shrine.status.Summary$$anonfun$19$$anonfun$20.apply(StatusJaxrs.scala:344)",
                 "line": "scala.util.Try$.apply(Try.scala:192)",
-                "line": "net.shrine.status.Summary$$anonfun$21.apply(StatusJaxrs.scala:349)",
-                "line": "net.shrine.status.Summary$$anonfun$21.apply(StatusJaxrs.scala:344)",
+                "line": "net.shrine.status.Summary$$anonfun$19.apply(StatusJaxrs.scala:344)",
+                "line": "net.shrine.status.Summary$$anonfun$19.apply(StatusJaxrs.scala:339)",
                 "line": "scala.Option.map(Option.scala:146)",
-                "line": "net.shrine.status.Summary$.apply(StatusJaxrs.scala:344)",
-                "line": "net.shrine.status.StatusJaxrs.summary(StatusJaxrs.scala:64)",
+                "line": "net.shrine.status.Summary$.apply(StatusJaxrs.scala:339)",
+                "line": "net.shrine.status.StatusJaxrs.summary(StatusJaxrs.scala:66)",
                 "line": "net.shrine.status.StatusJaxrsTest.testSummary(StatusJaxrsTest.scala:50)",
                 "line": "sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)",
                 "line": "sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)",
@@ -74,7 +75,7 @@
                 "line": "com.intellij.rt.execution.application.AppMain.main(AppMain.java:147)",
                 "exception": {
                   "name": "org.squeryl.SquerylSQLException",
-                  "message": "Exception while executing statement : Table \"SHRINE_QUERY\" not found; SQL statement:\nSelect\n  count(*) as c0\nFrom\n  SHRINE_QUERY SHRINE_QUERY1\nWhere\n  (((SHRINE_QUERY1.DOMAIN = ?) and (SHRINE_QUERY1.USERNAME = ?)) and (SHRINE_QUERY1.DATE_CREATED >= ?)) [42102-191]\nerrorCode: 42102, sqlState: 42S02\nSelect\n  count(*) as c0\nFrom\n  SHRINE_QUERY SHRINE_QUERY1\nWhere\n  (((SHRINE_QUERY1.DOMAIN = ?) and (SHRINE_QUERY1.USERNAME = ?)) and (SHRINE_QUERY1.DATE_CREATED >= ?))\njdbcParams:[ConstantStatementParam('ConstantTypedExpression:happy),ConstantStatementParam('ConstantTypedExpression:happy),ConstantStatementParam('ConstantTypedExpression:2016-10-03 15:50:14.221)]",
+                  "message": "Exception while executing statement : Table \"SHRINE_QUERY\" not found; SQL statement:\nSelect\n  count(*) as c0\nFrom\n  SHRINE_QUERY SHRINE_QUERY1\nWhere\n  (((SHRINE_QUERY1.DOMAIN = ?) and (SHRINE_QUERY1.USERNAME = ?)) and (SHRINE_QUERY1.DATE_CREATED >= ?)) [42102-191]\nerrorCode: 42102, sqlState: 42S02\nSelect\n  count(*) as c0\nFrom\n  SHRINE_QUERY SHRINE_QUERY1\nWhere\n  (((SHRINE_QUERY1.DOMAIN = ?) and (SHRINE_QUERY1.USERNAME = ?)) and (SHRINE_QUERY1.DATE_CREATED >= ?))\njdbcParams:[ConstantStatementParam('ConstantTypedExpression:happy),ConstantStatementParam('ConstantTypedExpression:happy),ConstantStatementParam('ConstantTypedExpression:2016-10-13 15:20:48.169)]",
                   "stacktrace": {
                     "line": "org.squeryl.SquerylSQLException$.apply(KeyedEntity.scala:118)",
                     "line": "org.squeryl.internals.DatabaseAdapter$class._exec(DatabaseAdapter.scala:361)",
@@ -114,14 +115,14 @@
                     "line": "net.shrine.adapter.service.AdapterService$$anonfun$handleRequest$1.apply(AdapterService.scala:31)",
                     "line": "scala.Option.orElse(Option.scala:289)",
                     "line": "net.shrine.adapter.service.AdapterService.handleRequest(AdapterService.scala:29)",
-                    "line": "net.shrine.status.Summary$$anonfun$21$$anonfun$22.apply(StatusJaxrs.scala:349)",
-                    "line": "net.shrine.status.Summary$$anonfun$21$$anonfun$22.apply(StatusJaxrs.scala:349)",
+                    "line": "net.shrine.status.Summary$$anonfun$19$$anonfun$20.apply(StatusJaxrs.scala:344)",
+                    "line": "net.shrine.status.Summary$$anonfun$19$$anonfun$20.apply(StatusJaxrs.scala:344)",
                     "line": "scala.util.Try$.apply(Try.scala:192)",
-                    "line": "net.shrine.status.Summary$$anonfun$21.apply(StatusJaxrs.scala:349)",
-                    "line": "net.shrine.status.Summary$$anonfun$21.apply(StatusJaxrs.scala:344)",
+                    "line": "net.shrine.status.Summary$$anonfun$19.apply(StatusJaxrs.scala:344)",
+                    "line": "net.shrine.status.Summary$$anonfun$19.apply(StatusJaxrs.scala:339)",
                     "line": "scala.Option.map(Option.scala:146)",
-                    "line": "net.shrine.status.Summary$.apply(StatusJaxrs.scala:344)",
-                    "line": "net.shrine.status.StatusJaxrs.summary(StatusJaxrs.scala:64)",
+                    "line": "net.shrine.status.Summary$.apply(StatusJaxrs.scala:339)",
+                    "line": "net.shrine.status.StatusJaxrs.summary(StatusJaxrs.scala:66)",
                     "line": "net.shrine.status.StatusJaxrsTest.testSummary(StatusJaxrsTest.scala:50)",
                     "line": "sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)",
                     "line": "sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)",
@@ -215,14 +216,14 @@
                           "net.shrine.adapter.service.AdapterService$$anonfun$handleRequest$1.apply(AdapterService.scala:31)",
                           "scala.Option.orElse(Option.scala:289)",
                           "net.shrine.adapter.service.AdapterService.handleRequest(AdapterService.scala:29)",
-                          "net.shrine.status.Summary$$anonfun$21$$anonfun$22.apply(StatusJaxrs.scala:349)",
-                          "net.shrine.status.Summary$$anonfun$21$$anonfun$22.apply(StatusJaxrs.scala:349)",
+                          "net.shrine.status.Summary$$anonfun$19$$anonfun$20.apply(StatusJaxrs.scala:344)",
+                          "net.shrine.status.Summary$$anonfun$19$$anonfun$20.apply(StatusJaxrs.scala:344)",
                           "scala.util.Try$.apply(Try.scala:192)",
-                          "net.shrine.status.Summary$$anonfun$21.apply(StatusJaxrs.scala:349)",
-                          "net.shrine.status.Summary$$anonfun$21.apply(StatusJaxrs.scala:344)",
+                          "net.shrine.status.Summary$$anonfun$19.apply(StatusJaxrs.scala:344)",
+                          "net.shrine.status.Summary$$anonfun$19.apply(StatusJaxrs.scala:339)",
                           "scala.Option.map(Option.scala:146)",
-                          "net.shrine.status.Summary$.apply(StatusJaxrs.scala:344)",
-                          "net.shrine.status.StatusJaxrs.summary(StatusJaxrs.scala:64)",
+                          "net.shrine.status.Summary$.apply(StatusJaxrs.scala:339)",
+                          "net.shrine.status.StatusJaxrs.summary(StatusJaxrs.scala:66)",
                           "net.shrine.status.StatusJaxrsTest.testSummary(StatusJaxrsTest.scala:50)",
                           "sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)",
                           "sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)",
@@ -260,7 +261,7 @@
             }
           }
         },
-        "epoch": 1475524274253
+        "epoch": 1476386508204
       }
     },
     "origin": {
@@ -268,7 +269,7 @@
     }
   },
   "adapterMappingsFileName": "AdapterMappings.xml",
-  "adapterMappingsDate": 1469822568000,
+  "adapterMappingsDate": 1476383131000,
   "adapterOk": true,
   "keystoreOk": true,
   "hubOk": false,
