@@ -200,6 +200,7 @@ object ScannerTest {
 
   private def literalAdapterMappingsSource(mappings: Map[String, Set[String]]): AdapterMappingsSource = new AdapterMappingsSource {
     override def load(source:String): Try[AdapterMappings] = Success(AdapterMappings("scannerTest",mappings = mappings))
+    override def lastModified: Long = 0l
   }
 
   import QueryResult.StatusType
