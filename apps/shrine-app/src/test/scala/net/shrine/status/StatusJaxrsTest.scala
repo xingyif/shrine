@@ -48,6 +48,7 @@ class StatusJaxrsTest extends ShouldMatchersForJUnit {
   def testSummary() = {
 
     val summaryString = statusJaxrs.summary
+    println(summaryString)
     val summary = Serialization.read[Summary](summaryString)
 
     summary.isHub should be (true)

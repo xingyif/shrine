@@ -49,9 +49,20 @@
             }
         }
 
+
+        function formatDate(maybeEpoch) {
+            if (!(maybeEpoch && isFinite(maybeEpoch))) {
+                return 'UNKNOWN';
+            } else {
+                var d = new Date(maybeEpoch);
+                return d.toUTCString();
+            }
+        }
+
         function setAdapter (adapter) {
             vm.mappings = {
-                mappingsFilename:  adapter.adapterMappingsFilename
+                mappingsFilename:  adapter.adapterMappingsFilename,
+                mappingsDate:      formatDate(adapter.adapterMappingsDate)
             };
 
             vm.configuration = {
