@@ -12,7 +12,9 @@ trait ClasspathAdapterMappingsSource extends ReaderAdapterMappingsSource {
   def mappingFileName: String
   
   //NB: Will blow up loudly if mapping file isn't found
-  final override protected def reader: Reader = new InputStreamReader(helpError.openStream())
+  final override protected def reader: Reader = {
+    new InputStreamReader(helpError.openStream())
+  }
 
   final override def lastModified: Long = {
     val conn = helpError.openConnection()

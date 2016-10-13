@@ -389,8 +389,8 @@ object Summary {
       ontologyVersion = ontologyVersion,
       ontologyTerm = term.value,
       queryResult = queryResult,
-      adapterMappingsFileName = adapterMappingInfo._1,
-      adapterMappingsDate = adapterMappingInfo._2,
+      adapterMappingsFileName = adapterMappingInfo.map(_._1),
+      adapterMappingsDate = adapterMappingInfo.map(_._2),
       adapterOk = adapterOk,
       keystoreOk = true, //todo something for this
       hubOk = hubOk,

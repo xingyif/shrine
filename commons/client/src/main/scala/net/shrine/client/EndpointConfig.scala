@@ -29,7 +29,6 @@ object EndpointConfig {
 
   def apply(config: Config): EndpointConfig = {
     val url = new URL(config.getString(Keys.url))
-    
     val acceptAllCerts = {
       if(config.hasPath(Keys.acceptAllCerts)) { config.getBoolean(Keys.acceptAllCerts) }
       else { defaultAcceptAllCertsValue }
