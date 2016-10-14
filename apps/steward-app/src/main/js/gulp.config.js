@@ -19,6 +19,8 @@ module.exports = function () {
     var srcFiles = clientDir + '**/!(*.spec)+(.js)';
     var moduleFiles = clientDir + '**/*.module.js';
     var specFiles = clientDir + '**/*.spec.js';
+    var sassFiles = src + 'sass/**/*.scss';
+    var cssDir = assets + 'css/';
 
     var config = {
         index: 'index.html',
@@ -36,10 +38,12 @@ module.exports = function () {
             src + '/config/**/*'
         ],
         cssFiles: [
-            assets + '**/*.css'
+            assets + '**/shrine.css'
         ],
         assetFiles: [assets + '**/*', src + 'config/**/*'],
         clientDir: clientDir,
+        sassFiles: sassFiles,
+        cssDir: cssDir,
         bower: {
             json: require('./bower.json'),
             directory: './bower_components/',
