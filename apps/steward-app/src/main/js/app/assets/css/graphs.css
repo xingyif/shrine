@@ -30,7 +30,7 @@
   overflow: auto;
   height: 600px; }
 
-.stats-graph-container > .bar-bg {
+.stats-graph-container .bar-bg {
   background-color: rgba(255, 255, 255, 0);
   height: 30px;
   margin: 0 auto 10px auto;
@@ -39,11 +39,11 @@
   color: white;
   padding: 0 0 0 10px;
   position: relative; }
-  .stats-graph-container > .bar-bg .user {
+  .stats-graph-container .bar-bg .user {
     position: absolute;
     z-index: 4;
     left: .2em; }
-  .stats-graph-container > .bar-bg .bar {
+  .stats-graph-container .bar-bg .bar {
     opacity: .8;
     z-index: 1;
     background-color: rgba(18, 92, 138, 0.35);
@@ -60,7 +60,7 @@
     z-index: 2;
     padding-right: 8px;
     text-align: right; }
-    .stats-graph-container > .bar-bg .bar:hover {
+    .stats-graph-container .bar-bg .bar:hover {
       background: rgba(255, 255, 255, 0.35);
       cursor: pointer; }
 
