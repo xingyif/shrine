@@ -3,6 +3,7 @@ package net.shrine.status
 import java.io.File
 
 import com.typesafe.config.ConfigFactory
+import net.shrine.qep.SingleHubModel
 import net.shrine.util.ShouldMatchersForJUnit
 import org.json4s.{DefaultFormats, Formats}
 import org.junit.Test
@@ -100,7 +101,6 @@ class StatusJaxrsTest extends ShouldMatchersForJUnit {
   def testQep() = {
 
     val string = statusJaxrs.qep
-
     val actual = Serialization.read[Qep](string)
 
     actual.create should be (true)
@@ -109,6 +109,7 @@ class StatusJaxrsTest extends ShouldMatchersForJUnit {
     actual.authorizationType should be ("StewardQueryAuthorizationService")
     actual.includeAggregateResults should be (false)
     actual.maxQueryWaitTimeMillis should be (300000000L)
+    actual.trustModel should be (SingleHubModel.description)
   }
 
   @Test

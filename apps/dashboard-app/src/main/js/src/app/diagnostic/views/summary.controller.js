@@ -26,8 +26,6 @@
 
             $app.model.getI2B2()
                 .then(setI2B2, handleFailure);
-
-            vm.formatDate = formatDate;
         }
 
         function handleFailure(failure) {
@@ -52,10 +50,12 @@
         function setSummary(summary) {
             // -- set viewmodel  -- //
             vm.summary              = summary;
-            if (vm.adapterMappingsFileName === undefined) {
-                vm.adapterMappingsFileName = unknown;
-            } else if (vm.adapterMappingsDate === undefined) {
-                vm.adapterMappingsDate = unknown;
+            if (vm.summary.adapterMappingsFileName === undefined) {
+                vm.summary.adapterMappingsFileName = unknown;
+            } else if (vm.summary.adapterMappingsDate === undefined) {
+                vm.summary.adapterMappingsDate = unknown;
+            } else {
+                vm.summary.adapterMappingsDate = formatDate(vm.summary.adapterMappingsDate);
             }
             return this;
         }
