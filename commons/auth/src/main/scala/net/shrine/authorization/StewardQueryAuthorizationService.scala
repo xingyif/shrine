@@ -59,8 +59,8 @@ final case class StewardQueryAuthorizationService(qepUserName:String,
     // Most important - it will encrypt all of the traffic on the wire.
     implicit def trustfulSslContext: SSLContext = {
       object BlindFaithX509TrustManager extends X509TrustManager {
-        def checkClientTrusted(chain: Array[X509Certificate], authType: String) = (info(s"Client asked BlindFaithX509TrustManager to check $chain for $authType"))
-        def checkServerTrusted(chain: Array[X509Certificate], authType: String) = (info(s"Server asked BlindFaithX509TrustManager to check $chain for $authType"))
+        def checkClientTrusted(chain: Array[X509Certificate], authType: String) = info(s"Client asked BlindFaithX509TrustManager to check $chain for $authType")
+        def checkServerTrusted(chain: Array[X509Certificate], authType: String) = info(s"Server asked BlindFaithX509TrustManager to check $chain for $authType")
         def getAcceptedIssuers = Array[X509Certificate]()
       }
 

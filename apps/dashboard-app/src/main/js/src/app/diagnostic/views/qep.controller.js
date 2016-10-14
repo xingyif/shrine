@@ -40,6 +40,7 @@
             vm.broadcasterUrl = (vm.isDownstream && qep.broadcasterUrl !== undefined)?
                                     qep.broadcasterUrl:
                                     'Unknown';
+            vm.trustModel = qep.trustModel;
         }
 
     }
