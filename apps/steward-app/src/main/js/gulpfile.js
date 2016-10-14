@@ -44,11 +44,17 @@ gulp.task('watch-src', function () {
 });
 
 gulp.task('build', function (callback) {
-    $.sequence('test', 'clean-build', ['copy-bower-styles', 'copy-bower-fonts', 'copy-bower-src', 'copy-app-assets', 'copy-app-src'], 'build-index')(callback);
+    $.sequence('test', 'clean-build', 'sass', ['copy-bower-styles', 'copy-bower-fonts', 'copy-bower-src', 'copy-app-assets', 'copy-app-src'], 'build-index')(callback);
 });
 
 gulp.task('default', function (callback) {
     $.sequence('build')(callback);
+});
+
+gulp.task('sass', function () {
+    return gulp.src(config.sassFiles)
+        .pipe($.sass().on('error', $.sass.logError))
+        .pipe(gulp.dest(config.cssDir));
 });
 
 gulp.task('build-index', function () {

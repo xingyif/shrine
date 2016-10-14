@@ -5,8 +5,8 @@
         .module('shrine.steward.statistics')
         .controller('StatisticsController', StatisticsController);
 
-    StatisticsController.$inject = ['StatisticsModel', 'StewardService', '$scope'];
-    function StatisticsController(model, service, $scope) {
+    StatisticsController.$inject = ['StatisticsModel', 'StewardService', '$scope', 'OntologyTermService'];
+    function StatisticsController(model, service, $scope, ontologyTermService) {
 
         var stats = this;
         var startDate = new Date();
@@ -103,7 +103,7 @@
         }
 
         function getResults(startUtc, endUtc) {
-            model.getQueriesPerUser(startUtc, endUtc)
+            /*model.getQueriesPerUser(startUtc, endUtc)
                 .then(function (result) {
                     stats.queriesPerUser = result;
                 });
@@ -112,6 +112,14 @@
                 .then(function (result) {
                     stats.topicsPerState = result;
                 });
+
+                */
+           /** testing the parser **/
+           model.getUserQueryHistory('ben')
+            .then(function (result) {
+                var test = result;
+                var ontology = ontologyTermService.buildOntology(result.queryRecords);
+            });     
         }
     }
 })();

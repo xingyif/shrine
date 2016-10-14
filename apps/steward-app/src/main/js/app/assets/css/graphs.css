@@ -1,0 +1,87 @@
+/* -- stats-graph styles -- */
+.stats-minimized, .stats-graph-minimized, .stats-ontology-minimized {
+  cursor: pointer;
+  opacity: .7; }
+  .stats-minimized:hover, .stats-graph-minimized:hover, .stats-ontology-minimized:hover {
+    border: 1px solid white;
+    opacity: 1; }
+
+.stats-graph-minimized {
+  transform: translate(60%, -20%) scale(0.1, 0.25); }
+
+.stats-ontology-minimized {
+  transform: translate(60%, 0%) scale(0.1, 0.25); }
+
+.stats-stage-base, .stats-graph-container, .stats-ontology-container {
+  padding-bottom: 0px;
+  padding-top: 0px;
+  color: white;
+  margin: 0 auto;
+  background-color: #384248;
+  width: 100%; }
+
+.stats-graph-container {
+  border-bottom: none;
+  border: 1px solid #1c8ed6;
+  overflow: auto;
+  padding-top: .6em; }
+
+.stats-ontology-container {
+  overflow: auto;
+  height: 600px; }
+
+.stats-graph-container > .bar-bg {
+  background-color: rgba(255, 255, 255, 0);
+  height: 30px;
+  margin: 0 auto 10px auto;
+  line-height: 30px;
+  font-size: 16px;
+  color: white;
+  padding: 0 0 0 10px;
+  position: relative; }
+  .stats-graph-container > .bar-bg .user {
+    position: absolute;
+    z-index: 4;
+    left: .2em; }
+  .stats-graph-container > .bar-bg .bar {
+    opacity: .8;
+    z-index: 1;
+    background-color: rgba(18, 92, 138, 0.35);
+    border-right: 1px solid #1c8ed6;
+    border-top: 1px solid #1c8ed6;
+    height: 30px;
+    transition: 0.7s;
+    width: 100%;
+    display: block;
+    animation: stats-bar-before 1 1.8s;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 2;
+    padding-right: 8px;
+    text-align: right; }
+    .stats-graph-container > .bar-bg .bar:hover {
+      background: rgba(255, 255, 255, 0.35);
+      cursor: pointer; }
+
+@keyframes stats-bar-before {
+  0% {
+    width: 0px; }
+  100% {
+    width: 100%; } }
+
+/** hard coded result values for demo **/
+.result1 {
+  max-width: 60%; }
+
+.result2 {
+  max-width: 20%; }
+
+.result3 {
+  max-width: 100%; }
+
+.result4 {
+  max-width: 40%; }
+
+.result5 {
+  max-width: 77%; }

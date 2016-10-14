@@ -19,7 +19,6 @@
         beforeEach(setup);
 
         it('Parse Query History', function () {
-
             var queryHistory = getQueryData();
             var ontologyTree = ontologyTermService.buildOntology(queryHistory.queryRecords);
             expect(ontologyTree.key).toBe('SHRINE');
