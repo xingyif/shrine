@@ -26,6 +26,7 @@ import net.shrine.crypto.{KeyStoreCertCollection, KeyStoreDescriptor, SigningCer
 import net.shrine.ont.data.OntClientOntologyMetadata
 import net.shrine.protocol.query.{OccuranceLimited, QueryDefinition, Term}
 import net.shrine.protocol._
+import net.shrine.qep.TrustModel
 import net.shrine.serialization.NodeSeqSerializer
 import net.shrine.util.Versions
 
@@ -195,7 +196,8 @@ case class Qep(
                 includeAggregateResults:Boolean,
                 authenticationType:String,
                 steward:Option[Steward],
-                broadcasterUrl:Option[String]
+                broadcasterUrl:Option[String],
+                trustModel:String
               )
 
 object Qep{
@@ -209,7 +211,9 @@ object Qep{
     includeAggregateResults = queryEntryPointComponents.fold(false)(_.i2b2Service.includeAggregateResult),
     authenticationType      = queryEntryPointComponents.fold("")(_.i2b2Service.authenticator.getClass.getSimpleName),
     steward                 = queryEntryPointComponents.flatMap(qec => checkStewardAuthorization(qec.shrineService.authorizationService)),
-    broadcasterUrl          = queryEntryPointComponents.flatMap(qec => checkBroadcasterUrl(qec.i2b2Service.broadcastAndAggregationService)))
+    broadcasterUrl          = queryEntryPointComponents.flatMap(qec => checkBroadcasterUrl(qec.i2b2Service.broadcastAndAggregationService)),
+    trustModel              = queryEntryPointComponents.flatMap(_.trustModel.map(_.description)).getOrElse("UNKNOWN")
+  )
 
   def checkStewardAuthorization(auth: QueryAuthorizationService): Option[Steward] = auth match {
     case sa:StewardQueryAuthorizationService => Some(Steward(sa.stewardBaseUrl.toString, sa.qepUserName))

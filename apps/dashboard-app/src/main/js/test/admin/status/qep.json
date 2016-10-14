@@ -9,7 +9,6 @@
     "stewardBaseUrl": "https://localhost:6443",
     "qepUsername": "qep",
     "password": "REDACTED"
-  }
+  },
+  "trustModel": "Central Certificate Authority"
 }
-
-

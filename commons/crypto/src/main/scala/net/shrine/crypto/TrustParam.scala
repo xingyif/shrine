@@ -11,7 +11,7 @@ object TrustParam {
   @Deprecated
   def forKeyStore(certs: KeyStoreCertCollection): SomeKeyStore = SomeKeyStore(certs)
   
-  final case object AcceptAllCerts extends TrustParam
+  case object AcceptAllCerts extends TrustParam
 
   final case class SomeKeyStore(certs: KeyStoreCertCollection) extends TrustParam
 }

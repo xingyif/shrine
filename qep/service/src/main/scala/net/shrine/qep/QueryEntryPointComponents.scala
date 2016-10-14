@@ -17,13 +17,16 @@ import net.shrine.qep.dao.AuditDao
 import net.shrine.qep.dao.squeryl.SquerylAuditDao
 import net.shrine.qep.dao.squeryl.tables.Tables
 
+import scala.util.Try
+
 /**
   * @author david 
   * @since 1.22
   */
 case class QueryEntryPointComponents(shrineService: QepService,
                                      i2b2Service: I2b2QepService,
-                                     auditDao: AuditDao  //todo auditDao is only used by the happy service to grab the most recent entries
+                                     auditDao: AuditDao,  //todo auditDao is only used by the happy service to grab the most recent entries
+                                     trustModel: Option[TrustModel]
                                     )
 
 object QueryEntryPointComponents extends Loggable {
@@ -76,7 +79,9 @@ object QueryEntryPointComponents extends Loggable {
         broadcastService,
         breakdownTypes
       ),
-      auditDao)
+      auditDao,
+      Try(qepConfig.getBoolean("trustModelIsHub")).toOption.map(if(_) SingleHubModel else PeerToPeerModel)
+    )
   }
 }
 
