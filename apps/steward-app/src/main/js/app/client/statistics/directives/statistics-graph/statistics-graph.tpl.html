@@ -1,10 +1,5 @@
-<!-- Graphs Testing -->
-	<div class="stats-graph-container">
-			<!-- for each instead -->
-			<graph-bar value="60" username="Ben"></graph-bar>
-			<graph-bar value="20" username="Dave"></graph-bar>
-			<graph-bar value="141" username="Dr. Evil"></graph-bar>
-			<graph-bar value="40" username="Isha"></graph-bar>
-			<graph-bar value="77" username="Ty"></graph-bar>
-		</div>
-			<!-- End Graphs Testing -->
+<div class="stats-graph-container">
+	<span ng-repeat="user in graph.graphData.users">
+		<graph-bar value="{{user._2}}" username="{{user._1.username}}">
+	</span> 
+</div>

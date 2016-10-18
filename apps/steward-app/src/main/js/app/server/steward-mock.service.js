@@ -84,13 +84,9 @@ StewardMockService.prototype.getQueriesPerUser = function () {
   }
 
   return {
-    data: {
       total: totalQueries,
       queriesPerUser: queriesPerUser
-    },
-    statusText: 'OK',
-    statusResult: 200
-  };
+    }
 }
 
 
