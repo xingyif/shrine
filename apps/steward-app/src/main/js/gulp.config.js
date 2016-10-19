@@ -80,11 +80,11 @@ module.exports = function () {
                     { type: 'text-summary' } //outputs to console.
                 ]
             },
-            preprocessors: {}
+            frameworks: ['jasmine', 'browserify'],
+            preprocessors: {
+                './app/client/**/*.spec.js': ['browserify']
+            }
         };
-
-        options.preprocessors[clientDir + '**/!(*.spec)+(.js)'] = ['coverage'];
-
         return options;
     }
 
