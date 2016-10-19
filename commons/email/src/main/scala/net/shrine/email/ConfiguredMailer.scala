@@ -1,10 +1,11 @@
 package net.shrine.email
 
 import java.util.Properties
-import javax.mail.Session
+import javax.mail.{Authenticator, PasswordAuthentication, Session}
 
 import com.typesafe.config.Config
 import courier.Mailer
+import net.shrine.config.ConfigExtensions
 
 /**
   * Creates a courier Mailer via shrine.conf, by pulling out all possible properties from https://www.tutorialspoint.com/javamail_api/javamail_api_smtp_servers.htm from an email section of shrine.conf
@@ -26,12 +27,19 @@ object ConfiguredMailer {
 
     properties.putAll(map)
 
-    println(s"properties is $properties")
+    def authenticatorFromConfig(config: Config) = {
+      new javax.mail.Authenticator() {
+        override def getPasswordAuthentication() = new PasswordAuthentication(config.getString("username"), config.getString("password"))
+      }
+    }
+
+    val configAuthenticator = config.getOptionConfigured("authenticator",authenticatorFromConfig)
 
     //Then make the session
-    val session = Session.getDefaultInstance(properties)
+    val session = configAuthenticator.fold(Session.getDefaultInstance(properties))(
+                    authenticator => Session.getDefaultInstance(properties,authenticator))
 
     //And finally the mailer
-    Mailer(session) //todo username and password for gmail
+    Mailer(session)
   }
 }
