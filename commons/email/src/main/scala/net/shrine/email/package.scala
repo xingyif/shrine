@@ -6,6 +6,4 @@ package net.shrine
   * @author david 
   * @since 1.22
   */
-package object email {
-
-}
+package object email {}
