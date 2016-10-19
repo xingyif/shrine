@@ -23,25 +23,42 @@
         function init() {
             $app.model.getKeystore()
                 .then(setKeystore, handleFailure);
+
+            $app.model.getQep()
+                .then(setQep, handleFailure)
         }
 
+        function setQep(qep) {
+            vm.trustModelIsHub = qep.trustModelIsHub
+        }
 
         /**
          *
-         * @param all
+         * @param keystore
          */
         function setKeystore (keystore) {
             vm.keystore = {
                 file:       keystore.fileName,
                 password:   "REDACTED"
             };
-            vm.certificate = {
-                alias:           keystore.privateKeyAlias,
-                owner:           keystore.owner,
-                issuer:          keystore.issuer,
-                privateKeyAlias: keystore.caTrustedAlias
+            vm.certificate = [
+                ['Alias',             keystore.privateKeyAlias],
+                ['Owner',             keystore.owner],
+                ['Issuer',            keystore.issuer],
+                ['Expires',           keystore.expires],
+                ['Private Key Alias', keystore.caTrustedAlias],
+                ['MD5 Signature',     keystore.md5Signature],
+                ['SHA256 Signature',  keystore.sha256Signature]
+            ];
 
-            }
+            vm.caCertificate = [
+                ['Alias',             keystore.caTrustedAlias],
+                ['MD5 Signature',     keystore.caTrustedSignature]
+            ];
+
+            vm.validation = [
+
+            ]
         }
 
         //TODO: Good error handling

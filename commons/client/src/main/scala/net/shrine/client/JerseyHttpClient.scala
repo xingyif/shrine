@@ -46,7 +46,12 @@ import net.shrine.util.StringEnrichments
  * 
  * TODO: Allow specifying credentials, to allow unit testing the Sheriff client classes.
  */
-final case class JerseyHttpClient(trustParam: TrustParam, timeout: Duration, mediaType: String = MediaType.TEXT_XML, credentials: Option[HttpCredentials] = None) extends HttpClient with Loggable {
+final case class JerseyHttpClient(trustParam: TrustParam,
+                                  timeout: Duration,
+                                  mediaType: String = MediaType.TEXT_XML,
+                                  credentials: Option[HttpCredentials] = None)
+  extends HttpClient with Loggable
+{
   import JerseyHttpClient._
 
   private lazy val client = createJerseyClient(trustParam, timeout)

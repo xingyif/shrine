@@ -49,7 +49,6 @@ class StatusJaxrsTest extends ShouldMatchersForJUnit {
   def testSummary() = {
 
     val summaryString = statusJaxrs.summary
-    println(summaryString)
     val summary = Serialization.read[Summary](summaryString)
 
     summary.isHub should be (true)
@@ -110,6 +109,7 @@ class StatusJaxrsTest extends ShouldMatchersForJUnit {
     actual.includeAggregateResults should be (false)
     actual.maxQueryWaitTimeMillis should be (300000000L)
     actual.trustModel should be (SingleHubModel.description)
+    actual.trustModelIsHub should be (true)
   }
 
   @Test
@@ -126,7 +126,7 @@ class StatusJaxrsTest extends ShouldMatchersForJUnit {
   def testKeyStore() = {
 
     val string = statusJaxrs.keystore
-
+    println(string)
     val actual = Serialization.read[KeyStoreReport](string)
   }
 

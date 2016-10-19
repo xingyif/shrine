@@ -13,8 +13,9 @@ import net.shrine.protocol.ResultOutputType
  */
 final case class SigningBroadcastAndAggregationService(broadcasterClient: BroadcasterClient,
                                                        signer: Signer,
-                                                       signingCertStrategy: SigningCertStrategy) extends AbstractBroadcastAndAggregationService(broadcasterClient,
-  signer.sign(_, signingCertStrategy)) {
+                                                       signingCertStrategy: SigningCertStrategy)
+  extends AbstractBroadcastAndAggregationService(broadcasterClient, signer.sign(_, signingCertStrategy))
+{
   override def attachSigningCert: Boolean = signingCertStrategy == SigningCertStrategy.Attach
 }
 

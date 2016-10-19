@@ -14,8 +14,8 @@ import org.json4s.native.JsonMethods.parse
 import org.junit.runner.RunWith
 import org.scalatest.FlatSpec
 import org.scalatest.junit.JUnitRunner
-import spray.http.StatusCodes.{OK, PermanentRedirect, Unauthorized, NotFound}
-import spray.http.{BasicHttpCredentials, OAuth2BearerToken}
+import spray.http.StatusCodes.{NotFound, OK, PermanentRedirect, Unauthorized}
+import spray.http.{BasicHttpCredentials, FormData, OAuth2BearerToken, StatusCodes}
 import spray.testkit.ScalatestRouteTest
 
 import scala.language.postfixOps
@@ -59,6 +59,7 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
 
         assertResult(OK)(status)
 
+        implicit val formats = OutboundUser.json4sFormats
         val userJson = new String(body.data.toByteArray)
         val outboundUser = parse(userJson).extract[OutboundUser]
         assertResult(adminOutboundUser)(outboundUser)
@@ -74,7 +75,7 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
       assertResult(OK)(status)
 
       val response = new String(body.data.toByteArray)
-      assertResult(""""AuthenticationFailed"""")(response)
+      assertResult("""AuthenticationFailed""")(response)
     }
   }
 
@@ -282,6 +283,39 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
       }
   }
 
+  "DashboardService" should "return a BadRequest for admin/status/signature with no signature parameter" in {
+    Post("/admin/status/verifySignature") ~>
+    addCredentials(adminCredentials) ~>
+    route ~> check {
+      assertResult(StatusCodes.BadRequest)(status)
+    }
+  }
+
+  "DashboardService" should "return a BadRequest for admin/status/signature with a malformatted signature parameter" in {
+    Post("/admin/status/verifySignature", FormData(Seq("sha256" -> "foo"))) ~>
+      addCredentials(adminCredentials) ~>
+      route ~> check {
+      assertResult(StatusCodes.BadRequest)(status)
+    }
+  }
+
+  "DashboardService" should "return a NotFound for admin/status/signature with a correctly formatted parameter that is not in the keystore" in {
+    Post("/admin/status/verifySignature", FormData(Seq("sha256" -> "00:00:00:00:00:00:00:7C:4B:FD:8D:A8:0A:C7:A4:AA:13:3E:22:B3:57:A7:C6:B0:95:15:1B:22:C0:E5:15:9A"))) ~>
+      addCredentials(adminCredentials) ~>
+      route ~> check {
+      assertResult(StatusCodes.NotFound)(status)
+    }
+  }
+
+  "DashboardService" should "return an OK for admin/status/signature with a valid sha256 hash" in {
+    Post("/admin/status/verifySignature", FormData(Seq("sha256" -> "AB:56:98:69:F0:DD:3C:7C:4B:FD:8D:A8:0A:C7:A4:AA:13:3E:22:B3:57:A7:C6:B0:95:15:1B:22:C0:E5:15:9A"))) ~>
+      addCredentials(adminCredentials) ~>
+      route ~> check {
+      assertResult(StatusCodes.OK)(status)
+    }
+  }
+
+
   val dashboardCredentials = BasicHttpCredentials(adminUserName,"shh!")
 
   "DashboardService" should  "return an OK and pong for fromDashboard/ping" in {
@@ -294,7 +328,7 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
 
       val string = new String(body.data.toByteArray)
 
-      assertResult(""""pong"""")(string)
+      assertResult("pong")(string)
     }
   }
 

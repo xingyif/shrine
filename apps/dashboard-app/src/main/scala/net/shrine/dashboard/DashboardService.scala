@@ -4,6 +4,8 @@ import akka.actor.Actor
 import akka.event.Logging
 import net.shrine.authentication.UserAuthenticator
 import net.shrine.authorization.steward.OutboundUser
+import net.shrine.config.ConfigExtensions
+import net.shrine.crypto.{KeyStoreCertCollection, KeyStoreDescriptorParser, UtilHasher}
 import net.shrine.dashboard.jwtauth.ShrineJwtAuthenticator
 import net.shrine.i2b2.protocol.pm.User
 import net.shrine.status.protocol.{Config => StatusProtocolConfig}
@@ -20,7 +22,6 @@ import org.json4s.{DefaultFormats, Formats}
 import org.json4s.native.JsonMethods.{parse => json4sParse}
 
 import scala.collection.immutable.Iterable
-import scala.concurrent.duration.{Duration, FiniteDuration, SECONDS}
 import scala.concurrent.ExecutionContext.Implicits.global
 
 /**
@@ -42,13 +43,12 @@ class DashboardServiceActor extends Actor with DashboardService {
   * A web service that provides the Dashboard endpoints. It is a trait to support testing independent of Akka.
   */
 
-trait DashboardService extends HttpService with Json4sSupport with Loggable {
-  implicit def json4sFormats: Formats = DefaultFormats
+trait DashboardService extends HttpService with Loggable {
 
   val userAuthenticator = UserAuthenticator(DashboardConfigSource.config)
 
   //don't need to do anything special for unauthorized users, but they do need access to a static form.
-  lazy val route:Route = gruntWatchCorsSupport{
+  lazy val route:Route = gruntWatchCorsSupport {
     redirectToIndex ~ staticResources ~ makeTrouble ~ about ~ authenticatedInBrowser ~ authenticatedDashboard
   }
 
@@ -149,8 +149,12 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
 
         requestUriThenRoute(happyBaseUrl+"/version",pullClasspathFromConfig)
       } ~
-      pathPrefix("ping") {complete("pong")}~
-      pathPrefix("status"){statusRoute(user)}
+    pathPrefix("ping")   { complete("pong") }~
+    pathPrefix("status") { statusRoute(user) }
+  } ~ post {
+    pathPrefix("status")
+    pathPrefix("verifySignature")
+    verifySignature
   }
 
   //Manually test this by running a curl command
@@ -175,19 +179,44 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
   def statusRoute(user:User):Route = get {
     val( adapter ,  hub ,  i2b2 ,  keystore ,  optionalParts ,  qep ,  summary ) =
        ("adapter", "hub", "i2b2", "keystore", "optionalParts", "qep", "summary")
-    pathPrefix("classpath")  {getClasspath}~
-    pathPrefix("config")     {getConfig}~
-    pathPrefix("problems")   {getProblems}~
-    pathPrefix(adapter)      {getFromSubService(adapter)}~
-    pathPrefix(hub)          {getFromSubService(hub)}~
-    pathPrefix(i2b2)         {getFromSubService(i2b2)}~
-    pathPrefix(keystore)     {getFromSubService(keystore)}~
-    pathPrefix(optionalParts){getFromSubService(optionalParts)}~
-    pathPrefix(qep)          {getFromSubService(qep)}~
-    pathPrefix(summary)      {getFromSubService(summary)}
+    pathPrefix("classpath")   { getClasspath }~
+    pathPrefix("config")      { getConfig }~
+    pathPrefix("problems")    { getProblems }~
+    pathPrefix(adapter)       { getFromSubService(adapter) }~
+    pathPrefix(hub)           { getFromSubService(hub) }~
+    pathPrefix(i2b2)          { getFromSubService(i2b2) }~
+    pathPrefix(keystore)      { getFromSubService(keystore) }~
+    pathPrefix(optionalParts) { getFromSubService(optionalParts) }~
+    pathPrefix(qep)           { getFromSubService(qep) }~
+    pathPrefix(summary)       { getFromSubService(summary) }
   }
 
   val statusBaseUrl = DashboardConfigSource.config.getString("shrine.dashboard.statusBaseUrl")
+
+  // TODO: Move this over to Status API?
+  lazy val verifySignature:Route = {
+    val keyStoreDescriptor = DashboardConfigSource.config.getConfigured("shrine.keystore", KeyStoreDescriptorParser(_))
+    val certCollection: KeyStoreCertCollection = KeyStoreCertCollection.fromFileRecoverWithClassPath(keyStoreDescriptor)
+    val hasher = UtilHasher(certCollection)
+
+    def handleSig(sha256:String): Option[Boolean] = {
+      if (hasher.validSignatureFormat(sha256)) {
+        hasher.containsCertWithSig(sha256).map(_ => true)
+      } else {
+        Some(false)
+      }
+
+    }
+
+    // Intellij complains if you use formFields with multiple params ¯\_(ツ)_/¯
+    formField("sha256".as[String].?) { sha256: Option[String] =>
+      val badRequest: StandardRoute = complete(StatusCodes.BadRequest, "You must provide a valid SHA-256 signature to verify along with its alias")
+      val notFound:   StandardRoute = complete(StatusCodes.NotFound, "Could not find a certificate matching the given signature")
+      val foundCert:  StandardRoute = complete(StatusCodes.OK, "A matching cert with a matching SHA-256 signature was found")
+      sha256.fold(badRequest)(sha => handleSig(sha)
+            .fold(notFound)  (if (_) foundCert else badRequest))
+    }
+  }
 
   lazy val getConfig:Route = {
 
@@ -231,24 +260,30 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
 
     val db = Problems.DatabaseConnector
 
-    parameters("offset".as[Int].?(0), "n".as[Int].?(20), "epoch".as[Long].?) {(offsetPreMod, nPreMax, epoch: Option[Long]) => {
-      val n = Math.max(0, nPreMax)
-      val moddedOffset = floorMod(Math.max(0, offsetPreMod), n)
+    // Intellij loudly complains if you use parameters instead of chained parameter calls.
+    // ¯\_(ツ)_/¯
+    parameter("offset".as[Int].?(0)) {(offsetPreMod:Int) => {
+      parameter("n".as[Int].?(20)) {(nPreMax:Int) =>
+        parameter("epoch".as[Long].?) {(epoch:Option[Long]) =>
+          val n = Math.max(0, nPreMax)
+          val moddedOffset = floorMod(Math.max(0, offsetPreMod), n)
 
-      val query = for {
-        result <- db.IO.sizeAndProblemDigest(n, moddedOffset)
-      } yield (result._2, floorMod(Math.max(0, moddedOffset), n), n, result._1)
+          val query = for {
+            result <- db.IO.sizeAndProblemDigest(n, moddedOffset)
+          } yield (result._2, floorMod(Math.max(0, moddedOffset), n), n, result._1)
 
-      val query2 = for {
-        dateOffset <- db.IO.findIndexOfDate(epoch.getOrElse(0))
-        moddedOffset = floorMod(dateOffset, n)
-        result <- db.IO.sizeAndProblemDigest(n, moddedOffset)
-      } yield (result._2, moddedOffset, n, result._1)
+          val query2 = for {
+            dateOffset <- db.IO.findIndexOfDate(epoch.getOrElse(0))
+            moddedOffset = floorMod(dateOffset, n)
+            result <- db.IO.sizeAndProblemDigest(n, moddedOffset)
+          } yield (result._2, moddedOffset, n, result._1)
 
-      val response: ProblemResponse = ProblemResponse.tupled(db.runBlocking(if (epoch.isEmpty) query else query2))
-      implicit val formats = response.json4sMarshaller
-      complete(response)
-    }}
+          val queryReal = if (epoch.isEmpty) query else query2
+          val tupled = db.runBlocking(queryReal)
+          val response: ProblemResponse = ProblemResponse(tupled._1, tupled._2, tupled._3, tupled._4)
+          implicit val formats = response.json4sMarshaller
+          complete(response)
+    }}}}
   }
 
 }
@@ -315,9 +350,9 @@ case class ShrineConfig(isHub:Boolean,
                         queryEntryPoint:QEP,
                         networkStatusQuery:String,
                         configMap:Map[String, String]
-                       )
+                       ) extends DefaultJsonSupport
 
-object ShrineConfig{
+object ShrineConfig extends DefaultJsonSupport {
   def apply(config:ParsedConfig):ShrineConfig = {
     val hub               = Hub(config)
     val isHub             = config.isHub
@@ -475,4 +510,8 @@ object gruntWatchCorsSupport extends Directive0 with RouteConcatenation {
     }
     else f(HNil)
   }
+}
+
+trait DefaultJsonSupport extends Json4sSupport {
+  override implicit def json4sFormats: Formats = DefaultFormats
 }

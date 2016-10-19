@@ -22,11 +22,11 @@ import net.shrine.log.{Log, Loggable}
 import scala.collection.JavaConverters._
 import scala.collection.immutable.{Map, Seq, Set}
 import net.shrine.config.ConfigExtensions
-import net.shrine.crypto.{KeyStoreCertCollection, KeyStoreDescriptor, SigningCertStrategy}
+import net.shrine.crypto.{KeyStoreCertCollection, KeyStoreDescriptor, SigningCertStrategy, UtilHasher}
 import net.shrine.ont.data.OntClientOntologyMetadata
 import net.shrine.protocol.query.{OccuranceLimited, QueryDefinition, Term}
 import net.shrine.protocol._
-import net.shrine.qep.TrustModel
+import net.shrine.qep.{PeerToPeerModel, SingleHubModel, TrustModel}
 import net.shrine.serialization.NodeSeqSerializer
 import net.shrine.util.Versions
 
@@ -119,16 +119,17 @@ case class KeyStoreEntryReport(
                               )
 */
 case class KeyStoreReport(
-                        fileName:String,
-                        password:String = "REDACTED",
-                        privateKeyAlias:Option[String],
-                        owner:Option[String],
-                        issuer:Option[String],
-                        expires:Option[Date],
-                        signature:Option[String],
-                        caTrustedAlias:Option[String],
-                        caTrustedSignature:Option[String]
-//                        keyStoreContents:List[KeyStoreEntryReport] //todo SHRINE-1529
+                           fileName:String,
+                           password:String = "REDACTED",
+                           privateKeyAlias:Option[String],
+                           owner:Option[String],
+                           issuer:Option[String],
+                           expires:Option[Date],
+                           md5Signature:Option[String],
+                           sha256Signature:Option[String],
+                           caTrustedAlias:Option[String],
+                           caTrustedSignature:Option[String]
+                           //                        keyStoreContents:List[KeyStoreEntryReport] //todo SHRINE-1529
                       )
 
 //todo build new API for the dashboard to use to check signatures
@@ -138,23 +139,26 @@ object KeyStoreReport {
     val keystoreDescriptor: KeyStoreDescriptor = ShrineOrchestrator.keyStoreDescriptor
     val certCollection: KeyStoreCertCollection = ShrineOrchestrator.certCollection
 
-    def toMd5(cert:X509Certificate): String = {
-      val md5 = MessageDigest.getInstance("MD5")
-      def toHex(buf: Array[Byte]): String = buf.map("%02X".format(_)).mkString(":")
+    val hasher = UtilHasher(certCollection)
 
-      toHex(md5.digest(cert.getEncoded))
+    def sortFormat(input: String):String = {
+      def isLong(str:String) = str.split('=').headOption.getOrElse(str).length > 2
+      // Just an ugly sort for formatting purposes. I want The long key last, and otherwise just
+      // Sort them lexicographically.
+      input.split(", ").sortBy(a => (isLong(a), a)).mkString(", ")
     }
 
     new KeyStoreReport(
       fileName = keystoreDescriptor.file,
       privateKeyAlias = keystoreDescriptor.privateKeyAlias,
-      owner = certCollection.myCert.map(cert => cert.getSubjectDN.getName),
-      issuer = certCollection.myCert.map(cert => cert.getIssuerDN.getName),
+      owner = certCollection.myCert.map(cert => sortFormat(cert.getSubjectDN.getName)),
+      issuer = certCollection.myCert.map(cert => sortFormat(cert.getIssuerDN.getName)),
       expires = certCollection.myCert.map(cert => cert.getNotAfter),
-      signature = certCollection.myCert.map(cert => toMd5(cert)),
+      md5Signature = certCollection.myCert.map(cert => hasher.encodeCert(cert, "MD5")),
+      sha256Signature = certCollection.myCert.map(cert => hasher.encodeCert(cert, "SHA-256")),
       //todo sha1 signature if needed
       caTrustedAlias = certCollection.caCertAliases.headOption,
-      caTrustedSignature = certCollection.headOption.map(cert => toMd5(cert))
+      caTrustedSignature = certCollection.headOption.map(cert => hasher.encodeCert(cert, "MD5"))
 //      keyStoreContents = certCollection.caCerts.zipWithIndex.map((cert: ((Principal, X509Certificate), Int)) => KeyStoreEntryReport(keystoreDescriptor.caCertAliases(cert._2),cert._1._1.getName,toMd5(cert._1._2))).to[List]
     )
   }
@@ -197,7 +201,8 @@ case class Qep(
                 authenticationType:String,
                 steward:Option[Steward],
                 broadcasterUrl:Option[String],
-                trustModel:String
+                trustModel:String,
+                trustModelIsHub:Boolean
               )
 
 object Qep{
@@ -212,7 +217,8 @@ object Qep{
     authenticationType      = queryEntryPointComponents.fold("")(_.i2b2Service.authenticator.getClass.getSimpleName),
     steward                 = queryEntryPointComponents.flatMap(qec => checkStewardAuthorization(qec.shrineService.authorizationService)),
     broadcasterUrl          = queryEntryPointComponents.flatMap(qec => checkBroadcasterUrl(qec.i2b2Service.broadcastAndAggregationService)),
-    trustModel              = queryEntryPointComponents.flatMap(_.trustModel.map(_.description)).getOrElse("UNKNOWN")
+    trustModel              = queryEntryPointComponents.flatMap(_.trustModel.map(_.description)).getOrElse("UNKNOWN"),
+    trustModelIsHub         = queryEntryPointComponents.flatMap(_.trustModel).fold(false) { _ == SingleHubModel}
   )
 
   def checkStewardAuthorization(auth: QueryAuthorizationService): Option[Steward] = auth match {
