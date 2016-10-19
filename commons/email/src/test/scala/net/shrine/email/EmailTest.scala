@@ -28,15 +28,10 @@ class EmailTest extends ShouldMatchersForJUnit {
   def testSendMockedEmail(): Unit = {
 
     val config = ConfigFactory.load("shrine.conf")
-
-    println(config)
-
-    println(config.getConfig("shrine"))
+    val mailer = ConfiguredMailer.createMailerFromConfig(config.getConfig("shrine.email"))
 
     val envelope:Envelope = Envelope(from = "someone@example.com").to("mom@gmail.com").cc("dad@gmail.com").subject("miss you").content(Text("hi mom"))
 
-
-    val mailer: Mailer = Mailer("localhost", 25)()
     val future = mailer(envelope)
 
     Await.ready(future, 5.seconds)
