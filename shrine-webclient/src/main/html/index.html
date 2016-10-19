@@ -8,7 +8,7 @@
  *       i2b2 Web Client
  *        v1.7.07-SHRINE
  *  *************************
- *  @modified: 05/9/2016
+ *  @modified: 09/20/2016
  *  Contributors:
  *     Nick Benik
  *     Griffin Weber, MD, PhD
@@ -20,7 +20,7 @@
  */-->
 
 <script type="text/javascript">
-    var i2b2build = "1.7.007   [05/9/2016 2:00 PM] ";
+    var i2b2build = "1.7.007   [09/20/2016 2:00 PM] ";
 	
 	//ie does not support trim method
 	if(typeof String.prototype.trim !== 'function') {
@@ -1425,6 +1425,18 @@ $.noConflict();
         </div>
     </div>
 </div>
+<!-- ############### </Query Flag Dialog> ############### -->
+
+<!-- ############### <Graph Zooming Dialog> ############### -->
+<div id="dialogZoomedGraph" style="display:none;">
+    <div class="hd" style="background:#6677AA;">Result Graph</div>
+    <div class="bd">
+        <br />
+        <div id="zoomedGraphTitle"></div>
+        <div id="zoomedGraphBody"></div>
+    </div>
+</div>
+<!-- ############### </Graph Zooming Dialog> ############### -->
 
 </div>
 

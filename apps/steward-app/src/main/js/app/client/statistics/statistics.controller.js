@@ -22,8 +22,13 @@
         stats.isValid = true;
         stats.startOpened = false;
         stats.endOpened = false;
-        stats.queriesPerUser = {};
         stats.topicsPerState = {};
+
+        stats.graphData = {
+            total: 0,
+            users: []
+        };
+
         stats.format = 'MM/dd/yyyy';
 
         stats.openStart = openStart;
@@ -103,23 +108,22 @@
         }
 
         function getResults(startUtc, endUtc) {
-            /*model.getQueriesPerUser(startUtc, endUtc)
+
+            model.getQueriesPerUser(startUtc, endUtc)
                 .then(function (result) {
-                    stats.queriesPerUser = result;
+                    stats.graphData = result;
                 });
 
             model.getTopicsPerState(startUtc, endUtc)
                 .then(function (result) {
                     stats.topicsPerState = result;
                 });
-
-                */
-           /** testing the parser **/
+                
            model.getUserQueryHistory('ben')
             .then(function (result) {
                 var test = result;
                 var ontology = ontologyTermService.buildOntology(result.queryRecords);
-            });     
+            });
         }
     }
 })();

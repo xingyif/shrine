@@ -33,7 +33,7 @@
   },
   "scripts": {
     "test": "gulp build",
-    "start": "node ~/dev/hms/server/server-mock"
+    "start": "node ./app/server/steward-mock"
   },
   "repository": {
     "type": "git",
