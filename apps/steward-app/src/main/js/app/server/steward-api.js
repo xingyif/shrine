@@ -3,7 +3,7 @@ var express = require('express');
 var cors = require('cors');
 var app = express();                
 var bodyParser = require('body-parser');
-var service = require('./steward-mock.service');
+var service = require('./../mock/steward-mock.service');
 var port = process.env.PORT || 6443;
 var router = express.Router();
 

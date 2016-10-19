@@ -22,7 +22,6 @@
         return statisticsGraph;
     }
 
-
     StatisticsGraphController.$inject = ['$scope', 'StatisticsGraphService'];
     function StatisticsGraphController($scope, statsService) {
         var graph = this;
@@ -30,7 +29,7 @@
     }
 
     function StatisticsGraphLink(scope) {
-        scope.$watch('graphData', function(before, after){
+        scope.$watch('graphData', function(before, after) {
             var graph = scope.graph;
             graph.graphData = scope.graphData;
         });

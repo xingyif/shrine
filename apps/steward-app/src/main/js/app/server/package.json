@@ -6,7 +6,7 @@
   "start": "",
   "scripts": {
     "test": "node test",
-    "start": "node steward-mock"
+    "start": "node steward-api"
   },
   "author": "‘Ben <benjamin_carmen@hms.harvard.edu>",
   "license": "MIT",
