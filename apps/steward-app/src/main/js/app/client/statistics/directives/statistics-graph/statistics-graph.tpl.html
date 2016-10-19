@@ -1,5 +1,5 @@
 <div class="stats-graph-container">
 	<span ng-repeat="user in graph.graphData.users">
-		<graph-bar value="{{user._2}}" username="{{user._1.username}}">
+		<graph-bar value="{{user._2}}" percentage="{{graph.toPercentage(user._2)}}"username="{{user._1.username}}">
 	</span> 
 </div>

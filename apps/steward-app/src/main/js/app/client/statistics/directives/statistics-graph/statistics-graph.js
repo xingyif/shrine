@@ -23,11 +23,19 @@
     }
 
     StatisticsGraphController.$inject = ['$scope', 'StatisticsGraphService'];
-    function StatisticsGraphController($scope, statsService) {
+    function StatisticsGraphController($scope, svc) {
         var graph = this;
+        graphService = svc;
         graph.graphData = $scope.graphData;
+        graph.toPercentage = toPercentage;
+
+        function toPercentage(value) {
+            var maxQueryCount = svc.getMaxUserQueryCount(graph.graphData.users) || 1;
+            return svc.getCountAsPercentage(value, maxQueryCount);
+        }
     }
 
+    StatisticsGraphLink.$inject = ['scope'];
     function StatisticsGraphLink(scope) {
         scope.$watch('graphData', function(before, after) {
             var graph = scope.graph;

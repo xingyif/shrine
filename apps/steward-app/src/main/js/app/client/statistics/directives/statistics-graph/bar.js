@@ -15,7 +15,8 @@
             controllerAs: 'bar',
             scope: {
                 username: '@',
-                value: '@'
+                value: '@',
+                percentage: '@'
             }
         };
 
@@ -25,7 +26,5 @@
     GraphBarController.$inject = ['$scope'];
     function GraphBarController($scope) {
         var bar = this;
-        bar.username = $scope.username;
-        bar.value = $scope.value;
     }
 })();

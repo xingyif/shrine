@@ -2,7 +2,6 @@
 module.exports = function () {
     // -- dependencies -- //
     var wiredep = require('wiredep');
-
     var bowerJS = wiredep({ devDependencies: true })['js'];//grab .js dev depenencies.
     var bowerCSS = wiredep({ devDependencies: true })['css'];
     var bowerFnt = [
@@ -81,8 +80,8 @@ module.exports = function () {
                 ]
             },
             frameworks: ['jasmine', 'browserify'],
-            preprocessors: {
-                './app/client/**/*.spec.js': ['browserify']
+            preprocessors: { /** files that use require **/
+                './app/client/**/*.browserify.spec.js': ['browserify']
             }
         };
         return options;

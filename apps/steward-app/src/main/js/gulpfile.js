@@ -10,6 +10,10 @@ var args = require('yargs').argv;
 var config = require('./gulp.config')();
 var $ = require('gulp-load-plugins')({ lazy: true });
 
+// -- set appRoot on global --//
+var path = require('path');
+global.appRoot = path.resolve(__dirname);
+
 // -- code errors and style.
 // -- to get both verbose and exit on error:  'gulp lint --v --e'
 gulp.task('lint', function () {
