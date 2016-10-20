@@ -15,7 +15,8 @@
             controllerAs: 'graph',
             link: StatisticsGraphLink,
             scope: {
-                graphData: '='
+                graphData: '=',
+                graphClick: '&' /** todo pass in click handler. **/
             }
         };
 
@@ -25,7 +26,7 @@
     StatisticsGraphController.$inject = ['$scope', 'StatisticsGraphService'];
     function StatisticsGraphController($scope, svc) {
         var graph = this;
-        graphService = svc;
+        //graphService = svc;
         graph.graphData = $scope.graphData;
         graph.toPercentage = toPercentage;
 
@@ -41,5 +42,6 @@
             var graph = scope.graph;
             graph.graphData = scope.graphData;
         });
+        var test = arguments;
     }
 })();

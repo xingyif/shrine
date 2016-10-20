@@ -12,7 +12,9 @@
             restrict: 'E',
             templateUrl: templateUrl,
             controller: GraphBarController,
+            link: GraphBarLinker,
             controllerAs: 'bar',
+            require: '^statisticsGraph',
             scope: {
                 username: '@',
                 value: '@',
@@ -26,5 +28,9 @@
     GraphBarController.$inject = ['$scope'];
     function GraphBarController($scope) {
         var bar = this;
+    }
+
+    function GraphBarLinker(scope) {
+        var test = arguments;
     }
 })();

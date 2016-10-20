@@ -15,7 +15,7 @@
 
         stats.getDateString = service.commonService.dateService.utcToMMDDYYYY;
         stats.timestampToUtc = service.commonService.dateService.timestampToUtc;
-
+        stats.viewDigest = viewDigest;
         stats.startDate = startDate; 
         stats.endDate = endDate;
 
@@ -100,6 +100,10 @@
             }
 
             return title;
+        }
+
+        function viewDigest(data) {
+            var test = data;
         }
 
         function parseStateCount(state) {
