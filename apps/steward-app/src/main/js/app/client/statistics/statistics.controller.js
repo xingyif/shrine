@@ -38,6 +38,8 @@
         stats.parseStateTitle = parseStateTitle;
         stats.parseStateCount = parseStateCount;
         stats.getResults = getResults;
+        stats.viewDigest = viewDigest;
+
 
         // -- start -- //
         init();

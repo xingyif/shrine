@@ -14,7 +14,6 @@
             controller: GraphBarController,
             link: GraphBarLinker,
             controllerAs: 'bar',
-            require: '^statisticsGraph',
             scope: {
                 username: '@',
                 value: '@',

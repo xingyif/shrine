@@ -29,6 +29,7 @@
         //graphService = svc;
         graph.graphData = $scope.graphData;
         graph.toPercentage = toPercentage;
+        graph.graphClick = $scope.graphClick;
 
         function toPercentage(value) {
             var maxQueryCount = svc.getMaxUserQueryCount(graph.graphData.users) || 1;
