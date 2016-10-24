@@ -34,7 +34,7 @@ class EmailTest extends ShouldMatchersForJUnit {
 
     val future = mailer(envelope)
 
-    Await.ready(future, 5.seconds)
+    Await.ready(future, 60.seconds)
 
     val momsInbox = Mailbox.get("mom@gmail.com")
     momsInbox.size === 1
