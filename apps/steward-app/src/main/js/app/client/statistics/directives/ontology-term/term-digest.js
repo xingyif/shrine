@@ -4,14 +4,15 @@
     angular.module('shrine.steward.statistics')
         .directive('termDigest', TermDigestDirective);
 
-    function TermDigestDirective () {
+            function TermDigestDirective () {
         var templateUrl = './app/client/statistics/directives/' +
             'ontology-term/term-digest.tpl.html';
 
         var termDigest  = {
             restrict: 'E',
             templateUrl: templateUrl,
-            controllAs: 'digest',
+            controller: QueryDigestController,
+            controllerAs: 'digest',
             scope: {
                 ontology: '='
             },
@@ -21,6 +22,14 @@
         return termDigest;
     }
 
-    function TermDigestLinker() {
+    function QueryDigestController() {
+        var digest = this;
+    }
+
+    function TermDigestLinker(scope) {
+        scope.$watch('ontology', function(before, after) {
+            var digest = scope.digest;
+            digest.ontology = scope.ontology;
+        });
     }
 })();

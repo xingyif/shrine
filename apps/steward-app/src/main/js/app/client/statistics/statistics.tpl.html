@@ -39,10 +39,19 @@
                 </button>
 			</div>
 		</fieldset>
+
+		<statistics-graph graph-data="stats.graphData" graph-click="stats.viewDigest(data)">
+		</statistics-graph>
+		<br/><br/>
+		<term-digest ontology="stats.ontology">
+    	</term-digest>
 	</div>
 
-	<statistics-graph graph-data="stats.graphData" graph-click="stats.viewDigest(data)">
-	</statistics-graph>
+	
+
+
+
+
 
 	<!--table class=" table table-striped ">
 				<thead>
@@ -102,8 +111,7 @@
 				</tfoot>
 			</table -->
 
-    <term-digest ontology="{val: 'test'}">
-    </term-digest>
+    
 	<!--div class="stats-ontology-container stats-ontology-minimized">
 		
 		<script type="text/ng-template " id="categoryNode ">
