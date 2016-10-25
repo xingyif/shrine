@@ -21,7 +21,7 @@ object ConfiguredMailer {
 
     val properties = new Properties()
 
-    val map: Map[String, Object] = config.entrySet().map({ entry =>
+    val map: Map[String, Object] = config.getConfig("javaxmail").entrySet().map({ entry =>
       entry.getKey -> entry.getValue.unwrapped()
     })(collection.breakOut)
 
