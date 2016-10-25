@@ -7,8 +7,11 @@
 
     StatisticsController.$inject = ['StatisticsModel', 'StewardService', '$scope', 'OntologyTermService'];
     function StatisticsController(model, service, $scope, ontologyTermService) {
+        var showOntClass = 'ont-overlay';
+        var hideOntClass = 'ont-hidden';
 
         var stats = this;
+        stats.ontClass = hideOntClass;
         var startDate = new Date();
         var endDate = new Date();
         startDate.setDate(endDate.getDate() - 7);
@@ -110,6 +113,7 @@
             .then(function (result) {
                 stats.ontology = ontologyTermService.buildOntology(result.queryRecords);
                 stats.max = ontologyTermService.getMax();
+                stats.ontClass = showOntClass;
             });
         }
 
