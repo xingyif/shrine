@@ -42,11 +42,10 @@
 
 		<statistics-graph graph-data="stats.graphData" graph-click="stats.viewDigest(data)">
 		</statistics-graph>
-		<br/><br/>
-		<term-digest ontology="stats.ontology" max="{{stats.max}}" class="{{stats.ontClass}}">
+	</div>
+	<term-digest ontology="stats.ontology" max="{{stats.max}}" class="{{stats.ontClass}}">
 			<button ng-click="stats.ontClass= 'ont-hidden'" class="ont-close">x</button>
     	</term-digest>
-	</div>
 
 	
 

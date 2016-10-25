@@ -28,7 +28,7 @@
 
 .stats-ontology-container {
   overflow: auto;
-  height: 600px; }
+  height: 100vh; }
 
 .stats-graph-container .bar-bg {
   background-color: rgba(255, 255, 255, 0);

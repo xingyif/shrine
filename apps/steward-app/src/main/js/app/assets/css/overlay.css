@@ -24,10 +24,10 @@
   left: 0;
   z-index: 2000;
   opacity: 1;
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(0, 0, 0, 0.9);
   -webkit-transition: all 0.3s;
   -moz-transition: all 0.3s;
-  transition: all 0.3s; }
+  transition: all 0.1s; }
 
 button.ont-close {
   display: block;
@@ -37,6 +37,8 @@ button.ont-close {
   top: 2%;
   position: absolute;
   border-radius: 9px;
-  font-size: 20px; }
+  font-size: 20px;
+  cursor: pointer;
+  border: none; }
   button.ont-close:hover {
     color: #fff; }

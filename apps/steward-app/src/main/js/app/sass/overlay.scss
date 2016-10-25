@@ -25,15 +25,15 @@
 	left: 0;
 	z-index: 2000;
 	opacity: 1;
-	background: rgba(#000, 0.8);
+	background: rgba(#000, 0.9);
 	-webkit-transition: all 0.3s;
 	-moz-transition: all 0.3s;
-	transition: all 0.3s;
+	transition: all 0.1s;
 }
 
 button {
    &.ont-close {
-display: block;
+	display: block;
     background: transparent;
     color: #c0c0c0;
     right: 2%;
@@ -41,6 +41,8 @@ display: block;
     position: absolute;
     border-radius: 9px;
     font-size: 20px;
+    cursor: pointer;
+    border: none;
 	&:hover{
     	color: #fff;
 	}

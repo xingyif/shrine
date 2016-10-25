@@ -14,7 +14,7 @@ $green-border: #99C794;
 
 @mixin ont-color($color, $border-border) {
   background: $color !important;
-   border: 1px solid $border-border!important; 
+  border: 1px solid $border-border!important; 
 }
 
 

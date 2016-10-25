@@ -42,7 +42,7 @@
 .stats-ontology-container{
    @extend .stats-stage-base;
    overflow: auto;
-   height: 600px
+   height: 100vh;
 }
 
 .stats-graph-container  .bar-bg{
