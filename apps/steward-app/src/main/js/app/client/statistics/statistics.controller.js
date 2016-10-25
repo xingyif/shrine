@@ -15,7 +15,7 @@
 
         stats.getDateString = service.commonService.dateService.utcToMMDDYYYY;
         stats.timestampToUtc = service.commonService.dateService.timestampToUtc;
-
+        stats.viewDigest = viewDigest;
         stats.startDate = startDate; 
         stats.endDate = endDate;
 
@@ -23,6 +23,7 @@
         stats.startOpened = false;
         stats.endOpened = false;
         stats.topicsPerState = {};
+        stats.ontology = {};
 
         stats.graphData = {
             total: 0,
@@ -38,6 +39,8 @@
         stats.parseStateTitle = parseStateTitle;
         stats.parseStateCount = parseStateCount;
         stats.getResults = getResults;
+        stats.viewDigest = viewDigest;
+
 
         // -- start -- //
         init();
@@ -102,6 +105,13 @@
             return title;
         }
 
+        function viewDigest(data) {
+            model.getUserQueryHistory(data.username.toLowerCase())
+            .then(function (result) {
+                stats.ontology = ontologyTermService.buildOntology(result.queryRecords);
+            });
+        }
+
         function parseStateCount(state) {
             var member = stats.parseStateTitle(state);
             return state[member];
@@ -118,12 +128,6 @@
                 .then(function (result) {
                     stats.topicsPerState = result;
                 });
-                
-           model.getUserQueryHistory('ben')
-            .then(function (result) {
-                var test = result;
-                var ontology = ontologyTermService.buildOntology(result.queryRecords);
-            });
         }
     }
 })();

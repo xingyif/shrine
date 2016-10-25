@@ -12,10 +12,12 @@
             restrict: 'E',
             templateUrl: templateUrl,
             controller: GraphBarController,
+            link: GraphBarLinker,
             controllerAs: 'bar',
             scope: {
                 username: '@',
-                value: '@'
+                value: '@',
+                percentage: '@'
             }
         };
 
@@ -25,7 +27,9 @@
     GraphBarController.$inject = ['$scope'];
     function GraphBarController($scope) {
         var bar = this;
-        bar.username = $scope.username;
-        bar.value = $scope.value;
+    }
+
+    function GraphBarLinker(scope) {
+        var test = arguments;
     }
 })();

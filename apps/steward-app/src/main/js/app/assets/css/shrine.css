@@ -810,18 +810,24 @@ i.shrine-close:hover {
   100% {
     width: 100%; } }
 
-/** hard coded result values for demo **/
-.result1 {
-  max-width: 60%; }
+/*
+.result1{
+  max-width: 60%;
+}
 
-.result2 {
-  max-width: 20%; }
+.result2{
+  max-width: 20%;
+}
 
-.result3 {
-  max-width: 100%; }
+.result3{
+  max-width: 100%;
+}
 
-.result4 {
-  max-width: 40%; }
+.result4{
+  max-width: 40%;
+}
 
-.result5 {
-  max-width: 77%; }
+.result5{
+  max-width: 77%;
+}
+*/

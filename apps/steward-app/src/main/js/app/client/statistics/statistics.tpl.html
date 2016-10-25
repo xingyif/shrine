@@ -39,12 +39,21 @@
                 </button>
 			</div>
 		</fieldset>
+
+		<statistics-graph graph-data="stats.graphData" graph-click="stats.viewDigest(data)">
+		</statistics-graph>
+		<br/><br/>
+		<term-digest ontology="stats.ontology">
+    	</term-digest>
 	</div>
 
-	<statistics-graph graph-data="stats.graphData">
-	</statistics-graph>
+	
 
-			<!--table class=" table table-striped ">
+
+
+
+
+	<!--table class=" table table-striped ">
 				<thead>
 					<tr>
 						<td colspan="2 " style="text-align: center ">
@@ -101,4 +110,52 @@
 					</tr>
 				</tfoot>
 			</table -->
+
+    
+	<!--div class="stats-ontology-container stats-ontology-minimized">
+		
+		<script type="text/ng-template " id="categoryNode ">
+			<span class="expandable {{c.getStyleByFrequency(value.queryCount)}}" ng-show="value.hasChildren()" ng-click="show=!show">
+				{{(show)? '-' : '+'}}
+			</span>
+			<a 
+				ng-init="show=false " 
+				ng-click="show=!show;"
+				
+				class="{{c.getStyleByFrequency(value.queryCount)}}">
+				<span
+
+				
+				class="tooltip-toggle"
+				
+				aria-label="{{value.queryCount}} queries">  
+				{{value.key}} - {{c.getPct(value.queryCount)}}%   
+
+			</span>
+
+
+			
+
+			</a>
+		
+			<ul ng-if="value.hasChildren() && show ">
+			<li ng-repeat="(key, value) in value.children" ng-include=" 'categoryNode' ">
+			</li>
+			</ul>
+    	</script>
+		<div class="tree ">
+			<ul>
+				<li>
+					<span class="expandable dark-red" ng-click="show=!show">{{(show)? '-' : '+'}}</span>
+					<a ng-init="show=false" ng-click="show=!show " class="dark-red">{{c.ontology.key + ' ( - ' + c.queryCount + ' queries)'}}</a>
+					<ul ng-if="show ">
+						<li ng-repeat="(key, value) in c.ontology.children" ng-include=" 'categoryNode' "></li>
+					</ul>
+				</li>
+			</ul>
 		</div>
+		<span ng-include=" 'ngDropdown' " style="z-index: 1000">
+		</span>
+	</div-->
+
+</div>

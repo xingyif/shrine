@@ -15,7 +15,8 @@
             controllerAs: 'graph',
             link: StatisticsGraphLink,
             scope: {
-                graphData: '='
+                graphData: '=',
+                graphClick: '&' /** todo pass in click handler. **/
             }
         };
 
@@ -23,15 +24,25 @@
     }
 
     StatisticsGraphController.$inject = ['$scope', 'StatisticsGraphService'];
-    function StatisticsGraphController($scope, statsService) {
+    function StatisticsGraphController($scope, svc) {
         var graph = this;
+        //graphService = svc;
         graph.graphData = $scope.graphData;
+        graph.toPercentage = toPercentage;
+        graph.graphClick = $scope.graphClick;
+
+        function toPercentage(value) {
+            var maxQueryCount = svc.getMaxUserQueryCount(graph.graphData.users) || 1;
+            return svc.getCountAsPercentage(value, maxQueryCount);
+        }
     }
 
+    StatisticsGraphLink.$inject = ['scope'];
     function StatisticsGraphLink(scope) {
         scope.$watch('graphData', function(before, after) {
             var graph = scope.graph;
             graph.graphData = scope.graphData;
         });
+        var test = arguments;
     }
 })();
