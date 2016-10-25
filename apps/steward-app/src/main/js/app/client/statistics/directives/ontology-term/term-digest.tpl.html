@@ -1,5 +1,16 @@
 <div class="stats-ontology-container">
-	Stats Ontology Container 
+	<!--Start the recursion-->
+	<div class="digest ">
+		<ul>
+			<li>
+				<span class="expandable dark-red" ng-click="show=!show">{{(show)? '-' : '+'}}</span>
+				<a ng-init="show=false" ng-click="show=!show " class="dark-red">{{digest.ontology.key + ' ( - ' + digest.ontology.queryCount + ' queries)'}}</a>
+				<ul ng-if="show ">
+					<li ng-repeat="(key, value) in digest.ontology.children" query-term >
 
-	{{digest.ontology}}
+					</li>
+				</ul>
+			</li>
+		</ul>
+	</div>
 </div>

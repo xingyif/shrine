@@ -14,7 +14,8 @@
             controller: QueryDigestController,
             controllerAs: 'digest',
             scope: {
-                ontology: '='
+                ontology: '=',
+                max: '@'
             },
             link: TermDigestLinker
         };
@@ -22,7 +23,7 @@
         return termDigest;
     }
 
-    function QueryDigestController() {
+    function QueryDigestController () {
         var digest = this;
     }
 
@@ -30,6 +31,7 @@
         scope.$watch('ontology', function(before, after) {
             var digest = scope.digest;
             digest.ontology = scope.ontology;
+            digest.max = scope.max;
         });
     }
 })();

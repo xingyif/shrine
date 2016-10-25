@@ -109,6 +109,7 @@
             model.getUserQueryHistory(data.username.toLowerCase())
             .then(function (result) {
                 stats.ontology = ontologyTermService.buildOntology(result.queryRecords);
+                stats.max = ontologyTermService.getMax();
             });
         }
 
