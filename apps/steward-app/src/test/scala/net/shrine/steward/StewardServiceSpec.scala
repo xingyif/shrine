@@ -43,8 +43,8 @@ class StewardServiceTest extends FlatSpec with ScalatestRouteTest with TestWithD
   val badCredentials = BasicHttpCredentials("qep","wrongPassword")
 
   val researcherUser = User(
-    fullName = researcherUserName,
-    username = researcherFullName,
+    fullName = researcherFullName,
+    username = researcherUserName,
     domain = "domain",
     credential = new Credential("ben's password",false),
     params = Map(),
@@ -52,8 +52,8 @@ class StewardServiceTest extends FlatSpec with ScalatestRouteTest with TestWithD
   )
 
   val stewardUser = User(
-    fullName = stewardUserName,
-    username = stewardFullName,
+    fullName = stewardFullName,
+    username = stewardUserName,
     domain = "domain",
     credential = new Credential("dave's password",false),
     params = Map(stewardRole -> "true"),
