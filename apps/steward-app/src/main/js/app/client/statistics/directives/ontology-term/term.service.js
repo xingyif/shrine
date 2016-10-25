@@ -16,7 +16,7 @@
         }
 
         function getStyleByFrequency(queryCount, maxCount) {
-            var frequency = queryCount / c.queryCount;
+            var frequency = queryCount / maxCount;
 
             if (frequency < 0.20) {
                 return 'blue';
