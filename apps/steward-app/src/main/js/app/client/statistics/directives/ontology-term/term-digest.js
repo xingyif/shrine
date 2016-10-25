@@ -17,7 +17,8 @@
                 ontology: '=',
                 max: '@'
             },
-            link: TermDigestLinker
+            link: TermDigestLinker,
+            transclude: true
         };
 
         return termDigest;

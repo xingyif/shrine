@@ -28,3 +28,15 @@
   -webkit-transition: all 0.3s;
   -moz-transition: all 0.3s;
   transition: all 0.3s; }
+
+button.ont-close {
+  display: block;
+  background: transparent;
+  color: #c0c0c0;
+  right: 2%;
+  top: 2%;
+  position: absolute;
+  border-radius: 9px;
+  font-size: 20px; }
+  button.ont-close:hover {
+    color: #fff; }
