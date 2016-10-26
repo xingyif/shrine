@@ -836,7 +836,8 @@ i.shrine-close:hover {
       padding: .25em;
       background: white;
       color: #C0C0C0;
-      border: 1px solid #94a0b4; }
+      border: 1px solid #94a0b4;
+      border-radius: .5rem; }
 
 .digest .expandable {
   position: absolute;
@@ -852,7 +853,8 @@ i.shrine-close:hover {
   font-size: 1em;
   background-color: white;
   color: #C0C0C0;
-  border: 1px solid #94a0b4; }
+  border: 1px solid #94a0b4;
+  border-radius: .25rem; }
 
 .digest > ul {
   position: relative;
@@ -868,7 +870,6 @@ ul:after {
   border-radius: .1em; }
 
 ul > li > a {
-  border-radius: .25em;
   color: blue;
   background: white; }
 
@@ -878,10 +879,11 @@ ul > li > a {
 .digest li a:hover,
 .digest li a:hover + ul li a {
   background: rgba(50, 130, 136, 0.25) !important;
-  color: #efefef;
+  color: #fff;
   border: 1px solid #99C794 !important;
   cursor: pointer;
-  z-index: 1000; }
+  z-index: 1000;
+  text-decoration: none; }
 
 .digest li a:hover + ul li::after,
 .digest li a:hover + ul li::before,
