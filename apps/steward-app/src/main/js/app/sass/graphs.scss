@@ -26,7 +26,6 @@
   padding-top: 0px;
   color: white;
   margin: 0 auto;
-  background-color: #384248;
   width: 100%;
 }
 
@@ -37,12 +36,13 @@
     border: 1px solid #1c8ed6;
     overflow: auto;
     padding-top: .6em;
+    background-color: #384248;
 }
 
 .stats-ontology-container{
    @extend .stats-stage-base;
    overflow: auto;
-   height: 600px
+   height: 100vh;
 }
 
 .stats-graph-container  .bar-bg{
@@ -92,27 +92,3 @@
     width: 100%;
   }
 }
-
-
-/*
-.result1{
-  max-width: 60%;
-}
-
-.result2{
-  max-width: 20%;
-}
-
-.result3{
-  max-width: 100%;
-}
-
-.result4{
-  max-width: 40%;
-}
-
-.result5{
-  max-width: 77%;
-}
-*/
-

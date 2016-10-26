@@ -21,6 +21,7 @@
             var ln = queryRecords.length;
             var queryCount = 0;
             var ontology = new OntologyTerm('SHRINE');
+            ontology.queryCount = ln;
 
             for (var i = 0; i < ln; i++) {
                 var record = queryRecords[i];
