@@ -27,14 +27,13 @@ import scala.collection.convert.{DecorateAsScala, WrapAsScala}
   *                    a private key entry (i.e., do we own this certificate?)
   */
 case class KeyStoreEntry(cert: X509Certificate, alias: String, publicKey: PublicKey, privateKey: Option[PrivateKey]) {
-  val certificateHolder = new JcaX509CertificateHolder(cert)   // Helpful methods are defined in the cert holder.
+  val certificateHolder = new JcaX509CertificateHolder(cert)                              // Helpful methods are defined in the cert holder.
   val isSelfSigned: Boolean = certificateHolder.getSubject == certificateHolder.getIssuer // May or may not be a CA
   val formattedSha256Hash: String = UtilHasher.encodeCert(cert, "SHA-256")
 
   def verify(signedBytes: Array[Byte], signatureBytes: Array[Byte]): Boolean = {
-    import scala.collection.JavaConversions._
-    val cmsData = new CMSSignedData(signedBytes)
-    val signers: SignerInformationStore = cmsData.getSignerInfos
+    import scala.collection.JavaConversions._                                             // Treat Java Iterable as Scala Iterable
+    val signers: SignerInformationStore = new CMSSignedData(signedBytes).getSignerInfos
 
     signers.headOption.exists(signerInfo => signerInfo.verify(new JcaSimpleSignerInfoVerifierBuilder().build(cert)))
   }
