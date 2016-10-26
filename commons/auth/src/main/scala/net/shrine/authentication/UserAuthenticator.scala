@@ -44,7 +44,7 @@ case class UserAuthenticator(config:Config) extends Loggable {
 
     def authenticator(userPass: Option[UserPass]): Future[Option[User]] = userSource.authenticateUser(userPass)
 
-    BasicAuth((a:Option[UserPass]) => authenticator(a), realm = realm)
+    BasicAuth((a:Option[UserPass]) => authenticator(a), realm = realm)(ec)
   }
 
 

@@ -193,6 +193,11 @@ trait DashboardService extends HttpService with Loggable {
 
   val statusBaseUrl = DashboardConfigSource.config.getString("shrine.dashboard.statusBaseUrl")
 
+  // TODO: check all other certs and return a list of domain/had sig pairs.
+  lazy val checkCertCollection:Route = {
+
+  }
+
   // TODO: Move this over to Status API?
   lazy val verifySignature:Route = {
     val keyStoreDescriptor = DashboardConfigSource.config.getConfigured("shrine.keystore", KeyStoreDescriptorParser(_))
@@ -205,7 +210,6 @@ trait DashboardService extends HttpService with Loggable {
       } else {
         Some(false)
       }
-
     }
 
     // Intellij complains if you use formFields with multiple params ¯\_(ツ)_/¯
