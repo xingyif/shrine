@@ -978,9 +978,6 @@ button.ont-close {
 .tooltip-toggle {
   cursor: pointer;
   position: relative; }
-  .tooltip-toggle svg {
-    height: 18px;
-    width: 18px; }
   .tooltip-toggle::before {
     border: 1px solid rgba(255, 255, 255, 0.8);
     position: absolute;
