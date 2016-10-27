@@ -193,12 +193,13 @@ object ProblemSources{
   }
 
   case object Adapter extends ProblemSource
+  case object Commons extends ProblemSource
+  case object Dsa extends ProblemSource
   case object Hub extends ProblemSource
   case object Qep extends ProblemSource
-  case object Dsa extends ProblemSource
   case object Unknown extends ProblemSource
 
-  def problemSources = Set(Adapter,Hub,Qep,Dsa,Unknown)
+  def problemSources = Set(Adapter,Commons,Dsa,Hub,Qep,Unknown)
 }
 
 case class ProblemNotYetEncoded(internalSummary:String,t:Option[Throwable] = None) extends AbstractProblem(ProblemSources.Unknown){
