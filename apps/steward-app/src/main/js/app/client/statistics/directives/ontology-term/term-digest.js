@@ -4,7 +4,7 @@
     angular.module('shrine.steward.statistics')
         .directive('termDigest', TermDigestDirective);
 
-            function TermDigestDirective () {
+    function TermDigestDirective (OntologyTermService) {
         var templateUrl = './app/client/statistics/directives/' +
             'ontology-term/term-digest.tpl.html';
 
@@ -24,15 +24,18 @@
         return termDigest;
     }
 
-    function QueryDigestController () {
+    QueryDigestController.$inject = ['OntologyTermService'];
+    function QueryDigestController (OntologyTermService) {
         var digest = this;
+        digest.ontologyTermService =  OntologyTermService;
     }
 
     function TermDigestLinker(scope) {
         scope.$watch('ontology', function(before, after) {
             var digest = scope.digest;
-            digest.ontology = scope.ontology;
-            digest.max = scope.max;
+            var service = digest.ontologyTermService;  
+            digest.ontology = service.buildOntology(scope.ontology);
+            digest.max = service.getMax();
         });
     }
 })();

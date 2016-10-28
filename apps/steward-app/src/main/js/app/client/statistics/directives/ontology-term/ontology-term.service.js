@@ -5,13 +5,13 @@
         .service('OntologyTermService', OntologyTermService);
 
     OntologyTermService.$inject = ['OntologyTerm'];
-    function OntologyTermService (OntologyTerm) {
+    function OntologyTermService(OntologyTerm) {
 
         return {
             buildOntology: buildOntology,
-            getMax: function() {
+            getMax: function () {
                 return OntologyTerm.prototype.maxTermUsedCount;
-            }
+            },
         };
 
         /**
@@ -21,6 +21,7 @@
             var ln = queryRecords.length;
             var queryCount = 0;
             var ontology = new OntologyTerm('SHRINE');
+            var topics = {};
             ontology.queryCount = ln;
 
             for (var i = 0; i < ln; i++) {
@@ -28,11 +29,37 @@
                 if (topicId === undefined || (record.topic !== undefined && topicId === record.topic.id)) {
                     var str = record.queryContents;
                     ontology = traverse(str.queryDefinition.expr, record.externalId, ontology);
-                    queryCount ++;
+                    queryCount++;
+
+                    if (!topics[record.topic.id]) {
+                        topics[record.topic.id] = record.topic;
+                    }
+
+                    appendTopicIfUnique(record.topic, topics);
                 }
             }
 
+            ontology.topics = formatTopicsToArray(topics);
             return ontology;
+        }
+
+        function formatTopicsToArray(topicObject) {
+            var topicArray = [];
+            var keys = Object.keys(topicObject);
+            Object.keys(topicObject)
+                .forEach(function (key) { topicArray.push(topicObject[key]); });
+
+            return topicArray;
+        }
+
+        function appendTopicIfUnique(topic, topics) {
+            var id = topic.id;
+
+            if (!topics[id]) {
+                topics[id] = topic;
+            }
+
+            return topics;
         }
 
         /**

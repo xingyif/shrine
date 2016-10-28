@@ -1,0 +1,30 @@
+<div class="topic-dropdown">
+
+	<h2>
+		Filter By Topic:
+	</h2>
+  
+	<button class="tdd-btn" style="max-width: 300px;">
+
+    <span>Title Here?</span>
+    <ul class="tdd-list" style="max-width: 300px;">
+      <li ng-class="{'active': c.tabIndex === undefined}" ng-click="c.getData()">
+       <a href="" >All</a>
+      </li>
+      <li ng-repeat="topic in dropdown.topics" ng-class="{'active': c.tabIndex === undefined}" ng-click="c.getData()">
+        <a href="" >{{topic.name}}</a>
+      </li>
+     </ul>      
+     <!--
+          <span>{{c.tabs[c.tabIndex]}}</span>
+          <ul class="tdd-list" style="max-width: 300px;">
+            <li ng-class="{'active': c.tabIndex === undefined}" ng-click="c.getData()"><a href="#">All</a></li>
+            <li ng-class="{'active': c.tabIndex === 18}" ng-click="c.getData(18)"><a href="#">Health impact of dietary related chronic diseases on HIV positive patients</a></li>
+            <li ng-class="{'active': c.tabIndex === 19}" ng-click="c.getData(19)"><a href="#">Identifying correlations between congenital anomalies and increased risk for chronic health conditions</a></li>
+            <li ng-class="{'active': c.tabIndex === 20}" ng-click="c.getData(20)"><a href="#">Comparing impact of medications for patients with multiple chronic health conditions</a></li>
+            <li ng-class="{'active': c.tabIndex === 21}" ng-click="c.getData(21)"><a href="#">Identifying Correlations between congenital anomalies and complications of labor and birth.</a></li>
+          </ul>
+          -->
+    </button>
+
+</div>

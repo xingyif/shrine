@@ -5,8 +5,8 @@
         .module('shrine.steward.statistics')
         .controller('StatisticsController', StatisticsController);
 
-    StatisticsController.$inject = ['StatisticsModel', 'StewardService', '$scope', 'OntologyTermService'];
-    function StatisticsController(model, service, $scope, ontologyTermService) {
+    StatisticsController.$inject = ['StatisticsModel', 'StewardService', '$scope'];
+    function StatisticsController(model, service, $scope) {
         var showOntClass = 'ont-overlay';
         var hideOntClass = 'ont-hidden';
 
@@ -111,8 +111,7 @@
         function viewDigest(data) {
             model.getUserQueryHistory(data.username.toLowerCase())
             .then(function (result) {
-                stats.ontology = ontologyTermService.buildOntology(result.queryRecords);
-                stats.max = ontologyTermService.getMax();
+                stats.ontology = result.queryRecords;
                 stats.ontClass = showOntClass;
             });
         }
