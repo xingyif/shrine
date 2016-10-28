@@ -1,0 +1,23 @@
+override def myCertId: Option[CertId] = Some(myEntry).map(entryToCertID)
+
+  override def myCert: Option[X509Certificate] = Some(myEntry.cert)
+
+  override def caCertAliases: NonEmptySeq[String] = caEntry.aliases
+
+  override def caCerts: Map[Principal, X509Certificate] = Map(caEntry.cert.getSubjectDN -> caEntry.cert)
+
+  override def myKeyPair: KeyPair = KeyPair(myEntry.publicKey, privateKey)
+
+  override def get(id: CertId): Option[X509Certificate] = Seq(myEntry, caEntry).find(entryToCertID(_).serial == id.serial).map(_.cert)
+
+  override def iterator: Iterator[X509Certificate] = Seq(myEntry, caEntry).map(_.cert).iterator
+
+  private[this] def id(entry: KeyStoreEntry) = Seq(entry).map(entryToCertID)
+
+  override def ids: Iterable[CertId] = id(myEntry)
+
+  override def caIds: Iterable[CertId] = id(caEntry)
+
+  private[this] def entryToCertID(entry: KeyStoreEntry): CertId = {
+    CertId(entry.certificateHolder.getSerialNumber, Option(entry.certificateHolder.getSubject.toString))
+  }

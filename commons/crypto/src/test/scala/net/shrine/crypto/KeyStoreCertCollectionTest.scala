@@ -7,6 +7,8 @@ import java.math.BigInteger
 import java.security.PrivateKey
 import java.security.KeyStore
 
+import net.shrine.crypto2.BouncyKeyStoreCollection
+
 /**
  * @author clint
  * @since Dec 2, 2013
@@ -55,6 +57,8 @@ final class KeyStoreCertCollectionTest extends ShouldMatchersForJUnit {
 
       //Should work, since even though multiple private keys were found, a private key alias was specified
       KeyStoreCertCollection.fromClassPathResource(descriptor)
+      BouncyKeyStoreCollection.fromFileRecoverWithClassPath(descriptor)
+
     }
   }
 

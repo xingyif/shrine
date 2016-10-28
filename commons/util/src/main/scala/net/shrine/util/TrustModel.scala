@@ -1,4 +1,4 @@
-package net.shrine.qep
+package net.shrine.util
 
 /**
   * Created by ty on 10/14/16.

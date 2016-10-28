@@ -26,9 +26,9 @@ import net.shrine.crypto.{KeyStoreCertCollection, KeyStoreDescriptor, SigningCer
 import net.shrine.ont.data.OntClientOntologyMetadata
 import net.shrine.protocol.query.{OccuranceLimited, QueryDefinition, Term}
 import net.shrine.protocol._
-import net.shrine.qep.{PeerToPeerModel, SingleHubModel, TrustModel}
+import net.shrine.qep.PeerToPeerModel
 import net.shrine.serialization.NodeSeqSerializer
-import net.shrine.util.Versions
+import net.shrine.util.{SingleHubModel, Versions}
 
 import scala.concurrent.Await
 import scala.util.{Success, Try}

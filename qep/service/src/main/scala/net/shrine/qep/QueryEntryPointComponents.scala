@@ -16,6 +16,7 @@ import net.shrine.protocol.ResultOutputType
 import net.shrine.qep.dao.AuditDao
 import net.shrine.qep.dao.squeryl.SquerylAuditDao
 import net.shrine.qep.dao.squeryl.tables.Tables
+import net.shrine.util.{PeerToPeerModel, SingleHubModel, TrustModel}
 
 import scala.util.Try
 

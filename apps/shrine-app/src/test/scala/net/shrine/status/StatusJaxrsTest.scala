@@ -3,8 +3,7 @@ package net.shrine.status
 import java.io.File
 
 import com.typesafe.config.ConfigFactory
-import net.shrine.qep.SingleHubModel
-import net.shrine.util.ShouldMatchersForJUnit
+import net.shrine.util.{ShouldMatchersForJUnit, SingleHubModel}
 import org.json4s.{DefaultFormats, Formats}
 import org.junit.Test
 import org.json4s.native.Serialization
