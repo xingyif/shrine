@@ -4,18 +4,17 @@
     angular.module('shrine.steward.statistics')
         .directive('termDigest', TermDigestDirective);
 
-    function TermDigestDirective (OntologyTermService) {
+    function TermDigestDirective(OntologyTermService) {
         var templateUrl = './app/client/statistics/directives/' +
             'ontology-term/term-digest.tpl.html';
 
-        var termDigest  = {
+        var termDigest = {
             restrict: 'E',
             templateUrl: templateUrl,
             controller: QueryDigestController,
             controllerAs: 'digest',
             scope: {
-                ontology: '=',
-                max: '@'
+                ontology: '='
             },
             link: TermDigestLinker,
             transclude: true
@@ -24,18 +23,37 @@
         return termDigest;
     }
 
-    QueryDigestController.$inject = ['OntologyTermService'];
-    function QueryDigestController (OntologyTermService) {
+    QueryDigestController.$inject = ['$scope', 'OntologyTermService'];
+    function QueryDigestController($scope, OntologyTermService) {
         var digest = this;
-        digest.ontologyTermService =  OntologyTermService;
+        //digest.ontologyTermService = OntologyTermService;
+
+        var cache = {};
+
+        this.getOntologyByTopic = getOntologyByTopic;
+        function getOntologyByTopic(topicId) {
+
+            var defaultData = {
+                ontology: {},
+                max: 0
+            };
+
+            var digest = $scope.digest;
+
+            if (!$scope.ontology.length) {
+                digest.ontology = defaultData;
+            }
+
+            else {
+                digest.ontology = OntologyTermService.buildOntology($scope.ontology, topicId);
+                digest.max = OntologyTermService.getMax();
+            }
+        }
     }
 
     function TermDigestLinker(scope) {
-        scope.$watch('ontology', function(before, after) {
-            var digest = scope.digest;
-            var service = digest.ontologyTermService;  
-            digest.ontology = service.buildOntology(scope.ontology);
-            digest.max = service.getMax();
+        scope.$watch('ontology', function (before, after) {
+            scope.digest.getOntologyByTopic();
         });
     }
 })();

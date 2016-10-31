@@ -10,7 +10,8 @@
         return {
             buildOntology: buildOntology,
             getMax: function () {
-                return OntologyTerm.prototype.maxTermUsedCount;
+                var maxTermUsedCount = OntologyTerm.prototype.maxTermUsedCount;
+                return maxTermUsedCount;
             },
         };
 
@@ -22,7 +23,7 @@
             var queryCount = 0;
             var ontology = new OntologyTerm('SHRINE');
             var topics = {};
-            ontology.queryCount = ln;
+            //ontology.queryCount = ln;
 
             for (var i = 0; i < ln; i++) {
                 var record = queryRecords[i];
@@ -40,6 +41,7 @@
             }
 
             ontology.topics = formatTopicsToArray(topics);
+            ontology.queryCount = queryCount;
             return ontology;
         }
 

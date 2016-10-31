@@ -13,6 +13,7 @@
         var topicDropdown = {
             scope: {
                 topics: '=',
+                topicSelected: '&'
             },
             restrict: 'E',
             controller: TopicDropdownController,
@@ -25,17 +26,19 @@
     }
 
     TopicDropdownController.$inject = ['$scope', 'OntologyTermService'];
-    function TopicDropdownController ($scope, OntologyTermService) {
+    function TopicDropdownController($scope, OntologyTermService) {
         var dropdown = this;
         dropdown.ontologyTermService = OntologyTermService;
         dropdown.topics = $scope.topics;
     }
 
-    function TopicDropdownLinker (scope) {
-        scope.$watch('topics', function(before, after) {
-            var dropdown  = scope.dropdown;
-            var service = dropdown.ontologyTermService;
-            dropdown.topics = scope.topics;
+    function TopicDropdownLinker(scope) {
+        var clearWatch = scope.$watch('topics', function (after, before) {
+            var dropdown = scope.dropdown;
+            if (after && after.length) {
+                dropdown.topics = after;
+                clearWatch();
+            }
         });
     }
 })();
