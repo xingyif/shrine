@@ -3,74 +3,36 @@ package net.shrine.crypto2
 
 import java.math.BigInteger
 import java.security.cert.X509Certificate
-import java.security.{KeyStore, PrivateKey}
+import java.security.{KeyStore, PrivateKey, Security}
 import javax.xml.datatype.XMLGregorianCalendar
 
 import net.shrine.crypto._
 import net.shrine.log.Loggable
 import net.shrine.protocol.{BroadcastMessage, CertId, Signature}
 import net.shrine.util._
+import org.bouncycastle.jce.provider.BouncyCastleProvider
 
 import scala.concurrent.duration.Duration
 
 /**
   * Created by ty on 10/25/16.
   */
-trait BouncyKeyStoreCollection extends Iterable[KeyStoreEntry] with Signer with Verifier with Loggable {
-
-  def sign(bytesToSign: Array[Byte]): Option[Array[Byte]]
-
-  def verify(signedBytes: Array[Byte], signatureBytes: Array[Byte]): Boolean
+trait BouncyKeyStoreCollection extends Loggable {
 
   val myEntry: KeyStoreEntry
 
-  override def verifySig(message: BroadcastMessage, maxSignatureAge: Duration): Boolean = {
-    val logSigFailure = (b:Boolean) => {
-      if (!b) {
-        UnknownSignatureProblem(message)
-        warn(s"Error verifying signature for message with id '${message.requestId}'")
-      }
-      b
-    }
+  def signBytes(bytesToSign: Array[Byte]): Array[Byte] = myEntry.sign(bytesToSign).getOrElse(CryptoErrors.noKeyError(myEntry))
 
-    message.signature.exists(sig =>
-      notTooOld(sig, maxSignatureAge, message) && logSigFailure(verify(toBytes(message, sig.timestamp), sig.value.array))
-    )
-  }
+  def verifyBytes(signedBytes: Array[Byte], signatureBytes: Array[Byte]): Boolean
 
-  override def sign(message: BroadcastMessage, signingCertStrategy: SigningCertStrategy): BroadcastMessage = {
-    val timeStamp = XmlDateHelper.now
-    val dummyCertId = CertId(BigInteger.valueOf(10l), None)
-    val signedBytes = sign(toBytes(message, timeStamp)).getOrElse(CryptoErrors.noKeyError(myEntry))
-    val sig = Signature(timeStamp, dummyCertId, None, signedBytes)
-    message.withSignature(sig)
-  }
-
-  private def toBytes(message: BroadcastMessage, timestamp: XMLGregorianCalendar): Array[Byte] = {
-    val messageXml = message.copy(signature = None).toXmlString
-    val timestampXml = timestamp.toXMLFormat
-
-    (messageXml + timestampXml).getBytes("UTF-8")
-  }
-
-  private def notTooOld(sig: Signature, maxSignatureAge: Duration, message: BroadcastMessage): Boolean = {
-    import XmlGcEnrichments._
-
-    val sigValidityEndTime: XMLGregorianCalendar = sig.timestamp + maxSignatureAge
-    val now = XmlDateHelper.now
-    val timeout = sigValidityEndTime > now
-
-    if (timeout) warn(s"Could not validate message with id '${message.requestId}' due to " +
-      s"exceeding max timeout of $maxSignatureAge")
-
-    timeout
-  }
+  def allEntries: Iterable[KeyStoreEntry]
 }
 
 /**
   * Factory object that reads the correct cert collection from the file.
   */
 object BouncyKeyStoreCollection extends Loggable {
+  Security.addProvider(new BouncyCastleProvider())
   import scala.collection.JavaConversions._
   type EitherCertError = Either[ImproperlyConfiguredKeyStoreProblem, BouncyKeyStoreCollection]
 

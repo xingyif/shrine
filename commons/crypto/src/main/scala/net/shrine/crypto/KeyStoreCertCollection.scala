@@ -21,8 +21,6 @@ final case class KeyStoreCertCollection(keystore: KeyStore, descriptor: KeyStore
   
   override def iterator: Iterator[X509Certificate] = certsById.valuesIterator ++ caCerts.valuesIterator
 
-  //def keystoreEntries: Iterable[KeyStoreEntry] = iterator.map(cert => KeyStoreEntry(cert.))
-
   override def ids: Iterable[CertId] = certsById.keys
   
   import KeyStoreCertCollection.toCertId

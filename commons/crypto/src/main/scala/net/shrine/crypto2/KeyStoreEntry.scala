@@ -1,7 +1,7 @@
 package net.shrine.crypto2
 
 import java.security.cert.X509Certificate
-import java.security.{InvalidKeyException, PrivateKey, PublicKey, SignatureException}
+import java.security._
 
 import net.shrine.crypto.UtilHasher
 import net.shrine.util.NonEmptySeq
@@ -25,14 +25,14 @@ import scala.util.Try
   * @param privateKey: The private key of the certificate, which is only available if this keystore represents
   *                    a private key entry (i.e., do we own this certificate?)
   */
-case class KeyStoreEntry(cert: X509Certificate, aliases: NonEmptySeq[String], privateKey: Option[PrivateKey]) {
+final case class KeyStoreEntry(cert: X509Certificate, aliases: NonEmptySeq[String], privateKey: Option[PrivateKey]) {
   val publicKey:PublicKey = cert.getPublicKey
   val certificateHolder = new JcaX509CertificateHolder(cert)                              // Helpful methods are defined in the cert holder.
   val isSelfSigned: Boolean = certificateHolder.getSubject == certificateHolder.getIssuer // May or may not be a CA
   val formattedSha256Hash: String = UtilHasher.encodeCert(cert, "SHA-256")
   private val provider = new BouncyCastleProvider()
 
-  def verify(signedBytes: Array[Byte], signatureBytes: Array[Byte]): Boolean = {
+  def verify(signedBytes: Array[Byte], originalMessage: Array[Byte]): Boolean = {
     import scala.collection.JavaConversions._                                             // Treat Java Iterable as Scala Iterable
     val signers: SignerInformationStore = new CMSSignedData(signedBytes).getSignerInfos
 
@@ -46,22 +46,19 @@ case class KeyStoreEntry(cert: X509Certificate, aliases: NonEmptySeq[String], pr
     */
   def sign(bytesToSign: Array[Byte]): Option[Array[Byte]] = {
     privateKey.map(key => {
+      val signature = Signature.getInstance("SHA256withRSA", provider)
+      signature.initSign(key)
+      signature.update(bytesToSign)
+
       val sigGen = new JcaContentSignerBuilder("SHA256withRSA").setProvider(provider).build(key)
       val cms = new CMSSignedDataGenerator()
       cms.addSignerInfoGenerator(
         new SignerInfoGeneratorBuilder(new BcDigestCalculatorProvider())
           .build(sigGen, certificateHolder))
-      cms.generate(new CMSProcessableByteArray(bytesToSign), true).getEncoded     // true means to envelop the signature in the given data
+      cms.generate(new CMSProcessableByteArray(signature.sign), true).getEncoded     // true means to envelop the signature in the given data
     })
   }
 
-  def wasSignedBy(entry: KeyStoreEntry): Boolean = {
-    Try(cert.verify(publicKey))
-      .map(a => true)
-      .recover {
-        case sx:SignatureException => false
-        case kx:InvalidKeyException => false
-      }.get
-  }
+  def wasSignedBy(entry: KeyStoreEntry): Boolean = Try(cert.verify(publicKey)).isSuccess
 
 }

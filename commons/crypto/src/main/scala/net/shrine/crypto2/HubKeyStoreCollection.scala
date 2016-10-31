@@ -11,11 +11,9 @@ import scala.concurrent.duration.Duration
   */
 case class HubKeyStoreCollection(override val myEntry: KeyStoreEntry, entries: Seq[KeyStoreEntry]) extends BouncyKeyStoreCollection {
 
-  def sign(bytesToSign: Array[Byte]) = myEntry.sign(bytesToSign)
-
-  def verify(signedBytes: Array[Byte], signatureBytes: Array[Byte]): Boolean = {
+  def verifyBytes(signedBytes: Array[Byte], signatureBytes: Array[Byte]): Boolean = {
     (myEntry +: entries).exists(_.verify(signedBytes, signatureBytes))
   }
 
-  override def iterator: Iterator[KeyStoreEntry] = (myEntry +: entries).iterator
+  override val allEntries: Iterable[KeyStoreEntry] = myEntry +: entries
 }
