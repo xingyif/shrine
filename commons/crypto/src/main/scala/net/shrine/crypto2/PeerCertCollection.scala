@@ -9,11 +9,11 @@ import scala.concurrent.duration.Duration
 /**
   * Created by ty on 10/27/16.
   */
-case class HubKeyStoreCollection(override val myEntry: KeyStoreEntry, entries: Seq[KeyStoreEntry]) extends BouncyKeyStoreCollection {
+case class PeerCertCollection(override val myEntry: KeyStoreEntry, entries: Set[KeyStoreEntry]) extends BouncyKeyStoreCollection {
 
   def verifyBytes(signedBytes: Array[Byte], signatureBytes: Array[Byte]): Boolean = {
-    (myEntry +: entries).exists(_.verify(signedBytes, signatureBytes))
+    (entries + myEntry).exists(_.verify(signedBytes, signatureBytes))
   }
 
-  override val allEntries: Iterable[KeyStoreEntry] = myEntry +: entries
+  override val allEntries: Iterable[KeyStoreEntry] = entries + myEntry
 }

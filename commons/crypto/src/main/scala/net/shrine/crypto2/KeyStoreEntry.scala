@@ -2,6 +2,8 @@ package net.shrine.crypto2
 
 import java.security.cert.X509Certificate
 import java.security._
+import java.time.{Clock, Instant}
+import java.util.Date
 
 import net.shrine.crypto.UtilHasher
 import net.shrine.util.NonEmptySeq
@@ -35,8 +37,9 @@ final case class KeyStoreEntry(cert: X509Certificate, aliases: NonEmptySeq[Strin
   def verify(signedBytes: Array[Byte], originalMessage: Array[Byte]): Boolean = {
     import scala.collection.JavaConversions._                                             // Treat Java Iterable as Scala Iterable
     val signers: SignerInformationStore = new CMSSignedData(signedBytes).getSignerInfos
+    val verifier = new JcaSimpleSignerInfoVerifierBuilder().setProvider(provider).build(cert)
 
-    signers.headOption.exists(signerInfo => signerInfo.verify(new JcaSimpleSignerInfoVerifierBuilder().setProvider(provider).build(cert)))
+    signers.headOption.exists(signerInfo => signerInfo.verify(verifier))                  // We don't attach multiple signers to a cert
   }
 
 
@@ -52,6 +55,7 @@ final case class KeyStoreEntry(cert: X509Certificate, aliases: NonEmptySeq[Strin
 
       val sigGen = new JcaContentSignerBuilder("SHA256withRSA").setProvider(provider).build(key)
       val cms = new CMSSignedDataGenerator()
+
       cms.addSignerInfoGenerator(
         new SignerInfoGeneratorBuilder(new BcDigestCalculatorProvider())
           .build(sigGen, certificateHolder))
@@ -59,6 +63,9 @@ final case class KeyStoreEntry(cert: X509Certificate, aliases: NonEmptySeq[Strin
     })
   }
 
-  def wasSignedBy(entry: KeyStoreEntry): Boolean = Try(cert.verify(publicKey)).isSuccess
+  def wasSignedBy(entry: KeyStoreEntry): Boolean = Try(cert.verify(entry.publicKey)).isSuccess
 
+  def isExpired(clock: Clock = Clock.systemDefaultZone()): Boolean = {
+    certificateHolder.getNotAfter.before(Date.from(Instant.now(clock)))
+  }
 }

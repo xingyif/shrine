@@ -18,11 +18,28 @@ case class ImproperlyConfiguredKeyStoreProblem(override val throwable: Option[Th
 case class ImproperlyConfiguredKeyStoreException(message: String) extends ConfigurationException(message)
 
 object CryptoErrors {
-  final val NoPrivateKeyInStore = "Could not find a key in the KeyStore with a PrivateKey. Without one, SHRINE cannot sign mesasges."
-  final val TooManyPrivateKeys  = "There are multiple entries in the KeyStore with a PrivateKey. Please specify which one to use for signing queries under `privateKeyAlias` in the configuration file."
-  final def CouldNotFindAlias(alias: String) = s"Could not find a KeyStore Entry corresponding to the alias '$alias'"
-  final def CouldNotFindCaAlias(aliases: Seq[String]) = s"Could not find a KeyStore Entry corresponding to the aliases '${aliases.mkString(", ")}"
-  final def NotSignedByCa(aliases: Set[String], caAlias: String) = s"The KeyStore Entries with aliases `${aliases.mkString(", ")}` were not signed by the ca `$caAlias`"
+  type Entries = Iterable[KeyStoreEntry]
+
+  def comma(aliases: Entries): String = aliases.map(_.aliases.first).mkString(", ")
+
+  final val NoPrivateKeyInStore =
+    "Could not find a key in the KeyStore with a PrivateKey. Without one, SHRINE cannot sign messages."
+  final def TooManyPrivateKeys(entries: Entries)  =
+    s"There are ${entries.size} entries in the KeyStore with a PrivateKey. Please specify which one to use for signing queries under `privateKeyAlias` in the configuration file."
+  final def CouldNotFindAlias(alias: String) =
+    s"Could not find a KeyStore Entry corresponding to the alias '$alias'"
+  final def CouldNotFindCaAlias(entries: Entries) =
+    s"Could not find a KeyStore Entry corresponding to the aliases '${comma(entries)}"
+  final def NotSignedByCa(myEntry: KeyStoreEntry, caEntry: KeyStoreEntry) =
+    s"The private entry identified by alias `${myEntry.aliases.first}` was not signed by ca entry `${caEntry.aliases.first}`"
+  final def RequiresExactlyTwoEntries(entries: Entries) =
+    s"Hub based networks require exactly two entries in the KeyStore, found ${entries.size} entries: `${comma(entries)}`"
+  final def RequiresExactlyOnePrivateKey(entries: Entries) =
+    s"Hub based networks require exactly one private key entry in the KeyStore, found ${entries.size} with private keys: `${comma(entries)}"
+  final def PrivateEntryIsCaEntry(aliases: Iterable[String]) =
+    s"Your private cert must not also be your CA cert. Intersecting aliases: `${aliases.mkString(", ")}`"
+  final def ExpiredCertificates(entries: Entries) =
+    s"The following certificates have expired: `${comma(entries)}`"
 
   private[crypto2] def noKeyError(myEntry: KeyStoreEntry) = {
     val illegalEntry = new IllegalArgumentException(s"The provided keystore entry $myEntry did not have a private key")

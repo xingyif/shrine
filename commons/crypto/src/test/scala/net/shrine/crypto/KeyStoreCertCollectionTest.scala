@@ -59,14 +59,16 @@ final class KeyStoreCertCollectionTest extends ShouldMatchersForJUnit {
       //val keyStore = KeyStoreCertCollection.fromClassPathResource(descriptor)
       val bouncy = BouncyKeyStoreCollection.fromFileRecoverWithClassPath(descriptor)
       val bytes = "Testing this message".getBytes("UTF-8")
-      val signed = bouncy.signBytes(bytes)
-      val signed2: Array[Byte] = DefaultSignerVerifier.sign(bouncy.myEntry.privateKey.get, bytes)
+
+      val CmsBytes = bouncy.signBytes(bytes)    // The cool, Crypto Messaging Syntax
+      val sigBytes: Array[Byte] = DefaultSignerVerifier.sign(bouncy.myEntry.privateKey.get, bytes)
+                                                // The less cool, regular signature
 
       val cert: X509Certificate = bouncy.myEntry.cert
-      bouncy.verifyBytes(signed, bytes) should equal(true)
-      DefaultSignerVerifier.verify(cert, bytes, signed2) should equal(true)
-//      DefaultSignerVerifier.verify(cert, bytes, signed) should equal(true)
-//      bouncy.verifyBytes(signed2, bytes) should equal(true)
+      bouncy.verifyBytes(CmsBytes, bytes) should equal(true)
+      DefaultSignerVerifier.verify(cert, bytes, sigBytes) should equal(true)
+//      DefaultSignerVerifier.verify(cert, bytes, CmsBytes) should equal(true)
+//      bouncy.verifyBytes(sigBytes, bytes) should equal(true)
     }
   }
 

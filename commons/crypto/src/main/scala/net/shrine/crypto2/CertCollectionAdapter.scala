@@ -48,8 +48,8 @@ final case class CertCollectionAdapter(keyStoreCollection: BouncyKeyStoreCollect
 
   // The CertCollection doesn't really account for PeerToPeer networks, so we slightly ignore that too
   private val caEntry: KeyStoreEntry = keyStoreCollection match {
-    case DownstreamKeyStoreCollection(privateEntry, ca) => ca
-    case HubKeyStoreCollection(privateEntry, otherEntries) => privateEntry
+    case HubCertCollection(privateEntry, ca)            => ca
+    case PeerCertCollection(privateEntry, otherEntries) => privateEntry
   }
 
 }

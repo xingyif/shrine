@@ -1,9 +1,12 @@
 package net.shrine.crypto2
 
 
+import java.io.{File, FileInputStream}
 import java.math.BigInteger
 import java.security.cert.X509Certificate
 import java.security.{KeyStore, PrivateKey, Security}
+import java.time.Instant
+import java.util.Date
 import javax.xml.datatype.XMLGregorianCalendar
 
 import net.shrine.crypto._
@@ -16,6 +19,11 @@ import scala.concurrent.duration.Duration
 
 /**
   * Created by ty on 10/25/16.
+  *
+  * Rewrite of [[net.shrine.crypto.CertCollection]]. Abstracts away the need to track down
+  * all the corresponding pieces of a KeyStore entry by collecting them into a collection
+  * of [[KeyStoreEntry]]s.
+  * See: [[HubCertCollection]], [[PeerCertCollection]], [[CertCollectionAdapter]]
   */
 trait BouncyKeyStoreCollection extends Loggable {
 
@@ -32,10 +40,18 @@ trait BouncyKeyStoreCollection extends Loggable {
   * Factory object that reads the correct cert collection from the file.
   */
 object BouncyKeyStoreCollection extends Loggable {
-  Security.addProvider(new BouncyCastleProvider())
   import scala.collection.JavaConversions._
+  import CryptoErrors._
+  Security.addProvider(new BouncyCastleProvider())
+
+  // On failure creates a problem so it gets logged into the database.
   type EitherCertError = Either[ImproperlyConfiguredKeyStoreProblem, BouncyKeyStoreCollection]
 
+  /**
+    * Creates a cert collection from a keyStore. Returns an Either to abstract away
+    * try catches/problem construction until the end.
+    * @return [[EitherCertError]]
+    */
   def createCertCollection(keyStore: KeyStore, descriptor: KeyStoreDescriptor):
     EitherCertError =
   {
@@ -43,59 +59,64 @@ object BouncyKeyStoreCollection extends Loggable {
     val values = keyStore.aliases().map(alias =>
       (alias, keyStore.getCertificate(alias), Option(keyStore.getKey(alias, descriptor.password.toCharArray).asInstanceOf[PrivateKey])))
     val entries = values.map(value => KeyStoreEntry(value._2.asInstanceOf[X509Certificate], NonEmptySeq(value._1, Nil), value._3)).toSet
-    descriptor.trustModel match {
-      case PeerToPeerModel => createHubCertCollection(entries, descriptor) // In a p2p network, no need to check that everything is signed by CA
-      case SingleHubModel  => for {
-        caEntry <- entries.find(_.aliases.intersect(descriptor.caCertAliases).nonEmpty)
-                          .toRight(CryptoErrors.configureError(CryptoErrors.CouldNotFindCaAlias(descriptor.caCertAliases))).right
-        signedByCa <- chooseDownStreamOrHub(caEntry, entries, descriptor).right
-      } yield signedByCa
+    if (entries.exists(_.isExpired()))
+      Left(configureError(ExpiredCertificates(entries.filter(_.isExpired()))))
+    else
+      descriptor.trustModel match {
+        case PeerToPeerModel => createPeerCertCollection(entries, descriptor)
+        case SingleHubModel  => createHubCertCollection(entries)
+      }
+  }
+
+  /**
+    * @return a [[scala.util.Left]] if we can't find or disambiguate a [[PrivateKey]],
+    *         otherwise return [[scala.util.Right]] that contains correct [[PeerCertCollection]]
+    */
+  def createPeerCertCollection(entries: Set[KeyStoreEntry], descriptor: KeyStoreDescriptor): EitherCertError = {
+    if (descriptor.caCertAliases.nonEmpty)
+      warn(s"Specifying caCertAliases in a PeerToPeer network is useless, certs found: `${descriptor.caCertAliases}`")
+    (descriptor.privateKeyAlias, entries.filter(_.privateKey.isDefined)) match {
+      case (_, empty) if empty.isEmpty => Left(configureError(NoPrivateKeyInStore))
+      case (None, keys) if keys.size == 1 =>
+        warn(s"No private key specified, using the only entry with a private key: `${keys.head.aliases.first}`")
+        Right(PeerCertCollection(keys.head, entries -- keys))
+
+      case (None, keys)                => Left(configureError(TooManyPrivateKeys(entries)))
+      case (Some(alias), keys) if keys.exists(_.aliases.contains(alias)) =>
+        val privateKeyEntry = keys.find(_.aliases.contains(alias)).get
+        Right(PeerCertCollection(privateKeyEntry, entries - privateKeyEntry))
+
+      case (Some(alias), keys)         => Left(configureError(CouldNotFindAlias(alias)))
     }
   }
 
-  def createHubCertCollection(entries: Set[KeyStoreEntry], descriptor: KeyStoreDescriptor): EitherCertError = {
-    getPrivateKeyEntry(entries, descriptor) match {
-      case Left(p)      => Left(p)
-      case Right(entry) => Right(HubKeyStoreCollection(entry, (entries - entry).toSeq))
+  def createHubCertCollection(entries: Set[KeyStoreEntry]): EitherCertError = {
+    if (entries.size != 2)
+      Left(configureError(RequiresExactlyTwoEntries(entries)))
+    else if (entries.count(_.privateKey.isDefined) != 1)
+      Left(configureError(RequiresExactlyOnePrivateKey(entries.filter(_.privateKey.isDefined))))
+    else {
+      val partition    = entries.partition(_.privateKey.isDefined)
+      val privateEntry = partition._1.head
+      val caEntry      = partition._2.head
+
+      if (privateEntry.wasSignedBy(caEntry))
+        Right(HubCertCollection(privateEntry, caEntry))
+      else
+        Left(configureError(NotSignedByCa(privateEntry, caEntry)))
     }
   }
 
-  // Ensures that every cert has been signed by the CaEntry, and then determines whether to create a
-  // Hub collection or a Downstream collection by whether or not the CaEntry also contains the private key.
-  def chooseDownStreamOrHub(caEntry: KeyStoreEntry, entries: Set[KeyStoreEntry], descriptor: KeyStoreDescriptor): EitherCertError = {
-    val allSignedByCa = entries.forall(_.wasSignedBy(caEntry))
-    (allSignedByCa, getPrivateKeyEntry(entries, descriptor)) match {
-      case(_, Left(problem)) => 
-        Left(problem)
-      case(false, _) => 
-        val notSigned = entries.filterNot(_.wasSignedBy(caEntry)).map(_.aliases.first)
-        val caAlias = caEntry.aliases.first
-        Left(CryptoErrors.configureError(CryptoErrors.NotSignedByCa(notSigned, caAlias)))
-      case(true, Right(privateEntry)) if caEntry == privateEntry =>
-        Right(HubKeyStoreCollection(caEntry, (entries - caEntry).toSeq))
-      case(true, Right(privateEntry)) =>
-        Right(DownstreamKeyStoreCollection(privateEntry, caEntry))
-    }
-  }
 
-  // Returns the private key, or an error describing why the private key couldn't be ascertained
-  def getPrivateKeyEntry(entries: Set[KeyStoreEntry], descriptor: KeyStoreDescriptor): Either[ImproperlyConfiguredKeyStoreProblem, KeyStoreEntry] = {
-    val entryKeys = entries.filter(_.privateKey.isDefined)
-    descriptor.privateKeyAlias match {
-      case Some(alias) =>
-        entryKeys.find(_.aliases.first == alias).toRight(CryptoErrors.configureError(CryptoErrors.CouldNotFindAlias(alias)))
-      case None        =>
-        if (entryKeys.size == 1) {
-          val entry = entryKeys.head
-          info(s"Found one cert with a private key, with alias '${entry.aliases.first}'")
-          Right(entry)
-        } else Left(CryptoErrors.configureError(CryptoErrors.TooManyPrivateKeys))
-    }
-  }
-
-  //TODO: Move fromFileRecoverWithClassPath to crypto2
+  //TODO: Move fromStreamHelper to crypto2
   def fromFileRecoverWithClassPath(descriptor: KeyStoreDescriptor): BouncyKeyStoreCollection = {
-    createCertCollection(KeyStoreCertCollection.fromFileRecoverWithClassPath(descriptor).keystore, descriptor)
+    val keyStore =
+      if (new File(descriptor.file).exists)
+        KeyStoreCertCollection.fromStreamHelper(descriptor, new FileInputStream(_))
+      else
+        KeyStoreCertCollection.fromStreamHelper(descriptor, getClass.getClassLoader.getResourceAsStream(_))
+
+    createCertCollection(keyStore, descriptor)
       .fold(problem => throw problem.throwable.get, identity)
   }
 }
