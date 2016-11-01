@@ -1,0 +1,16 @@
+<div class="topic-dropdown">
+  <span class="title">
+  Filter By Topic:
+  <span> 
+	<button class="tdd-btn">
+    <span ng-init="dropdown.selected={title: 'All'}">{{dropdown.selected.title}}</span>
+    <ul class="tdd-list">
+      <li ng-class="{'active': dropdown.selected.id === undefined}" ng-click="dropdown.selected={title: 'All'}; topicSelected()">
+        <a href="" >All</a>
+      </li>
+      <li ng-repeat="topic in dropdown.topics" ng-class="{'active': dropdown.selected.id === topic.id}" ng-click="dropdown.selected={title: topic.name, id: topic.id}; topicSelected({topicId: topic.id})">
+        <a href="" >{{topic.name}}</a>
+      </li>
+     </ul>      
+    </button>
+</div>

@@ -1,4 +1,6 @@
 .digest ul {
+  top: 13rem;
+  left: 5rem;
   float: left;
   clear: left;
   margin: .25em;
@@ -14,7 +16,8 @@
     padding-left: 1em;
     width: auto;
     text-align: center;
-    color: white; }
+    color: white;
+    animation: showterm .25s; }
     .digest ul li a {
       display: block;
       position: relative;
@@ -24,7 +27,9 @@
       padding: .25em;
       background: white;
       color: #C0C0C0;
-      border: 1px solid #94a0b4; }
+      border: 2px solid #94a0b4;
+      border-radius: .5rem;
+      transition: all .75s; }
 
 .digest .expandable {
   position: absolute;
@@ -40,7 +45,8 @@
   font-size: 1em;
   background-color: white;
   color: #C0C0C0;
-  border: 1px solid #94a0b4; }
+  border: 1px solid #94a0b4;
+  border-radius: .25rem; }
 
 .digest > ul {
   position: relative;
@@ -50,13 +56,20 @@
   .digest > ul:after {
     display: none; }
 
+@keyframes showterm {
+  0% {
+    top: -.5rem;
+    opacity: 0; }
+  100% {
+    top: 0rem;
+    opacity: 1; } }
+
 ul:after {
   color: blue;
   border: solid gray 1px;
   border-radius: .1em; }
 
 ul > li > a {
-  border-radius: .25em;
   color: blue;
   background: white; }
 
@@ -65,11 +78,11 @@ ul > li > a {
 .digest li span.expandable:hover + a + ul li a,
 .digest li a:hover,
 .digest li a:hover + ul li a {
-  background: rgba(50, 130, 136, 0.25) !important;
-  color: #efefef;
-  border: 1px solid #99C794 !important;
+  background: rgba(50, 130, 136, 0) !important;
+  color: #fff;
   cursor: pointer;
-  z-index: 1000; }
+  z-index: 1000;
+  text-decoration: none; }
 
 .digest li a:hover + ul li::after,
 .digest li a:hover + ul li::before,

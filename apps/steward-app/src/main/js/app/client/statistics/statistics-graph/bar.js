@@ -5,7 +5,7 @@
         .directive('graphBar', GraphBarDirective);
 
     function GraphBarDirective() {
-        var templateUrl = './app/client/statistics/directives/statistics-graph/' +
+        var templateUrl = './app/client/statistics/statistics-graph/' +
             'bar.tpl.html';
 
         var graphBar = {

@@ -3,7 +3,6 @@
     angular.module('shrine.steward.statistics')
         .factory('OntologyTerm', OntologyTermFactory);
 
-
     function OntologyTermFactory() {
         return OntologyTerm;
     }
