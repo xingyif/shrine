@@ -11,8 +11,9 @@
             buildOntology: buildOntology,
             getMax: function () {
                 var maxTermUsedCount = OntologyTerm.prototype.maxTermUsedCount;
+                OntologyTerm.prototype.maxTermUsedCount = 0;
                 return maxTermUsedCount;
-            },
+            }
         };
 
         /**

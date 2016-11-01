@@ -5,7 +5,7 @@
         .directive('termDigest', TermDigestDirective);
 
     function TermDigestDirective(OntologyTermService) {
-        var templateUrl = './app/client/statistics/directives/' +
+        var templateUrl = './app/client/statistics/' +
             'ontology-term/term-digest.tpl.html';
 
         var termDigest = {
@@ -46,6 +46,7 @@
 
             else {
                 digest.ontology = OntologyTermService.buildOntology($scope.ontology, topicId);
+                digest.totalQueries = digest.ontology.queryCount;
                 digest.max = OntologyTermService.getMax();
             }
         }

@@ -4,7 +4,7 @@
       </span>
 	<a ng-init="show=false " ng-click="show=!show;" class="{{svc.getStyleByFrequency(value.queryCount, 200)}} tooltip-toggle" aria-label="{{value.queryCount}} queries">
 
-             {{value.key}} - {{svc.getPct(value.queryCount, 200)}}%  
+             {{value.key}} - {{svc.getPct(value.queryCount, digest.totalQueries)}}%  
 
 	</a>
 

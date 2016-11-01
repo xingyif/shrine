@@ -7,7 +7,7 @@
 
     function TopicDropdownFactory() {
 
-        var templateUrl = './app/client/statistics/directives/' +
+        var templateUrl = './app/client/statistics/' +
             'ontology-term/topic-dropdown.tpl.html';
 
         var topicDropdown = {

@@ -6,12 +6,13 @@
 
     function TermDirectiveFactory () {
 
-        var templateUrl = './app/client/statistics/directives/' +
+        var templateUrl = './app/client/statistics/' +
             'ontology-term/term.tpl.html';
         var termDirective = {
             restrict: 'A',
             templateUrl: templateUrl,
-            controller: TermController
+            controller: TermController,
+            require: '^termDigest'
         };
 
         return termDirective;

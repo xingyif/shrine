@@ -6,7 +6,7 @@
 
 
     function StatisticsGraphDirective() {
-        var templateUrl = './app/client/statistics/directives/statistics-graph/' +
+        var templateUrl = './app/client/statistics/statistics-graph/' +
             'statistics-graph.tpl.html';
         var statisticsGraph = {
             restrict: 'E',
