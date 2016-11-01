@@ -811,6 +811,8 @@ i.shrine-close:hover {
     width: 100%; } }
 
 .digest ul {
+  top: 13rem;
+  left: 5rem;
   float: left;
   clear: left;
   margin: .25em;
@@ -1019,6 +1021,9 @@ button.ont-close {
   transition: all 2s; }
 
 .topic-dropdown {
+  z-index: 20000;
+  margin: 4rem;
+  left: 20%;
   color: rgba(0, 0, 0, 0.87);
   font-family: "Roboto", sans-serif;
   font-size: 14px;
@@ -1026,10 +1031,14 @@ button.ont-close {
   line-height: 1.5em;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  position: fixed;
-  top: 12%;
-  left: 0%; }
+  position: fixed; }
+  .topic-dropdown span.title {
+    text-transform: uppercase;
+    font-weight: 500;
+    font-size: 1.3em;
+    color: #63BCF8; }
   .topic-dropdown .tdd-btn {
+    max-width: 600px;
     outline: 0;
     /* takes care of blue outline */
     display: -webkit-inline-box;
@@ -1045,7 +1054,7 @@ button.ont-close {
     -ms-flex-pack: justify;
     justify-content: space-between;
     background: #5380F7;
-    min-width: 260px;
+    min-width: 400px;
     border: 0;
     border-radius: 4px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
@@ -1061,7 +1070,6 @@ button.ont-close {
     .topic-dropdown .tdd-btn .tdd-list {
       position: absolute;
       top: 100%;
-      left: 0;
       background: #FFFFFF;
       width: 100%;
       border-radius: 4px;

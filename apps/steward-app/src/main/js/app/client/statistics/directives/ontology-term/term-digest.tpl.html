@@ -1,12 +1,10 @@
 <div class="stats-ontology-container">
-	
-	<topic-dropdown 
-	topics="digest.ontology.topics"
-	topic-selected="digest.getOntologyByTopic(topicId)"
-	>
-	</topic-dropdown>
-	
 	<div ng-transclude></div>
+
+		<topic-dropdown 
+	topics="digest.ontology.topics"
+	topic-selected="digest.getOntologyByTopic(topicId)">
+	</topic-dropdown>
 	<!--Start the recursion-->
 	<div class="digest">
 		<ul>
