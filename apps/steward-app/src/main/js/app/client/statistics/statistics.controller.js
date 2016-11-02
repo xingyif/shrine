@@ -109,7 +109,7 @@
         }
 
         function viewDigest(data) {
-            model.getUserQueryHistory(data.username.toLowerCase())
+            model.getUserQueryHistory(data.userName.toLowerCase())
             .then(function (result) {
                 stats.ontology = result.queryRecords;
                 stats.ontClass = showOntClass;
