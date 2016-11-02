@@ -21,7 +21,7 @@
 
 .stats-graph-container {
   border-bottom: none;
-  border: 1px solid #1c8ed6;
+  border-left: 1px solid #125c8a;
   overflow: auto;
   padding-top: .6em;
   /*background: linear-gradient(#048DBE, #025978) !important;*/ }
