@@ -1,6 +1,6 @@
 .digest { 
   ul{
-    top: 13rem;
+    top: 20rem;
     left: 5rem;
     float: left; 
     clear: left;
@@ -33,6 +33,8 @@
         border: 2px solid #94a0b4;
         border-radius: .5rem;
         transition: all .75s;
+        font-weight: 300;
+        font-family: sans-serif;
       };
     }
   };

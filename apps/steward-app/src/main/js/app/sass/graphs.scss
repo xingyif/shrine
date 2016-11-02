@@ -36,7 +36,7 @@
     border: 1px solid #1c8ed6;
     overflow: auto;
     padding-top: .6em;
-    background: linear-gradient(#048DBE, #025978) !important;
+    /*background: linear-gradient(#048DBE, #025978) !important;*/
 }
 
 .stats-ontology-container{
@@ -46,11 +46,13 @@
 }
 
 .stats-graph-container  .bar-bg{
-  background-color: rgba(255, 255, 255, .05);
+  background-color: rgba(255, 255, 255, 1);
   height: 30px;
   margin: 0 auto 10px auto;
   line-height: 30px;
   font-size: 16px;
+  font-family: Roboto, sans-serif;
+  font-weight: 100;
   color: white;
   padding: 0 0 0 10px;
   position: relative;
@@ -62,7 +64,7 @@
     .bar{
         opacity: .8;
         z-index: 1;
-        background-color: rgba(18, 92, 138, 0.35);
+        background-color: rgba(18, 92, 138, 1);
         border: 1px solid #1c8ed6;
         height: 30px;
         transition: 0.7s;
@@ -76,7 +78,7 @@
         padding-right: 8px;
         text-align: right;
         &:hover{
-            background:rgba(255, 255, 255, .35);
+            background:rgba(0, 0, 0, .5);
             cursor: pointer;
         }
     }
