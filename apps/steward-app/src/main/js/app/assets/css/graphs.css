@@ -24,14 +24,14 @@
   border: 1px solid #1c8ed6;
   overflow: auto;
   padding-top: .6em;
-  background-color: #384248; }
+  background: linear-gradient(#048DBE, #025978) !important; }
 
 .stats-ontology-container {
   overflow: auto;
   height: 100vh; }
 
 .stats-graph-container .bar-bg {
-  background-color: rgba(255, 255, 255, 0);
+  background-color: rgba(255, 255, 255, 0.05);
   height: 30px;
   margin: 0 auto 10px auto;
   line-height: 30px;
@@ -47,8 +47,7 @@
     opacity: .8;
     z-index: 1;
     background-color: rgba(18, 92, 138, 0.35);
-    border-right: 1px solid #1c8ed6;
-    border-top: 1px solid #1c8ed6;
+    border: 1px solid #1c8ed6;
     height: 30px;
     transition: 0.7s;
     width: 100%;

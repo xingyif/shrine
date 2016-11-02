@@ -198,7 +198,7 @@ i2b2.CRC.view.graphs.createGraphs = function(sDivName, sInputString, bIsMultiSit
 			var titleDiv = jQuery("#" + sDivName + ' #chartTitle0');
 			if(titleDiv){
 				titleDiv.html("Patient Count     ");
-				var zoomLink = jQuery("[<a href = \"javascript:void(0);\" id=\"zoomLink\" onclick=\"javascript:i2b2.CRC.view.graphs.zoomGraph(event);\">Zoom Graph</a>]");
+				var zoomLink = jQuery("<a href = \"javascript:void(0);\" id=\"zoomLink\" onclick=\"javascript:i2b2.CRC.view.graphs.zoomGraph(event);\">Zoom Graph</a>");
 				zoomLink[0].dataArray = asInputArray;
 				zoomLink[0].graphTitle = "Patient Count";
 				titleDiv.append(zoomLink);
@@ -217,7 +217,7 @@ i2b2.CRC.view.graphs.createGraphs = function(sDivName, sInputString, bIsMultiSit
 				var dataArray = i2b2.CRC.view.graphs.getGraphDataArray(_2DResultsArray,asUniqueBreakdownTypes[i],siteReturningResults);
 				if(titleDiv){
 					titleDiv.html(chartTitle);
-					var zoomLink = jQuery("[<a href = \"javascript:void(0);\" id=\"zoomLink\" onclick=\"javascript:i2b2.CRC.view.graphs.zoomGraph(event);\">Zoom Graph</a>]");
+					var zoomLink = jQuery("<a href = \"javascript:void(0);\" id=\"zoomLink\" onclick=\"javascript:i2b2.CRC.view.graphs.zoomGraph(event);\">Zoom Graph</a>");
 					zoomLink[0].dataArray = dataArray;
 					zoomLink[0].graphTitle = chartTitle;
 					zoomLink[0].groups = siteReturningResults.keys();
