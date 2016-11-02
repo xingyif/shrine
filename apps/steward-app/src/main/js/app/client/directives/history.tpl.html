@@ -1,0 +1,80 @@
+<div>
+    <table class="table table-striped thin-col">
+        <thead>
+            <tr>
+                <td class="thin-col">
+                    <a ng-click="history.sort('stewardId')">
+                    ID
+                    <li ng-show="history.sortData.column === 'stewardId'" class="fa {{history.sortData.arrowClass}}"></li>
+                </a>
+                </td>
+                <td>
+                    <a ng-click="history.sort('topicName')">
+                    Query Topic
+                    <li ng-show="history.sortData.column === 'topicName'" class="fa {{history.sortData.arrowClass}}"></li>
+                </a>
+                </td>
+                <td>
+                    <a ng-click="history.sort('researcherId')">
+                    Username
+                    <li ng-show="history.sortData.column === 'researcherId'" class="fa {{history.sortData.arrowClass}}"></li>
+                </a>
+                </td>
+                <td>
+                    <a ng-click="history.sort('name')">
+                    Query Text
+                    <li ng-show="history.sortData.column === 'name'" class="fa {{history.sortData.arrowClass}}"></li>
+                </a>
+                </td>
+                <td>
+                    <a ng-click="history.sort('stewardResponse')">
+                    Status
+                   <li ng-show="history.sortData.column === 'stewardResponse'" class="fa {{history.sortData.arrowClass}}"></li>
+                </a>
+                </td>
+                <td>
+                    <a ng-click="history.sort('date')">
+                    Date
+                    <li ng-show="history.sortData.column === 'date'" class="fa {{history.sortData.arrowClass}}"></li>
+                </a>
+                </td>
+            </tr>
+        </thead>
+
+        <tbody>
+            <tr ng-repeat="query in history.queries">
+                <td class="thin-col">{{query.stewardId}}</td>
+                <td class="big-data">{{query.topic.name}}</td>
+                <td>{{query.user.userName}}</td>
+
+                <td class="big-data">
+                    <a href ng-click="history.open(query)">{{query.name}}</a>
+                </td>
+                <td>{{query.stewardResponse}}</td>
+                <td>{{history.dateFormatter(query.date)}}</td>
+            </tr>
+        </tbody>
+
+    </table>
+
+    <div class="form-group text-center" ng-show="history.sortData.length > history.sortData.limit">
+        <ul uib-pagination class="pagination-sm" 
+        items-per-page="history.sortData.limit" 
+        boundary-links="true"
+        previous-text="&lsaquo;"
+                    next-text="&rsaquo;"
+                    first-text="&laquo;"
+                    last-text="&raquo;" 
+        max-size="history.sortData.range"
+            total-items="history.sortData.length"
+            ng-model="history.sortData.pageIndex" 
+            ng-change="history.onPageSelected()">
+        </ul>
+
+        <div class="col-sm-12">
+            Page: {{history.sortData.pageIndex}} / {{history .sortData.totalPages}}
+        </div>
+        <br/>
+        <br/>
+    </div>
+</div>

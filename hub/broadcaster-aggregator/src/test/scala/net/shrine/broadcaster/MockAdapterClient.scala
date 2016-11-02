@@ -1,5 +1,7 @@
 package net.shrine.broadcaster
 
+import java.net.URL
+
 import net.shrine.protocol.Result
 import net.shrine.adapter.client.AdapterClient
 import net.shrine.protocol.BroadcastMessage
@@ -17,4 +19,5 @@ final case class MockAdapterClient(toReturn: Result) extends AdapterClient {
 
     Future.successful(toReturn)
   }
+  override def url: Option[URL] = ???
 }

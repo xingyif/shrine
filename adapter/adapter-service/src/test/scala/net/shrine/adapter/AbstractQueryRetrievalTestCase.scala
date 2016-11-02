@@ -4,11 +4,12 @@ import scala.xml.NodeSeq
 import net.shrine.util.ShouldMatchersForJUnit
 import ObfuscatorTest.within3
 import javax.xml.datatype.XMLGregorianCalendar
+
 import net.shrine.adapter.dao.AdapterDao
 import net.shrine.adapter.dao.squeryl.AbstractSquerylAdapterTest
 import net.shrine.client.HttpClient
 import net.shrine.client.HttpResponse
-import net.shrine.protocol.{HiveCredentials, AuthenticationInfo, BroadcastMessage, CrcRequest, Credential, ErrorResponse, I2b2ResultEnvelope, QueryResult, ReadResultRequest, ReadResultResponse, ResultOutputType, ShrineRequest, ShrineResponse, BaseShrineResponse, BaseShrineRequest, RunQueryRequest, RunQueryResponse, DefaultBreakdownResultOutputTypes}
+import net.shrine.protocol.{AuthenticationInfo, BaseShrineRequest, BaseShrineResponse, BroadcastMessage, CrcRequest, Credential, DefaultBreakdownResultOutputTypes, ErrorResponse, HiveCredentials, I2b2ResultEnvelope, QueryResult, ReadResultRequest, ReadResultResponse, ResultOutputType, RunQueryRequest, RunQueryResponse, ShrineRequest, ShrineResponse}
 import net.shrine.protocol.DefaultBreakdownResultOutputTypes.PATIENT_AGE_COUNT_XML
 import net.shrine.protocol.ResultOutputType.PATIENT_COUNT_XML
 import net.shrine.protocol.DefaultBreakdownResultOutputTypes.PATIENT_GENDER_COUNT_XML
@@ -19,6 +20,8 @@ import net.shrine.util.XmlGcEnrichments
 import net.shrine.client.Poster
 import net.shrine.adapter.translators.QueryDefinitionTranslator
 import net.shrine.adapter.translators.ExpressionTranslator
+import net.shrine.problem.TestProblem
+
 import scala.util.Success
 
 /**
@@ -127,7 +130,7 @@ abstract class AbstractQueryRetrievalTestCase[R <: BaseShrineResponse](
             if (countQueryShouldWork) {
               ReadResultResponse(123L, makeFinished(incompleteCountResult), I2b2ResultEnvelope(PATIENT_COUNT_XML, Map(PATIENT_COUNT_XML.name -> incompleteCountResult.setSize)))
             } else {
-              ErrorResponse("Retrieving count result failed")
+              ErrorResponse(TestProblem(summary = "Retrieving count result failed"))
             }
           }
           case Success(req: ReadResultRequest) if req.localResultId == breakdownResultId.toString => {
@@ -267,7 +270,7 @@ abstract class AbstractQueryRetrievalTestCase[R <: BaseShrineResponse](
     val dbQueryId = dao.insertQuery(localMasterId, shrineNetworkQueryId, authn, fooQuery, isFlagged = false, hasBeenRun = false, flagMessage = None)
 
     getResults match {
-      case errorResponse:ErrorResponse => errorResponse.problemDigest.codec should be (classOf[QueryNotFound].getName)
+      case errorResponse:ErrorResponse => errorResponse.problemDigest.codec should be (classOf[QueryResultNotAvailable].getName)
       case x => fail(s"Got $x, not an ErrorResponse")
     }
 
@@ -351,15 +354,17 @@ object AbstractQueryRetrievalTestCase {
     val translator = new QueryDefinitionTranslator(new ExpressionTranslator(Map("foo" -> Set("bar"))))
 
     new RunQueryAdapter(
-      poster,
-      dao,
-      AbstractQueryRetrievalTestCase.hiveCredentials,
-      translator,
-      10000,
-      doObfuscation,
+      poster = poster,
+      dao = dao,
+      hiveCredentials = AbstractQueryRetrievalTestCase.hiveCredentials,
+      conceptTranslator = translator,
+      adapterLockoutAttemptsThreshold = 10000,
+      doObfuscation = doObfuscation,
       runQueriesImmediately = true,
-      DefaultBreakdownResultOutputTypes.toSet,
-      collectAdapterAudit = false
+      breakdownTypes = DefaultBreakdownResultOutputTypes.toSet,
+      collectAdapterAudit = false,
+      botCountTimeThresholds = Seq.empty,
+      obfuscator = Obfuscator(5,6.5,10)
     )
   }
 

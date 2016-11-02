@@ -11,6 +11,7 @@ import scala.concurrent.duration.Duration
  * @author clint
  * @since Dec 5, 2013
  */
+//todo put all this in EndPoint's apply method
 final case class EndpointConfig(url: URL, acceptAllCerts: Boolean, timeout: Duration)
 
 object EndpointConfig {

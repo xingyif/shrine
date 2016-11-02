@@ -1,13 +1,11 @@
 package net.shrine.integration
 
-import net.shrine.broadcaster.Broadcaster
+import net.shrine.broadcaster.{NodeHandle, Broadcaster, Multiplexer, BufferingMultiplexer}
 import net.shrine.protocol.BroadcastMessage
-import net.shrine.broadcaster.Multiplexer
-import net.shrine.broadcaster.BufferingMultiplexer
 
 /**
  * @author clint
- * @date Jan 8, 2014
+ * @since Jan 8, 2014
  */
 final case class InspectableDelegatingBroadcaster(delegate: Broadcaster) extends Broadcaster {
   private[this] val lock = new AnyRef
@@ -25,4 +23,6 @@ final case class InspectableDelegatingBroadcaster(delegate: Broadcaster) extends
     
     result
   }
+
+  override def destinations: Set[NodeHandle] = ???
 }

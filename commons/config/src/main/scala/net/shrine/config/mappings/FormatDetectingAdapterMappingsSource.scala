@@ -4,19 +4,18 @@ import net.shrine.log.Loggable
 
 import scala.util.Try
 import scala.xml.XML
-import scala.util.control.NonFatal
 import net.shrine.util.XmlDateHelper.time
 
 trait FormatDetectingAdapterMappingsSource extends AdapterMappingsSource with Loggable { self: ReaderAdapterMappingsSource =>
-  override def load: Try[AdapterMappings] = {
+  override def load(ignored:String): Try[AdapterMappings] = {
 
     info(s"Loading adapter mappings from $mappingFileName")
 
     import FormatDetectingAdapterMappingsSource.Implicits._
 
-    def tryAsXml: Try[AdapterMappings] = Try(XML.load(reader)).flatMap(AdapterMappings.fromXml).ifSuccessful("Detected XML adapter mappings format")
+    def tryAsXml: Try[AdapterMappings] = Try(XML.load(reader)).flatMap(AdapterMappings.fromXml(mappingFileName,_)).ifSuccessful("Detected XML adapter mappings format")
 
-    def tryAsCsv: Try[AdapterMappings] = AdapterMappings.fromCsv(reader).ifSuccessful("Detected CSV adapter mappings format")
+    def tryAsCsv: Try[AdapterMappings] = AdapterMappings.fromCsv(mappingFileName,reader).ifSuccessful("Detected CSV adapter mappings format")
 
     time("Loading adapter mappings")(debug(_)) {
       tryAsXml.orElse(tryAsCsv).ifFailure(s"Couldn't load adapter mappings from $mappingFileName")

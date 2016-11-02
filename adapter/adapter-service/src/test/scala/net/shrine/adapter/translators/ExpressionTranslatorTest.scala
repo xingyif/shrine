@@ -37,7 +37,7 @@ final class ExpressionTranslatorTest extends ShouldMatchersForJUnit {
 
   private val unmappedTerm = Term("alskjklasdjl")
 
-  private val adapterMappings = AdapterMappings(mappings = mappings)
+  private val adapterMappings = AdapterMappings("test",mappings = mappings)
 
   private val n1 = Term("n1")
   private val n2 = Term("n2")

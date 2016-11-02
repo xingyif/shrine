@@ -1,9 +1,10 @@
 package net.shrine.integration
 
 import org.junit.Test
-import net.shrine.protocol.{ErrorResponse, BroadcastMessage, DeleteQueryRequest, Result, DeleteQueryResponse, DefaultBreakdownResultOutputTypes}
+import net.shrine.protocol.{BroadcastMessage, DefaultBreakdownResultOutputTypes, DeleteQueryRequest, DeleteQueryResponse, ErrorResponse, Result}
 import net.shrine.crypto.DefaultSignerVerifier
 import net.shrine.crypto.TestKeystore
+
 import scala.concurrent.Await
 import com.sun.jersey.api.client.UniformInterfaceException
 import net.shrine.adapter.service.AdapterResource
@@ -13,7 +14,8 @@ import net.shrine.crypto.SigningCertStrategy
  * @author clint
  * @since Dec 17, 2013
  */
-final class AdapterResourceEndToEndJaxRsFailureTest extends AbstractAdapterResourceJaxRsTest {
+final class AdapterResourceEndToEndJaxRsFailureTest extends AbstractAdapterResourceJaxRsTest
+{
   
   override val makeHandler = AlwaysThrowsAdapterRequestHandler
   

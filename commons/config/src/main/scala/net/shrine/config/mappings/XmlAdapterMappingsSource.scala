@@ -8,5 +8,5 @@ import scala.xml.XML
  * @date Jun 12, 2014
  */
 trait XmlAdapterMappingsSource extends ReaderAdapterMappingsSource {
-  final override def load: Try[AdapterMappings] = AdapterMappings.fromXml(XML.load(reader))
+  final override def load(notUsed:String): Try[AdapterMappings] = AdapterMappings.fromXml(mappingFileName,XML.load(reader))
 }

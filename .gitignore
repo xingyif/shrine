@@ -1,11 +1,16 @@
 *.class
 *.log
+*.log.*
 
 # mvn
 target/
+*.versionsBackup
 
 # emacs cruft
 *.*~
+
+# vim swap files
+*.swp
 
 # javascript artifacts
 **/src/main/js/build/
@@ -19,6 +24,7 @@ target/
 # idea
 .idea/
 *.iml
-
+*.ipr
+*.iws
 # osx cruft
 .DS_Store

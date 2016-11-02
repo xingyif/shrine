@@ -1,15 +1,11 @@
 package net.shrine.aggregation
 
-import net.shrine.problem.ProblemNotYetEncoded
-import org.junit.Test
-import org.junit.Assert.assertNotNull
-import net.shrine.protocol.{ ErrorResponse, QueryResult, ReadInstanceResultsResponse }
+import net.shrine.problem.TestProblem
 import net.shrine.protocol.ResultOutputType._
-import net.shrine.util.XmlDateHelper
-import net.shrine.protocol.AggregatedReadInstanceResultsResponse
-import net.shrine.protocol.Result
-import net.shrine.protocol.NodeId
-import net.shrine.util.ShouldMatchersForJUnit
+import net.shrine.protocol.{AggregatedReadInstanceResultsResponse, ErrorResponse, NodeId, QueryResult, ReadInstanceResultsResponse, Result}
+import net.shrine.util.{ShouldMatchersForJUnit, XmlDateHelper}
+import org.junit.Assert.assertNotNull
+import org.junit.Test
 
 /**
  * @author Bill Simons
@@ -85,7 +81,7 @@ final class ReadInstanceResultsAggregatorTest extends ShouldMatchersForJUnit {
     val errorMessage = "you are an error"
 
     val patientCountResponse = ReadInstanceResultsResponse(instanceId, queryResult)
-    val errorResponse = ErrorResponse(errorMessage)
+    val errorResponse = ErrorResponse(TestProblem(errorMessage))
 
     val patientCountNodeDescription = "NODE1"
     val errorNodeDescription = "NODE2"
@@ -102,6 +98,6 @@ final class ReadInstanceResultsAggregatorTest extends ShouldMatchersForJUnit {
     
     actual.results.contains(queryResult.withDescription(patientCountNodeDescription)) should be(true)
 
-    actual.results.exists(qr => qr.problemDigest.exists(pd => pd.codec == classOf[ProblemNotYetEncoded].getName)) should be (true)
+    actual.results.exists(qr => qr.problemDigest.exists(pd => pd.codec == classOf[TestProblem].getName)) should be (true)
   }
 }

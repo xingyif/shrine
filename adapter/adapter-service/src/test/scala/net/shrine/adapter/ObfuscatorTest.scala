@@ -20,12 +20,14 @@ object ObfuscatorTest {
 
 final class ObfuscatorTest extends ShouldMatchersForJUnit {
   import ObfuscatorTest._
-  
+
+  val obfuscator = Obfuscator(1,1.3,3)
+
   @Test
   def testObfuscateLong() {
     val l = 12345L
     
-    val obfuscated = Obfuscator.obfuscate(l)
+    val obfuscated = obfuscator.obfuscate(l)
     
     within3(l, obfuscated) should be(right = true)
   }
@@ -63,7 +65,7 @@ final class ObfuscatorTest extends ShouldMatchersForJUnit {
       noBreakdowns.setSize should equal(setSize1)
       noBreakdowns.breakdowns should equal(Map.empty)
       
-      val obfuscated = Obfuscator.obfuscate(noBreakdowns)
+      val obfuscated = obfuscator.obfuscate(noBreakdowns)
       
       within3(noBreakdowns.setSize, obfuscated.setSize)
       obfuscated.breakdowns should equal(Map.empty)
@@ -71,7 +73,7 @@ final class ObfuscatorTest extends ShouldMatchersForJUnit {
     
     //breakdowns
     {
-      val QueryResult(_, _, _, obfscSetSize1, _, _, _, _, _, _, obfscBreakdowns) = Obfuscator.obfuscate(queryResult(resultId1, setSize1))
+      val QueryResult(_, _, _, obfscSetSize1, _, _, _, _, _, _, obfscBreakdowns) = obfuscator.obfuscate(queryResult(resultId1, setSize1))
               
       within3(setSize1, obfscSetSize1) should be(right = true)
       

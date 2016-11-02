@@ -1,24 +1,14 @@
 package net.shrine.qep
 
-import net.shrine.protocol.I2b2RequestHandler
-import net.shrine.protocol.DeleteQueryRequest
-import net.shrine.protocol.ReadApprovedQueryTopicsRequest
-import net.shrine.protocol.ReadInstanceResultsRequest
-import net.shrine.protocol.ReadPreviousQueriesRequest
-import net.shrine.protocol.RenameQueryRequest
-import net.shrine.protocol.RunQueryRequest
-import net.shrine.protocol.ReadQueryDefinitionRequest
-import net.shrine.protocol.ReadQueryInstancesRequest
-import net.shrine.protocol.ShrineResponse
-import net.shrine.qep.dao.AuditDao
+import com.typesafe.config.Config
 import net.shrine.authentication.Authenticator
 import net.shrine.authorization.QueryAuthorizationService
 import net.shrine.broadcaster.BroadcastAndAggregationService
+import net.shrine.config.DurationConfigParser
+import net.shrine.protocol.{DeleteQueryRequest, FlagQueryRequest, I2b2RequestHandler, ReadApprovedQueryTopicsRequest, ReadInstanceResultsRequest, ReadPreviousQueriesRequest, ReadQueryDefinitionRequest, ReadQueryInstancesRequest, ReadResultOutputTypesRequest, RenameQueryRequest, ResultOutputType, RunQueryRequest, ShrineResponse, UnFlagQueryRequest}
+import net.shrine.qep.dao.AuditDao
+
 import scala.concurrent.duration.Duration
-import net.shrine.protocol.FlagQueryRequest
-import net.shrine.protocol.UnFlagQueryRequest
-import net.shrine.protocol.ReadResultOutputTypesRequest
-import net.shrine.protocol.ResultOutputType
 
 /**
  * @author clint
@@ -56,4 +46,27 @@ final case class I2b2QepService(
   override def flagQuery(request: FlagQueryRequest, shouldBroadcast: Boolean = true) = doFlagQuery(request, shouldBroadcast)
   
   override def unFlagQuery(request: UnFlagQueryRequest, shouldBroadcast: Boolean = true) = doUnFlagQuery(request, shouldBroadcast)
+}
+
+object I2b2QepService {
+
+  def apply(qepConfig: Config,
+            commonName: String,
+            auditDao: AuditDao,
+            authenticator: Authenticator,
+            authorizationService: QueryAuthorizationService,
+            broadcastService: BroadcastAndAggregationService,
+            breakdownTypes: Set[ResultOutputType]): I2b2QepService = {
+    I2b2QepService(
+      commonName,
+      auditDao,
+      authenticator,
+      authorizationService,
+      qepConfig.getBoolean("includeAggregateResults"),
+      broadcastService,
+      DurationConfigParser(qepConfig.getConfig("maxQueryWaitTime")),
+      breakdownTypes,
+      qepConfig.getBoolean("audit.collectQepAudit")
+    )
+  }
 }

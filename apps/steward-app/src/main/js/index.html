@@ -1,68 +1,121 @@
 <!doctype html>
-<html>
-    <head>
+<html ng-app="shrine.steward">
+
+<head>
     <meta charset="utf-8">
     <title>Shrine Data Steward</title>
     <meta name="description" content="">
     <meta name="viewport" content="width=device-width">
+    <!-- bower:css -->
+    <!-- endbower -->
 
-    <!-- build:css(.tmp) assets/css/main.css -->
-    <link rel="stylesheet" href="src/vendor/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="src/assets/css/timeline.css">
-    <link rel="stylesheet" href="src/vendor/metisMenu/dist/metisMenu.min.css">
-    <link rel="stylesheet"
-          href="src/vendor/angular-loading-bar/build/loading-bar.min.css">
 
-    <link rel="stylesheet" href="src/vendor/font-awesome/css/font-awesome.min.css"
-          type="text/css">
-    <link rel="stylesheet" href="src/assets/css/shrine.css">
-    <!-- endbuild -->
+    <!-- inject:css -->
+    <!-- endinject -->
 </head>
-<body class="main-app" >
 
+<body class="main-app" style="display:none; overflow-x:hidden">
+    <div ng-controller="StewardController as steward" ng-cloak>
+        <nav class="navbar navbar-default navbar-static-top shrine-navbar" role="navigation" style="margin-bottom: 0">
 
-    <div ng-app="stewardApp" ng-controller="AppCtrl">
+            <div class="shrine-brand">
+                <strong>SHRINE</strong> DATA STEWARD
+            </div>
 
-        <header></header>
+            <div class="pull-right shrine-institution-logo"></div>
 
-        <div ui-view>
+            <!-- /.navbar-header -->
+            <ul class="nav navbar-top-links navbar-right" ng-show="steward.isUserLoggedIn()" style="margin-top: 8px" ng-cloak>
+                <li>
+                    <span style="color:#1a1a1a;
+                        margin-right: 10px" ng-cloak>
+                        Hello,
+                        {{steward.getUsername()}}</span>
+                </li>
+
+                <li class="dropdown">
+                    <a class="dropdown-toggle" data-toggle="dropdown">
+                        <i class="fa fa-user fa-fw"></i>
+                        <i class="fa fa-caret-down"></i>
+                    </a>
+                    <ul class="dropdown-menu dropdown-user">
+                        <li style="text-align: center">
+                            {{steward.getRole()}}
+                        </li>
+                        <li class="divider"></li>
+                        <li>
+                            <a href="./app/assets/img/SHRINE-Data-Steward-Help.pdf" target="_blank" ng-cloak>
+                                <i class="fa fa-file fa-fw"></i> Help</a>
+                        </li>
+
+                        <li><a href="#" ng-click="steward.logout()" ng-cloak><i
+                    class="fa fa-sign-out fa-fw"></i> Logout</a>
+                        </li>
+                    </ul>
+                    <!-- /.dropdown-user -->
+                </li>
+            </ul>
+        </nav>
+        <div class="row">
+            <div class="col-sm-2" ng-if="steward.isUserLoggedIn()">
+                <div class="navbar-default sidebar" role="navigation">
+                    <div class="sidebar-nav navbar-collapse">
+                        <ul class="nav in" id="side-menu">
+                            <li ui-sref-active="shrine-on" ng-cloak>
+                                <a ui-sref="topics" class="shrine-off">
+                                    <i class="fa fa-globe fa-fw fa-2x"></i> Topics
+                                </a>
+                            </li>
+                            <li ui-sref-active="shrine-on" ng-cloak>
+                                <a ui-sref="history" class="shrine-off">
+                                    <i class="fa fa-history fa-fw fa-2x"></i> History
+                                </a>
+                            </li>
+                            <li ng-if="steward.showStewardMenuOptions" ui-sref-active="shrine-on" ng-cloak>
+                                <a ui-sref="statistics" class="shrine-off">
+                                    <i class="fa fa-bar-chart-o fa-fw fa-2x"></i> Statistics
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-{{steward.layoutWidth}} shrine-content">
+                <div id="page-wrapper" class="ng-view page-wrapper">
+                    <div ui-view ng-mousedown="idleBroadcast()"></div>
+                </div>
+            </div>
         </div>
-
-        <!-- /#page-wrapper -->
-        <!-- footer -->
-        <hms-footer footer-url="footerUrl"></hms-footer>
+        <br/>
+        <br/>
+        <br/>
+        <footer class="row">
+            <div class="col-sm-12">
+                <image ng-cloak src="app/assets/img/logo_harvard_catalyst.png"></image>
+            </div>
+        </footer>
     </div>
 
+    <!-- bower:js -->
+    <!-- endbower -->
 
+    <!-- inject:js -->
+    <!-- endinject -->
+    <script>
 
-    <!-- build:js(.) src/vendor.js -->
-    <script src="src/vendor/jquery/dist/jquery.min.js"></script>
-    <script type="text/javascript" src="src/vendor/angular/angular.min.js"></script>
-    <script src="src/vendor/bootstrap/dist/js/bootstrap.min.js"></script>
-    <script src="src/vendor/json3/lib/json3.min.js"></script>
-    <script src="src/vendor/angular-ui-router/release/angular-ui-router.min.js"></script>
-    <script type="text/javascript"
-            src="src/vendor/angular-route/angular-route.min.js"></script>
-    <script type="text/javascript"
-            src="src/vendor/angular-cookies/angular-cookies.min.js"></script>
-    <script src="src/vendor/oclazyload/dist/ocLazyLoad.min.js"></script>
-    <script type="text/javascript" src="src/vendor/lodash/lodash.min.js"></script>
-    <script src="src/vendor/angular-ui-router/release/angular-ui-router.js"></script>
-    <script src="src/vendor/x2js/xml2json.min.js"></script>
-    <script src="src/vendor/angular-loading-bar/build/loading-bar.min.js"></script>
-    <script src="src/vendor/angular-bootstrap/ui-bootstrap-tpls.js"></script>
-    <script src="src/vendor/metisMenu/dist/metisMenu.min.js"></script>
-    <script src="src/vendor/Chart.js/Chart.min.js"></script>
-    <!-- endbuild -->
+        (function () {
+            'use strict';
+            
+            $( document )
+                .ready(setContentVisible);
 
-    <!-- build:js src/app.js -->
-    <script type="text/javascript" src="src/app/common/utils-service.js"></script>
-    <script type="text/javascript" src="src/app/common/model-service.js"></script>
-    <script type="text/javascript" src="src/app/app.js"></script>
-    <script type="text/javascript" src="src/app/app-model.js"></script>
-    <script type="text/javascript" src="src/app/header/user-status/user-status.js"></script>
-    <script type="text/javascript" src="src/app/header/header.js"></script>
-    <script type="text/javascript" src="src/app/footer/footer.js"></script>
-    <!-- endbuild -->
+            function setContentVisible() {
+                $('.main-app').show();
+            }
+        })();
+
+    </script>
 </body>
+
+
 </html>

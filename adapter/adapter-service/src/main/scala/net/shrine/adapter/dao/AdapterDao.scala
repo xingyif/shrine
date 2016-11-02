@@ -1,5 +1,7 @@
 package net.shrine.adapter.dao
 
+import java.util.Date
+
 import net.shrine.protocol.query.QueryDefinition
 import net.shrine.protocol.AuthenticationInfo
 import net.shrine.adapter.dao.model.ShrineQueryResult
@@ -8,6 +10,7 @@ import net.shrine.protocol.I2b2ResultEnvelope
 import net.shrine.protocol.ResultOutputType
 import net.shrine.adapter.dao.model.ShrineQuery
 
+import scala.concurrent.duration.Duration
 import scala.xml.NodeSeq
 
 /**
@@ -43,9 +46,14 @@ trait AdapterDao {
   def findQueryByNetworkId(networkQueryId: Long): Option[ShrineQuery]
   
   def findResultsFor(networkQueryId: Long): Option[ShrineQueryResult]
-  
+
   def isUserLockedOut(authn: AuthenticationInfo, defaultThreshold: Int): Boolean
-  
+
+  /**
+    * @throws BotDetectedException if it detects a bot attack
+    */
+  def checkIfBot(authn:AuthenticationInfo, countTimeThresholds:Seq[(Long,Duration)]): Unit
+
   def renameQuery(networkQueryId: Long, newName: String): Unit
   
   def deleteQuery(networkQueryId: Long): Unit
@@ -70,4 +78,14 @@ trait AdapterDao {
                    
   def inTransaction[T](f: => T): T = f
   
+}
+
+
+case class BotDetectedException(domain:String,
+                                username:String,
+                                detectedCount:Long,
+                                sinceMs:Long,
+                                limit:Long) extends Exception() {
+
+  override def getMessage = s"$domain:$username has already run $detectedCount queries since ${new Date(sinceMs)}. The limit is $limit"
 }

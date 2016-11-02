@@ -9,6 +9,7 @@ import net.shrine.protocol.query.QueryDefinition
 import net.shrine.protocol.query.Term
 import net.shrine.util.XmlDateHelper
 import net.shrine.util.XmlUtil
+
 import scala.util.Success
 
 /**
@@ -56,7 +57,7 @@ final class ShrineResponseTest extends ShouldMatchersForJUnit {
     roundTrip(UnFlagQueryResponse)
     roundTrip(FlagQueryResponse)
 
-    roundTrip(ErrorResponse("errorMessage",Some(TestProblem)))
+    roundTrip(ErrorResponse(TestProblem("errorMessage")))
   }
 
   @Test

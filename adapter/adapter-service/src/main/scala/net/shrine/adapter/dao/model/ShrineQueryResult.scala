@@ -69,7 +69,16 @@ object ShrineQueryResult {
       for {
         resultRow <- resultRowsByType.get(PATIENT_COUNT_XML)
         count = Count.fromRows(resultRow, countRow) 
-      } yield ShrineQueryResult(queryRow.networkId, queryRow.localId, queryRow.hasBeenRun, queryRow.isFlagged, queryRow.flagMessage, count, breakdowns, errorRows)
+      } yield ShrineQueryResult(
+          networkQueryId = queryRow.networkId,
+          localId = queryRow.localId,
+          wasRun = true, //if there are result rows then the query has at least been shown to I2B2
+          isFlagged = queryRow.isFlagged,
+          flagMessage = queryRow.flagMessage,
+          count = count,
+          breakdowns = breakdowns,
+          errors = errorRows
+        )
     }
   }
 }

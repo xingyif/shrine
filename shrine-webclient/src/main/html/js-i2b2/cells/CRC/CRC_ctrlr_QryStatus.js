@@ -81,6 +81,9 @@ i2b2.CRC.ctrlr.QueryStatus.prototype = function() {
 				// callback processor to check the Query Instance
 		var scopedCallbackQRSI = new i2b2_scopedCallback();
 		scopedCallbackQRSI.scope = self;
+		
+		
+		
 		scopedCallbackQRSI.callback = function(results) {
 			if (results.error) {
 				alert(results.errorMsg);
@@ -128,12 +131,13 @@ i2b2.CRC.ctrlr.QueryStatus.prototype = function() {
 		
 		var self = i2b2.CRC.ctrlr.currentQueryStatus;
 		// this private function refreshes the display DIV
-					var d = new Date();
-			var t = Math.floor((d.getTime() - private_startTime)/100)/10;
-			var s = t.toString();
-			if (s.indexOf('.') < 0) {
-				s += '.0';
-			}
+		var d = new Date();
+		var t = Math.floor((d.getTime() - private_startTime)/100)/10;
+		var s = t.toString();
+		if (s.indexOf('.') < 0) {
+			s += '.0';
+		}
+		
 		if (private_singleton_isRunning) {
 			self.dispDIV.innerHTML = '<div style="clear:both;"><div style="float:left; font-weight:bold">Running Query: "'+self.QM.name+'"</div>';
 			// display the current run duration

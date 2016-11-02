@@ -3,9 +3,7 @@ package net.shrine.protocol
 import net.shrine.problem.TestProblem
 
 import scala.xml.NodeSeq
-
 import org.junit.Test
-
 import net.shrine.protocol.query.QueryDefinition
 import net.shrine.protocol.query.Term
 import net.shrine.util.XmlDateHelper
@@ -281,7 +279,7 @@ final class AggregatedRunQueryResponseTest extends ShrineResponseI2b2Serializabl
       errors.size should equal(0)
     }
 
-    def error = QueryResult.errorResult(None, "something broke", TestProblem)
+    val error = QueryResult.errorResult(None, "something broke", TestProblem())
 
     {
       val withOnlyErrors = actual.withResults(Seq(error, error))

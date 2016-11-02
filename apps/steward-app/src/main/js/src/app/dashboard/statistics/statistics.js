@@ -7,9 +7,7 @@
  * Controller of the sbAdminApp
  */
 angular.module('stewardApp')
-    .controller('StatisticsCtrl', ['$scope', '$timeout', '$app', 'StatisticsModel', function ($scope, $timeout, $app, model) {
-
-
+    .controller('StatisticsCtrl', ['$scope', '$timeout', '$app', 'StatisticsModel', '$log', function ($scope, $timeout, $app, model, $log) {
 
         //existing date range logic.
         var startDate = new Date(),
@@ -20,7 +18,10 @@ angular.module('stewardApp')
         $scope.getDateString = function (date) {
             return $app.utils.utcToMMDDYYYY(date);
         };
-
+        $scope.watch("startDate",  function(newValue, oldValue) {
+            var valueOf = function(value) { return value == null? "null": JSON.stringify(value)};
+            $log.warn("date changed from " + valueOf(newValue) + " to " + valueOf(oldValue));
+        });
         $scope.startDate        = $scope.getDateString(startDate);
         $scope.endDate          = $scope.getDateString(endDate);
         $scope.isValid          = true;
@@ -118,14 +119,14 @@ angular.module('stewardApp')
     .directive("queryCounts", function () {
         return {
             restrict: "E",
-            templateUrl: "src/app/dashboard/statistics/query-counts-table.tpl.html",
+            templateUrl: "app/client/dashboard/statistics/query-counts-table.tpl.html",
             replace: true
         };
     })
     .directive("topicStatus", function () {
         return {
             restrict: "E",
-            templateUrl: "src/app/dashboard/statistics/query-topic-status-table.tpl.html",
+            templateUrl: "app/client/dashboard/statistics/query-topic-status-table.tpl.html",
             replace: true
         };
     });

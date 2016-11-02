@@ -1,10 +1,14 @@
 package net.shrine.adapter
 
 import java.sql.SQLException
+import java.util.Date
 
+import net.shrine.adapter.dao.BotDetectedException
 import net.shrine.log.Loggable
-import net.shrine.problem.{Problem, ProblemNotYetEncoded, LoggingProblemHandler, ProblemSources, AbstractProblem}
-import net.shrine.protocol.{ShrineRequest, BroadcastMessage, ErrorResponse, BaseShrineResponse, AuthenticationInfo}
+import net.shrine.problem.{AbstractProblem, LoggingProblemHandler, Problem, ProblemNotYetEncoded, ProblemSources}
+import net.shrine.protocol.{AuthenticationInfo, BaseShrineResponse, BroadcastMessage, ErrorResponse, ShrineRequest}
+
+import scala.util.control.NonFatal
 
 /**
  * @author Bill Simons
@@ -18,6 +22,7 @@ import net.shrine.protocol.{ShrineRequest, BroadcastMessage, ErrorResponse, Base
  */
 abstract class Adapter extends Loggable {
   
+  //noinspection RedundantBlock
   final def perform(message: BroadcastMessage): BaseShrineResponse = {
     def problemToErrorResponse(problem:Problem):ErrorResponse = {
       LoggingProblemHandler.handleProblem(problem)
@@ -29,14 +34,15 @@ abstract class Adapter extends Loggable {
     } catch {
       case e: AdapterLockoutException => problemToErrorResponse(AdapterLockout(message.request.authn,e))
 
+      case e: BotDetectedException => problemToErrorResponse(BotDetected(e))
+
       case e @ CrcInvocationException(invokedCrcUrl, request, cause) => problemToErrorResponse(CrcCouldNotBeInvoked(invokedCrcUrl,request,e))
 
       case e: AdapterMappingException => problemToErrorResponse(AdapterMappingProblem(e))
 
       case e: SQLException => problemToErrorResponse(AdapterDatabaseProblem(e))
 
-      //noinspection RedundantBlock
-      case e: Exception => {
+      case NonFatal(e) => {
         val summary = if(message == null) "Unknown problem in Adapter.perform with null BroadcastMessage"
                       else s"Unexpected exception in Adapter"
         problemToErrorResponse(ProblemNotYetEncoded(summary,e))
@@ -85,4 +91,11 @@ case class AdapterDatabaseProblem(x:SQLException) extends AbstractProblem(Proble
   override val throwable = Some(x)
   override val summary: String = "Problem using the Adapter database."
   override val description = "The Shrine Adapter encountered a problem using a database."
+}
+
+case class BotDetected(bdx:BotDetectedException) extends AbstractProblem(ProblemSources.Adapter) {
+
+  override val throwable = Some(bdx)
+  override val summary: String = s"A user has run so many queries in a period of time that the adapter suspects a bot."
+  override val description: String = s"${bdx.domain}:${bdx.username} has run ${bdx.detectedCount} queries since ${new Date(bdx.sinceMs)}, more than the limit of ${bdx.limit} allowed in this time frame."
 }

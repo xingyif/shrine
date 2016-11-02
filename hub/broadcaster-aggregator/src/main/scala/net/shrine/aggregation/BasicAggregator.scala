@@ -1,27 +1,19 @@
 package net.shrine.aggregation
 
-import java.io.IOException
-import java.net.{UnknownHostException, ConnectException}
+import java.net.{ConnectException, UnknownHostException}
 
 import com.sun.jersey.api.client.ClientHandlerException
 import net.shrine.broadcaster.CouldNotParseResultsException
 import net.shrine.log.Loggable
-import net.shrine.problem.{ProblemNotYetEncoded, ProblemSources, AbstractProblem}
+import net.shrine.problem.{AbstractProblem, ProblemNotYetEncoded, ProblemSources}
 
 import scala.concurrent.duration.Duration
-import net.shrine.protocol.ErrorResponse
-import net.shrine.protocol.Failure
-import net.shrine.protocol.NodeId
-import net.shrine.protocol.Result
-import net.shrine.protocol.SingleNodeResult
-import net.shrine.protocol.Timeout
-import net.shrine.protocol.BaseShrineResponse
+import net.shrine.protocol.{BaseShrineResponse, ErrorResponse, FailureResult, FailureResult$, NodeId, Result, SingleNodeResult, Timeout}
 
 /**
  *
  * @author Clint Gilbert
  * @since Sep 16, 2011
- *
  * @see http://cbmi.med.harvard.edu
  *
  * This software is licensed under the LGPL
@@ -54,22 +46,19 @@ abstract class BasicAggregator[T <: BaseShrineResponse: Manifest] extends Aggreg
         val parsedResponse: ParsedResult[T] = result match {
           case Result(origin, _, errorResponse: ErrorResponse) => Error(Option(origin), errorResponse)
           case Result(origin, elapsed, response: T) if isAggregatable(response) => Valid(origin, elapsed, response)
-          case Timeout(origin) => Error(Option(origin), ErrorResponse(s"Timed out querying node '${origin.name}'"))
-          case Failure(origin, cause) => {
-            cause match {
-              case cx: ConnectException => Error(Option(origin), ErrorResponse(CouldNotConnectToAdapter(origin, cx)))
-              case uhx: UnknownHostException => Error(Option(origin), ErrorResponse(CouldNotConnectToAdapter(origin, uhx)))
-              case chx: ClientHandlerException => Error(Option(origin), ErrorResponse(CouldNotConnectToAdapter(origin, chx)))
-              case cnprx:CouldNotParseResultsException => {
-                if(cnprx.statusCode >= 400) Error(Option(origin), ErrorResponse(HttpErrorResponseProblem(cnprx)))
-                else Error(Option(origin), ErrorResponse(CouldNotParseResultsProblem(cnprx)))
-              }
-              case x => Error(Option(origin), ErrorResponse(ProblemNotYetEncoded(s"Failure querying node ${origin.name}",x)))
-            }
+          case Timeout(origin) => Error(Option(origin), ErrorResponse(TimedOutWithAdapter(origin)))
+          case FailureResult(origin, cause) => cause match {
+            case cx: ConnectException => Error(Option(origin), ErrorResponse(CouldNotConnectToAdapter(origin, cx)))
+            case uhx: UnknownHostException => Error(Option(origin), ErrorResponse(CouldNotConnectToAdapter(origin, uhx)))
+            case chx: ClientHandlerException => Error(Option(origin), ErrorResponse(CouldNotConnectToAdapter(origin, chx)))
+            case cnprx:CouldNotParseResultsException =>
+              if(cnprx.statusCode >= 400) Error(Option(origin), ErrorResponse(HttpErrorResponseProblem(cnprx)))
+              else Error(Option(origin), ErrorResponse(CouldNotParseResultsProblem(cnprx)))
+
+            case x => Error(Option(origin), ErrorResponse(ProblemNotYetEncoded(s"Failure querying node ${origin.name}",x)))
           }
           case _ => Invalid(None, s"Unexpected response in $getClass:\r\n $result")
         }
-
         parsedResponse
       }
     }
@@ -105,6 +94,12 @@ case class CouldNotConnectToAdapter(origin:NodeId,cx: Exception) extends Abstrac
   override val description: String = s"Shrine could not connect to the adapter at ${origin.name} due to ${throwable.get}."
 }
 
+case class TimedOutWithAdapter(origin:NodeId) extends AbstractProblem(ProblemSources.Hub) {
+  override val throwable = None
+  override val summary: String = "Timed out with adapter."
+  override val description: String = s"Shrine observed a timeout with the adapter at ${origin.name}."
+}
+
 case class CouldNotParseResultsProblem(cnrpx:CouldNotParseResultsException) extends AbstractProblem(ProblemSources.Hub) {
   override val throwable = Some(cnrpx)
   override val summary: String = "Could not parse response."
@@ -113,7 +108,6 @@ case class CouldNotParseResultsProblem(cnrpx:CouldNotParseResultsException) exte
                               Message body is {cnrpx.body}
                               {throwableDetail.getOrElse("")}
                             </details>
-
 }
 
 case class HttpErrorResponseProblem(cnrpx:CouldNotParseResultsException) extends AbstractProblem(ProblemSources.Hub) {
@@ -124,5 +118,4 @@ case class HttpErrorResponseProblem(cnrpx:CouldNotParseResultsException) extends
                               Message body is {cnrpx.body}
                               {throwableDetail.getOrElse("")}
                             </details>
-
 }

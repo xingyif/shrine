@@ -10,13 +10,13 @@ import net.shrine.protocol.ErrorResponse
 import net.shrine.protocol.query.QueryDefinition
 import net.shrine.protocol.RunQueryResponse
 import net.shrine.adapter.dao.AdapterDao
-import net.shrine.adapter.RunQueryAdapter
+import net.shrine.adapter.{QueryNotFound, RunQueryAdapter}
 import net.shrine.protocol.AuthenticationInfo
 import net.shrine.protocol.Credential
 
 /**
  * @author clint
- * @date May 2, 2014
+ * @since May 2, 2014
  */
 final case class HeldQueries(dao: AdapterDao, runQueryAdapter: RunQueryAdapter) {
   def run(req: RunHeldQueryRequest): ShrineResponse = {
@@ -54,7 +54,7 @@ final case class HeldQueries(dao: AdapterDao, runQueryAdapter: RunQueryAdapter) 
           runQueryAdapter.processRequest(newBroadcastMessage)
         }
       }
-      case None => ErrorResponse(s"Couldn't find query qith networkQueryId '${}'")
+      case None => ErrorResponse(QueryNotFound(queryId))
     }
   }
 }

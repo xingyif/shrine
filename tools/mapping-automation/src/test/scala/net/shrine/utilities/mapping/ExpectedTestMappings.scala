@@ -20,5 +20,5 @@ object ExpectedTestMappings {
     """\\i2b2\i2b2\Demographics\Age\0-9 years old\""" -> """\\i2b2\LOCAL\DEM|AGE:9""",
     """\\i2b2\i2b2\Demographics\""" -> """\\i2b2\LOCAL\DEM""")
     
-  lazy val mappings = AdapterMappings.empty ++ pairs
+  lazy val mappings = AdapterMappings.empty.copy(source = "testString") ++ pairs
 }

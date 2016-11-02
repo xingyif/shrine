@@ -1,10 +1,10 @@
 package net.shrine.qep.queries
 
-import net.shrine.protocol.QueryResult.StatusType
-import net.shrine.protocol.{I2b2ResultEnvelope, DefaultBreakdownResultOutputTypes, QueryResult, ResultOutputType}
-import net.shrine.util.{XmlDateHelper, ShouldMatchersForJUnit}
-import org.junit.{After, Before, Test}
 import net.shrine.problem.TestProblem
+import net.shrine.protocol.QueryResult.StatusType
+import net.shrine.protocol.{DefaultBreakdownResultOutputTypes, I2b2ResultEnvelope, QueryResult, ResultOutputType}
+import net.shrine.util.{ShouldMatchersForJUnit, XmlDateHelper}
+import org.junit.{After, Before, Test}
 
 /**
   * @author david 
@@ -51,16 +51,6 @@ class QepQueryDbTest extends ShouldMatchersForJUnit {
 
     val results = QepQueryDb.db.selectAllQepQueries
     results should equal(Seq(qepQuery,secondQepQuery))
-  }
-
-  @Test
-  def testSelectQepQuery() {
-
-    QepQueryDb.db.insertQepQuery(qepQuery)
-    QepQueryDb.db.insertQepQuery(secondQepQuery)
-
-    val results = QepQueryDb.db.selectPreviousQuery("ben","testDomain",1L)
-    results should equal(Some(qepQuery))
   }
 
   @Test
@@ -220,12 +210,13 @@ class QepQueryDbTest extends ShouldMatchersForJUnit {
 
     val results = QepQueryDb.db.selectMostRecentQepResultsFor(2L)
 
+    //Had a sporadic failure 8-9-2016 on David's lap top. Did not fail on rerun.
     results should equal(Seq(queryResultWithBreakdowns))
   }
 
   @Test
   def testInsertQueryResultWithProblem(): Unit = {
-    val queryResultWithProblem = queryResult.copy(statusType = StatusType.Error,problemDigest = Some(TestProblem.toDigest))
+    val queryResultWithProblem = queryResult.copy(statusType = StatusType.Error,problemDigest = Some(TestProblem().toDigest))
 
     QepQueryDb.db.insertQueryResult(2L,queryResultWithProblem)
 

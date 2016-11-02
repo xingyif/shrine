@@ -2,18 +2,21 @@ package net.shrine.problem
 
 import java.net.InetAddress
 import java.util.Date
+import java.util.concurrent.Executors
 
 import net.shrine.log.Loggable
-import net.shrine.serialization.{XmlUnmarshaller, XmlMarshaller}
+import net.shrine.serialization.{XmlMarshaller, XmlUnmarshaller}
 
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.xml.{Elem, Node, NodeSeq}
 
 /**
- * Describes what information we have about a problem at the site in code where we discover it.
- *
- * @author david 
- * @since 8/6/15
- */
+  * Describes what information we have about a problem at the site in code where we discover it.
+  *
+  * @author david
+  * @since 8/6/15
+  */
 trait Problem {
   def summary:String
 
@@ -25,25 +28,48 @@ trait Problem {
 
   def description:String
 
-  def exceptionXml(exception:Option[Throwable]): Option[Elem] = exception.map{x =>
-    <exception>
-      <name>{x.getClass.getName}</name>
-      <message>{x.getMessage}</message>
-      <stacktrace>
-        {x.getStackTrace.map(line => <line>{line}</line>)}{exceptionXml(Option(x.getCause)).getOrElse("")}
-      </stacktrace>
-    </exception>
-  }
+  def exceptionXml(exception:Option[Throwable]): Option[Elem] = {
+    exception.map{x =>
+      <exception>
+        <name>{x.getClass.getName}</name>
+        <message>{x.getMessage}</message>
+        <stacktrace>
+          {x.getStackTrace.map(line => <line>{line}</line>)}{exceptionXml(Option(x.getCause)).getOrElse("")}
+        </stacktrace>
+      </exception>
+    }}
 
-  def throwableDetail = exceptionXml(throwable)
+  def throwableDetail: Option[Elem] = exceptionXml(throwable)
 
   def detailsXml: NodeSeq = NodeSeq.fromSeq(<details>{throwableDetail.getOrElse("")}</details>)
 
-  def toDigest:ProblemDigest = ProblemDigest(problemName,stamp.pretty,summary,description,detailsXml)
+  def toDigest:ProblemDigest = ProblemDigest(problemName,stamp.pretty,summary,description,detailsXml,stamp.time)
 
+  /**
+    * Temporary replacement for onCreate, which will be released come Scala 2.13
+    * TODO: remove when Scala 2.13 releases
+    */
+  def hackToHandleAfterInitialization(handler:ProblemHandler):Future[Unit] = {
+    import scala.concurrent.blocking
+    Future {
+      var continue = true
+      while (continue) {
+        try {
+          blocking(synchronized(handler.handleProblem(this)))
+          continue = false
+        } catch {
+          case un:UninitializedFieldError =>
+            Thread.sleep(5)
+            continue = true
+        }
+      }
+      Unit
+    }
+  }
 }
 
-case class ProblemDigest(codec: String, stampText: String, summary: String, description: String, detailsXml: NodeSeq) extends XmlMarshaller {
+
+case class ProblemDigest(codec: String, stampText: String, summary: String, description: String, detailsXml: NodeSeq, epoch: Long) extends XmlMarshaller {
 
   override def toXml: Node = {
     <problem>
@@ -51,36 +77,37 @@ case class ProblemDigest(codec: String, stampText: String, summary: String, desc
       <stamp>{stampText}</stamp>
       <summary>{summary}</summary>
       <description>{description}</description>
+      <epoch>{epoch}</epoch>
       {detailsXml}
     </problem>
   }
 
   /**
-   * Ignores detailXml. equals with scala.xml is impossible. See http://www.scala-lang.org/api/2.10.3/index.html#scala.xml.Equality$
-   */
+    * Ignores detailXml. equals with scala.xml is impossible. See http://www.scala-lang.org/api/2.10.3/index.html#scala.xml.Equality$
+    */
   override def equals(other: Any): Boolean =
-    other match {
+  other match {
 
-      case that: ProblemDigest =>
-        (that canEqual this) &&
-          codec == that.codec &&
-          stampText == that.stampText &&
-          summary == that.summary &&
-          description == that.description
-      case _ => false
-    }
+    case that: ProblemDigest =>
+      (that canEqual this) &&
+        codec == that.codec &&
+        stampText == that.stampText &&
+        summary == that.summary &&
+        description == that.description &&
+        epoch == that.epoch
+    case _ => false
+  }
 
   /**
-   * Ignores detailXml
-   */
+    * Ignores detailXml
+    */
   override def hashCode: Int = {
     val prime = 67
-    codec.hashCode + prime * (stampText.hashCode + prime *(summary.hashCode + prime * description.hashCode))
+    codec.hashCode + prime * (stampText.hashCode + prime *(summary.hashCode + prime * (description.hashCode + prime * epoch.hashCode())))
   }
 }
 
 object ProblemDigest extends XmlUnmarshaller[ProblemDigest] with Loggable {
-
   override def fromXml(xml: NodeSeq): ProblemDigest = {
     val problemNode = xml \ "problem"
     require(problemNode.nonEmpty,s"No problem tag in $xml")
@@ -92,9 +119,18 @@ object ProblemDigest extends XmlUnmarshaller[ProblemDigest] with Loggable {
     val summary = extractText("summary")
     val description = extractText("description")
     val detailsXml: NodeSeq = problemNode \ "details"
+    val epoch =
+      try { extractText("epoch").toLong }
+      catch { case nx:NumberFormatException =>
+        error(s"While parsing xml representing a ProblemDigest, the epoch could not be parsed into a long", nx)
+        0
+      }
 
-    ProblemDigest(codec,stampText,summary,description,detailsXml)
+
+    ProblemDigest(codec,stampText,summary,description,detailsXml,epoch)
   }
+
+
 }
 
 case class Stamp(host:InetAddress,time:Long,source:ProblemSources.ProblemSource) {
@@ -102,11 +138,16 @@ case class Stamp(host:InetAddress,time:Long,source:ProblemSources.ProblemSource)
 }
 
 object Stamp {
-  def apply(source:ProblemSources.ProblemSource): Stamp = Stamp(InetAddress.getLocalHost,System.currentTimeMillis(),source)
+  //TODO: val dateFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS")?
+  //TODO: Currently the stamp text is locale specific, which can change depending on the jre/computer running it...
+  def apply(source:ProblemSources.ProblemSource, timer: => Long): Stamp = Stamp(InetAddress.getLocalHost, timer, source)
 }
 
 abstract class AbstractProblem(source:ProblemSources.ProblemSource) extends Problem {
-  val stamp = Stamp(source)
+  def timer = System.currentTimeMillis
+  override val stamp = Stamp(source, timer)
+  private val config = ProblemConfigSource.config.getConfig("shrine.problem")
+  hackToHandleAfterInitialization(ProblemConfigSource.getObject("problemHandler", config))
 }
 
 trait ProblemHandler {
@@ -114,14 +155,20 @@ trait ProblemHandler {
 }
 
 /**
- * An example problem handler
- */
+  * An example problem handler
+  */
 object LoggingProblemHandler extends ProblemHandler with Loggable {
   override def handleProblem(problem: Problem): Unit = {
 
     problem.throwable.fold(error(problem.toString))(throwable =>
       error(problem.toString,throwable)
     )
+  }
+}
+
+object DatabaseProblemHandler extends ProblemHandler {
+  override def handleProblem(problem: Problem): Unit = {
+    Problems.DatabaseConnector.insertProblem(problem.toDigest)
   }
 }
 
@@ -146,7 +193,7 @@ case class ProblemNotYetEncoded(internalSummary:String,t:Option[Throwable] = Non
   override val throwable = {
     val rx = t.fold(new IllegalStateException(s"$summary"))(
       new IllegalStateException(s"$summary",_)
-      )
+    )
     rx.fillInStackTrace()
     Some(rx)
   }
@@ -161,6 +208,7 @@ case class ProblemNotYetEncoded(internalSummary:String,t:Option[Throwable] = Non
       {throwableDetail.getOrElse("")}
     </details>
   )
+
 }
 
 object ProblemNotYetEncoded {

@@ -37,7 +37,6 @@ trait HttpClientDirectives extends Loggable {
     * Proxy the request to the specified base uri appended with the unmatched path.
     *
     */
-  //todo these implicits don't buy that much . Consider ditching them.
   def forwardUnmatchedPath(baseUri: Uri,maybeCredentials:Option[HttpCredentials] = None): Route = {
     def completeWithEntityAsString(httpResponse:HttpResponse,uri:Uri):Route = {
       ctx => {
@@ -59,10 +58,19 @@ trait HttpClientDirectives extends Loggable {
   }
 
   /**
+    * Just pass the result through
+    */
+  def passThrough(httpResponse: HttpResponse,uri: Uri):Route = ctx => ctx.complete(httpResponse.entity.asString)
+
+  /**
     * proxy the request to the specified uri with the unmatched path, then use the returned entity (as a string) to complete the route.
     *
     */
-  def requestUriThenRoute(resourceUri:Uri, route:(HttpResponse,Uri) => Route,maybeCredentials:Option[HttpCredentials] = None): Route = {
+  def requestUriThenRoute(
+                           resourceUri:Uri,
+                          route:(HttpResponse,Uri) => Route = passThrough,
+                          maybeCredentials:Option[HttpCredentials] = None
+                         ): Route = {
     ctx => {
       val httpResponse = httpResponseForUri(resourceUri,ctx,maybeCredentials)
       info(s"Got $httpResponse for $resourceUri")

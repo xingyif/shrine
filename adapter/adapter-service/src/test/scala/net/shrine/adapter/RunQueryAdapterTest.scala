@@ -1,7 +1,5 @@
 package net.shrine.adapter
 
-import net.shrine.problem.TestProblem
-
 import scala.concurrent.duration.DurationInt
 import org.junit.Test
 import net.shrine.util.ShouldMatchersForJUnit
@@ -13,7 +11,7 @@ import net.shrine.adapter.translators.QueryDefinitionTranslator
 import net.shrine.client.HttpClient
 import net.shrine.client.HttpResponse
 import net.shrine.client.Poster
-import net.shrine.protocol.{HiveCredentials, AuthenticationInfo, BroadcastMessage, CrcRequest, Credential, I2b2ResultEnvelope, QueryResult, RawCrcRunQueryResponse, ReadResultRequest, ReadResultResponse, ResultOutputType, RunQueryRequest, RunQueryResponse, ErrorResponse, BaseShrineResponse, DefaultBreakdownResultOutputTypes}
+import net.shrine.protocol.{AuthenticationInfo, BaseShrineResponse, BroadcastMessage, CrcRequest, Credential, DefaultBreakdownResultOutputTypes, ErrorResponse, HiveCredentials, I2b2ResultEnvelope, QueryResult, RawCrcRunQueryResponse, ReadResultRequest, ReadResultResponse, ResultOutputType, RunQueryRequest, RunQueryResponse}
 import net.shrine.protocol.RawCrcRunQueryResponse.toQueryResultMap
 import net.shrine.protocol.DefaultBreakdownResultOutputTypes.PATIENT_AGE_COUNT_XML
 import net.shrine.protocol.ResultOutputType.PATIENT_COUNT_XML
@@ -25,11 +23,14 @@ import net.shrine.protocol.query.QueryDefinition
 import net.shrine.protocol.query.Term
 import net.shrine.util.XmlDateHelper
 import net.shrine.util.XmlUtil
+
 import scala.util.Success
 import net.shrine.dao.squeryl.SquerylEntryPoint
+
 import scala.concurrent.duration.Duration
 import net.shrine.adapter.dao.model.ShrineError
 import net.shrine.adapter.dao.model.QueryResultRow
+import net.shrine.problem.TestProblem
 
 /**
  * @author Bill Simons
@@ -127,7 +128,9 @@ final class RunQueryAdapterTest extends AbstractSquerylAdapterTest with ShouldMa
       doObfuscation = false,
       runQueriesImmediately = true,
       breakdownTypes = DefaultBreakdownResultOutputTypes.toSet,
-      collectAdapterAudit = false
+      collectAdapterAudit = false,
+      botCountTimeThresholds = Seq.empty,
+      obfuscator = Obfuscator(1,1.3,3)
     )
 
     val request = RunQueryRequest(projectId, 1.second, authn, expectedNetworkQueryId, Option(topicId), Option(topicName), outputTypes, queryDef)
@@ -235,16 +238,18 @@ final class RunQueryAdapterTest extends AbstractSquerylAdapterTest with ShouldMa
       }
     })
     
-    val adapter = new RunQueryAdapter(
-      poster,
-      dao,
-      hiveCredentials,
-      translator,
-      adapterLockoutThreshold,
+    val adapter = RunQueryAdapter(
+      poster = poster,
+      dao = dao,
+      hiveCredentials = hiveCredentials,
+      conceptTranslator = translator,
+      adapterLockoutAttemptsThreshold = adapterLockoutThreshold,
       doObfuscation = false,
       runQueriesImmediately = true,
       breakdownTypes = DefaultBreakdownResultOutputTypes.toSet,
-      collectAdapterAudit = false
+      collectAdapterAudit = false,
+      botCountTimeThresholds = Seq.empty,
+      obfuscator = Obfuscator(1,1.3,3)
     )
         
     val resp = adapter.processRawCrcRunQueryResponse(networkAuthn, request, rawRunQueryResponse).asInstanceOf[RunQueryResponse]
@@ -321,16 +326,18 @@ final class RunQueryAdapterTest extends AbstractSquerylAdapterTest with ShouldMa
   //NB: See https://open.med.harvard.edu/jira/browse/SHRINE-745
   @Test
   def testParseAltErrorXml {
-    val adapter = new RunQueryAdapter(
-      Poster("crc-url", null),
-      null,
-      hiveCredentials,
-      null,
-      adapterLockoutThreshold,
+    val adapter = RunQueryAdapter(
+      poster = Poster("crc-url", null),
+      dao = null,
+      hiveCredentials = hiveCredentials,
+      conceptTranslator = null,
+      adapterLockoutAttemptsThreshold = adapterLockoutThreshold,
       doObfuscation = false,
       runQueriesImmediately = false,
-      DefaultBreakdownResultOutputTypes.toSet,
-      collectAdapterAudit = false
+      breakdownTypes = DefaultBreakdownResultOutputTypes.toSet,
+      collectAdapterAudit = false,
+      botCountTimeThresholds = Seq.empty,
+      obfuscator = Obfuscator(5,6.5,10)
     )
 
     val resp: ErrorResponse = adapter.parseShrineErrorResponseWithFallback(altI2b2ErrorXml).asInstanceOf[ErrorResponse]
@@ -410,16 +417,18 @@ final class RunQueryAdapterTest extends AbstractSquerylAdapterTest with ShouldMa
       </ns5:response>
     }.toString
 
-    val adapter = new RunQueryAdapter(
-      Poster("crc-url", null),
-      null,
-      hiveCredentials,
-      null,
-      adapterLockoutThreshold,
+    val adapter = RunQueryAdapter(
+      poster = Poster("crc-url", null),
+      dao = null,
+      hiveCredentials = hiveCredentials,
+      conceptTranslator = null,
+      adapterLockoutAttemptsThreshold = adapterLockoutThreshold,
       doObfuscation = false,
       runQueriesImmediately = true,
-      DefaultBreakdownResultOutputTypes.toSet,
-      collectAdapterAudit = false
+      breakdownTypes = DefaultBreakdownResultOutputTypes.toSet,
+      collectAdapterAudit = false,
+      botCountTimeThresholds = Seq.empty,
+      obfuscator = Obfuscator(5,6.5,10)
     )
 
     val resp = adapter.parseShrineErrorResponseWithFallback(xml).asInstanceOf[ErrorResponse]
@@ -430,52 +439,23 @@ final class RunQueryAdapterTest extends AbstractSquerylAdapterTest with ShouldMa
   }
 
   @Test
-  def testObfuscateBreakdowns {
-    val breakdown1 = I2b2ResultEnvelope(PATIENT_AGE_COUNT_XML, Map.empty)
-    val breakdown2 = I2b2ResultEnvelope(PATIENT_GENDER_COUNT_XML, Map("foo" -> 123, "bar" -> 345))
-    val breakdown3 = I2b2ResultEnvelope(PATIENT_RACE_COUNT_XML, Map("x" -> 999, "y" -> 888))
-
-    val original = Map.empty ++ Seq(breakdown1, breakdown2, breakdown3).map(env => (env.resultType, env))
-
-    val obfuscated = RunQueryAdapter.obfuscateBreakdowns(original)
-
-    original.keySet should equal(obfuscated.keySet)
-
-    original.keySet.forall(resultType => original(resultType).data.keySet == obfuscated(resultType).data.keySet) should be(true)
-
-    val localTerms = Set("local1a", "local1b")
-    
-    for {
-      (resultType, origBreakdown) <- original
-
-      mappings = Map("network" -> localTerms)
-
-      translator = new QueryDefinitionTranslator(new ExpressionTranslator(mappings))
-      obfscBreakdown <- obfuscated.get(resultType)
-      key <- origBreakdown.data.keySet
-    } {
-      (origBreakdown eq obfscBreakdown) should be(false)
-
-      ObfuscatorTest.within3(origBreakdown.data(key), obfscBreakdown.data(key)) should be(true)
-    }
-  }
-
-  @Test
   def testTranslateNetworkToLocalDoesntLeakCredentialsViaException: Unit = {
     val mappings = Map.empty[String, Set[String]]
 
     val translator = new QueryDefinitionTranslator(new ExpressionTranslator(mappings))
 
-    val adapter = new RunQueryAdapter(
-      Poster("crc-url", MockHttpClient),
-      null,
-      null,
-      translator,
-      adapterLockoutThreshold,
+    val adapter = RunQueryAdapter(
+      poster = Poster("crc-url", MockHttpClient),
+      dao = null,
+      hiveCredentials = null,
+      conceptTranslator = translator,
+      adapterLockoutAttemptsThreshold = adapterLockoutThreshold,
       doObfuscation = false,
       runQueriesImmediately = true,
-      DefaultBreakdownResultOutputTypes.toSet,
-      collectAdapterAudit = false
+      breakdownTypes = DefaultBreakdownResultOutputTypes.toSet,
+      collectAdapterAudit = false,
+      botCountTimeThresholds = Seq.empty,
+      obfuscator = Obfuscator(5,6.5,10)
     )
 
     val queryDefinition = QueryDefinition("foo", Term("blah"))
@@ -504,16 +484,18 @@ final class RunQueryAdapterTest extends AbstractSquerylAdapterTest with ShouldMa
 
     val translator = new QueryDefinitionTranslator(new ExpressionTranslator(mappings))
 
-    val adapter = new RunQueryAdapter(
-      Poster("crc-url", MockHttpClient),
-      null,
-      null,
-      translator,
-      adapterLockoutThreshold,
+    val adapter = RunQueryAdapter(
+      poster = Poster("crc-url", MockHttpClient),
+      dao = null,
+      hiveCredentials = null,
+      conceptTranslator = translator,
+      adapterLockoutAttemptsThreshold = adapterLockoutThreshold,
       doObfuscation = false,
       runQueriesImmediately = true,
-      DefaultBreakdownResultOutputTypes.toSet,
-      collectAdapterAudit = false
+      breakdownTypes = DefaultBreakdownResultOutputTypes.toSet,
+      collectAdapterAudit = false,
+      botCountTimeThresholds = Seq.empty,
+      obfuscator = Obfuscator(5,6.5,10)
     )
 
     val queryDefinition = QueryDefinition("10-17 years old@14:39:20", OccuranceLimited(1, Term("network")))
@@ -528,15 +510,17 @@ final class RunQueryAdapterTest extends AbstractSquerylAdapterTest with ShouldMa
   @Test
   def testQueuedRegularCountQuery: Unit = afterCreatingTables {
     val adapter = RunQueryAdapter(
-      Poster("crc-url", MockHttpClient),
-      dao,
-      null,
-      null,
-      adapterLockoutThreshold,
+      poster = Poster("crc-url", MockHttpClient),
+      dao = dao,
+      hiveCredentials = null,
+      conceptTranslator = null,
+      adapterLockoutAttemptsThreshold = adapterLockoutThreshold,
       doObfuscation = false,
       runQueriesImmediately = false,
-      DefaultBreakdownResultOutputTypes.toSet,
-      collectAdapterAudit = false
+      breakdownTypes = DefaultBreakdownResultOutputTypes.toSet,
+      collectAdapterAudit = false,
+      botCountTimeThresholds = Seq.empty,
+      obfuscator = Obfuscator(5,6.5,10)
     )
 
     val networkAuthn = AuthenticationInfo("nd", "nu", Credential("np", false))
@@ -574,7 +558,6 @@ final class RunQueryAdapterTest extends AbstractSquerylAdapterTest with ShouldMa
 
     storedQuery.dateCreated should not be (null) // :\
     storedQuery.domain should equal(networkAuthn.domain)
-    storedQuery.hasBeenRun should equal(false)
     storedQuery.isFlagged should equal(false)
     storedQuery.localId should equal(-1L.toString)
     storedQuery.name should equal(queryDef.name)
@@ -637,7 +620,7 @@ final class RunQueryAdapterTest extends AbstractSquerylAdapterTest with ShouldMa
 
   @Test
   def testRegularCountQueryComesBackError = afterCreatingTables {
-    val errorQueryResult = QueryResult.errorResult(Some("some-description"), "some-status-message",TestProblem)
+    val errorQueryResult = QueryResult.errorResult(Some("some-description"), "some-status-message",TestProblem())
 
     val outputTypes = justCounts
 
@@ -738,7 +721,7 @@ final class RunQueryAdapterTest extends AbstractSquerylAdapterTest with ShouldMa
 
   @Test
   def testErrorResponsesArePassedThrough: Unit = {
-    val errorResponse = ErrorResponse("blarg!")
+    val errorResponse = ErrorResponse(TestProblem(summary = "blarg!"))
 
     val resp = doQuery(Set(PATIENT_COUNT_XML)) {
       errorResponse.toI2b2String
@@ -941,16 +924,18 @@ final class RunQueryAdapterTest extends AbstractSquerylAdapterTest with ShouldMa
     val translator = new QueryDefinitionTranslator(new ExpressionTranslator(Map("foo" -> Set("bar"))))
 
     //NB: Don't obfuscate, for simpler testing
-    val adapter = new RunQueryAdapter(
-      Poster("crc-url", httpClient),
-      adapterDao,
-      hiveCredentials,
-      translator,
-      adapterLockoutThreshold,
+    val adapter = RunQueryAdapter(
+      poster = Poster("crc-url", httpClient),
+      dao = adapterDao,
+      hiveCredentials = hiveCredentials,
+      conceptTranslator = translator,
+      adapterLockoutAttemptsThreshold = adapterLockoutThreshold,
       doObfuscation = false,
       runQueriesImmediately = true,
-      DefaultBreakdownResultOutputTypes.toSet,
-      collectAdapterAudit = false
+      breakdownTypes = DefaultBreakdownResultOutputTypes.toSet,
+      collectAdapterAudit = false,
+      botCountTimeThresholds = Seq.empty,
+      obfuscator = Obfuscator(1,1.3,3)
     )
 
     import scala.concurrent.duration._

@@ -9,9 +9,9 @@
 angular.module('stewardApp')
 	.directive('userStatus',function(){
 		return {
-        templateUrl:'src/app/header/user-status/user-status.tpl.html',
+        templateUrl:'app/client/header/user-status/user-status.tpl.html',
         restrict: 'E',
-        replace: true,
+        replace: true
     	}
 	});
 

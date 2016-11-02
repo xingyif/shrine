@@ -17,38 +17,39 @@ i2b2.CRC.view['QT'] = new i2b2Base_cellViewController(i2b2.CRC, 'QT');
 var queryTimingButton;
 // define the option functions
 // ================================================================================================== //
-i2b2.CRC.view.QT.showOptions = function(subScreen) {
+i2b2.CRC.view.QT.showOptions = function (subScreen) {
     if (!this.modalOptions) {
-        var handleSubmit = function() {
+        var handleSubmit = function () {
             // submit value(s)
-            if(this.submit()) {
-                var tmpValue = parseInt($('QryTimeout').value,10);
+            if (this.submit()) {
+                var tmpValue = parseInt($('QryTimeout').value, 10);
                 i2b2.CRC.view['QT'].params.queryTimeout = tmpValue;
                 //			var tmpValue = parseInt($('MaxChldDisp').value,10);
                 //			i2b2.CRC.view['QT'].params.maxChildren = tmpValue;
             }
         }
-        var handleCancel = function() {
+        var handleCancel = function () {
             this.cancel();
         }
         this.modalOptions = new YAHOO.widget.SimpleDialog("optionsQT",
-            { width : "400px",
-                fixedcenter : true,
-                constraintoviewport : true,
+            {
+                width: "400px",
+                fixedcenter: true,
+                constraintoviewport: true,
                 modal: true,
                 zindex: 700,
-                buttons : [ { text:"OK", handler:handleSubmit, isDefault:true },
-                    { text:"Cancel", handler:handleCancel } ]
-            } );
+                buttons: [{ text: "OK", handler: handleSubmit, isDefault: true },
+                    { text: "Cancel", handler: handleCancel }]
+            });
         $('optionsQT').show();
-        this.modalOptions.validate = function() {
+        this.modalOptions.validate = function () {
             // now process the form data
             var msgError = '';
             //		var tmpValue = parseInt($('MaxChldDisp').value,10);
             //		if (!isNaN(tmpValue) && tmpValue <= 0) {
             //			msgError += "The max number of Children to display must be a whole number larger then zero.\n";
             //		}
-            var tmpValue = parseInt($('QryTimeout').value,10);
+            var tmpValue = parseInt($('QryTimeout').value, 10);
             if (!isNaN(tmpValue) && tmpValue <= 0) {
                 msgError += "The the query timeout period must be a whole number larger then zero.\n";
             }
@@ -62,12 +63,12 @@ i2b2.CRC.view.QT.showOptions = function(subScreen) {
     }
     this.modalOptions.show();
     // load settings
-//	$('MaxChldDisp').value = this.params.maxChildren;
+    //	$('MaxChldDisp').value = this.params.maxChildren;
     $('QryTimeout').value = this.params.queryTimeout;
 }
 
 // ================================================================================================== //
-i2b2.CRC.view.QT.ContextMenuPreprocess = function(p_oEvent) {
+i2b2.CRC.view.QT.ContextMenuPreprocess = function (p_oEvent) {
     var clickId = false;
     var clickPanel = false;
     var isDone = false;
@@ -76,7 +77,7 @@ i2b2.CRC.view.QT.ContextMenuPreprocess = function(p_oEvent) {
 
     while (!isDone) {
         // save the first DOM node found with an ID
-        if (currentNode.id && !clickId)  {
+        if (currentNode.id && !clickId) {
             clickId = currentNode.id;
         }
         // save and exit when we find the linkback to the panel controller
@@ -110,12 +111,12 @@ i2b2.CRC.view.QT.ContextMenuPreprocess = function(p_oEvent) {
                     var mil = [];
                     var op = i2b2.CRC.view.QT;
                     // all nodes can be deleted
-                    mil.push( { text: "Delete", onclick: { fn: op.ContextMenuRouter, obj: 'delete' }} );
+                    mil.push({ text: "Delete", onclick: { fn: op.ContextMenuRouter, obj: 'delete' } });
                     if (i2b2.CRC.view.QT.contextRecord.origData.isModifier) {
 
                         //Get the blob for this now.
                         //	if (i2b2.CRC.view.QT.contextRecord.origData.xmlOrig != null) {
-                        var cdetails = i2b2.ONT.ajax.GetModifierInfo("CRC:QueryTool", {modifier_applied_path:i2b2.CRC.view.QT.contextRecord.origData.applied_path, modifier_key_value:i2b2.CRC.view.QT.contextRecord.origData.key, ont_synonym_records: true, ont_hidden_records: true} );
+                        var cdetails = i2b2.ONT.ajax.GetModifierInfo("CRC:QueryTool", { modifier_applied_path: i2b2.CRC.view.QT.contextRecord.origData.applied_path, modifier_key_value: i2b2.CRC.view.QT.contextRecord.origData.key, ont_synonym_records: true, ont_hidden_records: true });
                         // this is what comes out of the old AJAX call
                         var c = i2b2.h.XPath(cdetails.refXML, 'descendant::modifier');
                         if (c.length > 0) {
@@ -127,18 +128,18 @@ i2b2.CRC.view.QT.ContextMenuPreprocess = function(p_oEvent) {
                         var lvMetaDatas1 = i2b2.h.XPath(i2b2.CRC.view.QT.contextRecord.origData.xmlOrig, 'metadataxml/ValueMetadata[string-length(Version)>0]');
                         if (lvMetaDatas1.length > 0) {
 
-                            mil.push( { text: "Set Modifier Value", onclick: { fn: op.ContextMenuRouter, obj: 'setmodifier' }} );
+                            mil.push({ text: "Set Modifier Value", onclick: { fn: op.ContextMenuRouter, obj: 'setmodifier' } });
                         }
                         var lvMetaDatas2 = i2b2.h.XPath(i2b2.CRC.view.QT.contextRecord.origData.parent.xmlOrig, 'metadataxml/ValueMetadata[string-length(Version)>0]');
                         if (lvMetaDatas2.length > 0) {
-                            mil.push( { text: "Set Value...", onclick: { fn: op.ContextMenuRouter, obj: 'labvalues' }} );
+                            mil.push({ text: "Set Value...", onclick: { fn: op.ContextMenuRouter, obj: 'labvalues' } });
                         }
 
                     } else {
                         // For lab tests...
 
                         if (!Object.isUndefined(i2b2.CRC.view.QT.contextRecord.origData.key)) {
-                            var cdetails = i2b2.ONT.ajax.GetTermInfo("CRC:QueryTool", {concept_key_value:i2b2.CRC.view.QT.contextRecord.origData.key, ont_synonym_records: true, ont_hidden_records: true} );
+                            var cdetails = i2b2.ONT.ajax.GetTermInfo("CRC:QueryTool", { concept_key_value: i2b2.CRC.view.QT.contextRecord.origData.key, ont_synonym_records: true, ont_hidden_records: true });
                             var c = i2b2.h.XPath(cdetails.refXML, 'descendant::concept');
                             if (c.length > 0) {
                                 i2b2.CRC.view.QT.contextRecord.origData.xmlOrig = c[0];
@@ -147,7 +148,7 @@ i2b2.CRC.view.QT.ContextMenuPreprocess = function(p_oEvent) {
 
                         var lvMetaDatas = i2b2.h.XPath(i2b2.CRC.view.QT.contextRecord.origData.xmlOrig, 'metadataxml/ValueMetadata[string-length(Version)>0]');
                         if (lvMetaDatas.length > 0) {
-                            mil.push( { text: "Set Value...", onclick: { fn: op.ContextMenuRouter, obj: 'labvalues' }} );
+                            mil.push({ text: "Set Value...", onclick: { fn: op.ContextMenuRouter, obj: 'labvalues' } });
                         }
                     }
                     i2b2.CRC.view.QT.ContextMenu.clearContent();
@@ -173,7 +174,7 @@ i2b2.CRC.view.QT.ContextMenuPreprocess = function(p_oEvent) {
 }
 
 // ================================================================================================== //
-i2b2.CRC.view.QT.ContextMenuRouter = function(a, b, actionName) {
+i2b2.CRC.view.QT.ContextMenuRouter = function (a, b, actionName) {
     // this is used to route the event to the correct handler
     var op = i2b2.CRC.view.QT;  // object path
     var cdat = { // context node data
@@ -181,7 +182,7 @@ i2b2.CRC.view.QT.ContextMenuRouter = function(a, b, actionName) {
         ctrlr: op.contextPanelCtrlr
     };
     // route accordingly
-    switch(actionName) {
+    switch (actionName) {
         case "delete":
             // delete item from the panel
             cdat.ctrlr._deleteConcept(cdat.data.renderData.htmlID, cdat.data);
@@ -193,13 +194,13 @@ i2b2.CRC.view.QT.ContextMenuRouter = function(a, b, actionName) {
             cdat.ctrlr.showModValues(cdat.data.sdxInfo.sdxKeyValue, cdat.data);
             break;
         default:
-            alert('context event was not found for event "'+actionName+'"');
+            alert('context event was not found for event "' + actionName + '"');
     }
 }
 
 //================================================================================================== //
 
-i2b2.CRC.view.QT.enableSameTiming = function() {
+i2b2.CRC.view.QT.enableSameTiming = function () {
 
     if (YAHOO.util.Dom.inDocument(queryTimingButton.getMenu().element)) {
 
@@ -215,15 +216,15 @@ i2b2.CRC.view.QT.enableSameTiming = function() {
             queryTimingButton.getMenu().render();
         }
     } else {
-        queryTimingButton.itemData =[{ text: "Treat Independently", value: "ANY"},
-            { text: "Selected groups occur in the same financial encounter", value: "SAMEVISIT"},
-            {text: "Items Instance will be the same", value: "SAMEINSTANCENUM" }];
+        queryTimingButton.itemData = [{ text: "Treat Independently", value: "ANY" },
+            { text: "Selected groups occur in the same financial encounter", value: "SAMEVISIT" },
+            { text: "Items Instance will be the same", value: "SAMEINSTANCENUM" }];
     }
 }
 
 // ================================================================================================== //
 
-i2b2.CRC.view.QT.setQueryTiming = function(sText) {
+i2b2.CRC.view.QT.setQueryTiming = function (sText) {
 
     //TODO cleanup
 
@@ -231,7 +232,7 @@ i2b2.CRC.view.QT.setQueryTiming = function(sText) {
 
         queryTimingButton.getMenu().clearContent();
         queryTimingButton.getMenu().addItems([
-            { text: "Treat Independently", value: "ANY"}]);
+            { text: "Treat Independently", value: "ANY" }]);
         queryTimingButton.getMenu().addItems([
             { text: "Selected groups occur in the same financial encounter", value: "SAMEVISIT" }]);
         queryTimingButton.getMenu().addItems([
@@ -243,16 +244,16 @@ i2b2.CRC.view.QT.setQueryTiming = function(sText) {
 
         }
         queryTimingButton.getMenu().render();
-    }  else {
+    } else {
 
-        if (sText =="TEMPORAL") {
-            queryTimingButton.set("label",  "Define sequence of Events");
+        if (sText == "TEMPORAL") {
+            queryTimingButton.set("label", "Define sequence of Events");
 
             i2b2.CRC.ctrlr.QT.queryTiming = "TEMPORAL";
             $('defineTemporalBar').show();
 
-        } else if (sText =="SAMEVISIT") {
-            queryTimingButton.set("label",  "Selected groups occur in the same financial encounter");
+        } else if (sText == "SAMEVISIT") {
+            queryTimingButton.set("label", "Selected groups occur in the same financial encounter");
         }
 
     }
@@ -260,17 +261,13 @@ i2b2.CRC.view.QT.setQueryTiming = function(sText) {
     queryTimingButton.getMenu().render();
     var menu = queryTimingButton.getMenu();
 
-    if (sText == "SAMEINSTANCENUM" )
-    {
+    if (sText == "SAMEINSTANCENUM") {
         var item = menu.getItem(3);
-    } else if (sText == "SAMEVISIT" )
-    {
+    } else if (sText == "SAMEVISIT") {
         var item = menu.getItem(1);
-    } else if (sText == "TEMPORAL" )
-    {
+    } else if (sText == "TEMPORAL") {
         var item = menu.getItem(2);
-    } else
-    {
+    } else {
         var item = menu.getItem(0);
     }
     queryTimingButton.set("selectedMenuItem", item);
@@ -279,46 +276,45 @@ i2b2.CRC.view.QT.setQueryTiming = function(sText) {
 
 //================================================================================================== //
 
-i2b2.CRC.view.QT.setPanelTiming = function(panelNum, sText) {
-    if (panelNum > 3) {return}
-    if (sText == "SAMEVISIT" )
-    {
-        $("queryPanelTimingB" + (panelNum) +  "-button").innerHTML = "Occurs in Same Encounter";
+i2b2.CRC.view.QT.setPanelTiming = function (panelNum, sText) {
+    if (panelNum > 3) { return }
+    if (sText == "SAMEVISIT") {
+        $("queryPanelTimingB" + (panelNum) + "-button").innerHTML = "Occurs in Same Encounter";
         i2b2.CRC.ctrlr.QT.panelControllers[panelNum - 1].doTiming(sText);
         i2b2.CRC.ctrlr.QT.panelControllers[panelNum - 1].refTiming.set('disabled', false);
     } else if (sText == "SAMEINSTANCENUM") {
-        $("queryPanelTimingB" + (panelNum) +  "-button").innerHTML = "Items Instance will be the same";
+        $("queryPanelTimingB" + (panelNum) + "-button").innerHTML = "Items Instance will be the same";
         i2b2.CRC.ctrlr.QT.panelControllers[panelNum - 1].doTiming(sText);
         i2b2.CRC.ctrlr.QT.panelControllers[panelNum - 1].refTiming.set('disabled', false);
     } else {
-        $("queryPanelTimingB" + (panelNum) +  "-button").innerHTML = "Treat Independently";
+        $("queryPanelTimingB" + (panelNum) + "-button").innerHTML = "Treat Independently";
         i2b2.CRC.ctrlr.QT.panelControllers[panelNum - 1].doTiming(sText);
     }
 }
 
 // ================================================================================================== //
-i2b2.CRC.view.QT.ZoomView = function() {
+i2b2.CRC.view.QT.ZoomView = function () {
     i2b2.hive.MasterView.toggleZoomWindow("QT");
 }
 
 // ================================================================================================== //
-i2b2.CRC.view.QT.Resize = function(e) {
-	//var ds = document.viewport.getDimensions();
-	//var w = ds.width;
-	//var h = ds.height
-    var w =  window.innerWidth || (window.document.documentElement.clientWidth || window.document.body.clientWidth);
-    var h =  window.innerHeight || (window.document.documentElement.clientHeight || window.document.body.clientHeight);
-	
-	
-    if (w < 840) {w = 840;}
-    if (h < 517) {h = 517;}
+i2b2.CRC.view.QT.Resize = function (e) {
+    //var ds = document.viewport.getDimensions();
+    //var w = ds.width;
+    //var h = ds.height
+    var w = window.innerWidth || (window.document.documentElement.clientWidth || window.document.body.clientWidth);
+    var h = window.innerHeight || (window.document.documentElement.clientHeight || window.document.body.clientHeight);
+
+
+    if (w < 840) { w = 840; }
+    if (h < 517) { h = 517; }
 
     // resize our visual components
     //var queryToolWidth = ds.width * 0.6;
     //$('crcQueryToolBox').style.left = w-queryToolWidth;
     //debugOnScreen("crcQueryToolBox.width = " + queryToolWidth );
 
-    $('crcQueryToolBox').style.left = w-550;
+    $('crcQueryToolBox').style.left = w - 550;
     if (i2b2.WORK && i2b2.WORK.isLoaded) {
         var z = h - 400; //392 + 44 - 17 - 25;
         if (i2b2.CRC.view.QT.isZoomed) { z += 196 - 44; }
@@ -341,84 +337,76 @@ i2b2.CRC.view.QT.Resize = function(e) {
 
 
 //================================================================================================== //
-i2b2.CRC.view.QT.splitterDragged = function()
-{
-	//var viewPortDim = document.viewport.getDimensions();
-	var w =  window.innerWidth || (window.document.documentElement.clientWidth || window.document.body.clientWidth);
-	
-    var splitter = $( i2b2.hive.mySplitter.name );
+i2b2.CRC.view.QT.splitterDragged = function () {
+    //var viewPortDim = document.viewport.getDimensions();
+    var w = window.innerWidth || (window.document.documentElement.clientWidth || window.document.body.clientWidth);
+
+    var splitter = $(i2b2.hive.mySplitter.name);
     var CRCQT = $("crcQueryToolBox");
     var CRCQTBodyBox = $("crcQueryToolBox.bodyBox");
 
-    var CRCQueryName 			= $("queryName");
-    var CRCQueryNameBar 		= $("queryNameBar");
-    var temporalConstraintBar 	= $("temporalConstraintBar");
-    var defineTemporalBar 		= $("defineTemporalBar");
+    var CRCQueryName = $("queryName");
+    var CRCQueryNameBar = $("queryNameBar");
+    var temporalConstraintBar = $("temporalConstraintBar");
+    var defineTemporalBar = $("defineTemporalBar");
     var temporalConstraintLabel = $("temporalConstraintLabel");
-    var temporalConstraintDiv	= $("temporalConstraintDiv");
-    var queryTiming				= $("queryTiming");
-    var queryTimingButton		= $("queryTiming-button");
+    var temporalConstraintDiv = $("temporalConstraintDiv");
+    var queryTiming = $("queryTiming");
+    var queryTimingButton = $("queryTiming-button");
 
-    var defineTemporal				= $("defineTemporal");
-    var defineTemporalButton		= $("defineTemporal-button");
+    var defineTemporal = $("defineTemporal");
+    var defineTemporalButton = $("defineTemporal-button");
 
-    var CRCQueryPanels 			= $("crcQryToolPanels");
-    var CRCinnerQueryPanel		= $("crc.innerQueryPanel");
-    var CRCtemoralBuilder		= $("crc.temoralBuilder");
-    var basicWidth					= parseInt(w) - parseInt(splitter.style.left) - parseInt(splitter.offsetWidth);
+    var CRCQueryPanels = $("crcQryToolPanels");
+    var CRCinnerQueryPanel = $("crc.innerQueryPanel");
+    var CRCtemoralBuilder = $("crc.temoralBuilder");
+    var basicWidth = parseInt(w) - parseInt(splitter.style.left) - parseInt(splitter.offsetWidth);
 
     /* Title, buttons, and panels */
-    CRCQT.style.left				= parseInt(splitter.offsetWidth) + parseInt(splitter.style.left) + 3 + "px";
-    CRCQT.style.width				= Math.max(basicWidth - 24, 0) + "px";
-    CRCQTBodyBox.style.width 		= Math.max(basicWidth - 41, 0) + "px";
+    CRCQT.style.left = parseInt(splitter.offsetWidth) + parseInt(splitter.style.left) + 3 + "px";
+    CRCQT.style.width = Math.max(basicWidth - 24, 0) + "px";
+    CRCQTBodyBox.style.width = Math.max(basicWidth - 41, 0) + "px";
 
-    CRCQueryNameBar.style.width 		= Math.max(basicWidth - 38, 0) + "px";
-    temporalConstraintBar.style.width 	= Math.max(basicWidth - 38, 0) + "px";
-    defineTemporalBar.style.width 	= Math.max(basicWidth - 38, 0) + "px";
-    temporalConstraintDiv.style.width 	= Math.max( parseInt(temporalConstraintBar.style.width) - parseInt(temporalConstraintLabel.style.width)-2, 0) + "px";
-    queryTimingButton.style.width 		= Math.max( parseInt(temporalConstraintBar.style.width) - 250,0) + "px";
-    defineTemporalButton.style.width 		= Math.max( parseInt(temporalConstraintBar.style.width) - 250,0) + "px";
+    CRCQueryNameBar.style.width = Math.max(basicWidth - 38, 0) + "px";
+    temporalConstraintBar.style.width = Math.max(basicWidth - 38, 0) + "px";
+    defineTemporalBar.style.width = Math.max(basicWidth - 38, 0) + "px";
+    temporalConstraintDiv.style.width = Math.max(parseInt(temporalConstraintBar.style.width) - parseInt(temporalConstraintLabel.style.width) - 2, 0) + "px";
+    queryTimingButton.style.width = Math.max(parseInt(temporalConstraintBar.style.width) - 250, 0) + "px";
+    defineTemporalButton.style.width = Math.max(parseInt(temporalConstraintBar.style.width) - 250, 0) + "px";
     //parseInt(temporalConstraintLabel.style.width)-23, 0) + "px";
 
-    CRCQueryName.style.width			= Math.max(basicWidth - 128, 0) + "px"; // use max to avoid negative width
+    CRCQueryName.style.width = Math.max(basicWidth - 128, 0) + "px"; // use max to avoid negative width
 
-    CRCQueryPanels.style.width		= Math.max(basicWidth - 30, 0) + "px";
-    CRCinnerQueryPanel.style.width	= Math.max(basicWidth - 36, 0) + "px";
-    CRCtemoralBuilder.style.width	= Math.max(basicWidth - 36, 0) + "px";
+    CRCQueryPanels.style.width = Math.max(basicWidth - 30, 0) + "px";
+    CRCinnerQueryPanel.style.width = Math.max(basicWidth - 36, 0) + "px";
+    CRCtemoralBuilder.style.width = Math.max(basicWidth - 36, 0) + "px";
 
 
-    var panelWidth = (basicWidth - 36)/3 - 4;
+    var panelWidth = (basicWidth - 36) / 3 - 4;
 
     var panels = CRCinnerQueryPanel.childNodes;
     var panelArray = new Array(3);
     var panelCount = 0;
-    for ( var i = 0; i < panels.length; i++ )
-    {
-        if ( panels[i].className === "qryPanel")
-        {
+    for (var i = 0; i < panels.length; i++) {
+        if (panels[i].className === "qryPanel") {
             panels[i].style.width = Math.max(panelWidth, 0) + "px";
             var nodes = panels[i].childNodes;
-            for ( var j = 0; j < nodes.length; j++ )
-            {
+            for (var j = 0; j < nodes.length; j++) {
                 if (nodes[j].className === "qryPanelTitle")
                     nodes[j].style.width = Math.max(panelWidth - 2, 0) + "px";
-                else if ( nodes[j].className === "qryPanelButtonBar" )
-                {
+                else if (nodes[j].className === "qryPanelButtonBar") {
                     nodes[j].style.width = Math.max(panelWidth, 0) + "px";
                     var buttons = nodes[j].childNodes;
-                    for ( var k = 0; k < buttons.length; k++)
-                    {
-                        if ( buttons[k].className === "qryButtonOccurs")
+                    for (var k = 0; k < buttons.length; k++) {
+                        if (buttons[k].className === "qryButtonOccurs")
                             buttons[k].style.width = Math.max(panelWidth - 88, 0) + "px";
                     }
                 }
-                else if ( nodes[j].className === "qryPanelTiming" )
-                {
+                else if (nodes[j].className === "qryPanelTiming") {
                     nodes[j].style.width = Math.max(panelWidth, 0) + "px";
                     var queryPanelTimingChildren = nodes[j].childNodes;
-                    for ( var k = 0; k < queryPanelTimingChildren.length; k++)
-                    {
-                        if ( queryPanelTimingChildren[k].style == null )
+                    for (var k = 0; k < queryPanelTimingChildren.length; k++) {
+                        if (queryPanelTimingChildren[k].style == null)
                             continue;
                         queryPanelTimingChildren[k].style.width = Math.max(panelWidth - 4, 0) + "px";
                     }
@@ -426,8 +414,8 @@ i2b2.CRC.view.QT.splitterDragged = function()
                     var queryPanelTimingB1 = $("queryPanelTimingB1");
                     queryPanelTimingB1.style.width = Math.max(panelWidth - 4, 0) + "px";
                 }
-                else if ( nodes[j].className === "queryPanel" || nodes[j].className === "queryPanel queryPanelDisabled" ) // QueryPanel or disabled QueryPanel
-                    nodes[j].style.width =  Math.max(panelWidth - 8, 0) + "px";
+                else if (nodes[j].className === "queryPanel" || nodes[j].className === "queryPanel queryPanelDisabled") // QueryPanel or disabled QueryPanel
+                    nodes[j].style.width = Math.max(panelWidth - 8, 0) + "px";
             }
             panelArray[panelCount] = panels[i];
             panelCount++;
@@ -443,36 +431,34 @@ i2b2.CRC.view.QT.splitterDragged = function()
     var scrollBox = $("scrollBox");		// scroll control
 
     footer.style.width = Math.max(basicWidth - 40, 0) + "px"; // adjust footer width
-    groupCount.style.width =  Math.max(parseInt(footer.style.width) - (printBox.offsetLeft + printBox.offsetWidth) - scrollBox.offsetWidth - 5, 0) + "px"; // adjust groupCount width
+    groupCount.style.width = Math.max(parseInt(footer.style.width) - (printBox.offsetLeft + printBox.offsetWidth) - scrollBox.offsetWidth - 5, 0) + "px"; // adjust groupCount width
 
     /* Deal with Baloons */
-    var baloonBox	= $("queryBalloonBox");
+    var baloonBox = $("queryBalloonBox");
     var baloons = baloonBox.getElementsByTagName("div");
 
-    for ( var i = 0; i < baloons.length; i++ )
-    {
-        if ( i%2 === 0) // even baloons
+    for (var i = 0; i < baloons.length; i++) {
+        if (i % 2 === 0) // even baloons
         {
-            var index = i/2;
-            if ( index < baloons.length)
-                baloons[i].style.left	= panelArray[index].offsetLeft + parseInt(panelArray[index].style.width)/2 - 35 + "px";
+            var index = i / 2;
+            if (index < baloons.length)
+                baloons[i].style.left = panelArray[index].offsetLeft + parseInt(panelArray[index].style.width) / 2 - 35 + "px";
         }
-        else
-        {
-            var index = Math.floor(i/2);
-            baloons[i].style.left	= panelArray[index].offsetLeft + parseInt(panelArray[index].style.width) - 22.5 + "px";
+        else {
+            var index = Math.floor(i / 2);
+            baloons[i].style.left = panelArray[index].offsetLeft + parseInt(panelArray[index].style.width) - 22.5 + "px";
         }
     }
 }
 
 //================================================================================================== //
-i2b2.CRC.view.QT.ResizeHeight = function() {
-	//var ds = document.viewport.getDimensions();
-	//var h = ds.height;
-	//var h = window.document.documentElement.clientHeight;
-	var h = window.innerHeight || (window.document.documentElement.clientHeight || window.document.body.clientHeight);
-	
-    if (h < 517) {h = 517;}
+i2b2.CRC.view.QT.ResizeHeight = function () {
+    //var ds = document.viewport.getDimensions();
+    //var h = ds.height;
+    //var h = window.document.documentElement.clientHeight;
+    var h = window.innerHeight || (window.document.documentElement.clientHeight || window.document.body.clientHeight);
+
+    if (h < 517) { h = 517; }
     // resize our visual components
     if (i2b2.WORK && i2b2.WORK.isLoaded) {
         var z = h - 400;
@@ -496,42 +482,42 @@ i2b2.CRC.view.QT.ResizeHeight = function() {
 
 }
 
-i2b2.CRC.view.QT.deleteLastTemporalGroup = function() {
-	
-	if(i2b2.CRC.model.queryCurrent.panels.length > 3){
-		var currentPanels = i2b2.CRC.model.queryCurrent.panels.length - 1;
-		i2b2.CRC.model.queryCurrent.panels.pop();
-		defineTemporalButton.getMenu().removeItem(defineTemporalButton.getMenu().getItems().length-1);
-		
-		for( var i = 0; i < i2b2.CRC.ctrlr.QT.tenporalBuilders + 1; i++){
-			var select = document.getElementById("instancevent1["+i+"]");
-			select.remove(select.length - 1);
-		
-			select = document.getElementById("instancevent2["+i+"]");
-			select.remove(select.length - 1);
-		}
-		
-		alert('Event ' + currentPanels + ' has been removed.');
-		//i2b2.CRC.ctrlr.QT.temporalGroup = i2b2.CRC.model.queryCurrent.panels.length;
-		
-		defineTemporalButton.getMenu().getItem(0).element.click()
-	
-	} else {
-		alert('You must leave a minimum of two events.');
-		
-	}
+i2b2.CRC.view.QT.deleteLastTemporalGroup = function () {
+
+    if (i2b2.CRC.model.queryCurrent.panels.length > 3) {
+        var currentPanels = i2b2.CRC.model.queryCurrent.panels.length - 1;
+        i2b2.CRC.model.queryCurrent.panels.pop();
+        defineTemporalButton.getMenu().removeItem(defineTemporalButton.getMenu().getItems().length - 1);
+
+        for (var i = 0; i < i2b2.CRC.ctrlr.QT.tenporalBuilders + 1; i++) {
+            var select = document.getElementById("instancevent1[" + i + "]");
+            select.remove(select.length - 1);
+
+            select = document.getElementById("instancevent2[" + i + "]");
+            select.remove(select.length - 1);
+        }
+
+        alert('Event ' + currentPanels + ' has been removed.');
+        //i2b2.CRC.ctrlr.QT.temporalGroup = i2b2.CRC.model.queryCurrent.panels.length;
+
+        defineTemporalButton.getMenu().getItem(0).element.click()
+
+    } else {
+        alert('You must leave a minimum of two events.');
+
+    }
 };
 
 // This is done once the entire cell has been loaded
 console.info("SUBSCRIBED TO i2b2.events.afterCellInit");
 i2b2.events.afterCellInit.subscribe(
-    (function(en,co) {
-        if (co[0].cellCode=='CRC') {
-// ================================================================================================== //
+    (function (en, co) {
+        if (co[0].cellCode == 'CRC') {
+            // ================================================================================================== //
             console.debug('[EVENT CAPTURED i2b2.events.afterCellInit]');
             //Update the result types from ajax call
             var scopedCallback = new i2b2_scopedCallback();
-            scopedCallback.callback = function(results) {
+            scopedCallback.callback = function (results) {
                 //var cl_onCompleteCB = onCompleteCallback;
                 // THIS function is used to process the AJAX results of the getChild call
                 //		results data object contains the following attributes:
@@ -559,13 +545,13 @@ i2b2.events.afterCellInit.subscribe(
                 var newHTML = "";
                 var ps = results.refXML.getElementsByTagName('query_result_type');
 
-                for(var i1=0; i1<ps.length; i1++) {
+                for (var i1 = 0; i1 < ps.length; i1++) {
                     var o = {};
-                    o.result_type_id = i2b2.h.getXNodeVal(ps[i1],'result_type_id');
-                    o.name = i2b2.h.getXNodeVal(ps[i1],'name');
+                    o.result_type_id = i2b2.h.getXNodeVal(ps[i1], 'result_type_id');
+                    o.name = i2b2.h.getXNodeVal(ps[i1], 'name');
 
                     var checked = "";
-                    switch(o.name) {
+                    switch (o.name) {
                         case "PATIENT_COUNT_XML":
                             //	o.name = "PRS";
                             checked = "checked=\"checked\" disabled";
@@ -577,15 +563,15 @@ i2b2.events.afterCellInit.subscribe(
                             break;
                     }
 
-                    o.display_type = i2b2.h.getXNodeVal(ps[i1],'display_type');
-                    o.visual_attribute_type = i2b2.h.getXNodeVal(ps[i1],'visual_attribute_type');
-                    o.description = i2b2.h.getXNodeVal(ps[i1],'description');
+                    o.display_type = i2b2.h.getXNodeVal(ps[i1], 'display_type');
+                    o.visual_attribute_type = i2b2.h.getXNodeVal(ps[i1], 'visual_attribute_type');
+                    o.description = i2b2.h.getXNodeVal(ps[i1], 'description');
                     // need to process param columns
                     //o. = i2b2.h.getXNodeVal(ps[i1],'');
                     //this.model.events.push(o);
 
-                   ///@todo: condition commented out for configurable result types if (o.visual_attribute_type == "LA") {
-                   newHTML += 	"			<div id=\"crcDlgResultOutput" + o.name + "\"><input type=\"checkbox\" class=\"chkQueryType\" name=\"queryType\" value=\"" + o.name + "\" " + checked + "/> " + o.description + "</div>";
+                    ///@todo: condition commented out for configurable result types if (o.visual_attribute_type == "LA") {
+                    newHTML += "			<div id=\"crcDlgResultOutput" + o.name + "\"><input type=\"checkbox\" class=\"chkQueryType\" name=\"queryType\" value=\"" + o.name + "\" " + checked + "/> " + o.description + "</div>";
                     ///}
                 }
 
@@ -597,7 +583,7 @@ i2b2.events.afterCellInit.subscribe(
 
 
             // register the query panels as valid DragDrop targets for Ontology Concepts (CONCPT) and query master (QM) objects
-            var op_trgt = {dropTarget:true};
+            var op_trgt = { dropTarget: true };
             i2b2.sdx.Master.AttachType('QPD1', 'CONCPT', op_trgt);
             i2b2.sdx.Master.AttachType('QPD2', 'CONCPT', op_trgt);
             i2b2.sdx.Master.AttachType('QPD3', 'CONCPT', op_trgt);
@@ -613,38 +599,38 @@ i2b2.events.afterCellInit.subscribe(
             i2b2.sdx.Master.AttachType('queryName', 'QM', op_trgt);
 
             //======================= <Define Hover Handlers> =======================
-            var funcHovOverQM = function(e, id, ddProxy) {
+            var funcHovOverQM = function (e, id, ddProxy) {
                 var el = $(id);
                 // apply DragDrop targeting CCS
                 var targets = YAHOO.util.DDM.getRelated(ddProxy, true);
-                for (var i=0; i<targets.length; i++) {
-                    Element.addClassName(targets[i]._domRef,"ddQMTarget");
+                for (var i = 0; i < targets.length; i++) {
+                    Element.addClassName(targets[i]._domRef, "ddQMTarget");
                 }
             }
-            var funcHovOutQM = function(e, id, ddProxy) {
+            var funcHovOutQM = function (e, id, ddProxy) {
                 var el = $(id);
                 // apply DragDrop targeting CCS
                 var targets = YAHOO.util.DDM.getRelated(ddProxy, true);
-                for (var i=0; i<targets.length; i++) {
-                    Element.removeClassName(targets[i]._domRef,"ddQMTarget");
+                for (var i = 0; i < targets.length; i++) {
+                    Element.removeClassName(targets[i]._domRef, "ddQMTarget");
                 }
             }
-            var funcHovOverCONCPT = function(e, id, ddProxy) {
+            var funcHovOverCONCPT = function (e, id, ddProxy) {
                 var el = $(id);
-                if (Object.isUndefined(el.linkbackPanelController)) { return false;}
+                if (Object.isUndefined(el.linkbackPanelController)) { return false; }
                 var panelController = el.linkbackPanelController;
                 // see if the panel controller is enabled
                 if (panelController.isActive == 'Y') {
-                    Element.addClassName(panelController.refDispContents,'ddCONCPTTarget');
+                    Element.addClassName(panelController.refDispContents, 'ddCONCPTTarget');
                 }
             }
-            var funcHovOutCONCPT = function(e, id, ddProxy) {
+            var funcHovOutCONCPT = function (e, id, ddProxy) {
                 var el = $(id);
-                if (Object.isUndefined(el.linkbackPanelController)) { return false;}
+                if (Object.isUndefined(el.linkbackPanelController)) { return false; }
                 var panelController = el.linkbackPanelController;
                 // see if the panel controller is enabled
                 if (panelController.isActive == 'Y') {
-                    Element.removeClassName(panelController.refDispContents,'ddCONCPTTarget');
+                    Element.removeClassName(panelController.refDispContents, 'ddCONCPTTarget');
                 }
             }
             i2b2.sdx.Master.setHandlerCustom('QPD1', 'QM', 'onHoverOut', funcHovOutCONCPT);
@@ -676,73 +662,73 @@ i2b2.events.afterCellInit.subscribe(
             //======================= <Define Drop Handlers> =======================
 
             //======================= <Define Drop Handlers> =======================
-            i2b2.sdx.Master.setHandlerCustom('QPD1', 'CONCPT', 'DropHandler', (function(sdxData) {
+            i2b2.sdx.Master.setHandlerCustom('QPD1', 'CONCPT', 'DropHandler', (function (sdxData) {
                 sdxData = sdxData[0];	// only interested in first record
                 var t = i2b2.CRC.ctrlr.QT.panelControllers[0];
-                if (t.isActive=="Y") { t.doDrop(sdxData); }
+                if (t.isActive == "Y") { t.doDrop(sdxData); }
             }));
-            i2b2.sdx.Master.setHandlerCustom('QPD2', 'CONCPT', 'DropHandler', (function(sdxData) {
+            i2b2.sdx.Master.setHandlerCustom('QPD2', 'CONCPT', 'DropHandler', (function (sdxData) {
                 sdxData = sdxData[0];	// only interested in first record
                 var t = i2b2.CRC.ctrlr.QT.panelControllers[1];
-                if (t.isActive=="Y") { t.doDrop(sdxData); }
+                if (t.isActive == "Y") { t.doDrop(sdxData); }
             }));
-            i2b2.sdx.Master.setHandlerCustom('QPD3', 'CONCPT', 'DropHandler', (function(sdxData) {
+            i2b2.sdx.Master.setHandlerCustom('QPD3', 'CONCPT', 'DropHandler', (function (sdxData) {
                 sdxData = sdxData[0];	// only interested in first record
                 var t = i2b2.CRC.ctrlr.QT.panelControllers[2];
-                if (t.isActive=="Y") { t.doDrop(sdxData); }
+                if (t.isActive == "Y") { t.doDrop(sdxData); }
             }));
 
-            i2b2.sdx.Master.setHandlerCustom('QPD1', 'ENS', 'DropHandler', (function(sdxData) {
+            i2b2.sdx.Master.setHandlerCustom('QPD1', 'ENS', 'DropHandler', (function (sdxData) {
                 sdxData = sdxData[0];	// only interested in first record
                 var t = i2b2.CRC.ctrlr.QT.panelControllers[0];
-                if (t.isActive=="Y") { t.doDrop(sdxData); }
+                if (t.isActive == "Y") { t.doDrop(sdxData); }
             }));
-            i2b2.sdx.Master.setHandlerCustom('QPD2', 'ENS', 'DropHandler', (function(sdxData) {
+            i2b2.sdx.Master.setHandlerCustom('QPD2', 'ENS', 'DropHandler', (function (sdxData) {
                 sdxData = sdxData[0];	// only interested in first record
                 var t = i2b2.CRC.ctrlr.QT.panelControllers[1];
-                if (t.isActive=="Y") { t.doDrop(sdxData); }
+                if (t.isActive == "Y") { t.doDrop(sdxData); }
             }));
-            i2b2.sdx.Master.setHandlerCustom('QPD3', 'ENS', 'DropHandler', (function(sdxData) {
+            i2b2.sdx.Master.setHandlerCustom('QPD3', 'ENS', 'DropHandler', (function (sdxData) {
                 sdxData = sdxData[0];	// only interested in first record
                 var t = i2b2.CRC.ctrlr.QT.panelControllers[2];
-                if (t.isActive=="Y") { t.doDrop(sdxData); }
+                if (t.isActive == "Y") { t.doDrop(sdxData); }
             }));
 
-            i2b2.sdx.Master.setHandlerCustom('QPD1', 'PRS', 'DropHandler', (function(sdxData) {
+            i2b2.sdx.Master.setHandlerCustom('QPD1', 'PRS', 'DropHandler', (function (sdxData) {
                 sdxData = sdxData[0];	// only interested in first record
                 var t = i2b2.CRC.ctrlr.QT.panelControllers[0];
-                if (t.isActive=="Y") { t.doDrop(sdxData); }
+                if (t.isActive == "Y") { t.doDrop(sdxData); }
             }));
-            i2b2.sdx.Master.setHandlerCustom('QPD2', 'PRS', 'DropHandler', (function(sdxData) {
+            i2b2.sdx.Master.setHandlerCustom('QPD2', 'PRS', 'DropHandler', (function (sdxData) {
                 sdxData = sdxData[0];	// only interested in first record
                 var t = i2b2.CRC.ctrlr.QT.panelControllers[1];
-                if (t.isActive=="Y") { t.doDrop(sdxData); }
+                if (t.isActive == "Y") { t.doDrop(sdxData); }
             }));
-            i2b2.sdx.Master.setHandlerCustom('QPD3', 'PRS', 'DropHandler', (function(sdxData) {
+            i2b2.sdx.Master.setHandlerCustom('QPD3', 'PRS', 'DropHandler', (function (sdxData) {
                 sdxData = sdxData[0];	// only interested in first record
                 var t = i2b2.CRC.ctrlr.QT.panelControllers[2];
-                if (t.isActive=="Y") { t.doDrop(sdxData); }
+                if (t.isActive == "Y") { t.doDrop(sdxData); }
             }));
 
-            i2b2.sdx.Master.setHandlerCustom('QPD1', 'QM', 'DropHandler', (function(sdxData) {
+            i2b2.sdx.Master.setHandlerCustom('QPD1', 'QM', 'DropHandler', (function (sdxData) {
                 sdxData = sdxData[0];	// only interested in first record
                 var t = i2b2.CRC.ctrlr.QT.panelControllers[0];
-                if (t.isActive=="Y") { t.doDrop(sdxData); }
+                if (t.isActive == "Y") { t.doDrop(sdxData); }
             }));
-            i2b2.sdx.Master.setHandlerCustom('QPD2', 'QM', 'DropHandler', (function(sdxData) {
+            i2b2.sdx.Master.setHandlerCustom('QPD2', 'QM', 'DropHandler', (function (sdxData) {
                 sdxData = sdxData[0];	// only interested in first record
                 var t = i2b2.CRC.ctrlr.QT.panelControllers[1];
-                if (t.isActive=="Y") { t.doDrop(sdxData); }
+                if (t.isActive == "Y") { t.doDrop(sdxData); }
             }));
-            i2b2.sdx.Master.setHandlerCustom('QPD3', 'QM', 'DropHandler', (function(sdxData) {
+            i2b2.sdx.Master.setHandlerCustom('QPD3', 'QM', 'DropHandler', (function (sdxData) {
                 sdxData = sdxData[0];	// only interested in first record
                 var t = i2b2.CRC.ctrlr.QT.panelControllers[2];
-                if (t.isActive=="Y") { t.doDrop(sdxData); }
+                if (t.isActive == "Y") { t.doDrop(sdxData); }
             }))
 
 
-            var funcATN = function(yuiTree, yuiParentNode, sdxDataPack, callbackLoader) {
-                var myobj = { html: sdxDataPack.renderData.html, nodeid: sdxDataPack.renderData.htmlID}
+            var funcATN = function (yuiTree, yuiParentNode, sdxDataPack, callbackLoader) {
+                var myobj = { html: sdxDataPack.renderData.html, nodeid: sdxDataPack.renderData.htmlID }
                 // if the treenode we are appending to is the root node then do not show the [+] infront
                 if (yuiTree.getRoot() == yuiParentNode) {
                     var tmpNode = new YAHOO.widget.HTMLNode(myobj, yuiParentNode, false, false);
@@ -753,12 +739,12 @@ i2b2.events.afterCellInit.subscribe(
                     // add the callback to load child nodes
                     sdxDataPack.sdxInfo.sdxLoadChildren = callbackLoader;
                 }
-                tmpNode.data.i2b2_SDX= sdxDataPack;
-                tmpNode.toggle = function() {
-                    if (!this.tree.locked && ( this.hasChildren(true) ) ) {
+                tmpNode.data.i2b2_SDX = sdxDataPack;
+                tmpNode.toggle = function () {
+                    if (!this.tree.locked && (this.hasChildren(true))) {
                         var data = this.data.i2b2_SDX.renderData;
                         var img = this.getContentEl();
-                        img = Element.select(img,'img')[0];
+                        img = Element.select(img, 'img')[0];
                         if (this.expanded) {
                             img.src = data.icon;
                             this.collapse();
@@ -782,7 +768,7 @@ i2b2.events.afterCellInit.subscribe(
             i2b2.sdx.Master.setHandlerCustom('QPD2', 'PRS', 'AppendTreeNode', funcATN);
             i2b2.sdx.Master.setHandlerCustom('QPD3', 'PRS', 'AppendTreeNode', funcATN);
 
-            var funcQMDH = function(sdxData) {
+            var funcQMDH = function (sdxData) {
                 sdxData = sdxData[0];	// only interested in first record
                 // pass the QM ID to be loaded
                 var qm_id = sdxData.sdxInfo.sdxKeyValue;
@@ -796,10 +782,10 @@ i2b2.events.afterCellInit.subscribe(
 
 
             // ========= Override default LoadChildrenFromTreeview handler (we need this so that we can properly capture the XML request/response messages) =========
-            var funcLCFT = function(node, onCompleteCallback) {
+            var funcLCFT = function (node, onCompleteCallback) {
                 var scopedCallback = new i2b2_scopedCallback();
                 scopedCallback.scope = node.data.i2b2_SDX;
-                scopedCallback.callback = function(results) {
+                scopedCallback.callback = function (results) {
                     var cl_node = node;
                     var cl_onCompleteCB = onCompleteCallback;
                     var cl_options = options;
@@ -860,24 +846,24 @@ i2b2.events.afterCellInit.subscribe(
                     }
 
                     var c = results.refXML.getElementsByTagName('concept');
-                    for(var i=0; i<1*c.length; i++) {
+                    for (var i = 0; i < 1 * c.length; i++) {
                         var o = new Object;
                         o.xmlOrig = c[i];
-                        o.name = i2b2.h.getXNodeVal(c[i],'name');
-                        o.hasChildren = i2b2.h.getXNodeVal(c[i],'visualattributes').substring(0,2);
-                        o.level = i2b2.h.getXNodeVal(c[i],'level');
-                        o.key = i2b2.h.getXNodeVal(c[i],'key');
-                        o.tooltip = i2b2.h.getXNodeVal(c[i],'tooltip');
+                        o.name = i2b2.h.getXNodeVal(c[i], 'name');
+                        o.hasChildren = i2b2.h.getXNodeVal(c[i], 'visualattributes').substring(0, 2);
+                        o.level = i2b2.h.getXNodeVal(c[i], 'level');
+                        o.key = i2b2.h.getXNodeVal(c[i], 'key');
+                        o.tooltip = i2b2.h.getXNodeVal(c[i], 'tooltip');
                         o.icd9 = '';
-                        o.table_name = i2b2.h.getXNodeVal(c[i],'tablename');
-                        o.column_name = i2b2.h.getXNodeVal(c[i],'columnname');
-                        o.operator = i2b2.h.getXNodeVal(c[i],'operator');
-                        o.dim_code = i2b2.h.getXNodeVal(c[i],'dimcode');
+                        o.table_name = i2b2.h.getXNodeVal(c[i], 'tablename');
+                        o.column_name = i2b2.h.getXNodeVal(c[i], 'columnname');
+                        o.operator = i2b2.h.getXNodeVal(c[i], 'operator');
+                        o.dim_code = i2b2.h.getXNodeVal(c[i], 'dimcode');
                         // append the data node
-                        var sdxDataNode = i2b2.sdx.Master.EncapsulateData('CONCPT',o);
+                        var sdxDataNode = i2b2.sdx.Master.EncapsulateData('CONCPT', o);
                         var renderOptions = {
                             title: o.name,
-                            dblclick: "i2b2.ONT.view.nav.ToggleNode(this,'"+cl_node.tree.id+"')",
+                            dblclick: "i2b2.ONT.view.nav.ToggleNode(this,'" + cl_node.tree.id + "')",
                             icon: {
                                 root: "sdx_ONT_CONCPT_root.gif",
                                 rootExp: "sdx_ONT_CONCPT_root-exp.gif",
@@ -898,8 +884,8 @@ i2b2.events.afterCellInit.subscribe(
                 node.data.i2b2_dropLock = true;
 
                 var options = {};
-                options.ont_max_records = "max='" +i2b2.CRC.cfg.params.maxChildren + "'";
-                options.result_wait_time= i2b2.CRC.cfg.params.queryTimeout;
+                options.ont_max_records = "max='" + i2b2.CRC.cfg.params.maxChildren + "'";
+                options.result_wait_time = i2b2.CRC.cfg.params.queryTimeout;
                 options.ont_synonym_records = i2b2.ONT.cfg.params.synonyms;
                 options.ont_hidden_records = i2b2.ONT.cfg.params.hiddens;
                 // parent key
@@ -918,43 +904,59 @@ i2b2.events.afterCellInit.subscribe(
             // Connect the panel controllers to the DOM nodes in the document
             var t = i2b2.CRC.ctrlr.QT;
 
-            queryTimingButton =  new YAHOO.widget.Button("queryTiming",
-                { lazyLoad: "false", type: "menu", menu: "menubutton1select", name:"querytiming" });
+            queryTimingButton = new YAHOO.widget.Button("queryTiming",
+                { lazyLoad: "false", type: "menu", menu: "menubutton1select", name: "querytiming" });
 
-            defineTemporalButton =  new YAHOO.widget.Button("defineTemporal",
-                { lazyLoad: "false", type: "menu", menu: "menubutton2select", name:"definetemporal" });
+            defineTemporalButton = new YAHOO.widget.Button("defineTemporal",
+                { lazyLoad: "false", type: "menu", menu: "menubutton2select", name: "definetemporal" });
 
-
-            var addDefineGroup = new YAHOO.widget.Button("addDefineGroup");
+            //This is where addNewTemporalGroup() is used in live version.
+            var Group = new YAHOO.widget.Button("addDefineGroup");
             addDefineGroup.on("click", function (event) {
+
+                // -- trying this as fix for SHRINE-1482
+                $('addDefineGroup-button').disable();
+
                 i2b2.CRC.ctrlr.QT.temporalGroup = i2b2.CRC.model.queryCurrent.panels.length;
                 //i2b2.CRC.ctrlr.QT.temporalGroup = i2b2.CRC.ctrlr.QT.temporalGroup + 1;
-                defineTemporalButton.getMenu().addItems([
-                    { text: "Event " + (i2b2.CRC.ctrlr.QT.temporalGroup), value: i2b2.CRC.ctrlr.QT.temporalGroup}]);
-                defineTemporalButton.getMenu().render();
+
+                if (YAHOO.util.Dom.inDocument(defineTemporalButton.getMenu().element)) {
+                    defineTemporalButton.getMenu().addItems([
+                        { text: "Event " + (i2b2.CRC.ctrlr.QT.temporalGroup), value: i2b2.CRC.ctrlr.QT.temporalGroup }]);
+                    defineTemporalButton.getMenu().render();
+                } else {
+                    var aMenuItemData = [];
+                    aMenuItemData[0] = { text: "Event " + (i2b2.CRC.ctrlr.QT.temporalGroup), value: i2b2.CRC.ctrlr.QT.temporalGroup };
+                    defineTemporalButton.getMenu().itemData = aMenuItemData;
+                }
 
                 i2b2.CRC.model.queryCurrent.panels[i2b2.CRC.ctrlr.QT.temporalGroup] = {};
                 this.yuiTree = new YAHOO.widget.TreeView("QPD1");
                 i2b2.CRC.ctrlr.QT.panelAdd(this.yuiTree);
                 i2b2.CRC.ctrlr.QT._redrawAllPanels();
 
-                //Add to define a query
-                var select = document.getElementById("instancevent1[0]");
-                select.options[select.options.length] = new Option( 'Event '+i2b2.CRC.ctrlr.QT.temporalGroup, i2b2.CRC.ctrlr.QT.temporalGroup);
+                //Add to define a query	
+                for (var i = 0; i < i2b2.CRC.ctrlr.QT.tenporalBuilders + 1; i++) {
+                    var select = document.getElementById("instancevent1[" + i + "]");
+                    select.options[select.options.length] = new Option('Event ' + i2b2.CRC.ctrlr.QT.temporalGroup, i2b2.CRC.ctrlr.QT.temporalGroup);
 
-                select = document.getElementById("instancevent2[0]");
-                select.options[select.options.length] = new Option( 'Event '+i2b2.CRC.ctrlr.QT.temporalGroup, i2b2.CRC.ctrlr.QT.temporalGroup);
+                    select = document.getElementById("instancevent2[" + i + "]");
+                    select.options[select.options.length] = new Option('Event ' + i2b2.CRC.ctrlr.QT.temporalGroup, i2b2.CRC.ctrlr.QT.temporalGroup);
+                }
 
+                alert('New Event ' + i2b2.CRC.ctrlr.QT.temporalGroup + ' has been added.');
+
+                $('addDefineGroup-button').enable();
             });
 
-			var removeDefineGroup = new YAHOO.widget.Button("removeDefineGroup"); 
-				removeDefineGroup.on("click", function (event) {
-					i2b2.CRC.view.QT.deleteLastTemporalGroup();
-						});
+            var removeDefineGroup = new YAHOO.widget.Button("removeDefineGroup");
+            removeDefineGroup.on("click", function (event) {
+                i2b2.CRC.view.QT.deleteLastTemporalGroup();
+            });
 
             queryTimingButton.on("mousedown", function (event) {
                 //i2b2.CRC.ctrlr.QT.panelControllers[0].doTiming(p_oItem.value);
-                if ((i2b2.CRC.ctrlr.QT.hasModifier) && (queryTimingButton.getMenu().getItems().length == 3))  {
+                if ((i2b2.CRC.ctrlr.QT.hasModifier) && (queryTimingButton.getMenu().getItems().length == 3)) {
                     queryTimingButton.getMenu().addItems([
                         { text: "Items Instance will be the same", value: "SAMEINSTANCENUM" }]);
                     queryTimingButton.getMenu().render();
@@ -968,10 +970,9 @@ i2b2.events.afterCellInit.subscribe(
                 var oMenuItem = event.newValue;
 
                 var sText = oMenuItem.value;
-                defineTemporalButton.set("label",oMenuItem.cfg.getProperty("text"));
+                defineTemporalButton.set("label", oMenuItem.cfg.getProperty("text"));
 
-                if (sText != "BUILDER")
-                {
+                if (sText != "BUILDER") {
                     $('crc.temoralBuilder').hide();
 
                     $('crc.innerQueryPanel').show();
@@ -979,8 +980,7 @@ i2b2.events.afterCellInit.subscribe(
                     i2b2.CRC.ctrlr.QT._redrawAllPanels();
 
 
-                    if (sText == "0")
-                    {
+                    if (sText == "0") {
                         $('QPD1').style.background = '#FFFFFF';
                         $('queryPanelTitle1').innerHTML = 'Group 1';
                     } else {
@@ -1004,12 +1004,10 @@ i2b2.events.afterCellInit.subscribe(
                 //i2b2.CRC.ctrlr.QT.panelControllers[0].doTiming(p_oItem.value);
                 var oMenuItem = event.newValue;
 
-                if (oMenuItem == 0)
-                {
+                if (oMenuItem == 0) {
                     var sValue = "ANY";
                     var sText = "Treat all groups independently";
-                } else if (oMenuItem == 1)
-                {
+                } else if (oMenuItem == 1) {
                     var sValue = "SAME";
                     var sText = "Selected groups occur in the same financial encounter";
                 } else {
@@ -1032,25 +1030,27 @@ i2b2.events.afterCellInit.subscribe(
                 }
                 if (sValue == "SAMEVISIT") {
                     i2b2.CRC.ctrlr.QT.queryTiming = "SAMEVISIT";
-                    for (var i=0; i<length; i++) {
+                    for (var i = 0; i < length; i++) {
                         //$("queryPanelTimingB" + (i+1) +  "-button").disabled = false;
                         //$("queryPanelTimingB" + (i+1) +  "-button").innerHTML = "Occurs in Same Encounter";
                         i2b2.CRC.ctrlr.QT.panelControllers[i].refTiming.set('disabled', false);
-                        i2b2.CRC.ctrlr.QT.panelControllers[i].refTiming.set("label",  "Occurs in Same Encounter");
+                        i2b2.CRC.ctrlr.QT.panelControllers[i].refTiming.set("label", "Occurs in Same Encounter");
                         if (YAHOO.util.Dom.inDocument(i2b2.CRC.ctrlr.QT.panelControllers[i].refTiming.getMenu().element)) {
 
                             i2b2.CRC.ctrlr.QT.panelControllers[i].refTiming.getMenu().clearContent();
                             i2b2.CRC.ctrlr.QT.panelControllers[i].refTiming.getMenu().addItems([
-                                { text: "Treat Independently", value: "ANY"}]);
+                                { text: "Treat Independently", value: "ANY" }]);
                             i2b2.CRC.ctrlr.QT.panelControllers[i].refTiming.getMenu().addItems([
                                 { text: "Occurs in Same Encounter", value: "SAMEVISIT" }]);
                             i2b2.CRC.ctrlr.QT.panelControllers[i].refTiming.getMenu().addItems([
                                 { text: "Items Instance will be the same", value: "SAMEINSTANCENUM" }]);
                             i2b2.CRC.ctrlr.QT.panelControllers[i].refTiming.getMenu().render();
                         } else {
-                            i2b2.CRC.ctrlr.QT.panelControllers[i].refTiming.itemData ={ text: "Treat Independently", value: "ANY",
+                            i2b2.CRC.ctrlr.QT.panelControllers[i].refTiming.itemData = {
+                                text: "Treat Independently", value: "ANY",
                                 text: "Occurs in Same Encounter", value: "SAMEVISIT",
-                                text: "Items Instance will be the same", value: "SAMEINSTANCENUM"  };
+                                text: "Items Instance will be the same", value: "SAMEINSTANCENUM"
+                            };
                         }
                         i2b2.CRC.ctrlr.QT.panelControllers[i].doTiming(sValue);
                     }
@@ -1061,38 +1061,40 @@ i2b2.events.afterCellInit.subscribe(
                     i2b2.CRC.ctrlr.QT.temporalGroup = 0;
                     i2b2.CRC.ctrlr.QT._redrawAllPanels();
 
-                    for (var i=0; i<length; i++) {
+                    for (var i = 0; i < length; i++) {
                         i2b2.CRC.ctrlr.QT.panelControllers[i].refTiming.set("label", "Treat Independently");
                         i2b2.CRC.ctrlr.QT.panelControllers[i].refTiming.set('disabled', true);
                         i2b2.CRC.ctrlr.QT.panelControllers[i].doTiming(sValue);
                     }
                 } else if (sValue == "ENCOUNTER") {
                     i2b2.CRC.ctrlr.QT.queryTiming = "ENCOUNTER";
-                    for (var i=0; i<length; i++) {
+                    for (var i = 0; i < length; i++) {
                         //$("queryPanelTimingB" + (i+1) +  "-button").disabled = false;
                         //$("queryPanelTimingB" + (i+1) +  "-button").innerHTML = "Occurs in Same Encounter";
                         i2b2.CRC.ctrlr.QT.panelControllers[i].refTiming.set('disabled', false);
-                        i2b2.CRC.ctrlr.QT.panelControllers[i].refTiming.set("label",  "Treat Independently");
+                        i2b2.CRC.ctrlr.QT.panelControllers[i].refTiming.set("label", "Treat Independently");
                         if (YAHOO.util.Dom.inDocument(i2b2.CRC.ctrlr.QT.panelControllers[i].refTiming.getMenu().element)) {
 
                             i2b2.CRC.ctrlr.QT.panelControllers[i].refTiming.getMenu().clearContent();
                             i2b2.CRC.ctrlr.QT.panelControllers[i].refTiming.getMenu().addItems([
-                                { text: "Treat Independently", value: "ANY"}]);
-                            for (var j=0; j<length; j++) {
+                                { text: "Treat Independently", value: "ANY" }]);
+                            for (var j = 0; j < length; j++) {
                                 i2b2.CRC.ctrlr.QT.panelControllers[i].refTiming.getMenu().addItems([
-                                    { text: "Occurs (" + (j+1) + ")", value: "OCCUR"+j }]);
+                                    { text: "Occurs (" + (j + 1) + ")", value: "OCCUR" + j }]);
                             }
                             i2b2.CRC.ctrlr.QT.panelControllers[i].refTiming.getMenu().render();
                         } else {
-                            i2b2.CRC.ctrlr.QT.panelControllers[i].refTiming.itemData ={ text: "Treat Independently", value: "ANY",
-                                text: "Occurs", value: "OCCUR0" };
+                            i2b2.CRC.ctrlr.QT.panelControllers[i].refTiming.itemData = {
+                                text: "Treat Independently", value: "ANY",
+                                text: "Occurs", value: "OCCUR0"
+                            };
                         }
                         i2b2.CRC.ctrlr.QT.panelControllers[i].doTiming(sValue);
                     }
-                } else if  (sValue == "TEMPORAL") {
+                } else if (sValue == "TEMPORAL") {
                     i2b2.CRC.ctrlr.QT.queryTiming = "TEMPORAL";
                     $('defineTemporalBar').show();
-                    for (var i=0; i<length; i++) {
+                    for (var i = 0; i < length; i++) {
 
                         i2b2.CRC.ctrlr.QT.panelControllers[i].refTiming.set('disabled', false);
                         //i2b2.CRC.ctrlr.QT.panelControllers[i].refTiming.set("label", "Items Instance will be the same");
@@ -1103,7 +1105,7 @@ i2b2.events.afterCellInit.subscribe(
 
                 } else {
                     i2b2.CRC.ctrlr.QT.queryTiming = "SAMEINSTANCENUM";
-                    for (var i=0; i<length; i++) {
+                    for (var i = 0; i < length; i++) {
 
                         i2b2.CRC.ctrlr.QT.panelControllers[i].refTiming.set('disabled', false);
                         i2b2.CRC.ctrlr.QT.panelControllers[i].refTiming.set("label", sText);
@@ -1112,16 +1114,16 @@ i2b2.events.afterCellInit.subscribe(
 
                             i2b2.CRC.ctrlr.QT.panelControllers[i].refTiming.getMenu().clearContent();
                             i2b2.CRC.ctrlr.QT.panelControllers[i].refTiming.getMenu().addItems([
-                                { text: "Treat Independently", value: "ANY"}]);
+                                { text: "Treat Independently", value: "ANY" }]);
                             i2b2.CRC.ctrlr.QT.panelControllers[i].refTiming.getMenu().addItems([
                                 { text: "Occurs in Same Encounter", value: "SAMEVISIT" }]);
                             i2b2.CRC.ctrlr.QT.panelControllers[i].refTiming.getMenu().addItems([
                                 { text: "Items Instance will be the same", value: "SAMEINSTANCENUM" }]);
                             i2b2.CRC.ctrlr.QT.panelControllers[i].refTiming.getMenu().render();
                         } else {
-                            i2b2.CRC.ctrlr.QT.panelControllers[i].refTiming.itemData =[{ text: "Treat Independently", value: "ANY"},
-                                { text: "Occurs in Same Encounter", value: "SAMEVISIT"} ,
-                                { text: "Items Instance will be the same", value: "SAMEINSTANCENUM"  }];
+                            i2b2.CRC.ctrlr.QT.panelControllers[i].refTiming.itemData = [{ text: "Treat Independently", value: "ANY" },
+                                { text: "Occurs in Same Encounter", value: "SAMEVISIT" },
+                                { text: "Items Instance will be the same", value: "SAMEINSTANCENUM" }];
                         }
 
 
@@ -1134,7 +1136,7 @@ i2b2.events.afterCellInit.subscribe(
             });
 
             //var qryButtonTiming = {};
-            for (var i=0; i<3; i++) {
+            for (var i = 0; i < 3; i++) {
 
                 var onSelectedMenuItemChange = function (event) {
                     var oMenuItem = event.newValue;
@@ -1144,10 +1146,10 @@ i2b2.events.afterCellInit.subscribe(
 
                     if (event.newvalue != event.prevValue) {
                         var panelNumber = this.toString();
-                        panelNumber = panelNumber.substring( panelNumber.length-1, panelNumber.length-0);
-                        i2b2.CRC.ctrlr.QT.panelControllers[panelNumber-1].doTiming(oMenuItem.value);
+                        panelNumber = panelNumber.substring(panelNumber.length - 1, panelNumber.length - 0);
+                        i2b2.CRC.ctrlr.QT.panelControllers[panelNumber - 1].doTiming(oMenuItem.value);
                     }
-                    if (oMenuItem.value.substring(0,5) == "OCCUR") {
+                    if (oMenuItem.value.substring(0, 5) == "OCCUR") {
                         this.setStyle('width', 130);
                         $("qryButtonLimitB1").show();
                         //$('qryPanelTiming Button').style.width = 120;
@@ -1162,19 +1164,19 @@ i2b2.events.afterCellInit.subscribe(
                 //var panelControl = t.panelControllers[i];
 
                 t.panelControllers[i].ctrlIndex = i;
-                t.panelControllers[i].refTitle = $("queryPanelTitle"+(i+1));
-                t.panelControllers[i].refButtonExclude = $("queryPanelExcludeB"+(i+1));
-                t.panelControllers[i].refButtonDates = $("queryPanelDatesB"+(i+1));
-                t.panelControllers[i].refButtonOccurs = $("queryPanelOccursB"+(i+1));
-                t.panelControllers[i].refButtonOccursNum = $("QP"+(i+1)+"Occurs");
-                t.panelControllers[i].refBalloon = $("queryBalloon"+(i+1));
-                t.panelControllers[i].refDispContents = $("QPD"+(i+1));
+                t.panelControllers[i].refTitle = $("queryPanelTitle" + (i + 1));
+                t.panelControllers[i].refButtonExclude = $("queryPanelExcludeB" + (i + 1));
+                t.panelControllers[i].refButtonDates = $("queryPanelDatesB" + (i + 1));
+                t.panelControllers[i].refButtonOccurs = $("queryPanelOccursB" + (i + 1));
+                t.panelControllers[i].refButtonOccursNum = $("QP" + (i + 1) + "Occurs");
+                t.panelControllers[i].refBalloon = $("queryBalloon" + (i + 1));
+                t.panelControllers[i].refDispContents = $("QPD" + (i + 1));
 
 
                 //t.panelControllers[i].refTiming = $("queryPanelTimingB"+(i+1));
                 //t.panelControllers[i].refTiming = $("queryPanelTimingB"+(i+1));
-                var qryButtonTiming =  new YAHOO.widget.Button("queryPanelTimingB"+(i+1),
-                    { type: "menu", menu: "menubutton1select", name:"querytiming" });
+                var qryButtonTiming = new YAHOO.widget.Button("queryPanelTimingB" + (i + 1),
+                    { type: "menu", menu: "menubutton1select", name: "querytiming" });
                 //qryButtonTiming.set('disabled', true);
                 qryButtonTiming.on("selectedMenuItemChange", onSelectedMenuItemChange);
                 qryButtonTiming.setStyle('width', 160);
@@ -1184,10 +1186,10 @@ i2b2.events.afterCellInit.subscribe(
 
                 // create a instance of YUI Treeview
                 if (!t.panelControllers[i].yuiTree) {
-                    t.panelControllers[i].yuiTree = new YAHOO.widget.TreeView("QPD"+(i+1));
-                    t.panelControllers[i].yuiTree.setDynamicLoad(t.panelControllers[i]._loadTreeDataForNode,1);
+                    t.panelControllers[i].yuiTree = new YAHOO.widget.TreeView("QPD" + (i + 1));
+                    t.panelControllers[i].yuiTree.setDynamicLoad(t.panelControllers[i]._loadTreeDataForNode, 1);
                     // forward reference from DOM Node to tree obj
-                    $("QPD"+(i+1)).tree = t.panelControllers[i].yuiTree;
+                    $("QPD" + (i + 1)).tree = t.panelControllers[i].yuiTree;
                     // linkback on the treeview to allow it to find its PanelController
                     t.panelControllers[i].refDispContents.linkbackPanelController = t.panelControllers[i];
                 }
@@ -1213,7 +1215,7 @@ i2b2.events.afterCellInit.subscribe(
                         oMenuItem.value);
                 }
 
-                qryButtonTiming.set("label", qryButtonTiming.getMenu().activeItem.srcElement.text );
+                qryButtonTiming.set("label", qryButtonTiming.getMenu().activeItem.srcElement.text);
 
 
                 //		i2b2.CRC.ctrlr.QT.panelControllers[0].doTiming(p_oItem.value);
@@ -1227,12 +1229,14 @@ i2b2.events.afterCellInit.subscribe(
             var op = i2b2.CRC.view.QT; // object path
             i2b2.CRC.view.QT.ContextMenu = new YAHOO.widget.ContextMenu(
                 "divContextMenu-QT",
-                { lazyload: true,
+                {
+                    lazyload: true,
                     trigger: [$('QPD1'), $('QPD2'), $('QPD3')],
                     itemdata: [
-                        { text: "Delete", 		onclick: { fn: op.ContextMenuRouter, obj: 'delete' } },
-                        { text: "Lab Values", 	onclick: { fn: op.ContextMenuRouter, obj: 'labvalues' } }
-                    ] }
+                        { text: "Delete", onclick: { fn: op.ContextMenuRouter, obj: 'delete' } },
+                        { text: "Lab Values", onclick: { fn: op.ContextMenuRouter, obj: 'labvalues' } }
+                    ]
+                }
             );
 
             i2b2.CRC.view.QT.ContextMenu.subscribe("triggerContextMenu", i2b2.CRC.view.QT.ContextMenuPreprocess);
@@ -1240,7 +1244,7 @@ i2b2.events.afterCellInit.subscribe(
 
             i2b2.CRC.view.QT.splitterDragged();					// initialize query tool's elements
             i2b2.CRC.view.QT.ResizeHeight();
-// ================================================================================================== //
+            // ================================================================================================== //
         }
     })
 );
@@ -1251,7 +1255,7 @@ i2b2.events.afterCellInit.subscribe(
 i2b2.CRC.view.QT.hballoon = {
     canShowQueryBalloons: true,
     delayQueryBalloons: false,
-    hideBalloons: function() {
+    hideBalloons: function () {
         var thisObj = i2b2.CRC.view.QT.hballoon;
         thisObj.canShowQueryBalloons = false;
         clearTimeout(thisObj.delayQueryBalloons);
@@ -1259,26 +1263,26 @@ i2b2.CRC.view.QT.hballoon = {
         YAHOO.util.Event.removeListener(document, "mousemove", thisObj.showBalloons);
         YAHOO.util.Event.addListener(document, "mousemove", thisObj.showBalloons);
     },
-    showBalloons: function(e) {
+    showBalloons: function (e) {
         var thisObj = i2b2.CRC.view.QT.hballoon;
         var x = YAHOO.util.Event.getPageX(e);
         var y = YAHOO.util.Event.getPageY(e);
         var elX = parseInt($('crcQueryToolBox').style.left);
-        if (isNaN(elX)) {elX = 241;}
+        if (isNaN(elX)) { elX = 241; }
         var elY = $('crcQueryToolBox').getHeight();
-        if (isNaN(elY)) {elY = 280;}
+        if (isNaN(elY)) { elY = 280; }
         elY = elY + 76 - 135;
-        if ( (x < elX-5) || (x > elX+524+5) || (y < elY-15) || (y > elY+110) ) {
+        if ((x < elX - 5) || (x > elX + 524 + 5) || (y < elY - 15) || (y > elY + 110)) {
             if (!thisObj.canShowQueryBalloons) {
                 thisObj.canShowQueryBalloons = true;
-                thisObj.delayQueryBalloons = setTimeout("i2b2.CRC.view.QT.hballoon._showQueryBalloons()",200);
+                thisObj.delayQueryBalloons = setTimeout("i2b2.CRC.view.QT.hballoon._showQueryBalloons()", 200);
             }
         } else {
             thisObj.canShowQueryBalloons = false;
             clearTimeout(thisObj.delayQueryBalloons);
         }
     },
-    _showQueryBalloons: function() {
+    _showQueryBalloons: function () {
         var thisObj = i2b2.CRC.view.QT.hballoon;
         if (thisObj.canShowQueryBalloons) {
             $('queryBalloonBox').show();
@@ -1288,29 +1292,29 @@ i2b2.CRC.view.QT.hballoon = {
 };
 
 //================================================================================================== //
-i2b2.events.initView.subscribe((function(eventTypeName, newMode) {
-// -------------------------------------------------------
+i2b2.events.initView.subscribe((function (eventTypeName, newMode) {
+    // -------------------------------------------------------
     this.visible = true;
     $('crcQueryToolBox').show();
     this.Resize();
 
     // initialize the dropdown menu for query timing
-    var temporalConstraintBar 	= $("temporalConstraintBar");
+    var temporalConstraintBar = $("temporalConstraintBar");
     var temporalConstraintLabel = $("temporalConstraintLabel");
-    var queryTimingButton		= $("queryTiming-button");
-    temporalConstraintDiv.style.width 	= Math.max( parseInt(temporalConstraintBar.style.width) - parseInt(temporalConstraintLabel.style.width)-2, 0) + "px";
-    queryTimingButton.style.width 		= Math.max( parseInt(temporalConstraintBar.style.width) - parseInt(temporalConstraintLabel.style.width)-6, 0) + "px";
+    var queryTimingButton = $("queryTiming-button");
+    temporalConstraintDiv.style.width = Math.max(parseInt(temporalConstraintBar.style.width) - parseInt(temporalConstraintLabel.style.width) - 2, 0) + "px";
+    queryTimingButton.style.width = Math.max(parseInt(temporalConstraintBar.style.width) - parseInt(temporalConstraintLabel.style.width) - 6, 0) + "px";
 
     // -------------------------------------------------------
-}),'',i2b2.CRC.view.QT);
+}), '', i2b2.CRC.view.QT);
 
 
 // ================================================================================================== //
-i2b2.events.changedViewMode.subscribe((function(eventTypeName, newMode) {
-// -------------------------------------------------------
+i2b2.events.changedViewMode.subscribe((function (eventTypeName, newMode) {
+    // -------------------------------------------------------
     newMode = newMode[0];
     this.viewMode = newMode;
-    switch(newMode) {
+    switch (newMode) {
         case "Patients":
             this.visible = true;
             $('crcQueryToolBox').show();
@@ -1322,12 +1326,12 @@ i2b2.events.changedViewMode.subscribe((function(eventTypeName, newMode) {
             $('crcQueryToolBox').hide();
             break;
     }
-// -------------------------------------------------------
-}),'', i2b2.CRC.view.QT);
+    // -------------------------------------------------------
+}), '', i2b2.CRC.view.QT);
 
 
 // ================================================================================================== //
-i2b2.events.changedZoomWindows.subscribe((function(eventTypeName, zoomMsg) {
+i2b2.events.changedZoomWindows.subscribe((function (eventTypeName, zoomMsg) {
     newMode = zoomMsg[0];
     if (!newMode.action) { return; }
     if (newMode.action == "ADD") {
@@ -1345,7 +1349,7 @@ i2b2.events.changedZoomWindows.subscribe((function(eventTypeName, zoomMsg) {
         }
     }
     this.ResizeHeight();
-}),'',i2b2.CRC.view.QT);
+}), '', i2b2.CRC.view.QT);
 
 
 console.timeEnd('execute time');

@@ -4,6 +4,7 @@ import junit.framework.TestCase
 import net.shrine.problem.TestProblem
 import net.shrine.util.ShouldMatchersForJUnit
 import org.junit.Test
+
 import scala.xml.NodeSeq
 import net.shrine.util.XmlUtil
 
@@ -13,13 +14,14 @@ import net.shrine.util.XmlUtil
  */
 final class ErrorResponseTest extends TestCase with ShouldMatchersForJUnit {
   val message = "foo"
+  val problem = TestProblem(message)
 
-  val resp = ErrorResponse(message,Some(TestProblem))
+  val resp = ErrorResponse(problem)
 
   val expectedShrineXml = XmlUtil.stripWhitespace {
     <errorResponse>
       <message>{ message }</message>
-      {TestProblem.toDigest.toXml}
+      {problem.toDigest.toXml}
     </errorResponse>
   }
 
@@ -42,7 +44,7 @@ final class ErrorResponseTest extends TestCase with ShouldMatchersForJUnit {
       <response_header>
         <result_status>
           <status type="ERROR">{ message }</status>
-          {TestProblem.toDigest.toXml}
+          {problem.toDigest.toXml}
         </result_status>
       </response_header>
       <message_body>

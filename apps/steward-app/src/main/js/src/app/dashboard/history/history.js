@@ -13,7 +13,7 @@ angular.module('stewardApp')
             scope: {
                 topic: "="
             },
-            templateUrl: 'src/app/dashboard/history/history.tpl.html',
+            templateUrl: 'app/client/dashboard/history/history.tpl.html',
             controller: function ($scope) {
 
                 //private
@@ -47,7 +47,7 @@ angular.module('stewardApp')
                  * @type {{templateUrl: string, controller: Function}}
                  */
                 $scope.modalConfig = {
-                    templateUrl: 'src/app/history/query-detail/query-detail.tpl.html',
+                    templateUrl: 'app/client/history/query-detail/query-detail.tpl.html',
                     controller: function ($scope, $modalInstance, modalData) {
 
                         $scope.query = modalData;
@@ -138,7 +138,7 @@ angular.module('stewardApp')
                     var model = $scope.model;
                     var modalInstance = $modal.open({
                         animation: true,
-                        templateUrl: 'src/app/dashboard/history/history-table/query-detail.tpl.html',
+                        templateUrl: 'app/client/dashboard/history/history-table/query-detail.tpl.html',
                         controller: function ($scope, $modalInstance, query) {
 
                             $scope.displayName  = (query.name.length > 50)? (query.name.substring(0, 50) + '...') : query.name;
@@ -182,7 +182,7 @@ angular.module('stewardApp')
     .directive("historyTable", function () {
         return {
             restrict: "E",
-            templateUrl: "src/app/dashboard/history/history-table/history-table.tpl.html",
+            templateUrl: "app/client/dashboard/history/history-table/history-table.tpl.html",
             replace: true
         };
     });

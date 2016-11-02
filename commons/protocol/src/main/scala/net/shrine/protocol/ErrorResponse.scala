@@ -1,13 +1,14 @@
 package net.shrine.protocol
 
 import net.shrine.log.Loggable
-import net.shrine.problem.{ProblemNotYetEncoded, LoggingProblemHandler, Problem, ProblemDigest}
+import net.shrine.problem.{LoggingProblemHandler, Problem, ProblemDigest}
 
 import scala.xml.{NodeBuffer, NodeSeq}
 import net.shrine.util.XmlUtil
 import net.shrine.serialization.XmlUnmarshaller
 import net.shrine.serialization.I2b2Unmarshaller
 import net.shrine.util.NodeSeqEnrichments
+
 import scala.util.Try
 import scala.util.control.NonFatal
 
@@ -50,18 +51,10 @@ final case class ErrorResponse(errorMessage: String,problemDigest:ProblemDigest)
 object ErrorResponse extends XmlUnmarshaller[ErrorResponse] with I2b2Unmarshaller[ErrorResponse] with HasRootTagName with Loggable {
   val rootTagName = "errorResponse"
 
-  //todo delete this one
-  def apply(errorMessage:String,problem:Option[Problem] = None):ErrorResponse = {
-    val p = problem.getOrElse(ProblemNotYetEncoded(s"'$errorMessage'"))
-    LoggingProblemHandler.handleProblem(p) //todo someday hook up to the proper problem handler hierarchy.
-    ErrorResponse(errorMessage,p.toDigest)
-  }
-
-  def apply(problem:Problem):ErrorResponse = {
+  def apply(problem:Problem) = {
     LoggingProblemHandler.handleProblem(problem) //todo someday hook up to the proper problem handler hierarchy.
     new ErrorResponse(problem.summary,problem.toDigest)
   }
-
 
   override def fromXml(xml: NodeSeq): ErrorResponse = {
 

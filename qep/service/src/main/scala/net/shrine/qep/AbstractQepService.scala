@@ -1,15 +1,13 @@
 package net.shrine.qep
 
-import net.shrine.aggregation.{Aggregator, Aggregators, DeleteQueryAggregator, FlagQueryAggregator, ReadInstanceResultsAggregator, RenameQueryAggregator, RunQueryAggregator, UnFlagQueryAggregator}
-import net.shrine.audit.NetworkQueryId
+import net.shrine.aggregation.{Aggregator, Aggregators, DeleteQueryAggregator, FlagQueryAggregator, ReadInstanceResultsAggregator, ReadQueryDefinitionAggregator, RenameQueryAggregator, RunQueryAggregator, UnFlagQueryAggregator}
 import net.shrine.authentication.AuthenticationResult.Authenticated
 import net.shrine.authentication.{AuthenticationResult, Authenticator, NotAuthenticatedException}
 import net.shrine.authorization.AuthorizationResult.{Authorized, NotAuthorized}
 import net.shrine.authorization.QueryAuthorizationService
 import net.shrine.broadcaster.BroadcastAndAggregationService
 import net.shrine.log.Loggable
-import net.shrine.problem.{ProblemSources, AbstractProblem}
-import net.shrine.protocol.{ErrorResponse, QueryResult, AggregatedReadInstanceResultsResponse, AggregatedRunQueryResponse, AuthenticationInfo, BaseShrineRequest, BaseShrineResponse, Credential, DeleteQueryRequest, FlagQueryRequest, QueryInstance, ReadApprovedQueryTopicsRequest, ReadInstanceResultsRequest, ReadPreviousQueriesRequest, ReadPreviousQueriesResponse, ReadQueryDefinitionRequest, ReadQueryInstancesRequest, ReadQueryInstancesResponse, ReadResultOutputTypesRequest, ReadResultOutputTypesResponse, RenameQueryRequest, ResultOutputType, RunQueryRequest, UnFlagQueryRequest}
+import net.shrine.protocol.{QueryResult, AggregatedReadInstanceResultsResponse, AggregatedRunQueryResponse, AuthenticationInfo, BaseShrineRequest, BaseShrineResponse, Credential, DeleteQueryRequest, FlagQueryRequest, QueryInstance, ReadApprovedQueryTopicsRequest, ReadInstanceResultsRequest, ReadPreviousQueriesRequest, ReadPreviousQueriesResponse, ReadQueryDefinitionRequest, ReadQueryInstancesRequest, ReadQueryInstancesResponse, ReadResultOutputTypesRequest, ReadResultOutputTypesResponse, RenameQueryRequest, ResultOutputType, RunQueryRequest, UnFlagQueryRequest}
 import net.shrine.qep.audit.QepAuditDb
 import net.shrine.qep.dao.AuditDao
 import net.shrine.qep.queries.QepQueryDb
@@ -46,7 +44,7 @@ trait AbstractQepService[BaseResp <: BaseShrineResponse] extends Loggable {
   }
   
   protected def doFlagQuery(request: FlagQueryRequest, shouldBroadcast: Boolean = true): BaseResp = {
-    authenticateAndThen(request) { authResult:Authenticated =>
+    authenticateAndThen(request) { authResult =>
       QepQueryDb.db.insertQepQueryFlag(request)
       doBroadcastQuery(request, new FlagQueryAggregator, shouldBroadcast,authResult)
     }
@@ -63,19 +61,17 @@ trait AbstractQepService[BaseResp <: BaseShrineResponse] extends Loggable {
     authenticateAndThen(request) { authResult =>
       info(s"doRunQuery($request,$shouldBroadcast) with $runQueryAggregatorFor")
 
-      //store the query in the qep's database inside doBroadcastQuery()
+      //store the query in the qep's database
 
       doBroadcastQuery(request, runQueryAggregatorFor(request), shouldBroadcast,authResult)
     }
   }
 
-  //returns a ReadQueryDefinitionResponse
   protected def doReadQueryDefinition(request: ReadQueryDefinitionRequest, shouldBroadcast: Boolean): BaseResp = {
     authenticateAndThen(request) { authResult =>
-      val result =QepQueryDb.db.selectPreviousQuery(request,authResult).getOrElse(
-        ErrorResponse(PreviousQueryDoesNotExist(request.queryId,request.authn.username,request.authn.domain))).asInstanceOf[BaseResp]
-      info(s"doReadQueryDefinition($request,$shouldBroadcast) result is $result")
-      result
+      info(s"doReadQueryDefinition($request,$shouldBroadcast)")
+
+      doBroadcastQuery(request, new ReadQueryDefinitionAggregator, shouldBroadcast,authResult)
     }
   }
 
@@ -134,7 +130,7 @@ trait AbstractQepService[BaseResp <: BaseShrineResponse] extends Loggable {
 
       //todo if any results are in one of the pending states go ahead and request them async (has to wait for async Shrine)
       //pull queries from the local database.
-      QepQueryDb.db.selectPreviousQueries(request,authResult)
+      QepQueryDb.db.selectPreviousQueries(request)
     }
   }
 
@@ -182,7 +178,7 @@ trait AbstractQepService[BaseResp <: BaseShrineResponse] extends Loggable {
 
           // tuck the ACT audit metrics data into a database here
           if (collectQepAudit) QepAuditDb.db.insertQepQuery(authorizedRequest,commonName)
-          QepQueryDb.db.insertQepQuery(authorizedRequest,authResult)
+          QepQueryDb.db.insertQepQuery(authorizedRequest)
 
           val response: BaseResp = doSynchronousQuery(networkAuthn,authorizedRequest,aggregator,shouldBroadcast)
 
@@ -218,7 +214,7 @@ trait AbstractQepService[BaseResp <: BaseShrineResponse] extends Loggable {
 
       debug(s"auditAuthorizeAndThen($request) with $authorizationService")
 
-      val authorizedRequest: RunQueryRequest = authorizationService.authorizeRunQueryRequest(request) match {
+      val authorizedRequest = authorizationService.authorizeRunQueryRequest(request) match {
         case na: NotAuthorized => throw na.toException
         case authorized: Authorized => request.copy(topicName = authorized.topicIdAndName.map(x => x._2))
       }
@@ -251,10 +247,4 @@ trait AbstractQepService[BaseResp <: BaseShrineResponse] extends Loggable {
       case na:NotAuthenticated => throw NotAuthenticatedException(na)
     }
   }
-}
-
-case class PreviousQueryDoesNotExist(networkQueryId: NetworkQueryId,username: String,domain:String) extends AbstractProblem(ProblemSources.Qep) {
-  override val summary: String = "No previous query with the requested id exists for this user."
-
-  override def description: String = s"No previous query with id $networkQueryId exists for ${username}:${domain}"
 }

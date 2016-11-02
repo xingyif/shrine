@@ -1,13 +1,14 @@
 package net.shrine.integration
 
+import java.net.URL
+
 import net.shrine.log.Loggable
 
 import scala.concurrent.Future
 import scala.concurrent.duration.DurationInt
 import org.junit.Test
 import net.shrine.util.ShouldMatchersForJUnit
-import net.shrine.adapter.AdapterMap
-import net.shrine.adapter.DeleteQueryAdapter
+import net.shrine.adapter.{AdapterMap, DeleteQueryAdapter, FlagQueryAdapter, Obfuscator, ReadQueryResultAdapter, RunQueryAdapter, UnFlagQueryAdapter}
 import net.shrine.adapter.client.AdapterClient
 import net.shrine.adapter.dao.squeryl.AbstractSquerylAdapterTest
 import net.shrine.adapter.service.AdapterRequestHandler
@@ -16,29 +17,25 @@ import net.shrine.broadcaster.AdapterClientBroadcaster
 import net.shrine.broadcaster.NodeHandle
 import net.shrine.crypto.DefaultSignerVerifier
 import net.shrine.crypto.TestKeystore
-import net.shrine.protocol.{HiveCredentials, AuthenticationInfo, BroadcastMessage, Credential, DeleteQueryRequest, DeleteQueryResponse, NodeId, Result, RunQueryRequest, CertId, RequestType, FlagQueryRequest, FlagQueryResponse, RawCrcRunQueryResponse, ResultOutputType, QueryResult, RunQueryResponse, AggregatedRunQueryResponse, UnFlagQueryRequest, UnFlagQueryResponse, DefaultBreakdownResultOutputTypes}
+import net.shrine.protocol.{AggregatedRunQueryResponse, AuthenticationInfo, BroadcastMessage, CertId, Credential, DefaultBreakdownResultOutputTypes, DeleteQueryRequest, DeleteQueryResponse, FlagQueryRequest, FlagQueryResponse, HiveCredentials, NodeId, QueryResult, RawCrcRunQueryResponse, RequestType, Result, ResultOutputType, RunQueryRequest, RunQueryResponse, UnFlagQueryRequest, UnFlagQueryResponse}
 import net.shrine.qep.QepService
 import net.shrine.broadcaster.SigningBroadcastAndAggregationService
 import net.shrine.broadcaster.InJvmBroadcasterClient
-import net.shrine.adapter.FlagQueryAdapter
 import net.shrine.protocol.query.Term
-import net.shrine.adapter.RunQueryAdapter
 import net.shrine.client.Poster
 import net.shrine.client.HttpClient
 import net.shrine.client.HttpResponse
 import net.shrine.adapter.translators.QueryDefinitionTranslator
 import net.shrine.adapter.translators.ExpressionTranslator
 import net.shrine.util.XmlDateHelper
-import net.shrine.adapter.ReadQueryResultAdapter
 import net.shrine.protocol.query.QueryDefinition
-import net.shrine.adapter.UnFlagQueryAdapter
 import net.shrine.crypto.SigningCertStrategy
 
 /**
  * @author clint
  * @since Nov 27, 2013
  *
- * An in-JVM simulation of a Shrine network with one hub and 4 doanstream adapters.
+ * An in-JVM simulation of a Shrine network with one hub and 4 downstream adapters.
  *
  * The hub and adapters are wired up with mock AdapterClients that do in-JVM communication via method calls
  * instead of remotely.
@@ -85,18 +82,21 @@ final class NetworkSimulationTest extends AbstractSquerylAdapterTest with Should
     val translator = new QueryDefinitionTranslator(new ExpressionTranslator(Map("n1" -> Set("l1"))))
 
     RunQueryAdapter(
-      mockPoster,
-      dao,
-      hiveCredentials,
-      translator,
-      10000,
+      poster = mockPoster,
+      dao = dao,
+      hiveCredentials = hiveCredentials,
+      conceptTranslator = translator,
+      adapterLockoutAttemptsThreshold = 10000,
       doObfuscation = false,
       runQueriesImmediately = false,
-      DefaultBreakdownResultOutputTypes.toSet,
-      collectAdapterAudit = false
+      breakdownTypes = DefaultBreakdownResultOutputTypes.toSet,
+      collectAdapterAudit = false,
+      botCountTimeThresholds = Seq.empty,
+      obfuscator = Obfuscator(5,6.5,10)
     )
   }
 
+  //todo this looks unused
   private def immediatelyRunsQueriesRunQueryAdapter(setSize: Long): RunQueryAdapter = {
     val mockCrcPoster = Poster("http://example.com", new HttpClient {
       override def post(input: String, url: String): HttpResponse = {
@@ -122,7 +122,8 @@ final class NetworkSimulationTest extends AbstractSquerylAdapterTest with Should
       dao,
       doObfuscation = false,
       DefaultBreakdownResultOutputTypes.toSet,
-      collectAdapterAudit = false
+      collectAdapterAudit = false,
+      obfuscator = Obfuscator(5,6.5,10)
     )
   }
 
@@ -254,7 +255,6 @@ final class NetworkSimulationTest extends AbstractSquerylAdapterTest with Should
     dao.insertQuery(masterId.toString, networkQueryId, authn, fooQuery, isFlagged = false, hasBeenRun = true, flagMessage = None)
 
     dao.findQueryByNetworkId(networkQueryId).get.isFlagged should be(false)
-    dao.findQueryByNetworkId(networkQueryId).get.hasBeenRun should be(true)
     dao.findQueryByNetworkId(networkQueryId).get.flagMessage should be(None)
 
     val req = FlagQueryRequest("some-project-id", 1.second, authn, networkQueryId, Some("foo"))
@@ -264,7 +264,6 @@ final class NetworkSimulationTest extends AbstractSquerylAdapterTest with Should
     resp should equal(FlagQueryResponse)
 
     dao.findQueryByNetworkId(networkQueryId).get.isFlagged should be(true)
-    dao.findQueryByNetworkId(networkQueryId).get.hasBeenRun should be(true)
     dao.findQueryByNetworkId(networkQueryId).get.flagMessage should be(Some("foo"))
   }
   
@@ -286,7 +285,6 @@ final class NetworkSimulationTest extends AbstractSquerylAdapterTest with Should
     dao.insertQuery(masterId.toString, networkQueryId, authn, fooQuery, isFlagged = true, hasBeenRun = true, flagMessage = flagMsg)
 
     dao.findQueryByNetworkId(networkQueryId).get.isFlagged should be(true)
-    dao.findQueryByNetworkId(networkQueryId).get.hasBeenRun should be(true)
     dao.findQueryByNetworkId(networkQueryId).get.flagMessage should be(flagMsg)
 
     val req = UnFlagQueryRequest("some-project-id", 1.second, authn, networkQueryId)
@@ -296,7 +294,6 @@ final class NetworkSimulationTest extends AbstractSquerylAdapterTest with Should
     resp should equal(UnFlagQueryResponse)
 
     dao.findQueryByNetworkId(networkQueryId).get.isFlagged should be(false)
-    dao.findQueryByNetworkId(networkQueryId).get.hasBeenRun should be(true)
     dao.findQueryByNetworkId(networkQueryId).get.flagMessage should be(None)
   }
 }
@@ -316,6 +313,8 @@ object NetworkSimulationTest {
 
       result
     }
+    override def url: Option[URL] = ???
+
   }
 
   private final case class MockAdapterRequestHandler(delegate: AdapterRequestHandler) extends AdapterRequestHandler {

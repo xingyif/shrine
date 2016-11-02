@@ -13,7 +13,7 @@ object SlurpXml extends (String >>> AdapterMappings) {
   override def apply(filename: String): AdapterMappings = {
     val xml = XML.loadFile(new File(filename))
     
-    AdapterMappings.fromXml(xml).get
+    AdapterMappings.fromXml(filename,xml).get
   }
   
   override def toString = "SlurpXml"

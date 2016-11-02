@@ -2,15 +2,19 @@ package net.shrine.config.mappings
 
 import scala.xml.NodeSeq
 import net.shrine.util.XmlUtil
+
 import scala.util.Try
 import net.shrine.util.XmlDateHelper
 import net.shrine.util.Tries
 import java.io.Reader
+
 import scala.io.Source
 import au.com.bytecode.opencsv.CSVReader
+
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.Buffer
 import java.io.StringWriter
+
 import au.com.bytecode.opencsv.CSVWriter
 
 /**
@@ -20,7 +24,7 @@ import au.com.bytecode.opencsv.CSVWriter
  * @author Clint Gilbert
  * @since 2013 (?)
  */
-final case class AdapterMappings(version: String = AdapterMappings.Unknown, mappings: Map[String, Set[String]] = Map.empty) {
+final case class AdapterMappings(source: String, version: String = AdapterMappings.Unknown, mappings: Map[String, Set[String]] = Map.empty) {
 
   def networkTerms: Set[String] = mappings.keySet
 
@@ -95,9 +99,9 @@ final case class AdapterMappings(version: String = AdapterMappings.Unknown, mapp
 object AdapterMappings {
   val Unknown = "Unknown"
 
-  val empty = new AdapterMappings
+  val empty = new AdapterMappings("empty")
 
-  def fromXml(xml: NodeSeq): Try[AdapterMappings] = {
+  def fromXml(source:String, xml: NodeSeq): Try[AdapterMappings] = {
     val entries = xml \ "mappings" \ "entry"
 
     val tupleAttempts = entries.map { entryXml =>
@@ -113,17 +117,17 @@ object AdapterMappings {
 
     for {
       tuples <- Tries.sequence(tupleAttempts)
-    } yield AdapterMappings(version, tuples.toMap)
+    } yield AdapterMappings(source, version, tuples.toMap)
   }
 
-  def fromCsv(reader: Reader): Try[AdapterMappings] = Try {
+  def fromCsv(source:String,reader: Reader): Try[AdapterMappings] = Try {
     //XXX: FIXME: Get this from a/the file somehow
     val version = Unknown
 
     try {
       val lines = Csv.lazySlurp(reader)
 
-      empty.withVersion(version) ++ lines
+      empty.copy(version = version,source = source) ++ lines
     } finally {
       reader.close()
     }

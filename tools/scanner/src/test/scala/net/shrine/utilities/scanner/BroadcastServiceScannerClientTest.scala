@@ -119,6 +119,8 @@ object BroadcastServiceScannerClientTest {
             QueryResult.StatusType.Finished,
             None)))
     }
+
+    override def attachSigningCert: Boolean = false
   }
 
   private final class MockRetrieveResultsBroadcastAndAggregationService extends BroadcastAndAggregationService {
@@ -137,5 +139,7 @@ object BroadcastServiceScannerClientTest {
             QueryResult.StatusType.Finished,
             None)))
     }
+
+    override def attachSigningCert: Boolean = false
   }
 }

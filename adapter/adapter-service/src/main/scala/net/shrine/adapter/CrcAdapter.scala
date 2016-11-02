@@ -1,13 +1,14 @@
 package net.shrine.adapter
 
-import net.shrine.problem.{ProblemSources, AbstractProblem}
 import org.xml.sax.SAXParseException
 
 import scala.xml.NodeSeq
 import scala.xml.XML
-import net.shrine.protocol.{HiveCredentials, AuthenticationInfo, BroadcastMessage, Credential, ShrineRequest, ShrineResponse, TranslatableRequest, BaseShrineRequest, ErrorResponse, BaseShrineResponse}
+import net.shrine.protocol.{AuthenticationInfo, BaseShrineRequest, BaseShrineResponse, BroadcastMessage, Credential, ErrorResponse, HiveCredentials, ShrineRequest, ShrineResponse, TranslatableRequest}
 import net.shrine.util.XmlDateHelper
 import net.shrine.client.Poster
+import net.shrine.problem.{AbstractProblem, ProblemSources}
+
 import scala.util.Try
 import scala.util.control.NonFatal
 

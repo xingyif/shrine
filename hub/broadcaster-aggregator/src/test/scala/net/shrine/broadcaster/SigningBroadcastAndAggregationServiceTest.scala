@@ -1,26 +1,15 @@
 package net.shrine.broadcaster
 
-import net.shrine.problem.TestProblem
-
 import scala.concurrent.Await
 import org.junit.Test
 import net.shrine.util.ShouldMatchersForJUnit
 import net.shrine.aggregation.Aggregator
 import net.shrine.crypto.DefaultSignerVerifier
 import net.shrine.crypto.TestKeystore
-import net.shrine.protocol.AuthenticationInfo
-import net.shrine.protocol.BroadcastMessage
-import net.shrine.protocol.Credential
-import net.shrine.protocol.DeleteQueryRequest
-import net.shrine.protocol.ErrorResponse
-import net.shrine.protocol.Failure
-import net.shrine.protocol.NodeId
-import net.shrine.protocol.Result
-import net.shrine.protocol.ShrineResponse
-import net.shrine.protocol.SingleNodeResult
-import net.shrine.protocol.Timeout
+import net.shrine.protocol.{AuthenticationInfo, BroadcastMessage, Credential, DeleteQueryRequest, ErrorResponse, FailureResult, FailureResult$, NodeId, Result, ShrineResponse, SingleNodeResult, Timeout}
 import net.shrine.crypto.SigningCertStrategy
 import net.shrine.broadcaster.dao.MockHubDao
+import net.shrine.problem.TestProblem
 
 /**
  * @author clint
@@ -30,7 +19,10 @@ final class SigningBroadcastAndAggregationServiceTest extends ShouldMatchersForJ
   import scala.concurrent.duration._
   import MockBroadcasters._
 
-  private def result(description: Char) = Result(NodeId(description.toString), 1.second, ErrorResponse("blah blah blah",Some(TestProblem)))
+  private def result(description: Char) = {
+    val problem: TestProblem = TestProblem(summary = "blah blah blah")
+    Result(NodeId(description.toString), 1.second, ErrorResponse(problem))
+  }
 
   private val results = "abcde".map(result)
 
@@ -58,25 +50,28 @@ final class SigningBroadcastAndAggregationServiceTest extends ShouldMatchersForJ
 
     val aggregator: Aggregator = new Aggregator {
       override def aggregate(results: Iterable[SingleNodeResult], errors: Iterable[ErrorResponse]): ShrineResponse = {
-        ErrorResponse(results.size.toString,Some(TestProblem))
+        ErrorResponse(TestProblem(results.size.toString))
       }
     }
 
     val aggregatedResult = Await.result(broadcastService.sendAndAggregate(broadcastMessage, aggregator, true), 5.minutes)
 
     mockBroadcaster.messageParam.signature.isDefined should be(true)
-    
-    aggregatedResult should equal(ErrorResponse(s"${results.size}",Some(TestProblem)))
+
+    val testProblem = TestProblem(s"${results.size}")
+    //testProblem.stamp.time = aggregatedResult.
+
+    aggregatedResult should equal(ErrorResponse(TestProblem(s"${results.size}")))
   }
 
   @Test
   def testAggregateHandlesFailures {
-    def toResult(description: Char) = Result(NodeId(description.toString), 1.second, ErrorResponse("blah blah blah",Some(TestProblem)))
+    def toResult(description: Char) = Result(NodeId(description.toString), 1.second, ErrorResponse(TestProblem("blah blah blah")))
 
-    def toFailure(description: Char) = Failure(NodeId(description.toString), new Exception with scala.util.control.NoStackTrace)
+    def toFailure(description: Char) = FailureResult(NodeId(description.toString), new Exception with scala.util.control.NoStackTrace)
 
     val failuresByOrigin: Map[NodeId, SingleNodeResult] = {
-      "UV".map(toFailure).map { case f @ Failure(origin, _) => origin -> f }.toMap
+      "UV".map(toFailure).map { case f @ FailureResult(origin, _) => origin -> f }.toMap
     }
     
     val timeoutsByOrigin: Map[NodeId, SingleNodeResult] = Map(NodeId("Z") -> Timeout(NodeId("Z")))
@@ -89,7 +84,7 @@ final class SigningBroadcastAndAggregationServiceTest extends ShouldMatchersForJ
 
     val aggregator: Aggregator = new Aggregator {
       override def aggregate(results: Iterable[SingleNodeResult], errors: Iterable[ErrorResponse]): ShrineResponse = {
-        ErrorResponse(s"${results.size},${errors.size}",Some(TestProblem))
+        ErrorResponse(TestProblem(s"${results.size},${errors.size}"))
       }
     }
 
@@ -97,6 +92,6 @@ final class SigningBroadcastAndAggregationServiceTest extends ShouldMatchersForJ
 
     mockBroadcaster.messageParam.signature.isDefined should be(true)
     
-    aggregatedResult should equal(ErrorResponse(s"${results.size + failuresByOrigin.size + timeoutsByOrigin.size},0",Some(TestProblem)))
+    aggregatedResult should equal(ErrorResponse(TestProblem(s"${results.size + failuresByOrigin.size + timeoutsByOrigin.size},0")))
   }
 }

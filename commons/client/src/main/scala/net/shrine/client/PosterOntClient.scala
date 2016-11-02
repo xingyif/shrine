@@ -1,25 +1,20 @@
 package net.shrine.client
 
 import net.shrine.log.Loggable
-import net.shrine.protocol.{HiveCredentials, ShrineRequest, AuthenticationInfo, Credential, RequestType}
-import scala.xml.NodeSeq
-import net.shrine.util.XmlUtil
+import net.shrine.protocol.{AuthenticationInfo, HiveCredentials, RequestType, ShrineRequest}
+import net.shrine.util.{NodeSeqEnrichments, XmlUtil}
+
 import scala.concurrent.duration.Duration
-import net.shrine.crypto.TrustParam
-import scala.xml.XML
-import scala.util.Try
-import scala.util.Failure
-import scala.util.Success
-import net.shrine.util.NodeSeqEnrichments
+import scala.util.{Failure, Success}
+import scala.xml.NodeSeq
 
 /**
  * @author clint
- * @date Jan 24, 2014
+ * @since Jan 24, 2014
  */
-final class PosterOntClient(hiveCredentials: HiveCredentials, waitTime: Duration, poster: Poster) extends OntClient {
+final case class PosterOntClient(hiveCredentials: HiveCredentials, waitTime: Duration, poster: Poster) extends OntClient {
 
   override def childrenOf(parent: String): Set[String] = {
-    import scala.concurrent.duration._
     import PosterOntClient._
 
     val urlSuffixForThisOp = "getChildren"

@@ -1,32 +1,21 @@
 package net.shrine.qep
 
 import java.sql.SQLException
+import javax.ws.rs.{POST, Path, Produces}
+import javax.ws.rs.core.{MediaType, Response}
+import javax.ws.rs.core.Response.ResponseBuilder
 
 import net.shrine.authentication.NotAuthenticatedException
 import net.shrine.log.Loggable
-import net.shrine.qep.queries.{QepDatabaseProblem, CouldNotRunDbIoActionException}
+import net.shrine.problem.ProblemNotYetEncoded
+import net.shrine.protocol.{ErrorResponse, HandleableI2b2Request, I2b2RequestHandler, ResultOutputType, ShrineRequest}
+import net.shrine.qep.queries.QepDatabaseProblem
+import net.shrine.serialization.I2b2Marshaller
+import net.shrine.slick.CouldNotRunDbIoActionException
+import net.shrine.util.XmlUtil
 
 import scala.util.Try
-import javax.ws.rs.POST
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.core.Response
-import net.shrine.util.{StackTrace, XmlUtil}
-import javax.ws.rs.core.MediaType
-import net.shrine.protocol.ReadI2b2AdminPreviousQueriesRequest
-import net.shrine.protocol.ShrineRequestHandler
-import net.shrine.protocol.ReadQueryDefinitionRequest
-import net.shrine.protocol.HandleableShrineRequest
-import net.shrine.protocol.ShrineRequest
-import net.shrine.protocol.ErrorResponse
-import javax.ws.rs.core.Response.ResponseBuilder
-import net.shrine.serialization.I2b2Marshaller
-import net.shrine.protocol.BaseShrineRequest
-import net.shrine.protocol.HandleableShrineRequest
-import net.shrine.protocol.I2b2RequestHandler
-import net.shrine.protocol.HandleableI2b2Request
 import scala.util.control.NonFatal
-import net.shrine.protocol.ResultOutputType
 import scala.xml.NodeSeq
 
 /**
@@ -59,10 +48,10 @@ final case class I2b2BroadcastResource(i2b2RequestHandler: I2b2RequestHandler, b
     // todo would be good to log $i2b2Request)")
 
     def errorResponse(e: Throwable): ErrorResponse = e match {
-      case nax:NotAuthenticatedException => ErrorResponse(s"Error processing message: ${e.getMessage}",Some(nax.problem))
-      case cnrdax:CouldNotRunDbIoActionException => ErrorResponse(s"Error processing message: ${e.getMessage}",Some(QepDatabaseProblem(cnrdax)))
-      case sqlx:SQLException => ErrorResponse(s"Error processing message: ${e.getMessage}",Some(QepDatabaseProblem(sqlx)))
-      case _ => ErrorResponse(s"Error processing message: ${e.getMessage}: Stack trace follows: ${StackTrace.stackTraceAsString(e)}")
+      case nax:NotAuthenticatedException => ErrorResponse(nax.problem)
+      case cnrdax:CouldNotRunDbIoActionException => ErrorResponse(QepDatabaseProblem(cnrdax))
+      case sqlx:SQLException => ErrorResponse(QepDatabaseProblem(sqlx))
+      case _ => ErrorResponse(ProblemNotYetEncoded("The QEP encountered an unforeseen problem while processing an i2b2 request",e))
     }
 
     def prettyPrint(xml: NodeSeq): String = XmlUtil.prettyPrint(xml.head).trim
@@ -85,11 +74,9 @@ final case class I2b2BroadcastResource(i2b2RequestHandler: I2b2RequestHandler, b
 
       Response.ok.entity(responseString)
     }.recover {
-      case NonFatal(e) => {
+      case NonFatal(e) =>
         error("Error processing request: ", e)
-
         i2b2HttpErrorResponse(e)
-      }
     }
 
     def handleParseError(e: Throwable): Try[ResponseBuilder] = Try {

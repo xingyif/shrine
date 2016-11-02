@@ -1,18 +1,13 @@
 package net.shrine.ont.data
 
 import net.shrine.client.OntClient
-import net.shrine.client.Poster
-import net.shrine.client.JerseyHttpClient
-import net.shrine.client.PosterOntClient
-import net.shrine.crypto.TrustParam
-import net.shrine.protocol.HiveCredentials
 
 /**
  * @author clint
- * @date Jan 28, 2014
+ * @since Jan 28, 2014
  */
-final class OntClientOntologyMetadata(client: OntClient) extends OntologyMetadata {
-  override def ontologyVersion: String = {
+final case class OntClientOntologyMetadata(client: OntClient) {
+  def ontologyVersion: String = {
     import OntClientOntologyMetadata._
 
     val versionTermOption = for {

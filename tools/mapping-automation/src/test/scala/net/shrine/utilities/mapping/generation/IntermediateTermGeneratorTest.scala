@@ -13,7 +13,7 @@ import java.io.FileReader
 
 /**
  * @author clint
- * @date Jul 18, 2014
+ * @since Jul 18, 2014
  */
 final class IntermediateTermGeneratorTest extends ShouldMatchersForJUnit {
   @Test
@@ -39,7 +39,7 @@ final class IntermediateTermGeneratorTest extends ShouldMatchersForJUnit {
 
     command(inputFile)
 
-    val generatedMappings = AdapterMappings.fromCsv(new FileReader(outputFile)).get
+    val generatedMappings = AdapterMappings.fromCsv(outputFile,new FileReader(outputFile)).get
 
     val xyza = """\\X\Y\Z\A\"""
     val xyz = """\\X\Y\Z\"""
@@ -50,11 +50,18 @@ final class IntermediateTermGeneratorTest extends ShouldMatchersForJUnit {
     val abca1 = """\\A\B\C\A1\"""
     val abca2 = """\\A\B\C\A2\"""
 
-    generatedMappings should equal(AdapterMappings(AdapterMappings.Unknown, Map(
-      xyza -> Set(abca1, abca2),
-      xyz -> Set(abca1, abca2, abc),
-      xy -> Set(abca1, abca2, abc),
-      x -> Set(abca1, abca2, abc))))
+    generatedMappings should equal(
+      AdapterMappings(
+        outputFile,
+        AdapterMappings.Unknown,
+        Map(
+          xyza -> Set(abca1, abca2),
+          xyz -> Set(abca1, abca2, abc),
+          xy -> Set(abca1, abca2, abc),
+          x -> Set(abca1, abca2, abc)
+        )
+      )
+    )
   }
   
   @Test
@@ -69,7 +76,7 @@ final class IntermediateTermGeneratorTest extends ShouldMatchersForJUnit {
 
     command(inputFile)
 
-    val generatedMappings = AdapterMappings.fromCsv(new FileReader(outputFile)).get
+    val generatedMappings = AdapterMappings.fromCsv(outputFile,new FileReader(outputFile)).get
 
     val xyza = """\\X\Y\Z\A\"""
     val xyz = """\\X\Y\Z\"""
@@ -80,7 +87,7 @@ final class IntermediateTermGeneratorTest extends ShouldMatchersForJUnit {
     val abca1 = """\\A\B\C\A1\"""
     val abca2 = """\\A\B\C\A2\"""
 
-    generatedMappings should equal(AdapterMappings(AdapterMappings.Unknown, Map(
+    generatedMappings should equal(AdapterMappings(outputFile,AdapterMappings.Unknown, Map(
       xyza -> Set(abca1, abca2),
       xyz -> Set(abca1, abca2, abc),
       xy -> Set(abca1, abca2, abc))))

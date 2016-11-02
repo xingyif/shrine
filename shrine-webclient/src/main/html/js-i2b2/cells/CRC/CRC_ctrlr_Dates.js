@@ -20,8 +20,7 @@ i2b2.CRC.ctrlr.dateConstraint = {
 	showDates: function(panelControllerIndex) {
 		var dm = i2b2.CRC.model.queryCurrent;
 		var panelIndex = i2b2.CRC.ctrlr.QT.panelControllers[panelControllerIndex].panelCurrentIndex;
-		if (undefined==dm.panels[panelIndex]) return;
-		// grab our current values
+		if (undefined==dm.panels[i2b2.CRC.ctrlr.QT.temporalGroup][panelIndex]) return;
 		var qn = dm.panels[i2b2.CRC.ctrlr.QT.temporalGroup][panelIndex];
 		this.currentPanelIndex = panelIndex;
 
@@ -181,18 +180,24 @@ i2b2.CRC.ctrlr.dateConstraint = {
 // ================================================================================================== //
 	doProcessDates: function(panelIndex) {
 		// push the dates into the data model
-		var sDate = new String;
 		var sDateError = false;
-		var rxDate = /^\d{1,2}(\-|\/|\.)\d{1,2}\1\d{4}$/
+
+		//^(0[1-9]|1[012])(\\|\-)(0[1-9]|[12][0-9]|3[01])(\\|\-)(19|20)\d\d$
+		///^\d{1,2}(\-|\/|\.)\d{1,2}\1\d{4}$/
+		var rxDate = /^([1-9]|0[1-9]|1[012])(\/|\-)([1-9]|0[1-9]|[12][0-9]|3[01])(\/|\-)(19|20)\d\d$/;
 		var DateRecord = {};
+		var startChecked = $('checkboxDateStart').checked;
+		var endChecked = $('checkboxDateEnd').checked;
+		var startDate, endDate;
+
 		var dm = i2b2.CRC.model.queryCurrent.panels[i2b2.CRC.ctrlr.QT.temporalGroup][panelIndex];
 		this.currentPanelIndex = panelIndex;
 		// start date
-		if ($('checkboxDateStart').checked) {
+		if (startChecked) {
 			DateRecord.Start = {};
-			sDate = $('constraintDateStart').value;
-			if (rxDate.test(sDate)) {
-				var aDate = sDate.split(/\//);
+			startDate = $('constraintDateStart').value;
+			if (rxDate.test(startDate)) {
+				var aDate = startDate.split(/\//);
 				DateRecord.Start.Month = padNumber(aDate[0],2);
 				DateRecord.Start.Day = padNumber(aDate[1],2);
 				DateRecord.Start.Year = aDate[2];
@@ -200,12 +205,12 @@ i2b2.CRC.ctrlr.dateConstraint = {
 				sDateError = "Invalid Start Date\n";
 			}
 		}
-		// end date
-		if ($('checkboxDateEnd').checked) {
+		// test the end date.
+		if (endChecked) {
 			DateRecord.End = {};
-			sDate = $('constraintDateEnd').value;
-			if (rxDate.test(sDate)) {
-				var aDate = sDate.split(/\//);
+			endDate = $('constraintDateEnd').value;
+			if (rxDate.test(endDate)) {
+				var aDate = endDate.split(/\//);
 				DateRecord.End.Month = padNumber(aDate[0]);
 				DateRecord.End.Day = padNumber(aDate[1]);
 				DateRecord.End.Year = aDate[2];
@@ -213,6 +218,18 @@ i2b2.CRC.ctrlr.dateConstraint = {
 				sDateError = "Invalid End Date\n";
 			}
 		}
+
+		//make sure dates are in proper order.
+		if(startDate && endDate) {
+			var start = new Date(startDate);
+			var end = new Date(endDate);
+			if(start.valueOf() >=  end.valueOf()) {
+				sDateError = "Invalid Date Range\n";
+			}
+		}
+		//must check 
+		//add an additional if statement that ensures start date is smaller than the end date.
+		//if(sDate)
 		// check for processing errors
 		if (sDateError) {
 			sDateError += "\nPlease use the following format: mm/dd/yyyy";

@@ -1,39 +1,48 @@
 {
-  "name": "steward",
-  "version": "1.0.0",
-  "description": "hms steward app",
-  "main": "y",
-  "dependencies": {
-    "grunt": "^0.4.5",
-    "grunt-cli": "0.1.13",
-    "grunt-contrib-clean": "^0.6.0",
-    "grunt-contrib-copy": "^0.8.0",
-    "grunt-contrib-stylus": "^0.21.0",
-    "grunt-contrib-watch": "^0.6.1",
-    "grunt-karma": "^0.10.1",
-    "karma": "^0.12.31",
-    "karma-jasmine": "^0.3.5",
-    "bower": "1.7.7",
-    "karma-phantomjs-launcher": "0.1.4",
-    "grunt-contrib-uglify": "^0.9.1",
-    "karma-firefox-launcher": "^0.1.6",
-    "karma-chrome-launcher": "^0.2.0"
-  },
+  "name": "hms-data-steward",
+  "version": "2.0.0",
+  "description": "HMS Data Steward",
+  "main": "./app/server/server-mock.js",
   "devDependencies": {
-    "grunt-contrib-uglify": "^0.9.1",
-    "karma-chrome-launcher": "^0.2.0",
-    "karma-firefox-launcher": "^0.1.6",
-    "karma-phantomjs-launcher": "^0.1.4",
-    "phantomjs": "^1.9.17"
+    "bower": "v1.7.9",
+    "del": "v2.2.1",
+    "gulp": "v3.9.1",
+    "gulp-concat": "v2.6.0",
+    "gulp-connect": "v4.1.0",
+    "gulp-copy": "v0.0.2",
+    "gulp-if": "v2.0.1",
+    "gulp-inject": "v4.1.0",
+    "gulp-jscs": "v4.0.0",
+    "gulp-jshint": "v2.0.1",
+    "gulp-load-plugins": "v1.2.4",
+    "gulp-print": "v2.0.1",
+    "gulp-sequence": "v0.4.5",
+    "gulp-server-livereload": "v1.8.1",
+    "jasmine": "v2.4.1",
+    "jscs": "v3.0.5",
+    "jshint": "v2.9.2",
+    "jshint-stylish": "v2.2.0",
+    "karma": "v1.1.0",
+    "karma-jasmine": "v1.0.2",
+    "karma-phantomjs-launcher": "v1.0.1",
+    "phantomjs-prebuilt": "v2.1.7",
+    "wiredep": "v4.0.0",
+    "yargs": "v4.7.1"
   },
   "scripts": {
-    "test": "grunt:karma"
+    "test": "gulp build",
+    "start": "node ~/dev/hms/server/server-mock"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://open.med.harvard.edu/stash/scm/shrine/shrine.git"
   },
   "keywords": [
-    "hms",
-    "steward",
-    "app"
+    "HMS",
+    "SHRINE",
+    "Data",
+    "Steward"
   ],
-  "author": "Ben Carmen",
-  "license": "ISC"
+  "author": "‘Ben <benjamin_carmen@hms.harvard.edu>",
+  "license": "MIT"
 }

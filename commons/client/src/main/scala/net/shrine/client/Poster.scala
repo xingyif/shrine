@@ -1,5 +1,7 @@
 package net.shrine.client
 
+import net.shrine.crypto.KeyStoreCertCollection
+
 /**
  * @author clint
  * @since Dec 18, 2013
@@ -10,4 +12,14 @@ final case class Poster(url: String, httpClient: HttpClient) {
   def post(data: String): HttpResponse = httpClient.post(data, url)
   
   def mapUrl(f: String => String): Poster = copy(url = f(url))
+}
+
+object Poster {
+  //todo a version based on config
+  def apply(keystoreCertCollection: KeyStoreCertCollection,endpoint: EndpointConfig):Poster = {
+
+    val httpClient = JerseyHttpClient(keystoreCertCollection, endpoint)
+
+    Poster(endpoint.url.toString, httpClient)
+  }
 }

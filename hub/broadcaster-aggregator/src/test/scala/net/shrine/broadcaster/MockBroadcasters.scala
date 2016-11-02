@@ -6,7 +6,7 @@ import net.shrine.protocol.NodeId
 
 /**
  * @author clint
- * @date Feb 28, 2014
+ * @since Feb 28, 2014
  */
 object MockBroadcasters {
   final case class MockAdapterClientBroadcaster(toReturn: Map[NodeId, SingleNodeResult]) extends Broadcaster {
@@ -25,5 +25,7 @@ object MockBroadcasters {
 
       multiplexer
     }
+
+    override def destinations: Set[NodeHandle] = ???
   }
 }

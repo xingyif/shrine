@@ -6,12 +6,11 @@ import javax.sql.DataSource
 
 import com.typesafe.config.Config
 import net.shrine.audit.{NetworkQueryId, QueryName, Time, UserName}
-import net.shrine.authentication.AuthenticationResult.Authenticated
 import net.shrine.log.Loggable
 import net.shrine.problem.{AbstractProblem, ProblemDigest, ProblemSources}
-import net.shrine.protocol.{DefaultBreakdownResultOutputTypes, DeleteQueryRequest, FlagQueryRequest, I2b2ResultEnvelope, QueryMaster, QueryResult, ReadPreviousQueriesRequest, ReadPreviousQueriesResponse, ReadQueryDefinitionRequest, ReadQueryDefinitionResponse, RenameQueryRequest, ResultOutputType, ResultOutputTypes, RunQueryRequest, UnFlagQueryRequest}
+import net.shrine.protocol.{DefaultBreakdownResultOutputTypes, DeleteQueryRequest, FlagQueryRequest, I2b2ResultEnvelope, QueryMaster, QueryResult, ReadPreviousQueriesRequest, ReadPreviousQueriesResponse, RenameQueryRequest, ResultOutputType, ResultOutputTypes, RunQueryRequest, UnFlagQueryRequest}
 import net.shrine.qep.QepConfigSource
-import net.shrine.slick.TestableDataSourceCreator
+import net.shrine.slick.{CouldNotRunDbIoActionException, TestableDataSourceCreator}
 import net.shrine.util.XmlDateHelper
 import slick.driver.JdbcProfile
 
@@ -52,10 +51,10 @@ case class QepQueryDb(schemaDef:QepQuerySchema,dataSource: DataSource,timeout:Du
     }
   }
 
-  def insertQepQuery(runQueryRequest: RunQueryRequest,authResult:Authenticated):Unit = {
+  def insertQepQuery(runQueryRequest: RunQueryRequest):Unit = {
     debug(s"insertQepQuery $runQueryRequest")
 
-    insertQepQuery(QepQuery(runQueryRequest,authResult))
+    insertQepQuery(QepQuery(runQueryRequest))
   }
 
   def insertQepQuery(qepQuery: QepQuery):Unit = {
@@ -66,20 +65,8 @@ case class QepQueryDb(schemaDef:QepQuerySchema,dataSource: DataSource,timeout:Du
     dbRun(mostRecentVisibleQepQueries.result)
   }
 
-  def selectPreviousQuery(request:ReadQueryDefinitionRequest,authResult:Authenticated):Option[ReadQueryDefinitionResponse] = {
-    selectPreviousQuery(authResult.username,authResult.domain,request.queryId).map(_.toReadQueryDefinitionResponse)
-  }
-
-  def selectPreviousQuery(userName: UserName, domain: String,networkQueryId: NetworkQueryId):Option[QepQuery] = {
-    dbRun(mostRecentVisibleQepQueries.filter(_.networkId === networkQueryId).filter(_.userName === userName).filter(_.userDomain === domain).sortBy(x => x.changeDate.desc).result) match {
-      case Nil => None
-      case Seq(only) => Some(only)
-      case other => throw new IllegalStateException(s"${other.size} queries stored for id $networkQueryId for $userName:$domain.")
-    }
-  }
-
-  def selectPreviousQueries(request: ReadPreviousQueriesRequest,authResult:Authenticated):ReadPreviousQueriesResponse = {
-    val previousQueries: Seq[QepQuery] = selectPreviousQueriesByUserAndDomain(authResult.username,authResult.domain,request.fetchSize)
+  def selectPreviousQueries(request: ReadPreviousQueriesRequest):ReadPreviousQueriesResponse = {
+    val previousQueries: Seq[QepQuery] = selectPreviousQueriesByUserAndDomain(request.authn.username,request.authn.domain,request.fetchSize)
     val flags:Map[NetworkQueryId,QepQueryFlag] = selectMostRecentQepQueryFlagsFor(previousQueries.map(_.networkId).to[Set])
     val queriesAndFlags = previousQueries.map(x => (x,flags.get(x.networkId)))
 
@@ -355,7 +342,7 @@ object QepQuerySchema {
   val slickProfile:JdbcProfile = QepConfigSource.objectForName(slickProfileClassName)
 
   import net.shrine.config.{ConfigExtensions, Keys}
-  val moreBreakdowns: Set[ResultOutputType] = config.getOptionConfigured(Keys.breakdownResultOutputTypes,ResultOutputTypes.fromConfig).getOrElse(Set.empty)
+  val moreBreakdowns: Set[ResultOutputType] = config.getOptionConfigured("breakdownResultOutputTypes",ResultOutputTypes.fromConfig).getOrElse(Set.empty)
 
   val schema = QepQuerySchema(slickProfile,moreBreakdowns)
 }
@@ -383,34 +370,23 @@ case class QepQuery(
       userId = userName,
       groupId = userDomain,
       createDate = XmlDateHelper.toXmlGregorianCalendar(dateCreated),
-      held = None, //todo this field is never used. Remove it in 1.22
       flagged = qepQueryFlag.map(_.flagged),
       flagMessage = qepQueryFlag.map(_.flagMessage)
-    )
-  }
-
-  def toReadQueryDefinitionResponse:ReadQueryDefinitionResponse = {
-    ReadQueryDefinitionResponse(
-      masterId = networkId,
-      name = queryName,
-      userId = userName,
-      createDate = XmlDateHelper.toXmlGregorianCalendar(dateCreated),
-      queryDefinition = queryXml
     )
   }
 }
 
 object QepQuery extends ((NetworkQueryId,UserName,String,QueryName,Option[String],Time,Boolean,String,Time) => QepQuery) {
-  def apply(runQueryRequest: RunQueryRequest,authenticated: Authenticated):QepQuery = {
+  def apply(runQueryRequest: RunQueryRequest):QepQuery = {
     new QepQuery(
       networkId = runQueryRequest.networkQueryId,
-      userName = authenticated.username,
-      userDomain = authenticated.domain,
+      userName = runQueryRequest.authn.username,
+      userDomain = runQueryRequest.authn.domain,
       queryName = runQueryRequest.queryDefinition.name,
       expression = runQueryRequest.queryDefinition.expr.map(_.toString),
       dateCreated = System.currentTimeMillis(),
       deleted = false,
-      queryXml = runQueryRequest.queryDefinition.toI2b2String,
+      queryXml = runQueryRequest.toXmlString,
       changeDate = System.currentTimeMillis()
     )
   }
@@ -541,13 +517,11 @@ case class QepProblemDigestRow(
       summary,
       description,
       if(!details.isEmpty) XML.loadString(details)
-      else <details/>
+      else <details/>,
+      //TODO: FIGURE OUT HOW TO GET AN ACUTAL EPOCH INTO HERE
+      0
     )
   }
-}
-
-case class CouldNotRunDbIoActionException(dataSource: DataSource, exception: Throwable) extends RuntimeException(exception) {
-  override def getMessage:String = s"Could not use the database defined by $dataSource due to ${exception.getLocalizedMessage}"
 }
 
 case class QepDatabaseProblem(x:Exception) extends AbstractProblem(ProblemSources.Qep){

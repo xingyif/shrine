@@ -3,12 +3,13 @@
 
     // -- angular module -- //
     angular.module('shrine.commmon.authentication')
-        .factory('AuthenticationService', AuthenticationService)
+        .factory('AuthenticationService', AuthenticationService);
 
 
-    AuthenticationService.$inject = ['$http', '$q', '$app']
-    function AuthenticationService ($http, $q, $app) {
+    AuthenticationService.$inject = ['$http', '$q', '$app', '$rootScope', '$interval', '$location'];
+    function AuthenticationService ($http, $q, $app, $rootScope, $interval, $location) {
 
+        idleHandle();
 
         // -- private const -- //
         var Config = {
@@ -26,13 +27,42 @@
         };
 
 
+        function idleHandle() {
+            // -- auto logout on idle -- //
+            var twentyMinutes = 20*60*1000;
+            var logoutPromise = $interval(timeout, twentyMinutes);
+            var idleEvent = 'idleEvent';
+            $rootScope.$on('$destroy', function () {
+                $interval.cancel(logoutPromise);
+            });
+            $rootScope.$on(idleEvent, function () {
+                $interval.cancel(logoutPromise);
+                logoutPromise = $interval(timeout, twentyMinutes);
+            });
+
+
+            /**
+             * When the interval is called, that means the user has gone idle, so we
+             * clear their credentials then navigate them back to the home page.
+             */
+            function timeout() {
+                clearCredentials();
+                $location.url("/login");
+            }
+
+            $rootScope.idleBroadcast = function() {
+                $rootScope.$broadcast(idleEvent);
+            }
+        }
+
+
         // -- private methods -- //
         /**
         * Wrapper for authenticate call.
         */
         function login () {
             return authenticate();
-        };
+        }
 
 
         /**

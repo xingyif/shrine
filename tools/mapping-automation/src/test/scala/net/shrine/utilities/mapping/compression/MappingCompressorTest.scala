@@ -40,7 +40,7 @@ final class MappingCompressorTest extends ShouldMatchersForJUnit {
     
     command(config.inputFile)
     
-    val actual = FileSystemFormatDetectingAdapterMappingsSource(config.outputFile).load.get.mappings
+    val actual = FileSystemFormatDetectingAdapterMappingsSource(config.outputFile).load(outputFile).get.mappings
     
     actual should equal(Map("""\\some\shrine\term\""" -> Set("""\\x\y\z\""", """\\a\b\c\""")))
   }

@@ -1,25 +1,23 @@
 package net.shrine.dashboard
 
-import java.math.BigInteger
 import java.security.PrivateKey
 import java.util.Date
 
 import io.jsonwebtoken.impl.TextCodec
-import io.jsonwebtoken.{SignatureAlgorithm, Jwts}
+import io.jsonwebtoken.{Jwts, SignatureAlgorithm}
 import net.shrine.authorization.steward.OutboundUser
-import net.shrine.crypto.{KeyStoreDescriptorParser, KeyStoreCertCollection}
+import net.shrine.crypto.{KeyStoreCertCollection, KeyStoreDescriptorParser}
 import net.shrine.dashboard.jwtauth.ShrineJwtAuthenticator
 import net.shrine.i2b2.protocol.pm.User
 import net.shrine.protocol.Credential
 import org.json4s.native.JsonMethods.parse
 import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
 import org.scalatest.FlatSpec
-import spray.http.HttpHeaders.Authorization
-import spray.http.{OAuth2BearerToken, HttpHeaders, BasicHttpCredentials}
-
+import org.scalatest.junit.JUnitRunner
+import spray.http.StatusCodes.{OK, PermanentRedirect, Unauthorized}
+import spray.http.{BasicHttpCredentials, OAuth2BearerToken}
 import spray.testkit.ScalatestRouteTest
-import spray.http.StatusCodes.{OK,PermanentRedirect,Unauthorized,NotFound}
+
 
 import scala.language.postfixOps
 
@@ -154,7 +152,6 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
         assertResult(OK)(status)
 
         val configString = new String(body.data.toByteArray)
-        //println(configString)
       }
   }
 
@@ -191,10 +188,42 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
       assertResult(OK)(status)
 
       val summary = new String(body.data.toByteArray)
-      println(summary)
     }
   }
 
+
+  "DashboardService" should "return an OK for admin/status/problems" in {
+
+    Get("/admin/status/problems") ~>
+      addCredentials(adminCredentials) ~>
+      route ~> check {
+        assertResult(OK)(status)
+
+        val problems = new String(body.data.toByteArray)
+      }
+  }
+
+  "DashboardService" should "return an OK for admin/status/problems with queries" in {
+
+    Get("/admin/status/problems?offset=2&n=1") ~>
+      addCredentials(adminCredentials) ~>
+      route ~> check {
+        assertResult(OK)(status)
+
+        val problems = new String(body.data.toByteArray)
+      }
+  }
+
+  "DashboardService" should "return an OK for admin/status/problems with queries and an epoch filter" in {
+
+    Get("/admin/status/problems?offset=2&n=3&epoch=3") ~>
+      addCredentials(adminCredentials) ~>
+      route ~> check {
+        assertResult(OK)(status)
+
+        val problems = new String(body.data.toByteArray)
+      }
+  }
 
   val dashboardCredentials = BasicHttpCredentials(adminUserName,"shh!")
 

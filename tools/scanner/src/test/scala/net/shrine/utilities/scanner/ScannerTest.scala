@@ -26,7 +26,7 @@ import net.shrine.protocol.Credential
 
 /**
  * @author clint
- * @date Mar 7, 2013
+ * @since Mar 7, 2013
  */
 final class ScannerTest extends ShouldMatchersForJUnit {
   import ScannerTest._
@@ -199,7 +199,7 @@ object ScannerTest {
   }
 
   private def literalAdapterMappingsSource(mappings: Map[String, Set[String]]): AdapterMappingsSource = new AdapterMappingsSource {
-    override val load: Try[AdapterMappings] = Success(AdapterMappings(mappings = mappings))
+    override def load(source:String): Try[AdapterMappings] = Success(AdapterMappings("scannerTest",mappings = mappings))
   }
 
   import QueryResult.StatusType

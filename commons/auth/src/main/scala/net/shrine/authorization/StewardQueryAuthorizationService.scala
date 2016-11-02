@@ -1,34 +1,32 @@
 package net.shrine.authorization
 
 import java.net.URL
-import javax.net.ssl.{KeyManager, X509TrustManager, SSLContext}
+import javax.net.ssl.{KeyManager, SSLContext, X509TrustManager}
 import java.security.cert.X509Certificate
 
 import akka.io.IO
-import com.typesafe.config.ConfigFactory
-import net.shrine.authorization.AuthorizationResult.{NotAuthorized, Authorized}
-import net.shrine.authorization.steward.{TopicIdAndName, ResearchersTopics, InboundShrineQuery}
+import com.typesafe.config.{Config, ConfigFactory}
+import net.shrine.authorization.AuthorizationResult.{Authorized, NotAuthorized}
+import net.shrine.authorization.steward.{InboundShrineQuery, ResearchersTopics, TopicIdAndName}
 import net.shrine.log.Loggable
-import net.shrine.protocol.{ApprovedTopic, RunQueryRequest, ReadApprovedQueryTopicsResponse, ErrorResponse, ReadApprovedQueryTopicsRequest}
-
+import net.shrine.protocol.{ApprovedTopic, AuthenticationInfo, ErrorResponse, ReadApprovedQueryTopicsRequest, ReadApprovedQueryTopicsResponse, RunQueryRequest}
+import net.shrine.config.ConfigExtensions
 import org.json4s.native.JsonMethods.parse
 import org.json4s.{DefaultFormats, Formats}
-
 import akka.actor.ActorSystem
 import akka.util.Timeout
 import akka.pattern.ask
-
+import net.shrine.problem.{AbstractProblem, ProblemSources}
 import spray.can.Http
 import spray.can.Http.{HostConnectorInfo, HostConnectorSetup}
-
-import spray.http.{HttpResponse, HttpRequest, BasicHttpCredentials}
-import spray.http.StatusCodes.{Unauthorized, OK, UnavailableForLegalReasons}
+import spray.http.{BasicHttpCredentials, HttpRequest, HttpResponse}
+import spray.http.StatusCodes.{OK, Unauthorized, UnavailableForLegalReasons}
 import spray.httpx.TransformerPipelineSupport.WithTransformation
 import spray.httpx.Json4sSupport
-import spray.client.pipelining.{addCredentials,sendReceive,Post,Get}
-import spray.io.{SSLContextProvider, PipelineContext, ClientSSLEngineProvider}
+import spray.client.pipelining.{Get, Post, addCredentials, sendReceive}
+import spray.io.{ClientSSLEngineProvider, PipelineContext, SSLContextProvider}
 
-import scala.concurrent.duration.{Duration, FiniteDuration, DurationInt}
+import scala.concurrent.duration.{Duration, DurationInt, FiniteDuration}
 import scala.concurrent.{Await, Future}
 import scala.language.postfixOps
 
@@ -58,6 +56,7 @@ final case class StewardQueryAuthorizationService(qepUserName:String,
 
     // Place a special SSLContext in scope here to be used by HttpClient.
     // It trusts all server certificates.
+    // Most important - it will encrypt all of the traffic on the wire.
     implicit def trustfulSslContext: SSLContext = {
       object BlindFaithX509TrustManager extends X509TrustManager {
         def checkClientTrusted(chain: Array[X509Certificate], authType: String) = (info(s"Client asked BlindFaithX509TrustManager to check $chain for $authType"))
@@ -209,10 +208,28 @@ import spray.can.Http
 
       Right(ReadApprovedQueryTopicsResponse(topics))
     }
-    else Left(ErrorResponse(s"Response status is ${response.status}, not OK. Response is "+response))
+    else Left(ErrorResponse(ErrorStatusFromDataStewardApp(response,stewardBaseUrl)))
   }
 
   override def toString() = {
     super.toString().replaceAll(qepPassword,"REDACTED")
   }
+}
+
+object StewardQueryAuthorizationService {
+
+  def apply(config:Config):StewardQueryAuthorizationService = StewardQueryAuthorizationService (
+    qepUserName = config.getString("qepUserName"),
+    qepPassword = config.getString("qepPassword"),
+    stewardBaseUrl = config.get("stewardBaseUrl", new URL(_))
+  )
+}
+
+case class ErrorStatusFromDataStewardApp(response:HttpResponse,stewardBaseUrl:URL) extends AbstractProblem(ProblemSources.Qep) {
+  override val summary: String = s"Data Steward App responded with status ${response.status}"
+  override val description:String = s"The Data Steward App at ${stewardBaseUrl} responded with status ${response.status}, not OK."
+  override val detailsXml = <details>
+    Response is {response}
+    {throwableDetail.getOrElse("")}
+  </details>
 }

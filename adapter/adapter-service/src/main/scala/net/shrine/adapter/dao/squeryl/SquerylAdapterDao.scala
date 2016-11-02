@@ -1,8 +1,9 @@
 package net.shrine.adapter.dao.squeryl
 
+import java.sql.Timestamp
 import javax.xml.datatype.XMLGregorianCalendar
 
-import net.shrine.adapter.dao.AdapterDao
+import net.shrine.adapter.dao.{AdapterDao, BotDetectedException}
 import net.shrine.adapter.dao.model.{ObfuscatedPair, ShrineQuery, ShrineQueryResult}
 import net.shrine.adapter.dao.model.squeryl.{SquerylBreakdownResultRow, SquerylCountRow, SquerylPrivilegedUser, SquerylQueryResultRow, SquerylShrineError, SquerylShrineQuery}
 import net.shrine.adapter.dao.squeryl.tables.Tables
@@ -14,8 +15,9 @@ import net.shrine.protocol.{AuthenticationInfo, I2b2ResultEnvelope, QueryResult,
 import net.shrine.protocol.query.QueryDefinition
 import net.shrine.util.XmlDateHelper
 import org.squeryl.Query
-import org.squeryl.dsl.GroupWithMeasures
+import org.squeryl.dsl.{GroupWithMeasures, Measures}
 
+import scala.concurrent.duration.Duration
 import scala.util.Try
 import scala.xml.NodeSeq
 
@@ -229,6 +231,21 @@ final class SquerylAdapterDao(initializer: SquerylInitializer, tables: Tables)(i
     }
   }.getOrElse(false)
 
+  override def checkIfBot(authn:AuthenticationInfo, botTimeThresholds:Seq[(Long,Duration)]): Unit = {
+    val now = System.currentTimeMillis()
+
+    botTimeThresholds.foreach{countDuration => inTransaction {
+      val sinceMs: Long = now - countDuration._2.toMillis
+      val query: Query[Measures[Long]] = Queries.countQueriesForUserSince(authn.domain, authn.username, sinceMs)
+      val queriesSince = query.headOption.map(_.measures).getOrElse(0L)
+      if (queriesSince >= countDuration._1) throw new BotDetectedException(domain = authn.domain,
+                                                                          username = authn.username,
+                                                                          detectedCount = queriesSince,
+                                                                          sinceMs = sinceMs,
+                                                                          limit = countDuration._1)
+    }}
+  }
+
   override def insertQuery(localMasterId: String,
                            networkId: Long,
                            authn: AuthenticationInfo,
@@ -365,6 +382,14 @@ final class SquerylAdapterDao(initializer: SquerylInitializer, tables: Tables)(i
     def privilegedUsers(domain: String, username: String): Query[SquerylPrivilegedUser] = {
       from(tables.privilegedUsers) { user =>
         where(user.username === username and user.domain === domain).select(user)
+      }
+    }
+
+    def countQueriesForUserSince(domain:String, username:String, sinceMs:Long): Query[Measures[Long]] = {
+      val since = new Timestamp(sinceMs)
+      from(tables.shrineQueries) { queryRow =>
+        where(queryRow.domain === domain and queryRow.username === username and queryRow.dateCreated >= since).
+          compute(count)
       }
     }
 

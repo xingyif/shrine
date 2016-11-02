@@ -28,7 +28,7 @@ final class Scanner(
   protected def doScan(): ScanResults = {
     info("Shrine Scanner starting")
     
-    val mappedNetworkTerms = adapterMappingsSource.load.get.networkTerms
+    val mappedNetworkTerms = adapterMappingsSource.load("test").get.networkTerms
 
     def allShrineOntologyTerms = ontologyDao.ontologyEntries.map(_.path).toSet
 

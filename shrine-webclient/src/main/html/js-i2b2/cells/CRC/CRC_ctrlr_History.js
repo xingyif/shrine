@@ -22,8 +22,12 @@ i2b2.CRC.ctrlr.history = {
 		//	1) fires a call to ajax.getCategories(), 
 		//	2) interprets the XML / populates the ONT data model, 
 		//	3) fires it's onDataUpdate event
-        //update view from controller @todo: this is a bad practice...going with design already in place:
-        $("refPrevQS").setStyle({
+        
+		/*
+		update view from controller @todo: this is a bad practice...
+		going with design already in place:
+		*/
+		$("refPrevQS").setStyle({
             display:'none'
         });
         $("refPrev2QS").setStyle({
@@ -36,7 +40,11 @@ i2b2.CRC.ctrlr.history = {
 
         var scopeCB = new i2b2_scopedCallback();
 		scopeCB.scope = i2b2.CRC.model.QueryMasters;
+		
+		
+		/////// --  replicated logic in CRC_ctrlr_QryStatus.js? -- //
 		scopeCB.callback = function(i2b2CellMsg) {
+			
 			// define the XML processing function
 			console.group("CALLBACK Processing AJAX i2b2CellMsg");
 			console.dir(i2b2CellMsg);
@@ -44,8 +52,10 @@ i2b2.CRC.ctrlr.history = {
 			i2b2.CRC.view.history.queryResponse = i2b2CellMsg.msgResponse;
 			i2b2.CRC.view.history.queryRequest = i2b2CellMsg.msgRequest;
 			i2b2.CRC.view.history.queryUrl = i2b2CellMsg.msgUrl;
+			
 			// the THIS scope is already set to i2b2.CRC.model.QueryMasters
 			i2b2.sdx.Master.ClearAll('QM');
+			
 			if (!i2b2CellMsg.error) {		
 				var qm = i2b2CellMsg.refXML.getElementsByTagName('query_master');
 				for(var i=0; i<1*qm.length; i++) {

@@ -8,7 +8,7 @@ import net.shrine.audit.{NetworkQueryId, QueryName, QueryTopicId, QueryTopicName
 import net.shrine.log.Loggable
 import net.shrine.protocol.RunQueryRequest
 import net.shrine.qep.QepConfigSource
-import net.shrine.slick.TestableDataSourceCreator
+import net.shrine.slick.{NeedsWarmUp, TestableDataSourceCreator}
 import slick.driver.JdbcProfile
 
 import scala.concurrent.duration.{Duration, DurationInt}
@@ -26,6 +26,8 @@ case class QepAuditDb(schemaDef:QepAuditSchema,dataSource: DataSource) extends L
   import jdbcProfile.api._
 
   val database = Database.forDataSource(dataSource)
+
+  def warmUp = dbRun(allQepQueryQuery.size.result)
 
   def createTables() = schemaDef.createTables(database)
 
@@ -54,7 +56,7 @@ case class QepAuditDb(schemaDef:QepAuditSchema,dataSource: DataSource) extends L
 
 }
 
-object QepAuditDb extends Loggable {
+object QepAuditDb extends Loggable with NeedsWarmUp {
 
   val dataSource:DataSource = TestableDataSourceCreator.dataSource(QepAuditSchema.config)
 
@@ -62,6 +64,10 @@ object QepAuditDb extends Loggable {
 
   val createTablesOnStart = QepAuditSchema.config.getBoolean("createTablesOnStart")
   if(createTablesOnStart) QepAuditDb.db.createTables()
+
+  def warmUp() = db.warmUp
+  // Todo, call this higher up
+  warmUp()
 
 }
 

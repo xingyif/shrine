@@ -1,7 +1,7 @@
 package net.shrine.aggregation
 
-import net.shrine.aggregation.BasicAggregator.{Invalid, Error, Valid}
-import net.shrine.problem.{ProblemSources, AbstractProblem}
+import net.shrine.aggregation.BasicAggregator.{Error, Invalid, Valid}
+import net.shrine.problem.{AbstractProblem, ProblemSources}
 import net.shrine.protocol.ErrorResponse
 import net.shrine.protocol.BaseShrineResponse
 
@@ -31,7 +31,7 @@ abstract class IgnoresErrorsAggregator[T <: BaseShrineResponse : Manifest] exten
 
     validResponses.map(_.response).toSet.headOption.getOrElse{
       val problem = NoValidResponsesToAggregate()
-      ErrorResponse(problem.summary,Some(problem))
+      ErrorResponse(problem)
     }
   }
 }

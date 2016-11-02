@@ -38,7 +38,7 @@ final class QueryDefinitionTranslatorTest extends ShouldMatchersForJUnit {
     QueryDefinition("foo", Option(expr), Some(QueryTiming.SameVisit), Some("id"), Some("queryType"), Some(constraints), subQueries)
   }
 
-  private val adapterMappings = AdapterMappings(mappings = mappings)
+  private val adapterMappings = AdapterMappings("test",mappings = mappings)
 
   @Test
   def testConstructor: Unit = {

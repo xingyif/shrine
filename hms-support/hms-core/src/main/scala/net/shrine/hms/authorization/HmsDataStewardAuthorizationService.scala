@@ -1,16 +1,15 @@
 package net.shrine.hms.authorization
 
-import net.shrine.log.Loggable
+import java.net.URL
 
-import net.shrine.authorization.QueryAuthorizationService
-import net.shrine.protocol.AuthenticationInfo
-import net.shrine.protocol.ReadApprovedQueryTopicsRequest
-import net.shrine.protocol.ReadApprovedQueryTopicsResponse
-import net.shrine.protocol.RunQueryRequest
-import net.shrine.authorization.AuthorizationResult
-import net.shrine.authentication.Authenticator
-import net.shrine.protocol.ErrorResponse
-import net.shrine.authentication.AuthenticationResult
+import com.typesafe.config.Config
+import net.shrine.authentication.{AuthenticationResult, Authenticator}
+import net.shrine.authorization.{AuthorizationResult, QueryAuthorizationService}
+import net.shrine.client.EndpointConfig
+import net.shrine.log.Loggable
+import net.shrine.protocol.{AuthenticationInfo, CredentialConfig, ErrorResponse, ReadApprovedQueryTopicsRequest, ReadApprovedQueryTopicsResponse, RunQueryRequest}
+import net.shrine.config.ConfigExtensions
+import net.shrine.problem.{AbstractProblem, ProblemSources}
 
 /**
  * @author Bill Simons
@@ -23,8 +22,9 @@ import net.shrine.authentication.AuthenticationResult
  * @see http://www.gnu.org/licenses/lgpl.html
  */
 final case class HmsDataStewardAuthorizationService(
-  sheriffClient: SheriffClient,
-  authenticator: Authenticator) extends QueryAuthorizationService with Loggable {
+                                                    sheriffClient: SheriffClient,
+                                                    authenticator: Authenticator
+                                                   ) extends QueryAuthorizationService with Loggable {
 
   import net.shrine.hms.authorization.HmsDataStewardAuthorizationService._
 
@@ -32,12 +32,12 @@ final case class HmsDataStewardAuthorizationService(
     val authn = request.authn
 
     authenticate(authn) match {
-      case None => Left(ErrorResponse(s"Couldn't authenticate user ${toDomainAndUser(authn)}"))
-      case Some(ecommonsUsername) => {
+      case None => Left(ErrorResponse(HMSNotAuthenticatedProblem(authn)))
+      case Some(ecommonsUsername) =>
         val topics = sheriffClient.getApprovedEntries(ecommonsUsername)
 
         Right(ReadApprovedQueryTopicsResponse(topics))
-      }
+
     }
   }
 
@@ -49,9 +49,9 @@ final case class HmsDataStewardAuthorizationService(
     } else {
       authenticate(authn) match {
         case None => AuthorizationResult.NotAuthorized(s"Requested topic is not approved; couldn't authenticate user ${toDomainAndUser(authn)}")
-        case Some(ecommonsUsername) => {
+        case Some(ecommonsUsername) =>
           sheriffClient.isAuthorized(ecommonsUsername, request.topicId.get, request.queryDefinition.toI2b2String)
-        }
+
       }
     }
   }
@@ -64,10 +64,26 @@ final case class HmsDataStewardAuthorizationService(
 }
 
 object HmsDataStewardAuthorizationService {
+
+  def apply(config:Config,authenticator: Authenticator):HmsDataStewardAuthorizationService = {
+    val endpointUrl = config.getString("sheriffEndpoint"+EndpointConfig.Keys.url)
+    val credentials = config.getConfigured("sheriffCredentials", CredentialConfig(_))
+
+    val sheriffClient = JerseySheriffClient(endpointUrl, credentials.username, credentials.password)
+
+    HmsDataStewardAuthorizationService(sheriffClient, authenticator)
+  }
+
   private def toDomainAndUser(authn: AuthenticationInfo): String = s"${authn.domain}:${authn.username}"
 
   def identifyEcommonsUsername(authenticationResult: AuthenticationResult): Option[String] = authenticationResult match {
     case AuthenticationResult.Authenticated(_, ecommonsUsername) => Option(ecommonsUsername)
     case _ => None
   }
+}
+
+case class HMSNotAuthenticatedProblem(authn: AuthenticationInfo) extends AbstractProblem(ProblemSources.Qep){
+  override val summary = s"Can not authenticate ${authn.domain}:${authn.username}."
+
+  override val description = s"Can not authenticate ${authn.domain}:${authn.username}."
 }

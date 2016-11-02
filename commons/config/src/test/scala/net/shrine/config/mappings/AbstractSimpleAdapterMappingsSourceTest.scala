@@ -13,7 +13,7 @@ abstract class AbstractSimpleAdapterMappingsSourceTest extends ShouldMatchersFor
   protected def sourcesThatShouldWork: Iterable[() => AdapterMappingsSource]
 
   protected def doTestLoad(source: AdapterMappingsSource) {
-    val mappings = source.load.get
+    val mappings = source.load("test").get
 
     mappings should not be (null)
 
@@ -27,7 +27,7 @@ abstract class AbstractSimpleAdapterMappingsSourceTest extends ShouldMatchersFor
   @Test
   final def testLoad {
     def doTestLoadbadFileName(source: => AdapterMappingsSource): Unit = {
-      source.load.isFailure should be(true)
+      source.load("test").isFailure should be(true)
     }
 
     sourcesThatShouldFail.foreach(source => doTestLoadbadFileName(source()))

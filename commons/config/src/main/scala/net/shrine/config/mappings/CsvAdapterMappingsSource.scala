@@ -7,5 +7,5 @@ import scala.util.Try
  * @date Jun 12, 2014
  */
 trait CsvAdapterMappingsSource extends ReaderAdapterMappingsSource {
-  final override def load: Try[AdapterMappings] = AdapterMappings.fromCsv(reader)
+  final override def load(source:String): Try[AdapterMappings] = AdapterMappings.fromCsv(source,reader)
 }

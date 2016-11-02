@@ -2,8 +2,8 @@ package net.shrine.adapter
 
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
+
 import net.shrine.adapter.audit.AdapterAuditDb
-import net.shrine.problem.{AbstractProblem, ProblemSources}
 
 import scala.Option.option2Iterable
 import scala.concurrent.Await
@@ -13,16 +13,16 @@ import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
 import scala.xml.NodeSeq
-import net.shrine.adapter.Obfuscator.obfuscateResults
 import net.shrine.adapter.dao.AdapterDao
 import net.shrine.adapter.dao.model.Breakdown
 import net.shrine.adapter.dao.model.ShrineQueryResult
-import net.shrine.protocol.{HiveCredentials, AuthenticationInfo, BroadcastMessage, ErrorResponse, HasQueryResults, QueryResult, ReadResultRequest, ReadResultResponse, ResultOutputType, ShrineRequest, ShrineResponse, BaseShrineRequest}
+import net.shrine.protocol.{AuthenticationInfo, BaseShrineRequest, BroadcastMessage, ErrorResponse, HasQueryResults, HiveCredentials, QueryResult, ReadResultRequest, ReadResultResponse, ResultOutputType, ShrineRequest, ShrineResponse}
 import net.shrine.protocol.query.QueryDefinition
-import net.shrine.util.StackTrace
 import net.shrine.util.Tries.sequence
+
 import scala.concurrent.duration.Duration
 import net.shrine.client.Poster
+import net.shrine.problem.{AbstractProblem, ProblemSources}
 
 /**
  * @author clint
@@ -35,6 +35,7 @@ object AbstractReadQueryResultAdapter {
   private final case class SpecificResponseAttempts[R](responseAttempt: Try[R], breakdownResponseAttempts: Seq[Try[ReadResultResponse]])
 }
 
+//noinspection RedundantBlock
 abstract class AbstractReadQueryResultAdapter[Req <: BaseShrineRequest, Rsp <: ShrineResponse with HasQueryResults](
   poster: Poster,
   override val hiveCredentials: HiveCredentials,
@@ -44,7 +45,8 @@ abstract class AbstractReadQueryResultAdapter[Req <: BaseShrineRequest, Rsp <: S
   getProjectId: Req => String,
   toResponse: (Long, QueryResult) => Rsp,
   breakdownTypes: Set[ResultOutputType],
-  collectAdapterAudit:Boolean
+  collectAdapterAudit:Boolean,
+  obfuscator:Obfuscator
 ) extends WithHiveCredentialsAdapter(hiveCredentials) {
 
   //TODO: Make this configurable 
@@ -81,40 +83,31 @@ abstract class AbstractReadQueryResultAdapter[Req <: BaseShrineRequest, Rsp <: S
     findShrineQueryRow match {
       case None => {
         debug(s"Query $queryId not found in the Shrine DB")
-        
-        errorResponse(queryId)
+
+        ErrorResponse(QueryNotFound(queryId))
       }
       case Some(shrineQueryRow) => {
-        if (shrineQueryRow.hasNotBeenRun) {
-          debug(s"Query $queryId found, but it wasn't run before")
 
-          findShrineQueryResults.map(makeResponseFrom(queryId, _)).getOrElse {
-            debug(s"Couldn't retrive all results for query $queryId; it's likely the query's status is incomplete (QUEUED, PROCESSING, etc)")
-            
-            errorResponse(queryId)
+        findShrineQueryResults match {
+          case None => {
+            debug(s"Query $queryId found but its results are not available")
+
+            //TODO: When precisely can this happen?  Should we go back to the CRC here?
+
+            ErrorResponse(QueryResultNotAvailable(queryId))
           }
-        } else {
-          findShrineQueryResults match {
-            case None => {
-              debug(s"Query $queryId found, and it has been run, but its results are not available yet")
-              
-              //TODO: When precisely can this happen?  Should we go back to the CRC here?
-              
-              errorResponse(queryId) 
-            }
-            case Some(shrineQueryResult) => {
-              if (shrineQueryResult.isDone) {
-                debug(s"Query $queryId is done and already stored, returning stored results")
+          case Some(shrineQueryResult) => {
+            if (shrineQueryResult.isDone) {
+              debug(s"Query $queryId is done and already stored, returning stored results")
 
-                makeResponseFrom(queryId, shrineQueryResult)
-              } else {
-                debug(s"Query $queryId is incomplete, asking CRC for results")
+              makeResponseFrom(queryId, shrineQueryResult)
+            } else {
+              debug(s"Query $queryId is incomplete, asking CRC for results")
 
-                val result: ShrineResponse = retrieveQueryResults(queryId, req, shrineQueryResult, message)
-                if (collectAdapterAudit) AdapterAuditDb.db.insertResultSent(queryId,result)
+              val result: ShrineResponse = retrieveQueryResults(queryId, req, shrineQueryResult, message)
+              if (collectAdapterAudit) AdapterAuditDb.db.insertResultSent(queryId,result)
 
-                result
-              }
+              result
             }
           }
         }
@@ -122,10 +115,8 @@ abstract class AbstractReadQueryResultAdapter[Req <: BaseShrineRequest, Rsp <: S
     }
   }
 
-  private def errorResponse(queryId: Long) = ErrorResponse(QueryNotFound(queryId))
-
   private def makeResponseFrom(queryId: Long, shrineQueryResult: ShrineQueryResult): ShrineResponse = {
-    shrineQueryResult.toQueryResults(doObfuscation).map(toResponse(queryId, _)).getOrElse(errorResponse(queryId))
+    shrineQueryResult.toQueryResults(doObfuscation).map(toResponse(queryId, _)).getOrElse(ErrorResponse(QueryNotFound(queryId)))
   }
 
   private def retrieveQueryResults(queryId: Long, req: Req, shrineQueryResult: ShrineQueryResult, message: BroadcastMessage): ShrineResponse = {
@@ -150,7 +141,7 @@ abstract class AbstractReadQueryResultAdapter[Req <: BaseShrineRequest, Rsp <: S
 
         countResponse
       }
-      case Failure(e) => ErrorResponse(s"Couldn't retrieve query with id '$queryId' from the CRC: exception message follows: ${e.getMessage} stack trace: ${StackTrace.stackTraceAsString(e)}")
+      case Failure(e) => ErrorResponse(CouldNotRetrieveQueryFromCrc(queryId,e))
     }
   }
 
@@ -230,8 +221,6 @@ abstract class AbstractReadQueryResultAdapter[Req <: BaseShrineRequest, Rsp <: S
       
       breakdownResponses: Seq[ReadResultResponse] <- sequence(breakdownResponseAttempts)
     } yield {
-      val localCountResultId = countResponse.metadata.resultId
-
       val breakdownsByType = (for {
         breakdownResponse <- breakdownResponses
         resultType <- breakdownResponse.metadata.resultType
@@ -239,7 +228,7 @@ abstract class AbstractReadQueryResultAdapter[Req <: BaseShrineRequest, Rsp <: S
 
       val queryResultWithBreakdowns = countQueryResult.withBreakdowns(breakdownsByType)
 
-      val queryResultToReturn = if(doObfuscation) Obfuscator.obfuscate(queryResultWithBreakdowns) else queryResultWithBreakdowns 
+      val queryResultToReturn = if(doObfuscation) obfuscator.obfuscate(queryResultWithBreakdowns) else queryResultWithBreakdowns
       
       toResponse(queryId, queryResultToReturn)
     }
@@ -263,7 +252,7 @@ abstract class AbstractReadQueryResultAdapter[Req <: BaseShrineRequest, Rsp <: S
 
   private def storeResult(shrineQueryResult: ShrineQueryResult, response: Rsp, authn: AuthenticationInfo, queryId: Long, failedBreakdownTypes: Set[ResultOutputType]) {
     val rawResults = response.results
-    val obfuscatedResults = obfuscateResults(doObfuscation)(response.results)
+    val obfuscatedResults = obfuscator.obfuscateResults(doObfuscation)(response.results)
 
     for {
       shrineQuery <- dao.findQueryByNetworkId(queryId)
@@ -288,7 +277,7 @@ abstract class AbstractReadQueryResultAdapter[Req <: BaseShrineRequest, Rsp <: S
     override protected def parseShrineResponse(xml: NodeSeq): ShrineResponse = unmarshaller(breakdownTypes)(xml).get //TODO: Avoid .get call
   }
 
-  private lazy val delegateResultRetrievingAdapter = new DelegateAdapter[ReadResultRequest, ReadResultResponse](ReadResultResponse.fromI2b2 _)
+  private lazy val delegateResultRetrievingAdapter = new DelegateAdapter[ReadResultRequest, ReadResultResponse](ReadResultResponse.fromI2b2)
 }
 
 case class QueryNotFound(queryId:Long) extends AbstractProblem(ProblemSources.Adapter) {
@@ -296,3 +285,13 @@ case class QueryNotFound(queryId:Long) extends AbstractProblem(ProblemSources.Ad
   override def description:String = s"No query with id $queryId found on ${stamp.host.getHostName}"
 }
 
+case class QueryResultNotAvailable(queryId:Long) extends AbstractProblem(ProblemSources.Adapter) {
+  override def summary: String = s"Query $queryId found but its results are not available yet"
+  override def description:String = s"Query $queryId found but its results are not available yet on ${stamp.host.getHostName}"
+}
+
+case class CouldNotRetrieveQueryFromCrc(queryId:Long,x: Throwable) extends AbstractProblem(ProblemSources.Adapter) {
+  override def summary: String = s"Could not retrieve query $queryId from the CRC"
+  override def description:String = s"Unhandled exception while retrieving query $queryId while retrieving it from the CRC on ${stamp.host.getHostName}"
+  override def throwable = Some(x)
+}

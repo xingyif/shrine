@@ -2,19 +2,10 @@ package net.shrine.broadcaster.service
 
 import net.shrine.util.ShouldMatchersForJUnit
 import org.junit.Test
-import net.shrine.broadcaster.Broadcaster
-import net.shrine.broadcaster.Multiplexer
-import net.shrine.protocol.BroadcastMessage
-import net.shrine.protocol.SingleNodeResult
-import net.shrine.protocol.Result
-import net.shrine.protocol.DeleteQueryResponse
-import net.shrine.protocol.NodeId
-import net.shrine.protocol.Timeout
-import net.shrine.protocol.Failure
+import net.shrine.broadcaster.{Broadcaster, Multiplexer, NodeHandle}
+import net.shrine.protocol.{AuthenticationInfo, BroadcastMessage, Credential, DeleteQueryRequest, DeleteQueryResponse, FailureResult, FailureResult$, NodeId, Result, SingleNodeResult, Timeout}
+
 import scala.concurrent.Future
-import net.shrine.protocol.AuthenticationInfo
-import net.shrine.protocol.Credential
-import net.shrine.protocol.DeleteQueryRequest
 
 /**
  * @author clint
@@ -32,7 +23,7 @@ final class BroadcasterMultiplexerServiceTest extends ShouldMatchersForJUnit {
     val expectedResults = Seq(
       Result(NodeId("X"), 1.second, DeleteQueryResponse(12345)),
       Timeout(NodeId("Y")),
-      Failure(NodeId("Z"), new Exception with scala.util.control.NoStackTrace))
+      FailureResult(NodeId("Z"), new Exception with scala.util.control.NoStackTrace))
 
     val mockBroadcaster = new Broadcaster {
       var messageParam: BroadcastMessage = _
@@ -46,6 +37,8 @@ final class BroadcasterMultiplexerServiceTest extends ShouldMatchersForJUnit {
           override def responses: Future[Iterable[SingleNodeResult]] = Future.successful(expectedResults)
         }
       }
+
+      override def destinations: Set[NodeHandle] = ???
     }
 
     val service = BroadcasterMultiplexerService(mockBroadcaster, 1.second)
@@ -63,6 +56,8 @@ final class BroadcasterMultiplexerServiceTest extends ShouldMatchersForJUnit {
       override def broadcast(message: BroadcastMessage): Multiplexer = {
         throw new Exception
       }
+
+      override def destinations: Set[NodeHandle] = ???
     }
 
     val service = BroadcasterMultiplexerService(mockBroadcaster, 1.second)
@@ -80,6 +75,8 @@ final class BroadcasterMultiplexerServiceTest extends ShouldMatchersForJUnit {
 
         override def responses: Future[Iterable[SingleNodeResult]] = throw new Exception
       }
+
+      override def destinations: Set[NodeHandle] = ???
     }
 
     val service = BroadcasterMultiplexerService(mockBroadcaster, 1.second)

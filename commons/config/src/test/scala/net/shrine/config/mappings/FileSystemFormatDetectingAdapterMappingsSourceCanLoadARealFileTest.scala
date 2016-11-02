@@ -21,7 +21,7 @@ final class FileSystemFormatDetectingAdapterMappingsSourceCanLoadARealFileTest e
     () => FileSystemFormatDetectingAdapterMappingsSource(pcoriCsvFile))
 
   override protected def doTestLoad(source: AdapterMappingsSource): Unit = {
-    val mappings = source.load.get
+    val mappings = source.load("test").get
 
     mappings should not be (null)
 

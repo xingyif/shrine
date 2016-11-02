@@ -18,17 +18,19 @@
             OptionsEndpoint:  'admin/status/options',
             ConfigEndpoint:   'admin/status/config',
             SummaryEndpoint:  'admin/status/summary',
-            HapyAllEndpoint:  'admin/happy/all'
+            ProblemEndpoint:  'admin/status/problems',
+            HappyAllEndpoint: 'admin/happy/all'
         };
 
 
         // -- public -- //
         return {
-            getOptions: getOptions,
-            getConfig:  getConfig,
-            getSummary: getSummary,
-            getHappyAll:getHappyAll,
-            cache:      cache
+            getOptions:  getOptions,
+            getConfig:   getConfig,
+            getSummary:  getSummary,
+            getProblems: getProblemsMaker(),
+            getHappyAll: getHappyAll,
+            cache:       cache
         };
 
         /**
@@ -86,7 +88,7 @@
             summary.isHub           = !Boolean("" == all.notAHub);
             summary.shrineVersion   = all.versionInfo.shrineVersion;
             summary.shrineBuildDate = all.versionInfo.buildDate;
-            summary.ontologyVersion = all.versionInfo.ontologyVersion
+            summary.ontologyVersion = all.versionInfo.ontologyVersion;
             summary.ontologyTerm    = ""; //to be implemented in config.
             summary.adapterOk       = all.adapter.result.response.errorResponse === undefined;
             summary.keystoreOk      = true;
@@ -143,12 +145,42 @@
         }
 
 
+        function getProblemsMaker() {
+
+            var prevOffset = 0;
+            var prevN = 20;
+
+            /**
+             * ProblemEndpoint:  'admin/status/problems',
+             * @returns {*}
+             */
+            return function(offset, n, epoch) {
+                if (offset != null) {
+                    prevOffset = offset;
+                } else {
+                    offset = prevOffset;
+                }
+                if (n != null) {
+                    prevN = n;
+                } else {
+                    n = prevN;
+                }
+
+                var epochString = epoch && isFinite(epoch) ? '&epoch=' + epoch : '';
+                var url = urlGetter(
+                    Config.ProblemEndpoint + '?offset=' + offset + '&n=' + n + epochString);
+                return h.get(url)
+                    .then(parseJsonResult, onFail);
+            }
+        }
+
+
         /**
          *
          * @returns {*}
          */
         function getHappyAll() {
-            var url = urlGetter(Config.HapyAllEndpoint, '.xml')
+            var url = urlGetter(Config.HappyAllEndpoint, '.xml')
             return h.get(url)
                 .then(parseHappyAllResult, onFail);
         }

@@ -1,18 +1,9 @@
 package net.shrine.aggregation
 
-import net.shrine.problem.ProblemNotYetEncoded
-
-import scala.concurrent.duration.DurationInt
-import org.junit.Test
+import net.shrine.problem.TestProblem
+import net.shrine.protocol.{AggregatedReadQueryResultResponse, BaseShrineResponse, ErrorResponse, NodeId, QueryResult, ReadQueryResultResponse, Result, ResultOutputType}
 import net.shrine.util.ShouldMatchersForJUnit
-import net.shrine.protocol.AggregatedReadQueryResultResponse
-import net.shrine.protocol.ErrorResponse
-import net.shrine.protocol.NodeId
-import net.shrine.protocol.QueryResult
-import net.shrine.protocol.ReadQueryResultResponse
-import net.shrine.protocol.Result
-import net.shrine.protocol.ResultOutputType
-import net.shrine.protocol.BaseShrineResponse
+import org.junit.Test
 
 /**
  * @author clint
@@ -40,7 +31,7 @@ final class ReadQueryResultAggregatorTest extends ShouldMatchersForJUnit {
   private val result1 = Result(NodeId("X"), 1.second, response1)
   private val result2 = Result(NodeId("Y"), 1.second, response2)
 
-  private val errors = Seq(ErrorResponse("blarg"), ErrorResponse("glarg"))
+  private val errors = Seq(ErrorResponse(TestProblem(summary ="blarg")), ErrorResponse(TestProblem(summary = "glarg")))
 
   @Test
   def testAggregate {
@@ -90,7 +81,7 @@ final class ReadQueryResultAggregatorTest extends ShouldMatchersForJUnit {
 
     response.queryId should equal(queryId)
 
-    response.results.exists(qr => qr.problemDigest.exists(pd => pd.codec == classOf[ProblemNotYetEncoded].getName)) should be (true)
+    response.results.exists(qr => qr.problemDigest.exists(pd => pd.codec == classOf[TestProblem].getName)) should be (true)
   }
 
   @Test
@@ -108,7 +99,7 @@ final class ReadQueryResultAggregatorTest extends ShouldMatchersForJUnit {
 
     aggregatedQueryResult should equal(expectedAggregatedResult)
 
-    actualErrorQueryResults.exists(qr => qr.problemDigest.exists(pd => pd.codec == classOf[ProblemNotYetEncoded].getName)) should be (true)
+    actualErrorQueryResults.exists(qr => qr.problemDigest.exists(pd => pd.codec == classOf[TestProblem].getName)) should be (true)
   }
   
   @Test

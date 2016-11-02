@@ -1,13 +1,12 @@
 package net.shrine.war
 
-import javax.servlet.ServletContextListener
-import javax.servlet.ServletContextEvent
+import javax.servlet.{ServletContextEvent, ServletContextListener}
+
 import net.shrine.log.Loggable
-import net.shrine.wiring.ShrineConfig
 
 /**
  * @author clint
- * @date May 18, 2014
+ * @since May 18, 2014
  * 
  * ServletContextListener to perform any Shrine-wide shutdown and startup tasks.
  * For now, just logs.

@@ -1,5 +1,7 @@
 package net.shrine.aggregation
 
+import net.shrine.problem.TestProblem
+
 import scala.concurrent.duration.DurationInt
 import org.junit.Test
 import net.shrine.util.ShouldMatchersForJUnit
@@ -81,7 +83,7 @@ final class RunQueryAggregatorTest extends ShouldMatchersForJUnit {
 
     val rqr1 = RunQueryResponse(queryId, now, userId, groupId, requestQueryDef, queryInstanceId, qrCount)
     val errorMessage = "error message"
-    val errorResponse = ErrorResponse(errorMessage)
+    val errorResponse = ErrorResponse(TestProblem(summary = errorMessage))
 
     val result1 = Result(NodeId("description1"), 1.second, rqr1)
     val result2 = Result(NodeId("description2"), 1.second, errorResponse)

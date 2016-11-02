@@ -8,6 +8,7 @@ import net.shrine.protocol.QueryResult
 import net.shrine.protocol.ResultOutputType
 import net.shrine.protocol.query.QueryDefinition
 
+import scala.concurrent.duration.Duration
 import scala.xml.NodeSeq
 
 /**
@@ -38,6 +39,8 @@ trait MockAdapterDao extends AdapterDao {
   override def findQueriesByDomain(domain: String): Seq[ShrineQuery] = Nil
 
   override def findResultsFor(networkQueryId: Long): Option[ShrineQueryResult] = None
+
+  override def checkIfBot(authn:AuthenticationInfo, botTimeThresholds:Seq[(Long,Duration)]): Unit = {}
 
   override def isUserLockedOut(id: AuthenticationInfo, defaultThreshold: Int): Boolean = false
 

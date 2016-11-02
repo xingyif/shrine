@@ -453,8 +453,6 @@ function QueryToolController() {
 
         }
 
-        //@pcori_webclient
-        //result_output = '<result_output priority_index="11" name="patient_count_xml"/>';
         params.psm_result_output = '<result_output_list>'+result_output+'</result_output_list>\n';
 
         // create query object
@@ -1297,6 +1295,19 @@ function QueryToolController() {
         $('temporalbuilders').innerHTML = html;
 
     }
+
+	// ================================================================================================== //
+	this.doRemoveTemporal = function() { // nw096 - WEBCLIENT-155 Removes last temporal relationship
+		if(this.tenporalBuilders == 0){
+			alert('You must leave a minimum of one temporal relationship.');
+		} else {
+			if(jQuery("[id^='temporalbuilder_']").length > 1){
+				this.tenporalBuilders = this.tenporalBuilders - 1;
+				$('temporalbuilders').lastChild.remove();
+			}
+		}
+	}
+	
 
 // ================================================================================================== //
     this.doScrollFirst = function() {
