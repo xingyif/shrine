@@ -46,6 +46,8 @@
     text-transform: uppercase;
     overflow: hidden;
     cursor: pointer; }
+    .topic-dropdown .tdd-btn:hover {
+      cursor: pointer; }
     .topic-dropdown .tdd-btn .tdd-list {
       position: absolute;
       top: 100%;

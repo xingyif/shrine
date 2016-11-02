@@ -17,6 +17,9 @@
   -moz-osx-font-smoothing: grayscale;
   position: fixed;
     .tdd-btn {
+      &:hover{
+        cursor: pointer;
+      }
       max-width: 1000px;
       outline: 0; /* takes care of blue outline */
       display: -webkit-inline-box;
