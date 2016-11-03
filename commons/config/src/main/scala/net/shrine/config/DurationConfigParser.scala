@@ -1,7 +1,6 @@
 package net.shrine.config
 
-import scala.concurrent.duration.Duration
-
+import scala.concurrent.duration.FiniteDuration
 import com.typesafe.config.Config
 
 /**
@@ -18,7 +17,7 @@ object DurationConfigParser {
     val inf = "inf"
   }
 
-  def apply(subConfig: Config): Duration = {
+  def apply(subConfig: Config): FiniteDuration = {
     import scala.concurrent.duration._
     import Keys._
 
