@@ -48,7 +48,7 @@ class Boot extends WebBoot with Loggable {
       info(s"DSA will request audits from ${AuditEmailer.to}")
 
       system.scheduler.schedule(initialDelay = 0 milliseconds, //todo figure out how to handle the initial delay
-        interval = emailConfig.getConfigured("interval", DurationConfigParser.apply),
+        interval = emailConfig.get("interval", DurationConfigParser.parseDuration),
         receiver = system.actorOf(Props[AuditEmailerActor]),
         "tick")
     }
@@ -84,7 +84,8 @@ object AuditEmailer  {
   val emailConfig = config.getConfig("shrine.steward.emailDataSteward")
 
   val maxQueryCountBetweenAudits = emailConfig.getInt("maxQueryCountBetweenAudits")
-  val minTimeBetweenAudits = emailConfig.getConfigured("minTimeBetweenAudits",DurationConfigParser.apply)
+  val minTimeBetweenAudits = emailConfig.get("minTimeBetweenAudits",DurationConfigParser.parseDuration)
+
   val researcherLineTemplate = emailConfig.getString("researcherLine")
   val emailTemplate = emailConfig.getString("emailBody")
   val emailSubject = emailConfig.getString("subject")

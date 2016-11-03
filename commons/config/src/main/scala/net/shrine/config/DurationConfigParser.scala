@@ -1,6 +1,6 @@
 package net.shrine.config
 
-import scala.concurrent.duration.FiniteDuration
+import scala.concurrent.duration.{Duration, FiniteDuration}
 import com.typesafe.config.Config
 
 /**
@@ -17,6 +17,7 @@ object DurationConfigParser {
     val inf = "inf"
   }
 
+  //todo replace everywhere with the better version in 1.23. it is not compatible with typesafe config's reference.confs
   def apply(subConfig: Config): FiniteDuration = {
     import scala.concurrent.duration._
     import Keys._
@@ -29,5 +30,9 @@ object DurationConfigParser {
     else if (subConfig.hasPath(hours)) { subConfig.getDouble(hours).hours }
     else if (subConfig.hasPath(days)) { subConfig.getDouble(days).days }
     else { throw new Exception(s"Expected to find one of '$milliseconds', '$seconds', '$minutes', '$hours' or '$days' at subConfig $subConfig") }
+  }
+
+  def parseDuration(durationString:String):FiniteDuration = {
+    Some(Duration(durationString)).collect({ case d: FiniteDuration => d }).getOrElse(throw new NumberFormatException(s"$durationString is not a FiniteDuration"))
   }
 }
