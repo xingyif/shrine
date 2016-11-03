@@ -44,7 +44,7 @@ class Boot extends WebBoot with Loggable {
   if(emailConfig.getBoolean("sendAuditEmails")) {
     system.scheduler.schedule(initialDelay = 0 milliseconds, //todo figure out how to handle the initial delay
       interval = emailConfig.getConfigured("interval",DurationConfigParser.apply),
-      receiver = system.actorOf(Props[AuditEmailer]),
+      receiver = system.actorOf(Props[AuditEmailerActor]),
       "tick")
   }
 
@@ -61,24 +61,29 @@ class Boot extends WebBoot with Loggable {
   }
 }
 
-class AuditEmailer extends Actor {
+class AuditEmailerActor extends Actor {
 
-  override def receive: Receive = { case _ =>
+  override def receive: Receive = {case _ => AuditEmailer.audit()}
 
-    //todo check the config and fail early if something important is missing.
-    val config = StewardConfigSource.config
-    val mailer = ConfiguredMailer.createMailerFromConfig(config.getConfig("shrine.email"))
-    val emailConfig = config.getConfig("shrine.steweard.emailDataSteward")
+}
 
-    val maxQueryCountBetweenAudits = emailConfig.getInt("maxQueryCountBetweenAudits")
-    val minTimeBetweenAudits = emailConfig.getConfigured("minTimeBetweenAudits",DurationConfigParser.apply)
-    val researcherLineTemplate = emailConfig.getString("researcherLine")
-    val emailTemplate = emailConfig.getString("emailBody")
-    val emailSubject = emailConfig.getString("subject")
-    val from = emailConfig.get("from",new InternetAddress(_))
-    val to = emailConfig.get("to",new InternetAddress(_))
-    val stewardBaseUrl: Option[String] = config.getOption("stewardBaseUrl",_.getString)
+object AuditEmailer  {
 
+  //todo check the config and fail early if something important is missing.
+  val config = StewardConfigSource.config
+  val mailer = ConfiguredMailer.createMailerFromConfig(config.getConfig("shrine.email"))
+  val emailConfig = config.getConfig("shrine.steweard.emailDataSteward")
+
+  val maxQueryCountBetweenAudits = emailConfig.getInt("maxQueryCountBetweenAudits")
+  val minTimeBetweenAudits = emailConfig.getConfigured("minTimeBetweenAudits",DurationConfigParser.apply)
+  val researcherLineTemplate = emailConfig.getString("researcherLine")
+  val emailTemplate = emailConfig.getString("emailBody")
+  val emailSubject = emailConfig.getString("subject")
+  val from = emailConfig.get("from",new InternetAddress(_))
+  val to = emailConfig.get("to",new InternetAddress(_))
+  val stewardBaseUrl: Option[String] = config.getOption("stewardBaseUrl",_.getString)
+
+  def audit() = {
     //gather a list of users to audit
     val researchersToAudit: Seq[ResearcherToAudit] = StewardDatabase.db.selectResearchersToAudit(maxQueryCountBetweenAudits,
                                                                                                   minTimeBetweenAudits)
@@ -101,7 +106,7 @@ class AuditEmailer extends Actor {
       //send the email
       val future = mailer(envelope)
 
-      //todo what happens if it can't send?
+      //todo what happens if it can't send? maybe a Try block and drop a problem
       val result: Unit = Await.result(future, 60.seconds)
     }
   }
