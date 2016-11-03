@@ -10,6 +10,7 @@ import net.shrine.slick.NeedsWarmUp
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future, Promise}
+import scala.util.Try
 import scala.xml.{Elem, Node, NodeSeq}
 
 /**
@@ -55,14 +56,8 @@ trait Problem {
     Future {
       var continue = true
       while (continue) {
-        try {
-          blocking(synchronized(handler.handleProblem(this)))
-          continue = false
-        } catch {
-          case un:UninitializedFieldError =>
-            Thread.sleep(5)
-            continue = true
-        }
+        continue = Try(blocking(synchronized(handler.handleProblem(this)))).isSuccess
+        Thread.sleep(5)
       }
       Unit
     }
@@ -168,7 +163,7 @@ object LoggingProblemHandler extends ProblemHandler with Loggable {
   override def warmUp(): Unit = Unit
 }
 
-object DatabaseProblemHandler extends ProblemHandler {
+object DatabaseProblemHandler extends ProblemHandler with Loggable {
   override def handleProblem(problem: Problem): Unit = {
     Problems.DatabaseConnector.insertProblem(problem.toDigest)
   }

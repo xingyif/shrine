@@ -1,9 +1,9 @@
 package net.shrine.crypto2
 
-import java.security.Principal
+import java.security.{KeyStore, Principal}
 import java.security.cert.X509Certificate
 
-import net.shrine.crypto.{CertCollection, KeyPair}
+import net.shrine.crypto.{CertCollection, KeyPair, KeyStoreDescriptor}
 import net.shrine.protocol.CertId
 
 
@@ -48,8 +48,8 @@ final case class CertCollectionAdapter(keyStoreCollection: BouncyKeyStoreCollect
 
   // The CertCollection doesn't really account for PeerToPeer networks, so we slightly ignore that too
   private val caEntry: KeyStoreEntry = keyStoreCollection match {
-    case HubCertCollection(privateEntry, ca)            => ca
-    case PeerCertCollection(privateEntry, otherEntries) => privateEntry
+    case HubCertCollection(_, ca)            => ca
+    case PeerCertCollection(privateEntry, _) => privateEntry
   }
 
 }

@@ -14,6 +14,7 @@ import net.shrine.client.{EndpointConfig, JerseyHttpClient, OntClient, Poster, P
 import net.shrine.config.ConfigExtensions
 import net.shrine.config.mappings.AdapterMappings
 import net.shrine.crypto.{DefaultSignerVerifier, KeyStoreCertCollection, KeyStoreDescriptorParser, TrustParam}
+import net.shrine.crypto2.{BouncyKeyStoreCollection, SignerVerifierAdapter}
 import net.shrine.dao.squeryl.{DataSourceSquerylInitializer, SquerylDbAdapterSelecter, SquerylInitializer}
 import net.shrine.happy.{HappyShrineResource, HappyShrineService}
 import net.shrine.log.Loggable
@@ -52,10 +53,10 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
 
   //TODO: Don't assume keystore lives on the filesystem, could come from classpath, etc
   lazy val keyStoreDescriptor = shrineConfig.getConfigured("keystore",KeyStoreDescriptorParser(_))
-  lazy val certCollection: KeyStoreCertCollection = KeyStoreCertCollection.fromFileRecoverWithClassPath(keyStoreDescriptor)
-  protected lazy val keystoreTrustParam: TrustParam = TrustParam.SomeKeyStore(certCollection)
+  lazy val certCollection: BouncyKeyStoreCollection = BouncyKeyStoreCollection.fromFileRecoverWithClassPath(keyStoreDescriptor)
+  protected lazy val keystoreTrustParam: TrustParam = TrustParam.BouncyKeyStore(certCollection)
   //todo used by the adapterServide and happyShrineService, but not by the QEP. maybe each can have its own signerVerivier
-  lazy val signerVerifier: DefaultSignerVerifier = new DefaultSignerVerifier(certCollection)
+  lazy val signerVerifier = SignerVerifierAdapter(certCollection)
 
   protected lazy val dataSource: DataSource = TestableDataSourceCreator.dataSource(shrineConfig.getConfig("squerylDataSource.database"))
   protected lazy val squerylAdapter: DatabaseAdapter = SquerylDbAdapterSelecter.determineAdapter(shrineConfig.getString("shrineDatabaseType"))
@@ -151,7 +152,7 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
   
 
 
-  def poster(keystoreCertCollection: KeyStoreCertCollection)(endpoint: EndpointConfig): Poster = {
+  def poster(keystoreCertCollection: BouncyKeyStoreCollection)(endpoint: EndpointConfig): Poster = {
     val httpClient = JerseyHttpClient(keystoreCertCollection, endpoint)
 
     Poster(endpoint.url.toString, httpClient)

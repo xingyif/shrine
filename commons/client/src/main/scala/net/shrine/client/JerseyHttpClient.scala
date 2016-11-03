@@ -3,6 +3,7 @@ package net.shrine.client
 import java.security.KeyStore
 import java.security.SecureRandom
 import java.security.cert.X509Certificate
+
 import com.sun.jersey.api.client.Client
 import com.sun.jersey.api.client.ClientResponse
 import com.sun.jersey.api.client.config.ClientConfig
@@ -17,16 +18,19 @@ import javax.net.ssl.TrustManagerFactory
 import javax.net.ssl.X509KeyManager
 import javax.net.ssl.X509TrustManager
 import javax.ws.rs.core.MediaType
+
 import net.shrine.crypto.{KeyStoreCertCollection, TrustParam}
-import TrustParam.AcceptAllCerts
-import TrustParam.SomeKeyStore
+import TrustParam.{AcceptAllCerts, BouncyKeyStore, SomeKeyStore}
 import net.shrine.log.Loggable
+
 import scala.concurrent.duration._
 import net.shrine.util.XmlUtil
+
 import scala.xml.XML
 import scala.util.control.NonFatal
 import com.sun.jersey.api.client.WebResource
 import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter
+import net.shrine.crypto2.BouncyKeyStoreCollection
 import net.shrine.util.StringEnrichments
 
 /**
@@ -81,8 +85,8 @@ final case class JerseyHttpClient(trustParam: TrustParam,
 object JerseyHttpClient {
 
   //todo take a config instead of an EndpointConfig
-  def apply(keystoreCertCollection: KeyStoreCertCollection, endpoint: EndpointConfig):JerseyHttpClient = {
-    val trustParam = if (endpoint.acceptAllCerts) AcceptAllCerts else SomeKeyStore(keystoreCertCollection)
+  def apply(keystoreCertCollection: BouncyKeyStoreCollection, endpoint: EndpointConfig):JerseyHttpClient = {
+    val trustParam = if (endpoint.acceptAllCerts) AcceptAllCerts else BouncyKeyStore(keystoreCertCollection)
     JerseyHttpClient(trustParam, endpoint.timeout)
   }
 
@@ -159,6 +163,12 @@ object JerseyHttpClient {
           context.init(null, Array[TrustManager](TrustsAllCertsTrustManager), new SecureRandom)
 
           (context, TrustsAllCertsHostnameVerifier)
+        }
+        case BouncyKeyStore(certs) => { // Noo! My beautiful layer of abstraction over the KeyStore!
+                                        // Todo: Mock the x509 keyStore manager?
+          context.init(Array(keyManager(certs.keyStore, certs.descriptor.password.toCharArray)), Array(trustManager(certs.keyStore)), null)
+
+          (context, null.asInstanceOf[HostnameVerifier])
         }
       }
     }

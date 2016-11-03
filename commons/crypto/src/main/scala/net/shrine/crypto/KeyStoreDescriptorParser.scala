@@ -1,9 +1,10 @@
 package net.shrine.crypto
 
 import com.typesafe.config.{Config, ConfigValue, ConfigValueType}
-
 import net.shrine.config.ConfigExtensions
 import net.shrine.log.Loggable
+import net.shrine.util.{PeerToPeerModel, SingleHubModel, TrustModel}
+
 import scala.collection.JavaConverters._
 
 /**
@@ -17,6 +18,7 @@ object KeyStoreDescriptorParser extends Loggable {
     val privateKeyAlias = "privateKeyAlias"
     val keyStoreType = "keyStoreType"
     val caCertAliases = "caCertAliases"
+    val trustModel = "trustModelIsHub"
   }
 
   def apply(config: Config): KeyStoreDescriptor = {
@@ -32,6 +34,16 @@ object KeyStoreDescriptorParser extends Loggable {
         KeyStoreType.Default
       }
     }
+
+    def getTrustModel: TrustModel =
+      if (config.hasPath(trustModel) && !config.getBoolean(trustModel))
+        PeerToPeerModel
+      else if (config.hasPath(trustModel))
+        SingleHubModel
+      else {
+        info(s"No Trust Model specified for this network configuration, assuming that a Hub configuration is being used")
+        SingleHubModel
+      }
     
     def getCaCertAliases: Seq[String] = {
 
@@ -45,6 +57,7 @@ object KeyStoreDescriptorParser extends Loggable {
         config.getString(password),
         config.getOption(privateKeyAlias,_.getString),
         getCaCertAliases,
-        getKeyStoreType)
+        getKeyStoreType,
+        getTrustModel)
   }
 }

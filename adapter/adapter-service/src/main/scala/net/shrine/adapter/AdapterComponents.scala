@@ -13,6 +13,7 @@ import net.shrine.crypto.{DefaultSignerVerifier, KeyStoreCertCollection}
 import net.shrine.dao.squeryl.SquerylInitializer
 import net.shrine.protocol.{HiveCredentials, NodeId, RequestType, ResultOutputType}
 import net.shrine.config.{ConfigExtensions, DurationConfigParser}
+import net.shrine.crypto2.{BouncyKeyStoreCollection, SignerVerifierAdapter}
 import net.shrine.log.Log
 
 import scala.concurrent.duration.Duration
@@ -33,16 +34,15 @@ case class AdapterComponents(
 
 object AdapterComponents {
   //todo try and trim this argument list back
-  def apply(
-             adapterConfig:Config, //config is "shrine.adapter"
-             certCollection: KeyStoreCertCollection,
-             squerylInitializer: SquerylInitializer,
-             breakdownTypes: Set[ResultOutputType],
-             crcHiveCredentials: HiveCredentials,
-             signerVerifier: DefaultSignerVerifier,
-             pmPoster: Poster,
-             nodeId: NodeId
-           ):AdapterComponents = {
+  def apply(adapterConfig: Config,
+            certCollection: BouncyKeyStoreCollection,
+            squerylInitializer: SquerylInitializer,
+            breakdownTypes: Set[ResultOutputType],
+            crcHiveCredentials: HiveCredentials,
+            signerVerifier: SignerVerifierAdapter,
+            pmPoster: Poster,
+            nodeId: NodeId):
+  AdapterComponents = {
     val crcEndpoint: EndpointConfig = adapterConfig.getConfigured("crcEndpoint",EndpointConfig(_))
 
     val crcPoster: Poster = Poster(certCollection,crcEndpoint)

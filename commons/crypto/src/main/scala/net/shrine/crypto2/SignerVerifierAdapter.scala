@@ -27,8 +27,9 @@ case class SignerVerifierAdapter(keyStoreCollection: BouncyKeyStoreCollection)
   override def allEntries: Iterable[KeyStoreEntry] = keyStoreCollection.allEntries
 
   override def sign(message: BroadcastMessage, signingCertStrategy: SigningCertStrategy): BroadcastMessage = {
+    val certAdapter = CertCollectionAdapter(keyStoreCollection)
     val timeStamp = XmlDateHelper.now
-    val dummyCertId = CertId(BigInteger.valueOf(10l), None)
+    val dummyCertId = certAdapter.myCertId.get
     val signedBytes = signBytes(toBytes(message, timeStamp))
     val sig = Signature(timeStamp, dummyCertId, None, signedBytes)
     message.withSignature(sig)
@@ -44,7 +45,13 @@ case class SignerVerifierAdapter(keyStoreCollection: BouncyKeyStoreCollection)
     }
 
     message.signature.exists(sig =>
-      notTooOld(sig, maxSignatureAge, message) && logSigFailure(verifyBytes(toBytes(message, sig.timestamp), sig.value.array))
+      {
+        val notTooOl = notTooOld(sig, maxSignatureAge, message)
+        val verify = verifyBytes(sig.value.array, toBytes(message, sig.timestamp))
+        println(s"\n notTooOld: $notTooOl\n")
+        println(s"\n verify: $verify\n")
+        notTooOl && logSigFailure(verify)
+      }
     )
   }
 
@@ -56,7 +63,7 @@ case class SignerVerifierAdapter(keyStoreCollection: BouncyKeyStoreCollection)
     val now = XmlDateHelper.now
     val timeout = sigValidityEndTime > now
 
-    if (timeout) warn(s"Could not validate message with id '${message.requestId}' due to " +
+    if (!timeout) warn(s"Could not validate message with id '${message.requestId}' due to " +
       s"exceeding max timeout of $maxSignatureAge")
 
     timeout

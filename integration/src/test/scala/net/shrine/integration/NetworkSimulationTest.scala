@@ -16,7 +16,7 @@ import net.shrine.adapter.service.AdapterService
 import net.shrine.broadcaster.AdapterClientBroadcaster
 import net.shrine.broadcaster.NodeHandle
 import net.shrine.crypto.DefaultSignerVerifier
-import net.shrine.crypto.TestKeystore
+import net.shrine.crypto.NewTestKeyStore
 import net.shrine.protocol.{AggregatedRunQueryResponse, AuthenticationInfo, BroadcastMessage, CertId, Credential, DefaultBreakdownResultOutputTypes, DeleteQueryRequest, DeleteQueryResponse, FlagQueryRequest, FlagQueryResponse, HiveCredentials, NodeId, QueryResult, RawCrcRunQueryResponse, RequestType, Result, ResultOutputType, RunQueryRequest, RunQueryResponse, UnFlagQueryRequest, UnFlagQueryResponse}
 import net.shrine.qep.QepService
 import net.shrine.broadcaster.SigningBroadcastAndAggregationService
@@ -30,6 +30,7 @@ import net.shrine.adapter.translators.ExpressionTranslator
 import net.shrine.util.XmlDateHelper
 import net.shrine.protocol.query.QueryDefinition
 import net.shrine.crypto.SigningCertStrategy
+import net.shrine.crypto2.{CertCollectionAdapter, SignerVerifierAdapter}
 
 /**
  * @author clint
@@ -50,11 +51,11 @@ import net.shrine.crypto.SigningCertStrategy
  */
 final class NetworkSimulationTest extends AbstractSquerylAdapterTest with ShouldMatchersForJUnit {
 
-  private val certCollection = TestKeystore.certCollection
+  private val certCollection = NewTestKeyStore.certCollection
 
-  private lazy val myCertId: CertId = certCollection.myCertId.get
+  private lazy val myCertId: CertId = CertCollectionAdapter(certCollection).myCertId.get
 
-  private lazy val signerVerifier = new DefaultSignerVerifier(certCollection)
+  private lazy val signerVerifier = SignerVerifierAdapter(certCollection)
 
   private val domain = "test-domain"
 

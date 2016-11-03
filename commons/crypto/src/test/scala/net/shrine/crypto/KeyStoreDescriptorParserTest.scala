@@ -19,6 +19,7 @@ final class KeyStoreDescriptorParserTest extends ShouldMatchersForJUnit {
           privateKeyAlias="baz"
           keyStoreType="jks"
           caCertAliases = [foo, bar]
+          trustModelIsHub = true
           """))
           
       descriptor.file should be("foo")
@@ -35,6 +36,7 @@ final class KeyStoreDescriptorParserTest extends ShouldMatchersForJUnit {
           password="bar"
           privateKeyAlias="baz"
           keyStoreType="pkcs12"
+          trustModelIsHub = true
           """))
           
       descriptor.file should be("foo")
@@ -49,6 +51,7 @@ final class KeyStoreDescriptorParserTest extends ShouldMatchersForJUnit {
           file="foo"
           password="bar"
           privateKeyAlias="baz"
+          trustModelIsHub = true
           """))
           
       descriptor.file should be("foo")
@@ -63,6 +66,7 @@ final class KeyStoreDescriptorParserTest extends ShouldMatchersForJUnit {
           file="foo"
           password="bar"
           keyStoreType="jks"
+          trustModelIsHub = true
           """))
           
       descriptor.file should be("foo")

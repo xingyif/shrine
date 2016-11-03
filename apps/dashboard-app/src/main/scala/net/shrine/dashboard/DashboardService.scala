@@ -194,9 +194,9 @@ trait DashboardService extends HttpService with Loggable {
   val statusBaseUrl = DashboardConfigSource.config.getString("shrine.dashboard.statusBaseUrl")
 
   // TODO: check all other certs and return a list of domain/had sig pairs.
-  lazy val checkCertCollection:Route = {
-
-  }
+//  lazy val checkCertCollection:Route = {
+//
+//  }
 
   // TODO: Move this over to Status API?
   lazy val verifySignature:Route = {

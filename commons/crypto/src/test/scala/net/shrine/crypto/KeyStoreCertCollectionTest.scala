@@ -19,13 +19,13 @@ final class KeyStoreCertCollectionTest extends ShouldMatchersForJUnit {
   private def bigInt(s: String) = new BigInteger(s)
 
   @Test
-  def testInstanceMethods: Unit = doKeystoreTest(TestKeystore.certCollection)
+  def testInstanceMethods: Unit = doKeystoreTest(OldTestKeyStore.certCollection)
 
   @Test
   def testNoPrivateKeyAtSpecifiedAlias {
-    val collectionThatShouldBeFound = KeyStoreCertCollection.fromClassPathResource(TestKeystore.descriptor)
+    val collectionThatShouldBeFound = KeyStoreCertCollection.fromClassPathResource(OldTestKeyStore.descriptor)
 
-    val descriptorWithBogusAlias = TestKeystore.descriptor.copy(privateKeyAlias = Some("bogus cert alias"))
+    val descriptorWithBogusAlias = OldTestKeyStore.descriptor.copy(privateKeyAlias = Some("bogus cert alias"))
 
     //Should throw, since there is no cert-with-private-key at the alias we specified
     intercept[Exception] {
@@ -35,7 +35,7 @@ final class KeyStoreCertCollectionTest extends ShouldMatchersForJUnit {
 
   @Test
   def testNoPrivateKeyAlias {
-    val descriptorWithBogusAlias = TestKeystore.descriptor.copy(file = "shrine.keystore-one-private-key", privateKeyAlias = None)
+    val descriptorWithBogusAlias = OldTestKeyStore.descriptor.copy(file = "shrine.keystore-one-private-key", privateKeyAlias = None)
 
     //Shouldn't throw, since there's only one private key - this key should be found and used
     KeyStoreCertCollection.fromClassPathResource(descriptorWithBogusAlias)
@@ -44,7 +44,7 @@ final class KeyStoreCertCollectionTest extends ShouldMatchersForJUnit {
   @Test
   def testMultiplePrivateKeys {
     {
-      val descriptor = TestKeystore.descriptor.copy(privateKeyAlias = None, file = "shrine.keystore.multiple-private-keys")
+      val descriptor = OldTestKeyStore.descriptor.copy(privateKeyAlias = None, file = "shrine.keystore.multiple-private-keys")
 
       //Should throw, since no private key alias was specified, and multiple private keys were found
       intercept[Exception] {
@@ -53,22 +53,10 @@ final class KeyStoreCertCollectionTest extends ShouldMatchersForJUnit {
     }
     
     {
-      val descriptor = TestKeystore.descriptor.copy(file = "shrine-test.keystore", password = "changeit", privateKeyAlias = Some("shrine-test"), caCertAliases = Seq("shrine-test"))
+      val descriptor = OldTestKeyStore.descriptor.copy(file = "shrine.keystore.multiple-private-keys")
 
       //Should work, since even though multiple private keys were found, a private key alias was specified
-      //val keyStore = KeyStoreCertCollection.fromClassPathResource(descriptor)
-      val bouncy = BouncyKeyStoreCollection.fromFileRecoverWithClassPath(descriptor)
-      val bytes = "Testing this message".getBytes("UTF-8")
-
-      val CmsBytes = bouncy.signBytes(bytes)    // The cool, Crypto Messaging Syntax
-      val sigBytes: Array[Byte] = DefaultSignerVerifier.sign(bouncy.myEntry.privateKey.get, bytes)
-                                                // The less cool, regular signature
-
-      val cert: X509Certificate = bouncy.myEntry.cert
-      bouncy.verifyBytes(CmsBytes, bytes) should equal(true)
-      DefaultSignerVerifier.verify(cert, bytes, sigBytes) should equal(true)
-//      DefaultSignerVerifier.verify(cert, bytes, CmsBytes) should equal(true)
-//      bouncy.verifyBytes(sigBytes, bytes) should equal(true)
+      val keyStore = KeyStoreCertCollection.fromClassPathResource(descriptor)
     }
   }
 
@@ -120,14 +108,13 @@ final class KeyStoreCertCollectionTest extends ShouldMatchersForJUnit {
 
   private def doKeyStoreTestForBoth(descriptor: KeyStoreDescriptor) {
     val certCollection = KeyStoreCertCollection.fromFileRecoverWithClassPath(descriptor)
-    val bouncyCertCollection = BouncyKeyStoreCollection.fromFileRecoverWithClassPath(descriptor)
+
     doKeystoreTest(certCollection)
-    //doKeystoreTest(CertCollectionAdapter(bouncyCertCollection))
   }
 
   @Test
   def testSize {
-    val collection = TestKeystore.certCollection
+    val collection = OldTestKeyStore.certCollection
 
     collection.size should be(3)
   }
@@ -136,10 +123,10 @@ final class KeyStoreCertCollectionTest extends ShouldMatchersForJUnit {
   @Test
   def testFromFile {
     import KeyStoreCertCollection.fromFile
-    doKeyStoreTestForBoth(TestKeystore.certCollection.descriptor.copy(file = "src/test/resources/shrine.keystore"))
+    doKeyStoreTestForBoth(OldTestKeyStore.certCollection.descriptor.copy(file = "src/test/resources/shrine.keystore"))
 
     intercept[Exception] {
-      fromFile(TestKeystore.certCollection.descriptor.copy(file = "sakfjalskflkasjflas.foo"))
+      fromFile(OldTestKeyStore.certCollection.descriptor.copy(file = "sakfjalskflkasjflas.foo"))
     }
   }
 
@@ -148,11 +135,11 @@ final class KeyStoreCertCollectionTest extends ShouldMatchersForJUnit {
   def testFromClassPathResource {
     import KeyStoreCertCollection.fromClassPathResource
 
-    doKeyStoreTestForBoth(TestKeystore.certCollection.descriptor)
+    doKeyStoreTestForBoth(OldTestKeyStore.certCollection.descriptor)
 
 
     intercept[Exception] {
-      fromClassPathResource(TestKeystore.certCollection.descriptor.copy(file = "sakfjalskflkasjflas.foo"))
+      fromClassPathResource(OldTestKeyStore.certCollection.descriptor.copy(file = "sakfjalskflkasjflas.foo"))
     }
   }
 }

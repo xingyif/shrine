@@ -7,13 +7,17 @@ import java.util.Date
 
 import net.shrine.crypto.UtilHasher
 import net.shrine.util.NonEmptySeq
+import org.bouncycastle.asn1.x500.style.{BCStyle, IETFUtils}
 import org.bouncycastle.asn1.x509.AlgorithmIdentifier
+import org.bouncycastle.cert.X509CertificateHolder
 import org.bouncycastle.cert.jcajce.JcaX509CertificateHolder
 import org.bouncycastle.cms._
-import org.bouncycastle.cms.jcajce.JcaSimpleSignerInfoVerifierBuilder
+import org.bouncycastle.cms.jcajce.{JcaSignerInfoGeneratorBuilder, JcaSimpleSignerInfoVerifierBuilder}
 import org.bouncycastle.jce.provider.BouncyCastleProvider
+import org.bouncycastle.operator.ContentSigner
 import org.bouncycastle.operator.bc.BcDigestCalculatorProvider
-import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder
+import org.bouncycastle.operator.jcajce.{JcaContentSignerBuilder, JcaContentVerifierProviderBuilder, JcaDigestCalculatorProviderBuilder}
+import org.bouncycastle.util.{Selector, Store}
 
 import scala.util.Try
 
@@ -32,14 +36,32 @@ final case class KeyStoreEntry(cert: X509Certificate, aliases: NonEmptySeq[Strin
   val certificateHolder = new JcaX509CertificateHolder(cert)                              // Helpful methods are defined in the cert holder.
   val isSelfSigned: Boolean = certificateHolder.getSubject == certificateHolder.getIssuer // May or may not be a CA
   val formattedSha256Hash: String = UtilHasher.encodeCert(cert, "SHA-256")
+
+  val commonName: Option[String] = for { // Who doesn't put CNs on their certs, I mean really
+    rdn <- certificateHolder.getSubject.getRDNs(BCStyle.CN).headOption
+    cn <- Option(rdn.getFirst)
+  } yield IETFUtils.valueToString(cn.getValue)
+
+
+//    certificateHolder.getSubject.getRDNs(BCStyle.CN).headOption.flatMap(rdn =>
+//                                      Option(rdn.getFirst).map(cn => IETFUtils.valueToString(cn.getValue)))
+
   private val provider = new BouncyCastleProvider()
 
   def verify(signedBytes: Array[Byte], originalMessage: Array[Byte]): Boolean = {
     import scala.collection.JavaConversions._                                             // Treat Java Iterable as Scala Iterable
-    val signers: SignerInformationStore = new CMSSignedData(signedBytes).getSignerInfos
-    val verifier = new JcaSimpleSignerInfoVerifierBuilder().setProvider(provider).build(cert)
+    val parser = new CMSSignedDataParser(new JcaDigestCalculatorProviderBuilder().setProvider(provider).build(), signedBytes)
+    parser.getSignedContent.drain()
 
-    signers.headOption.exists(signerInfo => signerInfo.verify(verifier))                  // We don't attach multiple signers to a cert
+    val maybeResult = for {
+      signerInfo <- parser.getSignerInfos.headOption
+      certHolder <- parser.getCertificates.asInstanceOf[Store[X509CertificateHolder]].getMatches(new Selector[X509CertificateHolder] {
+        override def `match`(x: X509CertificateHolder): Boolean = true
+      }).headOption
+      verifier = new JcaContentVerifierProviderBuilder().setProvider(provider).build(certificateHolder)
+    } yield certHolder.isSignatureValid(verifier)
+
+    maybeResult.exists(identity)
   }
 
 
@@ -49,21 +71,25 @@ final case class KeyStoreEntry(cert: X509Certificate, aliases: NonEmptySeq[Strin
     */
   def sign(bytesToSign: Array[Byte]): Option[Array[Byte]] = {
     privateKey.map(key => {
-      val signature = Signature.getInstance("SHA256withRSA", provider)
-      signature.initSign(key)
-      signature.update(bytesToSign)
+      val gen = new CMSSignedDataGenerator()
+      val contentSigner: ContentSigner = new JcaContentSignerBuilder("SHA256withRSA").setProvider(provider).build(key)
+      val builder = new JcaSignerInfoGeneratorBuilder(new JcaDigestCalculatorProviderBuilder().setProvider(provider).build)
+      contentSigner.getOutputStream.write(bytesToSign)
+      contentSigner.getOutputStream.flush()
+      val msg = new CMSProcessableByteArray(contentSigner.getSignature)
+      builder.setDirectSignature(true)
+      gen.addSignerInfoGenerator(builder.build(contentSigner, cert))
+      gen.addCertificate(certificateHolder)
+      gen.generate(msg, true).getEncoded
 
-      val sigGen = new JcaContentSignerBuilder("SHA256withRSA").setProvider(provider).build(key)
-      val cms = new CMSSignedDataGenerator()
-
-      cms.addSignerInfoGenerator(
-        new SignerInfoGeneratorBuilder(new BcDigestCalculatorProvider())
-          .build(sigGen, certificateHolder))
-      cms.generate(new CMSProcessableByteArray(signature.sign), true).getEncoded     // true means to envelop the signature in the given data
     })
   }
 
-  def wasSignedBy(entry: KeyStoreEntry): Boolean = Try(cert.verify(entry.publicKey)).isSuccess
+  def wasSignedBy(entry: KeyStoreEntry): Boolean = wasSignedBy(entry.publicKey)
+
+  def wasSignedBy(publicKey: PublicKey): Boolean = certificateHolder.isSignatureValid(
+    new JcaContentVerifierProviderBuilder().setProvider("BC").build(publicKey)
+  )
 
   def isExpired(clock: Clock = Clock.systemDefaultZone()): Boolean = {
     certificateHolder.getNotAfter.before(Date.from(Instant.now(clock)))

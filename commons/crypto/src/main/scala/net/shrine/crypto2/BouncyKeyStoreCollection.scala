@@ -34,6 +34,10 @@ trait BouncyKeyStoreCollection extends Loggable {
   def verifyBytes(signedBytes: Array[Byte], signatureBytes: Array[Byte]): Boolean
 
   def allEntries: Iterable[KeyStoreEntry]
+
+  def keyStore: KeyStore = BouncyKeyStoreCollection.keyStore.getOrElse(throw new IllegalStateException("Accessing keyStore without loading from keyStore file first!"))
+
+  def descriptor: KeyStoreDescriptor = BouncyKeyStoreCollection.descriptor.getOrElse(throw new IllegalStateException("Accessing keyStoreDescriptor without loading from keyStore file first!"))
 }
 
 /**
@@ -43,6 +47,8 @@ object BouncyKeyStoreCollection extends Loggable {
   import scala.collection.JavaConversions._
   import CryptoErrors._
   Security.addProvider(new BouncyCastleProvider())
+  var descriptor: Option[KeyStoreDescriptor] = None
+  var keyStore: Option[KeyStore] = None
 
   // On failure creates a problem so it gets logged into the database.
   type EitherCertError = Either[ImproperlyConfiguredKeyStoreProblem, BouncyKeyStoreCollection]
@@ -63,8 +69,8 @@ object BouncyKeyStoreCollection extends Loggable {
       Left(configureError(ExpiredCertificates(entries.filter(_.isExpired()))))
     else
       descriptor.trustModel match {
-        case PeerToPeerModel => createPeerCertCollection(entries, descriptor)
-        case SingleHubModel  => createHubCertCollection(entries)
+        case PeerToPeerModel => createPeerCertCollection(entries, descriptor, keyStore)
+        case SingleHubModel  => createHubCertCollection(entries, descriptor, keyStore)
       }
   }
 
@@ -72,7 +78,9 @@ object BouncyKeyStoreCollection extends Loggable {
     * @return a [[scala.util.Left]] if we can't find or disambiguate a [[PrivateKey]],
     *         otherwise return [[scala.util.Right]] that contains correct [[PeerCertCollection]]
     */
-  def createPeerCertCollection(entries: Set[KeyStoreEntry], descriptor: KeyStoreDescriptor): EitherCertError = {
+  def createPeerCertCollection(entries: Set[KeyStoreEntry], descriptor: KeyStoreDescriptor, keyStore: KeyStore):
+    EitherCertError =
+  {
     if (descriptor.caCertAliases.nonEmpty)
       warn(s"Specifying caCertAliases in a PeerToPeer network is useless, certs found: `${descriptor.caCertAliases}`")
     (descriptor.privateKeyAlias, entries.filter(_.privateKey.isDefined)) match {
@@ -90,7 +98,9 @@ object BouncyKeyStoreCollection extends Loggable {
     }
   }
 
-  def createHubCertCollection(entries: Set[KeyStoreEntry]): EitherCertError = {
+  def createHubCertCollection(entries: Set[KeyStoreEntry], descriptor: KeyStoreDescriptor, keyStore: KeyStore):
+    EitherCertError =
+  {
     if (entries.size != 2)
       Left(configureError(RequiresExactlyTwoEntries(entries)))
     else if (entries.count(_.privateKey.isDefined) != 1)
@@ -115,6 +125,9 @@ object BouncyKeyStoreCollection extends Loggable {
         KeyStoreCertCollection.fromStreamHelper(descriptor, new FileInputStream(_))
       else
         KeyStoreCertCollection.fromStreamHelper(descriptor, getClass.getClassLoader.getResourceAsStream(_))
+
+    BouncyKeyStoreCollection.keyStore = Some(keyStore)
+    BouncyKeyStoreCollection.descriptor = Some(descriptor)
 
     createCertCollection(keyStore, descriptor)
       .fold(problem => throw problem.throwable.get, identity)

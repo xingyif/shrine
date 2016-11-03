@@ -23,10 +23,10 @@ import scala.collection.JavaConverters._
 import scala.collection.immutable.{Map, Seq, Set}
 import net.shrine.config.ConfigExtensions
 import net.shrine.crypto.{KeyStoreCertCollection, KeyStoreDescriptor, SigningCertStrategy, UtilHasher}
+import net.shrine.crypto2._
 import net.shrine.ont.data.OntClientOntologyMetadata
 import net.shrine.protocol.query.{OccuranceLimited, QueryDefinition, Term}
 import net.shrine.protocol._
-import net.shrine.qep.PeerToPeerModel
 import net.shrine.serialization.NodeSeqSerializer
 import net.shrine.util.{SingleHubModel, Versions}
 
@@ -124,9 +124,9 @@ case class KeyStoreReport(
                            privateKeyAlias:Option[String],
                            owner:Option[String],
                            issuer:Option[String],
-                           expires:Option[Date],
-                           md5Signature:Option[String],
-                           sha256Signature:Option[String],
+                           expires:Date,
+                           md5Signature:String,
+                           sha256Signature:String,
                            caTrustedAlias:Option[String],
                            caTrustedSignature:Option[String]
                            //                        keyStoreContents:List[KeyStoreEntryReport] //todo SHRINE-1529
@@ -137,28 +137,35 @@ case class KeyStoreReport(
 object KeyStoreReport {
   def apply(): KeyStoreReport = {
     val keystoreDescriptor: KeyStoreDescriptor = ShrineOrchestrator.keyStoreDescriptor
-    val certCollection: KeyStoreCertCollection = ShrineOrchestrator.certCollection
+    val certCollection: BouncyKeyStoreCollection = ShrineOrchestrator.certCollection
+    val maybeCaEntry: Option[KeyStoreEntry] = certCollection match {
+      case HubCertCollection(_, caEntry) => Some(caEntry)
+      case px:PeerCertCollection => None
+    }
 
-    val hasher = UtilHasher(certCollection)
+    val hasher = UtilHasher(CertCollectionAdapter(certCollection))
 
-    def sortFormat(input: String):String = {
-      def isLong(str:String) = str.split('=').headOption.getOrElse(str).length > 2
-      // Just an ugly sort for formatting purposes. I want The long key last, and otherwise just
-      // Sort them lexicographically.
-      input.split(", ").sortBy(a => (isLong(a), a)).mkString(", ")
+    def sortFormat(input: String):Option[String] = {
+      if (input.isEmpty) None
+      else {
+        def isLong(str: String) = str.split('=').headOption.getOrElse(str).length > 2
+        // Just an ugly sort for formatting purposes. I want The long key last, and otherwise just
+        // Sort them lexicographically.
+        Some(input.split(", ").sortBy(a => (isLong(a), a)).mkString(", "))
+      }
     }
 
     new KeyStoreReport(
       fileName = keystoreDescriptor.file,
       privateKeyAlias = keystoreDescriptor.privateKeyAlias,
-      owner = certCollection.myCert.map(cert => sortFormat(cert.getSubjectDN.getName)),
-      issuer = certCollection.myCert.map(cert => sortFormat(cert.getIssuerDN.getName)),
-      expires = certCollection.myCert.map(cert => cert.getNotAfter),
-      md5Signature = certCollection.myCert.map(cert => hasher.encodeCert(cert, "MD5")),
-      sha256Signature = certCollection.myCert.map(cert => hasher.encodeCert(cert, "SHA-256")),
+      owner = sortFormat(certCollection.myEntry.cert.getSubjectDN.getName),
+      issuer = sortFormat(certCollection.myEntry.cert.getIssuerDN.getName),
+      expires = certCollection.myEntry.cert.getNotAfter,
+      md5Signature = UtilHasher.encodeCert(certCollection.myEntry.cert, "MD5"),
+      sha256Signature = UtilHasher.encodeCert(certCollection.myEntry.cert, "SHA-256"),
       //todo sha1 signature if needed
-      caTrustedAlias = certCollection.caCertAliases.headOption,
-      caTrustedSignature = certCollection.headOption.map(cert => hasher.encodeCert(cert, "MD5"))
+      caTrustedAlias = maybeCaEntry.map(_.aliases.first),
+      caTrustedSignature = maybeCaEntry.map(entry => UtilHasher.encodeCert(entry.cert, "MD5"))
 //      keyStoreContents = certCollection.caCerts.zipWithIndex.map((cert: ((Principal, X509Certificate), Int)) => KeyStoreEntryReport(keystoreDescriptor.caCertAliases(cert._2),cert._1._1.getName,toMd5(cert._1._2))).to[List]
     )
   }

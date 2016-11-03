@@ -10,5 +10,5 @@ case class HubCertCollection(override val myEntry: KeyStoreEntry, caEntry: KeySt
   /**
     * The only valid messages for a downstream node are those that come from the CA
     */
-  override def verifyBytes(signedBytes:Array[Byte], signatureBytes:Array[Byte]) = {caEntry.verify(signedBytes, signatureBytes)}
+  override def verifyBytes(signedBytes:Array[Byte], signatureBytes:Array[Byte]) = caEntry.verify(signedBytes, signatureBytes)
 }
