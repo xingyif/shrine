@@ -19,6 +19,7 @@ import java.util.Date
 import net.shrine.config.{ConfigExtensions, DurationConfigParser}
 
 import scala.language.postfixOps
+import scala.util.control.NonFatal
 
 // this class is instantiated by the servlet initializer
 // it needs to have a default constructor and implement
@@ -42,10 +43,16 @@ class Boot extends WebBoot with Loggable {
   val emailConfig = config.getConfig("shrine.steward.emailDataSteward")
 
   if(emailConfig.getBoolean("sendAuditEmails")) {
-    system.scheduler.schedule(initialDelay = 0 milliseconds, //todo figure out how to handle the initial delay
-      interval = emailConfig.getConfigured("interval",DurationConfigParser.apply),
-      receiver = system.actorOf(Props[AuditEmailerActor]),
-      "tick")
+
+    try {
+      info(s"DSA will request audits from ${AuditEmailer.to}")
+
+      system.scheduler.schedule(initialDelay = 0 milliseconds, //todo figure out how to handle the initial delay
+        interval = emailConfig.getConfigured("interval", DurationConfigParser.apply),
+        receiver = system.actorOf(Props[AuditEmailerActor]),
+        "tick")
+    }
+    catch {case NonFatal(x) => warn("DSA will not email audit requests due to exception",x)} //todo a new problem
   }
 
   //todo use this to figure out what if any initial delay should be. Maybe if the interval is >= 1 day then the delay will send the email so many hours passed either the previous or the next midnight
@@ -69,7 +76,6 @@ class AuditEmailerActor extends Actor {
 
 object AuditEmailer  {
 
-  //todo check the config and fail early if something important is missing.
   val config = StewardConfigSource.config
   val mailer = ConfiguredMailer.createMailerFromConfig(config.getConfig("shrine.email"))
   val emailConfig = config.getConfig("shrine.steward.emailDataSteward")
