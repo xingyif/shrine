@@ -324,11 +324,7 @@ case class StewardDatabase(schemaDef:StewardSchema,dataSource: DataSource) exten
     dbRun(mostRecentUserAudits.result)
   }
 
-  def selectResearchersToAudit(maxQueryCountBetweenAudits:Int,minTimeBetweenAudits:Duration):Seq[ResearcherToAudit] = {
-
-    val now = System.currentTimeMillis()
-    println(s"now $now minTimeBetweenAudits $minTimeBetweenAudits maxQueryCountBetweenAudits $maxQueryCountBetweenAudits")
-
+  def selectResearchersToAudit(maxQueryCountBetweenAudits:Int,minTimeBetweenAudits:Duration,now:Date):Seq[ResearcherToAudit] = {
 
     //todo one round with the db instead of O(researchers)
 
@@ -344,8 +340,6 @@ case class StewardDatabase(schemaDef:StewardSchema,dataSource: DataSource) exten
       dateOfFirstQuery.toMap ++ mostRecentAudit.toMap
     })
 
-    println(s"researchersToHorizons $researchersToHorizons")
-
     val researchersToHorizonsAndCounts = researchersToHorizons.map{ researcherDate =>
 
       val queryParameters = QueryParameters(researcherIdOption = Some(researcherDate._1),
@@ -355,20 +349,14 @@ case class StewardDatabase(schemaDef:StewardSchema,dataSource: DataSource) exten
       (researcherDate._1,(researcherDate._2,count))
     }
 
-    println(s"researchersToHorizonsAndCounts $researchersToHorizonsAndCounts")
-
     //audit if oldest query within the horizon is >= 30 days in the past and the researcher has run at least one query since.
     //todo configure
     val oldestAllowed = System.currentTimeMillis() - minTimeBetweenAudits.toMillis
     val timeBasedAudit = researchersToHorizonsAndCounts.filter(x => x._2._2 > 0 && x._2._1 <= oldestAllowed)
 
-    println(s"timeBasedAudit $timeBasedAudit")
-
     //audit if the researcher has run >= 30 queries since horizon?
     //todo configure
     val queryBasedAudit = researchersToHorizonsAndCounts.filter(x => x._2._2 >= maxQueryCountBetweenAudits)
-
-    println(s"queryBasedAudit $queryBasedAudit")
 
     val toAudit = timeBasedAudit ++ queryBasedAudit
 

@@ -95,12 +95,14 @@ object AuditEmailer  {
 
   def audit() = {
     //gather a list of users to audit
+    val now = System.currentTimeMillis()
     val researchersToAudit: Seq[ResearcherToAudit] = StewardDatabase.db.selectResearchersToAudit(maxQueryCountBetweenAudits,
-                                                                                                  minTimeBetweenAudits)
+                                                                                                  minTimeBetweenAudits,
+                                                                                                  now)
     if (researchersToAudit.nonEmpty){
 
       val auditLines = researchersToAudit.sortBy(_.count).reverse.map { researcher =>
-        researcherLineTemplate.replaceAll("FULLANME",researcher.researcher.fullName)
+        researcherLineTemplate.replaceAll("FULLNAME",researcher.researcher.fullName)
           .replaceAll("USERNAME",researcher.researcher.userName)
           .replaceAll("COUNT",researcher.count.toString)
           .replaceAll("LAST_AUDIT_DATE",new Date(researcher.leastRecentQueryDate).toString)
@@ -118,6 +120,8 @@ object AuditEmailer  {
 
       //todo what happens if it can't send? maybe a Try block and drop a problem
       val result: Unit = Await.result(future, 60.seconds)
+
+      StewardDatabase.db.logAuditRequests(researchersToAudit,now)
     }
   }
 }

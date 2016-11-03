@@ -75,7 +75,7 @@ class StewardServiceTest extends FlatSpec with TestWithDatabase {
 
     Thread.sleep(20)
 
-    val audits: Seq[ResearcherToAudit] = StewardDatabase.db.selectResearchersToAudit(30,10 milliseconds)
+    val audits: Seq[ResearcherToAudit] = StewardDatabase.db.selectResearchersToAudit(30,10 milliseconds,System.currentTimeMillis())
 
     val expected = Seq(ResearcherToAudit(researcherOutboundUser,1,now - 20,now))
 
@@ -95,7 +95,7 @@ class StewardServiceTest extends FlatSpec with TestWithDatabase {
 
     Thread.sleep(20)
 
-    val audits: Seq[ResearcherToAudit] = StewardDatabase.db.selectResearchersToAudit(30,30 days)
+    val audits: Seq[ResearcherToAudit] = StewardDatabase.db.selectResearchersToAudit(30,30 days,System.currentTimeMillis())
 
     assertResult(Seq.empty)(audits)
   }
@@ -115,7 +115,7 @@ class StewardServiceTest extends FlatSpec with TestWithDatabase {
 
     Thread.sleep(20)
 
-    val audits: Seq[ResearcherToAudit] = StewardDatabase.db.selectResearchersToAudit(30,10 milliseconds)
+    val audits: Seq[ResearcherToAudit] = StewardDatabase.db.selectResearchersToAudit(30,10 milliseconds,System.currentTimeMillis())
 
     val expected = Seq(ResearcherToAudit(researcherOutboundUser,1,now - 20,now))
 
@@ -138,7 +138,7 @@ class StewardServiceTest extends FlatSpec with TestWithDatabase {
 
     Thread.sleep(20)
 
-    val audits: Seq[ResearcherToAudit] = StewardDatabase.db.selectResearchersToAudit(30,30 days)
+    val audits: Seq[ResearcherToAudit] = StewardDatabase.db.selectResearchersToAudit(30,30 days,System.currentTimeMillis())
 
     assertResult(Seq.empty)(audits)
   }
@@ -154,7 +154,7 @@ class StewardServiceTest extends FlatSpec with TestWithDatabase {
     StewardDatabase.db.logAndCheckQuery(researcherUserName,Some(1),InboundShrineQuery(2,"test query1",queryContent))
     val now = System.currentTimeMillis()
 
-    val audits: Seq[ResearcherToAudit] = StewardDatabase.db.selectResearchersToAudit(3,30 days)
+    val audits: Seq[ResearcherToAudit] = StewardDatabase.db.selectResearchersToAudit(3,30 days,System.currentTimeMillis())
 
     val expected = Seq(ResearcherToAudit(researcherOutboundUser,3,now - 20,now))
 
@@ -173,7 +173,7 @@ class StewardServiceTest extends FlatSpec with TestWithDatabase {
     StewardDatabase.db.logAndCheckQuery(researcherUserName,Some(1),InboundShrineQuery(2,"test query1",queryContent))
     val now = System.currentTimeMillis()
 
-    val audits: Seq[ResearcherToAudit] = StewardDatabase.db.selectResearchersToAudit(30,30 days)
+    val audits: Seq[ResearcherToAudit] = StewardDatabase.db.selectResearchersToAudit(30,30 days,System.currentTimeMillis())
 
     assertResult(Seq.empty)(audits)
   }
@@ -193,7 +193,7 @@ class StewardServiceTest extends FlatSpec with TestWithDatabase {
     StewardDatabase.db.logAndCheckQuery(researcherUserName,Some(1),InboundShrineQuery(1,"test query1",queryContent))
     StewardDatabase.db.logAndCheckQuery(researcherUserName,Some(1),InboundShrineQuery(2,"test query1",queryContent))
 
-    val audits: Seq[ResearcherToAudit] = StewardDatabase.db.selectResearchersToAudit(3,30 days)
+    val audits: Seq[ResearcherToAudit] = StewardDatabase.db.selectResearchersToAudit(3,30 days,System.currentTimeMillis())
 
     val expected = Seq(ResearcherToAudit(researcherOutboundUser,3,now - 20,now))
 
@@ -216,7 +216,7 @@ class StewardServiceTest extends FlatSpec with TestWithDatabase {
     StewardDatabase.db.logAndCheckQuery(researcherUserName,Some(1),InboundShrineQuery(1,"test query1",queryContent))
     StewardDatabase.db.logAndCheckQuery(researcherUserName,Some(1),InboundShrineQuery(2,"test query1",queryContent))
 
-    val audits: Seq[ResearcherToAudit] = StewardDatabase.db.selectResearchersToAudit(30,30 days)
+    val audits: Seq[ResearcherToAudit] = StewardDatabase.db.selectResearchersToAudit(30,30 days,System.currentTimeMillis())
 
     val expected = Seq(ResearcherToAudit(researcherOutboundUser,3,now - 20,now))
 
