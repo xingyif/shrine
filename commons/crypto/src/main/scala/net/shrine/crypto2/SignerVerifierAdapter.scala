@@ -48,8 +48,6 @@ case class SignerVerifierAdapter(keyStoreCollection: BouncyKeyStoreCollection)
       {
         val notTooOl = notTooOld(sig, maxSignatureAge, message)
         val verify = verifyBytes(sig.value.array, toBytes(message, sig.timestamp))
-        println(s"\n notTooOld: $notTooOl\n")
-        println(s"\n verify: $verify\n")
         notTooOl && logSigFailure(verify)
       }
     )

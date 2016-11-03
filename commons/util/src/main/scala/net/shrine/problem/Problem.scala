@@ -56,8 +56,14 @@ trait Problem {
     Future {
       var continue = true
       while (continue) {
-        continue = Try(blocking(synchronized(handler.handleProblem(this)))).isSuccess
-        Thread.sleep(5)
+        try {
+          blocking(synchronized(handler.handleProblem(this)))
+          continue = false
+        } catch {
+          case un:UninitializedFieldError =>
+            Thread.sleep(5)
+            continue = true
+        }
       }
       Unit
     }

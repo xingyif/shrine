@@ -7,6 +7,7 @@ import com.typesafe.config.Config
 import net.shrine.adapter.service.AdapterConfigSource
 import net.shrine.audit.{NetworkQueryId, QueryName, QueryTopicId, QueryTopicName, ShrineNodeId, Time, UserName}
 import net.shrine.crypto.KeyStoreCertCollection
+import net.shrine.crypto2.KeyStoreEntry
 import net.shrine.log.Loggable
 import net.shrine.protocol.{BroadcastMessage, RunQueryRequest, RunQueryResponse, ShrineResponse}
 import net.shrine.slick.TestableDataSourceCreator
@@ -228,7 +229,7 @@ object QueryReceived extends ((
           warn(s"No signature on message ${message.requestId}")
           (-1L,"No Cert For Message")}{signature =>
           val timesamp = signature.timestamp.toGregorianCalendar.getTimeInMillis
-          val shrineNodeId:ShrineNodeId = signature.signingCert.fold("Signing Cert Not Available")(x => KeyStoreCertCollection.extractCommonName(x.toCertificate).getOrElse("Common name not in cert"))
+          val shrineNodeId:ShrineNodeId = KeyStoreEntry.extractCommonName(signature.value.toArray).getOrElse("Signing Cert Not Available")
           (timesamp,shrineNodeId)
         }
 

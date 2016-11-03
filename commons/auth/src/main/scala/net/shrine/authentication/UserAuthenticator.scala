@@ -3,7 +3,9 @@ package net.shrine.authentication
 import com.typesafe.config.Config
 import net.shrine.authorization.steward.{qepRole, stewardRole}
 import net.shrine.client.{EndpointConfig, JerseyHttpClient, Poster}
+import net.shrine.crypto.TrustParam.BouncyKeyStore
 import net.shrine.crypto.{KeyStoreCertCollection, KeyStoreDescriptor, KeyStoreDescriptorParser, TrustParam}
+import net.shrine.crypto2.BouncyKeyStoreCollection
 import net.shrine.i2b2.protocol.pm.{BadUsernameOrPasswordException, GetUserConfigurationRequest, PmUserWithoutProjectException, User}
 import net.shrine.log.Loggable
 import net.shrine.protocol.{AuthenticationInfo, Credential}
@@ -94,8 +96,8 @@ case class PmUserSource(config:Config) extends UserSource with Loggable {
     val trustParam =  if (pmEndpoint.acceptAllCerts) AcceptAllCerts
     else {
       val keyStoreDescriptor:KeyStoreDescriptor = KeyStoreDescriptorParser.apply(config.getConfig("shrine.keystore"))
-      val keystoreCertCollection: KeyStoreCertCollection = KeyStoreCertCollection.fromFileRecoverWithClassPath(keyStoreDescriptor)
-      SomeKeyStore(keystoreCertCollection)
+      val keystoreCertCollection: BouncyKeyStoreCollection = BouncyKeyStoreCollection.fromFileRecoverWithClassPath(keyStoreDescriptor)
+      BouncyKeyStore(keystoreCertCollection)
     }
 
     val httpClient = JerseyHttpClient(trustParam, pmEndpoint.timeout)

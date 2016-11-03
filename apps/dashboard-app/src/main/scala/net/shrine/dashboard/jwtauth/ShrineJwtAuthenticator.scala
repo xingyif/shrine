@@ -1,25 +1,26 @@
 package net.shrine.dashboard.jwtauth
 
 import java.io.ByteArrayInputStream
-import java.security.{Principal, Key, PrivateKey}
+import java.security.{Key, Principal, PrivateKey}
 import java.security.cert.{CertificateFactory, X509Certificate}
 import java.util.Date
 
 import io.jsonwebtoken.impl.TextCodec
-import io.jsonwebtoken.{Jws, ClaimJwtException, Claims, SignatureAlgorithm, Jwts}
-import net.shrine.crypto.{KeyStoreDescriptorParser, KeyStoreCertCollection}
+import io.jsonwebtoken.{ClaimJwtException, Claims, Jws, Jwts, SignatureAlgorithm}
+import net.shrine.crypto.{KeyStoreCertCollection, KeyStoreDescriptorParser}
+import net.shrine.crypto2.{BouncyKeyStoreCollection, HubCertCollection, PeerCertCollection}
 import net.shrine.dashboard.DashboardConfigSource
 import net.shrine.i2b2.protocol.pm.User
 import net.shrine.log.Loggable
 import net.shrine.protocol.Credential
 import spray.http.HttpHeaders.{Authorization, `WWW-Authenticate`}
-import spray.http.{HttpRequest, OAuth2BearerToken, HttpHeader, HttpChallenge}
+import spray.http.{HttpChallenge, HttpHeader, HttpRequest, OAuth2BearerToken}
 import spray.routing.AuthenticationFailedRejection.{CredentialsMissing, CredentialsRejected}
 import spray.routing.AuthenticationFailedRejection
 import spray.routing.authentication._
 
-import scala.concurrent.{Future, ExecutionContext}
-import scala.util.{Success, Failure, Try}
+import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Failure, Success, Try}
 
 /**
   * An Authenticator that uses Jwt in a Bearer header to authenticate. See http://jwt.io/introduction/ for what this is all about,
@@ -31,7 +32,7 @@ import scala.util.{Success, Failure, Try}
 object ShrineJwtAuthenticator extends Loggable {
 
   val config = DashboardConfigSource.config
-  val certCollection: KeyStoreCertCollection = KeyStoreCertCollection.fromFileRecoverWithClassPath(KeyStoreDescriptorParser(config.getConfig("shrine.keystore")))
+  val certCollection = BouncyKeyStoreCollection.fromFileRecoverWithClassPath(KeyStoreDescriptorParser(config.getConfig("shrine.keystore")))
 
   //from https://groups.google.com/forum/#!topic/spray-user/5DBEZUXbjtw
   def authenticate(implicit ec: ExecutionContext): ContextAuthenticator[User] = { ctx =>
@@ -91,9 +92,9 @@ object ShrineJwtAuthenticator extends Loggable {
 
   def createOAuthCredentials(user:User): OAuth2BearerToken = {
 
-    val base64Cert:String = TextCodec.BASE64URL.encode(certCollection.myCert.get.getEncoded)
+    val base64Cert:String = TextCodec.BASE64URL.encode(certCollection.myEntry.cert.getEncoded)
 
-    val key: PrivateKey = certCollection.myKeyPair.privateKey
+    val key: PrivateKey = certCollection.myEntry.privateKey.get
     val expiration: Date = new Date(System.currentTimeMillis() + 30 * 1000) //good for 30 seconds
     val jwtsString = Jwts.builder().
         setHeaderParam("kid", base64Cert).
@@ -134,25 +135,34 @@ object ShrineJwtAuthenticator extends Loggable {
 
     val issuingSite = jwtsClaims.getBody.getIssuer
 
+    case class CertIssuerNotInCollectionException(issuingSite:String,issuer: Principal, aliases: Iterable[String]) extends ShrineJwtException(s"Could not find a certificate with issuer DN $issuer. Known cert aliases are ${aliases.mkString(",")}")
+
     //todo is this the right way to find a cert in the certCollection?
-
-    debug(s"certCollection.caCerts.contains(${cert.getSubjectX500Principal}) is ${certCollection.caCerts.contains(cert.getSubjectX500Principal)}")
-    certCollection.caCerts.get(cert.getSubjectX500Principal).fold{
-      //if not in the keystore, check that the issuer is available
-      val issuer: Principal = cert.getIssuerX500Principal
-      case class CertIssuerNotInCollectionException(issuingSite:String,issuer: Principal) extends ShrineJwtException(s"Could not find a CA certificate with issuer DN $issuer. Known CA cert aliases are ${certCollection.caCertAliases.mkString(",")}")
-      val signingCert = certCollection.caCerts.getOrElse(issuer,{throw CertIssuerNotInCollectionException(issuingSite,issuer)})
-
-      //verify that the cert was signed using the signingCert
-      //todo this can throw CertificateException, NoSuchAlgorithmException, InvalidKeyException, NoSuchProviderException, SignatureException
-      cert.verify(signingCert.getPublicKey)
-      //todo has cert expired?
-      info(s"${cert.getSubjectX500Principal} verified using $issuer from the KeyStore")
-      cert
-    }{ principal => //if the cert is in the certCollection then all is well
-      info(s"$principal is in the KeyStore")
-      cert
+    certCollection match {
+      case HubCertCollection(_, caEntry) if caEntry.signed(cert) => caEntry.cert
+      case px:PeerCertCollection => px.allEntries.find(_.signed(cert)).map(_.cert).getOrElse(
+        throw CertIssuerNotInCollectionException(issuingSite,cert.getIssuerDN, px.allEntries.flatMap(_.aliases))
+      )
+      case hc:HubCertCollection => throw CertIssuerNotInCollectionException(issuingSite,cert.getIssuerDN, hc.caEntry.aliases)
     }
+
+//    debug(s"certCollection.caCerts.contains(${cert.getSubjectX500Principal}) is ${caEntry.cert.getSubjectX500Principal == cert.getSubjectX500Principal}")
+//    certCollection.caCerts.get(cert.getSubjectX500Principal).fold{
+//      //if not in the keystore, check that the issuer is available
+//      val issuer: Principal = cert.getIssuerX500Principal
+//      case class CertIssuerNotInCollectionException(issuingSite:String,issuer: Principal) extends ShrineJwtException(s"Could not find a CA certificate with issuer DN $issuer. Known CA cert aliases are ${certCollection.caCertAliases.mkString(",")}")
+//      val signingCert = certCollection.caCerts.getOrElse(issuer,{throw CertIssuerNotInCollectionException(issuingSite,issuer)})
+//
+//      //verify that the cert was signed using the signingCert
+//      //todo this can throw CertificateException, NoSuchAlgorithmException, InvalidKeyException, NoSuchProviderException, SignatureException
+//      cert.verify(signingCert.getPublicKey)
+//      //todo has cert expired?
+//      info(s"${cert.getSubjectX500Principal} verified using $issuer from the KeyStore")
+//      cert
+//    }{ principal => //if the cert is in the certCollection then all is well
+//      info(s"$principal is in the KeyStore")
+//      cert
+//    }
   }
 
   def failIfNull[E](e:E,t:Throwable):Try[E] = Try {

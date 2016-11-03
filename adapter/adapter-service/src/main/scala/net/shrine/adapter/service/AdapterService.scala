@@ -42,7 +42,6 @@ final class AdapterService(
    */
   private def handleInvalidSignature(message: BroadcastMessage): Option[Result] = {
     val (sigIsValid, elapsed) = time(signatureVerifier.verifySig(message, maxSignatureAge))
-    println(s"HEY! $sigIsValid")
     if(sigIsValid) { None }
     else {
       info(s"Incoming message had invalid signature: $message")

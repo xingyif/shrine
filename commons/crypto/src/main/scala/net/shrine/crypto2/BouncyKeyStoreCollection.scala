@@ -13,6 +13,7 @@ import net.shrine.crypto._
 import net.shrine.log.Loggable
 import net.shrine.protocol.{BroadcastMessage, CertId, Signature}
 import net.shrine.util._
+import org.bouncycastle.cert.X509CertificateHolder
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 
 import scala.concurrent.duration.Duration

@@ -1,5 +1,5 @@
 package net.shrine.crypto
-import net.shrine.util.{SingleHubModel, TrustModel}
+import net.shrine.util.{PeerToPeerModel, SingleHubModel, TrustModel}
 
 /**
  * @author clint

@@ -6,6 +6,7 @@ import net.shrine.authentication.UserAuthenticator
 import net.shrine.authorization.steward.OutboundUser
 import net.shrine.config.ConfigExtensions
 import net.shrine.crypto.{KeyStoreCertCollection, KeyStoreDescriptorParser, UtilHasher}
+import net.shrine.crypto2.{BouncyKeyStoreCollection, CertCollectionAdapter}
 import net.shrine.dashboard.jwtauth.ShrineJwtAuthenticator
 import net.shrine.i2b2.protocol.pm.User
 import net.shrine.status.protocol.{Config => StatusProtocolConfig}
@@ -201,8 +202,8 @@ trait DashboardService extends HttpService with Loggable {
   // TODO: Move this over to Status API?
   lazy val verifySignature:Route = {
     val keyStoreDescriptor = DashboardConfigSource.config.getConfigured("shrine.keystore", KeyStoreDescriptorParser(_))
-    val certCollection: KeyStoreCertCollection = KeyStoreCertCollection.fromFileRecoverWithClassPath(keyStoreDescriptor)
-    val hasher = UtilHasher(certCollection)
+    val certCollection = BouncyKeyStoreCollection.fromFileRecoverWithClassPath(keyStoreDescriptor)
+    val hasher = UtilHasher(CertCollectionAdapter(certCollection))
 
     def handleSig(sha256:String): Option[Boolean] = {
       if (hasher.validSignatureFormat(sha256)) {

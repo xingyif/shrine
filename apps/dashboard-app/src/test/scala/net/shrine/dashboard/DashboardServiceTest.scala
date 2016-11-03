@@ -308,7 +308,7 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
   }
 
   "DashboardService" should "return an OK for admin/status/signature with a valid sha256 hash" in {
-    Post("/admin/status/verifySignature", FormData(Seq("sha256" -> "AB:56:98:69:F0:DD:3C:7C:4B:FD:8D:A8:0A:C7:A4:AA:13:3E:22:B3:57:A7:C6:B0:95:15:1B:22:C0:E5:15:9A"))) ~>
+    Post("/admin/status/verifySignature", FormData(Seq("sha256" -> "65:AA:60:6C:CD:56:1F:C2:A6:90:AE:C9:01:61:96:B2:A5:EA:A5:05:A5:55:27:18:24:45:73:8F:15:A9:09:03"))) ~>
       addCredentials(adminCredentials) ~>
       route ~> check {
       assertResult(StatusCodes.OK)(status)
