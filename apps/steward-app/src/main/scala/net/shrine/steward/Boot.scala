@@ -52,7 +52,10 @@ class Boot extends WebBoot with Loggable {
         receiver = system.actorOf(Props[AuditEmailerActor]),
         "tick")
     }
-    catch {case NonFatal(x) => warn("DSA will not email audit requests due to exception",x)} //todo a new problem
+    catch {
+      case NonFatal(x) => warn("DSA will not email audit requests due to exception",x)
+      case x:ExceptionInInitializerError => warn("DSA will not email audit requests due to exception",x)
+    } //todo a new problem
   }
 
   //todo use this to figure out what if any initial delay should be. Maybe if the interval is >= 1 day then the delay will send the email so many hours passed either the previous or the next midnight
