@@ -2,7 +2,7 @@
 	<span class="expandable {{svc.getStyleByFrequency(value.queryCount, 200)}}" ng-show="value.hasChildren()" ng-click="show=!show">
         {{(show)? '-' : '+'}}
       </span>
-	<a ng-init="show=false " ng-click="show=!show;" class="{{svc.getStyleByFrequency(value.queryCount, 200)}} tooltip-toggle" aria-label="{{value.queryCount}} queries">
+	<a ng-init="show=false " ng-click="show=!show;" class="{{svc.getStyleByFrequency(value.queryCount, digest.totalQueries)}} tooltip-toggle" aria-label="{{value.queryCount}} queries">
 
              {{value.key}} - {{svc.getPct(value.queryCount, digest.totalQueries)}}%  
 

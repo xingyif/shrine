@@ -28,7 +28,8 @@
 
             for (var i = 0; i < ln; i++) {
                 var record = queryRecords[i];
-                if (topicId === undefined || (record.topic !== undefined && topicId === record.topic.id)) {
+                var topic = record.topic;
+                if (topic && (topicId === undefined || topicId === topic.id)) {
                     var str = record.queryContents;
                     ontology = traverse(str.queryDefinition.expr, record.externalId, ontology);
                     queryCount++;
@@ -37,7 +38,7 @@
                         topics[record.topic.id] = record.topic;
                     }
 
-                    appendTopicIfUnique(record.topic, topics);
+                    appendTopicIfUnique(topic, topics);
                 }
             }
 

@@ -1,5 +1,5 @@
 .topic-dropdown {
-  span.title{
+  div.title{
     text-transform: uppercase;
     font-weight: 500;
     font-size: 1.3em;
@@ -7,17 +7,20 @@
   }
   z-index: 20000;
   margin: 4rem;
-  left: 20%;
+  left: 0%;
   color: rgba(0, 0, 0, 0.87);
   font-family: "Roboto", sans-serif;
   font-size: 14px;
-  font-weight: 400;
+  font-weight: 300;
   line-height: 1.5em;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   position: fixed;
     .tdd-btn {
-      max-width: 600px;
+      &:hover{
+        cursor: pointer;
+      }
+      max-width: 1000px;
       outline: 0; /* takes care of blue outline */
       display: -webkit-inline-box;
       display: -webkit-inline-flex;
@@ -31,7 +34,8 @@
       -webkit-justify-content: space-between;
       -ms-flex-pack: justify;
       justify-content: space-between;
-      background: #5380F7;
+      background: rgba(0,0,0, .75);
+      border: 1px solid #63BCF8 !important;
       min-width: 400px;
       border: 0;
       border-radius: 4px;
@@ -40,7 +44,7 @@
       padding: 16px 20px;
       color: #FFFFFF;
       font-size: 12px;
-      font-weight: 600;
+      font-weight: 300;
       letter-spacing: 1.2px;
       text-transform: uppercase;
       overflow: hidden;
@@ -49,7 +53,8 @@
       .tdd-list {
         position: absolute;
         top: 100%;
-        background: #FFFFFF;
+        background: rgba(0,0,0, .75);
+        border: 1px solid #63BCF8 !important;
         width: 100%;
         border-radius: 4px;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
@@ -66,6 +71,7 @@
           color: inherit;
           font-size: 10px;
           text-decoration: none;
+          background: none !important;
         };
 
         &:before {
@@ -76,8 +82,8 @@
           width: 0;
           height: 0;
           box-shadow: 2px -2px 6px rgba(0, 0, 0, 0.05);
-          border-top: 6px solid #FFFFFF;
-          border-right: 6px solid #FFFFFF;
+          border-top: 6px solid #63BCF8;;
+          border-right: 6px solid #63BCF8;;
           border-bottom: 6px solid transparent;
           border-left: 6px solid transparent;
           -webkit-transform: rotate(-45deg);
@@ -88,9 +94,7 @@
         li {
           z-index: 100;
           position: relative;
-          background: #FFFFFF;
           padding: 0 20px;
-          color: #666;
 
           &.active {
             color: #5380F7;
