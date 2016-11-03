@@ -6,7 +6,7 @@ import akka.actor.{Actor, ActorSystem, Props}
 import courier.{Envelope, Text}
 import net.shrine.authorization.steward.ResearcherToAudit
 import net.shrine.email.ConfiguredMailer
-import net.shrine.log.Loggable
+import net.shrine.log.{Log, Loggable}
 import net.shrine.steward.db.StewardDatabase
 import spray.servlet.WebBoot
 
@@ -77,7 +77,7 @@ class AuditEmailerActor extends Actor {
 
 }
 
-object AuditEmailer  {
+object AuditEmailer {
 
   val config = StewardConfigSource.config
   val mailer = ConfiguredMailer.createMailerFromConfig(config.getConfig("shrine.email"))
@@ -115,13 +115,19 @@ object AuditEmailer  {
 
       val envelope:Envelope = Envelope.from(from).to(to).subject(emailSubject).content(emailBody)
 
+      Log.debug(s"About to send $envelope .")
+
       //send the email
       val future = mailer(envelope)
 
       //todo what happens if it can't send? maybe a Try block and drop a problem
-      val result: Unit = Await.result(future, 60.seconds)
-
-      StewardDatabase.db.logAuditRequests(researchersToAudit,now)
+      try {
+        Await.result(future, 60.seconds)
+        StewardDatabase.db.logAuditRequests(researchersToAudit, now)
+        Log.info(s"Sent and logged $envelope .")
+      } catch {
+        case NonFatal(x) => Log.warn(s"Problem while sending $envelope ",x)//todo problem
+      }
     }
   }
 }
