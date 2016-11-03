@@ -39,7 +39,7 @@ class Boot extends WebBoot with Loggable {
   // if either the volume or time conditions are met, send an email to the data steward asking for an audit
   val config = StewardConfigSource.config
 
-  val emailConfig = config.getConfig("shrine.steweard.emailDataSteward")
+  val emailConfig = config.getConfig("shrine.steward.emailDataSteward")
 
   if(emailConfig.getBoolean("sendAuditEmails")) {
     system.scheduler.schedule(initialDelay = 0 milliseconds, //todo figure out how to handle the initial delay
@@ -72,7 +72,7 @@ object AuditEmailer  {
   //todo check the config and fail early if something important is missing.
   val config = StewardConfigSource.config
   val mailer = ConfiguredMailer.createMailerFromConfig(config.getConfig("shrine.email"))
-  val emailConfig = config.getConfig("shrine.steweard.emailDataSteward")
+  val emailConfig = config.getConfig("shrine.steward.emailDataSteward")
 
   val maxQueryCountBetweenAudits = emailConfig.getInt("maxQueryCountBetweenAudits")
   val minTimeBetweenAudits = emailConfig.getConfigured("minTimeBetweenAudits",DurationConfigParser.apply)
