@@ -44,9 +44,11 @@
                 .then(parseTopicsPerState, onFail);
         }
 
-        function getUserQueryHistory(username) {
+        function getUserQueryHistory(username, startDate, endDate) {
             var queryString = '?asJson=true';
-            var url = service.getUrl(urls.userQueryHistory) + '/' +  username + queryString;
+            var skip, limit, state, sortBy, sortDirection;
+            var url = service.getUrl(urls.userQueryHistory + '/' +  username + queryString, skip,
+                limit, state, sortBy, sortDirection, startDate, endDate);
 
             return $http.get(url)
                 .then(parseQueryHistory, onFail);
