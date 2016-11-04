@@ -1,23 +1,15 @@
 package net.shrine.steward
 
-import javax.mail.internet.InternetAddress
-
-import akka.actor.{Actor, ActorSystem, Props}
-import courier.{Envelope, Text}
-import net.shrine.authorization.steward.ResearcherToAudit
-import net.shrine.email.ConfiguredMailer
-import net.shrine.log.{Log, Loggable}
+import akka.actor.{ActorSystem, Props}
+import net.shrine.config.{ConfigExtensions, DurationConfigParser}
+import net.shrine.log.Loggable
+import net.shrine.problem.{AbstractProblem, ProblemSources}
 import net.shrine.steward.db.StewardDatabase
+import net.shrine.steward.email.{AuditEmailer, AuditEmailerActor}
 import spray.servlet.WebBoot
 
-import scala.concurrent.Await
-import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
-import courier._
-import java.util.Date
-
-import net.shrine.config.{ConfigExtensions, DurationConfigParser}
-
+import scala.concurrent.duration._
 import scala.language.postfixOps
 import scala.util.control.NonFatal
 
@@ -42,20 +34,18 @@ class Boot extends WebBoot with Loggable {
 
   val emailConfig = config.getConfig("shrine.steward.emailDataSteward")
 
-  if(emailConfig.getBoolean("sendAuditEmails")) {
+  if(emailConfig.getBoolean("sendAuditEmails") && AuditEmailer.configCheck(config)) {
 
     try {
-      info(s"DSA will request audits from ${AuditEmailer.to}")
-
       system.scheduler.schedule(initialDelay = 0 milliseconds, //todo figure out how to handle the initial delay
         interval = emailConfig.get("interval", DurationConfigParser.parseDuration),
         receiver = system.actorOf(Props[AuditEmailerActor]),
         "tick")
     }
     catch {
-      case NonFatal(x) => warn("DSA will not email audit requests due to exception",x)
-      case x:ExceptionInInitializerError => warn("DSA will not email audit requests due to exception",x)
-    } //todo a new problem
+      case NonFatal(x)  => CannotStartAuditEmailActor(x)
+      case x:ExceptionInInitializerError => CannotStartAuditEmailActor(x)
+    }
   }
 
   //todo use this to figure out what if any initial delay should be. Maybe if the interval is >= 1 day then the delay will send the email so many hours passed either the previous or the next midnight
@@ -71,63 +61,11 @@ class Boot extends WebBoot with Loggable {
   }
 }
 
-class AuditEmailerActor extends Actor {
+case class CannotStartAuditEmailActor(ex:Throwable) extends AbstractProblem(ProblemSources.Dsa) {
+  override def summary: String = "The DSA could not start an Actor to email audit requests due to an exception."
 
-  override def receive: Receive = {case _ => AuditEmailer.audit()}
+  override def description: String = s"The DSA will not email audit requests due to ${throwable.get}"
 
+  override def throwable = Some(ex)
 }
 
-object AuditEmailer {
-
-  val config = StewardConfigSource.config
-  val mailer = ConfiguredMailer.createMailerFromConfig(config.getConfig("shrine.email"))
-  val emailConfig = config.getConfig("shrine.steward.emailDataSteward")
-
-  val maxQueryCountBetweenAudits = emailConfig.getInt("maxQueryCountBetweenAudits")
-  val minTimeBetweenAudits = emailConfig.get("minTimeBetweenAudits",DurationConfigParser.parseDuration)
-
-  val researcherLineTemplate = emailConfig.getString("researcherLine")
-  val emailTemplate = emailConfig.getString("emailBody")
-  val emailSubject = emailConfig.getString("subject")
-  val from = emailConfig.get("from",new InternetAddress(_))
-  val to = emailConfig.get("to",new InternetAddress(_))
-  val stewardBaseUrl: Option[String] = config.getOption("stewardBaseUrl",_.getString)
-
-  def audit() = {
-    //gather a list of users to audit
-    val now = System.currentTimeMillis()
-    val researchersToAudit: Seq[ResearcherToAudit] = StewardDatabase.db.selectResearchersToAudit(maxQueryCountBetweenAudits,
-                                                                                                  minTimeBetweenAudits,
-                                                                                                  now)
-    if (researchersToAudit.nonEmpty){
-
-      val auditLines = researchersToAudit.sortBy(_.count).reverse.map { researcher =>
-        researcherLineTemplate.replaceAll("FULLNAME",researcher.researcher.fullName)
-          .replaceAll("USERNAME",researcher.researcher.userName)
-          .replaceAll("COUNT",researcher.count.toString)
-          .replaceAll("LAST_AUDIT_DATE",new Date(researcher.leastRecentQueryDate).toString)
-      }.mkString("\n")
-
-      //build up the email body
-      val withLines = emailTemplate.replaceAll("AUDIT_LINES",auditLines)
-      val withBaseUrl = stewardBaseUrl.fold(withLines)(withLines.replaceAll("STEWARD_BASE_URL",_))
-      val emailBody = Text(withBaseUrl)
-
-      val envelope:Envelope = Envelope.from(from).to(to).subject(emailSubject).content(emailBody)
-
-      Log.debug(s"About to send $envelope .")
-
-      //send the email
-      val future = mailer(envelope)
-
-      //todo what happens if it can't send? maybe a Try block and drop a problem
-      try {
-        Await.result(future, 60.seconds)
-        StewardDatabase.db.logAuditRequests(researchersToAudit, now)
-        Log.info(s"Sent and logged $envelope .")
-      } catch {
-        case NonFatal(x) => Log.warn(s"Problem while sending $envelope ",x)//todo problem
-      }
-    }
-  }
-}
