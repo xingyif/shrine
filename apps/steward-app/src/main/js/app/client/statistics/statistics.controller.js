@@ -109,7 +109,10 @@
         }
 
         function viewDigest(data) {
-            model.getUserQueryHistory(data.userName.toLowerCase())
+            var secondsPerDay = 86400000;
+            var startUtc = stats.timestampToUtc(stats.startDate);
+            var endUtc = stats.timestampToUtc(stats.endDate) + secondsPerDay;
+            model.getUserQueryHistory(data.userName.toLowerCase(), startUtc, endUtc)
             .then(function (result) {
                 stats.ontology = result.queryRecords;
                 stats.ontClass = showOntClass;

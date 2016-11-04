@@ -54,7 +54,8 @@
 
     function TermDigestLinker(scope) {
         scope.$watch('ontology', function (before, after) {
-            scope.digest.getOntologyByTopic();
+            var digest = scope.digest;
+            digest.getOntologyByTopic();
         });
     }
 })();
