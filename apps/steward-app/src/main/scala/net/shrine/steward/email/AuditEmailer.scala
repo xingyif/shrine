@@ -33,7 +33,7 @@ case class AuditEmailer(maxQueryCountBetweenAudits:Int,
                         emailSubject:String,
                         from:InternetAddress,
                         to:InternetAddress,
-                        stewardBaseUrl:Option[String],
+                        stewardBaseUrl:Option[String], //todo not an option
                         mailer:Mailer
                        ) {
   def audit() = {
@@ -94,7 +94,7 @@ object AuditEmailer {
       emailSubject = emailConfig.getString("subject"),
       from = emailConfig.get("from", new InternetAddress(_)),
       to = emailConfig.get("to", new InternetAddress(_)),
-      stewardBaseUrl = config.getOption("stewardBaseUrl", _.getString),
+      stewardBaseUrl = config.getOption("shrine.queryEntryPoint.shrineSteward.stewardBaseUrl", _.getString),
       mailer = ConfiguredMailer.createMailerFromConfig(config.getConfig("shrine.email")))
   }
 

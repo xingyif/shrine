@@ -37,8 +37,10 @@ class Boot extends WebBoot with Loggable {
   if(emailConfig.getBoolean("sendAuditEmails") && AuditEmailer.configCheck(config)) {
 
     try {
-      system.scheduler.schedule(initialDelay = 0 milliseconds, //todo figure out how to handle the initial delay
-        interval = emailConfig.get("interval", DurationConfigParser.parseDuration),
+      val interval = emailConfig.get("interval", DurationConfigParser.parseDuration)
+
+      system.scheduler.schedule(initialDelay = initialDelayToSendEmail(emailConfig.get("timeAfterMidnight",DurationConfigParser.parseDuration),interval),
+        interval = interval,
         receiver = system.actorOf(Props[AuditEmailerActor]),
         "tick")
     }
@@ -48,16 +50,26 @@ class Boot extends WebBoot with Loggable {
     }
   }
 
-  //todo use this to figure out what if any initial delay should be. Maybe if the interval is >= 1 day then the delay will send the email so many hours passed either the previous or the next midnight
-  def previousMidnight: Long = {
-    import java.util.Calendar
-    val c = Calendar.getInstance()
-    val now = c.getTimeInMillis()
-    c.set(Calendar.HOUR_OF_DAY, 0)
-    c.set(Calendar.MINUTE, 0)
-    c.set(Calendar.SECOND, 0)
-    c.set(Calendar.MILLISECOND, 0)
-    c.getTimeInMillis
+  def initialDelayToSendEmail(timeFromMidnight:Duration,interval:Duration): FiniteDuration = {
+    if(interval >= (1 day)) {
+
+      import java.util.Calendar
+      val c = Calendar.getInstance()
+      val now = c.getTimeInMillis
+
+      val previousMidnight = {
+        c.set(Calendar.HOUR_OF_DAY, 0)
+        c.set(Calendar.MINUTE, 0)
+        c.set(Calendar.SECOND, 0)
+        c.set(Calendar.MILLISECOND, 0)
+        c.getTimeInMillis
+      }
+      val timeToSendToday = previousMidnight + timeFromMidnight.toMillis
+
+      if (timeToSendToday > now) timeToSendToday milliseconds
+      else timeToSendToday + (1 day).toMillis milliseconds
+    }
+    else 0 milliseconds //if we're testing then don't delay that first send
   }
 }
 
