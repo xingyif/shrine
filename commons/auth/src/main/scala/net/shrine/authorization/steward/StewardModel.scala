@@ -247,6 +247,14 @@ case class QueryHistoryWithJson(totalCount:Int,skipped:Int,queryRecords:Seq[Outb
 
 case class TopicIdAndName(id:String,name:String)
 
+case class ResearcherToAudit(researcher:OutboundUser, count:Int, leastRecentQueryDate:Date, currentAuditDate:Date) {
+  def sameExceptForTimes(audit: ResearcherToAudit): Boolean = {
+    (researcher == audit.researcher) &&
+      (count == audit.count)
+  }
+}
+
+
 //http request Json
 case class InboundShrineQuery(
                               externalId:ExternalQueryId,
