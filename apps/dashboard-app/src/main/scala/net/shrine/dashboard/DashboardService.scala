@@ -288,8 +288,8 @@ object KeyStoreInfo {
   val config             = DashboardConfigSource.config
   val keyStoreDescriptor = KeyStoreDescriptorParser(
     config.getConfig("shrine.keystore"),
-    config.getConfig("shrine.hub"),
-    config.getConfig("shrine.queryEntryPoint"))
+    config.getConfigOrEmpty("shrine.hub"),
+    config.getConfigOrEmpty("shrine.queryEntryPoint"))
   val certCollection     = BouncyKeyStoreCollection.fromFileRecoverWithClassPath(keyStoreDescriptor)
   val hasher             = UtilHasher(certCollection)
 

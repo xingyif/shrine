@@ -46,8 +46,8 @@ final case class KeyStoreEntry(cert: X509Certificate, aliases: NonEmptySeq[Strin
   private val provider = new BouncyCastleProvider()
 
   def verify(signedBytes: Array[Byte], originalMessage: Array[Byte]): Boolean = {
-    println(s"VERIFYING: ${aliases.first}")
-//    println(KeyStoreEntry.extractCertHolder(signedBytes).exists(_.isSignatureValid(
+
+    //    println(KeyStoreEntry.extractCertHolder(signedBytes).exists(_.isSignatureValid(
 //        new JcaContentVerifierProviderBuilder()
 //          .setProvider(provider).build(certificateHolder)
 //      )
@@ -72,12 +72,11 @@ final case class KeyStoreEntry(cert: X509Certificate, aliases: NonEmptySeq[Strin
   def sign(bytesToSign: Array[Byte]): Option[Array[Byte]] = {
     import scala.collection.JavaConversions._
     val SHA256 = "SHA256withRSA"
-    println(s"Signing: ${aliases.first}")
+
     privateKey.map(key => {
       val signature = Signature.getInstance(SHA256, provider)
       signature.initSign(key)
       signature.update(bytesToSign)
-
 //      val data = new CMSProcessableByteArray(signature.sign())
 //      val gen = new CMSSignedDataGenerator()
 //

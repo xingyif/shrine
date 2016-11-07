@@ -17,17 +17,18 @@ import net.shrine.ont.data.OntClientOntologyMetadata
 import net.shrine.protocol._
 import net.shrine.protocol.query.{OccuranceLimited, QueryDefinition, Term}
 import net.shrine.serialization.NodeSeqSerializer
-import net.shrine.spray.{BadShaResponse, FoundShaResponse, NotFoundShaResponse, ShaResponse}
+import net.shrine.spray._
 import net.shrine.util.{PeerToPeerModel, SingleHubModel, Versions}
 import net.shrine.wiring.ShrineOrchestrator
 import org.json4s.native.Serialization
 import org.json4s.{DefaultFormats, Formats}
+import spray.httpx.Json4sSupport
 
 import scala.collection.JavaConverters._
 import scala.collection.immutable.{Map, Seq, Set}
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{Await, Future, duration}
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 import scala.util.control.NonFatal
 
 /**
@@ -114,26 +115,24 @@ case class KeyStoreEntryReport(
                               md5Signature:String
                               )
 */
-trait SiteStatus {
-  val siteAlias: String
-}
-case class RemoteSiteStatus(override val siteAlias: String, theyHaveMine: Boolean, haveTheirs: Boolean) extends SiteStatus
-case class TimedOutStatus(override val siteAlias: String) extends SiteStatus
-
+case class SiteStatus(siteAlias: String, theyHaveMine: Boolean, haveTheirs: Boolean, url: String, timeOutError: Boolean = false) extends DefaultJsonSupport
+case class AbbreviatedKeyStoreEntry(alias: String, cn: String, md5: String) extends DefaultJsonSupport
 case class KeyStoreReport(
-                           fileName:String,
-                           password:String = "REDACTED",
-                           privateKeyAlias:Option[String],
-                           owner:Option[String],
-                           issuer:Option[String],
-                           expires:Date,
-                           md5Signature:String,
-                           sha256Signature:String,
-                           caTrustedAlias:Option[String],
-                           caTrustedSignature:Option[String],
-                           remoteSiteStatuses:Seq[Option[SiteStatus]]
+                           fileName: String,
+                           password: String = "REDACTED",
+                           privateKeyAlias: Option[String],
+                           owner: Option[String],
+                           issuer: Option[String],
+                           expires: Date,
+                           md5Signature: String,
+                           sha256Signature: String,
+                           caTrustedAlias: Option[String],
+                           caTrustedSignature: Option[String],
+                           remoteSiteStatuses: Seq[SiteStatus],
+                           isHub: Boolean,
+                           abbreviatedEntries: Seq[AbbreviatedKeyStoreEntry]
                            //                        keyStoreContents:List[KeyStoreEntryReport] //todo SHRINE-1529
-                      )
+                         )
 
 //todo build new API for the dashboard to use to check signatures
 
@@ -144,10 +143,10 @@ object KeyStoreReport {
     val maybeCaEntry: Option[KeyStoreEntry] = certCollection match {
       case DownStreamCertCollection(_, caEntry, _) => Some(caEntry)
       case HubCertCollection(caEntry, _, _)        => Some(caEntry)
-      case px: PeerCertCollection                => None
+      case px: PeerCertCollection                  => None
     }
-    val siteStatuses = Client(certCollection.remoteSites.toList).zipWithIndex
-
+    val siteStatusesPreZip = Client(certCollection.remoteSites.toList)
+    val siteStatuses = siteStatusesPreZip.zipWithIndex
 
     def sortFormat(input: String):Option[String] = {
       if (input.isEmpty) None
@@ -158,6 +157,14 @@ object KeyStoreReport {
         Some(input.split(", ").sortBy(a => (isLong(a), a)).mkString(", "))
       }
     }
+
+    lazy val blockForSiteStatuses = siteStatuses.map(fut => Try(Await.result(fut._1, new FiniteDuration(10, duration.SECONDS))) match {
+      case Success(Some(status)) => status
+      case Success(None)         => Log.warn("There was an issue with the verifySignature endpoint, check that we have network connectivity")
+                                    SiteStatus(certCollection.remoteSites(fut._2).alias, false, false, "", true)
+      case Failure(exc)          => Log.warn("We timed out while trying to connect to the verifySignature endpoint, please check network connectivity")
+                                    SiteStatus(certCollection.remoteSites(fut._2).alias, false, false, "", true)
+    })
 
     new KeyStoreReport(
       fileName = keyStoreDescriptor.file,
@@ -170,8 +177,12 @@ object KeyStoreReport {
       //todo sha1 signature if needed
       caTrustedAlias = maybeCaEntry.map(_.aliases.first),
       caTrustedSignature = maybeCaEntry.map(entry => UtilHasher.encodeCert(entry.cert, "MD5")),
-      remoteSiteStatuses = siteStatuses.map(fut => Try(Await.result(fut._1, new FiniteDuration(10, duration.SECONDS)))
-                                            .toOption.getOrElse(Some(TimedOutStatus(certCollection.remoteSites(fut._2).alias))))
+      remoteSiteStatuses = blockForSiteStatuses,
+      isHub = keyStoreDescriptor.trustModel == SingleHubModel(true),
+      abbreviatedEntries = certCollection.allEntries.map(entry => AbbreviatedKeyStoreEntry(
+        entry.aliases.first,
+        entry.commonName.getOrElse("No common name"),
+        UtilHasher.encodeCert(entry.cert, "MD5"))).toList
 
 //      keyStoreContents = certCollection.caCerts.zipWithIndex.map((cert: ((Principal, X509Certificate), Int)) => KeyStoreEntryReport(keyStoreDescriptor.caCertAliases(cert._2),cert._1._1.getName,toMd5(cert._1._2))).to[List]
     )
@@ -480,23 +491,23 @@ object Client extends Loggable {
 
   import scala.concurrent.ExecutionContext.Implicits.global
   import sys.process._
-  implicit val formats = org.json4s.DefaultFormats
 
-  type MaybeSiteStatus = Future[Option[RemoteSiteStatus]]
+  type MaybeSiteStatus = Future[Option[SiteStatus]]
 
   def apply(sites: Seq[RemoteSite]): Seq[MaybeSiteStatus] = {
     sites.map(curl)
   }
 
   def curl(site: RemoteSite): MaybeSiteStatus = {
-    val command = s"curl -sk 'https://${site.url}/shrine-dashboard/status/verifySignature' --data 'sha256=${site.sha256}'"
+    implicit val formats = org.json4s.DefaultFormats
+    val command = s"curl -sk https://${site.url}/shrine-dashboard/status/verifySignature --data sha256=${site.sha256}"
     Future {
       for {response <- Try(parse(command.!!).extract[ShaResponse]).toOption
            status <- response match {
              case BadShaResponse              => error(s"Somehow, this client is sending an incorrectly formatted SHA256 signature to the dashboard. Offending sig: ${site.sha256}");
                                                   None
-             case FoundShaResponse(sha256)    => Some(RemoteSiteStatus(site.alias, theyHaveMine = true, haveTheirs = doWeHaveCert(sha256)))
-             case NotFoundShaResponse(sha256) => Some(RemoteSiteStatus(site.alias, theyHaveMine = false, haveTheirs = doWeHaveCert(sha256)))
+             case FoundShaResponse(sha256)    => Some(SiteStatus(site.alias, theyHaveMine = true, haveTheirs = doWeHaveCert(sha256), site.url))
+             case NotFoundShaResponse(sha256) => Some(SiteStatus(site.alias, theyHaveMine = false, haveTheirs = doWeHaveCert(sha256), site.url))
            }} yield status
     }
   }

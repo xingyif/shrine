@@ -1,5 +1,5 @@
 (function () {
-    'use strict'
+    'use strict';
 
     // -- register controller with angular -- //
     angular.module('shrine-tools')
@@ -13,7 +13,7 @@
     KeystoreController.$inject = ['$app', '$log'];
     function KeystoreController ($app, $log) {
         var vm = this;
-
+        var map = $app.model.map;
         init();
 
 
@@ -37,6 +37,7 @@
          * @param keystore
          */
         function setKeystore (keystore) {
+            vm.isHub = keystore.isHub;
             vm.keystore = {
                 file:       keystore.fileName,
                 password:   "REDACTED"
@@ -56,9 +57,42 @@
                 ['MD5 Signature',     keystore.caTrustedSignature]
             ];
 
-            vm.validation = [
 
-            ]
+            vm.downStreamValidation = downStreamValidation(keystore);
+            vm.hubAndPeerValidation = hubAndPeerValidation(keystore);
+            vm.keyStoreContents     = keyStoreContents(keystore)
+        }
+
+        function keyStoreContents(keystore) {
+            function handleEntry(entry) {
+                return [entry.alias, entry.cn, entry.md5]
+            }
+            return map(handleEntry, keystore.abbreviatedEntries)
+        }
+
+        function downStreamValidation(keystore) {
+            $log.warn("called");
+            var remoteSite = keystore.remoteSiteStatuses[0];
+            if (remoteSite.timeOutError) {
+                return [['Timed Out', "Timed out while connecting to the hub"]]
+            } else {
+                return [
+                    ["Signature Matches Hub's?", remoteSite.theyHaveMine? "Yes": "No"],
+                    ["CA Certificate Matches Hub's?", remoteSite.haveTheirs? "Yes": "No"]
+                ]
+            }
+        }
+
+        function hubAndPeerValidation(keystore) {
+            function handleStatus(siteStatus) {
+                if (siteStatus.timeOutError) {
+                    return [siteStatus.siteAlias, "Timed Out", "N/A"]
+                } else {
+                    return [siteStatus.siteAlias, siteStatus.theyHaveMine, siteStatus.haveTheirs]
+                }
+            };
+
+            return map(handleStatus, keystore.remoteSiteStatuses)
         }
 
         //TODO: Good error handling

@@ -49,7 +49,7 @@ object KeyStoreDescriptorParser extends Loggable {
     val tm = getTrustModel
 
     def parseUrl(url: String): String = {
-      url.split("(https://)|(/shrine.*)")(1)
+      url.split("(https://)|(:.*)")(1)
     }
 
     def getRemoteSites: Seq[RemoteSiteDescriptor] = {

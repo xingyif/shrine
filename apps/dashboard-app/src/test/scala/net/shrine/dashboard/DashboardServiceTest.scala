@@ -11,6 +11,7 @@ import net.shrine.dashboard.jwtauth.ShrineJwtAuthenticator
 import net.shrine.i2b2.protocol.pm.User
 import net.shrine.protocol.Credential
 import net.shrine.spray.{FoundShaResponse, ShaResponse}
+import net.shrine.config.ConfigExtensions
 import org.json4s.native.JsonMethods.parse
 import org.junit.runner.RunWith
 import org.scalatest.FlatSpec
@@ -342,8 +343,8 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
     val config = DashboardConfigSource.config
     val shrineCertCollection: KeyStoreCertCollection = KeyStoreCertCollection.fromFileRecoverWithClassPath(KeyStoreDescriptorParser(
       config.getConfig("shrine.keystore"),
-      config.getConfig("shrine.hub"),
-      config.getConfig("shrine.queryEntryPoint")))
+      config.getConfigOrEmpty("shrine.hub"),
+      config.getConfigOrEmpty("shrine.queryEntryPoint")))
 
     val base64Cert = new String(TextCodec.BASE64URL.encode(shrineCertCollection.myCert.get.getEncoded))
 
@@ -369,8 +370,8 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
     val config = DashboardConfigSource.config
     val shrineCertCollection: KeyStoreCertCollection = KeyStoreCertCollection.fromClassPathResource(KeyStoreDescriptorParser(
       config.getConfig("shrine.keystore"),
-      config.getConfig("shrine.hub"),
-      config.getConfig("shrine.queryEntryPoint")))
+      config.getConfigOrEmpty("shrine.hub"),
+      config.getConfigOrEmpty("shrine.queryEntryPoint")))
 
     val base64Cert = new String(TextCodec.BASE64URL.encode(shrineCertCollection.myCert.get.getEncoded))
 

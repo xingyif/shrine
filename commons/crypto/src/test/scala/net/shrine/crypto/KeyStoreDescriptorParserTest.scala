@@ -40,7 +40,7 @@ final class KeyStoreDescriptorParserTest extends ShouldMatchersForJUnit {
       descriptor.keyStoreType should be(KeyStoreType.JKS)
       descriptor.caCertAliases.toSet should be(Set("foo", "bar"))
       descriptor.trustModel should be(SingleHubModel(true))
-      descriptor.remoteSiteDescriptors should be(Seq(RemoteSiteDescriptor("site1", "downstream1", "localhost:8080")))
+      descriptor.remoteSiteDescriptors should be(Seq(RemoteSiteDescriptor("site1", "downstream1", "localhost")))
     }
     
     //All fields, PKCS12
@@ -70,7 +70,7 @@ final class KeyStoreDescriptorParserTest extends ShouldMatchersForJUnit {
       descriptor.privateKeyAlias should be(Some("baz"))
       descriptor.keyStoreType should be(KeyStoreType.PKCS12)
       descriptor.trustModel should be(SingleHubModel(false))
-      descriptor.remoteSiteDescriptors should be(Seq(RemoteSiteDescriptor("hub", "carra", "localhost:8080")))
+      descriptor.remoteSiteDescriptors should be(Seq(RemoteSiteDescriptor("hub", "carra", "localhost")))
     }
     
     //no keystore type
@@ -103,8 +103,8 @@ final class KeyStoreDescriptorParserTest extends ShouldMatchersForJUnit {
       descriptor.keyStoreType should be(KeyStoreType.Default)
       descriptor.trustModel should be (SingleHubModel(true))
       descriptor.remoteSiteDescriptors should contain theSameElementsAs Seq(
-        RemoteSiteDescriptor("site1", "downstream1", "someRemoteSite:7777"),
-        RemoteSiteDescriptor("site2", "downstream2", "someOtherSite:8888"))
+        RemoteSiteDescriptor("site1", "downstream1", "someRemoteSite"),
+        RemoteSiteDescriptor("site2", "downstream2", "someOtherSite"))
     }
     
     //no private key alias
@@ -133,7 +133,7 @@ final class KeyStoreDescriptorParserTest extends ShouldMatchersForJUnit {
       descriptor.privateKeyAlias should be(None)
       descriptor.trustModel should be(PeerToPeerModel)
       descriptor.keyStoreType should be(KeyStoreType.JKS)
-      descriptor.remoteSiteDescriptors should be(Seq(RemoteSiteDescriptor("site1", "node1", "somePeerSite:9999")))
+      descriptor.remoteSiteDescriptors should be(Seq(RemoteSiteDescriptor("site1", "node1", "somePeerSite")))
     }
 
     //No file

@@ -10,7 +10,7 @@ case class DownStreamCertCollection(override val myEntry: KeyStoreEntry, caEntry
   /**
     * The only valid messages for a downstream node are those that come from the CA
     */
-  override def verifyBytes(signedBytes:Array[Byte], signatureBytes:Array[Byte]) = caEntry.verify(signedBytes, signatureBytes)
+  override def verifyBytes(signedBytes:Array[Byte], signatureBytes:Array[Byte]) = caEntry.verify(signedBytes, signatureBytes) || myEntry.verify(signedBytes, signatureBytes) // todo: temporary
 
   override val remoteSites = hubSite +: Nil
 }

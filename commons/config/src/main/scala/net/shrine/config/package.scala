@@ -1,6 +1,6 @@
 package net.shrine
 
-import com.typesafe.config.Config
+import com.typesafe.config.{Config, ConfigFactory}
 
 package object config {
 
@@ -28,6 +28,13 @@ package object config {
     def getOptionConfiguredIf[T](key:String,constructor: Config => T,createFlag:String = "create"):Option[T] = {
       if(self.getBoolean(s"$key.$createFlag")) self.getOptionConfigured(key,constructor)
       else None
+    }
+
+    def getConfigOrEmpty(key:String): Config = {
+      if (self.hasPath(key))
+        self.getConfig(key)
+      else
+        ConfigFactory.empty()
     }
   }
 

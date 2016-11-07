@@ -10,7 +10,7 @@
     DiagnosticModel.$inject = ['$http', '$q', 'UrlGetter'];
     function DiagnosticModel (h, q, urlGetter) {
 
-
+        var toDashboard = {url:''};
         var cache = {};
 
         // -- private const -- //
@@ -38,8 +38,18 @@
             getProblems:       getProblemsMaker(),
             getQep:            getJsonMaker(Config.QepEndpoint, 'qep'),
             getSummary:        getJsonMaker(Config.SummaryEndpoint, 'summary'),
-            cache:             cache
+            map:               map,
+            cache:             cache,
+            toDashboard:       toDashboard
         };
+
+        function map(func, list) {
+            var result = [];
+            for(var i = 0; i < list.length; i++) {
+                result.push(func(list[i]))
+            }
+            return result;
+        }
 
 
         /**
@@ -135,7 +145,7 @@
             return function() {
                 var cachedValue = cache[cacheKey];
                 if (cachedValue === undefined) {
-                    var url = urlGetter(endpoint);
+                    var url = urlGetter(endpoint, undefined, toDashboard.url);
                     return h.get(url)
                         .then(resolver, onFail)
                 } else {
@@ -167,7 +177,10 @@
 
                 var epochString = epoch && isFinite(epoch) ? '&epoch=' + epoch : '';
                 var url = urlGetter(
-                    Config.ProblemEndpoint + '?offset=' + offset + '&n=' + n + epochString);
+                    Config.ProblemEndpoint + '?offset=' + offset + '&n=' + n + epochString,
+                    undefined,
+                    toDashboard.url
+                );
                 return h.get(url)
                     .then(parseJsonResult, onFail);
             }

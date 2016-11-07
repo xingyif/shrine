@@ -50,6 +50,7 @@ class DownStreamCertCollectionTest extends FlatSpec with Matchers {
 
     testEntry.verify(mySigned, heyo) shouldBe false
     testEntry.verify(testSigned, heyo) shouldBe true
+    testEntry.signed(testEntry.cert) shouldBe true
 
     hubCertCollection.myEntry.verify(testSigned, heyo) shouldBe false
     hubCertCollection.myEntry.verify(mySigned, heyo) shouldBe true
@@ -57,7 +58,7 @@ class DownStreamCertCollectionTest extends FlatSpec with Matchers {
     hubCertCollection.caEntry.verify(testSigned, heyo) shouldBe false
     hubCertCollection.caEntry.verify(mySigned, heyo) shouldBe false
 
-    hubCertCollection.verifyBytes(hubCertCollection.signBytes(heyo), heyo) shouldBe false
+    hubCertCollection.verifyBytes(hubCertCollection.signBytes(heyo), heyo) shouldBe true
   }
 }
 
