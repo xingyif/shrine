@@ -49,11 +49,15 @@ final class DefaultSignerVerifier(certCollection: CertCollection) extends Signer
 
   private[crypto] def isSignedByTrustedCA(attachedCert: X509Certificate): Try[Boolean] = {
     for {
-      attachedCertSignerCert <- toTry(certCollection.caCerts.get(CertCollection.getIssuer(attachedCert)))(new Exception(s"Couldn't find CA certificate with issuer DN '${attachedCert.getIssuerDN}'; known CA cert aliases: ${certCollection.caCertAliases.mkString(",")}"))
+      attachedCertSignerCert <- toTry(certCollection.caCerts.get(CertCollection.getIssuer(attachedCert)))(new Exception(exceptionMessage(attachedCert)))
       caPublicKey = attachedCertSignerCert.getPublicKey
     } yield {
       attachedCert.isSignedBy(caPublicKey)
     }
+  }
+
+  private def exceptionMessage(attachedCert: X509Certificate):String = {
+    s"Couldn't find CA certificate with issuer DN '${attachedCert.getIssuerDN}'; known CA cert aliases: ${certCollection.caCertAliases.mkString(",")}"
   }
 
   private[crypto] def obtainAndValidateSigningCert(signature: Signature): Try[X509Certificate] = {
@@ -66,7 +70,8 @@ final class DefaultSignerVerifier(certCollection: CertCollection) extends Signer
         } yield {
           if (signedByTrustedCA) { signingCert }
           else {
-            throw new Exception(s"Couldn't verify: signing cert with serial '${signingCert.getSerialNumber}' was part of the signature, but was not signed by any CA we trust.  Aliases of trusted CAs are: ${certCollection.caCertAliases.map(s => s"'$s'").mkString(",")}")
+            throw new Exception(s"Couldn't verify: signing cert with serial '${signingCert.getSerialNumber}' was part of the signature, " +
+              s"but was not signed by any CA we trust.  Aliases of trusted CAs are: ${certCollection.caCertAliases.map(s => s"'$s'").mkString(",")}")
           }
         }
 
@@ -89,8 +94,8 @@ final class DefaultSignerVerifier(certCollection: CertCollection) extends Signer
     }
 
     message.signature match {
-      case None => false
-      case Some(signature) => {
+      case None            => false
+      case Some(signature) =>
         val signerCertAttempt: Try[X509Certificate] = obtainAndValidateSigningCert(signature)
 
         val verificationAttempt = for {
@@ -102,13 +107,11 @@ final class DefaultSignerVerifier(certCollection: CertCollection) extends Signer
 
         verificationAttempt match {
           case Success(result) => result
-          case Failure(reason) => {
+          case Failure(reason) =>
             warn(s"Error verifying signature for message with id '${message.requestId}': ", reason)
 
             false
-          }
         }
-      }
     }
   }
 

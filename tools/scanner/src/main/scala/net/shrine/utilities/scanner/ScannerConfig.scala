@@ -53,13 +53,14 @@ object ScannerConfig {
     }
 
     import ScannerConfigKeys._
+    import net.shrine.config.ConfigExtensions
     
     def string(k: String) = config.getString(k)
     
     def duration(k: String) = getDuration(k, config.getConfig(k))
     
     def authInfo(k: String) = getAuthInfo(config.getConfig(k))
-    
+
     ScannerConfig(
       string(adapterMappingsFile),
       string(ontologySqlFile),
@@ -69,7 +70,10 @@ object ScannerConfig {
       string(projectId),
       authInfo(credentials),
       Try(string(outputFile)).getOrElse(FileNameSource.nextOutputFileName),
-      KeyStoreDescriptorParser(config.getConfig(keystore)),
+      KeyStoreDescriptorParser(
+        config.getConfigOrEmpty(keystore),
+        config.getConfigOrEmpty(hub),
+        config.getConfigOrEmpty(qep)),
       string(pmUrl),
       Try(ResultOutputTypes.fromConfig(config.getConfig(breakdownResultOutputTypes))).getOrElse(Set.empty))
   }
@@ -80,6 +84,8 @@ object ScannerConfig {
     private def subKey(k: String) = BaseKeys.subKey(base)(k)
 
     val keystore = subKey("keystore")
+    val hub = subKey("hub")
+    val qep = subKey("queryEntryPoint")
     val adapterMappingsFile = subKey("adapterMappingsFile")
     val ontologySqlFile = subKey("ontologySqlFile")
     val reScanTimeout = subKey("reScanTimeout")

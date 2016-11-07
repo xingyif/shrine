@@ -10,7 +10,7 @@ import org.junit.Test
 final class CertCollectionTest extends ShouldMatchersForJUnit {
   @Test
   def testGetIssuer: Unit = {
-    val cert = TestKeystore.certCollection.myCert.get
+    val cert = NewTestKeyStore.certCollection.myEntry.cert
     
     CertCollection.getIssuer(cert) should equal(cert.getIssuerX500Principal)
     CertCollection.getIssuer(cert) should not equal(cert.getIssuerDN)

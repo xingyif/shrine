@@ -1,4 +1,4 @@
-package net.shrine.qep
+package net.shrine.util
 
 /**
   * Created by ty on 10/14/16.
@@ -8,12 +8,12 @@ package net.shrine.qep
   * however, going forward we can do better: <a href=https://open.med.harvard.edu/jira/browse/SHRINE-1729>Jira Ticket</a>
   */
 sealed trait TrustModel {
-  def description:String = this match {
-    case SingleHubModel => "Central Certificate Authority"
+  val description:String = this match {
+    case sx:SingleHubModel => "Central Certificate Authority"
     case PeerToPeerModel => "Peer-to-Peer Certificate Authority"
   }
 }
 
-object SingleHubModel extends TrustModel
+case class SingleHubModel(isCa: Boolean) extends TrustModel
 
-object PeerToPeerModel extends TrustModel
+case object PeerToPeerModel extends TrustModel

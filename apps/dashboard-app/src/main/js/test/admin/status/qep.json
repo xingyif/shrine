@@ -10,5 +10,6 @@
     "qepUsername": "qep",
     "password": "REDACTED"
   },
-  "trustModel": "Central Certificate Authority"
+  "trustModel": "Central Certificate Authority",
+  "trustModelIsHub": true
 }

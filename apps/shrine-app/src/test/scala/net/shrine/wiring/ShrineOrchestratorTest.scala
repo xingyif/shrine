@@ -6,7 +6,7 @@ import net.shrine.adapter.service.AdapterRequestHandler
 import net.shrine.protocol.BroadcastMessage
 import net.shrine.protocol.Result
 import net.shrine.client.{EndpointConfig, JerseyHttpClient}
-import net.shrine.crypto.TestKeystore
+import net.shrine.crypto.NewTestKeyStore
 import java.net.URL
 import net.shrine.crypto.TrustParam
 import javax.ws.rs.core.MediaType
@@ -28,7 +28,7 @@ final class ShrineOrchestratorTest extends ShouldMatchersForJUnit {
     {
       val endpoint = EndpointConfig(url, true, 42.minutes)
       
-      val JerseyHttpClient(trustParam, timeout, mediaType, credentials) = JerseyHttpClient(TestKeystore.certCollection, endpoint)
+      val JerseyHttpClient(trustParam, timeout, mediaType, credentials) = JerseyHttpClient(NewTestKeyStore.certCollection, endpoint)
       
       trustParam should be(TrustParam.AcceptAllCerts)
       timeout should be(endpoint.timeout)
@@ -40,9 +40,9 @@ final class ShrineOrchestratorTest extends ShouldMatchersForJUnit {
     {
       val endpoint = EndpointConfig(url, false, 42.minutes)
       
-      val JerseyHttpClient(trustParam, timeout, mediaType, credentials) = JerseyHttpClient(TestKeystore.certCollection, endpoint)
+      val JerseyHttpClient(trustParam, timeout, mediaType, credentials) = JerseyHttpClient(NewTestKeyStore.certCollection, endpoint)
       
-      trustParam should be(TrustParam.SomeKeyStore(TestKeystore.certCollection))
+      trustParam should be(TrustParam.BouncyKeyStore(NewTestKeyStore.certCollection))
       timeout should be(endpoint.timeout)
       mediaType should be(MediaType.TEXT_XML)
       credentials should be(None)

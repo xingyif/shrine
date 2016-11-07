@@ -1,37 +1,34 @@
 package net.shrine.status
 
-import java.io.File
-import java.net.URL
-import java.security.MessageDigest
-import java.security.cert.X509Certificate
 import java.util.Date
-import javax.ws.rs.{GET, Path, Produces, WebApplicationException}
 import javax.ws.rs.core.{MediaType, Response}
+import javax.ws.rs.{GET, Path, Produces, WebApplicationException}
 
 import com.sun.jersey.spi.container.{ContainerRequest, ContainerRequestFilter}
 import com.typesafe.config.{Config => TsConfig}
-import net.shrine.adapter.AdapterComponents
 import net.shrine.authorization.{QueryAuthorizationService, StewardQueryAuthorizationService}
 import net.shrine.broadcaster._
 import net.shrine.client.PosterOntClient
-import net.shrine.wiring.ShrineOrchestrator
-import org.json4s.{DefaultFormats, Formats}
-import org.json4s.native.Serialization
+import net.shrine.config.ConfigExtensions
+import net.shrine.crypto.{KeyStoreDescriptor, SigningCertStrategy, UtilHasher}
+import net.shrine.crypto2._
 import net.shrine.log.{Log, Loggable}
+import net.shrine.ont.data.OntClientOntologyMetadata
+import net.shrine.protocol._
+import net.shrine.protocol.query.{OccuranceLimited, QueryDefinition, Term}
+import net.shrine.serialization.NodeSeqSerializer
+import net.shrine.spray._
+import net.shrine.util.{PeerToPeerModel, SingleHubModel, Versions}
+import net.shrine.wiring.ShrineOrchestrator
+import org.json4s.native.Serialization
+import org.json4s.{DefaultFormats, Formats}
+import spray.httpx.Json4sSupport
 
 import scala.collection.JavaConverters._
 import scala.collection.immutable.{Map, Seq, Set}
-import net.shrine.config.ConfigExtensions
-import net.shrine.crypto.{KeyStoreCertCollection, KeyStoreDescriptor, SigningCertStrategy}
-import net.shrine.ont.data.OntClientOntologyMetadata
-import net.shrine.protocol.query.{OccuranceLimited, QueryDefinition, Term}
-import net.shrine.protocol._
-import net.shrine.qep.TrustModel
-import net.shrine.serialization.NodeSeqSerializer
-import net.shrine.util.Versions
-
-import scala.concurrent.Await
-import scala.util.{Success, Try}
+import scala.concurrent.duration.FiniteDuration
+import scala.concurrent.{Await, Future, duration}
+import scala.util.{Failure, Success, Try}
 import scala.util.control.NonFatal
 
 /**
@@ -118,44 +115,76 @@ case class KeyStoreEntryReport(
                               md5Signature:String
                               )
 */
+case class SiteStatus(siteAlias: String, theyHaveMine: Boolean, haveTheirs: Boolean, url: String, timeOutError: Boolean = false) extends DefaultJsonSupport
+case class AbbreviatedKeyStoreEntry(alias: String, cn: String, md5: String) extends DefaultJsonSupport
 case class KeyStoreReport(
-                        fileName:String,
-                        password:String = "REDACTED",
-                        privateKeyAlias:Option[String],
-                        owner:Option[String],
-                        issuer:Option[String],
-                        expires:Option[Date],
-                        signature:Option[String],
-                        caTrustedAlias:Option[String],
-                        caTrustedSignature:Option[String]
-//                        keyStoreContents:List[KeyStoreEntryReport] //todo SHRINE-1529
-                      )
+                           fileName: String,
+                           password: String = "REDACTED",
+                           privateKeyAlias: Option[String],
+                           owner: Option[String],
+                           issuer: Option[String],
+                           expires: Date,
+                           md5Signature: String,
+                           sha256Signature: String,
+                           caTrustedAlias: Option[String],
+                           caTrustedSignature: Option[String],
+                           remoteSiteStatuses: Seq[SiteStatus],
+                           isHub: Boolean,
+                           abbreviatedEntries: Seq[AbbreviatedKeyStoreEntry]
+                           //                        keyStoreContents:List[KeyStoreEntryReport] //todo SHRINE-1529
+                         )
 
 //todo build new API for the dashboard to use to check signatures
 
 object KeyStoreReport {
   def apply(): KeyStoreReport = {
-    val keystoreDescriptor: KeyStoreDescriptor = ShrineOrchestrator.keyStoreDescriptor
-    val certCollection: KeyStoreCertCollection = ShrineOrchestrator.certCollection
+    val keyStoreDescriptor: KeyStoreDescriptor = ShrineOrchestrator.keyStoreDescriptor
+    val certCollection: BouncyKeyStoreCollection = ShrineOrchestrator.certCollection
+    val maybeCaEntry: Option[KeyStoreEntry] = certCollection match {
+      case DownStreamCertCollection(_, caEntry, _) => Some(caEntry)
+      case HubCertCollection(caEntry, _, _)        => Some(caEntry)
+      case px: PeerCertCollection                  => None
+    }
+    val siteStatusesPreZip = Client(certCollection.remoteSites.toList)
+    val siteStatuses = siteStatusesPreZip.zipWithIndex
 
-    def toMd5(cert:X509Certificate): String = {
-      val md5 = MessageDigest.getInstance("MD5")
-      def toHex(buf: Array[Byte]): String = buf.map("%02X".format(_)).mkString(":")
-
-      toHex(md5.digest(cert.getEncoded))
+    def sortFormat(input: String):Option[String] = {
+      if (input.isEmpty) None
+      else {
+        def isLong(str: String) = str.split('=').headOption.getOrElse(str).length > 2
+        // Just an ugly sort for formatting purposes. I want The long key last, and otherwise just
+        // Sort them lexicographically.
+        Some(input.split(", ").sortBy(a => (isLong(a), a)).mkString(", "))
+      }
     }
 
+    lazy val blockForSiteStatuses = siteStatuses.map(fut => Try(Await.result(fut._1, new FiniteDuration(10, duration.SECONDS))) match {
+      case Success(Some(status)) => status
+      case Success(None)         => Log.warn("There was an issue with the verifySignature endpoint, check that we have network connectivity")
+                                    SiteStatus(certCollection.remoteSites(fut._2).alias, false, false, "", true)
+      case Failure(exc)          => Log.warn("We timed out while trying to connect to the verifySignature endpoint, please check network connectivity")
+                                    SiteStatus(certCollection.remoteSites(fut._2).alias, false, false, "", true)
+    })
+
     new KeyStoreReport(
-      fileName = keystoreDescriptor.file,
-      privateKeyAlias = keystoreDescriptor.privateKeyAlias,
-      owner = certCollection.myCert.map(cert => cert.getSubjectDN.getName),
-      issuer = certCollection.myCert.map(cert => cert.getIssuerDN.getName),
-      expires = certCollection.myCert.map(cert => cert.getNotAfter),
-      signature = certCollection.myCert.map(cert => toMd5(cert)),
+      fileName = keyStoreDescriptor.file,
+      privateKeyAlias = keyStoreDescriptor.privateKeyAlias,
+      owner = sortFormat(certCollection.myEntry.cert.getSubjectDN.getName),
+      issuer = sortFormat(certCollection.myEntry.cert.getIssuerDN.getName),
+      expires = certCollection.myEntry.cert.getNotAfter,
+      md5Signature = UtilHasher.encodeCert(certCollection.myEntry.cert, "MD5"),
+      sha256Signature = UtilHasher.encodeCert(certCollection.myEntry.cert, "SHA-256"),
       //todo sha1 signature if needed
-      caTrustedAlias = certCollection.caCertAliases.headOption,
-      caTrustedSignature = certCollection.headOption.map(cert => toMd5(cert))
-//      keyStoreContents = certCollection.caCerts.zipWithIndex.map((cert: ((Principal, X509Certificate), Int)) => KeyStoreEntryReport(keystoreDescriptor.caCertAliases(cert._2),cert._1._1.getName,toMd5(cert._1._2))).to[List]
+      caTrustedAlias = maybeCaEntry.map(_.aliases.first),
+      caTrustedSignature = maybeCaEntry.map(entry => UtilHasher.encodeCert(entry.cert, "MD5")),
+      remoteSiteStatuses = blockForSiteStatuses,
+      isHub = keyStoreDescriptor.trustModel == SingleHubModel(true),
+      abbreviatedEntries = certCollection.allEntries.map(entry => AbbreviatedKeyStoreEntry(
+        entry.aliases.first,
+        entry.commonName.getOrElse("No common name"),
+        UtilHasher.encodeCert(entry.cert, "MD5"))).toList
+
+//      keyStoreContents = certCollection.caCerts.zipWithIndex.map((cert: ((Principal, X509Certificate), Int)) => KeyStoreEntryReport(keyStoreDescriptor.caCertAliases(cert._2),cert._1._1.getName,toMd5(cert._1._2))).to[List]
     )
   }
 }
@@ -197,7 +226,8 @@ case class Qep(
                 authenticationType:String,
                 steward:Option[Steward],
                 broadcasterUrl:Option[String],
-                trustModel:String
+                trustModel:String,
+                trustModelIsHub:Boolean
               )
 
 object Qep{
@@ -212,7 +242,11 @@ object Qep{
     authenticationType      = queryEntryPointComponents.fold("")(_.i2b2Service.authenticator.getClass.getSimpleName),
     steward                 = queryEntryPointComponents.flatMap(qec => checkStewardAuthorization(qec.shrineService.authorizationService)),
     broadcasterUrl          = queryEntryPointComponents.flatMap(qec => checkBroadcasterUrl(qec.i2b2Service.broadcastAndAggregationService)),
-    trustModel              = queryEntryPointComponents.flatMap(_.trustModel.map(_.description)).getOrElse("UNKNOWN")
+    trustModel              = ShrineOrchestrator.keyStoreDescriptor.trustModel.description,
+    trustModelIsHub         = ShrineOrchestrator.keyStoreDescriptor.trustModel match  {
+      case sh: SingleHubModel => true
+      case PeerToPeerModel    => false
+    }
   )
 
   def checkStewardAuthorization(auth: QueryAuthorizationService): Option[Steward] = auth match {
@@ -447,6 +481,40 @@ class PermittedHostOnly extends ContainerRequestFilter {
       throw new WebApplicationException(response)
     }
     else requestContext
+  }
+
+}
+
+object Client extends Loggable {
+  //todo: Cut out CURL
+  import org.json4s.native.JsonMethods.parse
+
+  import scala.concurrent.ExecutionContext.Implicits.global
+  import sys.process._
+
+  type MaybeSiteStatus = Future[Option[SiteStatus]]
+
+  def apply(sites: Seq[RemoteSite]): Seq[MaybeSiteStatus] = {
+    sites.map(curl)
+  }
+
+  def curl(site: RemoteSite): MaybeSiteStatus = {
+    implicit val formats = org.json4s.DefaultFormats
+    val command = s"curl -sk https://${site.url}/shrine-dashboard/status/verifySignature --data sha256=${site.sha256}"
+    Future {
+      for {response <- Try(parse(command.!!).extract[ShaResponse]).toOption
+           status <- response match {
+             case BadShaResponse              => error(s"Somehow, this client is sending an incorrectly formatted SHA256 signature to the dashboard. Offending sig: ${site.sha256}");
+                                                  None
+             case FoundShaResponse(sha256)    => Some(SiteStatus(site.alias, theyHaveMine = true, haveTheirs = doWeHaveCert(sha256), site.url))
+             case NotFoundShaResponse(sha256) => Some(SiteStatus(site.alias, theyHaveMine = false, haveTheirs = doWeHaveCert(sha256), site.url))
+           }} yield status
+    }
+  }
+
+  def doWeHaveCert(sha256:String): Boolean = UtilHasher(ShrineOrchestrator.certCollection).handleSig(sha256) match {
+    case FoundShaResponse(_) => true
+    case _ => false
   }
 
 }

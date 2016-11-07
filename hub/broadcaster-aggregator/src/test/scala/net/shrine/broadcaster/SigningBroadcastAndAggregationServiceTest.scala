@@ -5,10 +5,11 @@ import org.junit.Test
 import net.shrine.util.ShouldMatchersForJUnit
 import net.shrine.aggregation.Aggregator
 import net.shrine.crypto.DefaultSignerVerifier
-import net.shrine.crypto.TestKeystore
+import net.shrine.crypto.NewTestKeyStore
 import net.shrine.protocol.{AuthenticationInfo, BroadcastMessage, Credential, DeleteQueryRequest, ErrorResponse, FailureResult, FailureResult$, NodeId, Result, ShrineResponse, SingleNodeResult, Timeout}
 import net.shrine.crypto.SigningCertStrategy
 import net.shrine.broadcaster.dao.MockHubDao
+import net.shrine.crypto2.SignerVerifierAdapter
 import net.shrine.problem.TestProblem
 
 /**
@@ -31,7 +32,7 @@ final class SigningBroadcastAndAggregationServiceTest extends ShouldMatchersForJ
   private lazy val resultsWithNullsByOrigin: Map[NodeId, SingleNodeResult] = {
     results.collect { case r @ Result(origin, _, _) => origin -> r }.toMap ++ nullResultsByOrigin
   }
-  private lazy val signer = new DefaultSignerVerifier(TestKeystore.certCollection)
+  private lazy val signer = SignerVerifierAdapter(NewTestKeyStore.certCollection)
 
   private val broadcastMessage = {
     val authn = AuthenticationInfo("domain", "username", Credential("asdasd", false))

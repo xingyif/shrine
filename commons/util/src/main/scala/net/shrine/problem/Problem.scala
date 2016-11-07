@@ -10,6 +10,7 @@ import net.shrine.slick.NeedsWarmUp
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future, Promise}
+import scala.util.Try
 import scala.xml.{Elem, Node, NodeSeq}
 
 /**
@@ -168,7 +169,7 @@ object LoggingProblemHandler extends ProblemHandler with Loggable {
   override def warmUp(): Unit = Unit
 }
 
-object DatabaseProblemHandler extends ProblemHandler {
+object DatabaseProblemHandler extends ProblemHandler with Loggable {
   override def handleProblem(problem: Problem): Unit = {
     Problems.DatabaseConnector.insertProblem(problem.toDigest)
   }
@@ -193,12 +194,13 @@ object ProblemSources{
   }
 
   case object Adapter extends ProblemSource
+  case object Commons extends ProblemSource
+  case object Dsa extends ProblemSource
   case object Hub extends ProblemSource
   case object Qep extends ProblemSource
-  case object Dsa extends ProblemSource
   case object Unknown extends ProblemSource
 
-  def problemSources = Set(Adapter,Hub,Qep,Dsa,Unknown)
+  def problemSources = Set(Adapter,Commons,Dsa,Hub,Qep,Unknown)
 }
 
 case class ProblemNotYetEncoded(internalSummary:String,t:Option[Throwable] = None) extends AbstractProblem(ProblemSources.Unknown){

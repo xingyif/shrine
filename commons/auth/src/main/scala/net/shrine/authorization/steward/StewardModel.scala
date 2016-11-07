@@ -6,7 +6,7 @@ import net.shrine.i2b2.protocol.pm.User
 import net.shrine.log.Loggable
 import net.shrine.protocol.Credential
 import net.shrine.serialization.NodeSeqSerializer
-import org.json4s.{DefaultFormats, Formats}
+import org.json4s.{DefaultFormats, DefaultJsonFormats, Formats}
 import spray.http.{StatusCode, StatusCodes}
 import spray.httpx.Json4sSupport
 
@@ -62,9 +62,10 @@ case class OutboundTopic(id:TopicId,
   }
 }
 
-case class OutboundUser(userName:UserName,fullName:String,roles:Set[Role] = Set(researcherRole)) {}
+case class OutboundUser(userName:UserName,fullName:String,roles:Set[Role] = Set(researcherRole)) extends DefaultJsonFormats
 
-object OutboundUser extends Loggable {
+object OutboundUser extends Loggable with Json4sSupport {
+  override implicit def json4sFormats: Formats = DefaultFormats
 
   def createResearcher(userName:UserName,fullName:String) = OutboundUser(userName,fullName)
   def createSteward(userName:UserName,fullName:String) = OutboundUser(userName,fullName,Set(researcherRole,stewardRole))
@@ -112,10 +113,8 @@ case class OutboundShrineQueryWithJson(
                                 queryContents: NodeSeq,
                                 stewardResponse:TopicStateName,
                                 date:Date)
-  extends Json4sSupport
+  extends DefaultJsonFormats
 {
-  override implicit def json4sFormats: Formats = DefaultFormats + new NodeSeqSerializer
-
   def convertToXml:OutboundShrineQuery = {
     OutboundShrineQuery(stewardId, externalId, name, user, topic, queryContents.toString, stewardResponse, date)
   }

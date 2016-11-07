@@ -1,5 +1,7 @@
 package net.shrine.crypto
 
+import net.shrine.crypto2.BouncyKeyStoreCollection
+
 /**
  * @author clint
  * @date Nov 22, 2013
@@ -14,4 +16,6 @@ object TrustParam {
   case object AcceptAllCerts extends TrustParam
 
   final case class SomeKeyStore(certs: KeyStoreCertCollection) extends TrustParam
+
+  final case class BouncyKeyStore(certs: BouncyKeyStoreCollection) extends TrustParam
 }

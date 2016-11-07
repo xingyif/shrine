@@ -2,6 +2,7 @@ package net.shrine.utilities.scanner
 
 import java.io.File
 import java.io.FileInputStream
+
 import scala.concurrent.duration.Duration
 import SingleThreadExecutionContext.Implicits.executionContext
 import net.shrine.adapter.client.RemoteAdapterClient
@@ -24,6 +25,7 @@ import net.shrine.protocol.NodeId
 import net.shrine.util.Versions
 import net.shrine.crypto.SigningCertStrategy
 import net.shrine.broadcaster.dao.HubDao
+import net.shrine.crypto2.{BouncyKeyStoreCollection, SignerVerifierAdapter}
 import net.shrine.protocol.query.QueryDefinition
 import net.shrine.protocol.AuthenticationInfo
 import net.shrine.protocol.SingleNodeResult
@@ -55,9 +57,9 @@ final class ScannerModule(args: Seq[String]) {
       
       val destinations = Set(NodeHandle(NodeId(config.shrineUrl), RemoteAdapterClient(NodeId(config.shrineUrl),poster, config.breakdownTypes)))
 
-      val certCollection = KeyStoreCertCollection.fromFile(config.keystoreDescriptor)
+      val certCollection = BouncyKeyStoreCollection.fromFileRecoverWithClassPath(config.keystoreDescriptor)
       
-      val signer = new DefaultSignerVerifier(certCollection)
+      val signer = SignerVerifierAdapter(certCollection)
       
       val doesNothingHubDao: HubDao = new HubDao {
         override def inTransaction[T](f: => T): T = f

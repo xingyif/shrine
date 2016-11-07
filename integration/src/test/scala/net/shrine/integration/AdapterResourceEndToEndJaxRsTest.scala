@@ -4,13 +4,14 @@ import scala.concurrent.Await
 import scala.concurrent.duration.DurationInt
 import org.junit.Test
 import net.shrine.crypto.DefaultSignerVerifier
-import net.shrine.crypto.TestKeystore
+import net.shrine.crypto.NewTestKeyStore
 import net.shrine.protocol.BroadcastMessage
 import net.shrine.protocol.DeleteQueryRequest
 import net.shrine.protocol.DeleteQueryResponse
 import net.shrine.protocol.Result
 import com.sun.jersey.api.client.UniformInterfaceException
 import net.shrine.crypto.SigningCertStrategy
+import net.shrine.crypto2.SignerVerifierAdapter
 
 /**
  * @author clint
@@ -28,7 +29,7 @@ final class AdapterResourceEndToEndJaxRsTest extends AbstractAdapterResourceJaxR
     
     val unsigned = BroadcastMessage(networkAuthn, DeleteQueryRequest("some-project", 1.minute, networkAuthn, masterId))
     
-    val signer = new DefaultSignerVerifier(TestKeystore.certCollection)
+    val signer = SignerVerifierAdapter(NewTestKeyStore.certCollection)
     
     val signed = signer.sign(unsigned, SigningCertStrategy.Attach)
     
