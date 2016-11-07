@@ -5,12 +5,14 @@
         .service('OntologyTermService', OntologyTermService);
 
     OntologyTermService.$inject = ['OntologyTerm'];
-    function OntologyTermService (OntologyTerm) {
+    function OntologyTermService(OntologyTerm) {
 
         return {
             buildOntology: buildOntology,
-            getMax: function() {
-                return OntologyTerm.prototype.maxTermUsedCount;
+            getMax: function () {
+                var maxTermUsedCount = OntologyTerm.prototype.maxTermUsedCount;
+                OntologyTerm.prototype.maxTermUsedCount = 0;
+                return maxTermUsedCount;
             }
         };
 
@@ -21,17 +23,47 @@
             var ln = queryRecords.length;
             var queryCount = 0;
             var ontology = new OntologyTerm('SHRINE');
+            var topics = {};
+            //ontology.queryCount = ln;
 
             for (var i = 0; i < ln; i++) {
                 var record = queryRecords[i];
-                if (topicId === undefined || (record.topic !== undefined && topicId === record.topic.id)) {
+                var topic = record.topic;
+                if (topic && (topicId === undefined || topicId === topic.id)) {
                     var str = record.queryContents;
                     ontology = traverse(str.queryDefinition.expr, record.externalId, ontology);
-                    queryCount ++;
+                    queryCount++;
+
+                    if (!topics[record.topic.id]) {
+                        topics[record.topic.id] = record.topic;
+                    }
+
+                    appendTopicIfUnique(topic, topics);
                 }
             }
 
+            ontology.topics = formatTopicsToArray(topics);
+            ontology.queryCount = queryCount;
             return ontology;
+        }
+
+        function formatTopicsToArray(topicObject) {
+            var topicArray = [];
+            var keys = Object.keys(topicObject);
+            Object.keys(topicObject)
+                .forEach(function (key) { topicArray.push(topicObject[key]); });
+
+            return topicArray;
+        }
+
+        function appendTopicIfUnique(topic, topics) {
+            var id = topic.id;
+
+            if (!topics[id]) {
+                topics[id] = topic;
+            }
+
+            return topics;
         }
 
         /**

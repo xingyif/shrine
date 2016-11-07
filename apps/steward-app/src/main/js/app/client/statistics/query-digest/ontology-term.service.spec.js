@@ -22,7 +22,8 @@
             var queryHistory = getQueryData();
             var ontologyTree = ontologyTermService.buildOntology(queryHistory.queryRecords);
             expect(ontologyTree.key).toBe('SHRINE');
-            expect(ontologyTermService.getMax()).toEqual(OntologyTerm.prototype.maxTermUsedCount);
+            var maxTermUsedCount = OntologyTerm.prototype.maxTermUsedCount;
+            expect(ontologyTermService.getMax()).toEqual(maxTermUsedCount);
             expect(ontologyTree.children).toBeDefined();
         });
     }

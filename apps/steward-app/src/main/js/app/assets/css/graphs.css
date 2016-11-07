@@ -17,38 +17,39 @@
   padding-top: 0px;
   color: white;
   margin: 0 auto;
-  background-color: #384248;
   width: 100%; }
 
 .stats-graph-container {
   border-bottom: none;
-  border: 1px solid #1c8ed6;
+  border-left: 1px solid #125c8a;
   overflow: auto;
-  padding-top: .6em; }
+  padding-top: .6em;
+  /*background: linear-gradient(#048DBE, #025978) !important;*/ }
 
 .stats-ontology-container {
   overflow: auto;
-  height: 600px; }
+  height: 100vh; }
 
-.stats-graph-container > .bar-bg {
-  background-color: rgba(255, 255, 255, 0);
+.stats-graph-container .bar-bg {
+  background-color: white;
   height: 30px;
   margin: 0 auto 10px auto;
   line-height: 30px;
   font-size: 16px;
+  font-family: Roboto, sans-serif;
+  font-weight: 100;
   color: white;
   padding: 0 0 0 10px;
   position: relative; }
-  .stats-graph-container > .bar-bg .user {
+  .stats-graph-container .bar-bg .user {
     position: absolute;
     z-index: 4;
     left: .2em; }
-  .stats-graph-container > .bar-bg .bar {
+  .stats-graph-container .bar-bg .bar {
     opacity: .8;
     z-index: 1;
-    background-color: rgba(18, 92, 138, 0.35);
-    border-right: 1px solid #1c8ed6;
-    border-top: 1px solid #1c8ed6;
+    background-color: #125c8a;
+    border: 1px solid #1c8ed6;
     height: 30px;
     transition: 0.7s;
     width: 100%;
@@ -60,8 +61,8 @@
     z-index: 2;
     padding-right: 8px;
     text-align: right; }
-    .stats-graph-container > .bar-bg .bar:hover {
-      background: rgba(255, 255, 255, 0.35);
+    .stats-graph-container .bar-bg .bar:hover {
+      background: rgba(0, 0, 0, 0.5);
       cursor: pointer; }
 
 @keyframes stats-bar-before {
@@ -69,19 +70,3 @@
     width: 0px; }
   100% {
     width: 100%; } }
-
-/** hard coded result values for demo **/
-.result1 {
-  max-width: 60%; }
-
-.result2 {
-  max-width: 20%; }
-
-.result3 {
-  max-width: 100%; }
-
-.result4 {
-  max-width: 40%; }
-
-.result5 {
-  max-width: 77%; }

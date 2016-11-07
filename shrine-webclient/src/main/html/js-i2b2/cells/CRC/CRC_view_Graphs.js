@@ -106,7 +106,7 @@ i2b2.CRC.view.graphs.createGraphs = function(sDivName, sInputString, bIsMultiSit
 		}
 		var asUniqueBreakdownTypes = [];
 		for (var i=0; i < asBreakdownTypes.length; i++) {
-			if (asUniqueBreakdownTypes.indexOf(asBreakdownTypes[i]) === -1 && asBreakdownTypes[i] !== '')
+			if (asUniqueBreakdownTypes.indexOf(asBreakdownTypes[i]) === -1 && asBreakdownTypes[i] !== ''&& (!(asBreakdownTypes[i].toLowerCase().indexOf('error')>=0)))
 				asUniqueBreakdownTypes.push(asBreakdownTypes[i]);
 		}
 		if (asUniqueBreakdownTypes.length === 0) throw ("ERROR 203 in createGraphs, there are no breakdown types in *unique* array");
@@ -196,8 +196,13 @@ i2b2.CRC.view.graphs.createGraphs = function(sDivName, sInputString, bIsMultiSit
 			}
 			
 			var titleDiv = jQuery("#" + sDivName + ' #chartTitle0');
-			if(titleDiv)
-				titleDiv.html("Patient Count");
+			if(titleDiv){
+				titleDiv.html("Patient Count     ");
+				var zoomLink = jQuery("<a href = \"javascript:void(0);\" id=\"zoomLink\" onclick=\"javascript:i2b2.CRC.view.graphs.zoomGraph(event);\">Zoom Graph</a>");
+				zoomLink[0].dataArray = asInputArray;
+				zoomLink[0].graphTitle = "Patient Count";
+				titleDiv.append(zoomLink);
+			}
 			graph_multiplesite_patient_number("#" + sDivName + " #chart0", asUniqueBreakdownTypes[0], asInputArray);
 
 			for (var i=1; i<asUniqueBreakdownTypes.length; i++){
@@ -207,21 +212,87 @@ i2b2.CRC.view.graphs.createGraphs = function(sDivName, sInputString, bIsMultiSit
 				if(title.toLowerCase().indexOf('vital')>=0)
 					title = title + ' Status';
 				
-				var chartTitle = "Patient " + title + " Count Breakdown";
+				var chartTitle = "Patient " + title + " Count Breakdown     ";
 				var titleDiv = jQuery("#" + sDivName + ' #chartTitle' + i);
-				if(titleDiv)
-					titleDiv.html(chartTitle);
 				var dataArray = i2b2.CRC.view.graphs.getGraphDataArray(_2DResultsArray,asUniqueBreakdownTypes[i],siteReturningResults);
+				if(titleDiv){
+					titleDiv.html(chartTitle);
+					var zoomLink = jQuery("<a href = \"javascript:void(0);\" id=\"zoomLink\" onclick=\"javascript:i2b2.CRC.view.graphs.zoomGraph(event);\">Zoom Graph</a>");
+					zoomLink[0].dataArray = dataArray;
+					zoomLink[0].graphTitle = chartTitle;
+					zoomLink[0].groups = siteReturningResults.keys();
+					titleDiv.append(zoomLink);
+				}
 				graph_multiplesite_patient_breakdown("#" + sDivName + " #" + chartDivId, siteReturningResults.keys(), dataArray);
 			}	
 			
 		 }
-		
 	}
 	catch(err) {
 		console.error(err);
 	}
 } // END of function createGraphs
+
+i2b2.CRC.view.graphs.zoomGraph = function(event) 
+{
+	try{
+		var wWidth = jQuery(window).width();
+		var dWidth = wWidth * 0.95;
+		var wHeight = jQuery(window).height();
+		if( navigator.userAgent.toLowerCase().indexOf('firefox') > -1 ){
+			wHeight = window.innerHeight;
+		}
+		var dHeight = wHeight * 0.95;
+		
+		var thisLinkElem = jQuery(event.target);
+		var data = [];
+		var chartTitle = "";
+		if(thisLinkElem && thisLinkElem.length>0)
+		{
+			data = thisLinkElem[0].dataArray;
+			chartTitle = thisLinkElem[0].graphTitle;
+			
+			if (i2b2.CRC.view.dialogZoomedGraph) 
+				i2b2.CRC.view.dialogZoomedGraph = null;
+				
+			i2b2.CRC.view.dialogZoomedGraph = new YAHOO.widget.SimpleDialog("dialogZoomedGraph", {
+					width: dWidth,
+					height: dHeight,
+					fixedcenter: true,
+					constraintoviewport: true,
+					modal: true,
+					zindex: 700,
+				});
+			$('dialogZoomedGraph').show();
+			i2b2.CRC.view.dialogZoomedGraph.render(document.body);
+			// display the dialoge
+			i2b2.CRC.view.dialogZoomedGraph.center();
+			i2b2.CRC.view.dialogZoomedGraph.show();
+			
+			jQuery("#zoomedGraphTitle").addClass('chartTitleDiv').html(chartTitle);
+			
+			if(chartTitle!=""){
+				if(chartTitle.indexOf("Patient Count")>=0)
+					graph_multiplesite_patient_number("#zoomedGraphBody" , chartTitle, data, wHeight * 0.80);
+				else
+					graph_multiplesite_patient_breakdown("#zoomedGraphBody",thisLinkElem[0].groups , data, wHeight * 0.80);
+			}
+			
+			i2b2.CRC.view.dialogZoomedGraph.hideEvent.subscribe(function(o) {
+				jQuery("#zoomedGraphTitle").html("");
+				jQuery("#zoomedGraphBody").html("");
+			});
+			
+		}
+		else
+			alert("Graph can't be zoomed!");
+	}
+	catch(e)
+	{
+		console.error(e);
+		alert("Graph can't be zoomed!");
+	}
+}
 
 i2b2.CRC.view.graphs.getGraphDataArray = function(_2DResultsArray,breakdownType,siteHash) {
 	var maxRowsNum = siteHash.size();
@@ -670,7 +741,7 @@ function graph_singlesite_patient_breakdown(sDivName,sBreakdownType,asInputFragm
    FUNCTION graph_multiplesite_patient_number
    Fills in the Div for multiple patient number display
 **********************************************************************************/
-function graph_multiplesite_patient_number(sDivName,sBreakdownType,asInputFragments) {
+function graph_multiplesite_patient_number(sDivName,sBreakdownType,asInputFragments,maxHeight) {
 	try 
 	{
 		if (sBreakdownType === undefined || sBreakdownType === null) throw ("ERROR - sBreakdownType in function graph_patient_breakdown is null");
@@ -709,12 +780,15 @@ function graph_multiplesite_patient_number(sDivName,sBreakdownType,asInputFragme
 		}
 		else
 		{
+			var graphHeight = 300;
+			if(maxHeight)
+				graphHeight = maxHeight;
 			if(!(typeof c3 === 'undefined')){
 				var chart = c3.generate({
 					bindto: sDivName,
 					size: { 
 						//width: 535,
-						height: 200
+						height: graphHeight
 					},
 					data: {
 						columns: c3values,
@@ -726,7 +800,7 @@ function graph_multiplesite_patient_number(sDivName,sBreakdownType,asInputFragme
 						}
 					},
 					legend: {
-						position: 'right'
+						position: 'bottom'
 					},
 					axis: {
 						x: {
@@ -762,14 +836,20 @@ function graph_multiplesite_patient_number(sDivName,sBreakdownType,asInputFragme
    FUNCTION graph_multiplesite_patient_breakdown
    function where the dataset is displayed
 **********************************************************************************/
-function graph_multiplesite_patient_breakdown(sDivName,asUniqueBreakdownSites,c3dataarray) {
+function graph_multiplesite_patient_breakdown(sDivName,asUniqueBreakdownSites,c3dataarray,maxHeight,maxWidth) {
 	try {
 		if(!(typeof c3 === 'undefined')){
+			var graphHeight = 300;
+			if(maxHeight)
+				graphHeight = maxHeight;
+			var graphWidth = 1000;
+			if(maxWidth)
+				graphWidth = maxWidth;
 			var chart = c3.generate({
 				bindto: sDivName,
 				size: { 
-					width: 1000,
-					height: 200
+					// width: 1000,
+					height: graphHeight
 				},
 				data: {
 					x: 'x',
@@ -782,7 +862,7 @@ function graph_multiplesite_patient_breakdown(sDivName,asUniqueBreakdownSites,c3
 					bottom: 40
 				},
 				legend: {
-					position: 'right'
+					position: 'bottom'
 				},
 				axis: {
 					x: {

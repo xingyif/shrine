@@ -1,0 +1,20 @@
+<div class="stats-ontology-container">
+	<div ng-transclude></div>
+
+	<topic-dropdown topics="digest.ontology.topics" topic-selected="digest.getOntologyByTopic(topicId)">
+	</topic-dropdown>
+	<!--Start the recursion-->
+	<div class="digest">
+		<ul>
+			<li>
+				<span class="expandable dark-red" ng-click="show=!show">{{(show)? '-' : '+'}}</span>
+				<a ng-init="show=false" ng-click="show=!show" class="dark-red">{{digest.ontology.key + ' ( - ' + digest.ontology.queryCount + ' queries)'}}</a>
+				<ul ng-if="show ">
+					<li ng-repeat="(key, value) in digest.ontology.children" query-term>
+
+					</li>
+				</ul>
+			</li>
+		</ul>
+	</div>
+</div>
