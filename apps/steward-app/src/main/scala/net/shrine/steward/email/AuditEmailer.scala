@@ -33,7 +33,7 @@ case class AuditEmailer(maxQueryCountBetweenAudits:Int,
                         emailSubject:String,
                         from:InternetAddress,
                         to:InternetAddress,
-                        stewardBaseUrl:Option[String],
+                        stewardBaseUrl:String, //todo not an option
                         mailer:Mailer
                        ) {
   def audit() = {
@@ -52,9 +52,8 @@ case class AuditEmailer(maxQueryCountBetweenAudits:Int,
       }.mkString("\n")
 
       //build up the email body
-      val withLines = emailTemplate.replaceAll("AUDIT_LINES",auditLines)
-      val withBaseUrl = stewardBaseUrl.fold(withLines)(withLines.replaceAll("STEWARD_BASE_URL",_))
-      val emailBody = Text(withBaseUrl)
+      val emailBody = Text(emailTemplate.replaceAll("AUDIT_LINES",auditLines)
+                            .replaceAll("STEWARD_BASE_URL",stewardBaseUrl))
 
       val envelope:Envelope = Envelope.from(from).to(to).subject(emailSubject).content(emailBody)
 
@@ -94,7 +93,7 @@ object AuditEmailer {
       emailSubject = emailConfig.getString("subject"),
       from = emailConfig.get("from", new InternetAddress(_)),
       to = emailConfig.get("to", new InternetAddress(_)),
-      stewardBaseUrl = config.getOption("stewardBaseUrl", _.getString),
+      stewardBaseUrl = config.getString("shrine.queryEntryPoint.shrineSteward.stewardBaseUrl"),
       mailer = ConfiguredMailer.createMailerFromConfig(config.getConfig("shrine.email")))
   }
 
