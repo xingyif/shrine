@@ -2,21 +2,13 @@ package net.shrine.crypto2
 
 
 import java.io.{File, FileInputStream}
-import java.math.BigInteger
 import java.security.cert.X509Certificate
 import java.security.{KeyStore, PrivateKey, Security}
-import java.time.Instant
-import java.util.Date
-import javax.xml.datatype.XMLGregorianCalendar
 
 import net.shrine.crypto._
 import net.shrine.log.Loggable
-import net.shrine.protocol.{BroadcastMessage, CertId, Signature}
 import net.shrine.util._
-import org.bouncycastle.cert.X509CertificateHolder
 import org.bouncycastle.jce.provider.BouncyCastleProvider
-
-import scala.concurrent.duration.Duration
 
 /**
   * Created by ty on 10/25/16.
@@ -47,8 +39,9 @@ trait BouncyKeyStoreCollection extends Loggable {
   * Factory object that reads the correct cert collection from the file.
   */
 object BouncyKeyStoreCollection extends Loggable {
-  import scala.collection.JavaConversions._
   import CryptoErrors._
+
+  import scala.collection.JavaConversions._
   Security.addProvider(new BouncyCastleProvider())
   var descriptor: Option[KeyStoreDescriptor] = None
   var keyStore: Option[KeyStore] = None

@@ -68,7 +68,7 @@ object TestCert {
   val subject              = new X500Name("dc=stillTesting")
   val serial               = BigInteger.valueOf(System.currentTimeMillis())
   val notBefore            = new Date(0)
-  val notAfter             = new Date(java.time.Instant.now().toEpochMilli + 1000 * 60 * 60 * 24 * 10)
+  val notAfter             = new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24 * 10)
   val subjectPublicKeyInfo = SubjectPublicKeyInfo.getInstance(ASN1Sequence.getInstance(keyPair.getPublic.getEncoded))
 
   val certBuilder = new X509v3CertificateBuilder(name, serial, notBefore, notAfter, subject, subjectPublicKeyInfo)
