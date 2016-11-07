@@ -24,6 +24,7 @@ CREATE NONCLUSTERED INDEX [ix_SHRINE_QUERY_network_id] ON [dbo].[SHRINE_QUERY] (
 CREATE NONCLUSTERED INDEX [ix_SHRINE_QUERY_local_id] ON [dbo].[SHRINE_QUERY] ([local_id] ASC)
 CREATE NONCLUSTERED INDEX [ix_SHRINE_QUERY_username_domain] ON [dbo].[SHRINE_QUERY] (username, domain ASC)
 
+alter table SHRINE_QUERY alter column flag_message [varchar](MAX)
 
 create table QUERY_RESULT(
   id int not null identity(1,1),
