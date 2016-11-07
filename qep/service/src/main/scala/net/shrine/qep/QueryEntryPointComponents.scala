@@ -27,8 +27,7 @@ import scala.util.Try
   */
 case class QueryEntryPointComponents(shrineService: QepService,
                                      i2b2Service: I2b2QepService,
-                                     auditDao: AuditDao,  //todo auditDao is only used by the happy service to grab the most recent entries
-                                     trustModel: Option[TrustModel]
+                                     auditDao: AuditDao  //todo auditDao is only used by the happy service to grab the most recent entries
                                     )
 
 object QueryEntryPointComponents extends Loggable {
@@ -81,8 +80,7 @@ object QueryEntryPointComponents extends Loggable {
         broadcastService,
         breakdownTypes
       ),
-      auditDao,
-      Try(qepConfig.getBoolean("trustModelIsHub")).toOption.map(if(_) SingleHubModel else PeerToPeerModel)
+      auditDao
     )
   }
 }

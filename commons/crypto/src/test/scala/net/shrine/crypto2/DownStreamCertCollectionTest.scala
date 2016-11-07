@@ -24,15 +24,15 @@ import org.scalatest.junit.JUnitRunner
   * Created by ty on 11/1/16.
   */
 @RunWith(classOf[JUnitRunner])
-class HubCertCollectionTest extends FlatSpec with Matchers {
+class DownStreamCertCollectionTest extends FlatSpec with Matchers {
   val descriptor = NewTestKeyStore.descriptor
   val heyo = "Heyo!".getBytes("UTF-8")
 
 
-  "A hub cert collection" should "build and verify its own messages" in {
+  "A down stream cert collection" should "build and verify its own messages" in {
     val hubCertCollection = BouncyKeyStoreCollection.fromFileRecoverWithClassPath(descriptor) match {
-      case hub:HubCertCollection => hub
-      case _ => fail("This should generate a HubCertCollection!")
+      case hub:DownStreamCertCollection => hub
+      case _                            => fail("This should generate a DownstreamCertCollection!")
     }
 
     val testEntry = KeyStoreEntry(TestCert.cert, NonEmptySeq("notTrusted", Nil), Some(TestCert.keyPair.getPrivate))
@@ -52,12 +52,12 @@ class HubCertCollectionTest extends FlatSpec with Matchers {
     testEntry.verify(testSigned, heyo) shouldBe true
 
     hubCertCollection.myEntry.verify(testSigned, heyo) shouldBe false
-//    hubCertCollection.myEntry.verify(mySigned, heyo) shouldBe true
+    hubCertCollection.myEntry.verify(mySigned, heyo) shouldBe true
 
     hubCertCollection.caEntry.verify(testSigned, heyo) shouldBe false
-    hubCertCollection.caEntry.verify(mySigned, heyo) shouldBe true
+    hubCertCollection.caEntry.verify(mySigned, heyo) shouldBe false
 
-    hubCertCollection.verifyBytes(hubCertCollection.signBytes(heyo), heyo) shouldBe true
+    hubCertCollection.verifyBytes(hubCertCollection.signBytes(heyo), heyo) shouldBe false
   }
 }
 

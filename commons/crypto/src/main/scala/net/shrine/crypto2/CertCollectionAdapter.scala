@@ -22,6 +22,8 @@ final case class CertCollectionAdapter(keyStoreCollection: BouncyKeyStoreCollect
 
   override def allEntries: Iterable[KeyStoreEntry] = keyStoreCollection.allEntries
 
+  override def remoteSites: Seq[RemoteSite] = keyStoreCollection.remoteSites
+
   override def myCertId: Option[CertId] = Some(entryToCertId(myEntry))
 
   override def myCert: Option[X509Certificate] = Some(myEntry.cert)
@@ -48,8 +50,9 @@ final case class CertCollectionAdapter(keyStoreCollection: BouncyKeyStoreCollect
 
   // The CertCollection doesn't really account for PeerToPeer networks, so we slightly ignore that too
   private val caEntry: KeyStoreEntry = keyStoreCollection match {
-    case HubCertCollection(_, ca)            => ca
-    case PeerCertCollection(privateEntry, _) => privateEntry
+    case DownStreamCertCollection(_, ca, _)     => ca
+    case HubCertCollection(ca, _, _)            => ca
+    case PeerCertCollection(privateEntry, _, _) => privateEntry
   }
 
 }

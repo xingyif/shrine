@@ -9,11 +9,11 @@ package net.shrine.util
   */
 sealed trait TrustModel {
   val description:String = this match {
-    case SingleHubModel => "Central Certificate Authority"
+    case sx:SingleHubModel => "Central Certificate Authority"
     case PeerToPeerModel => "Peer-to-Peer Certificate Authority"
   }
 }
 
-case object SingleHubModel extends TrustModel
+case class SingleHubModel(isCa: Boolean) extends TrustModel
 
 case object PeerToPeerModel extends TrustModel

@@ -95,7 +95,10 @@ case class PmUserSource(config:Config) extends UserSource with Loggable {
 
     val trustParam =  if (pmEndpoint.acceptAllCerts) AcceptAllCerts
     else {
-      val keyStoreDescriptor:KeyStoreDescriptor = KeyStoreDescriptorParser.apply(config.getConfig("shrine.keystore"))
+      val keyStoreDescriptor:KeyStoreDescriptor = KeyStoreDescriptorParser.apply(
+        config.getConfig("shrine.keystore"),
+        config.getConfig("shrine.hub"),
+        config.getConfig("shrine.queryEntryPoint"))
       val keystoreCertCollection: BouncyKeyStoreCollection = BouncyKeyStoreCollection.fromFileRecoverWithClassPath(keyStoreDescriptor)
       BouncyKeyStore(keystoreCertCollection)
     }

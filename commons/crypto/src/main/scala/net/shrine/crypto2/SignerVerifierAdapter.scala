@@ -53,6 +53,8 @@ case class SignerVerifierAdapter(keyStoreCollection: BouncyKeyStoreCollection)
     )
   }
 
+  override def remoteSites: Seq[RemoteSite] = keyStoreCollection.remoteSites
+
   // Has the signature expired?
   private def notTooOld(sig: Signature, maxSignatureAge: Duration, message: BroadcastMessage): Boolean = {
     import XmlGcEnrichments._

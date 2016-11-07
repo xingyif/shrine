@@ -69,7 +69,7 @@ object ScannerConfig {
       string(projectId),
       authInfo(credentials),
       Try(string(outputFile)).getOrElse(FileNameSource.nextOutputFileName),
-      KeyStoreDescriptorParser(config.getConfig(keystore)),
+      KeyStoreDescriptorParser(config.getConfig(keystore), config.getConfig(hub), config.getConfig(qep)),
       string(pmUrl),
       Try(ResultOutputTypes.fromConfig(config.getConfig(breakdownResultOutputTypes))).getOrElse(Set.empty))
   }
@@ -80,6 +80,8 @@ object ScannerConfig {
     private def subKey(k: String) = BaseKeys.subKey(base)(k)
 
     val keystore = subKey("keystore")
+    val hub = subKey("hub")
+    val qep = subKey("queryEntryPoint")
     val adapterMappingsFile = subKey("adapterMappingsFile")
     val ontologySqlFile = subKey("ontologySqlFile")
     val reScanTimeout = subKey("reScanTimeout")

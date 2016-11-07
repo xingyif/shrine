@@ -107,7 +107,7 @@ class StatusJaxrsTest extends ShouldMatchersForJUnit {
     actual.authorizationType should be ("StewardQueryAuthorizationService")
     actual.includeAggregateResults should be (false)
     actual.maxQueryWaitTimeMillis should be (300000000L)
-    actual.trustModel should be (SingleHubModel.description)
+    actual.trustModel should be (SingleHubModel(true).description)
     actual.trustModelIsHub should be (true)
   }
 

@@ -1,14 +1,14 @@
 package net.shrine.crypto2
 
 /**
-  * Created by ty on 10/25/16.
+  * Created by ty on 11/4/16.
   */
-case class HubCertCollection(override val myEntry: KeyStoreEntry, caEntry: KeyStoreEntry) extends BouncyKeyStoreCollection {
+case class HubCertCollection(caEntry: KeyStoreEntry, downStreamAliases: Set[KeyStoreEntry], override val remoteSites: Seq[RemoteSite]) extends BouncyKeyStoreCollection {
+  override val myEntry: KeyStoreEntry = caEntry
 
-  override val allEntries: Iterable[KeyStoreEntry] = myEntry +: caEntry +: Nil
+  override def allEntries: Iterable[KeyStoreEntry] = downStreamAliases + caEntry
 
-  /**
-    * The only valid messages for a downstream node are those that come from the CA
-    */
-  override def verifyBytes(signedBytes:Array[Byte], signatureBytes:Array[Byte]) = caEntry.verify(signedBytes, signatureBytes)
+  override def verifyBytes(signedBytes: Array[Byte], signatureBytes: Array[Byte]): Boolean =
+    allEntries.exists(_.verify(signedBytes, signatureBytes))
+
 }

@@ -8,7 +8,7 @@ import java.util.Date
 import io.jsonwebtoken.impl.TextCodec
 import io.jsonwebtoken.{ClaimJwtException, Claims, Jws, Jwts, SignatureAlgorithm}
 import net.shrine.crypto.{KeyStoreCertCollection, KeyStoreDescriptorParser}
-import net.shrine.crypto2.{BouncyKeyStoreCollection, HubCertCollection, PeerCertCollection}
+import net.shrine.crypto2.{BouncyKeyStoreCollection, DownStreamCertCollection, HubCertCollection, PeerCertCollection}
 import net.shrine.dashboard.DashboardConfigSource
 import net.shrine.i2b2.protocol.pm.User
 import net.shrine.log.Loggable
@@ -32,7 +32,10 @@ import scala.util.{Failure, Success, Try}
 object ShrineJwtAuthenticator extends Loggable {
 
   val config = DashboardConfigSource.config
-  val certCollection = BouncyKeyStoreCollection.fromFileRecoverWithClassPath(KeyStoreDescriptorParser(config.getConfig("shrine.keystore")))
+  val certCollection = BouncyKeyStoreCollection.fromFileRecoverWithClassPath(KeyStoreDescriptorParser(
+    config.getConfig("shrine.keystore"),
+    config.getConfig("shrine.hub"),
+    config.getConfig("shrine.queryEntryPoint")))
 
   //from https://groups.google.com/forum/#!topic/spray-user/5DBEZUXbjtw
   def authenticate(implicit ec: ExecutionContext): ContextAuthenticator[User] = { ctx =>
@@ -139,11 +142,13 @@ object ShrineJwtAuthenticator extends Loggable {
 
     //todo is this the right way to find a cert in the certCollection?
     certCollection match {
-      case HubCertCollection(_, caEntry) if caEntry.signed(cert) => caEntry.cert
-      case px:PeerCertCollection => px.allEntries.find(_.signed(cert)).map(_.cert).getOrElse(
-        throw CertIssuerNotInCollectionException(issuingSite,cert.getIssuerDN, px.allEntries.flatMap(_.aliases))
+      case DownStreamCertCollection(_, caEntry, _) if caEntry.signed(cert) => cert
+      case HubCertCollection(ca, _, _) if ca.signed(cert)                  => cert
+      case px: PeerCertCollection                                          => px.allEntries.find(_.signed(cert)).map(_.cert).getOrElse(
+        throw CertIssuerNotInCollectionException(issuingSite, cert.getIssuerDN, px.allEntries.flatMap(_.aliases))
       )
-      case hc:HubCertCollection => throw CertIssuerNotInCollectionException(issuingSite,cert.getIssuerDN, hc.caEntry.aliases)
+      case dc: DownStreamCertCollection                                    => throw CertIssuerNotInCollectionException(issuingSite, cert.getIssuerDN, dc.caEntry.aliases)
+      case hc: HubCertCollection                                         => throw CertIssuerNotInCollectionException(issuingSite,cert.getIssuerDN, hc.caEntry.aliases)
     }
 
 //    debug(s"certCollection.caCerts.contains(${cert.getSubjectX500Principal}) is ${caEntry.cert.getSubjectX500Principal == cert.getSubjectX500Principal}")

@@ -5,22 +5,23 @@ import akka.event.Logging
 import net.shrine.authentication.UserAuthenticator
 import net.shrine.authorization.steward.OutboundUser
 import net.shrine.config.ConfigExtensions
-import net.shrine.crypto.{KeyStoreCertCollection, KeyStoreDescriptorParser, UtilHasher}
+import net.shrine.crypto.{KeyStoreDescriptorParser, UtilHasher}
 import net.shrine.crypto2.{BouncyKeyStoreCollection, CertCollectionAdapter}
+import net.shrine.dashboard.httpclient.HttpClientDirectives.{forwardUnmatchedPath, requestUriThenRoute}
 import net.shrine.dashboard.jwtauth.ShrineJwtAuthenticator
 import net.shrine.i2b2.protocol.pm.User
-import net.shrine.status.protocol.{Config => StatusProtocolConfig}
-import net.shrine.dashboard.httpclient.HttpClientDirectives.{forwardUnmatchedPath, requestUriThenRoute}
 import net.shrine.log.Loggable
 import net.shrine.problem.{ProblemDigest, Problems}
 import net.shrine.serialization.NodeSeqSerializer
+import net.shrine.spray._
+import net.shrine.status.protocol.{Config => StatusProtocolConfig}
+import org.json4s.native.JsonMethods.{parse => json4sParse}
+import org.json4s.{DefaultFormats, Formats}
 import shapeless.HNil
 import spray.http.{HttpRequest, HttpResponse, StatusCodes, Uri}
 import spray.httpx.Json4sSupport
-import spray.routing.directives.LogEntry
 import spray.routing._
-import org.json4s.{DefaultFormats, Formats}
-import org.json4s.native.JsonMethods.{parse => json4sParse}
+import spray.routing.directives.LogEntry
 
 import scala.collection.immutable.Iterable
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -50,7 +51,12 @@ trait DashboardService extends HttpService with Loggable {
 
   //don't need to do anything special for unauthorized users, but they do need access to a static form.
   lazy val route:Route = gruntWatchCorsSupport {
-    redirectToIndex ~ staticResources ~ makeTrouble ~ about ~ authenticatedInBrowser ~ authenticatedDashboard
+    redirectToIndex ~ staticResources ~ makeTrouble ~ about ~ authenticatedInBrowser ~ authenticatedDashboard ~ post {
+      // Chicken and egg problem; Can't check status of certs validation between sites if you need valid certs to exchange messages
+      pathPrefix("status")
+      pathPrefix("verifySignature")
+      verifySignature
+    }
   }
 
   /** logs the request method, uri and response at info level */
@@ -152,10 +158,6 @@ trait DashboardService extends HttpService with Loggable {
       } ~
     pathPrefix("ping")   { complete("pong") }~
     pathPrefix("status") { statusRoute(user) }
-  } ~ post {
-    pathPrefix("status")
-    pathPrefix("verifySignature")
-    verifySignature
   }
 
   //Manually test this by running a curl command
@@ -194,34 +196,20 @@ trait DashboardService extends HttpService with Loggable {
 
   val statusBaseUrl = DashboardConfigSource.config.getString("shrine.dashboard.statusBaseUrl")
 
-  // TODO: check all other certs and return a list of domain/had sig pairs.
-//  lazy val checkCertCollection:Route = {
-//
-//  }
-
   // TODO: Move this over to Status API?
   lazy val verifySignature:Route = {
-    val keyStoreDescriptor = DashboardConfigSource.config.getConfigured("shrine.keystore", KeyStoreDescriptorParser(_))
-    val certCollection = BouncyKeyStoreCollection.fromFileRecoverWithClassPath(keyStoreDescriptor)
-    val hasher = UtilHasher(CertCollectionAdapter(certCollection))
 
-    def handleSig(sha256:String): Option[Boolean] = {
-      if (hasher.validSignatureFormat(sha256)) {
-        hasher.containsCertWithSig(sha256).map(_ => true)
-      } else {
-        Some(false)
-      }
-    }
-
-    // Intellij complains if you use formFields with multiple params ¯\_(ツ)_/¯
     formField("sha256".as[String].?) { sha256: Option[String] =>
-      val badRequest: StandardRoute = complete(StatusCodes.BadRequest, "You must provide a valid SHA-256 signature to verify along with its alias")
-      val notFound:   StandardRoute = complete(StatusCodes.NotFound, "Could not find a certificate matching the given signature")
-      val foundCert:  StandardRoute = complete(StatusCodes.OK, "A matching cert with a matching SHA-256 signature was found")
-      sha256.fold(badRequest)(sha => handleSig(sha)
-            .fold(notFound)  (if (_) foundCert else badRequest))
+      val response = sha256.map(s => KeyStoreInfo.hasher.handleSig(s))
+      implicit val format = ShaResponse.json4sFormats
+      if (response.isDefined)
+        complete(response.get)
+      else
+        complete(StatusCodes.BadRequest)
     }
   }
+
+
 
   lazy val getConfig:Route = {
 
@@ -290,11 +278,21 @@ trait DashboardService extends HttpService with Loggable {
           complete(response)
     }}}}
   }
-
 }
 
 case class ProblemResponse(size: Int, offset: Int, n: Int, problems: Seq[ProblemDigest]) extends Json4sSupport {
   override implicit def json4sFormats: Formats = DefaultFormats + new NodeSeqSerializer
+}
+
+object KeyStoreInfo {
+  val config             = DashboardConfigSource.config
+  val keyStoreDescriptor = KeyStoreDescriptorParser(
+    config.getConfig("shrine.keystore"),
+    config.getConfig("shrine.hub"),
+    config.getConfig("shrine.queryEntryPoint"))
+  val certCollection     = BouncyKeyStoreCollection.fromFileRecoverWithClassPath(keyStoreDescriptor)
+  val hasher             = UtilHasher(certCollection)
+
 }
 
 /**
@@ -491,12 +489,12 @@ object QEP{
 //adapted from https://gist.github.com/joseraya/176821d856b43b1cfe19
 object gruntWatchCorsSupport extends Directive0 with RouteConcatenation {
 
-  import spray.http.HttpHeaders.{`Access-Control-Allow-Methods`, `Access-Control-Max-Age`, `Access-Control-Allow-Headers`,`Access-Control-Allow-Origin`}
-  import spray.routing.directives.RespondWithDirectives.respondWithHeaders
-  import spray.routing.directives.MethodDirectives.options
-  import spray.routing.directives.RouteDirectives.complete
-  import spray.http.HttpMethods.{OPTIONS,GET,POST}
   import spray.http.AllOrigins
+  import spray.http.HttpHeaders.{`Access-Control-Allow-Headers`, `Access-Control-Allow-Methods`, `Access-Control-Allow-Origin`, `Access-Control-Max-Age`}
+  import spray.http.HttpMethods.{GET, OPTIONS, POST}
+  import spray.routing.directives.MethodDirectives.options
+  import spray.routing.directives.RespondWithDirectives.respondWithHeaders
+  import spray.routing.directives.RouteDirectives.complete
 
   private val allowOriginHeader = `Access-Control-Allow-Origin`(AllOrigins)
   private val optionsCorsHeaders = List(
@@ -515,8 +513,4 @@ object gruntWatchCorsSupport extends Directive0 with RouteConcatenation {
     }
     else f(HNil)
   }
-}
-
-trait DefaultJsonSupport extends Json4sSupport {
-  override implicit def json4sFormats: Formats = DefaultFormats
 }

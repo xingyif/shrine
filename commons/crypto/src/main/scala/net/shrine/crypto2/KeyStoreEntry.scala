@@ -36,7 +36,6 @@ final case class KeyStoreEntry(cert: X509Certificate, aliases: NonEmptySeq[Strin
   val publicKey:PublicKey = cert.getPublicKey
   val certificateHolder = new JcaX509CertificateHolder(cert)                              // Helpful methods are defined in the cert holder.
   val isSelfSigned: Boolean = certificateHolder.getSubject == certificateHolder.getIssuer // May or may not be a CA
-  val formattedSha256Hash: String = UtilHasher.encodeCert(cert, "SHA-256")
 
   val commonName: Option[String] = KeyStoreEntry.getCommonNameFromCert(certificateHolder)
 
@@ -47,11 +46,22 @@ final case class KeyStoreEntry(cert: X509Certificate, aliases: NonEmptySeq[Strin
   private val provider = new BouncyCastleProvider()
 
   def verify(signedBytes: Array[Byte], originalMessage: Array[Byte]): Boolean = {
-    KeyStoreEntry.extractCertHolder(signedBytes).exists(_.isSignatureValid(
-        new JcaContentVerifierProviderBuilder()
-          .setProvider(provider).build(certificateHolder)
-      )
-    )
+    println(s"VERIFYING: ${aliases.first}")
+//    println(KeyStoreEntry.extractCertHolder(signedBytes).exists(_.isSignatureValid(
+//        new JcaContentVerifierProviderBuilder()
+//          .setProvider(provider).build(certificateHolder)
+//      )
+//    ))
+    import scala.collection.JavaConversions._
+    //val cms = new CMSSignedData(signedBytes)
+
+    //cms.getSignerInfos.getSigners.headOption.exists(_.verify(new JcaSimpleSignerInfoVerifierBuilder().setProvider(provider).build(certificateHolder)))
+    val signer = Signature.getInstance(
+      "SHA256withRSA",
+      provider)
+    signer.initVerify(publicKey)
+    signer.update(originalMessage)
+    signer.verify(signedBytes)
   }
 
 
@@ -62,18 +72,19 @@ final case class KeyStoreEntry(cert: X509Certificate, aliases: NonEmptySeq[Strin
   def sign(bytesToSign: Array[Byte]): Option[Array[Byte]] = {
     import scala.collection.JavaConversions._
     val SHA256 = "SHA256withRSA"
+    println(s"Signing: ${aliases.first}")
     privateKey.map(key => {
       val signature = Signature.getInstance(SHA256, provider)
       signature.initSign(key)
       signature.update(bytesToSign)
 
-      val data = new CMSProcessableByteArray(signature.sign())
-      val gen = new CMSSignedDataGenerator()
-
-      gen.addCertificates(new JcaCertStore(Seq(cert)))
-      val result = gen.generate(data, true).getEncoded
-      result
-
+//      val data = new CMSProcessableByteArray(signature.sign())
+//      val gen = new CMSSignedDataGenerator()
+//
+//      gen.addCertificates(new JcaCertStore(Seq(certificateHolder)))
+//      val result = gen.generate(data, true).getEncoded
+//      result
+      signature.sign()
     })
   }
 
@@ -119,4 +130,8 @@ object KeyStoreEntry {
 
 object SelectAll extends Selector[X509CertificateHolder] {
   override def `match`(obj: X509CertificateHolder): Boolean = true
+}
+
+case class RemoteSite(url: String, entry: KeyStoreEntry, alias: String) {
+  val sha256 = UtilHasher.encodeCert(entry.cert, "SHA-256")
 }
