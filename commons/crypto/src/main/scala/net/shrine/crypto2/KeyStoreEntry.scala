@@ -1,26 +1,18 @@
 package net.shrine.crypto2
 
-import java.security.cert.X509Certificate
 import java.security._
-import java.time.{Clock, Instant}
-import java.util
+import java.security.cert.X509Certificate
 import java.util.Date
 
 import net.shrine.crypto.UtilHasher
 import net.shrine.util.NonEmptySeq
 import org.bouncycastle.asn1.x500.style.{BCStyle, IETFUtils}
-import org.bouncycastle.asn1.x509.AlgorithmIdentifier
 import org.bouncycastle.cert.X509CertificateHolder
-import org.bouncycastle.cert.jcajce.{JcaCertStore, JcaX509CertificateConverter, JcaX509CertificateHolder}
+import org.bouncycastle.cert.jcajce.JcaX509CertificateHolder
 import org.bouncycastle.cms._
-import org.bouncycastle.cms.jcajce.{JcaSignerInfoGeneratorBuilder, JcaSimpleSignerInfoVerifierBuilder}
 import org.bouncycastle.jce.provider.BouncyCastleProvider
-import org.bouncycastle.operator.{ContentSigner, ContentVerifier}
-import org.bouncycastle.operator.bc.BcDigestCalculatorProvider
-import org.bouncycastle.operator.jcajce.{JcaContentSignerBuilder, JcaContentVerifierProviderBuilder, JcaDigestCalculatorProviderBuilder}
+import org.bouncycastle.operator.jcajce.JcaContentVerifierProviderBuilder
 import org.bouncycastle.util.{Selector, Store}
-
-import scala.util.Try
 
 /**
   * Created by ty on 10/26/16.
@@ -52,7 +44,6 @@ final case class KeyStoreEntry(cert: X509Certificate, aliases: NonEmptySeq[Strin
 //          .setProvider(provider).build(certificateHolder)
 //      )
 //    ))
-    import scala.collection.JavaConversions._
     //val cms = new CMSSignedData(signedBytes)
 
     //cms.getSignerInfos.getSigners.headOption.exists(_.verify(new JcaSimpleSignerInfoVerifierBuilder().setProvider(provider).build(certificateHolder)))
@@ -70,7 +61,6 @@ final case class KeyStoreEntry(cert: X509Certificate, aliases: NonEmptySeq[Strin
     * @return Returns None if this is not a PrivateKey Entry
     */
   def sign(bytesToSign: Array[Byte]): Option[Array[Byte]] = {
-    import scala.collection.JavaConversions._
     val SHA256 = "SHA256withRSA"
 
     privateKey.map(key => {
@@ -98,8 +88,8 @@ final case class KeyStoreEntry(cert: X509Certificate, aliases: NonEmptySeq[Strin
   )
 
 
-  def isExpired(clock: Clock = Clock.systemDefaultZone()): Boolean = {
-    certificateHolder.getNotAfter.before(Date.from(Instant.now(clock)))
+  def isExpired(time: Long = System.currentTimeMillis()): Boolean = {
+    certificateHolder.getNotAfter.before(new Date(time))
   }
 }
 

@@ -1,24 +1,20 @@
 package net.shrine.crypto2
 
 import java.math.BigInteger
-import java.security.cert.X509Certificate
 import java.security.{KeyPairGenerator, SecureRandom}
 import java.util.Date
-import javax.security.auth.x500.X500Principal
 
-import junit.framework.TestFailure
-import net.shrine.crypto.{KeyStoreDescriptor, KeyStoreType, NewTestKeyStore}
-import net.shrine.util.{NonEmptySeq, SingleHubModel}
+import net.shrine.crypto.NewTestKeyStore
+import net.shrine.util.NonEmptySeq
 import org.bouncycastle.asn1.ASN1Sequence
 import org.bouncycastle.asn1.x500.X500Name
 import org.bouncycastle.asn1.x509._
 import org.bouncycastle.cert.X509v3CertificateBuilder
 import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder
-import org.bouncycastle.x509.X509V3CertificateGenerator
 import org.junit.runner.RunWith
-import org.scalatest.{FlatSpec, Matchers, ShouldMatchers}
 import org.scalatest.junit.JUnitRunner
+import org.scalatest.{FlatSpec, Matchers}
 
 /**
   * Created by ty on 11/1/16.
