@@ -18,7 +18,15 @@
 
         beforeEach(setup);
 
-        it('Parse Query History', function () {
+        it('getMax should exist', function  () {
+            expect(typeof(ontologyTermService.getMax)).toBe('function');
+        });
+
+        it('buildOntology should exist', function () {
+            expect(typeof(ontologyTermService.buildOntology)).toBe('function');
+        });
+
+        it('Parse Query History should work.', function () {
             var queryHistory = getQueryData();
             var ontologyTree = ontologyTermService.buildOntology(queryHistory.queryRecords);
             expect(ontologyTree.key).toBe('SHRINE');
