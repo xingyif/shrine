@@ -2,8 +2,6 @@ package net.shrine.dashboard
 
 import akka.actor.{ActorRef, ActorSystem, Props}
 import net.shrine.problem.{AbstractProblem, ProblemConfigSource, ProblemHandler, ProblemSources}
-import net.shrine.steward.db.StewardDatabase
-import net.shrine.steward.{CannotStartDsa, StewardConfigSource, StewardServiceActor}
 import spray.servlet.WebBoot
 
 import scala.util.control.NonFatal
