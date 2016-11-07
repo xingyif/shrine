@@ -8,7 +8,7 @@
     function TopicDropdownFactory() {
 
         var templateUrl = './app/client/statistics/' +
-            'ontology-term/topic-dropdown.tpl.html';
+            'query-digest/topic-dropdown.tpl.html';
 
         var topicDropdown = {
             scope: {

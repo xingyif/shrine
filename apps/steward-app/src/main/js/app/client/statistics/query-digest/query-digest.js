@@ -2,13 +2,13 @@
     'use strict';
 
     angular.module('shrine.steward.statistics')
-        .directive('termDigest', TermDigestDirective);
+        .directive('queryDigest', QueryDigestDirective);
 
-    function TermDigestDirective(OntologyTermService) {
+    function QueryDigestDirective(OntologyTermService) {
         var templateUrl = './app/client/statistics/' +
-            'ontology-term/term-digest.tpl.html';
+            'query-digest/query-digest.tpl.html';
 
-        var termDigest = {
+        var queryDigest = {
             restrict: 'E',
             templateUrl: templateUrl,
             controller: QueryDigestController,
@@ -16,11 +16,11 @@
             scope: {
                 ontology: '='
             },
-            link: TermDigestLinker,
+            link: QueryDigestLinker,
             transclude: true
         };
 
-        return termDigest;
+        return queryDigest;
     }
 
     QueryDigestController.$inject = ['$scope', 'OntologyTermService'];
@@ -52,7 +52,7 @@
         }
     }
 
-    function TermDigestLinker(scope) {
+    function QueryDigestLinker(scope) {
         scope.$watch('ontology', function (before, after) {
             var digest = scope.digest;
             digest.getOntologyByTopic();

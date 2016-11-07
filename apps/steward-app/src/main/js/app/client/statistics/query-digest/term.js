@@ -7,7 +7,7 @@
     function TermDirectiveFactory () {
 
         var templateUrl = './app/client/statistics/' +
-            'ontology-term/term.tpl.html';
+            'query-digest/term.tpl.html';
         var termDirective = {
             restrict: 'A',
             templateUrl: templateUrl,
