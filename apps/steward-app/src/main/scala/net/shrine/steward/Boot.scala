@@ -1,6 +1,6 @@
 package net.shrine.steward
 
-import akka.actor.{ActorSystem, Props}
+import akka.actor.{ActorRef, ActorSystem, Props}
 import net.shrine.config.{ConfigExtensions, DurationConfigParser}
 import net.shrine.log.Loggable
 import net.shrine.problem.{AbstractProblem, ProblemSources}
@@ -26,27 +26,53 @@ class Boot extends WebBoot with Loggable {
   val system = ActorSystem("StewardActors",StewardConfigSource.config)
 
   // the service actor replies to incoming HttpRequests
-  val serviceActor = system.actorOf(Props[StewardServiceActor])
+  override val serviceActor: ActorRef = startServiceActor
 
-  // if sending email alerts is on start a periodic polling of the database at a fixed time every day.
-  // if either the volume or time conditions are met, send an email to the data steward asking for an audit
-  val config = StewardConfigSource.config
+  startEmailTask()
 
-  val emailConfig = config.getConfig("shrine.steward.emailDataSteward")
+  def startServiceActor = try {
 
-  if(emailConfig.getBoolean("sendAuditEmails") && AuditEmailer.configCheck(config)) {
+    info(s"StewardActors akka daemonic config is ${StewardConfigSource.config.getString("akka.daemonic")}")
 
-    try {
-      val interval = emailConfig.get("interval", DurationConfigParser.parseDuration)
+    StewardDatabase.warmUp()
 
-      system.scheduler.schedule(initialDelay = initialDelayToSendEmail(emailConfig.get("timeAfterMidnight",DurationConfigParser.parseDuration),interval),
-        interval = interval,
-        receiver = system.actorOf(Props[AuditEmailerActor]),
-        "tick")
-    }
-    catch {
-      case NonFatal(x)  => CannotStartAuditEmailActor(x)
-      case x:ExceptionInInitializerError => CannotStartAuditEmailActor(x)
+    // we need an ActorSystem to host our application in
+    val system = ActorSystem("StewardActors", StewardConfigSource.config)
+
+    // the service actor replies to incoming HttpRequests
+    val serviceActor = system.actorOf(Props[StewardServiceActor])
+
+    startEmailTask()
+
+    serviceActor
+  }
+  catch {
+    case NonFatal(x) => CannotStartDsa(x); throw x
+    case x: ExceptionInInitializerError => CannotStartDsa(x); throw x
+    case x: Throwable => CannotStartDsa(x); throw x
+  }
+
+  def startEmailTask() = {
+    // if sending email alerts is on start a periodic polling of the database at a fixed time every day.
+    // if either the volume or time conditions are met, send an email to the data steward asking for an audit
+    val config = StewardConfigSource.config
+
+    val emailConfig = config.getConfig("shrine.steward.emailDataSteward")
+
+    if (emailConfig.getBoolean("sendAuditEmails") && AuditEmailer.configCheck(config)) {
+
+      try {
+        val interval = emailConfig.get("interval", DurationConfigParser.parseDuration)
+
+        system.scheduler.schedule(initialDelay = initialDelayToSendEmail(emailConfig.get("timeAfterMidnight", DurationConfigParser.parseDuration), interval),
+          interval = interval,
+          receiver = system.actorOf(Props[AuditEmailerActor]),
+          "tick")
+      }
+      catch {
+        case NonFatal(x) => CannotStartAuditEmailActor(x)
+        case x: ExceptionInInitializerError => CannotStartAuditEmailActor(x)
+      }
     }
   }
 
@@ -77,6 +103,14 @@ case class CannotStartAuditEmailActor(ex:Throwable) extends AbstractProblem(Prob
   override def summary: String = "The DSA could not start an Actor to email audit requests due to an exception."
 
   override def description: String = s"The DSA will not email audit requests due to ${throwable.get}"
+
+  override def throwable = Some(ex)
+}
+
+case class CannotStartDsa(ex:Throwable) extends AbstractProblem(ProblemSources.Dsa) {
+  override def summary: String = "The DSA could not start due to an exception."
+
+  override def description: String = s"The DSA could not start due to ${throwable.get}"
 
   override def throwable = Some(ex)
 }
