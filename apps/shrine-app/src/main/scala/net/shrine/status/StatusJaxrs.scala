@@ -495,7 +495,7 @@ object Client extends Loggable {
   type MaybeSiteStatus = Future[Option[SiteStatus]]
 
   def apply(sites: Seq[RemoteSite]): Seq[MaybeSiteStatus] = {
-    sites.map(curl)
+    sites.filter(_.entry.isDefined).map(curl)
   }
 
   def curl(site: RemoteSite): MaybeSiteStatus = {

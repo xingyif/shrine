@@ -21,9 +21,6 @@ final class KeyStoreDescriptorParserTest extends ShouldMatchersForJUnit {
                 keyStoreType="jks"
                 caCertAliases = [foo, bar]
                 trustModelIsHub = true
-                aliasMap = {
-                  site1 = "downstream1"
-                }
                 """),
         ConfigFactory.parseString(
           """
@@ -40,7 +37,7 @@ final class KeyStoreDescriptorParserTest extends ShouldMatchersForJUnit {
       descriptor.keyStoreType should be(KeyStoreType.JKS)
       descriptor.caCertAliases.toSet should be(Set("foo", "bar"))
       descriptor.trustModel should be(SingleHubModel(true))
-      descriptor.remoteSiteDescriptors should be(Seq(RemoteSiteDescriptor("site1", "downstream1", "localhost")))
+      descriptor.remoteSiteDescriptors should be(Seq(RemoteSiteDescriptor("site1", None, "localhost")))
     }
     
     //All fields, PKCS12
@@ -51,10 +48,8 @@ final class KeyStoreDescriptorParserTest extends ShouldMatchersForJUnit {
                 password="bar"
                 privateKeyAlias="baz"
                 keyStoreType="pkcs12"
+                caCertAliases = [carra ca]
                 trustModelIsHub = true
-                aliasMap = {
-                  hub = "carra"
-                }
                 """),
         ConfigFactory.empty(),
         ConfigFactory.parseString(
@@ -70,7 +65,7 @@ final class KeyStoreDescriptorParserTest extends ShouldMatchersForJUnit {
       descriptor.privateKeyAlias should be(Some("baz"))
       descriptor.keyStoreType should be(KeyStoreType.PKCS12)
       descriptor.trustModel should be(SingleHubModel(false))
-      descriptor.remoteSiteDescriptors should be(Seq(RemoteSiteDescriptor("hub", "carra", "localhost")))
+      descriptor.remoteSiteDescriptors should be(Seq(RemoteSiteDescriptor("Hub", Some("carra ca"), "localhost")))
     }
     
     //no keystore type
@@ -81,11 +76,8 @@ final class KeyStoreDescriptorParserTest extends ShouldMatchersForJUnit {
                 password="bar"
                 privateKeyAlias="baz"
                 trustModelIsHub = true
+                caCertAliases = [carra ca]
                 isHub = true
-                aliasMap = {
-                  site1 = "downstream1"
-                  site2 = "downstream2"
-                }
                 """),
         ConfigFactory.parseString(
           """
@@ -103,8 +95,8 @@ final class KeyStoreDescriptorParserTest extends ShouldMatchersForJUnit {
       descriptor.keyStoreType should be(KeyStoreType.Default)
       descriptor.trustModel should be (SingleHubModel(true))
       descriptor.remoteSiteDescriptors should contain theSameElementsAs Seq(
-        RemoteSiteDescriptor("site1", "downstream1", "someRemoteSite"),
-        RemoteSiteDescriptor("site2", "downstream2", "someOtherSite"))
+        RemoteSiteDescriptor("site1", None, "someRemoteSite"),
+        RemoteSiteDescriptor("site2", None, "someOtherSite"))
     }
     
     //no private key alias
@@ -133,7 +125,7 @@ final class KeyStoreDescriptorParserTest extends ShouldMatchersForJUnit {
       descriptor.privateKeyAlias should be(None)
       descriptor.trustModel should be(PeerToPeerModel)
       descriptor.keyStoreType should be(KeyStoreType.JKS)
-      descriptor.remoteSiteDescriptors should be(Seq(RemoteSiteDescriptor("site1", "node1", "somePeerSite")))
+      descriptor.remoteSiteDescriptors should be(Seq(RemoteSiteDescriptor("site1", Some("node1"), "somePeerSite")))
     }
 
     //No file
@@ -154,8 +146,7 @@ final class KeyStoreDescriptorParserTest extends ShouldMatchersForJUnit {
                 file="foo"
                 password="bar"
                 privateKeyAlias="baz"
-                trustModelIsHub = true
-                isHub = true
+                trustModelIsHub = false
                 aliasMap = {
                   site1 = "downstream1"
                   site2 = "downstream2"
@@ -180,8 +171,7 @@ final class KeyStoreDescriptorParserTest extends ShouldMatchersForJUnit {
                 file="foo"
                 password="bar"
                 privateKeyAlias="baz"
-                trustModelIsHub = true
-                isHub = true
+                trustModelIsHub = false
                 aliasMap = {
                   site1 = "downstream1"
                   site2 = "downstream2"
@@ -198,32 +188,5 @@ final class KeyStoreDescriptorParserTest extends ShouldMatchersForJUnit {
         )
       }
     }
-
-    //Extraneous mappings
-    intercept[AssertionError] {
-      {
-        val descriptor = KeyStoreDescriptorParser(
-          ConfigFactory.parseString("""
-                file="foo"
-                password="bar"
-                privateKeyAlias="baz"
-                trustModelIsHub = true
-                isHub = false
-                aliasMap = {
-                  site1 = "downstream1"
-                  dontdothisman = "downstream2"
-                }
-                                    """),
-          ConfigFactory.empty(),
-          ConfigFactory.parseString(
-            """
-              |broadcasterServiceEndpoint {
-              |  url = "https://localhost:8080/shrine/"
-              |}
-            """.stripMargin)
-        )
-      }
-    }
-
   }
 }

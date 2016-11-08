@@ -45,7 +45,6 @@ object KeyStoreDescriptorParser extends Loggable {
       }
     }
 
-    val aliases = keyStoreConfig.getConfig(aliasMap).entrySet()
     val tm = getTrustModel
 
     def parseUrl(url: String): String = {
@@ -54,30 +53,41 @@ object KeyStoreDescriptorParser extends Loggable {
 
     def getRemoteSites: Seq[RemoteSiteDescriptor] = {
       tm match {
-        case SingleHubModel(true) | PeerToPeerModel => parseAliasMap
-        case SingleHubModel(false) => parseSimpleMap
+        case PeerToPeerModel => parseAliasMap
+        case SingleHubModel(true) => parseRemoteSitesForHub
+        case SingleHubModel(false) => parseRemoteSiteFromQep
       }
     }
 
-    def parseSimpleMap: Seq[RemoteSiteDescriptor] = {
-      assert(aliases.size() == 1, "In a DownStreamNode, the only remote site is the hub") // Todo: Better error handling
-      val entry = aliases.head
-      assert(entry.getValue.valueType() == ConfigValueType.STRING)
+    def getCaCertAliases: Seq[String] = {
 
-      Seq(RemoteSiteDescriptor(entry.getKey, cvToString(entry.getValue), parseUrl(qepConfig.getString(s"$qepEndpoint.$url"))))
+      def isString(cv: ConfigValue) = cv.valueType == ConfigValueType.STRING
+
+      keyStoreConfig.getOption(caCertAliases,_.getList).fold(Seq.empty[ConfigValue])(list => list.asScala).collect{ case cv if isString(cv) => cvToString(cv) }
+    }
+
+    def parseRemoteSitesForHub: Seq[RemoteSiteDescriptor] = {
+      val downStreamAliases = hubConfig.getConfig(downStreamNodes).entrySet
+      downStreamAliases.map(entry =>
+        RemoteSiteDescriptor(entry.getKey, None, parseUrl(cvToString(entry.getValue)))).toList
+    }
+
+    def parseRemoteSiteFromQep: Seq[RemoteSiteDescriptor] = {
+      val aliases = getCaCertAliases
+      assert(aliases.nonEmpty, "There has to be at least one caCertAlias") // TODO: Better error handling
+
+      RemoteSiteDescriptor("Hub", Some(aliases.head), parseUrl(qepConfig.getString(s"$qepEndpoint.$url"))) +: Nil
     }
 
     def parseAliasMap: Seq[RemoteSiteDescriptor] = {
+      val aliases = keyStoreConfig.getConfig(aliasMap).entrySet()
       val downStreamAliases = hubConfig.getConfig(downStreamNodes).entrySet()
       assert(aliases.size() == downStreamAliases.size(), "The aliasMap has to match one-to-one with the Hub's downstreamNodes")
       (aliases ++ downStreamAliases).foreach(entry => assert(entry.getValue.valueType() == ConfigValueType.STRING))
       assert(aliases.size == aliases.map(_.getKey).intersect(downStreamAliases.map(_.getKey)).size)
 
       aliases.map(siteAlias =>
-        RemoteSiteDescriptor(
-          siteAlias.getKey,
-          cvToString(siteAlias.getValue),
-          parseUrl(cvToString(downStreamAliases.find(_.getKey == siteAlias.getKey).get.getValue)))).toSeq
+        RemoteSiteDescriptor(siteAlias.getKey, Some(cvToString(siteAlias.getValue)), parseUrl(cvToString(downStreamAliases.find(_.getKey == siteAlias.getKey).get.getValue)))).toSeq
     }
 
     def getKeyStoreType: KeyStoreType = {
@@ -93,12 +103,6 @@ object KeyStoreDescriptorParser extends Loggable {
     def cvToString(cv: ConfigValue): String = {
       cv.unwrapped.toString
     }
-    def getCaCertAliases: Seq[String] = {
-
-      def isString(cv: ConfigValue) = cv.valueType == ConfigValueType.STRING
-
-      keyStoreConfig.getOption(caCertAliases,_.getList).fold(Seq.empty[ConfigValue])(list => list.asScala).collect{ case cv if isString(cv) => cvToString(cv) }
-    }
 
     KeyStoreDescriptor(
       keyStoreConfig.getString(file),
@@ -112,4 +116,4 @@ object KeyStoreDescriptorParser extends Loggable {
   }
 }
 
-case class RemoteSiteDescriptor(siteAlias: String, keyStoreAlias: String, url: String)
+case class RemoteSiteDescriptor(siteAlias: String, keyStoreAlias: Option[String], url: String)

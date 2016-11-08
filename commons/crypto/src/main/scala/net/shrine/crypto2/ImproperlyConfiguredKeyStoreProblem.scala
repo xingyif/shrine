@@ -53,6 +53,12 @@ object CryptoErrors {
     throw illegalEntry
   }
 
+  private[crypto2] def invalidSiganatureFormat(bytes: Array[Byte]) = {
+    val illegalSignature = new IllegalArgumentException("Given a signature with bytes that are not valid CMSSignedData")
+    Log.error(InvalidSignatureFormatProblem(bytes, Some(illegalSignature)).toDigest)
+    throw illegalSignature
+  }
+
   private[crypto2] def configureError(description: String): ImproperlyConfiguredKeyStoreProblem = {
     val err = ImproperlyConfiguredKeyStoreProblem(Some(ImproperlyConfiguredKeyStoreException(description)), description)
     Log.error(err.toDigest)
@@ -69,4 +75,14 @@ case class UnknownSignatureProblem(message: BroadcastMessage)
     s"The message with id '${message.requestId}' contained an unknown signature. Please " +
     "check that the KeyStore is properly configured, and that SHRINE is on the same version."
   }
+}
+
+case class InvalidSignatureFormatProblem(illegalBytes: Array[Byte], override val throwable: Option[Throwable])
+  extends AbstractProblem(ProblemSources.Commons)
+{
+  override def summary: String = s"An incoming message contained a signature that was not signed using CMSSignedData."
+
+  override def description: String =
+    s"The message with signature bytes ${s"[${illegalBytes.mkString(" ")}]"} was not signed using CMSSignedData, which means" +
+      s"it's in an invalid format. Please check that every SHRINE node is operating on the same version."
 }

@@ -8,7 +8,7 @@ import net.shrine.crypto.UtilHasher
 import net.shrine.util.NonEmptySeq
 import org.bouncycastle.asn1.x500.style.{BCStyle, IETFUtils}
 import org.bouncycastle.cert.X509CertificateHolder
-import org.bouncycastle.cert.jcajce.JcaX509CertificateHolder
+import org.bouncycastle.cert.jcajce.{JcaCertStore, JcaX509CertificateConverter, JcaX509CertificateHolder}
 import org.bouncycastle.cms._
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.bouncycastle.operator.jcajce.JcaContentVerifierProviderBuilder
@@ -28,27 +28,17 @@ final case class KeyStoreEntry(cert: X509Certificate, aliases: NonEmptySeq[Strin
   val publicKey:PublicKey = cert.getPublicKey
   val certificateHolder = new JcaX509CertificateHolder(cert)                              // Helpful methods are defined in the cert holder.
   val isSelfSigned: Boolean = certificateHolder.getSubject == certificateHolder.getIssuer // May or may not be a CA
-
+  val provider = BouncyKeyStoreCollection.provider
   val commonName: Option[String] = KeyStoreEntry.getCommonNameFromCert(certificateHolder)
+  val SHA256 = BouncyKeyStoreCollection.SHA256
 
 
 //    certificateHolder.getSubject.getRDNs(BCStyle.CN).headOption.flatMap(rdn =>
 //                                      Option(rdn.getFirst).map(cn => IETFUtils.valueToString(cn.getValue)))
 
-  private val provider = new BouncyCastleProvider()
-
   def verify(signedBytes: Array[Byte], originalMessage: Array[Byte]): Boolean = {
-
-    //    println(KeyStoreEntry.extractCertHolder(signedBytes).exists(_.isSignatureValid(
-//        new JcaContentVerifierProviderBuilder()
-//          .setProvider(provider).build(certificateHolder)
-//      )
-//    ))
-    //val cms = new CMSSignedData(signedBytes)
-
-    //cms.getSignerInfos.getSigners.headOption.exists(_.verify(new JcaSimpleSignerInfoVerifierBuilder().setProvider(provider).build(certificateHolder)))
     val signer = Signature.getInstance(
-      "SHA256withRSA",
+      SHA256,
       provider)
     signer.initVerify(publicKey)
     signer.update(originalMessage)
@@ -61,19 +51,12 @@ final case class KeyStoreEntry(cert: X509Certificate, aliases: NonEmptySeq[Strin
     * @return Returns None if this is not a PrivateKey Entry
     */
   def sign(bytesToSign: Array[Byte]): Option[Array[Byte]] = {
-    val SHA256 = "SHA256withRSA"
 
     privateKey.map(key => {
       val signature = Signature.getInstance(SHA256, provider)
       signature.initSign(key)
       signature.update(bytesToSign)
-//      val data = new CMSProcessableByteArray(signature.sign())
-//      val gen = new CMSSignedDataGenerator()
-//
-//      gen.addCertificates(new JcaCertStore(Seq(certificateHolder)))
-//      val result = gen.generate(data, true).getEncoded
-//      result
-      signature.sign()
+      signature.sign
     })
   }
 
@@ -115,12 +98,23 @@ object KeyStoreEntry {
       commonName <- getCommonNameFromCert(certHolder)
     } yield commonName
   }
+
+  def extractX509Cert(certificateHolder: X509CertificateHolder): X509Certificate = {
+    new JcaX509CertificateConverter().setProvider(BouncyKeyStoreCollection.provider)
+      .getCertificate(certificateHolder)
+  }
+
+  def certSignedOtherCert(signer: X509CertificateHolder, signee: X509CertificateHolder): Boolean = {
+    signee.isSignatureValid(
+      new JcaContentVerifierProviderBuilder()
+        .setProvider(BouncyKeyStoreCollection.provider).build(signer))
+  }
 }
 
 object SelectAll extends Selector[X509CertificateHolder] {
   override def `match`(obj: X509CertificateHolder): Boolean = true
 }
 
-case class RemoteSite(url: String, entry: KeyStoreEntry, alias: String) {
-  val sha256 = UtilHasher.encodeCert(entry.cert, "SHA-256")
+case class RemoteSite(url: String, entry: Option[KeyStoreEntry], alias: String) {
+  val sha256 = entry.map(e => UtilHasher.encodeCert(e.cert, "SHA-256"))
 }

@@ -59,7 +59,7 @@
 
 
             vm.downStreamValidation = downStreamValidation(keystore);
-            vm.hubAndPeerValidation = hubAndPeerValidation(keystore);
+            vm.peerCertValidation   = peerCertValidation(keystore);
             vm.keyStoreContents     = keyStoreContents(keystore)
         }
 
@@ -71,26 +71,27 @@
         }
 
         function downStreamValidation(keystore) {
-            $log.warn("called");
+            if (keystore.remoteSiteStatuses.length == 0) {
+                return [];
+            }
             var remoteSite = keystore.remoteSiteStatuses[0];
             if (remoteSite.timeOutError) {
                 return [['Timed Out', "Timed out while connecting to the hub"]]
             } else {
                 return [
-                    ["Signature Matches Hub's?", remoteSite.theyHaveMine? "Yes": "No"],
                     ["CA Certificate Matches Hub's?", remoteSite.haveTheirs? "Yes": "No"]
                 ]
             }
         }
 
-        function hubAndPeerValidation(keystore) {
+        function peerCertValidation(keystore) {
             function handleStatus(siteStatus) {
                 if (siteStatus.timeOutError) {
                     return [siteStatus.siteAlias, "Timed Out", "N/A"]
                 } else {
                     return [siteStatus.siteAlias, siteStatus.theyHaveMine, siteStatus.haveTheirs]
                 }
-            };
+            }
 
             return map(handleStatus, keystore.remoteSiteStatuses)
         }

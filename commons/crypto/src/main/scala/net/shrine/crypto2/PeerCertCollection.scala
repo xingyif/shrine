@@ -5,8 +5,8 @@ package net.shrine.crypto2
   */
 case class PeerCertCollection(override val myEntry: KeyStoreEntry, entries: Set[KeyStoreEntry], override val remoteSites: Seq[RemoteSite]) extends BouncyKeyStoreCollection {
 
-  def verifyBytes(signedBytes: Array[Byte], signatureBytes: Array[Byte]): Boolean = {
-    (entries + myEntry).exists(_.verify(signedBytes, signatureBytes))
+  def verifyBytes(cmsEncodedSignature: Array[Byte], originalMessage: Array[Byte]): Boolean = {
+    (entries + myEntry).exists(_.verify(cmsEncodedSignature, originalMessage))
   }
 
   override val allEntries: Iterable[KeyStoreEntry] = entries + myEntry

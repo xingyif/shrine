@@ -18,7 +18,7 @@ object NewTestKeyStore {
   
   val caCertAliases = Seq("shrine-test-ca")
   
-  lazy val descriptor = KeyStoreDescriptor(fileName, password, privateKeyAlias, caCertAliases, keyStoreType, SingleHubModel(false), Seq(RemoteSiteDescriptor("hub", "shrine-test-ca", "localhost:8080")))
+  lazy val descriptor = KeyStoreDescriptor(fileName, password, privateKeyAlias, caCertAliases, keyStoreType, SingleHubModel(false), Seq(RemoteSiteDescriptor("hub", Some("shrine-test-ca"), "localhost:8080")))
   
   lazy val certCollection = BouncyKeyStoreCollection.fromFileRecoverWithClassPath(descriptor)
   

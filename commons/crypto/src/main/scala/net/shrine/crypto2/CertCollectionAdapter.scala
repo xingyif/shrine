@@ -16,7 +16,7 @@ final case class CertCollectionAdapter(keyStoreCollection: BouncyKeyStoreCollect
 {
   override def signBytes(bytesToSign: Array[Byte]): Array[Byte] = keyStoreCollection.signBytes(bytesToSign)
 
-  override def verifyBytes(signedBytes: Array[Byte], signatureBytes: Array[Byte]): Boolean = keyStoreCollection.verifyBytes(signedBytes, signatureBytes)
+  override def verifyBytes(cmsEncodedSignature: Array[Byte], originalMessage: Array[Byte]): Boolean = keyStoreCollection.verifyBytes(cmsEncodedSignature, originalMessage)
 
   override val myEntry: KeyStoreEntry = keyStoreCollection.myEntry
 

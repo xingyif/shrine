@@ -44,7 +44,10 @@
                 if (abbreviatedEntry.url != "")
                     tempList.push(abbreviatedEntry)
             }
-            vm.otherDashboards = map(function(entry){return [entry.siteAlias, entry.url]}, tempList);
+            if (keystore.trustModelIsHub && !keystore.isHub)
+                vm.otherDashboards = [];
+            else
+                vm.otherDashboards = map(function(entry){return [entry.siteAlias, entry.url]}, tempList);
             $log.warn(JSON.stringify(vm.otherDashboards));
             vm.clearCache = clearCache;
             vm.switchDashboard = switchDashboard;

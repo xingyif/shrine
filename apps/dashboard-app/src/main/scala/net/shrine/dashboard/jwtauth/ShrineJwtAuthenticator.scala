@@ -9,7 +9,7 @@ import io.jsonwebtoken.impl.TextCodec
 import io.jsonwebtoken.{ClaimJwtException, Claims, Jws, Jwts, SignatureAlgorithm}
 import net.shrine.crypto.{KeyStoreCertCollection, KeyStoreDescriptorParser}
 import net.shrine.crypto2.{BouncyKeyStoreCollection, DownStreamCertCollection, HubCertCollection, PeerCertCollection}
-import net.shrine.dashboard.DashboardConfigSource
+import net.shrine.dashboard.{DashboardConfigSource, KeyStoreInfo}
 import net.shrine.i2b2.protocol.pm.User
 import net.shrine.log.Loggable
 import net.shrine.protocol.Credential
@@ -30,13 +30,7 @@ import scala.util.{Failure, Success, Try}
   * @since 12/21/15
   */
 object ShrineJwtAuthenticator extends Loggable {
-  import net.shrine.config.ConfigExtensions
-
-  val config = DashboardConfigSource.config
-  val certCollection = BouncyKeyStoreCollection.fromFileRecoverWithClassPath(KeyStoreDescriptorParser(
-    config.getConfig("shrine.keystore"),
-    config.getConfigOrEmpty("shrine.hub"),
-    config.getConfigOrEmpty("shrine.queryEntryPoint")))
+  val certCollection = KeyStoreInfo.certCollection
 
   //from https://groups.google.com/forum/#!topic/spray-user/5DBEZUXbjtw
   def authenticate(implicit ec: ExecutionContext): ContextAuthenticator[User] = { ctx =>
@@ -94,9 +88,15 @@ object ShrineJwtAuthenticator extends Loggable {
     }
   }
 
-  def createOAuthCredentials(user:User): OAuth2BearerToken = {
+  def createOAuthCredentials(user:User, dnsName: String): OAuth2BearerToken = {
 
-    val base64Cert:String = TextCodec.BASE64URL.encode(certCollection.myEntry.cert.getEncoded)
+    val oauthEntry = certCollection match {
+      case HubCertCollection(myEntry, _, _) => myEntry
+      case DownStreamCertCollection(myEntry, _, _) => myEntry // Note: The DownStreamCertCollection will never be accepted
+      case PeerCertCollection(_, _, sites) => sites.find(_.url == dnsName).get.entry.get
+      // This looks really dangerous, but it's an invariant that all remote sites for PeerToPeer collections have entries.
+    }
+    val base64Cert:String = TextCodec.BASE64URL.encode(oauthEntry.cert.getEncoded)
 
     val key: PrivateKey = certCollection.myEntry.privateKey.get
     val expiration: Date = new Date(System.currentTimeMillis() + 30 * 1000) //good for 30 seconds

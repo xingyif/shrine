@@ -22,9 +22,11 @@ trait BouncyKeyStoreCollection extends Loggable {
 
   val myEntry: KeyStoreEntry
 
+  val provider = BouncyKeyStoreCollection.provider
+
   def signBytes(bytesToSign: Array[Byte]): Array[Byte] = myEntry.sign(bytesToSign).getOrElse(CryptoErrors.noKeyError(myEntry))
 
-  def verifyBytes(signedBytes: Array[Byte], signatureBytes: Array[Byte]): Boolean
+  def verifyBytes(cmsEncodedSignature: Array[Byte], originalMessage: Array[Byte]): Boolean
 
   def allEntries: Iterable[KeyStoreEntry]
 
@@ -42,9 +44,11 @@ object BouncyKeyStoreCollection extends Loggable {
   import CryptoErrors._
 
   import scala.collection.JavaConversions._
-  Security.addProvider(new BouncyCastleProvider())
+  val provider = new BouncyCastleProvider()
+  Security.addProvider(provider)
   var descriptor: Option[KeyStoreDescriptor] = None
   var keyStore: Option[KeyStore] = None
+  val SHA256 = "SHA256withRSA"
 
   // On failure creates a problem so it gets logged into the database.
   type EitherCertError = Either[ImproperlyConfiguredKeyStoreProblem, BouncyKeyStoreCollection]
@@ -68,41 +72,37 @@ object BouncyKeyStoreCollection extends Loggable {
     else
       descriptor.trustModel match {
         case PeerToPeerModel       => createPeerCertCollection(entries, descriptor)
-        case SingleHubModel(false) => createDownStreamCollection(entries, descriptor)
-        case SingleHubModel(true)  => createHubCertCollection(entries, descriptor)
+        case SingleHubModel(isHub) => createHubCertCollection(entries, descriptor, isHub)
       }
   }
 
-  def createHubCertCollection(entries: Set[KeyStoreEntry], descriptor: KeyStoreDescriptor):
+  def createHubCertCollection(entries: Set[KeyStoreEntry], descriptor: KeyStoreDescriptor, isHub: Boolean):
     EitherCertError =
   {
-    if (descriptor.privateKeyAlias.isDefined)
-      warn(s"Specifying the private key alias for the Hub in a non PeerToPeer network is useless, as it uses caCertAliases.")
-    val configKeyStoreAliases = descriptor.remoteSiteDescriptors.map(_.keyStoreAlias)
+    if (entries.size != 2)
+      Left(configureError(RequiresExactlyTwoEntries(entries)))
+    else if (entries.count(_.privateKey.isDefined) != 1)
+      Left(configureError(RequiresExactlyOnePrivateKey(entries.filter(_.privateKey.isDefined))))
+    else {
+      val partition    = entries.partition(_.privateKey.isDefined)
+      val privateEntry = partition._1.head
+      val caEntry      = partition._2.head
+      val rsds = descriptor.remoteSiteDescriptors
 
-    if (configKeyStoreAliases.toSet != entries.map(_.aliases.first))
-      Left(configureError(IncorrectAliasMapping(configKeyStoreAliases, entries)))
-    else
-    (descriptor.caCertAliases, entries.filter(_.privateKey.isDefined)) match {
-      case (certs, keys) if certs.isEmpty || keys.isEmpty => Left(configureError(CouldNotFindCa))
-      case (_, keys) if keys.size > 1 => Left(configureError(TooManyPrivateKeys(keys)))
-      case (certs, key) if key.head.aliases.intersect(certs).isEmpty => Left(configureError(CouldNotFindCa))
-      case (certs, key) =>
-        val caEntry = key.head
-        val unsignedEntries = (entries - caEntry).filter(!_.wasSignedBy(caEntry))
-
-        if (unsignedEntries.nonEmpty)
-          Left(configureError(NotSignedByCa(unsignedEntries, caEntry)))
-        else
-          Right(HubCertCollection(caEntry, entries - caEntry, remoteDescriptorToRemoteSite(descriptor, entries)))
-
-    }
-
+      if (!isHub && rsds.head.keyStoreAlias.get != caEntry.aliases.first)
+        Left(configureError(IncorrectAliasMapping(rsds.head.keyStoreAlias.get +: Nil, caEntry +: Nil)))
+      else if (isHub && privateEntry.wasSignedBy(caEntry))
+        Right(HubCertCollection(privateEntry, caEntry, rsds.map(rsd => RemoteSite(rsd.url, None, rsd.siteAlias))))
+      else if (privateEntry.wasSignedBy(caEntry))
+        Right(DownStreamCertCollection(privateEntry, caEntry, RemoteSite(rsds.head.url, Some(caEntry), rsds.head.siteAlias)))
+      else
+        Left(configureError(NotSignedByCa(privateEntry +: Nil, caEntry)))
+      }
   }
 
   def remoteDescriptorToRemoteSite(descriptor: KeyStoreDescriptor, entries: Set[KeyStoreEntry]): Seq[RemoteSite] = {
-    descriptor.remoteSiteDescriptors.map(rsd =>
-      RemoteSite(rsd.url, entries.find(_.aliases.contains(rsd.keyStoreAlias)).get, rsd.siteAlias))
+    descriptor.remoteSiteDescriptors.map(rsd => // Only safe with Peer/Downstream collections
+      RemoteSite(rsd.url, entries.find(_.aliases.contains(rsd.keyStoreAlias.get)), rsd.siteAlias))
   }
 
   /**
@@ -112,12 +112,10 @@ object BouncyKeyStoreCollection extends Loggable {
   def createPeerCertCollection(entries: Set[KeyStoreEntry], descriptor: KeyStoreDescriptor):
     EitherCertError =
   {
-    if (descriptor.caCertAliases.nonEmpty)
-      warn(s"Specifying caCertAliases in a PeerToPeer network is useless, certs found: `${descriptor.caCertAliases}`")
     val configKeyStoreAliases = descriptor.remoteSiteDescriptors.map(_.keyStoreAlias)
 
-    if (configKeyStoreAliases.toSet != entries.map(_.aliases.first))
-      Left(configureError(IncorrectAliasMapping(configKeyStoreAliases, entries)))
+    if (configKeyStoreAliases.toSet.flatten != entries.map(_.aliases.first))
+      Left(configureError(IncorrectAliasMapping(configKeyStoreAliases.flatten, entries)))
     else
       (descriptor.privateKeyAlias, entries.filter(_.privateKey.isDefined)) match {
       case (_, empty) if empty.isEmpty => Left(configureError(NoPrivateKeyInStore))
@@ -131,30 +129,6 @@ object BouncyKeyStoreCollection extends Loggable {
         Right(PeerCertCollection(privateKeyEntry, entries - privateKeyEntry,
           remoteDescriptorToRemoteSite(descriptor, entries)))
       case (Some(alias), keys)         => Left(configureError(CouldNotFindAlias(alias)))
-    }
-  }
-
-  def createDownStreamCollection(entries: Set[KeyStoreEntry], descriptor: KeyStoreDescriptor):
-    EitherCertError =
-  {
-    if (descriptor.caCertAliases.nonEmpty)
-      warn(s"Specifying caCertAliases for a DownStream node is useless, as you write the cert in aliasMap anyways. Certs found: `${descriptor.caCertAliases}`")
-    if (entries.size != 2)
-      Left(configureError(RequiresExactlyTwoEntries(entries)))
-    else if (entries.count(_.privateKey.isDefined) != 1)
-      Left(configureError(RequiresExactlyOnePrivateKey(entries.filter(_.privateKey.isDefined))))
-    else {
-      val partition    = entries.partition(_.privateKey.isDefined)
-      val privateEntry = partition._1.head
-      val caEntry      = partition._2.head
-      val rsd          = descriptor.remoteSiteDescriptors.head
-
-      if (descriptor.remoteSiteDescriptors.head.keyStoreAlias != caEntry.aliases.first)
-        Left(configureError(IncorrectAliasMapping(rsd.keyStoreAlias +: Nil, caEntry +: Nil)))
-      else if (privateEntry.wasSignedBy(caEntry))
-        Right(DownStreamCertCollection(privateEntry, caEntry, RemoteSite(rsd.url, caEntry, rsd.siteAlias)))
-      else
-        Left(configureError(NotSignedByCa(privateEntry +: Nil, caEntry)))
     }
   }
 

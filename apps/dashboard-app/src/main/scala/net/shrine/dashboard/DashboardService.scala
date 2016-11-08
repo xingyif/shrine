@@ -15,6 +15,7 @@ import net.shrine.problem.{ProblemDigest, Problems}
 import net.shrine.serialization.NodeSeqSerializer
 import net.shrine.spray._
 import net.shrine.status.protocol.{Config => StatusProtocolConfig}
+import net.shrine.util.SingleHubModel
 import org.json4s.native.JsonMethods.{parse => json4sParse}
 import org.json4s.{DefaultFormats, Formats}
 import shapeless.HNil
@@ -168,13 +169,18 @@ trait DashboardService extends HttpService with Loggable {
   def toDashboardRoute(user:User):Route = get {
 
     pathPrefix(Segment) { dnsName =>
-      val remoteDashboardProtocol = DashboardConfigSource.config.getString("shrine.dashboard.remoteDashboard.protocol")
-      val remoteDashboardPort = DashboardConfigSource.config.getString("shrine.dashboard.remoteDashboard.port")
-      val remoteDashboardPathPrefix = DashboardConfigSource.config.getString("shrine.dashboard.remoteDashboard.pathPrefix")
+      val urlToParse: String = KeyStoreInfo.keyStoreDescriptor.trustModel match {
+        case SingleHubModel(false) => DashboardConfigSource.config.getString("shrine.queryEntryPoint.broadcasterServiceEndpoint.url")
+        case _ => DashboardConfigSource.config.getList("shrine.hub.downstreamNodes").get(0).unwrapped().toString
+      }
 
-      val baseUrl = s"$remoteDashboardProtocol$dnsName$remoteDashboardPort/$remoteDashboardPathPrefix"
+      val remoteDashboardPort = urlToParse.split(':')(2).split('/')(0)
+      val remoteDashboardProtocol = urlToParse.split("://")(0)
+      val remoteDashboardPathPrefix = "shrine-dashboard/fromDashboard" // I don't think this needs to be configurable
 
-      forwardUnmatchedPath(baseUrl,Some(ShrineJwtAuthenticator.createOAuthCredentials(user)))
+      val baseUrl = s"$remoteDashboardProtocol://$dnsName:$remoteDashboardPort/$remoteDashboardPathPrefix"
+
+      forwardUnmatchedPath(baseUrl,Some(ShrineJwtAuthenticator.createOAuthCredentials(user, dnsName)))
     }
   }
 
