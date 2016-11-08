@@ -1076,6 +1076,7 @@ button.ont-close {
     .topic-dropdown .tdd-btn .tdd-list {
       position: absolute;
       top: 100%;
+      left: 0px;
       background: rgba(0, 0, 0, 0.75);
       border: 1px solid #63BCF8 !important;
       width: 100%;
@@ -1125,3 +1126,19 @@ button.ont-close {
       transform: translate(0, 20px);
       opacity: 1;
       visibility: visible; }
+
+.dropdown-arrow {
+  content: '';
+  opacity: .8;
+  position: absolute;
+  right: 10px;
+  top: 43px;
+  width: 0;
+  height: 0;
+  box-shadow: 2px -2px 6px rgba(0, 0, 0, 0.05);
+  border-top: 4px solid #63BCF8;
+  border-right: 4px solid #63BCF8;
+  border-bottom: 4px solid transparent;
+  border-left: 4px solid transparent;
+  -webkit-transform: rotate(-45deg);
+  transform: rotate(135deg); }

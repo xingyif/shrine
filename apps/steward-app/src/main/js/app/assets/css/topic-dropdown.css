@@ -51,6 +51,7 @@
     .topic-dropdown .tdd-btn .tdd-list {
       position: absolute;
       top: 100%;
+      left: 0px;
       background: rgba(0, 0, 0, 0.75);
       border: 1px solid #63BCF8 !important;
       width: 100%;
