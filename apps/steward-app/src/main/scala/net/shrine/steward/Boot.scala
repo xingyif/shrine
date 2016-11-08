@@ -18,30 +18,24 @@ import scala.util.control.NonFatal
 // the spray.servlet.WebBoot trait
 class Boot extends WebBoot with Loggable {
 
-  info(s"StewardActors akka daemonic config is ${StewardConfigSource.config.getString("akka.daemonic")}")
-
-  val warmUp:Unit = StewardDatabase.warmUp()
-
   // we need an ActorSystem to host our application in
-  val system = ActorSystem("StewardActors",StewardConfigSource.config)
+  override val system = startActorSystem()
 
   // the service actor replies to incoming HttpRequests
-  override val serviceActor: ActorRef = startServiceActor
+  override val serviceActor: ActorRef = startServiceActor()
 
-  startEmailTask()
+  def startActorSystem() = try ActorSystem("StewardActors",StewardConfigSource.config)
+  catch {
+    case NonFatal(x) => CannotStartDsa(x); throw x
+    case x: ExceptionInInitializerError => CannotStartDsa(x); throw x
+  }
 
-  def startServiceActor = try {
-
+  def startServiceActor() = try {
     info(s"StewardActors akka daemonic config is ${StewardConfigSource.config.getString("akka.daemonic")}")
-
     StewardDatabase.warmUp()
-
-    // we need an ActorSystem to host our application in
-    val system = ActorSystem("StewardActors", StewardConfigSource.config)
 
     // the service actor replies to incoming HttpRequests
     val serviceActor = system.actorOf(Props[StewardServiceActor])
-
     startEmailTask()
 
     serviceActor
@@ -49,7 +43,6 @@ class Boot extends WebBoot with Loggable {
   catch {
     case NonFatal(x) => CannotStartDsa(x); throw x
     case x: ExceptionInInitializerError => CannotStartDsa(x); throw x
-    case x: Throwable => CannotStartDsa(x); throw x
   }
 
   def startEmailTask() = {
@@ -90,10 +83,11 @@ class Boot extends WebBoot with Loggable {
         c.set(Calendar.MILLISECOND, 0)
         c.getTimeInMillis
       }
-      val timeToSendToday = previousMidnight + timeFromMidnight.toMillis
+      val timeToSendToday: Long = previousMidnight + timeFromMidnight.toMillis
 
-      if (timeToSendToday > now) timeToSendToday milliseconds
-      else timeToSendToday + (1 day).toMillis milliseconds
+      val timeToSend: Long = if (timeToSendToday > now) timeToSendToday
+                             else timeToSendToday + (1 day).toMillis
+      (timeToSend - now) milliseconds
     }
     else 0 milliseconds //if we're testing then don't delay that first send
   }

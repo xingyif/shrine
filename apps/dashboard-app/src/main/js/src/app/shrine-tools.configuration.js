@@ -68,6 +68,12 @@
                     'src/app/diagnostic/views/bootcordion.js'
                 ]
             },
+            'diagnostic.dashboard': {
+                name: 'diagnostic.dashboard',
+                files: [
+                    'src/app/diagnostic/views/dashboard.controller.js'
+                ]
+            },
             'diagnostic.problems': {
                 name: 'diagnostic.problems',
                 files: [
@@ -184,6 +190,17 @@
                 resolve: {
                     loadFiles: function ($ocLazyLoad) {
                         return $ocLazyLoad.load(stateConfig['diagnostic.config']);
+                    }
+                }
+            })
+            .state('diagnostic.dashboard', {
+                url:           '/dashboard',
+                controller:    'DashboardController',
+                controllerAs:  'vm',
+                templateUrl:   'src/app/diagnostic/views/dashboard.tpl.html',
+                resolve: {
+                    loadMyFiles: function ($ocLazyLoad) {
+                        return $ocLazyLoad.load(stateConfig['diagnostic.dashboard']);
                     }
                 }
             })

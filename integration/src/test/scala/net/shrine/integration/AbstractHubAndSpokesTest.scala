@@ -2,7 +2,8 @@ package net.shrine.integration
 
 import net.shrine.adapter.service.{AdapterRequestHandler, AdapterResource, JerseyTestComponent}
 import net.shrine.client.{JerseyHttpClient, Poster}
-import net.shrine.crypto.{DefaultSignerVerifier, TestKeystore, TrustParam}
+import net.shrine.crypto.{DefaultSignerVerifier, NewTestKeyStore, TrustParam}
+import net.shrine.crypto2.{CertCollectionAdapter, SignerVerifierAdapter}
 import net.shrine.protocol.{AuthenticationInfo, CertId, Credential, NodeId}
 import org.junit.{After, Before}
 
@@ -29,11 +30,11 @@ trait AbstractHubAndSpokesTest {
   
   val networkAuthn = AuthenticationInfo("d", "u", Credential("p", false))
   
-  val certCollection = TestKeystore.certCollection
+  val certCollection = NewTestKeyStore.certCollection
 
-  lazy val myCertId: CertId = certCollection.myCertId.get
+  lazy val myCertId: CertId = CertCollectionAdapter(certCollection).myCertId.get
 
-  lazy val signerVerifier = new DefaultSignerVerifier(certCollection)
+  lazy val signerVerifier = SignerVerifierAdapter(certCollection)
   
   import AbstractHubAndSpokesTest.SpokeComponent
   

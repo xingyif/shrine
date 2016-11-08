@@ -10,6 +10,6 @@ import org.junit.Test
 final class TrustParamTest extends ShouldMatchersForJUnit {
   @Test
   def testForKeyStore {
-    TrustParam.forKeyStore(TestKeystore.certCollection) should equal(TrustParam.SomeKeyStore(TestKeystore.certCollection))
+    //Deprecated: delete? TrustParam.forKeyStore(TestKeystore.certCollection) should equal(TrustParam.SomeKeyStore(TestKeystore.certCollection))
   }
 }

@@ -20,7 +20,7 @@ final case class KeyStoreCertCollection(keystore: KeyStore, descriptor: KeyStore
   override def get(id: CertId): Option[X509Certificate] = certsById.get(id)
   
   override def iterator: Iterator[X509Certificate] = certsById.valuesIterator ++ caCerts.valuesIterator
-  
+
   override def ids: Iterable[CertId] = certsById.keys
   
   import KeyStoreCertCollection.toCertId
@@ -118,14 +118,18 @@ object KeyStoreCertCollection extends Loggable {
   }
   
   def fromStream(descriptor: KeyStoreDescriptor, streamFrom: String => InputStream): KeyStoreCertCollection = {
+    KeyStoreCertCollection(fromStreamHelper(descriptor, streamFrom), descriptor)
+  }
+
+  def fromStreamHelper(descriptor: KeyStoreDescriptor, streamFrom: String => InputStream): KeyStore = {
     def toString(descriptor: KeyStoreDescriptor) = descriptor.copy(password = "********").toString
-    
+
     debug(s"Loading keystore using descriptor: ${toString(descriptor)}")
 
     val stream = streamFrom(descriptor.file)
-    
-    require(stream != null,s"null stream for descriptor ${toString(descriptor)}")
-    
+
+    require(stream != null,s"null stream for descriptor ${toString(descriptor)}¬")
+
     val keystore = KeyStore.getInstance(descriptor.keyStoreType.name)
 
     try {
@@ -133,12 +137,12 @@ object KeyStoreCertCollection extends Loggable {
     } catch {case x:IOException => throw new IOException(s"Unable to load keystore from $descriptor",x)}
 
     import scala.collection.JavaConverters._
-    
+
     debug(s"Keystore aliases: ${keystore.aliases.asScala.mkString(",")}")
-    
+
     debug(s"Keystore ${toString(descriptor)} loaded successfully")
-    
-    KeyStoreCertCollection(keystore, descriptor)
+
+    keystore
   }
   
   private[crypto] def toCertId(cert: X509Certificate): CertId = {

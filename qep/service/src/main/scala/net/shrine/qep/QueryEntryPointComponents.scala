@@ -8,6 +8,7 @@ import net.shrine.broadcaster.{BroadcastAndAggregationService, NodeHandle, Signi
 import net.shrine.client.Poster
 import net.shrine.config.ConfigExtensions
 import net.shrine.crypto.KeyStoreCertCollection
+import net.shrine.crypto2.BouncyKeyStoreCollection
 import net.shrine.dao.squeryl.SquerylInitializer
 import net.shrine.hms.authentication.EcommonsPmAuthenticator
 import net.shrine.hms.authorization.HmsDataStewardAuthorizationService
@@ -16,6 +17,7 @@ import net.shrine.protocol.ResultOutputType
 import net.shrine.qep.dao.AuditDao
 import net.shrine.qep.dao.squeryl.SquerylAuditDao
 import net.shrine.qep.dao.squeryl.tables.Tables
+import net.shrine.util.{PeerToPeerModel, SingleHubModel, TrustModel}
 
 import scala.util.Try
 
@@ -25,14 +27,13 @@ import scala.util.Try
   */
 case class QueryEntryPointComponents(shrineService: QepService,
                                      i2b2Service: I2b2QepService,
-                                     auditDao: AuditDao,  //todo auditDao is only used by the happy service to grab the most recent entries
-                                     trustModel: Option[TrustModel]
+                                     auditDao: AuditDao  //todo auditDao is only used by the happy service to grab the most recent entries
                                     )
 
 object QueryEntryPointComponents extends Loggable {
   def apply(
              qepConfig:Config,
-             certCollection: KeyStoreCertCollection,
+             certCollection: BouncyKeyStoreCollection,
              breakdownTypes: Set[ResultOutputType],
              broadcastDestinations: Option[Set[NodeHandle]],
              hubDao: HubDao, //todo the QEP should not need the hub dao
@@ -40,9 +41,9 @@ object QueryEntryPointComponents extends Loggable {
              pmPoster: Poster //todo could really have its own
            ):QueryEntryPointComponents = {
 
-    val commonName: String = certCollection.myCommonName.getOrElse {
+    val commonName: String = certCollection.myEntry.commonName.getOrElse {
       val hostname = java.net.InetAddress.getLocalHost.getHostName
-      warn(s"No common name available from ${certCollection.descriptor}. Using $hostname instead.")
+      warn(s"No common name available from ${certCollection.myEntry}. Using $hostname instead.")
       hostname
     }
 
@@ -79,8 +80,7 @@ object QueryEntryPointComponents extends Loggable {
         broadcastService,
         breakdownTypes
       ),
-      auditDao,
-      Try(qepConfig.getBoolean("trustModelIsHub")).toOption.map(if(_) SingleHubModel else PeerToPeerModel)
+      auditDao
     )
   }
 }

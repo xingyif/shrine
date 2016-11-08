@@ -1,12 +1,9 @@
 package net.shrine.utilities.scanner
 
-import net.shrine.util.ShouldMatchersForJUnit
+import com.typesafe.config.{ConfigException, ConfigFactory}
+import net.shrine.crypto.{KeyStoreDescriptor, KeyStoreType, RemoteSiteDescriptor}
+import net.shrine.util.{ShouldMatchersForJUnit, SingleHubModel}
 import org.junit.Test
-import com.typesafe.config.ConfigFactory
-import com.typesafe.config.Config
-import com.typesafe.config.ConfigException
-import net.shrine.crypto.KeyStoreDescriptor
-import net.shrine.crypto.KeyStoreType
 
 /**
  * @author clint
@@ -36,7 +33,15 @@ final class ScannerConfigTest extends ShouldMatchersForJUnit {
       scannerConfig.authorization.credential.isToken should be(false)
       scannerConfig.outputFile should equal("foo.csv")
       scannerConfig.keystoreDescriptor.caCertAliases should equal(Seq("carra ca"))
-      scannerConfig.keystoreDescriptor should equal(KeyStoreDescriptor("shrine.keystore", "chiptesting", Some("test-cert"), Seq("carra ca"), KeyStoreType.PKCS12))
+      scannerConfig.keystoreDescriptor should equal(KeyStoreDescriptor(
+        "shrine.keystore",
+        "chiptesting",
+        Some("test-cert"),
+        Seq("carra ca"),
+        KeyStoreType.PKCS12,
+        SingleHubModel(false),
+        Seq(RemoteSiteDescriptor("Hub", Some("carra ca"), "localhost"))
+      ))
       scannerConfig.pmUrl should equal("http://example.com/pm")
     }
 
@@ -53,9 +58,9 @@ final class ScannerConfigTest extends ShouldMatchersForJUnit {
       ScannerConfig.getDuration("", ConfigFactory.empty())
     }
 
-    import scala.collection.JavaConverters._
+    import net.shrine.utilities.scallop.Keys.{milliseconds, minutes, seconds}
 
-    import net.shrine.utilities.scallop.Keys.{ milliseconds, seconds, minutes }
+    import scala.collection.JavaConverters._
 
     ScannerConfig.getDuration("", ConfigFactory.parseMap(Map(milliseconds -> "123").asJava)) should be(123.milliseconds)
 
