@@ -51,6 +51,7 @@
     .topic-dropdown .tdd-btn .tdd-list {
       position: absolute;
       top: 100%;
+      left: 0px;
       background: rgba(0, 0, 0, 0.75);
       border: 1px solid #63BCF8 !important;
       width: 100%;
@@ -66,7 +67,6 @@
         border-bottom: 1px solid rgba(0, 0, 0, 0.05);
         padding: 16px 0;
         color: inherit;
-        font-size: 10px;
         text-decoration: none;
         background: none !important; }
       .topic-dropdown .tdd-btn .tdd-list:before {

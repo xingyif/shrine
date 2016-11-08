@@ -1,4 +1,7 @@
 <div class="stats-graph-container">
+	<span ng-if="graph.graphData.users.length === 0">
+		There is no Data for this time period.
+	</span>
 	<span ng-repeat="user in graph.graphData.users">
 		<graph-bar value="{{user._2}}" 
 		percentage="{{graph.toPercentage(user._2)}}"

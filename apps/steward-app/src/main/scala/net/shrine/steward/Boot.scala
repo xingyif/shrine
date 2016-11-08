@@ -83,10 +83,11 @@ class Boot extends WebBoot with Loggable {
         c.set(Calendar.MILLISECOND, 0)
         c.getTimeInMillis
       }
-      val timeToSendToday = previousMidnight + timeFromMidnight.toMillis
+      val timeToSendToday: Long = previousMidnight + timeFromMidnight.toMillis
 
-      if (timeToSendToday > now) timeToSendToday milliseconds
-      else timeToSendToday + (1 day).toMillis milliseconds
+      val timeToSend: Long = if (timeToSendToday > now) timeToSendToday
+                             else timeToSendToday + (1 day).toMillis
+      (timeToSend - now) milliseconds
     }
     else 0 milliseconds //if we're testing then don't delay that first send
   }

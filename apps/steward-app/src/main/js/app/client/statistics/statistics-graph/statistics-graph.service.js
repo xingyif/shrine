@@ -10,7 +10,7 @@ var Service;
 
     function StatisticsGraphService() {
         return {
-            geSortedUser: getSortedUsers,
+            getSortedUsers: getSortedUsers,
             getMaxUser: getMaxUser,
             getMaxUserQueryCount: getMaxUserQueryCount,
             getCountAsPercentage: getCountAsPercentage

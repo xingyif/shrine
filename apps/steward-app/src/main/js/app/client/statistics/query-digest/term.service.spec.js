@@ -20,5 +20,13 @@
         it('Term Service should Exist', function () {
             expect(typeof(termService)).toBe('object');
         });
+
+        it('getPct should Exist', function () {
+            expect(typeof(termService.getPct)).toBe('function');
+        });
+
+        it('getStyleByFrequency should Exist', function () {
+            expect(typeof(termService.getStyleByFrequency)).toBe('function');
+        });
     }
 })();

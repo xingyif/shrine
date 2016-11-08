@@ -1,0 +1,15 @@
+.dropdown-arrow {
+  content: '';
+  opacity: .8;
+  position: absolute;
+  right: 10px;
+  top: 43px;
+  width: 0;
+  height: 0;
+  box-shadow: 2px -2px 6px rgba(0, 0, 0, 0.05);
+  border-top: 4px solid #63BCF8;
+  border-right: 4px solid #63BCF8;
+  border-bottom: 4px solid transparent;
+  border-left: 4px solid transparent;
+  -webkit-transform: rotate(-45deg);
+  transform: rotate(135deg); }

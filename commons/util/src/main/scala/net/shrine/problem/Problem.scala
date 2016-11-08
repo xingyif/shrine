@@ -157,7 +157,7 @@ trait ProblemHandler extends NeedsWarmUp {
 }
 
 /**
-  * An example problem handler
+  * Write problems to the default log
   */
 object LoggingProblemHandler extends ProblemHandler with Loggable {
   override def handleProblem(problem: Problem): Unit = {
@@ -175,6 +175,18 @@ object DatabaseProblemHandler extends ProblemHandler with Loggable {
   }
 
   override def warmUp(): Unit = Problems.warmUp
+}
+
+object LogAndDatabaseProblemHandler extends ProblemHandler {
+  override def handleProblem(problem: Problem): Unit = {
+    LoggingProblemHandler.handleProblem(problem)
+    DatabaseProblemHandler.handleProblem(problem)
+  }
+
+  override def warmUp(): Unit = {
+    LoggingProblemHandler.warmUp()
+    DatabaseProblemHandler.warmUp()
+  }
 }
 
 /**
