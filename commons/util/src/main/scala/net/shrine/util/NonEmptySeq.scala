@@ -8,7 +8,7 @@ package net.shrine.util
   * @param first the first element
   * @param rest  the possible empty tail
   */
-case class NonEmptySeq[+A](first: A, rest: Seq[A]) extends Seq[A] {
+case class NonEmptySeq[+A](first: A, rest: Seq[A] = Nil) extends Seq[A] {
   override def length: Int = 1 + rest.length
 
   override def iterator: Iterator[A] = (first +: rest).iterator

@@ -115,6 +115,6 @@ object SelectAll extends Selector[X509CertificateHolder] {
   override def `match`(obj: X509CertificateHolder): Boolean = true
 }
 
-case class RemoteSite(url: String, entry: Option[KeyStoreEntry], alias: String) {
+case class RemoteSite(url: String, entry: Option[KeyStoreEntry], alias: String, port: String) {
   val sha256 = entry.map(e => UtilHasher.encodeCert(e.cert, "SHA-256"))
 }

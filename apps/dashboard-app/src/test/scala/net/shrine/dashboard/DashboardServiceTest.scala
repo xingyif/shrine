@@ -6,12 +6,13 @@ import java.util.Date
 import io.jsonwebtoken.impl.TextCodec
 import io.jsonwebtoken.{Jwts, SignatureAlgorithm}
 import net.shrine.authorization.steward.OutboundUser
-import net.shrine.crypto.{KeyStoreCertCollection, KeyStoreDescriptorParser}
+import net.shrine.config.ConfigExtensions
+import net.shrine.crypto.KeyStoreDescriptorParser
+import net.shrine.crypto2.BouncyKeyStoreCollection
 import net.shrine.dashboard.jwtauth.ShrineJwtAuthenticator
 import net.shrine.i2b2.protocol.pm.User
 import net.shrine.protocol.Credential
 import net.shrine.spray.{FoundShaResponse, ShaResponse}
-import net.shrine.config.ConfigExtensions
 import org.json4s.native.JsonMethods.parse
 import org.junit.runner.RunWith
 import org.scalatest.FlatSpec
@@ -341,14 +342,14 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
   "DashboardService" should  "reject a fromDashboard/ping with an expired jwts header" in {
 
     val config = DashboardConfigSource.config
-    val shrineCertCollection: KeyStoreCertCollection = KeyStoreCertCollection.fromFileRecoverWithClassPath(KeyStoreDescriptorParser(
+    val shrineCertCollection: BouncyKeyStoreCollection = BouncyKeyStoreCollection.fromFileRecoverWithClassPath(KeyStoreDescriptorParser(
       config.getConfig("shrine.keystore"),
       config.getConfigOrEmpty("shrine.hub"),
       config.getConfigOrEmpty("shrine.queryEntryPoint")))
 
-    val base64Cert = new String(TextCodec.BASE64URL.encode(shrineCertCollection.myCert.get.getEncoded))
+    val base64Cert = new String(TextCodec.BASE64URL.encode(shrineCertCollection.myEntry.cert.getEncoded))
 
-    val key: PrivateKey = shrineCertCollection.myKeyPair.privateKey
+    val key: PrivateKey = shrineCertCollection.myEntry.privateKey.get
     val expiration: Date = new Date(System.currentTimeMillis() - 300 * 1000) //bad for 5 minutes
     val jwtsString = Jwts.builder().
         setHeaderParam("kid", base64Cert).
@@ -368,14 +369,14 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
   "DashboardService" should  "reject a fromDashboard/ping with no subject" in {
 
     val config = DashboardConfigSource.config
-    val shrineCertCollection: KeyStoreCertCollection = KeyStoreCertCollection.fromClassPathResource(KeyStoreDescriptorParser(
+    val shrineCertCollection: BouncyKeyStoreCollection = BouncyKeyStoreCollection.fromFileRecoverWithClassPath(KeyStoreDescriptorParser(
       config.getConfig("shrine.keystore"),
       config.getConfigOrEmpty("shrine.hub"),
       config.getConfigOrEmpty("shrine.queryEntryPoint")))
 
-    val base64Cert = new String(TextCodec.BASE64URL.encode(shrineCertCollection.myCert.get.getEncoded))
+    val base64Cert = new String(TextCodec.BASE64URL.encode(shrineCertCollection.myEntry.cert.getEncoded))
 
-    val key: PrivateKey = shrineCertCollection.myKeyPair.privateKey
+    val key: PrivateKey = shrineCertCollection.myEntry.privateKey.get
     val expiration: Date = new Date(System.currentTimeMillis() + 30 * 1000)
     val jwtsString = Jwts.builder().
         setHeaderParam("kid", base64Cert).

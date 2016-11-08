@@ -1,11 +1,16 @@
 package net.shrine.status
 
+import java.security.cert.X509Certificate
 import java.util.Date
+import javax.net.ssl.{KeyManager, SSLContext, X509TrustManager}
 import javax.ws.rs.core.{MediaType, Response}
 import javax.ws.rs.{GET, Path, Produces, WebApplicationException}
 
+import akka.actor.ActorSystem
+import akka.io.IO
+import akka.util.Timeout
 import com.sun.jersey.spi.container.{ContainerRequest, ContainerRequestFilter}
-import com.typesafe.config.{Config => TsConfig}
+import com.typesafe.config.{ConfigFactory, Config => TsConfig}
 import net.shrine.authorization.{QueryAuthorizationService, StewardQueryAuthorizationService}
 import net.shrine.broadcaster._
 import net.shrine.client.PosterOntClient
@@ -22,7 +27,12 @@ import net.shrine.util.{PeerToPeerModel, SingleHubModel, Versions}
 import net.shrine.wiring.ShrineOrchestrator
 import org.json4s.native.Serialization
 import org.json4s.{DefaultFormats, Formats}
+import spray.can.Http
+import spray.can.Http.{HostConnectorInfo, HostConnectorSetup}
+import spray.client.pipelining._
+import spray.http.{HttpRequest, HttpResponse}
 import spray.httpx.Json4sSupport
+import spray.io.{ClientSSLEngineProvider, PipelineContext, SSLContextProvider}
 
 import scala.collection.JavaConverters._
 import scala.collection.immutable.{Map, Seq, Set}
@@ -145,7 +155,7 @@ object KeyStoreReport {
       case HubCertCollection(caEntry, _, _)        => Some(caEntry)
       case px: PeerCertCollection                  => None
     }
-    val siteStatusesPreZip = Client(certCollection.remoteSites.toList)
+    val siteStatusesPreZip = ShaVerificationService(certCollection.remoteSites.toList)
     val siteStatuses = siteStatusesPreZip.zipWithIndex
 
     def sortFormat(input: String):Option[String] = {
@@ -485,12 +495,60 @@ class PermittedHostOnly extends ContainerRequestFilter {
 
 }
 
-object Client extends Loggable {
-  //todo: Cut out CURL
+object ShaVerificationService extends Loggable with DefaultJsonSupport {
+  //todo: remove duplication with StewardQueryAuthorizationService
   import org.json4s.native.JsonMethods.parse
+  import akka.pattern.ask
 
-  import scala.concurrent.ExecutionContext.Implicits.global
-  import sys.process._
+  import system.dispatcher
+
+  // execution context for futures
+  implicit val system = ActorSystem("AuthorizationServiceActors", ConfigFactory.load("shrine")) //todo use shrine's config
+
+  def sendHttpRequest(httpRequest: HttpRequest): Future[HttpResponse] = {
+    implicit val timeout: Timeout = Timeout.durationToTimeout(new FiniteDuration(10, duration.SECONDS)) //10 seconds
+
+    implicit def json4sFormats: Formats = DefaultFormats
+
+    implicit def trustfulSslContext: SSLContext = {
+      object BlindFaithX509TrustManager extends X509TrustManager {
+        def checkClientTrusted(chain: Array[X509Certificate], authType: String) = info(s"Client asked BlindFaithX509TrustManager to check $chain for $authType")
+
+        def checkServerTrusted(chain: Array[X509Certificate], authType: String) = info(s"Server asked BlindFaithX509TrustManager to check $chain for $authType")
+
+        def getAcceptedIssuers = Array[X509Certificate]()
+      }
+
+      val context = SSLContext.getInstance("TLS")
+      context.init(Array[KeyManager](), Array(BlindFaithX509TrustManager), null)
+      context
+    }
+
+    implicit def trustfulSslContextProvider: SSLContextProvider = {
+      SSLContextProvider.forContext(trustfulSslContext)
+    }
+
+    class CustomClientSSLEngineProvider extends ClientSSLEngineProvider {
+      def apply(pc: PipelineContext) = ClientSSLEngineProvider.default(trustfulSslContextProvider).apply(pc)
+    }
+
+    implicit def sslEngineProvider: ClientSSLEngineProvider = new CustomClientSSLEngineProvider
+
+    val responseFuture: Future[HttpResponse] = for {
+      HostConnectorInfo(hostConnector, _) <- {
+        val hostConnectorSetup = new HostConnectorSetup(httpRequest.uri.authority.host.address,
+          httpRequest.uri.authority.port,
+          sslEncryption = httpRequest.uri.scheme == "https")(
+          sslEngineProvider = sslEngineProvider)
+
+        IO(Http) ask hostConnectorSetup
+      }
+      response <- sendReceive(hostConnector).apply(httpRequest)
+      _ <- hostConnector ask Http.CloseAll
+    } yield response
+
+    responseFuture
+  }
 
   type MaybeSiteStatus = Future[Option[SiteStatus]]
 
@@ -500,21 +558,25 @@ object Client extends Loggable {
 
   def curl(site: RemoteSite): MaybeSiteStatus = {
     implicit val formats = org.json4s.DefaultFormats
-    val command = s"curl -sk https://${site.url}/shrine-dashboard/status/verifySignature --data sha256=${site.sha256}"
-    Future {
-      for {response <- Try(parse(command.!!).extract[ShaResponse]).toOption
-           status <- response match {
-             case BadShaResponse              => error(s"Somehow, this client is sending an incorrectly formatted SHA256 signature to the dashboard. Offending sig: ${site.sha256}");
-                                                  None
-             case FoundShaResponse(sha256)    => Some(SiteStatus(site.alias, theyHaveMine = true, haveTheirs = doWeHaveCert(sha256), site.url))
-             case NotFoundShaResponse(sha256) => Some(SiteStatus(site.alias, theyHaveMine = false, haveTheirs = doWeHaveCert(sha256), site.url))
-           }} yield status
-    }
+    val request = Post(s"https://${site.url}:${site.port}/shrine-dashboard/status/verifySignature", Map("sha256" -> site.sha256))
+
+    for {response <- sendHttpRequest(request)
+         status = parse(new String(response.entity.data.toByteArray)).extractOpt[ShaResponse] match {
+           case Some(BadShaResponse)              => {
+             error(s"Somehow, this client is sending an incorrectly formatted SHA256 signature to the dashboard. Offending sig: ${site.sha256}")
+             None
+           }
+           case Some(FoundShaResponse(sha256))    => Some(SiteStatus(site.alias, theyHaveMine = true, haveTheirs = doWeHaveCert(sha256), site.url))
+           case Some(NotFoundShaResponse(sha256)) => Some(SiteStatus(site.alias, theyHaveMine = false, haveTheirs = doWeHaveCert(sha256), site.url))
+           case None                              => {
+             error(s"Unable to parse the result of the verifySignature call into a ShaResponse")
+             None
+           }
+         }} yield status
   }
 
-  def doWeHaveCert(sha256:String): Boolean = UtilHasher(ShrineOrchestrator.certCollection).handleSig(sha256) match {
+  def doWeHaveCert(sha256: String): Boolean = UtilHasher(ShrineOrchestrator.certCollection).handleSig(sha256) match {
     case FoundShaResponse(_) => true
-    case _ => false
+    case _                   => false
   }
-
 }
