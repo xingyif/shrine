@@ -8,7 +8,6 @@ import scala.concurrent.duration.Duration
  * @date Nov 27, 2013
  */
 
-//todo delete this interface . Only one thing implements it.
 trait Verifier {
   def verifySig(message: BroadcastMessage, maxSignatureAge: Duration): Boolean
 }
