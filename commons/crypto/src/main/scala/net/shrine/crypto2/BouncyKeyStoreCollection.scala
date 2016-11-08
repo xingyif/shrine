@@ -92,9 +92,11 @@ object BouncyKeyStoreCollection extends Loggable {
       if (!isHub && rsds.head.keyStoreAlias.get != caEntry.aliases.first)
         Left(configureError(IncorrectAliasMapping(rsds.head.keyStoreAlias.get +: Nil, caEntry +: Nil)))
       else if (isHub && privateEntry.wasSignedBy(caEntry))
-        Right(HubCertCollection(privateEntry, caEntry, rsds.map(rsd => RemoteSite(rsd.url, None, rsd.siteAlias))))
-      else if (privateEntry.wasSignedBy(caEntry))
-        Right(DownStreamCertCollection(privateEntry, caEntry, RemoteSite(rsds.head.url, Some(caEntry), rsds.head.siteAlias)))
+        Right(HubCertCollection(privateEntry, caEntry, rsds.map(rsd => RemoteSite(rsd.url, None, rsd.siteAlias, rsd.port))))
+      else if (privateEntry.wasSignedBy(caEntry)) {
+        val rsd = rsds.head
+        Right(DownStreamCertCollection(privateEntry, caEntry, RemoteSite(rsd.url, Some(caEntry), rsd.siteAlias, rsd.port)))
+      }
       else
         Left(configureError(NotSignedByCa(privateEntry +: Nil, caEntry)))
       }
@@ -102,7 +104,7 @@ object BouncyKeyStoreCollection extends Loggable {
 
   def remoteDescriptorToRemoteSite(descriptor: KeyStoreDescriptor, entries: Set[KeyStoreEntry]): Seq[RemoteSite] = {
     descriptor.remoteSiteDescriptors.map(rsd => // Only safe with Peer/Downstream collections
-      RemoteSite(rsd.url, entries.find(_.aliases.contains(rsd.keyStoreAlias.get)), rsd.siteAlias))
+      RemoteSite(rsd.url, entries.find(_.aliases.contains(rsd.keyStoreAlias.get)), rsd.siteAlias, rsd.port))
   }
 
   /**

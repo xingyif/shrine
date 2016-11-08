@@ -40,7 +40,7 @@ final class ScannerConfigTest extends ShouldMatchersForJUnit {
         Seq("carra ca"),
         KeyStoreType.PKCS12,
         SingleHubModel(false),
-        Seq(RemoteSiteDescriptor("Hub", Some("carra ca"), "localhost"))
+        Seq(RemoteSiteDescriptor("Hub", Some("carra ca"), "localhost", "8080"))
       ))
       scannerConfig.pmUrl should equal("http://example.com/pm")
     }

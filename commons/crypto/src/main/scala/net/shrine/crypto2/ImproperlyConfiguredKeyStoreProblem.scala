@@ -47,22 +47,20 @@ object CryptoErrors {
 
   private[crypto2] def noKeyError(myEntry: KeyStoreEntry) = {
     val illegalEntry = new IllegalArgumentException(s"The provided keystore entry $myEntry did not have a private key")
-    Log.error(ImproperlyConfiguredKeyStoreProblem(Some(illegalEntry),
+    val problem = ImproperlyConfiguredKeyStoreProblem(Some(illegalEntry),
       s"The KeyStore entry identified as the signing cert for this node did not provide a private key to sign with." +
-        s" Please check the KeyStore entry with the alias `${myEntry.aliases.first}`.").toDigest)
-    throw illegalEntry
+        s" Please check the KeyStore entry with the alias `${myEntry.aliases.first}`.")
+    throw problem.throwable.get
   }
 
   private[crypto2] def invalidSiganatureFormat(bytes: Array[Byte]) = {
     val illegalSignature = new IllegalArgumentException("Given a signature with bytes that are not valid CMSSignedData")
-    Log.error(InvalidSignatureFormatProblem(bytes, Some(illegalSignature)).toDigest)
-    throw illegalSignature
+    val problem = InvalidSignatureFormatProblem(bytes, Some(illegalSignature))
+    throw problem.throwable.get
   }
 
   private[crypto2] def configureError(description: String): ImproperlyConfiguredKeyStoreProblem = {
-    val err = ImproperlyConfiguredKeyStoreProblem(Some(ImproperlyConfiguredKeyStoreException(description)), description)
-    Log.error(err.toDigest)
-    err
+    ImproperlyConfiguredKeyStoreProblem(Some(ImproperlyConfiguredKeyStoreException(description)), description)
   }
 }
 

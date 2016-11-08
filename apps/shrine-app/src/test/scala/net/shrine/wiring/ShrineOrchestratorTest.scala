@@ -1,15 +1,12 @@
 package net.shrine.wiring
 
+import java.net.URL
+import javax.ws.rs.core.MediaType
+
+import net.shrine.client.{EndpointConfig, JerseyHttpClient}
+import net.shrine.crypto.{NewTestKeyStore, TrustParam}
 import net.shrine.util.ShouldMatchersForJUnit
 import org.junit.Test
-import net.shrine.adapter.service.AdapterRequestHandler
-import net.shrine.protocol.BroadcastMessage
-import net.shrine.protocol.Result
-import net.shrine.client.{EndpointConfig, JerseyHttpClient}
-import net.shrine.crypto.NewTestKeyStore
-import java.net.URL
-import net.shrine.crypto.TrustParam
-import javax.ws.rs.core.MediaType
 
 /**
  * @author clint

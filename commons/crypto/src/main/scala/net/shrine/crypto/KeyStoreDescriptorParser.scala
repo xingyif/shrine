@@ -51,6 +51,10 @@ object KeyStoreDescriptorParser extends Loggable {
       url.split("(https://)|(:.*)")(1)
     }
 
+    def parsePort(url:String): String = {
+      url.split(':')(2).split('/')(0)
+    }
+
     def getRemoteSites: Seq[RemoteSiteDescriptor] = {
       tm match {
         case PeerToPeerModel => parseAliasMap
@@ -68,15 +72,16 @@ object KeyStoreDescriptorParser extends Loggable {
 
     def parseRemoteSitesForHub: Seq[RemoteSiteDescriptor] = {
       val downStreamAliases = hubConfig.getConfig(downStreamNodes).entrySet
-      downStreamAliases.map(entry =>
-        RemoteSiteDescriptor(entry.getKey, None, parseUrl(cvToString(entry.getValue)))).toList
+      downStreamAliases.map(entry => {
+        val url = cvToString(entry.getValue)
+        RemoteSiteDescriptor(entry.getKey, None, parseUrl(url), parsePort(url))}).toList
     }
 
     def parseRemoteSiteFromQep: Seq[RemoteSiteDescriptor] = {
       val aliases = getCaCertAliases
       assert(aliases.nonEmpty, "There has to be at least one caCertAlias") // TODO: Better error handling
-
-      RemoteSiteDescriptor("Hub", Some(aliases.head), parseUrl(qepConfig.getString(s"$qepEndpoint.$url"))) +: Nil
+      val qepUrl = qepConfig.getString(s"$qepEndpoint.$url")
+      RemoteSiteDescriptor("Hub", Some(aliases.head), parseUrl(qepUrl), parsePort(qepUrl)) +: Nil
     }
 
     def parseAliasMap: Seq[RemoteSiteDescriptor] = {
@@ -86,8 +91,9 @@ object KeyStoreDescriptorParser extends Loggable {
       (aliases ++ downStreamAliases).foreach(entry => assert(entry.getValue.valueType() == ConfigValueType.STRING))
       assert(aliases.size == aliases.map(_.getKey).intersect(downStreamAliases.map(_.getKey)).size)
 
-      aliases.map(siteAlias =>
-        RemoteSiteDescriptor(siteAlias.getKey, Some(cvToString(siteAlias.getValue)), parseUrl(cvToString(downStreamAliases.find(_.getKey == siteAlias.getKey).get.getValue)))).toSeq
+      aliases.map(siteAlias => {
+        val url = cvToString(downStreamAliases.find(_.getKey == siteAlias.getKey).get.getValue)
+        RemoteSiteDescriptor(siteAlias.getKey, Some(cvToString(siteAlias.getValue)), parseUrl(url), parsePort(url))}).toSeq
     }
 
     def getKeyStoreType: KeyStoreType = {
@@ -116,4 +122,4 @@ object KeyStoreDescriptorParser extends Loggable {
   }
 }
 
-case class RemoteSiteDescriptor(siteAlias: String, keyStoreAlias: Option[String], url: String)
+case class RemoteSiteDescriptor(siteAlias: String, keyStoreAlias: Option[String], url: String, port: String)
