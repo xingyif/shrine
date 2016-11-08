@@ -32,7 +32,7 @@ class DownStreamCertCollectionTest extends FlatSpec with Matchers {
       case _                             => fail("This should generate a DownstreamCertCollection!")
     }
 
-    val testEntry = CertificateCreator.createSelfSignedCertEntry("Not trusted", "testing", "stillTesting")
+    val testEntry = CertificateCreator.createSelfSignedCertEntry("notTrusted", "testing", "stillTesting")
 
     hubCertCollection.allEntries.size shouldBe 2
     hubCertCollection.myEntry.privateKey.isDefined shouldBe true
@@ -71,8 +71,8 @@ object CertificateCreator {
   }
 
   def createSignedCertEntry(alias: String, cn: String, dc: String, signingKey: PrivateKey, keyPair: KeyPair): KeyStoreEntry = {
-    val name: X500Name = new X500Name(cn)
-    val subject = new X500Name(dc)
+    val name: X500Name = new X500Name(s"cn=$cn")
+    val subject = new X500Name(s"dc=$dc")
     val serial = BigInteger.valueOf(System.currentTimeMillis())
     val notBefore = new Date(0)
     val notAfter = new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24 * 10)
