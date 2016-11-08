@@ -1,22 +1,15 @@
-import akka.actor.{Actor, ActorRefFactory}
+package metadata
+
 import com.typesafe.config.ConfigRenderOptions
 import net.shrine.log.Loggable
-import net.shrine.source.ConfigSource
 import spray.http.{StatusCode, StatusCodes}
-import spray.routing.{HttpService, Route}
+import spray.routing.{HttpService, _}
 
 import scala.util.Try
 
 /**
-  * A super simple API that provides access to the MetaData section of SHRINE's configuration
+  * Created by ty on 11/8/16.
   */
-
-class MetaDataActor extends Actor with MetaDataService {
-  override def receive: Receive = runRoute(route)
-
-  override def actorRefFactory: ActorRefFactory = context
-}
-
 trait MetaDataService extends HttpService with Loggable {
   lazy val config = MetaConfigSource.config.getConfig("shrine.metaData")
 
@@ -38,5 +31,3 @@ trait MetaDataService extends HttpService with Loggable {
         s"Could not find a value for the specified path `$key`")
   }
 }
-
-object MetaConfigSource extends ConfigSource

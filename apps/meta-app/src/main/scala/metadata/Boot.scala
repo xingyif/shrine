@@ -1,9 +1,14 @@
+package metadata
+
 import akka.actor.{ActorRef, ActorSystem, Props}
-import net.shrine.problem.{AbstractProblem, ProblemConfigSource, ProblemHandler, ProblemSources}
+import net.shrine.problem.{ProblemConfigSource, ProblemHandler}
 import spray.servlet.WebBoot
 
 import scala.util.control.NonFatal
 
+/**
+  * Created by ty on 11/8/16.
+  */
 // this class is instantiated by the servlet initializer
 // it needs to have a default constructor and implement
 // the spray.servlet.WebBoot trait
@@ -35,12 +40,4 @@ class Boot extends WebBoot {
     case x: ExceptionInInitializerError => CannotStartMetaData(x); throw x
   }
 
-}
-
-case class CannotStartMetaData(ex:Throwable) extends AbstractProblem(ProblemSources.Dsa) {
-  override def summary: String = "The MetaData API could not start due to an exception."
-
-  override def description: String = s"The MetaData API could not start due to ${throwable.get}"
-
-  override def throwable = Some(ex)
 }
