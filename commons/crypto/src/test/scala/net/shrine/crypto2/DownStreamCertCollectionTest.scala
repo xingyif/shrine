@@ -1,7 +1,8 @@
 package net.shrine.crypto2
 
 import java.math.BigInteger
-import java.security.{KeyPairGenerator, SecureRandom}
+import java.security.cert.X509Certificate
+import java.security.{KeyPair, KeyPairGenerator, PrivateKey, SecureRandom}
 import java.util.Date
 
 import net.shrine.crypto.NewTestKeyStore
@@ -22,16 +23,16 @@ import org.scalatest.{FlatSpec, Matchers}
 @RunWith(classOf[JUnitRunner])
 class DownStreamCertCollectionTest extends FlatSpec with Matchers {
   val descriptor = NewTestKeyStore.descriptor
-  val heyo = "Heyo!".getBytes("UTF-8")
+  val heyo       = "Heyo!".getBytes("UTF-8")
 
 
   "A down stream cert collection" should "build and verify its own messages" in {
     val hubCertCollection = BouncyKeyStoreCollection.fromFileRecoverWithClassPath(descriptor) match {
-      case hub:DownStreamCertCollection => hub
-      case _                            => fail("This should generate a DownstreamCertCollection!")
+      case hub: DownStreamCertCollection => hub
+      case _                             => fail("This should generate a DownstreamCertCollection!")
     }
 
-    val testEntry = KeyStoreEntry(TestCert.cert, NonEmptySeq("notTrusted", Nil), Some(TestCert.keyPair.getPrivate))
+    val testEntry = CertificateCreator.createSelfSignedCertEntry("Not trusted", "testing", "stillTesting")
 
     hubCertCollection.allEntries.size shouldBe 2
     hubCertCollection.myEntry.privateKey.isDefined shouldBe true
@@ -58,20 +59,36 @@ class DownStreamCertCollectionTest extends FlatSpec with Matchers {
   }
 }
 
-object TestCert {
+object CertificateCreator {
+
   // generate a key pair
-  val keyPairGenerator = KeyPairGenerator.getInstance("RSA", "BC")
-  keyPairGenerator.initialize(4096, new SecureRandom())
+  def createSelfSignedCertEntry(alias: String, cn: String, dc: String): KeyStoreEntry = {
+    val keyPairGenerator = KeyPairGenerator.getInstance("RSA", "BC")
+    keyPairGenerator.initialize(4096, new SecureRandom())
+    val keyPair = keyPairGenerator.generateKeyPair()
 
-  val keyPair              = keyPairGenerator.generateKeyPair()
-  val name: X500Name       = new X500Name("cn=testing")
-  val subject              = new X500Name("dc=stillTesting")
-  val serial               = BigInteger.valueOf(System.currentTimeMillis())
-  val notBefore            = new Date(0)
-  val notAfter             = new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24 * 10)
-  val subjectPublicKeyInfo = SubjectPublicKeyInfo.getInstance(ASN1Sequence.getInstance(keyPair.getPublic.getEncoded))
+    createSignedCertEntry(alias, cn, dc, keyPair.getPrivate, keyPair)
+  }
 
-  val certBuilder = new X509v3CertificateBuilder(name, serial, notBefore, notAfter, subject, subjectPublicKeyInfo)
-  val certHolder  = certBuilder.build(new JcaContentSignerBuilder("SHA256withRSA").setProvider("BC").build(keyPair.getPrivate))
-  val cert        = new JcaX509CertificateConverter().setProvider("BC").getCertificate(certHolder)
+  def createSignedCertEntry(alias: String, cn: String, dc: String, signingKey: PrivateKey, keyPair: KeyPair): KeyStoreEntry = {
+    val name: X500Name = new X500Name(cn)
+    val subject = new X500Name(dc)
+    val serial = BigInteger.valueOf(System.currentTimeMillis())
+    val notBefore = new Date(0)
+    val notAfter = new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24 * 10)
+    val subjectPublicKeyInfo = SubjectPublicKeyInfo.getInstance(ASN1Sequence.getInstance(keyPair.getPublic.getEncoded))
+
+    val certBuilder = new X509v3CertificateBuilder(name, serial, notBefore, notAfter, subject, subjectPublicKeyInfo)
+    val certHolder = certBuilder.build(new JcaContentSignerBuilder("SHA256withRSA").setProvider("BC").build(signingKey))
+    val cert = new JcaX509CertificateConverter().setProvider("BC").getCertificate(certHolder)
+    KeyStoreEntry(cert, NonEmptySeq(alias), Some(keyPair.getPrivate))
+  }
+
+  def createSignedCertFromEntry(alias: String, cn: String, dc: String, signingEntry: KeyStoreEntry): KeyStoreEntry = {
+    val keyPairGenerator = KeyPairGenerator.getInstance("RSA", "BC")
+    keyPairGenerator.initialize(4096, new SecureRandom())
+    val keyPair = keyPairGenerator.generateKeyPair()
+
+    createSignedCertEntry(alias, cn, dc, signingEntry.privateKey.get, keyPair)
+  }
 }
