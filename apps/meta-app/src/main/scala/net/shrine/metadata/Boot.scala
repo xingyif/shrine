@@ -1,4 +1,4 @@
-package metadata
+package net.shrine.metadata
 
 import akka.actor.{ActorRef, ActorSystem, Props}
 import net.shrine.problem.{ProblemConfigSource, ProblemHandler}

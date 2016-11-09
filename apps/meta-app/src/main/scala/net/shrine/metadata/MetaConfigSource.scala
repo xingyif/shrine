@@ -1,4 +1,4 @@
-package metadata
+package net.shrine.metadata
 
 import net.shrine.source.ConfigSource
 

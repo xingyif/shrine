@@ -1,4 +1,4 @@
-package metadata
+package net.shrine.metadata
 
 import com.typesafe.config.ConfigRenderOptions
 import net.shrine.log.Loggable
