@@ -25,7 +25,7 @@
      * @returns
      */
     function getUrl (endpoint, extension, toDashboard) {
-        toDashboard = toDashboard !== undefined || toDashboard !== ''? 'to-dashboard/' + toDashboard + '/': '';
+        toDashboard = toDashboard !== undefined && toDashboard !== ''? 'to-dashboard/' + toDashboard + '/': '';
         // -- local -- //
         var testUrl     = 'test/',
             urlKey      = 'shrine-dashboard';
