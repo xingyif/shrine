@@ -32,6 +32,20 @@ import org.squeryl.internals.DatabaseAdapter
 object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
 
   override def resources: Iterable[AnyRef] = {
+    val happy = happyResource
+    info("HAPPY LOADED")
+    val staus = statusJaxrs
+    info("STATUS LOADED")
+    val shrine = shrineResource
+    info("SHRINE RESOURCES LOADED")
+    val i2b2 = i2b2BroadcastResource
+    info("i2b2 LOADED")
+    val adapter = adapterResource
+    info("ADAPTER LOADED")
+    val i2b2Admin = i2b2AdminResource
+    info("I2B2 ADMIN LOADED")
+    val hub = hubComponents
+    info("HUB LOADED")
     Seq(happyResource,statusJaxrs) ++
       shrineResource ++
       i2b2BroadcastResource ++
@@ -55,7 +69,6 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
   protected lazy val keystoreTrustParam: TrustParam = TrustParam.BouncyKeyStore(certCollection)
   //todo used by the adapterServide and happyShrineService, but not by the QEP. maybe each can have its own signerVerivier
   lazy val signerVerifier = SignerVerifierAdapter(certCollection)
-
   protected lazy val dataSource: DataSource = TestableDataSourceCreator.dataSource(shrineConfig.getConfig("squerylDataSource.database"))
   protected lazy val squerylAdapter: DatabaseAdapter = SquerylDbAdapterSelecter.determineAdapter(shrineConfig.getString("shrineDatabaseType"))
   protected lazy val squerylInitializer: SquerylInitializer = new DataSourceSquerylInitializer(dataSource, squerylAdapter)

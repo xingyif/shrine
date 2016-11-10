@@ -176,6 +176,7 @@ object KeyStoreReport {
       case Success(None)         => Log.warn("There was an issue with the verifySignature endpoint, check that we have network connectivity")
         SiteStatus(certCollection.remoteSites(fut._2).alias, false, false, "", true)
       case Failure(exc)          => Log.warn("We timed out while trying to connect to the verifySignature endpoint, please check network connectivity")
+        throw exc
         SiteStatus(certCollection.remoteSites(fut._2).alias, false, false, "", true)
     })
 
@@ -595,5 +596,11 @@ object ShaVerificationService extends Loggable with DefaultJsonSupport {
     override def summary: String = "The client for handling certificate diagnostic across Dashboards in the Status Service received an invalid response from verifySignature"
 
     override def description: String = s"verifySig produced the invalid response `$response`"
+  }
+
+  def main(args: Array[String]): Unit = {
+    val entry = CertificateCreator.createSelfSignedCertEntry("boo", "der", "derder")
+
+    println(Await.result(curl(RemoteSite("shrine-dev1.catalyst", Some(entry), "alias", "6443")), new FiniteDuration(10, duration.SECONDS)))
   }
 }
