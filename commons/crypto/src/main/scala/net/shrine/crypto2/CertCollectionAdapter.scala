@@ -1,9 +1,8 @@
 package net.shrine.crypto2
 
-import java.security.{KeyStore, Principal}
+import java.security.{KeyStore, Principal, PrivateKey, PublicKey}
 import java.security.cert.X509Certificate
 
-import net.shrine.crypto.{CertCollection, KeyPair, KeyStoreDescriptor}
 import net.shrine.protocol.CertId
 
 
@@ -11,6 +10,7 @@ import net.shrine.protocol.CertId
   * Allows gradual replacement of the old crypto package by keeping the old
   * interface for now
   */
+//TODO: Delete when we no longer need CertCollection
 final case class CertCollectionAdapter(keyStoreCollection: BouncyKeyStoreCollection)
   extends BouncyKeyStoreCollection with CertCollection
 {
@@ -56,3 +56,5 @@ final case class CertCollectionAdapter(keyStoreCollection: BouncyKeyStoreCollect
   }
 
 }
+
+case class KeyPair(publicKey: PublicKey, privateKey: PrivateKey)

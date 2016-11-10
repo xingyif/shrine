@@ -3,15 +3,12 @@ package net.shrine.integration
 import scala.concurrent.Await
 import scala.concurrent.duration.DurationInt
 import org.junit.Test
-import net.shrine.crypto.DefaultSignerVerifier
-import net.shrine.crypto.NewTestKeyStore
 import net.shrine.protocol.BroadcastMessage
 import net.shrine.protocol.DeleteQueryRequest
 import net.shrine.protocol.DeleteQueryResponse
 import net.shrine.protocol.Result
 import com.sun.jersey.api.client.UniformInterfaceException
-import net.shrine.crypto.SigningCertStrategy
-import net.shrine.crypto2.SignerVerifierAdapter
+import net.shrine.crypto2.{NewTestKeyStore, SignerVerifierAdapter, SigningCertStrategy}
 
 /**
  * @author clint

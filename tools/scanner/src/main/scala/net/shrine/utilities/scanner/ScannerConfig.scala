@@ -1,14 +1,13 @@
 package net.shrine.utilities.scanner
 
 import scala.concurrent.duration.Duration
-import net.shrine.protocol.{ResultOutputTypes, AuthenticationInfo, Credential, ResultOutputType}
+import net.shrine.protocol.{AuthenticationInfo, Credential, ResultOutputType, ResultOutputTypes}
 import com.typesafe.config.Config
-import com.typesafe.config.ConfigFactory
 import com.typesafe.config.ConfigException
+
 import scala.util.Try
 import net.shrine.utilities.scallop.{Keys => BaseKeys}
-import net.shrine.crypto.{KeyStoreDescriptorParser, KeyStoreDescriptor}
-import net.shrine.config.Keys
+import net.shrine.crypto2.{KeyStoreDescriptor, KeyStoreDescriptorParser}
 
 /**
  * @author clint

@@ -1,11 +1,9 @@
 package net.shrine.crypto2
 
 import java.math.BigInteger
-import java.security.cert.X509Certificate
-import java.security.{KeyPair, KeyPairGenerator, PrivateKey, SecureRandom}
+import java.security.{KeyPairGenerator, PrivateKey, SecureRandom}
 import java.util.Date
 
-import net.shrine.crypto.NewTestKeyStore
 import net.shrine.util.NonEmptySeq
 import org.bouncycastle.asn1.ASN1Sequence
 import org.bouncycastle.asn1.x500.X500Name
@@ -70,7 +68,7 @@ object CertificateCreator {
     createSignedCertEntry(alias, cn, dc, keyPair.getPrivate, keyPair)
   }
 
-  def createSignedCertEntry(alias: String, cn: String, dc: String, signingKey: PrivateKey, keyPair: KeyPair): KeyStoreEntry = {
+  def createSignedCertEntry(alias: String, cn: String, dc: String, signingKey: PrivateKey, keyPair: java.security.KeyPair): KeyStoreEntry = {
     val name: X500Name = new X500Name(s"cn=$cn")
     val subject = new X500Name(s"dc=$dc")
     val serial = BigInteger.valueOf(System.currentTimeMillis())

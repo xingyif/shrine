@@ -15,17 +15,14 @@ import net.shrine.client.JerseyHttpClient
 import net.shrine.client.Poster
 import net.shrine.config.mappings.AdapterMappingsSource
 import net.shrine.config.mappings.FileSystemFormatDetectingAdapterMappingsSource
-import net.shrine.crypto.DefaultSignerVerifier
-import net.shrine.crypto.KeyStoreCertCollection
-import net.shrine.crypto.TrustParam.AcceptAllCerts
+import net.shrine.crypto2.TrustParam.AcceptAllCerts
 import net.shrine.hms.authentication.EcommonsPmAuthenticator
 import net.shrine.ont.data.OntologyDao
 import net.shrine.ont.data.ShrineSqlOntologyDao
 import net.shrine.protocol.NodeId
 import net.shrine.util.Versions
-import net.shrine.crypto.SigningCertStrategy
 import net.shrine.broadcaster.dao.HubDao
-import net.shrine.crypto2.{BouncyKeyStoreCollection, SignerVerifierAdapter}
+import net.shrine.crypto2.{BouncyKeyStoreCollection, SignerVerifierAdapter, SigningCertStrategy}
 import net.shrine.protocol.query.QueryDefinition
 import net.shrine.protocol.AuthenticationInfo
 import net.shrine.protocol.SingleNodeResult

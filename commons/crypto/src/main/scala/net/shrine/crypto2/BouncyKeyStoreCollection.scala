@@ -1,11 +1,10 @@
 package net.shrine.crypto2
 
 
-import java.io.{File, FileInputStream}
+import java.io.{File, FileInputStream, IOException, InputStream}
 import java.security.cert.X509Certificate
 import java.security.{KeyStore, PrivateKey, Security}
 
-import net.shrine.crypto._
 import net.shrine.log.Loggable
 import net.shrine.util._
 import org.bouncycastle.jce.provider.BouncyCastleProvider
@@ -13,7 +12,7 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider
 /**
   * Created by ty on 10/25/16.
   *
-  * Rewrite of [[net.shrine.crypto.CertCollection]]. Abstracts away the need to track down
+  * Rewrite of [[CertCollection]]. Abstracts away the need to track down
   * all the corresponding pieces of a KeyStore entry by collecting them into a collection
   * of [[KeyStoreEntry]]s.
   * See: [[DownStreamCertCollection]], [[PeerCertCollection]], [[CertCollectionAdapter]]
@@ -135,18 +134,41 @@ object BouncyKeyStoreCollection extends Loggable {
   }
 
 
-  //TODO: Move fromStreamHelper to crypto2
   def fromFileRecoverWithClassPath(descriptor: KeyStoreDescriptor): BouncyKeyStoreCollection = {
     val keyStore =
       if (new File(descriptor.file).exists)
-        KeyStoreCertCollection.fromStreamHelper(descriptor, new FileInputStream(_))
+        fromStreamHelper(descriptor, new FileInputStream(_))
       else
-        KeyStoreCertCollection.fromStreamHelper(descriptor, getClass.getClassLoader.getResourceAsStream(_))
+        fromStreamHelper(descriptor, getClass.getClassLoader.getResourceAsStream(_))
 
     BouncyKeyStoreCollection.keyStore = Some(keyStore)
     BouncyKeyStoreCollection.descriptor = Some(descriptor)
 
     createCertCollection(keyStore, descriptor)
       .fold(problem => throw problem.throwable.get, identity)
+  }
+
+  def fromStreamHelper(descriptor: KeyStoreDescriptor, streamFrom: String => InputStream): KeyStore = {
+    def toString(descriptor: KeyStoreDescriptor) = descriptor.copy(password = "********").toString
+
+    debug(s"Loading keystore using descriptor: ${toString(descriptor)}")
+
+    val stream = streamFrom(descriptor.file)
+
+    require(stream != null,s"null stream for descriptor ${toString(descriptor)}¬")
+
+    val keystore = KeyStore.getInstance(descriptor.keyStoreType.name)
+
+    try {
+      keystore.load(stream, descriptor.password.toCharArray)
+    } catch {case x:IOException => throw new IOException(s"Unable to load keystore from $descriptor",x)}
+
+    import scala.collection.JavaConverters._
+
+    debug(s"Keystore aliases: ${keystore.aliases.asScala.mkString(",")}")
+
+    debug(s"Keystore ${toString(descriptor)} loaded successfully")
+
+    keystore
   }
 }

@@ -9,7 +9,6 @@ import net.shrine.adapter.service.{AdapterService, I2b2AdminService}
 import net.shrine.adapter.translators.{ExpressionTranslator, QueryDefinitionTranslator}
 import net.shrine.client.{EndpointConfig, Poster}
 import net.shrine.config.mappings.{AdapterMappings, AdapterMappingsSource, ClasspathFormatDetectingAdapterMappingsSource}
-import net.shrine.crypto.{DefaultSignerVerifier, KeyStoreCertCollection}
 import net.shrine.dao.squeryl.SquerylInitializer
 import net.shrine.protocol.{HiveCredentials, NodeId, RequestType, ResultOutputType}
 import net.shrine.config.{ConfigExtensions, DurationConfigParser}

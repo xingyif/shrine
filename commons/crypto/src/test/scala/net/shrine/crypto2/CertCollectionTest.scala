@@ -1,4 +1,4 @@
-package net.shrine.crypto
+package net.shrine.crypto2
 
 import net.shrine.util.ShouldMatchersForJUnit
 import org.junit.Test

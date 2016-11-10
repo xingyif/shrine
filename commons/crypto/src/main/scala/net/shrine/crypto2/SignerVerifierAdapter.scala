@@ -2,7 +2,6 @@ package net.shrine.crypto2
 
 import javax.xml.datatype.XMLGregorianCalendar
 
-import net.shrine.crypto.{Signer, SigningCertStrategy, Verifier}
 import net.shrine.protocol.{BroadcastMessage, Signature}
 import net.shrine.util.{XmlDateHelper, XmlGcEnrichments}
 

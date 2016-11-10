@@ -10,7 +10,7 @@ import net.shrine.adapter.service.AdapterResource
 import net.shrine.adapter.service.JerseyTestComponent
 import net.shrine.client.JerseyHttpClient
 import net.shrine.client.Poster
-import net.shrine.crypto.TrustParam.AcceptAllCerts
+import net.shrine.crypto2.TrustParam.AcceptAllCerts
 import net.shrine.protocol.{NodeId, AuthenticationInfo, Credential, DefaultBreakdownResultOutputTypes}
 import net.shrine.adapter.client.AdapterClient
 

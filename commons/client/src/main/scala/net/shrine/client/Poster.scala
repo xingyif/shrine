@@ -1,6 +1,5 @@
 package net.shrine.client
 
-import net.shrine.crypto.KeyStoreCertCollection
 import net.shrine.crypto2.BouncyKeyStoreCollection
 
 /**

@@ -2,7 +2,7 @@ package net.shrine.qep
 
 import com.sun.jersey.api.client.UniformInterfaceException
 import net.shrine.client.JerseyShrineClient
-import net.shrine.crypto.TrustParam.AcceptAllCerts
+import net.shrine.crypto2.TrustParam.AcceptAllCerts
 import net.shrine.protocol.{AggregatedReadInstanceResultsResponse, AggregatedReadQueryResultResponse, AggregatedReadTranslatedQueryDefinitionResponse, AggregatedRunQueryResponse, ApprovedTopic, AuthenticationInfo, BaseShrineResponse, Credential, DefaultBreakdownResultOutputTypes, DeleteQueryRequest, DeleteQueryResponse, FlagQueryRequest, FlagQueryResponse, QueryResult, ReadApprovedQueryTopicsRequest, ReadApprovedQueryTopicsResponse, ReadInstanceResultsRequest, ReadPreviousQueriesRequest, ReadPreviousQueriesResponse, ReadQueryDefinitionRequest, ReadQueryDefinitionResponse, ReadQueryInstancesRequest, ReadQueryInstancesResponse, ReadQueryResultRequest, ReadTranslatedQueryDefinitionRequest, RenameQueryRequest, RenameQueryResponse, RequestType, ResultOutputType, RunQueryRequest, ShrineRequest, ShrineRequestHandler, UnFlagQueryRequest, UnFlagQueryResponse}
 import net.shrine.protocol.query.{QueryDefinition, Term}
 import net.shrine.util.{AbstractPortSearchingJerseyTest, JerseyAppDescriptor, ShouldMatchersForJUnit, XmlDateHelper}

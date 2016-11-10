@@ -1,7 +1,8 @@
 package net.shrine.client
 
+import net.shrine.crypto2.NewTestKeyStore
 import net.shrine.util.ShouldMatchersForJUnit
-import net.shrine.crypto.TrustParam.AcceptAllCerts
+import net.shrine.crypto2.TrustParam.AcceptAllCerts
 import net.shrine.protocol.AggregatedReadInstanceResultsResponse
 import net.shrine.protocol.AggregatedReadQueryResultResponse
 import net.shrine.protocol.AggregatedRunQueryResponse
@@ -25,9 +26,9 @@ import net.shrine.protocol.ShrineResponse
 import net.shrine.protocol.query.QueryDefinition
 import net.shrine.protocol.query.Term
 import net.shrine.util.XmlDateHelper
-import net.shrine.crypto.NewTestKeyStore
 import net.shrine.protocol.QueryMaster
 import net.shrine.protocol.DefaultBreakdownResultOutputTypes
+
 import scala.util.Success
 import scala.util.Try
 

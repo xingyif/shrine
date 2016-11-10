@@ -4,8 +4,6 @@ import net.shrine.util.ShouldMatchersForJUnit
 import org.junit.Test
 import net.shrine.protocol.NodeId
 import net.shrine.protocol.DeleteQueryResponse
-import net.shrine.crypto.DefaultSignerVerifier
-import net.shrine.crypto.NewTestKeyStore
 import net.shrine.protocol.AuthenticationInfo
 import net.shrine.protocol.Credential
 import net.shrine.protocol.BroadcastMessage
@@ -13,11 +11,9 @@ import net.shrine.protocol.DeleteQueryRequest
 import net.shrine.adapter.AdapterMap
 import net.shrine.adapter.DeleteQueryAdapter
 import net.shrine.adapter.dao.MockAdapterDao
-import net.shrine.adapter.RenameQueryAdapter
 import net.shrine.protocol.RenameQueryRequest
 import net.shrine.protocol.ErrorResponse
-import net.shrine.crypto.SigningCertStrategy
-import net.shrine.crypto2.SignerVerifierAdapter
+import net.shrine.crypto2.{NewTestKeyStore, SignerVerifierAdapter, SigningCertStrategy}
 
 /**
  * @author clint

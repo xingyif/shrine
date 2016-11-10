@@ -1,9 +1,9 @@
-package net.shrine.crypto
+package net.shrine.crypto2
 
-import java.security.cert.X509Certificate
-import java.security.KeyStore
-import net.shrine.protocol.CertId
 import java.security.Principal
+import java.security.cert.X509Certificate
+
+import net.shrine.protocol.CertId
 
 /**
  * @author clint
@@ -11,6 +11,9 @@ import java.security.Principal
  */
 
 //todo remove this trait. There is only KeyStoreCertCollection
+// Can safely remove once HappyShrineService is removed and CertID is taken out
+// Of broadcast signatures.
+@Deprecated
 trait CertCollection extends Iterable[X509Certificate] {
   def myCertId: Option[CertId]
   

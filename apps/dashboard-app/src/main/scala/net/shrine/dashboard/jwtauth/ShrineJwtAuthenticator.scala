@@ -1,22 +1,21 @@
 package net.shrine.dashboard.jwtauth
 
 import java.io.ByteArrayInputStream
-import java.security.{Key, Principal, PrivateKey}
 import java.security.cert.{CertificateFactory, X509Certificate}
+import java.security.{Key, Principal, PrivateKey}
 import java.util.Date
 
 import io.jsonwebtoken.impl.TextCodec
 import io.jsonwebtoken.{ClaimJwtException, Claims, Jws, Jwts, SignatureAlgorithm}
-import net.shrine.crypto.{KeyStoreCertCollection, KeyStoreDescriptorParser}
-import net.shrine.crypto2.{BouncyKeyStoreCollection, DownStreamCertCollection, HubCertCollection, PeerCertCollection}
-import net.shrine.dashboard.{DashboardConfigSource, KeyStoreInfo}
+import net.shrine.crypto2.{DownStreamCertCollection, HubCertCollection, PeerCertCollection}
+import net.shrine.dashboard.KeyStoreInfo
 import net.shrine.i2b2.protocol.pm.User
 import net.shrine.log.Loggable
 import net.shrine.protocol.Credential
 import spray.http.HttpHeaders.{Authorization, `WWW-Authenticate`}
 import spray.http.{HttpChallenge, HttpHeader, HttpRequest, OAuth2BearerToken}
-import spray.routing.AuthenticationFailedRejection.{CredentialsMissing, CredentialsRejected}
 import spray.routing.AuthenticationFailedRejection
+import spray.routing.AuthenticationFailedRejection.{CredentialsMissing, CredentialsRejected}
 import spray.routing.authentication._
 
 import scala.concurrent.{ExecutionContext, Future}

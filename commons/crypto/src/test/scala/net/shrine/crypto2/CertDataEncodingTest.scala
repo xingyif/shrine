@@ -1,9 +1,8 @@
-package net.shrine.crypto
+package net.shrine.crypto2
 
+import net.shrine.protocol.CertData
 import net.shrine.util.ShouldMatchersForJUnit
 import org.junit.Test
-import net.shrine.protocol.CertData
-import java.security.cert.Certificate
 
 /**
  * @author clint
@@ -12,7 +11,7 @@ import java.security.cert.Certificate
 final class CertDataEncodingTest extends ShouldMatchersForJUnit {
   @Test
   def testToCertificateKey: Unit = {
-    import NewTestKeyStore.certCollection
+    import net.shrine.crypto2.NewTestKeyStore.certCollection
     
     val cert = certCollection.myEntry.cert
     

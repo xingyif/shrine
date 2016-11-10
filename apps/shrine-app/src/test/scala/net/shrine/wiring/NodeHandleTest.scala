@@ -11,7 +11,7 @@ import net.shrine.adapter.service.AdapterRequestHandler
 import net.shrine.broadcaster.{IdAndUrl, NodeHandle}
 import net.shrine.client.JerseyHttpClient
 import net.shrine.client.Poster
-import net.shrine.crypto.TrustParam.AcceptAllCerts
+import net.shrine.crypto2.TrustParam.AcceptAllCerts
 import net.shrine.protocol.BroadcastMessage
 import net.shrine.protocol.NodeId
 import net.shrine.protocol.Result

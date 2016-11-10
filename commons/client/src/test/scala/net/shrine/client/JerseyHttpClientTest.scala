@@ -4,13 +4,10 @@ import org.junit.Test
 import com.sun.jersey.api.client.config.DefaultClientConfig
 import com.sun.jersey.client.urlconnection.HTTPSProperties
 import net.shrine.util.ShouldMatchersForJUnit
-import net.shrine.crypto.KeyStoreCertCollection
-import net.shrine.crypto.TrustParam
-import TrustParam.AcceptAllCerts
-import TrustParam.SomeKeyStore
-import net.shrine.crypto.KeyStoreDescriptor
-import net.shrine.crypto.NewTestKeyStore
 import com.sun.jersey.api.client.config.ClientConfig
+import net.shrine.crypto2.TrustParam.AcceptAllCerts
+import net.shrine.crypto2.{KeyStoreDescriptor, NewTestKeyStore, TrustParam}
+
 import scala.language.reflectiveCalls
 
 /**
