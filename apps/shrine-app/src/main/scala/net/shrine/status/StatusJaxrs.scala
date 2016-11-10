@@ -562,21 +562,16 @@ object ShaVerificationService extends Loggable with DefaultJsonSupport {
 
     for {response <- sendHttpRequest(request)
          status = parse(new String(response.entity.data.toByteArray)).extractOpt[ShaResponse] match {
-           case Some(BadShaResponse)              => {
+           case Some(ShaResponse(ShaResponse.badFormat, false)) =>
              error(s"Somehow, this client is sending an incorrectly formatted SHA256 signature to the dashboard. Offending sig: ${site.sha256}")
              None
-           }
-           case Some(FoundShaResponse(sha256))    => Some(SiteStatus(site.alias, theyHaveMine = true, haveTheirs = doWeHaveCert(sha256), site.url))
-           case Some(NotFoundShaResponse(sha256)) => Some(SiteStatus(site.alias, theyHaveMine = false, haveTheirs = doWeHaveCert(sha256), site.url))
-           case None                              => {
+           case Some(ShaResponse(sha256, true))                 => Some(SiteStatus(site.alias, theyHaveMine = true, haveTheirs = doWeHaveCert(sha256), site.url))
+           case Some(ShaResponse(sha256, false))                => Some(SiteStatus(site.alias, theyHaveMine = false, haveTheirs = doWeHaveCert(sha256), site.url))
+           case None                                            =>
              error(s"Unable to parse the result of the verifySignature call into a ShaResponse")
              None
-           }
          }} yield status
   }
 
-  def doWeHaveCert(sha256: String): Boolean = UtilHasher(ShrineOrchestrator.certCollection).handleSig(sha256) match {
-    case FoundShaResponse(_) => true
-    case _                   => false
-  }
+  def doWeHaveCert(sha256: String): Boolean = UtilHasher(ShrineOrchestrator.certCollection).handleSig(sha256).found
 }

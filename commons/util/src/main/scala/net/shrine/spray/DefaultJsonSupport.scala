@@ -11,10 +11,7 @@ trait DefaultJsonSupport extends Json4sSupport {
   override implicit def json4sFormats: Formats = DefaultFormats
 }
 
-trait ShaResponse extends DefaultJsonSupport
-
-object ShaResponse extends ShaResponse
-
-case class FoundShaResponse(sha256: String) extends ShaResponse
-case class NotFoundShaResponse(sha256: String) extends ShaResponse
-case object BadShaResponse extends ShaResponse
+case class ShaResponse(sha256: String, found:Boolean) extends DefaultJsonSupport
+object ShaResponse extends DefaultJsonSupport {
+  val badFormat = "Bad format"
+}

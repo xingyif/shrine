@@ -12,7 +12,7 @@ import net.shrine.crypto2.BouncyKeyStoreCollection
 import net.shrine.dashboard.jwtauth.ShrineJwtAuthenticator
 import net.shrine.i2b2.protocol.pm.User
 import net.shrine.protocol.Credential
-import net.shrine.spray.{FoundShaResponse, ShaResponse}
+import net.shrine.spray.ShaResponse
 import org.json4s.native.JsonMethods.parse
 import org.junit.runner.RunWith
 import org.scalatest.FlatSpec
@@ -298,7 +298,9 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
     Post("/admin/status/verifySignature", FormData(Seq("sha256" -> "foo"))) ~>
       addCredentials(adminCredentials) ~>
       route ~> check {
-      assertResult(OK)(status)
+      assertResult(StatusCodes.BadRequest)(status)
+      implicit val formats = ShaResponse.json4sFormats
+      assertResult(ShaResponse(ShaResponse.badFormat, false))(parse(new String(body.data.toByteArray)).extract[ShaResponse])
     }
   }
 
@@ -306,7 +308,10 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
     Post("/admin/status/verifySignature", FormData(Seq("sha256" -> "00:00:00:00:00:00:00:7C:4B:FD:8D:A8:0A:C7:A4:AA:13:3E:22:B3:57:A7:C6:B0:95:15:1B:22:C0:E5:15:9A"))) ~>
       addCredentials(adminCredentials) ~>
       route ~> check {
-      assertResult(OK)(status)
+      assertResult(NotFound)(status)
+      implicit val formats = ShaResponse.json4sFormats
+      assertResult(ShaResponse("65:AA:60:6C:CD:56:1F:C2:A6:90:AE:C9:01:61:96:B2:A5:EA:A5:05:A5:55:27:18:24:45:73:8F:15:A9:09:03", false)) (
+        parse(new String(body.data.toByteArray)).extract[ShaResponse])
     }
   }
 
@@ -316,8 +321,8 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
       route ~> check {
       assertResult(OK)(status)
       implicit val formats = ShaResponse.json4sFormats
-      assertResult(FoundShaResponse("65:AA:60:6C:CD:56:1F:C2:A6:90:AE:C9:01:61:96:B2:A5:EA:A5:05:A5:55:27:18:24:45:73:8F:15:A9:09:03"))(
-        parse(new String(body.data.toByteArray)).extract[FoundShaResponse]
+      assertResult(ShaResponse("65:AA:60:6C:CD:56:1F:C2:A6:90:AE:C9:01:61:96:B2:A5:EA:A5:05:A5:55:27:18:24:45:73:8F:15:A9:09:03", true))(
+        parse(new String(body.data.toByteArray)).extract[ShaResponse]
       )
     }
   }

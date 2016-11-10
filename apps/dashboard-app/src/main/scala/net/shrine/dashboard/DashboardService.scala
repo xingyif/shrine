@@ -208,10 +208,12 @@ trait DashboardService extends HttpService with Loggable {
     formField("sha256".as[String].?) { sha256: Option[String] =>
       val response = sha256.map(s => KeyStoreInfo.hasher.handleSig(s))
       implicit val format = ShaResponse.json4sFormats
-      if (response.isDefined)
-        complete(response.get)
-      else
-        complete(StatusCodes.BadRequest)
+      response match {
+        case None                                           => complete(StatusCodes.BadRequest)
+        case Some(sh@ShaResponse(ShaResponse.badFormat, _)) => complete(StatusCodes.BadRequest -> sh)
+        case Some(sh@ShaResponse(_, false))                 => complete(StatusCodes.NotFound -> sh)
+        case Some(sh@ShaResponse(_, true))                  => complete(StatusCodes.OK -> sh)
+      }
     }
   }
 

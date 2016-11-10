@@ -4,9 +4,7 @@ import java.security.MessageDigest
 import java.security.cert.X509Certificate
 
 import net.shrine.crypto2.BouncyKeyStoreCollection
-import net.shrine.spray.{BadShaResponse, FoundShaResponse, NotFoundShaResponse, ShaResponse}
-import org.bouncycastle.asn1.x500.style.{BCStyle, IETFUtils}
-import org.bouncycastle.cert.jcajce.JcaX509CertificateHolder
+import net.shrine.spray.ShaResponse
 
 
 /**
@@ -35,9 +33,9 @@ case class UtilHasher(certCollection: BouncyKeyStoreCollection) {
   def handleSig(sha256:String): ShaResponse = {
     val mySha =  UtilHasher.encodeCert(certCollection.myEntry.cert, "SHA-256")
     if (validSignatureFormat(sha256)) {
-      containsCertWithSig(sha256).fold(NotFoundShaResponse(mySha): ShaResponse)(_ => FoundShaResponse(mySha))
+      containsCertWithSig(sha256).fold(ShaResponse(mySha, found = false): ShaResponse)(_ => ShaResponse(mySha, found = true))
     } else {
-      BadShaResponse
+      ShaResponse(ShaResponse.badFormat, found = false)
     }
   }
 }
