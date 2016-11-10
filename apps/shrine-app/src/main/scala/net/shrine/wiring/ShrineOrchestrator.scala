@@ -52,8 +52,6 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
 
   //TODO: Don't assume keystore lives on the filesystem, could come from classpath, etc
   lazy val keyStoreDescriptor = KeyStoreDescriptorParser(shrineConfig.getConfig("keystore"), shrineConfig.getConfigOrEmpty("hub"), shrineConfig.getConfigOrEmpty("queryEntryPoint"))
-  println(shrineConfig.origin())
-  println(shrineConfig.getConfig("keystore"))
   lazy val certCollection: BouncyKeyStoreCollection = BouncyKeyStoreCollection.fromFileRecoverWithClassPath(keyStoreDescriptor)
   protected lazy val keystoreTrustParam: TrustParam = TrustParam.BouncyKeyStore(certCollection)
   //todo used by the adapterServide and happyShrineService, but not by the QEP. maybe each can have its own signerVerivier

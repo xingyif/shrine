@@ -1,12 +1,10 @@
 package net.shrine.status
 
-import java.io.File
-
 import com.typesafe.config.ConfigFactory
 import net.shrine.util.{ShouldMatchersForJUnit, SingleHubModel}
+import org.json4s.native.Serialization
 import org.json4s.{DefaultFormats, Formats}
 import org.junit.Test
-import org.json4s.native.Serialization
 
 import scala.collection.immutable.Map
 
@@ -124,7 +122,6 @@ class StatusJaxrsTest extends ShouldMatchersForJUnit {
   @Test
   def testKeyStore() = {
     val string = statusJaxrs.keystore
-    println(string)
     val actual = Serialization.read[KeyStoreReport](string)
   }
 
