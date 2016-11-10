@@ -1,9 +1,9 @@
-package net.shrine.crypto
+package net.shrine.crypto2
 
 /**
- * @author clint
- * @since Dec 4, 2014
- */
+  * @author clint
+  * @since Dec 4, 2014
+  */
 final case class SigningCertStrategy private (name: String, description: String, attachSigningCert: Boolean)
 
 object SigningCertStrategy {

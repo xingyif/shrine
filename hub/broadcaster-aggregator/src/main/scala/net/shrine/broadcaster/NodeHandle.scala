@@ -7,7 +7,7 @@ import net.shrine.adapter.client.{AdapterClient, InJvmAdapterClient, RemoteAdapt
 import net.shrine.adapter.service.AdapterRequestHandler
 import net.shrine.client.{JerseyHttpClient, Poster}
 import net.shrine.config.{ConfigExtensions, DurationConfigParser}
-import net.shrine.crypto.TrustParam
+import net.shrine.crypto2.TrustParam
 import net.shrine.protocol.{NodeId, ResultOutputType}
 
 /**

@@ -1,4 +1,4 @@
-package net.shrine.crypto
+package net.shrine.crypto2
 
 /**
  * @author clint

@@ -10,7 +10,8 @@ import com.sun.jersey.api.client.UniformInterface
 import com.sun.jersey.api.client.WebResource
 import JerseyHttpClient.createJerseyClient
 import javax.ws.rs.core.MediaType
-import net.shrine.crypto.TrustParam
+
+import net.shrine.crypto2.TrustParam
 import net.shrine.protocol.AggregatedReadInstanceResultsResponse
 import net.shrine.protocol.AggregatedReadQueryResultResponse
 import net.shrine.protocol.AggregatedRunQueryResponse
@@ -28,6 +29,7 @@ import net.shrine.protocol.query.QueryDefinition
 import net.shrine.util.UrlCheck
 import net.shrine.protocol.AggregatedReadTranslatedQueryDefinitionResponse
 import net.shrine.serialization.XmlUnmarshaller
+
 import scala.util.Try
 import net.shrine.protocol.FlagQueryResponse
 import net.shrine.protocol.UnFlagQueryResponse

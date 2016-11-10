@@ -5,7 +5,7 @@ import net.shrine.adapter.service.AdapterRequestHandler
 import net.shrine.broadcaster.dao.HubDao
 import net.shrine.broadcaster.{AdapterClientBroadcaster, NodeHandle}
 import net.shrine.config.{ConfigExtensions, DurationConfigParser}
-import net.shrine.crypto.TrustParam
+import net.shrine.crypto2.TrustParam
 import net.shrine.protocol.{NodeId, ResultOutputType}
 
 /**

@@ -1,5 +1,6 @@
-package net.shrine.crypto
-import net.shrine.util.{PeerToPeerModel, SingleHubModel, TrustModel}
+package net.shrine.crypto2
+
+import net.shrine.util.{SingleHubModel, TrustModel}
 
 /**
  * @author clint
@@ -12,9 +13,9 @@ final case class KeyStoreDescriptor(
     password: String,
     privateKeyAlias: Option[String],
     caCertAliases: Seq[String],
-    keyStoreType: KeyStoreType = KeyStoreType.Default,
-    trustModel: TrustModel = SingleHubModel(false),
-    remoteSiteDescriptors: Seq[RemoteSiteDescriptor] = Nil) // TODO: make this non-default once crypto is deleted
+    trustModel: TrustModel,
+    remoteSiteDescriptors: Seq[RemoteSiteDescriptor],
+    keyStoreType: KeyStoreType = KeyStoreType.Default) // TODO: make this non-default once crypto is deleted
 {
   override def toString = scala.runtime.ScalaRunTime._toString(this.copy(password = "REDACTED"))
 }

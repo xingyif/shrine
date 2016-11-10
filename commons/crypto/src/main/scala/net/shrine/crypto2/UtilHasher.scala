@@ -1,9 +1,8 @@
-package net.shrine.crypto
+package net.shrine.crypto2
 
 import java.security.MessageDigest
 import java.security.cert.X509Certificate
 
-import net.shrine.crypto2.BouncyKeyStoreCollection
 import net.shrine.spray.ShaResponse
 
 

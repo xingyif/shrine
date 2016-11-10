@@ -15,7 +15,6 @@ import net.shrine.authorization.{QueryAuthorizationService, StewardQueryAuthoriz
 import net.shrine.broadcaster._
 import net.shrine.client.PosterOntClient
 import net.shrine.config.ConfigExtensions
-import net.shrine.crypto.{KeyStoreDescriptor, SigningCertStrategy, UtilHasher}
 import net.shrine.crypto2._
 import net.shrine.log.{Log, Loggable}
 import net.shrine.ont.data.OntClientOntologyMetadata
@@ -31,15 +30,14 @@ import spray.can.Http
 import spray.can.Http.{HostConnectorInfo, HostConnectorSetup}
 import spray.client.pipelining._
 import spray.http.{HttpRequest, HttpResponse}
-import spray.httpx.Json4sSupport
 import spray.io.{ClientSSLEngineProvider, PipelineContext, SSLContextProvider}
 
 import scala.collection.JavaConverters._
 import scala.collection.immutable.{Map, Seq, Set}
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{Await, Future, duration}
-import scala.util.{Failure, Success, Try}
 import scala.util.control.NonFatal
+import scala.util.{Failure, Success, Try}
 
 /**
   * A subservice that shares internal state of the shrine servlet.
@@ -49,7 +47,7 @@ import scala.util.control.NonFatal
   */
 @Path("/internalstatus")
 @Produces(Array(MediaType.APPLICATION_JSON))
-case class StatusJaxrs(shrineConfig:TsConfig) extends Loggable {
+case class StatusJaxrs(shrineConfig: TsConfig) extends Loggable {
 
   implicit def json4sFormats: Formats = DefaultFormats + new NodeSeqSerializer
 
@@ -118,6 +116,7 @@ case class StatusJaxrs(shrineConfig:TsConfig) extends Loggable {
 
 
 }
+
 /* todo fill in later when you take the time to get the right parts in place SHRINE-1529
 case class KeyStoreEntryReport(
                               alias:String,
@@ -126,7 +125,9 @@ case class KeyStoreEntryReport(
                               )
 */
 case class SiteStatus(siteAlias: String, theyHaveMine: Boolean, haveTheirs: Boolean, url: String, timeOutError: Boolean = false) extends DefaultJsonSupport
+
 case class AbbreviatedKeyStoreEntry(alias: String, cn: String, md5: String) extends DefaultJsonSupport
+
 case class KeyStoreReport(
                            fileName: String,
                            password: String = "REDACTED",
@@ -158,7 +159,7 @@ object KeyStoreReport {
     val siteStatusesPreZip = ShaVerificationService(certCollection.remoteSites.toList)
     val siteStatuses = siteStatusesPreZip.zipWithIndex
 
-    def sortFormat(input: String):Option[String] = {
+    def sortFormat(input: String): Option[String] = {
       if (input.isEmpty) None
       else {
         def isLong(str: String) = str.split('=').headOption.getOrElse(str).length > 2
@@ -171,9 +172,9 @@ object KeyStoreReport {
     lazy val blockForSiteStatuses = siteStatuses.map(fut => Try(Await.result(fut._1, new FiniteDuration(10, duration.SECONDS))) match {
       case Success(Some(status)) => status
       case Success(None)         => Log.warn("There was an issue with the verifySignature endpoint, check that we have network connectivity")
-                                    SiteStatus(certCollection.remoteSites(fut._2).alias, false, false, "", true)
+        SiteStatus(certCollection.remoteSites(fut._2).alias, false, false, "", true)
       case Failure(exc)          => Log.warn("We timed out while trying to connect to the verifySignature endpoint, please check network connectivity")
-                                    SiteStatus(certCollection.remoteSites(fut._2).alias, false, false, "", true)
+        SiteStatus(certCollection.remoteSites(fut._2).alias, false, false, "", true)
     })
 
     new KeyStoreReport(
@@ -194,18 +195,18 @@ object KeyStoreReport {
         entry.commonName.getOrElse("No common name"),
         UtilHasher.encodeCert(entry.cert, "MD5"))).toList
 
-//      keyStoreContents = certCollection.caCerts.zipWithIndex.map((cert: ((Principal, X509Certificate), Int)) => KeyStoreEntryReport(keyStoreDescriptor.caCertAliases(cert._2),cert._1._1.getName,toMd5(cert._1._2))).to[List]
+      //      keyStoreContents = certCollection.caCerts.zipWithIndex.map((cert: ((Principal, X509Certificate), Int)) => KeyStoreEntryReport(keyStoreDescriptor.caCertAliases(cert._2),cert._1._1.getName,toMd5(cert._1._2))).to[List]
     )
   }
 }
 
-case class I2b2(pmUrl:String,
-                crcUrl:Option[String],
-                ontUrl:String,
-                i2b2Domain:String,
-                username:String,
-                crcProject:String,
-                ontProject:String)
+case class I2b2(pmUrl: String,
+                crcUrl: Option[String],
+                ontUrl: String,
+                i2b2Domain: String,
+                username: String,
+                crcProject: String,
+                ontProject: String)
 
 object I2b2 {
   def apply(): I2b2 = new I2b2(
@@ -217,65 +218,67 @@ object I2b2 {
     crcProject = ShrineOrchestrator.crcHiveCredentials.projectId,
     ontProject = ShrineOrchestrator.ontologyMetadata.client match {
       case client: PosterOntClient => client.hiveCredentials.projectId
-      case _ => ""
+      case _                       => ""
     }
   )
 }
 
-case class DownstreamNode(name:String, url:String)
+case class DownstreamNode(name: String, url: String)
 
 // Replaces StewardQueryAuthorizationService so that we never transmit a password
-case class Steward(stewardBaseUrl: String, qepUsername: String, password:String = "REDACTED")
+case class Steward(stewardBaseUrl: String, qepUsername: String, password: String = "REDACTED")
 
 case class Qep(
-                maxQueryWaitTimeMillis:Long,
-                create:Boolean,
-                attachSigningCert:Boolean,
-                authorizationType:String,
-                includeAggregateResults:Boolean,
-                authenticationType:String,
-                steward:Option[Steward],
-                broadcasterUrl:Option[String],
-                trustModel:String,
-                trustModelIsHub:Boolean
+                maxQueryWaitTimeMillis: Long,
+                create: Boolean,
+                attachSigningCert: Boolean,
+                authorizationType: String,
+                includeAggregateResults: Boolean,
+                authenticationType: String,
+                steward: Option[Steward],
+                broadcasterUrl: Option[String],
+                trustModel: String,
+                trustModelIsHub: Boolean
               )
 
-object Qep{
+object Qep {
   val key = "shrine.queryEntryPoint."
+
   import ShrineOrchestrator.queryEntryPointComponents
-  def apply():Qep = new Qep(
-    maxQueryWaitTimeMillis  = queryEntryPointComponents.fold(0L)(_.i2b2Service.queryTimeout.toMicros),
-    create                  = queryEntryPointComponents.isDefined,
-    attachSigningCert       = queryEntryPointComponents.fold(false)(_.i2b2Service.broadcastAndAggregationService.attachSigningCert),
-    authorizationType       = queryEntryPointComponents.fold("")(_.i2b2Service.authorizationService.getClass.getSimpleName),
+
+  def apply(): Qep = new Qep(
+    maxQueryWaitTimeMillis = queryEntryPointComponents.fold(0L)(_.i2b2Service.queryTimeout.toMicros),
+    create = queryEntryPointComponents.isDefined,
+    attachSigningCert = queryEntryPointComponents.fold(false)(_.i2b2Service.broadcastAndAggregationService.attachSigningCert),
+    authorizationType = queryEntryPointComponents.fold("")(_.i2b2Service.authorizationService.getClass.getSimpleName),
     includeAggregateResults = queryEntryPointComponents.fold(false)(_.i2b2Service.includeAggregateResult),
-    authenticationType      = queryEntryPointComponents.fold("")(_.i2b2Service.authenticator.getClass.getSimpleName),
-    steward                 = queryEntryPointComponents.flatMap(qec => checkStewardAuthorization(qec.shrineService.authorizationService)),
-    broadcasterUrl          = queryEntryPointComponents.flatMap(qec => checkBroadcasterUrl(qec.i2b2Service.broadcastAndAggregationService)),
-    trustModel              = ShrineOrchestrator.keyStoreDescriptor.trustModel.description,
-    trustModelIsHub         = ShrineOrchestrator.keyStoreDescriptor.trustModel match  {
+    authenticationType = queryEntryPointComponents.fold("")(_.i2b2Service.authenticator.getClass.getSimpleName),
+    steward = queryEntryPointComponents.flatMap(qec => checkStewardAuthorization(qec.shrineService.authorizationService)),
+    broadcasterUrl = queryEntryPointComponents.flatMap(qec => checkBroadcasterUrl(qec.i2b2Service.broadcastAndAggregationService)),
+    trustModel = ShrineOrchestrator.keyStoreDescriptor.trustModel.description,
+    trustModelIsHub = ShrineOrchestrator.keyStoreDescriptor.trustModel match {
       case sh: SingleHubModel => true
       case PeerToPeerModel    => false
     }
   )
 
   def checkStewardAuthorization(auth: QueryAuthorizationService): Option[Steward] = auth match {
-    case sa:StewardQueryAuthorizationService => Some(Steward(sa.stewardBaseUrl.toString, sa.qepUserName))
-    case _ => None
+    case sa: StewardQueryAuthorizationService => Some(Steward(sa.stewardBaseUrl.toString, sa.qepUserName))
+    case _                                    => None
   }
 
   //TODO: Double check with Dave that this is the right url
   def checkBroadcasterUrl(broadcaster: BroadcastAndAggregationService): Option[String] = broadcaster match {
-    case a:HubBroadcastAndAggregationService => a.broadcasterClient match {
+    case a: HubBroadcastAndAggregationService => a.broadcasterClient match {
       case PosterBroadcasterClient(poster, _) => Some(poster.url)
-      case _ => None
+      case _                                  => None
     }
-    case _ => None
+    case _                                    => None
   }
 }
 
 object DownstreamNodes {
-  def get():Seq[DownstreamNode] = {
+  def get(): Seq[DownstreamNode] = {
     ShrineOrchestrator.hubComponents.fold(Seq.empty[DownstreamNode])(_.broadcastDestinations.map(DownstreamNode(_)).to[Seq])
   }
 }
@@ -286,21 +289,21 @@ object DownstreamNode {
     nodeHandle.client.url.map(_.toString).getOrElse("not applicable"))
 }
 
-case class Adapter(crcEndpointUrl:String,
-                   setSizeObfuscation:Boolean,
-                   adapterLockoutAttemptsThreshold:Int,
-                   adapterMappingsFilename:Option[String],
-                   adapterMappingsDate:Option[Long]
+case class Adapter(crcEndpointUrl: String,
+                   setSizeObfuscation: Boolean,
+                   adapterLockoutAttemptsThreshold: Int,
+                   adapterMappingsFilename: Option[String],
+                   adapterMappingsDate: Option[Long]
                   )
 
 object
-Adapter{
-  def apply():Adapter = {
-    val crcEndpointUrl                  = ShrineOrchestrator.adapterComponents.fold("")(_.i2b2AdminService.crcUrl)
-    val setSizeObfuscation              = ShrineOrchestrator.adapterComponents.fold(false)(_.i2b2AdminService.obfuscate)
+Adapter {
+  def apply(): Adapter = {
+    val crcEndpointUrl = ShrineOrchestrator.adapterComponents.fold("")(_.i2b2AdminService.crcUrl)
+    val setSizeObfuscation = ShrineOrchestrator.adapterComponents.fold(false)(_.i2b2AdminService.obfuscate)
     val adapterLockoutAttemptsThreshold = ShrineOrchestrator.adapterComponents.fold(0)(_.i2b2AdminService.adapterLockoutAttemptsThreshold)
-    val adapterMappingsFileName         = mappingFileInfo.map(_._1)
-    val adapterMappingsFileDate         = mappingFileInfo.map(_._2)
+    val adapterMappingsFileName = mappingFileInfo.map(_._1)
+    val adapterMappingsFileDate = mappingFileInfo.map(_._2)
 
     Adapter(crcEndpointUrl, setSizeObfuscation, adapterLockoutAttemptsThreshold, adapterMappingsFileName, adapterMappingsFileDate)
   }
@@ -309,24 +312,24 @@ Adapter{
     ShrineOrchestrator.adapterComponents.map(ac => (ac.adapterMappings.source, ac.lastModified, ac.adapterMappings.version))
 }
 
-case class Hub(shouldQuerySelf:Boolean, //todo don't use this field any more. Drop it when possible
-               create:Boolean,
-               downstreamNodes:Seq[DownstreamNode])
+case class Hub(shouldQuerySelf: Boolean, //todo don't use this field any more. Drop it when possible
+               create: Boolean,
+               downstreamNodes: Seq[DownstreamNode])
 
-object Hub{
-  def apply():Hub = {
+object Hub {
+  def apply(): Hub = {
     val shouldQuerySelf = false
-    val create          = ShrineOrchestrator.hubComponents.isDefined
+    val create = ShrineOrchestrator.hubComponents.isDefined
     val downstreamNodes = DownstreamNodes.get()
     Hub(shouldQuerySelf, create, downstreamNodes)
   }
 }
 
 
-case class OptionalParts(isHub:Boolean,
-                         stewardEnabled:Boolean,
-                         shouldQuerySelf:Boolean, //todo don't use this field any more. Drop it when possible
-                         downstreamNodes:Seq[DownstreamNode])
+case class OptionalParts(isHub: Boolean,
+                         stewardEnabled: Boolean,
+                         shouldQuerySelf: Boolean, //todo don't use this field any more. Drop it when possible
+                         downstreamNodes: Seq[DownstreamNode])
 
 object OptionalParts {
   def apply(): OptionalParts = {
@@ -340,19 +343,19 @@ object OptionalParts {
 }
 
 case class Summary(
-                    isHub:Boolean,
-                    shrineVersion:String,
-                    shrineBuildDate:String,
-                    ontologyVersion:String,
-                    ontologyVersionTerm:String,
-                    ontologyTerm:String,
+                    isHub: Boolean,
+                    shrineVersion: String,
+                    shrineBuildDate: String,
+                    ontologyVersion: String,
+                    ontologyVersionTerm: String,
+                    ontologyTerm: String,
                     queryResult: Option[SingleNodeResult],
-                    adapterMappingsFileName:Option[String],
-                    adapterMappingsDate:Option[Long],
-                    adapterOk:Boolean,
-                    keystoreOk:Boolean,
-                    hubOk:Boolean,
-                    qepOk:Boolean
+                    adapterMappingsFileName: Option[String],
+                    adapterMappingsDate: Option[Long],
+                    adapterOk: Boolean,
+                    keystoreOk: Boolean,
+                    hubOk: Boolean,
+                    qepOk: Boolean
                   )
 
 object Summary {
@@ -384,7 +387,7 @@ object Summary {
 
     val message = runQueryRequest
 
-    val queryResult: Option[SingleNodeResult] = ShrineOrchestrator.adapterService.map{ adapterService =>
+    val queryResult: Option[SingleNodeResult] = ShrineOrchestrator.adapterService.map { adapterService =>
 
       import scala.concurrent.duration._
 
@@ -394,17 +397,17 @@ object Summary {
       val elapsed = (end - start).milliseconds
 
       resultAttempt match {
-        case scala.util.Success(result) => result
+        case scala.util.Success(result)    => result
         case scala.util.Failure(throwable) => FailureResult(NodeId("Local"), throwable)
       }
     }
 
     val adapterOk = queryResult.fold(true) {
-      case r:Result => true
-      case f:FailureResult => false
+      case r: Result        => true
+      case f: FailureResult => false
     }
 
-    val hubOk = ShrineOrchestrator.hubComponents.fold(true){ hubComponents =>
+    val hubOk = ShrineOrchestrator.hubComponents.fold(true) { hubComponents =>
       val maxQueryWaitTime = hubComponents.broadcasterMultiplexerService.maxQueryWaitTime
       val broadcaster: Broadcaster = hubComponents.broadcasterMultiplexerService.broadcaster
       val message = runQueryRequest
@@ -427,7 +430,7 @@ object Summary {
     }
     catch {
       case NonFatal(x) =>
-        Log.info("Problem while getting ontology version",x)
+        Log.info("Problem while getting ontology version", x)
         s"Unavailable due to: ${x.getMessage}"
     }
 
@@ -450,19 +453,19 @@ object Summary {
   }
 }
 
-case class Version(version:String)
+case class Version(version: String)
 
 //todo SortedMap when possible
-case class Json4sConfig(keyValues:Map[String,String])
+case class Json4sConfig(keyValues: Map[String, String])
 
-object Json4sConfig{
-  def isPassword(key:String):Boolean = {
-    if(key.toLowerCase.contains("password")) true
+object Json4sConfig {
+  def isPassword(key: String): Boolean = {
+    if (key.toLowerCase.contains("password")) true
     else false
   }
 
-  def apply(config:TsConfig):Json4sConfig = {
-    val entries: Set[(String, String)] = config.entrySet.asScala.to[Set].map(x => (x.getKey,x.getValue.render())).filterNot(x => isPassword(x._1))
+  def apply(config: TsConfig): Json4sConfig = {
+    val entries: Set[(String, String)] = config.entrySet.asScala.to[Set].map(x => (x.getKey, x.getValue.render())).filterNot(x => isPassword(x._1))
     val sortedMap: Map[String, String] = entries.toMap
     Json4sConfig(sortedMap)
   }
@@ -477,8 +480,8 @@ class PermittedHostOnly extends ContainerRequestFilter {
   //how to apply in http://stackoverflow.com/questions/4358213/how-does-one-intercept-a-request-during-the-jersey-lifecycle
   override def filter(requestContext: ContainerRequest): ContainerRequest = {
     val hostOfOrigin = requestContext.getBaseUri.getHost
-    val shrineConfig:TsConfig = ShrineOrchestrator.config
-    val permittedHostOfOrigin:String = shrineConfig.getOption("shrine.status.permittedHostOfOrigin",_.getString).getOrElse("localhost")
+    val shrineConfig: TsConfig = ShrineOrchestrator.config
+    val permittedHostOfOrigin: String = shrineConfig.getOption("shrine.status.permittedHostOfOrigin", _.getString).getOrElse("localhost")
 
     val path = requestContext.getPath
 
@@ -497,9 +500,8 @@ class PermittedHostOnly extends ContainerRequestFilter {
 
 object ShaVerificationService extends Loggable with DefaultJsonSupport {
   //todo: remove duplication with StewardQueryAuthorizationService
-  import org.json4s.native.JsonMethods.parse
   import akka.pattern.ask
-
+  import org.json4s.native.JsonMethods.parse
   import system.dispatcher
 
   // execution context for futures

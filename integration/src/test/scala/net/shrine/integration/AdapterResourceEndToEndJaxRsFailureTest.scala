@@ -1,15 +1,11 @@
 package net.shrine.integration
 
+import net.shrine.adapter.service.AdapterResource
+import net.shrine.crypto2.{NewTestKeyStore, SignerVerifierAdapter, SigningCertStrategy}
+import net.shrine.protocol.{BroadcastMessage, DeleteQueryRequest, ErrorResponse}
 import org.junit.Test
-import net.shrine.protocol.{BroadcastMessage, DefaultBreakdownResultOutputTypes, DeleteQueryRequest, DeleteQueryResponse, ErrorResponse, Result}
-import net.shrine.crypto.DefaultSignerVerifier
-import net.shrine.crypto.NewTestKeyStore
 
 import scala.concurrent.Await
-import com.sun.jersey.api.client.UniformInterfaceException
-import net.shrine.adapter.service.AdapterResource
-import net.shrine.crypto.SigningCertStrategy
-import net.shrine.crypto2.SignerVerifierAdapter
 
 /**
  * @author clint

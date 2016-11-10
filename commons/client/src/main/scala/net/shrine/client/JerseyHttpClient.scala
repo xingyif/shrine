@@ -1,37 +1,20 @@
 package net.shrine.client
 
-import java.security.KeyStore
-import java.security.SecureRandom
+import java.security.{KeyStore, SecureRandom}
 import java.security.cert.X509Certificate
-
-import com.sun.jersey.api.client.Client
-import com.sun.jersey.api.client.ClientResponse
-import com.sun.jersey.api.client.config.ClientConfig
-import com.sun.jersey.api.client.config.DefaultClientConfig
-import com.sun.jersey.client.urlconnection.HTTPSProperties
-import javax.net.ssl.HostnameVerifier
-import javax.net.ssl.KeyManagerFactory
-import javax.net.ssl.SSLContext
-import javax.net.ssl.SSLSession
-import javax.net.ssl.TrustManager
-import javax.net.ssl.TrustManagerFactory
-import javax.net.ssl.X509KeyManager
-import javax.net.ssl.X509TrustManager
+import javax.net.ssl._
 import javax.ws.rs.core.MediaType
 
-import net.shrine.crypto.{KeyStoreCertCollection, TrustParam}
-import TrustParam.{AcceptAllCerts, BouncyKeyStore, SomeKeyStore}
+import com.sun.jersey.api.client.{Client, ClientResponse, WebResource}
+import com.sun.jersey.api.client.config.{ClientConfig, DefaultClientConfig}
+import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter
+import com.sun.jersey.client.urlconnection.HTTPSProperties
+import net.shrine.crypto2.TrustParam.{AcceptAllCerts, BouncyKeyStore}
+import net.shrine.crypto2.{BouncyKeyStoreCollection, TrustParam}
 import net.shrine.log.Loggable
+import net.shrine.util.{StringEnrichments, XmlUtil}
 
 import scala.concurrent.duration._
-import net.shrine.util.XmlUtil
-
-import scala.xml.XML
-import scala.util.control.NonFatal
-import com.sun.jersey.api.client.WebResource
-import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter
-import net.shrine.crypto2.BouncyKeyStoreCollection
-import net.shrine.util.StringEnrichments
 
 /**
  * @author Bill Simons
@@ -154,11 +137,6 @@ object JerseyHttpClient {
       val context = tlsContext
 
       trustParam match {
-        case SomeKeyStore(certs) => {
-          context.init(Array(keyManager(certs.keystore, certs.descriptor.password.toCharArray)), Array(trustManager(certs.keystore)), null)
-
-          (context, null.asInstanceOf[HostnameVerifier])
-        }
         case AcceptAllCerts => {
           context.init(null, Array[TrustManager](TrustsAllCertsTrustManager), new SecureRandom)
 

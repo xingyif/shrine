@@ -1,7 +1,7 @@
 package net.shrine.utilities.scanner
 
 import com.typesafe.config.{ConfigException, ConfigFactory}
-import net.shrine.crypto.{KeyStoreDescriptor, KeyStoreType, RemoteSiteDescriptor}
+import net.shrine.crypto2.{KeyStoreDescriptor, KeyStoreType, RemoteSiteDescriptor}
 import net.shrine.util.{ShouldMatchersForJUnit, SingleHubModel}
 import org.junit.Test
 
@@ -38,9 +38,9 @@ final class ScannerConfigTest extends ShouldMatchersForJUnit {
         "chiptesting",
         Some("test-cert"),
         Seq("carra ca"),
-        KeyStoreType.PKCS12,
         SingleHubModel(false),
-        Seq(RemoteSiteDescriptor("Hub", Some("carra ca"), "localhost", "8080"))
+        Seq(RemoteSiteDescriptor("Hub", Some("carra ca"), "localhost", "8080")),
+        KeyStoreType.PKCS12
       ))
       scannerConfig.pmUrl should equal("http://example.com/pm")
     }

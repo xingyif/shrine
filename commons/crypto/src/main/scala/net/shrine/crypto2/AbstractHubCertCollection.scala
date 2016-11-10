@@ -60,3 +60,20 @@ abstract class AbstractHubCertCollection(override val myEntry: KeyStoreEntry, ca
     gen.generate(data, true).getEncoded
   }
 }
+
+
+/**
+  * Created by ty on 10/25/16.
+  */
+case class DownStreamCertCollection(override val myEntry: KeyStoreEntry, caEntry: KeyStoreEntry, hubSite: RemoteSite)
+  extends AbstractHubCertCollection(myEntry, caEntry)
+{
+  override val remoteSites = hubSite +: Nil
+}
+
+
+/**
+  * Created by ty on 11/4/16.
+  */
+case class HubCertCollection(override val myEntry: KeyStoreEntry, caEntry: KeyStoreEntry, override val remoteSites: Seq[RemoteSite])
+  extends AbstractHubCertCollection(myEntry, caEntry)

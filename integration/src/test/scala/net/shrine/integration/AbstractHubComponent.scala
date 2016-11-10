@@ -4,7 +4,7 @@ import net.shrine.adapter.client.RemoteAdapterClient
 import net.shrine.adapter.service.JerseyTestComponent
 import net.shrine.broadcaster.{AdapterClientBroadcaster, BroadcasterClient, InJvmBroadcasterClient, NodeHandle, PosterBroadcasterClient, SigningBroadcastAndAggregationService}
 import net.shrine.client.ShrineClient
-import net.shrine.crypto.SigningCertStrategy
+import net.shrine.crypto2.SigningCertStrategy
 import net.shrine.protocol.{AuthenticationInfo, DefaultBreakdownResultOutputTypes, NodeId}
 
 /**

@@ -4,7 +4,6 @@ import java.security._
 import java.security.cert.X509Certificate
 import java.util.Date
 
-import net.shrine.crypto.UtilHasher
 import net.shrine.util.NonEmptySeq
 import org.bouncycastle.asn1.x500.style.{BCStyle, IETFUtils}
 import org.bouncycastle.cert.X509CertificateHolder

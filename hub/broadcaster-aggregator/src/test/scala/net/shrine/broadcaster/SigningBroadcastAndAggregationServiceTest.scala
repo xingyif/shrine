@@ -4,12 +4,8 @@ import scala.concurrent.Await
 import org.junit.Test
 import net.shrine.util.ShouldMatchersForJUnit
 import net.shrine.aggregation.Aggregator
-import net.shrine.crypto.DefaultSignerVerifier
-import net.shrine.crypto.NewTestKeyStore
-import net.shrine.protocol.{AuthenticationInfo, BroadcastMessage, Credential, DeleteQueryRequest, ErrorResponse, FailureResult, FailureResult$, NodeId, Result, ShrineResponse, SingleNodeResult, Timeout}
-import net.shrine.crypto.SigningCertStrategy
-import net.shrine.broadcaster.dao.MockHubDao
-import net.shrine.crypto2.SignerVerifierAdapter
+import net.shrine.protocol.{AuthenticationInfo, BroadcastMessage, Credential, DeleteQueryRequest, ErrorResponse, FailureResult, NodeId, Result, ShrineResponse, SingleNodeResult, Timeout}
+import net.shrine.crypto2.{NewTestKeyStore, SignerVerifierAdapter, SigningCertStrategy}
 import net.shrine.problem.TestProblem
 
 /**

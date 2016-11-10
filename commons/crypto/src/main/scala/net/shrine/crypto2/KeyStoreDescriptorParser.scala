@@ -1,4 +1,4 @@
-package net.shrine.crypto
+package net.shrine.crypto2
 
 import com.typesafe.config.{Config, ConfigValue, ConfigValueType}
 import net.shrine.config.ConfigExtensions
@@ -28,6 +28,7 @@ object KeyStoreDescriptorParser extends Loggable {
 
   def apply(keyStoreConfig: Config, hubConfig: Config, qepConfig: Config): KeyStoreDescriptor = {
     import Keys._
+
     import scala.collection.JavaConversions._
 
     def getTrustModel: TrustModel = {
@@ -115,9 +116,9 @@ object KeyStoreDescriptorParser extends Loggable {
       keyStoreConfig.getString(password),
       keyStoreConfig.getOption(privateKeyAlias, _.getString),
       getCaCertAliases,
-      getKeyStoreType,
       tm,
-      getRemoteSites
+      getRemoteSites,
+      getKeyStoreType
     )
   }
 }

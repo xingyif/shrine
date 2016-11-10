@@ -7,12 +7,9 @@ import net.shrine.adapter.client.RemoteAdapterClient
 import net.shrine.client.JerseyHttpClient
 import net.shrine.client.Poster
 import net.shrine.client.TimeoutException
-import net.shrine.crypto.DefaultSignerVerifier
-import net.shrine.crypto.NewTestKeyStore
-import net.shrine.crypto.TrustParam.AcceptAllCerts
+import net.shrine.crypto2.TrustParam.AcceptAllCerts
 import net.shrine.protocol.{BroadcastMessage, DefaultBreakdownResultOutputTypes, DeleteQueryRequest, NodeId}
-import net.shrine.crypto.SigningCertStrategy
-import net.shrine.crypto2.SignerVerifierAdapter
+import net.shrine.crypto2.{NewTestKeyStore, SignerVerifierAdapter, SigningCertStrategy}
 
 /**
  * @author clint

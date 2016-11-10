@@ -1,12 +1,11 @@
 package net.shrine.happy
 
 import net.shrine.broadcaster.{Broadcaster, NodeHandle}
-import net.shrine.crypto.SigningCertStrategy
-import net.shrine.crypto2.CertCollectionAdapter
+import net.shrine.crypto2.{CertCollectionAdapter, SigningCertStrategy}
 import net.shrine.i2b2.protocol.pm.{GetUserConfigurationRequest, HiveConfig}
 import net.shrine.log.Loggable
 import net.shrine.protocol.query.{OccuranceLimited, QueryDefinition, Term}
-import net.shrine.protocol.{AuthenticationInfo, BroadcastMessage, Credential, FailureResult, FailureResult$, NodeId, Result, ResultOutputType, RunQueryRequest, Timeout}
+import net.shrine.protocol.{AuthenticationInfo, BroadcastMessage, Credential, FailureResult, NodeId, Result, ResultOutputType, RunQueryRequest, Timeout}
 import net.shrine.util.{StackTrace, Versions, XmlUtil}
 import net.shrine.wiring.ShrineOrchestrator
 
