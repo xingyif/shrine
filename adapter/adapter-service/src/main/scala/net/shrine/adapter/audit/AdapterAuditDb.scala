@@ -6,7 +6,7 @@ import javax.sql.DataSource
 import com.typesafe.config.Config
 import net.shrine.adapter.service.AdapterConfigSource
 import net.shrine.audit.{NetworkQueryId, QueryName, QueryTopicId, QueryTopicName, ShrineNodeId, Time, UserName}
-import net.shrine.crypto2.KeyStoreEntry
+import net.shrine.crypto.KeyStoreEntry
 import net.shrine.log.Loggable
 import net.shrine.protocol.{BroadcastMessage, RunQueryRequest, RunQueryResponse, ShrineResponse}
 import net.shrine.slick.TestableDataSourceCreator

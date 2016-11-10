@@ -3,7 +3,7 @@ package net.shrine.adapter.service
 import net.shrine.log.Loggable
 import net.shrine.protocol.{BaseShrineResponse, BroadcastMessage, ErrorResponse, NodeId, RequestType, Result, Signature}
 import net.shrine.adapter.AdapterMap
-import net.shrine.crypto2.Verifier
+import net.shrine.crypto.Verifier
 import net.shrine.problem.{AbstractProblem, ProblemSources}
 
 import scala.concurrent.duration.Duration

@@ -1,7 +1,7 @@
 package net.shrine.utilities.scanner
 
 import com.typesafe.config.{ConfigException, ConfigFactory}
-import net.shrine.crypto2.{KeyStoreDescriptor, KeyStoreType, RemoteSiteDescriptor}
+import net.shrine.crypto.{KeyStoreDescriptor, KeyStoreType, RemoteSiteDescriptor}
 import net.shrine.util.{ShouldMatchersForJUnit, SingleHubModel}
 import org.junit.Test
 

@@ -1,6 +1,6 @@
 package net.shrine.client
 
-import net.shrine.crypto2.BouncyKeyStoreCollection
+import net.shrine.crypto.BouncyKeyStoreCollection
 
 /**
  * @author clint

@@ -5,7 +5,7 @@ import net.shrine.authorization.AuthorizationResult.{NotAuthorized, Authorized}
 import net.shrine.log.Loggable
 import net.shrine.protocol.ApprovedTopic
 import net.shrine.client.JerseyHttpClient
-import net.shrine.crypto2.TrustParam.AcceptAllCerts
+import net.shrine.crypto.TrustParam.AcceptAllCerts
 import net.shrine.client.HttpCredentials
 import net.liftweb.json.DefaultFormats
 import net.liftweb.json.JsonAST.JValue

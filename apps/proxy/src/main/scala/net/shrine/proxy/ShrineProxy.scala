@@ -6,7 +6,7 @@ import scala.xml.XML
 import scala.xml.NodeSeq
 import net.shrine.client.JerseyHttpClient
 import net.shrine.client.HttpResponse
-import net.shrine.crypto2.TrustParam.AcceptAllCerts
+import net.shrine.crypto.TrustParam.AcceptAllCerts
 import net.shrine.client.HttpClient
 
 /**

@@ -15,7 +15,7 @@ import net.shrine.authorization.{QueryAuthorizationService, StewardQueryAuthoriz
 import net.shrine.broadcaster._
 import net.shrine.client.PosterOntClient
 import net.shrine.config.ConfigExtensions
-import net.shrine.crypto2._
+import net.shrine.crypto._
 import net.shrine.log.{Log, Loggable}
 import net.shrine.ont.data.OntClientOntologyMetadata
 import net.shrine.protocol._

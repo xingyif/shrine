@@ -11,7 +11,7 @@ import com.sun.jersey.api.client.WebResource
 import JerseyHttpClient.createJerseyClient
 import javax.ws.rs.core.MediaType
 
-import net.shrine.crypto2.TrustParam
+import net.shrine.crypto.TrustParam
 import net.shrine.protocol.AggregatedReadInstanceResultsResponse
 import net.shrine.protocol.AggregatedReadQueryResultResponse
 import net.shrine.protocol.AggregatedRunQueryResponse

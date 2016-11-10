@@ -4,7 +4,7 @@ import com.typesafe.config.Config
 import net.shrine.broadcaster.dao.HubDao
 import net.shrine.client.{EndpointConfig, Poster}
 import net.shrine.config.ConfigExtensions
-import net.shrine.crypto2.{BouncyKeyStoreCollection, Signer, SignerVerifierAdapter, SigningCertStrategy}
+import net.shrine.crypto.{BouncyKeyStoreCollection, Signer, SignerVerifierAdapter, SigningCertStrategy}
 import net.shrine.protocol.ResultOutputType
 
 /**

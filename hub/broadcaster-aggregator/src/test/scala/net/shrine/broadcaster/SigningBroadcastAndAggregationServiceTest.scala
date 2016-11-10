@@ -5,7 +5,7 @@ import org.junit.Test
 import net.shrine.util.ShouldMatchersForJUnit
 import net.shrine.aggregation.Aggregator
 import net.shrine.protocol.{AuthenticationInfo, BroadcastMessage, Credential, DeleteQueryRequest, ErrorResponse, FailureResult, NodeId, Result, ShrineResponse, SingleNodeResult, Timeout}
-import net.shrine.crypto2.{NewTestKeyStore, SignerVerifierAdapter, SigningCertStrategy}
+import net.shrine.crypto.{NewTestKeyStore, SignerVerifierAdapter, SigningCertStrategy}
 import net.shrine.problem.TestProblem
 
 /**

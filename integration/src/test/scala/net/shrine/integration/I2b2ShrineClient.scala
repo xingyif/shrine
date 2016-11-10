@@ -23,7 +23,7 @@ import net.shrine.protocol.AggregatedReadInstanceResultsResponse
 import net.shrine.protocol.AggregatedReadQueryResultResponse
 import net.shrine.protocol.DeleteQueryRequest
 import net.shrine.client.HttpResponse
-import net.shrine.crypto2.TrustParam
+import net.shrine.crypto.TrustParam
 import net.shrine.protocol.FlagQueryRequest
 import net.shrine.serialization.I2b2Marshaller
 import net.shrine.protocol.UnFlagQueryRequest

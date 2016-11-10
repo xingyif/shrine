@@ -7,7 +7,7 @@ import java.util.Date
 
 import io.jsonwebtoken.impl.TextCodec
 import io.jsonwebtoken.{ClaimJwtException, Claims, Jws, Jwts, SignatureAlgorithm}
-import net.shrine.crypto2.{DownStreamCertCollection, HubCertCollection, PeerCertCollection}
+import net.shrine.crypto.{DownStreamCertCollection, HubCertCollection, PeerCertCollection}
 import net.shrine.dashboard.KeyStoreInfo
 import net.shrine.i2b2.protocol.pm.User
 import net.shrine.log.Loggable

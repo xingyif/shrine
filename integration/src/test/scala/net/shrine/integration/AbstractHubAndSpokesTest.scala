@@ -2,7 +2,7 @@ package net.shrine.integration
 
 import net.shrine.adapter.service.{AdapterRequestHandler, AdapterResource, JerseyTestComponent}
 import net.shrine.client.{JerseyHttpClient, Poster}
-import net.shrine.crypto2.{CertCollectionAdapter, NewTestKeyStore, SignerVerifierAdapter, TrustParam}
+import net.shrine.crypto.{CertCollectionAdapter, NewTestKeyStore, SignerVerifierAdapter, TrustParam}
 import net.shrine.protocol.{AuthenticationInfo, CertId, Credential, NodeId}
 import org.junit.{After, Before}
 

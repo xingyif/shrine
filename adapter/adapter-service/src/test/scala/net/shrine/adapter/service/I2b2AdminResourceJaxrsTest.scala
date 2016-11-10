@@ -3,7 +3,7 @@ package net.shrine.adapter.service
 import com.sun.jersey.test.framework.{AppDescriptor, JerseyTest}
 import net.shrine.adapter.service.I2b2AdminResourceJaxrsTest._
 import net.shrine.client.JerseyHttpClient
-import net.shrine.crypto2.TrustParam.AcceptAllCerts
+import net.shrine.crypto.TrustParam.AcceptAllCerts
 import net.shrine.problem.TestProblem
 import net.shrine.protocol.{AbstractReadQueryDefinitionRequest, AuthenticationInfo, Credential, DefaultBreakdownResultOutputTypes, I2b2AdminReadQueryDefinitionRequest, I2b2AdminRequestHandler, I2b2AdminUserWithRole, QueryMaster, QueryResult, ReadI2b2AdminPreviousQueriesRequest, ReadI2b2AdminQueryingUsersRequest, ReadI2b2AdminQueryingUsersResponse, ReadPreviousQueriesResponse, ReadQueryDefinitionResponse, RunHeldQueryRequest, RunQueryResponse, ShrineResponse}
 import net.shrine.protocol.query.{QueryDefinition, Term}

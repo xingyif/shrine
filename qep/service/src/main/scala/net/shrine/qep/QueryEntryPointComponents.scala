@@ -7,7 +7,7 @@ import net.shrine.broadcaster.dao.HubDao
 import net.shrine.broadcaster.{BroadcastAndAggregationService, NodeHandle, SigningBroadcastAndAggregationService}
 import net.shrine.client.Poster
 import net.shrine.config.ConfigExtensions
-import net.shrine.crypto2.BouncyKeyStoreCollection
+import net.shrine.crypto.BouncyKeyStoreCollection
 import net.shrine.dao.squeryl.SquerylInitializer
 import net.shrine.hms.authentication.EcommonsPmAuthenticator
 import net.shrine.hms.authorization.HmsDataStewardAuthorizationService

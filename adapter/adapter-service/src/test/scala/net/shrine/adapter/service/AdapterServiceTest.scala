@@ -13,7 +13,7 @@ import net.shrine.adapter.DeleteQueryAdapter
 import net.shrine.adapter.dao.MockAdapterDao
 import net.shrine.protocol.RenameQueryRequest
 import net.shrine.protocol.ErrorResponse
-import net.shrine.crypto2.{NewTestKeyStore, SignerVerifierAdapter, SigningCertStrategy}
+import net.shrine.crypto.{NewTestKeyStore, SignerVerifierAdapter, SigningCertStrategy}
 
 /**
  * @author clint

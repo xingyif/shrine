@@ -12,7 +12,7 @@ import net.shrine.broadcaster.service.HubComponents
 import net.shrine.client._
 import net.shrine.config.ConfigExtensions
 import net.shrine.config.mappings.AdapterMappings
-import net.shrine.crypto2.{BouncyKeyStoreCollection, KeyStoreDescriptorParser, SignerVerifierAdapter, TrustParam}
+import net.shrine.crypto.{BouncyKeyStoreCollection, KeyStoreDescriptorParser, SignerVerifierAdapter, TrustParam}
 import net.shrine.dao.squeryl.{DataSourceSquerylInitializer, SquerylDbAdapterSelecter, SquerylInitializer}
 import net.shrine.happy.{HappyShrineResource, HappyShrineService}
 import net.shrine.log.Loggable

@@ -15,7 +15,7 @@ import net.shrine.protocol.Timeout
 import net.shrine.util.XmlDateHelper
 import net.shrine.protocol.BaseShrineResponse
 import net.shrine.broadcaster.dao.HubDao
-import net.shrine.crypto2.Signer
+import net.shrine.crypto.Signer
 
 /**
  * @author clint

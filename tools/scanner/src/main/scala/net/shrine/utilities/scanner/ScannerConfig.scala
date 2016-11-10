@@ -7,7 +7,7 @@ import com.typesafe.config.ConfigException
 
 import scala.util.Try
 import net.shrine.utilities.scallop.{Keys => BaseKeys}
-import net.shrine.crypto2.{KeyStoreDescriptor, KeyStoreDescriptorParser}
+import net.shrine.crypto.{KeyStoreDescriptor, KeyStoreDescriptorParser}
 
 /**
  * @author clint

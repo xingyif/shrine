@@ -1,7 +1,7 @@
 package net.shrine.utilities.batchquerier.components
 
-import net.shrine.crypto2.TrustParam
-import net.shrine.crypto2.TrustParam.AcceptAllCerts
+import net.shrine.crypto.TrustParam
+import net.shrine.crypto.TrustParam.AcceptAllCerts
 import net.shrine.utilities.batchquerier.HasTrustParam
 
 /**

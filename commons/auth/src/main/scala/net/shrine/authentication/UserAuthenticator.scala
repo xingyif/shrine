@@ -3,8 +3,8 @@ package net.shrine.authentication
 import com.typesafe.config.Config
 import net.shrine.authorization.steward.{qepRole, stewardRole}
 import net.shrine.client.{EndpointConfig, JerseyHttpClient, Poster}
-import net.shrine.crypto2.TrustParam.BouncyKeyStore
-import net.shrine.crypto2.{BouncyKeyStoreCollection, KeyStoreDescriptor, KeyStoreDescriptorParser}
+import net.shrine.crypto.TrustParam.BouncyKeyStore
+import net.shrine.crypto.{BouncyKeyStoreCollection, KeyStoreDescriptor, KeyStoreDescriptorParser}
 import net.shrine.i2b2.protocol.pm.{BadUsernameOrPasswordException, GetUserConfigurationRequest, PmUserWithoutProjectException, User}
 import net.shrine.log.Loggable
 import net.shrine.protocol.{AuthenticationInfo, Credential}
@@ -90,7 +90,7 @@ case class PmUserSource(config:Config) extends UserSource with Loggable {
 
   lazy val pmPoster: Poster = {
     val pmEndpoint: EndpointConfig = EndpointConfig(config.getConfig("shrine.pmEndpoint"))
-    import net.shrine.crypto2.TrustParam.AcceptAllCerts
+    import net.shrine.crypto.TrustParam.AcceptAllCerts
 
     val trustParam =  if (pmEndpoint.acceptAllCerts) AcceptAllCerts
     else {

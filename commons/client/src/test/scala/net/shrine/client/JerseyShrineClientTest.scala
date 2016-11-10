@@ -1,8 +1,8 @@
 package net.shrine.client
 
-import net.shrine.crypto2.NewTestKeyStore
+import net.shrine.crypto.NewTestKeyStore
 import net.shrine.util.ShouldMatchersForJUnit
-import net.shrine.crypto2.TrustParam.AcceptAllCerts
+import net.shrine.crypto.TrustParam.AcceptAllCerts
 import net.shrine.protocol.AggregatedReadInstanceResultsResponse
 import net.shrine.protocol.AggregatedReadQueryResultResponse
 import net.shrine.protocol.AggregatedRunQueryResponse

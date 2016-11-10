@@ -1,4 +1,4 @@
-package net.shrine.crypto2
+package net.shrine.crypto
 
 import com.typesafe.config.{Config, ConfigValue, ConfigValueType}
 import net.shrine.config.ConfigExtensions

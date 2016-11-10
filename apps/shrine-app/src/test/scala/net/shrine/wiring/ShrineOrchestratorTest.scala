@@ -4,7 +4,7 @@ import java.net.URL
 import javax.ws.rs.core.MediaType
 
 import net.shrine.client.{EndpointConfig, JerseyHttpClient}
-import net.shrine.crypto2.{NewTestKeyStore, TrustParam}
+import net.shrine.crypto.{NewTestKeyStore, TrustParam}
 import net.shrine.util.ShouldMatchersForJUnit
 import org.junit.Test
 

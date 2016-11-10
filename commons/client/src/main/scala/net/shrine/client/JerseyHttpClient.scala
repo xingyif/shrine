@@ -9,8 +9,8 @@ import com.sun.jersey.api.client.{Client, ClientResponse, WebResource}
 import com.sun.jersey.api.client.config.{ClientConfig, DefaultClientConfig}
 import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter
 import com.sun.jersey.client.urlconnection.HTTPSProperties
-import net.shrine.crypto2.TrustParam.{AcceptAllCerts, BouncyKeyStore}
-import net.shrine.crypto2.{BouncyKeyStoreCollection, TrustParam}
+import net.shrine.crypto.TrustParam.{AcceptAllCerts, BouncyKeyStore}
+import net.shrine.crypto.{BouncyKeyStoreCollection, TrustParam}
 import net.shrine.log.Loggable
 import net.shrine.util.{StringEnrichments, XmlUtil}
 

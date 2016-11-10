@@ -27,7 +27,7 @@ import net.shrine.adapter.translators.QueryDefinitionTranslator
 import net.shrine.adapter.translators.ExpressionTranslator
 import net.shrine.util.XmlDateHelper
 import net.shrine.protocol.query.QueryDefinition
-import net.shrine.crypto2.{CertCollectionAdapter, NewTestKeyStore, SignerVerifierAdapter, SigningCertStrategy}
+import net.shrine.crypto.{CertCollectionAdapter, NewTestKeyStore, SignerVerifierAdapter, SigningCertStrategy}
 
 /**
  * @author clint

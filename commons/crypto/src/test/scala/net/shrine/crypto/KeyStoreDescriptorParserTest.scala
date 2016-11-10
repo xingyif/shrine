@@ -1,4 +1,4 @@
-package net.shrine.crypto2
+package net.shrine.crypto
 
 import com.typesafe.config.ConfigFactory
 import net.shrine.util.{PeerToPeerModel, ShouldMatchersForJUnit, SingleHubModel}

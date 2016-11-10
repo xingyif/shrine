@@ -1,4 +1,4 @@
-package net.shrine.crypto2
+package net.shrine.crypto
 
 import java.math.BigInteger
 import java.security.{KeyPairGenerator, PrivateKey, SecureRandom}

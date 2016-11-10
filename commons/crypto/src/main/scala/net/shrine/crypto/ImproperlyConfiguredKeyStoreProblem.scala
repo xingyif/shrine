@@ -1,4 +1,4 @@
-package net.shrine.crypto2
+package net.shrine.crypto
 
 import javax.naming.ConfigurationException
 
@@ -45,7 +45,7 @@ object CryptoErrors {
   final def IncorrectAliasMapping(aliases: Iterable[String], entries: Entries) =
     s"The remote site aliases did not correspond to the aliases in the KeyStore.\n  Remote Site aliases: `${aliases.mkString(", ")}`\n  KeyStore Aliases: `${comma(entries)}`"
 
-  private[crypto2] def noKeyError(myEntry: KeyStoreEntry) = {
+  private[crypto] def noKeyError(myEntry: KeyStoreEntry) = {
     val illegalEntry = new IllegalArgumentException(s"The provided keystore entry $myEntry did not have a private key")
     val problem = ImproperlyConfiguredKeyStoreProblem(Some(illegalEntry),
       s"The KeyStore entry identified as the signing cert for this node did not provide a private key to sign with." +
@@ -53,13 +53,13 @@ object CryptoErrors {
     throw problem.throwable.get
   }
 
-  private[crypto2] def invalidSiganatureFormat(bytes: Array[Byte]) = {
+  private[crypto] def invalidSiganatureFormat(bytes: Array[Byte]) = {
     val illegalSignature = new IllegalArgumentException("Given a signature with bytes that are not valid CMSSignedData")
     val problem = InvalidSignatureFormatProblem(bytes, Some(illegalSignature))
     throw problem.throwable.get
   }
 
-  private[crypto2] def configureError(description: String): ImproperlyConfiguredKeyStoreProblem = {
+  private[crypto] def configureError(description: String): ImproperlyConfiguredKeyStoreProblem = {
     ImproperlyConfiguredKeyStoreProblem(Some(ImproperlyConfiguredKeyStoreException(description)), description)
   }
 }

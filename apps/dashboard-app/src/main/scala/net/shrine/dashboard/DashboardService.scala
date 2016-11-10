@@ -5,7 +5,7 @@ import akka.event.Logging
 import net.shrine.authentication.UserAuthenticator
 import net.shrine.authorization.steward.OutboundUser
 import net.shrine.config.ConfigExtensions
-import net.shrine.crypto2.{BouncyKeyStoreCollection, CertCollectionAdapter, KeyStoreDescriptorParser, UtilHasher}
+import net.shrine.crypto.{BouncyKeyStoreCollection, CertCollectionAdapter, KeyStoreDescriptorParser, UtilHasher}
 import net.shrine.dashboard.httpclient.HttpClientDirectives.{forwardUnmatchedPath, requestUriThenRoute}
 import net.shrine.dashboard.jwtauth.ShrineJwtAuthenticator
 import net.shrine.i2b2.protocol.pm.User

@@ -5,8 +5,8 @@ import com.sun.jersey.api.client.config.DefaultClientConfig
 import com.sun.jersey.client.urlconnection.HTTPSProperties
 import net.shrine.util.ShouldMatchersForJUnit
 import com.sun.jersey.api.client.config.ClientConfig
-import net.shrine.crypto2.TrustParam.AcceptAllCerts
-import net.shrine.crypto2.{KeyStoreDescriptor, NewTestKeyStore, TrustParam}
+import net.shrine.crypto.TrustParam.AcceptAllCerts
+import net.shrine.crypto.{KeyStoreDescriptor, NewTestKeyStore, TrustParam}
 
 import scala.language.reflectiveCalls
 

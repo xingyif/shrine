@@ -1,7 +1,7 @@
 package net.shrine.integration
 
 import net.shrine.adapter.service.AdapterResource
-import net.shrine.crypto2.{NewTestKeyStore, SignerVerifierAdapter, SigningCertStrategy}
+import net.shrine.crypto.{NewTestKeyStore, SignerVerifierAdapter, SigningCertStrategy}
 import net.shrine.protocol.{BroadcastMessage, DeleteQueryRequest, ErrorResponse}
 import org.junit.Test
 

@@ -1,4 +1,4 @@
-package net.shrine.crypto2
+package net.shrine.crypto
 
 import java.security.Principal
 import java.security.cert.X509Certificate

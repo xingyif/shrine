@@ -7,7 +7,7 @@ import io.jsonwebtoken.impl.TextCodec
 import io.jsonwebtoken.{Jwts, SignatureAlgorithm}
 import net.shrine.authorization.steward.OutboundUser
 import net.shrine.config.ConfigExtensions
-import net.shrine.crypto2.{BouncyKeyStoreCollection, KeyStoreDescriptorParser}
+import net.shrine.crypto.{BouncyKeyStoreCollection, KeyStoreDescriptorParser}
 import net.shrine.dashboard.jwtauth.ShrineJwtAuthenticator
 import net.shrine.i2b2.protocol.pm.User
 import net.shrine.protocol.Credential

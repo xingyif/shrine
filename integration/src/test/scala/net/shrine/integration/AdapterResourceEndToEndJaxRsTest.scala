@@ -8,7 +8,7 @@ import net.shrine.protocol.DeleteQueryRequest
 import net.shrine.protocol.DeleteQueryResponse
 import net.shrine.protocol.Result
 import com.sun.jersey.api.client.UniformInterfaceException
-import net.shrine.crypto2.{NewTestKeyStore, SignerVerifierAdapter, SigningCertStrategy}
+import net.shrine.crypto.{NewTestKeyStore, SignerVerifierAdapter, SigningCertStrategy}
 
 /**
  * @author clint

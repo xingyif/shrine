@@ -12,7 +12,7 @@ import net.shrine.protocol.AuthenticationInfo
 import net.shrine.client.Poster
 import net.shrine.client.JerseyHttpClient
 import net.shrine.broadcaster.BroadcasterClient
-import net.shrine.crypto2.TrustParam
+import net.shrine.crypto.TrustParam
 import net.shrine.protocol.DefaultBreakdownResultOutputTypes
 
 object Hubs {

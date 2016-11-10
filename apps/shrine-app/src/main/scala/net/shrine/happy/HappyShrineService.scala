@@ -1,7 +1,7 @@
 package net.shrine.happy
 
 import net.shrine.broadcaster.{Broadcaster, NodeHandle}
-import net.shrine.crypto2.{CertCollectionAdapter, SigningCertStrategy}
+import net.shrine.crypto.{CertCollectionAdapter, SigningCertStrategy}
 import net.shrine.i2b2.protocol.pm.{GetUserConfigurationRequest, HiveConfig}
 import net.shrine.log.Loggable
 import net.shrine.protocol.query.{OccuranceLimited, QueryDefinition, Term}

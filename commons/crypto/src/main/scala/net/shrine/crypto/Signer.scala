@@ -1,4 +1,4 @@
-package net.shrine.crypto2
+package net.shrine.crypto
 
 import net.shrine.protocol.BroadcastMessage
 

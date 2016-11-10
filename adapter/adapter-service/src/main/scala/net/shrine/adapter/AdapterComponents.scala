@@ -12,7 +12,7 @@ import net.shrine.config.mappings.{AdapterMappings, AdapterMappingsSource, Class
 import net.shrine.dao.squeryl.SquerylInitializer
 import net.shrine.protocol.{HiveCredentials, NodeId, RequestType, ResultOutputType}
 import net.shrine.config.{ConfigExtensions, DurationConfigParser}
-import net.shrine.crypto2.{BouncyKeyStoreCollection, SignerVerifierAdapter}
+import net.shrine.crypto.{BouncyKeyStoreCollection, SignerVerifierAdapter}
 import net.shrine.log.Log
 
 import scala.concurrent.duration.Duration
