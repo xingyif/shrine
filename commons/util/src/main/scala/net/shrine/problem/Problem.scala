@@ -210,6 +210,7 @@ object ProblemSources{
   case object Dsa extends ProblemSource
   case object Hub extends ProblemSource
   case object Qep extends ProblemSource
+  case object ShrineApp extends ProblemSource
   case object Unknown extends ProblemSource
 
   def problemSources = Set(Adapter,Commons,Dsa,Hub,Qep,Unknown)

@@ -1,5 +1,6 @@
 package net.shrine.status
 
+import java.security.Security
 import java.security.cert.X509Certificate
 import java.util.Date
 import javax.net.ssl.{KeyManager, SSLContext, X509TrustManager}
@@ -18,6 +19,7 @@ import net.shrine.config.ConfigExtensions
 import net.shrine.crypto._
 import net.shrine.log.{Log, Loggable}
 import net.shrine.ont.data.OntClientOntologyMetadata
+import net.shrine.problem.{AbstractProblem, ProblemSources}
 import net.shrine.protocol._
 import net.shrine.protocol.query.{OccuranceLimited, QueryDefinition, Term}
 import net.shrine.serialization.NodeSeqSerializer
@@ -29,7 +31,7 @@ import org.json4s.{DefaultFormats, Formats}
 import spray.can.Http
 import spray.can.Http.{HostConnectorInfo, HostConnectorSetup}
 import spray.client.pipelining._
-import spray.http.{HttpRequest, HttpResponse}
+import spray.http.{ContentType, ContentTypes, FormData, HttpCharsets, HttpEntity, HttpHeaders, HttpRequest, HttpResponse, MediaTypes}
 import spray.io.{ClientSSLEngineProvider, PipelineContext, SSLContextProvider}
 
 import scala.collection.JavaConverters._
@@ -501,7 +503,7 @@ class PermittedHostOnly extends ContainerRequestFilter {
 object ShaVerificationService extends Loggable with DefaultJsonSupport {
   //todo: remove duplication with StewardQueryAuthorizationService
   import akka.pattern.ask
-  import org.json4s.native.JsonMethods.parse
+  import org.json4s.native.JsonMethods.parseOpt
   import system.dispatcher
 
   // execution context for futures
@@ -555,25 +557,43 @@ object ShaVerificationService extends Loggable with DefaultJsonSupport {
   type MaybeSiteStatus = Future[Option[SiteStatus]]
 
   def apply(sites: Seq[RemoteSite]): Seq[MaybeSiteStatus] = {
-    sites.filter(_.entry.isDefined).map(curl)
+    sites.filter(site => site.entry.isDefined && site.sha256.isDefined).map(curl)
   }
 
   def curl(site: RemoteSite): MaybeSiteStatus = {
     implicit val formats = org.json4s.DefaultFormats
-    val request = Post(s"https://${site.url}:${site.port}/shrine-dashboard/status/verifySignature", Map("sha256" -> site.sha256))
+    val request = Post(s"https://${site.url}:${site.port}/shrine-dashboard/status/verifySignature")
+      .withEntity( // For some reason, FormData isn't producing the correct HTTP call, so we do it manually
+        HttpEntity.apply(
+          ContentType(
+            MediaTypes.`application/x-www-form-urlencoded`,
+            HttpCharsets.`UTF-8`),
+          s"sha256=${site.sha256.getOrElse("")}"))
 
     for {response <- sendHttpRequest(request)
-         status = parse(new String(response.entity.data.toByteArray)).extractOpt[ShaResponse] match {
+         rawResponse = new String(response.entity.data.toByteArray)
+         status = parseOpt(rawResponse).fold(handleError(rawResponse))(_.extractOpt[ShaResponse] match {
            case Some(ShaResponse(ShaResponse.badFormat, false)) =>
              error(s"Somehow, this client is sending an incorrectly formatted SHA256 signature to the dashboard. Offending sig: ${site.sha256}")
              None
            case Some(ShaResponse(sha256, true))                 => Some(SiteStatus(site.alias, theyHaveMine = true, haveTheirs = doWeHaveCert(sha256), site.url))
            case Some(ShaResponse(sha256, false))                => Some(SiteStatus(site.alias, theyHaveMine = false, haveTheirs = doWeHaveCert(sha256), site.url))
            case None                                            =>
-             error(s"Unable to parse the result of the verifySignature call into a ShaResponse")
+             InvalidVerifySignatureResponse(rawResponse)
              None
-         }} yield status
+         })} yield status
   }
 
   def doWeHaveCert(sha256: String): Boolean = UtilHasher(ShrineOrchestrator.certCollection).handleSig(sha256).found
+
+  def handleError(response: String): Option[SiteStatus] = {
+    InvalidVerifySignatureResponse(response)
+    None
+  }
+
+  case class InvalidVerifySignatureResponse(response: String) extends AbstractProblem(ProblemSources.ShrineApp) {
+    override def summary: String = "The client for handling certificate diagnostic across Dashboards in the Status Service received an invalid response from verifySignature"
+
+    override def description: String = s"verifySig produced the invalid response `$response`"
+  }
 }

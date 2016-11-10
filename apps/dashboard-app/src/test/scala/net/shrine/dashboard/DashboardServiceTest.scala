@@ -286,7 +286,7 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
   }
 
   "DashboardService" should "return a BadRequest for admin/status/signature with no signature parameter" in {
-    Post("/admin/status/verifySignature") ~>
+    Post("/status/verifySignature") ~>
     addCredentials(adminCredentials) ~>
     route ~> check {
       assertResult(StatusCodes.BadRequest)(status)
@@ -294,7 +294,7 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
   }
 
   "DashboardService" should "return a BadRequest for admin/status/signature with a malformatted signature parameter" in {
-    Post("/admin/status/verifySignature", FormData(Seq("sha256" -> "foo"))) ~>
+    Post("/status/verifySignature", FormData(Seq("sha256" -> "foo"))) ~>
       addCredentials(adminCredentials) ~>
       route ~> check {
       assertResult(StatusCodes.BadRequest)(status)
@@ -304,7 +304,7 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
   }
 
   "DashboardService" should "return a NotFound for admin/status/signature with a correctly formatted parameter that is not in the keystore" in {
-    Post("/admin/status/verifySignature", FormData(Seq("sha256" -> "00:00:00:00:00:00:00:7C:4B:FD:8D:A8:0A:C7:A4:AA:13:3E:22:B3:57:A7:C6:B0:95:15:1B:22:C0:E5:15:9A"))) ~>
+    Post("/status/verifySignature", FormData(Seq("sha256" -> "00:00:00:00:00:00:00:7C:4B:FD:8D:A8:0A:C7:A4:AA:13:3E:22:B3:57:A7:C6:B0:95:15:1B:22:C0:E5:15:9A"))) ~>
       addCredentials(adminCredentials) ~>
       route ~> check {
       assertResult(NotFound)(status)
@@ -315,7 +315,9 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
   }
 
   "DashboardService" should "return an OK for admin/status/signature with a valid sha256 hash" in {
-    Post("/admin/status/verifySignature", FormData(Seq("sha256" -> "0E:5D:D1:10:68:2B:63:F4:66:E2:50:41:EA:13:AF:1A:F9:99:DB:40:6A:F7:EE:39:F2:1A:0D:51:7A:44:09:7A"))) ~>
+    val post = Post("/status/verifySignature", FormData(Seq("sha256" -> "0E:5D:D1:10:68:2B:63:F4:66:E2:50:41:EA:13:AF:1A:F9:99:DB:40:6A:F7:EE:39:F2:1A:0D:51:7A:44:09:7A")))
+    println(post)
+      post ~>
       addCredentials(adminCredentials) ~>
       route ~> check {
       assertResult(OK)(status)
