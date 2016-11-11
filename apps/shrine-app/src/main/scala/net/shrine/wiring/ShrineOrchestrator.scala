@@ -115,8 +115,6 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
   }
     else None //todo eventually make this just another downstream node accessed via loopback
 
-  val hubConfig = shrineConfig.getConfig("hub")
-
   lazy val hubComponents: Option[HubComponents] = shrineConfig.getOptionConfiguredIf("hub",HubComponents(_,
     keystoreTrustParam,
     nodeId,
