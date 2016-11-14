@@ -30,6 +30,7 @@
         graph.graphData = $scope.graphData;
         graph.toPercentage = toPercentage;
         graph.graphClick = $scope.graphClick;
+        graph.clearUsers = svc.clearUsers;
 
         function toPercentage(value) {
             var maxQueryCount = svc.getMaxUserQueryCount(graph.graphData.users) || 1;
@@ -42,6 +43,7 @@
         scope.$watch('graphData', function(before, after) {
             var graph = scope.graph;
             graph.graphData = scope.graphData;
+            graph.clearUsers();
         });
         var test = arguments;
     }
