@@ -12,6 +12,9 @@
 
         var toDashboard = {url:''};
         var cache = {};
+        var m = this;
+
+        m.siteAlias = '';
 
         // -- private const -- //
         var Config = {
@@ -40,7 +43,8 @@
             getSummary:        getJsonMaker(Config.SummaryEndpoint, 'summary'),
             map:               map,
             cache:             cache,
-            toDashboard:       toDashboard
+            toDashboard:       toDashboard,
+            m:                 m
         };
 
         function map(func, list) {

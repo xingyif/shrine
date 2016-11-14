@@ -5,6 +5,9 @@
         </div>
         <div class="col-sm-10 shrine-content" style="min-height: 50em">
             <div id="page-wrapper" class="ng-view page-wrapper">
+                <h2 ng-show="m.siteAlias != ''" style="width:25%;margin:0 auto;white-space:nowrap;color: #ff3333;">
+                    {{siteAlias}}
+                </h2>
                 <div ui-view></div>
             </div>
         </div>

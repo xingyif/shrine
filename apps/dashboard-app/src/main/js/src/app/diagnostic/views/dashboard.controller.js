@@ -52,8 +52,9 @@
             vm.switchDashboard = switchDashboard;
         }
 
-        function switchDashboard(url) {
+        function switchDashboard(url, alias) {
             $app.model.toDashboard.url = url;
+            $app.model.m.siteAlias = alias;
             clearCache();
         }
 

@@ -1,7 +1,7 @@
 <div style="display:flex;text-align:center">
 
     <div ng-repeat="dashboard in vm.otherDashboards" style="margin:auto">
-        <button ng-click="vm.switchDashboard(dashboard[1])" style="padding:5px 10px 5px 10px; font-size:x-large" class="btn btn-primary">
+        <button ng-click="vm.switchDashboard(dashboard[1], dashboard[0])" style="padding:5px 10px 5px 10px; font-size:x-large" class="btn btn-primary">
             {{dashboard[0]}}
         </button>
     </div>
