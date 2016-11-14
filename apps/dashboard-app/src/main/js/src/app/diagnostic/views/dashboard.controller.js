@@ -35,7 +35,7 @@
 
         /**
          *
-         * @param hub
+         * @param keystore
          */
         function setDashboard (keystore) {
             var tempList = [];
@@ -44,10 +44,9 @@
                 if (abbreviatedEntry.url != "")
                     tempList.push(abbreviatedEntry)
             }
-            if (keystore.trustModelIsHub && !keystore.isHub)
-                vm.otherDashboards = [];
-            else
-                vm.otherDashboards = map(function(entry){return [entry.siteAlias, entry.url]}, tempList);
+            vm.otherDashboards = [['Self', '']];
+            if (!(keystore.trustModelIsHub && !keystore.isHub))
+                vm.otherDashboards = vm.otherDashboards.concat(map(function(entry){return [entry.siteAlias, entry.url]}, tempList));
             $log.warn(JSON.stringify(vm.otherDashboards));
             vm.clearCache = clearCache;
             vm.switchDashboard = switchDashboard;
