@@ -13,8 +13,8 @@
      *
      * @type {string[]}
      */
-    DashboardController.$inject = ['$app', '$log'];
-    function DashboardController ($app, $log) {
+    DashboardController.$inject = ['$app', '$log', '$location'];
+    function DashboardController ($app, $log, $location) {
         var vm = this;
         var map = $app.model.map;
 
@@ -55,6 +55,7 @@
             $app.model.toDashboard.url = url;
             $app.model.m.siteAlias = alias == 'Self'? '': alias;
             clearCache();
+            $location.url("/diagnostic/summary");
         }
 
         function clearCache() {
