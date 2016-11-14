@@ -32,20 +32,6 @@ import org.squeryl.internals.DatabaseAdapter
 object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
 
   override def resources: Iterable[AnyRef] = {
-    val happy = happyResource
-    info("HAPPY LOADED")
-    val staus = statusJaxrs
-    info("STATUS LOADED")
-    val shrine = shrineResource
-    info("SHRINE RESOURCES LOADED")
-    val i2b2 = i2b2BroadcastResource
-    info("i2b2 LOADED")
-    val adapter = adapterResource
-    info("ADAPTER LOADED")
-    val i2b2Admin = i2b2AdminResource
-    info("I2B2 ADMIN LOADED")
-    val hub = hubComponents
-    info("HUB LOADED")
     Seq(happyResource,statusJaxrs) ++
       shrineResource ++
       i2b2BroadcastResource ++

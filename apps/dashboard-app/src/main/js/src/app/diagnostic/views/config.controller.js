@@ -25,9 +25,15 @@
          * @param configuration
          */
         function setConfig (config) {
-            $scope.config = config
-            vm.config = config;
-            $element.append($compile('<bootcordion data="vm.config"></bootcordion>')($scope));
+            if (!config.hasOwnProperty('failed')) {
+                $scope.config = config;
+                vm.config = config;
+                $element.append($compile('<bootcordion data="vm.config"></bootcordion>')($scope));
+            } else {
+                vm.configError = config.failed;
+                $element.append($compile('<h3>Config received an error response:</h3>'));
+                $element.append($compile('<span>{{vm.configError}}</span>'));
+            }
         }
     }
 })();

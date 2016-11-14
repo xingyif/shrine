@@ -58,7 +58,7 @@
          * @returns {*}
          */
         function onFail(failedResult) {
-            return failedResult;
+            return {failed: failedResult};
         }
 
 
@@ -96,7 +96,7 @@
             return false;
         }
 
-        // "explodes" the flag config map.
+        // "explodes" and merges the flag config map.
         // e.g., {"key.foo": 10, "key.baz": 5} -> {"key": {"foo": 10, "baz": 5}}
         function preProcessJson (object) {
             var result = {};

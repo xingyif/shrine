@@ -510,6 +510,8 @@ object ShaVerificationService extends Loggable with DefaultJsonSupport {
   // execution context for futures
   implicit val system = ActorSystem("AuthorizationServiceActors", ConfigFactory.load("shrine")) //todo use shrine's config
 
+  val certCollection = ShrineOrchestrator.certCollection
+
   def sendHttpRequest(httpRequest: HttpRequest): Future[HttpResponse] = {
     implicit val timeout: Timeout = Timeout.durationToTimeout(new FiniteDuration(10, duration.SECONDS)) //10 seconds
 
@@ -557,11 +559,11 @@ object ShaVerificationService extends Loggable with DefaultJsonSupport {
 
   type MaybeSiteStatus = Future[Option[SiteStatus]]
 
-  def apply(sites: Seq[RemoteSite]): Seq[MaybeSiteStatus] = {
-    sites.filter(site => site.entry.isDefined && site.sha256.isDefined).map(curl)
-  }
+  def apply(sites: Seq[RemoteSite]): Seq[MaybeSiteStatus] = sites.map(curl)
+
 
   def curl(site: RemoteSite): MaybeSiteStatus = {
+    val sha256 = UtilHasher.encodeCert(certCollection.myEntry.cert, "SHA-256")
     implicit val formats = org.json4s.DefaultFormats
     val request = Post(s"https://${site.url}:${site.port}/shrine-dashboard/status/verifySignature")
       .withEntity( // For some reason, FormData isn't producing the correct HTTP call, so we do it manually
@@ -569,13 +571,13 @@ object ShaVerificationService extends Loggable with DefaultJsonSupport {
           ContentType(
             MediaTypes.`application/x-www-form-urlencoded`,
             HttpCharsets.`UTF-8`),
-          s"sha256=${site.sha256.getOrElse("")}"))
+          s"sha256=$sha256"))
 
     for {response <- sendHttpRequest(request)
          rawResponse = new String(response.entity.data.toByteArray)
          status = parseOpt(rawResponse).fold(handleError(rawResponse))(_.extractOpt[ShaResponse] match {
            case Some(ShaResponse(ShaResponse.badFormat, false)) =>
-             error(s"Somehow, this client is sending an incorrectly formatted SHA256 signature to the dashboard. Offending sig: ${site.sha256}")
+             error(s"Somehow, this client is sending an incorrectly formatted SHA256 signature to the dashboard. Offending sig: $sha256")
              None
            case Some(ShaResponse(sha256, true))                 => Some(SiteStatus(site.alias, theyHaveMine = true, haveTheirs = doWeHaveCert(sha256), site.url))
            case Some(ShaResponse(sha256, false))                => Some(SiteStatus(site.alias, theyHaveMine = false, haveTheirs = doWeHaveCert(sha256), site.url))
@@ -585,7 +587,7 @@ object ShaVerificationService extends Loggable with DefaultJsonSupport {
          })} yield status
   }
 
-  def doWeHaveCert(sha256: String): Boolean = UtilHasher(ShrineOrchestrator.certCollection).handleSig(sha256).found
+  def doWeHaveCert(sha256: String): Boolean = UtilHasher(certCollection).handleSig(sha256).found
 
   def handleError(response: String): Option[SiteStatus] = {
     InvalidVerifySignatureResponse(response)
