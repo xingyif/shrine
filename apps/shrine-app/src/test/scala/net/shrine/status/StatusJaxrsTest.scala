@@ -122,6 +122,7 @@ class StatusJaxrsTest extends ShouldMatchersForJUnit {
   @Test
   def testKeyStore() = {
     val string = statusJaxrs.keystore
+    println(string)
     val actual = Serialization.read[KeyStoreReport](string)
   }
 
