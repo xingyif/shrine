@@ -36,8 +36,7 @@
         } else if (!toDashboard) {
             return getDeployUrl(urlKey) + endpoint;
         } else {
-            urlKey = removeAdmin(urlKey);
-            return getDeployUrl(urlKey) + 'toDashboard/' + toDashboard + '/' + endpoint;
+            return getDeployUrl(urlKey) + 'toDashboard/' + toDashboard + '/' + removeAdmin(endpoint);
         }
     }
 
