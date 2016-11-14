@@ -559,10 +559,8 @@ object ShaVerificationService extends Loggable with DefaultJsonSupport {
 
   type MaybeSiteStatus = Future[Option[SiteStatus]]
 
-  def apply(sites: Seq[RemoteSite]): Seq[MaybeSiteStatus] = {
-    info(s"DEBUGGING SITE STATUSES: `$sites`")
-    sites.map(curl)
-  }
+  def apply(sites: Seq[RemoteSite]): Seq[MaybeSiteStatus] = sites.map(curl)
+
 
   def curl(site: RemoteSite): MaybeSiteStatus = {
     val sha256 = UtilHasher.encodeCert(certCollection.myEntry.cert, "SHA-256")
