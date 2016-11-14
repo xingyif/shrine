@@ -47,9 +47,12 @@
         function getUserQueryHistory(username, startDate, endDate) {
             var queryString = '?asJson=true';
             var skip, limit, state, sortBy, sortDirection;
+            /*
+                todo: service not ready for date range.  
             var url = service.getUrl(urls.userQueryHistory + '/' +  username + queryString, skip,
                 limit, state, sortBy, sortDirection, startDate, endDate);
-
+            */
+            var url = service.getUrl(urls.userQueryHistory + '/' +  username + queryString);
             return $http.get(url)
                 .then(parseQueryHistory, onFail);
         }
