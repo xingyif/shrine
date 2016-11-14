@@ -24,7 +24,6 @@
             var queryCount = 0;
             var ontology = new OntologyTerm('SHRINE');
             var topics = {};
-            //ontology.queryCount = ln;
 
             for (var i = 0; i < ln; i++) {
                 var record = queryRecords[i];
@@ -42,6 +41,7 @@
                 }
             }
 
+            ontology.userName = (ln) ? queryRecords[0].user.userName : '';
             ontology.topics = formatTopicsToArray(topics);
             ontology.queryCount = queryCount;
             return ontology;
