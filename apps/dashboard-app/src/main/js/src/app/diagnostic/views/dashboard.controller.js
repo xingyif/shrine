@@ -53,7 +53,7 @@
 
         function switchDashboard(url, alias) {
             $app.model.toDashboard.url = url;
-            $app.model.m.siteAlias = alias;
+            $app.model.m.siteAlias = alias == 'Self'? '': alias;
             clearCache();
         }
 
