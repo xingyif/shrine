@@ -31,6 +31,9 @@ import org.squeryl.internals.DatabaseAdapter
  */
 object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
 
+  println("Top of ShrineOrchestrator")
+  info("Top of ShrineOrchestrator")
+
   override def resources: Iterable[AnyRef] = {
     Seq(happyResource,statusJaxrs) ++
       shrineResource ++
@@ -98,8 +101,6 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
   }
     else None //todo eventually make this just another downstream node accessed via loopback
 
-  val hubConfig = shrineConfig.getConfig("hub")
-
   lazy val hubComponents: Option[HubComponents] = shrineConfig.getOptionConfiguredIf("hub",HubComponents(_,
     keystoreTrustParam,
     nodeId,
@@ -154,5 +155,8 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
 
     Poster(endpoint.url.toString, httpClient)
   }
+
+  println("Bottom of ShrineOrchestrator")
+  info("Bottom of ShrineOrchestrator")
 }
 
