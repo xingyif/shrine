@@ -31,6 +31,9 @@ import org.squeryl.internals.DatabaseAdapter
  */
 object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
 
+  println("Start of Orchestrator")
+  info("Start of Orchestrator")
+
   override def resources: Iterable[AnyRef] = {
     Seq(happyResource,statusJaxrs) ++
       shrineResource ++
@@ -152,5 +155,8 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
 
     Poster(endpoint.url.toString, httpClient)
   }
+
+  println("End of Orchestrator")
+  info("End of Orchestrator")
 }
 
