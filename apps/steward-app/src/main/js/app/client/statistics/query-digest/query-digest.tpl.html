@@ -8,7 +8,7 @@
 		<ul>
 			<li>
 				<span class="expandable dark-red" ng-click="show=!show">{{(show)? '-' : '+'}}</span>
-				<a ng-init="show=false" ng-click="show=!show" class="dark-red">{{digest.ontology.userName + ' (' + digest.ontology.queryCount + ' queries)'}}</a>
+				<a ng-init="show=false" ng-click="show=!show" class="dark-red">SHRINE {{' (' + digest.ontology.userName + ' ' + digest.ontology.queryCount + ' queries)'}}</a>
 				<ul ng-if="show ">
 					<li ng-repeat="(key, value) in digest.ontology.children" query-term>
 
