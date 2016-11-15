@@ -73,6 +73,7 @@
             vm.isOpen = false;
             vm.date = new Date();
             vm.problemsError = false;
+            vm.today = new Date();
 
             vm.dateOptions = {max: new Date()};
             vm.pageSizes = [5, 10, 20];
