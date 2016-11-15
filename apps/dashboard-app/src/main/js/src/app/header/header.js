@@ -32,9 +32,9 @@
 	 *
 	 * @type {string[]}
 	 */
-	HeaderController.$inject = ['$app'];
-	function HeaderController($app) {
-		var vm = this;
+	HeaderController.$inject = ['$app', '$scope', '$log'];
+	function HeaderController($app, $scope, $log) {
+		$scope.m = $app.model.m;
 	}
 
 	/**

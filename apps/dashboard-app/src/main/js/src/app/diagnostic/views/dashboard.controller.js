@@ -13,8 +13,8 @@
      *
      * @type {string[]}
      */
-    DashboardController.$inject = ['$app', '$log'];
-    function DashboardController ($app, $log) {
+    DashboardController.$inject = ['$app', '$log', '$location'];
+    function DashboardController ($app, $log, $location) {
         var vm = this;
         var map = $app.model.map;
 
@@ -38,30 +38,34 @@
          * @param keystore
          */
         function setDashboard (keystore) {
+            var modelStatuses = $app.model.m.remoteSiteStatuses;
             var tempList = [];
-            for (var i = 0; i < keystore.remoteSiteStatuses.length; i++) {
-                var abbreviatedEntry = keystore.remoteSiteStatuses[i];
+            for (var i = 0; i < modelStatuses.length; i++) {
+                var abbreviatedEntry = modelStatuses[i];
                 if (abbreviatedEntry.url != "")
                     tempList.push(abbreviatedEntry)
             }
-            vm.otherDashboards = [['Self', '']];
-            if (!(keystore.trustModelIsHub && !keystore.isHub))
-                vm.otherDashboards = vm.otherDashboards.concat(map(function(entry){return [entry.siteAlias, entry.url]}, tempList));
-            $log.warn(JSON.stringify(vm.otherDashboards));
+
+            vm.otherDashboards = [['Self', '']].concat(map(entryToPair, tempList));
             vm.clearCache = clearCache;
             vm.switchDashboard = switchDashboard;
         }
 
         function switchDashboard(url, alias) {
             $app.model.toDashboard.url = url;
-            $app.model.m.siteAlias = alias;
+            $app.model.m.siteAlias = alias == 'Self'? '': alias;
             clearCache();
+            $location.url("/diagnostic/summary");
         }
 
         function clearCache() {
             for (var member in $app.model.cache) {
                 if($app.model.cache.hasOwnProperty(member)) delete $app.model.cache[member];
             }
+        }
+
+        function entryToPair(entry){
+            return [entry.siteAlias, entry.url];
         }
     }
 })();

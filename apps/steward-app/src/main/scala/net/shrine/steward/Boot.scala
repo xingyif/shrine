@@ -18,6 +18,9 @@ import scala.util.control.NonFatal
 // the spray.servlet.WebBoot trait
 class Boot extends WebBoot with Loggable {
 
+  println("Start of steweard boot")
+  info("Start of steweard boot")
+
   // we need an ActorSystem to host our application in
   override val system = startActorSystem()
 
@@ -91,6 +94,10 @@ class Boot extends WebBoot with Loggable {
     }
     else 0 milliseconds //if we're testing then don't delay that first send
   }
+
+  println("End of steweard boot")
+  info("End of steweard boot")
+
 }
 
 case class CannotStartAuditEmailActor(ex:Throwable) extends AbstractProblem(ProblemSources.Dsa) {
