@@ -1,22 +1,26 @@
 <div>
-    <h2 ng-show="m.siteAlias" style="width:25%;margin:0 auto;white-space:nowrap;color: #ff3333;">
-        Boo
-    </h2>
-    <table class="table table-striped">
-        <thead>
-        <tr>
-            <td colspan="2">
-                Adapter Configuration
-            </td>
-        </tr>
-        <tr>
-            <td colspan="2">
-                <i>These are the parameters that the SHRINE Adapter will use for querying the i2b2 CRC.</i>
-            </td>
-        </tr>
-        </thead>
+    <error-handler error="vm.adapterError" error-name="adapter"></error-handler>
+    <error-handler error="vm.adapterError" error-name="i2b2"></error-handler>
+    <error-handler error="vm.adapterError" error-name="adapter"></error-handler>
+    <div ng-show="!(vm.adapterError && vm.i2b2Error && vm.summaryError)">
+        <h2 ng-show="m.siteAlias" style="width:25%;margin:0 auto;white-space:nowrap;color: #ff3333;">
+            Boo
+        </h2>
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <td colspan="2">
+                    Adapter Configuration
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <i>These are the parameters that the SHRINE Adapter will use for querying the i2b2 CRC.</i>
+                </td>
+            </tr>
+            </thead>
 
-        <tbody>
+            <tbody>
             <tr>
                 <td>
                     CRC URL
@@ -65,101 +69,114 @@
                     {{vm.configuration.lockoutThreshold}}
                 </td>
             </tr>
-        </tbody>
-    </table>
+            </tbody>
+        </table>
 
-    <table class="table table-striped">
-        <thead>
-        <tr>
-            <td colspan="2">
-                Adapter Query Test
-            </td>
-        </tr>
-        </thead>
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <td colspan="2">
+                    Adapter Query Test
+                </td>
+            </tr>
+            </thead>
 
-        <tbody>
-        <tr>
-            <td>
-                SHRINE Query Term
-            </td>
-            <td>
-                {{vm.adapter.term}}
-            </td>
-        </tr>
-        <tr>
-            <td>
-                Status
-            </td>
-            <td ng-if="vm.adapter.success" style="color:green">
-                Success
-            </td>
-            <td ng-if="!vm.adapter.success" style="color:red">
-                Failed
-            </td>
-        </tr>
-        <tr ng-if="vm.adapter.success">
-            <td>
-                Details
-            </td>
-            <td ng-if="vm.adapter.success">
-                {{vm.adapter.description}}
-            </td>
-        </tr>
-        <tr ng-if="!vm.adapter.success">
-            <td>
-                Error Details
-            </td>
-            <td ng-if="!vm.adapter.success">
+            <tbody>
+            <tr>
+                <td>
+                    SHRINE Query Term
+                </td>
+                <td>
+                    {{vm.adapter.term}}
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    Status
+                </td>
+                <td ng-if="vm.adapter.success" style="color:green">
+                    Success
+                </td>
+                <td ng-if="!vm.adapter.success" style="color:red">
+                    Failed
+                </td>
+            </tr>
+            <tr ng-if="vm.adapter.success">
+                <td>
+                    Details
+                </td>
+                <td ng-if="vm.adapter.success">
+                    {{vm.adapter.description}}
+                </td>
+            </tr>
+            <tr ng-if="!vm.adapter.success">
+                <td>
+                    Error Details
+                </td>
+                <td ng-if="!vm.adapter.success">
 
-                <div><b>Summary:</b></div>
-                <div>{{vm.adapter.errorData.summary }}</div><br/>
-                <div><b>Description:</b></div>
-                <div>{{vm.adapter.errorData.description }}</div><br/>
-                <div><i>For information on troubleshooting and resolution, check
-                    <a href="https://open.med.harvard.edu/wiki/display/SHRINE/{{vm.adapter.errorData.codec}}" target="_blank">the SHRINE Error
-                        Codex</a>.</i>
-                </div>
-                <br/>
-                <div><b><i>Copy the text below and paste it in an email to your site administrator for a faster response.</i></b></div>
-                <br/>
-                <div><b>Technical Details:</b></div><pre style="margin-top:0">{{vm.adapter.errorData.description}}</pre><br/>
-                <div><b>Codec:</b></div><pre style="margin-top:0">{{vm.adapter.errorData.codec }}</pre><br/>
-                <div><b>Stamp:</b></div><pre style="margin-top:0">{{vm.adapter.errorData.stampText}}</pre><br/>
-                <div><b>Stack Trace Name:</b></div><pre style="margin-top:0">{{vm.adapter.errorData.detailsXml.details.exception.name }}</pre><br/>
-                <div><b>Stack Trace Message:</b></div><pre style="margin-top:0">{{vm.adapter.errorData.detailsXml.details.exception.message}}</pre><br/>
+                    <div><b>Summary:</b></div>
+                    <div>{{vm.adapter.errorData.summary }}</div>
+                    <br/>
+                    <div><b>Description:</b></div>
+                    <div>{{vm.adapter.errorData.description }}</div>
+                    <br/>
+                    <div><i>For information on troubleshooting and resolution, check
+                        <a href="https://open.med.harvard.edu/wiki/display/SHRINE/{{vm.adapter.errorData.codec}}" target="_blank">the SHRINE Error
+                            Codex</a>.</i>
+                    </div>
+                    <br/>
+                    <div><b><i>Copy the text below and paste it in an email to your site administrator for a faster response.</i></b></div>
+                    <br/>
+                    <div><b>Technical Details:</b></div>
+                    <pre style="margin-top:0">{{vm.adapter.errorData.description}}</pre>
+                    <br/>
+                    <div><b>Codec:</b></div>
+                    <pre style="margin-top:0">{{vm.adapter.errorData.codec }}</pre>
+                    <br/>
+                    <div><b>Stamp:</b></div>
+                    <pre style="margin-top:0">{{vm.adapter.errorData.stampText}}</pre>
+                    <br/>
+                    <div><b>Stack Trace Name:</b></div>
+                    <pre style="margin-top:0">{{vm.adapter.errorData.detailsXml.details.exception.name }}</pre>
+                    <br/>
+                    <div><b>Stack Trace Message:</b></div>
+                    <pre style="margin-top:0">{{vm.adapter.errorData.detailsXml.details.exception.message}}</pre>
+                    <br/>
 
-            </td>
-        </tr>
+                </td>
+            </tr>
 
-        </tbody>
-    </table>
+            </tbody>
+        </table>
 
-    <table class="table table-striped">
-        <thead>
-        <tr>
-            <td colspan="2">
-                Mappings File
-            </td>
-        </tr>
-        </thead>
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <td colspan="2">
+                    Mappings File
+                </td>
+            </tr>
+            </thead>
 
-        <tbody>
-        <tr>
-            <td>
-                Filename
-            </td>
-            <td>
-                {{vm.mappings.mappingsFilename}}
-            </td>
-        </tr>
-        <tr>
-            <td>
-                Last Modified
-            </td>
-            <td>
-                {{vm.mappings.mappingsDate}}
-            </td>
-        </tr>
-        </tbody>
-    </table>
+            <tbody>
+            <tr>
+                <td>
+                    Filename
+                </td>
+                <td>
+                    {{vm.mappings.mappingsFilename}}
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    Last Modified
+                </td>
+                <td>
+                    {{vm.mappings.mappingsDate}}
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
 </div>

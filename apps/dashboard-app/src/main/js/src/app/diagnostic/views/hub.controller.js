@@ -13,7 +13,7 @@
     HubController.$inject = ['$app', '$log'];
     function HubController ($app, $log) {
         var vm = this;
-
+        vm.hubError = false;
         init();
 
         /**
@@ -25,8 +25,7 @@
         }
 
         function handleFailure (failure) {
-            //TODO: HANDLE FAILURE
-            $log.error(JSON.stringify(failure));
+            vm.hubError = failure;
         }
 
         /**

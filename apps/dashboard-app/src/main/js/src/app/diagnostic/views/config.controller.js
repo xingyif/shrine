@@ -17,23 +17,23 @@
          */
         function init () {
             $app.model.getConfig()
-                .then(setConfig)
+                .then(setConfig, handleFailure)
         }
 
         /**
          *
-         * @param configuration
+         * @param config
          */
         function setConfig (config) {
-            if (!config.hasOwnProperty('failed')) {
                 $scope.config = config;
                 vm.config = config;
                 $element.append($compile('<bootcordion data="vm.config"></bootcordion>')($scope));
-            } else {
-                vm.configError = config.failed;
-                $element.append($compile('<h3>Config received an error response:</h3>'));
-                $element.append($compile('<span>{{vm.configError}}</span>'));
-            }
+        }
+
+        function handleFailure(configFailure) {
+            vm.configError = configFailure;
+            $element.append($compile('<h3>Config received an error response:</h3>'));
+            $element.append($compile('<span>{{vm.configError}}</span>'));
         }
     }
 })();

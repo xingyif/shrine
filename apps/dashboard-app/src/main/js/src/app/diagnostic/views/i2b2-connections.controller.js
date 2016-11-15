@@ -12,7 +12,7 @@
     I2B2ConnectionsController.$inject = ['$app', '$log'];
     function I2B2ConnectionsController($app, $log) {
         var vm = this;
-
+        vm.i2b2Error = false;
         init();
 
 
@@ -26,7 +26,7 @@
 
         function handleFailure(failure) {
             //TODO: HANDLE FAILURE BETTER
-            $log.error(JSON.stringify(failure));
+            vm.i2b2Error = failure;
         }
 
 
