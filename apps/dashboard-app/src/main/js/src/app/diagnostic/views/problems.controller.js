@@ -136,7 +136,7 @@
         }
 
         function submitDate() {
-            var epoch = $scope.date.getTime() + 86400000; // + a day
+            var epoch = vm.date.getTime() + 86400000; // + a day
             vm.showDateError = false;
             newPage(vm.probsOffset, vm.probsN, epoch);
         }
