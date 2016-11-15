@@ -32,9 +32,25 @@
 	 *
 	 * @type {string[]}
 	 */
-	HeaderController.$inject = ['$app', '$scope', '$log'];
-	function HeaderController($app, $scope, $log) {
+	HeaderController.$inject = ['$app', '$scope', '$location'];
+	function HeaderController($app, $scope, $location) {
 		$scope.m = $app.model.m;
+		$scope.goHome = goHome;
+
+
+        function goHome() {
+
+            $app.model.toDashboard.url = '';
+            $app.model.m.siteAlias = '';
+            clearCache();
+            $location.url("/diagnostic/summary");
+        }
+
+        function clearCache() {
+            for (var member in $app.model.cache) {
+                if($app.model.cache.hasOwnProperty(member)) delete $app.model.cache[member];
+            }
+        }
 	}
 
 	/**
