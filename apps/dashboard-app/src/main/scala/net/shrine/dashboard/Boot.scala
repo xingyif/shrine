@@ -13,9 +13,6 @@ import scala.util.control.NonFatal
 // the spray.servlet.WebBoot trait
 class Boot extends WebBoot {
 
-  println("Start of dashboard boot")
-  Log.info("Start of dashboard boot")
-
   // we need an ActorSystem to host our application in
   override val system = startActorSystem()
 
@@ -41,10 +38,6 @@ class Boot extends WebBoot {
     case NonFatal(x) => CannotStartDashboard(x); throw x
     case x: ExceptionInInitializerError => CannotStartDashboard(x); throw x
   }
-
-  println("End of dashboard boot")
-  Log.info("End of dashboard boot")
-
 }
 
 case class CannotStartDashboard(ex:Throwable) extends AbstractProblem(ProblemSources.Dsa) {
