@@ -11,6 +11,7 @@ import net.shrine.crypto.{BouncyKeyStoreCollection, KeyStoreDescriptorParser}
 import net.shrine.dashboard.jwtauth.ShrineJwtAuthenticator
 import net.shrine.i2b2.protocol.pm.User
 import net.shrine.protocol.Credential
+import net.shrine.source.ConfigSource
 import net.shrine.spray.ShaResponse
 import org.json4s.native.JsonMethods.parse
 import org.junit.runner.RunWith
@@ -347,7 +348,7 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
 
   "DashboardService" should  "reject a fromDashboard/ping with an expired jwts header" in {
 
-    val config = DashboardConfigSource.config
+    val config = ConfigSource.config
     val shrineCertCollection: BouncyKeyStoreCollection = BouncyKeyStoreCollection.fromFileRecoverWithClassPath(KeyStoreDescriptorParser(
       config.getConfig("shrine.keystore"),
       config.getConfigOrEmpty("shrine.hub"),
@@ -374,7 +375,7 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
 
   "DashboardService" should  "reject a fromDashboard/ping with no subject" in {
 
-    val config = DashboardConfigSource.config
+    val config = ConfigSource.config
     val shrineCertCollection: BouncyKeyStoreCollection = BouncyKeyStoreCollection.fromFileRecoverWithClassPath(KeyStoreDescriptorParser(
       config.getConfig("shrine.keystore"),
       config.getConfigOrEmpty("shrine.hub"),

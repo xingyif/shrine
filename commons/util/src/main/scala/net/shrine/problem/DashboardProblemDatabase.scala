@@ -5,6 +5,7 @@ import javax.sql.DataSource
 
 import com.typesafe.config.Config
 import net.shrine.slick.{CouldNotRunDbIoActionException, NeedsWarmUp, TestableDataSourceCreator}
+import net.shrine.source.ConfigSource
 import slick.dbio.SuccessAction
 import slick.driver.JdbcProfile
 import slick.jdbc.meta.MTable
@@ -22,8 +23,8 @@ import scala.xml.XML
   * @since 07/16
   */
 object Problems extends NeedsWarmUp {
-  val config:Config = ProblemConfigSource.config.getConfig("shrine.dashboard.database")
-  val slickProfile:JdbcProfile = ProblemConfigSource.getObject("slickProfileClassName", config)
+  val config:Config = ConfigSource.config.getConfig("shrine.dashboard.database")
+  val slickProfile:JdbcProfile = ConfigSource.getObject("slickProfileClassName", config)
 
   import slickProfile.api._
 

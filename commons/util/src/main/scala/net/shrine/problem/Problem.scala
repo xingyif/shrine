@@ -2,15 +2,14 @@ package net.shrine.problem
 
 import java.net.InetAddress
 import java.util.Date
-import java.util.concurrent.Executors
 
 import net.shrine.log.Loggable
 import net.shrine.serialization.{XmlMarshaller, XmlUnmarshaller}
 import net.shrine.slick.NeedsWarmUp
+import net.shrine.source.ConfigSource
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.{ExecutionContext, Future, Promise}
-import scala.util.Try
+import scala.concurrent.Future
 import scala.xml.{Elem, Node, NodeSeq}
 
 /**
@@ -148,8 +147,8 @@ object Stamp {
 abstract class AbstractProblem(source:ProblemSources.ProblemSource) extends Problem {
   def timer = System.currentTimeMillis
   override val stamp = Stamp(source, timer)
-  private val config = ProblemConfigSource.config.getConfig("shrine.problem")
-  hackToHandleAfterInitialization(ProblemConfigSource.getObject("problemHandler", config))
+  private val config = ConfigSource.config.getConfig("shrine.problem")
+  hackToHandleAfterInitialization(ConfigSource.getObject("problemHandler", config))
 }
 
 trait ProblemHandler extends NeedsWarmUp {
