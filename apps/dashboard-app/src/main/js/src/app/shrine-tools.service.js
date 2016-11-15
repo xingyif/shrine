@@ -14,6 +14,9 @@
             model:   diagnosticModel
         };
 
+        var m = true;
+        _app.m = true;
+
         return _app;
 
 

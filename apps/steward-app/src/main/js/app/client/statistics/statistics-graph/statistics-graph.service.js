@@ -13,7 +13,8 @@ var Service;
             getSortedUsers: getSortedUsers,
             getMaxUser: getMaxUser,
             getMaxUserQueryCount: getMaxUserQueryCount,
-            getCountAsPercentage: getCountAsPercentage
+            getCountAsPercentage: getCountAsPercentage,
+            clearUsers: clearUsers
         };
 
         function getSortedUsers(users) {
@@ -40,6 +41,10 @@ var Service;
 
         function getCountAsPercentage(userQueryCount, maxQueryCount) {
             return 100 * (userQueryCount / maxQueryCount);
+        }
+
+        function clearUsers() {
+            sortedUsers = [];
         }
     }
 

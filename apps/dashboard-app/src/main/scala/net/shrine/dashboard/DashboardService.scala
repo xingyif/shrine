@@ -169,9 +169,11 @@ trait DashboardService extends HttpService with Loggable {
   def toDashboardRoute(user:User):Route = get {
 
     pathPrefix(Segment) { dnsName =>
+      import scala.collection.JavaConversions._
+
       val urlToParse: String = KeyStoreInfo.keyStoreDescriptor.trustModel match {
         case SingleHubModel(false) => DashboardConfigSource.config.getString("shrine.queryEntryPoint.broadcasterServiceEndpoint.url")
-        case _ => DashboardConfigSource.config.getList("shrine.hub.downstreamNodes").get(0).unwrapped().toString
+        case _ => DashboardConfigSource.config.getObject("shrine.hub.downstreamNodes").values.head.unwrapped.toString
       }
 
       val remoteDashboardPort = urlToParse.split(':')(2).split('/')(0)

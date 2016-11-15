@@ -12,6 +12,10 @@
 
         var toDashboard = {url:''};
         var cache = {};
+        var m = {};
+
+        m.remoteSiteStatuses = [];
+        m.siteAlias = '';
 
         // -- private const -- //
         var Config = {
@@ -33,14 +37,15 @@
             getConfig:         getJsonMaker(Config.ConfigEndpoint, 'config', parseConfig),
             getHub:            getJsonMaker(Config.HubEndpoint, 'hub'),
             getI2B2:           getJsonMaker(Config.I2B2Endpoint, 'i2b2'),
-            getKeystore:       getJsonMaker(Config.KeystoreEndpoint, 'keystore'),
+            getKeystore:       getJsonMaker(Config.KeystoreEndpoint, 'keystore', storeRemoteSites),
             getOptionalParts:  getJsonMaker(Config.OptionsEndpoint, 'optionalParts'),
             getProblems:       getProblemsMaker(),
             getQep:            getJsonMaker(Config.QepEndpoint, 'qep'),
             getSummary:        getJsonMaker(Config.SummaryEndpoint, 'summary'),
             map:               map,
             cache:             cache,
-            toDashboard:       toDashboard
+            toDashboard:       toDashboard,
+            m:                 m
         };
 
         function map(func, list) {
@@ -63,7 +68,7 @@
 
 
         /***
-         * Method for handling a successful rest call.
+         * Method for handling a successful rest call. Simply caches it and returns it.
          * @param result
          * @param cacheKey
          * @returns {*}
@@ -71,6 +76,20 @@
         function parseJsonResult(result, cacheKey) {
             cache[cacheKey] = result.data;
             return result.data;
+        }
+
+        /**
+         * Still cache and return the result, however, save the RemoteSites outside of the cache,
+         * as we don't want these values to change between cache resets (which occur when switching sites)
+         * @param result
+         * @param cacheKey
+         */
+        function storeRemoteSites(result, cacheKey) {
+            cache[cacheKey] = result.data;
+            if (m.remoteSiteStatuses.length == 0) {
+                m.remoteSiteStatuses = result.data.remoteSiteStatuses;
+            }
+            return result.data
         }
 
         /**

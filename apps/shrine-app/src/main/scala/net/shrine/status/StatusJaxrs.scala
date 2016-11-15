@@ -176,7 +176,6 @@ object KeyStoreReport {
       case Success(None)         => Log.warn("There was an issue with the verifySignature endpoint, check that we have network connectivity")
         SiteStatus(certCollection.remoteSites(fut._2).alias, false, false, "", true)
       case Failure(exc)          => Log.warn("We timed out while trying to connect to the verifySignature endpoint, please check network connectivity")
-        throw exc
         SiteStatus(certCollection.remoteSites(fut._2).alias, false, false, "", true)
     })
 

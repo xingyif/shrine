@@ -25,17 +25,25 @@
      * @returns
      */
     function getUrl (endpoint, extension, toDashboard) {
-        toDashboard = toDashboard !== undefined && toDashboard !== ''? 'toDashboard/' + toDashboard + '/': '';
         // -- local -- //
         var testUrl     = 'test/',
             urlKey      = 'shrine-dashboard';
 
         extension = extension || '.json';
         // -- testing locally or deploy -- //
-        return (isTest())?
-               (testUrl + endpoint + extension):
-               getDeployUrl(urlKey) + toDashboard + endpoint;
+        if (isTest()) {
+            return testUrl + endpoint + extension
+        } else if (!toDashboard) {
+            return getDeployUrl(urlKey) + endpoint;
+        } else {
+            return getDeployUrl(urlKey) + 'toDashboard/' + toDashboard + '/' + removeAdmin(endpoint);
+        }
     }
+
+    function removeAdmin(url) {
+        return url.split('admin/').join('');
+    }
+
 
 
     /**
