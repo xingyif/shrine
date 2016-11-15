@@ -14,6 +14,8 @@
     function KeystoreController ($app, $log) {
         var vm = this;
         var map = $app.model.map;
+        vm.qepError = false;
+        vm.keyStoreError = false;
         init();
 
 
@@ -22,10 +24,10 @@
          */
         function init() {
             $app.model.getKeystore()
-                .then(setKeystore, handleFailure);
+                .then(setKeystore, handleKeyStoreFailure);
 
             $app.model.getQep()
-                .then(setQep, handleFailure)
+                .then(setQep, handleQepFailure)
         }
 
         function setQep(qep) {
@@ -96,9 +98,12 @@
             return map(handleStatus, keystore.remoteSiteStatuses)
         }
 
-        //TODO: Good error handling
-        function handleFailure(failure) {
-            $log.error(JSON.stringify(failure));
+        function handleKeyStoreFailure(failure) {
+            vm.keyStoreError = failure;
+        }
+
+        function handleQepFailure(failure) {
+            vm.qepError = failure;
         }
     }
 })();

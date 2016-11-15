@@ -9,7 +9,8 @@ import net.shrine.authorization.steward.{Date, ExternalQueryId, InboundShrineQue
 import net.shrine.i2b2.protocol.pm.User
 import net.shrine.log.Loggable
 import net.shrine.slick.{NeedsWarmUp, TestableDataSourceCreator}
-import net.shrine.steward.{CreateTopicsMode, StewardConfigSource}
+import net.shrine.source.ConfigSource
+import net.shrine.steward.CreateTopicsMode
 import slick.dbio.Effect.Read
 import slick.driver.JdbcProfile
 
@@ -59,7 +60,7 @@ case class StewardDatabase(schemaDef:StewardSchema,dataSource: DataSource) exten
   }
 
   def createRequestForTopicAccess(user:User,topicRequest:InboundTopicRequest):TopicRecord = {
-    val createInState = StewardConfigSource.createTopicsInState
+    val createInState = CreateTopicsMode.createTopicsInState
     val now = System.currentTimeMillis()
     val topicRecord = TopicRecord(Some(nextTopicId.getAndIncrement),topicRequest.name,topicRequest.description,user.username,now,createInState.topicState)
     val userTopicRecord = UserTopicRecord(user.username,topicRecord.id.get,TopicState.approved,user.username,now)
@@ -187,7 +188,7 @@ case class StewardDatabase(schemaDef:StewardSchema,dataSource: DataSource) exten
 
     //todo upsertUser(user) when the info is available from the PM
     val noOpDBIOForState: DBIOAction[TopicState, NoStream, Effect.Read] = DBIO.successful {
-      if (StewardConfigSource.createTopicsInState == CreateTopicsMode.TopicsIgnoredJustLog) TopicState.approved
+      if (CreateTopicsMode.createTopicsInState == CreateTopicsMode.TopicsIgnoredJustLog) TopicState.approved
       else TopicState.createTopicsModeRequiresTopic
     }
 
@@ -584,10 +585,10 @@ case class StewardSchema(jdbcProfile: JdbcProfile) extends Loggable {
 
 object StewardSchema {
 
-  val allConfig:Config = StewardConfigSource.config
+  val allConfig:Config = ConfigSource.config
   val config:Config = allConfig.getConfig("shrine.steward.database")
 
-  val slickProfile:JdbcProfile = StewardConfigSource.getObject("slickProfileClassName", config)
+  val slickProfile:JdbcProfile = ConfigSource.getObject("slickProfileClassName", config)
 
   val schema = StewardSchema(slickProfile)
 }

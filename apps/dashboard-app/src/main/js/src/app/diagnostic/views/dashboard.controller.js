@@ -17,6 +17,7 @@
     function DashboardController ($app, $log, $location) {
         var vm = this;
         var map = $app.model.map;
+        vm.keyStoreError = false;
 
         init();
 
@@ -29,8 +30,7 @@
         }
 
         function handleFailure (failure) {
-            //TODO: HANDLE FAILURE
-            $log.error(JSON.stringify(failure));
+            vm.keyStoreError = failure;
         }
 
         /**

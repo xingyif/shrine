@@ -28,56 +28,65 @@
             'diagnostic.summary': {
                 name:'diagnostic.summary',
                 files:[
-                    'src/app/diagnostic/views/summary.controller.js'
+                    'src/app/diagnostic/views/summary.controller.js',
+                    'src/app/diagnostic/views/errorHandler.js'
                 ]
             },
             'diagnostic.i2b2-connections': {
                 name:'diagnostic.i2b2-connections',
                 files:[
-                    'src/app/diagnostic/views/i2b2-connections.controller.js'
+                    'src/app/diagnostic/views/i2b2-connections.controller.js',
+                    'src/app/diagnostic/views/errorHandler.js'
                 ]
             },
             'diagnostic.keystore': {
                 name:'diagnostic.keystore',
                 files:[
-                    'src/app/diagnostic/views/keystore.controller.js'
+                    'src/app/diagnostic/views/keystore.controller.js',
+                    'src/app/diagnostic/views/errorHandler.js'
                 ]
             },
             'diagnostic.hub': {
                 name:'diagnostic.keystore',
                 files:[
-                    'src/app/diagnostic/views/hub.controller.js'
+                    'src/app/diagnostic/views/hub.controller.js',
+                    'src/app/diagnostic/views/errorHandler.js'
                 ]
             },
             'diagnostic.adapter': {
                 name:'diagnostic.adapter',
                 files:[
-                    'src/app/diagnostic/views/adapter.controller.js'
+                    'src/app/diagnostic/views/adapter.controller.js',
+                    'src/app/diagnostic/views/errorHandler.js'
                 ]
             },
             'diagnostic.qep': {
                 name:'diagnostic.qep',
                 files:[
-                    'src/app/diagnostic/views/qep.controller.js'
+                    'src/app/diagnostic/views/qep.controller.js',
+                    'src/app/diagnostic/views/errorHandler.js'
                 ]
             },
             'diagnostic.config': {
                 name: 'diagnostic.config',
                 files: [
                     'src/app/diagnostic/views/config.controller.js',
-                    'src/app/diagnostic/views/bootcordion.js'
+                    'src/app/diagnostic/views/bootcordion.js',
+                    'src/app/diagnostic/views/errorHandler.js'
                 ]
             },
             'diagnostic.dashboard': {
                 name: 'diagnostic.dashboard',
                 files: [
-                    'src/app/diagnostic/views/dashboard.controller.js'
+                    'src/app/diagnostic/views/dashboard.controller.js',
+                    'src/app/diagnostic/views/errorHandler.js'
                 ]
             },
             'diagnostic.problems': {
                 name: 'diagnostic.problems',
                 files: [
-                    'src/app/diagnostic/views/problems.controller.js'
+                    'src/app/diagnostic/views/problems.controller.js',
+                    'src/app/diagnostic/views/errorHandler.js'
                 ]
             }
         };

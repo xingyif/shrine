@@ -5,13 +5,14 @@ import akka.event.Logging
 import net.shrine.authentication.UserAuthenticator
 import net.shrine.authorization.steward.OutboundUser
 import net.shrine.config.ConfigExtensions
-import net.shrine.crypto.{BouncyKeyStoreCollection, CertCollectionAdapter, KeyStoreDescriptorParser, UtilHasher}
+import net.shrine.crypto.{BouncyKeyStoreCollection, KeyStoreDescriptorParser, UtilHasher}
 import net.shrine.dashboard.httpclient.HttpClientDirectives.{forwardUnmatchedPath, requestUriThenRoute}
 import net.shrine.dashboard.jwtauth.ShrineJwtAuthenticator
 import net.shrine.i2b2.protocol.pm.User
 import net.shrine.log.Loggable
 import net.shrine.problem.{ProblemDigest, Problems}
 import net.shrine.serialization.NodeSeqSerializer
+import net.shrine.source.ConfigSource
 import net.shrine.spray._
 import net.shrine.status.protocol.{Config => StatusProtocolConfig}
 import net.shrine.util.SingleHubModel
@@ -47,7 +48,7 @@ class DashboardServiceActor extends Actor with DashboardService {
 
 trait DashboardService extends HttpService with Loggable {
 
-  val userAuthenticator = UserAuthenticator(DashboardConfigSource.config)
+  val userAuthenticator = UserAuthenticator(ConfigSource.config)
 
   //don't need to do anything special for unauthorized users, but they do need access to a static form.
   lazy val route:Route = gruntWatchCorsSupport {
@@ -141,12 +142,12 @@ trait DashboardService extends HttpService with Loggable {
   def adminRoute(user:User):Route = get {
 
     pathPrefix("happy") {
-      val happyBaseUrl: String = DashboardConfigSource.config.getString("shrine.dashboard.happyBaseUrl")
+      val happyBaseUrl: String = ConfigSource.config.getString("shrine.dashboard.happyBaseUrl")
 
       forwardUnmatchedPath(happyBaseUrl)
     } ~
       pathPrefix("messWithHappyVersion") { //todo is this used?
-      val happyBaseUrl: String = DashboardConfigSource.config.getString("shrine.dashboard.happyBaseUrl")
+      val happyBaseUrl: String = ConfigSource.config.getString("shrine.dashboard.happyBaseUrl")
 
         def pullClasspathFromConfig(httpResponse:HttpResponse,uri:Uri):Route = {
           ctx => {
@@ -172,8 +173,8 @@ trait DashboardService extends HttpService with Loggable {
       import scala.collection.JavaConversions._
 
       val urlToParse: String = KeyStoreInfo.keyStoreDescriptor.trustModel match {
-        case SingleHubModel(false) => DashboardConfigSource.config.getString("shrine.queryEntryPoint.broadcasterServiceEndpoint.url")
-        case _ => DashboardConfigSource.config.getObject("shrine.hub.downstreamNodes").values.head.unwrapped.toString
+        case SingleHubModel(false) => ConfigSource.config.getString("shrine.queryEntryPoint.broadcasterServiceEndpoint.url")
+        case _ => ConfigSource.config.getObject("shrine.hub.downstreamNodes").values.head.unwrapped.toString
       }
 
       val remoteDashboardPort = urlToParse.split(':')(2).split('/')(0)
@@ -202,7 +203,7 @@ trait DashboardService extends HttpService with Loggable {
     pathPrefix(summary)       { getFromSubService(summary) }
   }
 
-  val statusBaseUrl = DashboardConfigSource.config.getString("shrine.dashboard.statusBaseUrl")
+  val statusBaseUrl = ConfigSource.config.getString("shrine.dashboard.statusBaseUrl")
 
   // TODO: Move this over to Status API?
   lazy val verifySignature:Route = {
@@ -295,7 +296,7 @@ case class ProblemResponse(size: Int, offset: Int, n: Int, problems: Seq[Problem
 }
 
 object KeyStoreInfo {
-  val config             = DashboardConfigSource.config
+  val config             = ConfigSource.config
   val keyStoreDescriptor = KeyStoreDescriptorParser(
     config.getConfig("shrine.keystore"),
     config.getConfigOrEmpty("shrine.hub"),
@@ -511,7 +512,7 @@ object gruntWatchCorsSupport extends Directive0 with RouteConcatenation {
     `Access-Control-Allow-Headers`("Origin, X-Requested-With, Content-Type, Accept, Accept-Encoding, Accept-Language, Host, Referer, User-Agent, Authorization"),
     `Access-Control-Max-Age`(1728000)) //20 days
 
-  val gruntWatch:Boolean = DashboardConfigSource.config.getBoolean("shrine.dashboard.gruntWatch")
+  val gruntWatch:Boolean = ConfigSource.config.getBoolean("shrine.dashboard.gruntWatch")
 
   override def happly(f: (HNil) => Route): Route = {
     if(gruntWatch) {

@@ -11,7 +11,7 @@ import net.shrine.config.{ConfigExtensions, DurationConfigParser}
 import net.shrine.email.ConfiguredMailer
 import net.shrine.log.Log
 import net.shrine.problem.{AbstractProblem, ProblemSources}
-import net.shrine.steward.StewardConfigSource
+import net.shrine.source.ConfigSource
 import net.shrine.steward.db.StewardDatabase
 
 import scala.concurrent.Await
@@ -82,7 +82,7 @@ object AuditEmailer {
     * @param config All of shrine.conf
     */
   def apply(config:Config):AuditEmailer = {
-    val config = StewardConfigSource.config
+    val config = ConfigSource.config
     val emailConfig = config.getConfig("shrine.steward.emailDataSteward")
 
     AuditEmailer(
@@ -116,7 +116,7 @@ object AuditEmailer {
 class AuditEmailerActor extends Actor {
 
   override def receive: Receive = {case _ =>
-    val config = StewardConfigSource.config
+    val config = ConfigSource.config
     AuditEmailer(config).audit()
   }
 }

@@ -72,6 +72,8 @@
         function init () {
             vm.isOpen = false;
             vm.date = new Date();
+            vm.problemsError = false;
+            vm.today = new Date();
 
             vm.dateOptions = {max: new Date()};
             vm.pageSizes = [5, 10, 20];
@@ -102,7 +104,7 @@
                 return arr.join("");
             };
 
-            $app.model.getProblems().then(setProblems)
+            $app.model.getProblems().then(setProblems, handleProblemsFailure)
         }
 
         function handleButton(value) {
@@ -135,7 +137,7 @@
         }
 
         function submitDate() {
-            var epoch = $scope.date.getTime() + 86400000; // + a day
+            var epoch = vm.date.getTime() + 86400000; // + a day
             vm.showDateError = false;
             newPage(vm.probsOffset, vm.probsN, epoch);
         }
@@ -228,6 +230,10 @@
                 }
             }
             return chars.join('');
+        }
+
+        function handleProblemsFailure(failure) {
+            vm.problemsError = failure;
         }
 
     }

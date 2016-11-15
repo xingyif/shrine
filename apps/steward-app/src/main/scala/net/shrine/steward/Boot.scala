@@ -4,6 +4,7 @@ import akka.actor.{ActorRef, ActorSystem, Props}
 import net.shrine.config.{ConfigExtensions, DurationConfigParser}
 import net.shrine.log.Loggable
 import net.shrine.problem.{AbstractProblem, ProblemSources}
+import net.shrine.source.ConfigSource
 import net.shrine.steward.db.StewardDatabase
 import net.shrine.steward.email.{AuditEmailer, AuditEmailerActor}
 import spray.servlet.WebBoot
@@ -18,23 +19,20 @@ import scala.util.control.NonFatal
 // the spray.servlet.WebBoot trait
 class Boot extends WebBoot with Loggable {
 
-  println("Start of steweard boot")
-  info("Start of steweard boot")
-
   // we need an ActorSystem to host our application in
   override val system = startActorSystem()
 
   // the service actor replies to incoming HttpRequests
   override val serviceActor: ActorRef = startServiceActor()
 
-  def startActorSystem() = try ActorSystem("StewardActors",StewardConfigSource.config)
+  def startActorSystem() = try ActorSystem("StewardActors",ConfigSource.config)
   catch {
     case NonFatal(x) => CannotStartDsa(x); throw x
     case x: ExceptionInInitializerError => CannotStartDsa(x); throw x
   }
 
   def startServiceActor() = try {
-    info(s"StewardActors akka daemonic config is ${StewardConfigSource.config.getString("akka.daemonic")}")
+    info(s"StewardActors akka daemonic config is ${ConfigSource.config.getString("akka.daemonic")}")
     StewardDatabase.warmUp()
 
     // the service actor replies to incoming HttpRequests
@@ -51,7 +49,7 @@ class Boot extends WebBoot with Loggable {
   def startEmailTask() = {
     // if sending email alerts is on start a periodic polling of the database at a fixed time every day.
     // if either the volume or time conditions are met, send an email to the data steward asking for an audit
-    val config = StewardConfigSource.config
+    val config = ConfigSource.config
 
     val emailConfig = config.getConfig("shrine.steward.emailDataSteward")
 
@@ -94,10 +92,6 @@ class Boot extends WebBoot with Loggable {
     }
     else 0 milliseconds //if we're testing then don't delay that first send
   }
-
-  println("End of steweard boot")
-  info("End of steweard boot")
-
 }
 
 case class CannotStartAuditEmailActor(ex:Throwable) extends AbstractProblem(ProblemSources.Dsa) {

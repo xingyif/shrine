@@ -13,20 +13,26 @@
     QEPController.$inject = ['$app', '$log'];
     function QEPController ($app, $log) {
         var vm = this;
-
+        vm.optionsError = false;
+        vm.qepError = false;
         init();
 
         function init () {
 
             $app.model.getOptionalParts()
-                .then(setOptions, handleFailure)
-                .then($app.model.getQep, handleFailure)
-                .then(setQep, handleFailure);
+                .then(setOptions, handleOptionsFailure)
+                .then($app.model.getQep)
+                .then(setQep, handleQepFailure);
         }
 
-        function handleFailure(failure) {
+        function handleOptionsFailure(failure) {
             //TODO: HANDLE FAILURE
-            $log.error(JSON.stringify(failure));
+            vm.optionsError = failure;
+        }
+
+        function handleQepFailure(failure) {
+            //TODO: HANDLE FAILURE
+            vm.qepError = failure;
         }
 
         function setOptions(options) {

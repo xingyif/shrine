@@ -11,6 +11,7 @@ import net.shrine.crypto.{BouncyKeyStoreCollection, KeyStoreDescriptorParser}
 import net.shrine.dashboard.jwtauth.ShrineJwtAuthenticator
 import net.shrine.i2b2.protocol.pm.User
 import net.shrine.protocol.Credential
+import net.shrine.source.ConfigSource
 import net.shrine.spray.ShaResponse
 import org.json4s.native.JsonMethods.parse
 import org.junit.runner.RunWith
@@ -316,7 +317,6 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
 
   "DashboardService" should "return an OK for admin/status/signature with a valid sha256 hash" in {
     val post = Post("/status/verifySignature", FormData(Seq("sha256" -> "0E:5D:D1:10:68:2B:63:F4:66:E2:50:41:EA:13:AF:1A:F9:99:DB:40:6A:F7:EE:39:F2:1A:0D:51:7A:44:09:7A")))
-    println(post)
       post ~>
       addCredentials(adminCredentials) ~>
       route ~> check {
@@ -347,7 +347,7 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
 
   "DashboardService" should  "reject a fromDashboard/ping with an expired jwts header" in {
 
-    val config = DashboardConfigSource.config
+    val config = ConfigSource.config
     val shrineCertCollection: BouncyKeyStoreCollection = BouncyKeyStoreCollection.fromFileRecoverWithClassPath(KeyStoreDescriptorParser(
       config.getConfig("shrine.keystore"),
       config.getConfigOrEmpty("shrine.hub"),
@@ -374,7 +374,7 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
 
   "DashboardService" should  "reject a fromDashboard/ping with no subject" in {
 
-    val config = DashboardConfigSource.config
+    val config = ConfigSource.config
     val shrineCertCollection: BouncyKeyStoreCollection = BouncyKeyStoreCollection.fromFileRecoverWithClassPath(KeyStoreDescriptorParser(
       config.getConfig("shrine.keystore"),
       config.getConfigOrEmpty("shrine.hub"),
@@ -395,6 +395,7 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
       sealRoute(route) ~> check {
 
       assertResult(Unauthorized)(status)
+      println(new String(body.data.toByteArray))
     }
   }
 

@@ -1,6 +1,6 @@
 package net.shrine.adapter.audit
 
-import net.shrine.adapter.service.AdapterConfigSource
+import net.shrine.source.ConfigSource
 import net.shrine.util.ShouldMatchersForJUnit
 import org.junit.{After, Before, Test}
 
@@ -18,7 +18,7 @@ class AdapterAuditDbTest extends ShouldMatchersForJUnit {// with TestWithDatabas
   @Test
   def testInsertResultsSent() {
 
-    AdapterConfigSource.configForBlock("shrine.adapter.audit.useQepAudit","true",this.getClass.getSimpleName){
+    ConfigSource.configForBlock("shrine.adapter.audit.useQepAudit","true",this.getClass.getSimpleName){
 
       AdapterAuditDb.db.insertResultSent(resultsSent)
 
@@ -30,7 +30,7 @@ class AdapterAuditDbTest extends ShouldMatchersForJUnit {// with TestWithDatabas
   @Test
   def testInsertExecutionStarted() {
 
-    AdapterConfigSource.configForBlock("shrine.adapter.audit.useQepAudit","true",this.getClass.getSimpleName){
+    ConfigSource.configForBlock("shrine.adapter.audit.useQepAudit","true",this.getClass.getSimpleName){
 
       AdapterAuditDb.db.insertExecutionStarted(executionStarted)
 
@@ -42,7 +42,7 @@ class AdapterAuditDbTest extends ShouldMatchersForJUnit {// with TestWithDatabas
   @Test
   def testInsertExecutionCompleted() {
 
-    AdapterConfigSource.configForBlock("shrine.adapter.audit.useQepAudit","true",this.getClass.getSimpleName){
+    ConfigSource.configForBlock("shrine.adapter.audit.useQepAudit","true",this.getClass.getSimpleName){
 
       AdapterAuditDb.db.insertExecutionCompleted(executionCompleted)
 
@@ -54,7 +54,7 @@ class AdapterAuditDbTest extends ShouldMatchersForJUnit {// with TestWithDatabas
   @Test
   def testInsertQueryReceived() {
 
-    AdapterConfigSource.configForBlock("shrine.adapter.audit.useQepAudit","true",this.getClass.getSimpleName){
+    ConfigSource.configForBlock("shrine.adapter.audit.useQepAudit","true",this.getClass.getSimpleName){
 
       AdapterAuditDb.db.insertQueryReceived(queryReceived)
 

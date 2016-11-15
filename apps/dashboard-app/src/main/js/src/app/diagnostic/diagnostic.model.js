@@ -63,7 +63,7 @@
          * @returns {*}
          */
         function onFail(failedResult) {
-            return {failed: failedResult};
+            return q.reject(failedResult);
         }
 
 
