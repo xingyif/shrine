@@ -9,14 +9,14 @@ import net.shrine.adapter.dao.AdapterDao
 import net.shrine.adapter.dao.model.ShrineQuery
 import net.shrine.adapter.dao.squeryl.SquerylAdapterDao
 import net.shrine.audit.NetworkQueryId
-import net.shrine.dao.squeryl.{DataSourceSquerylInitializer, SquerylInitializer, SquerylDbAdapterSelecter}
+import net.shrine.dao.squeryl.{DataSourceSquerylInitializer, SquerylDbAdapterSelecter, SquerylInitializer}
 import net.shrine.adapter.dao.squeryl.tables.{Tables => AdapterTables}
 import net.shrine.protocol.ResultOutputTypes
-import net.shrine.qep.QepConfigSource
-import net.shrine.qep.queries.{QepQueryDb, QepQuery, QepQueryFlag}
+import net.shrine.qep.queries.{QepQuery, QepQueryDb, QepQueryFlag}
 import net.shrine.slick.TestableDataSourceCreator
 import org.squeryl.internals.DatabaseAdapter
 import net.shrine.config.ConfigExtensions
+import net.shrine.source.ConfigSource
 
 /**
  * @author dwalend
@@ -47,7 +47,7 @@ object AdapterQueriesToQep {
 
       println(s"Found ${adapterQueries.size} queries for $domain in the adapter's table")
 
-      QepConfigSource.configForBlock(config, getClass.getSimpleName) {
+      ConfigSource.configForBlock(config, getClass.getSimpleName) {
 
         //filter out any queries that already exist
         val queriesInQep: Set[NetworkQueryId] = QepQueryDb.db.selectAllQepQueries.map(_.networkId).to[Set]

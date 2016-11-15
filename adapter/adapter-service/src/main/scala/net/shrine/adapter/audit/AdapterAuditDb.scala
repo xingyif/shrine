@@ -4,12 +4,12 @@ import java.sql.SQLException
 import javax.sql.DataSource
 
 import com.typesafe.config.Config
-import net.shrine.adapter.service.AdapterConfigSource
 import net.shrine.audit.{NetworkQueryId, QueryName, QueryTopicId, QueryTopicName, ShrineNodeId, Time, UserName}
 import net.shrine.crypto.KeyStoreEntry
 import net.shrine.log.Loggable
 import net.shrine.protocol.{BroadcastMessage, RunQueryRequest, RunQueryResponse, ShrineResponse}
 import net.shrine.slick.TestableDataSourceCreator
+import net.shrine.source.ConfigSource
 import slick.driver.JdbcProfile
 
 import scala.concurrent.duration.{Duration, DurationInt}
@@ -178,11 +178,11 @@ case class AdapterAuditSchema(jdbcProfile: JdbcProfile) extends Loggable {
 
 object AdapterAuditSchema {
 
-  val allConfig:Config = AdapterConfigSource.config
+  val allConfig:Config = ConfigSource.config
 
   val config:Config = allConfig.getConfig("shrine.adapter.audit.database")
 
-  val slickProfile:JdbcProfile = AdapterConfigSource.getObject("slickProfileClassName", config)
+  val slickProfile:JdbcProfile = ConfigSource.getObject("slickProfileClassName", config)
 
   val schema = AdapterAuditSchema(slickProfile)
 }

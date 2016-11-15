@@ -2,6 +2,7 @@ package net.shrine.metadata
 
 import com.typesafe.config.ConfigRenderOptions
 import net.shrine.log.Loggable
+import net.shrine.source.ConfigSource
 import spray.http.{StatusCode, StatusCodes}
 import spray.routing.{HttpService, _}
 
@@ -11,7 +12,7 @@ import scala.util.Try
   * Created by ty on 11/8/16.
   */
 trait MetaDataService extends HttpService with Loggable {
-  lazy val config = MetaConfigSource.config.getConfig("shrine.metaData")
+  lazy val config = ConfigSource.config.getConfig("shrine.metaData")
 
   lazy val route: Route = get {
     pathPrefix("ping") { complete("pong")} ~

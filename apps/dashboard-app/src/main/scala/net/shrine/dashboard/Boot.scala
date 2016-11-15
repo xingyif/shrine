@@ -2,7 +2,8 @@ package net.shrine.dashboard
 
 import akka.actor.{ActorRef, ActorSystem, Props}
 import net.shrine.log.Log
-import net.shrine.problem.{AbstractProblem, ProblemConfigSource, ProblemHandler, ProblemSources}
+import net.shrine.problem.{AbstractProblem, ProblemHandler, ProblemSources}
+import net.shrine.source.ConfigSource
 import spray.servlet.WebBoot
 
 import scala.util.control.NonFatal
@@ -21,7 +22,7 @@ class Boot extends WebBoot {
   // the service actor replies to incoming HttpRequests
   override val serviceActor: ActorRef = startServiceActor()
 
-  def startActorSystem() = try ActorSystem("DashboardActors",DashboardConfigSource.config)
+  def startActorSystem() = try ActorSystem("DashboardActors",ConfigSource.config)
   catch {
     case NonFatal(x) => CannotStartDashboard(x); throw x
     case x: ExceptionInInitializerError => CannotStartDashboard(x); throw x
@@ -30,7 +31,7 @@ class Boot extends WebBoot {
   def startServiceActor() = try {
     //TODO: create a common interface for Problems to hide behind, so that it doesn't exist anywhere in the code
     //TODO: except for when brought into scope by a DatabaseProblemHandler
-    val handler:ProblemHandler = ProblemConfigSource.getObject("shrine.problem.problemHandler", ProblemConfigSource.config)
+    val handler:ProblemHandler = ConfigSource.getObject("shrine.problem.problemHandler", ConfigSource.config)
     handler.warmUp()
 
     // the service actor replies to incoming HttpRequests

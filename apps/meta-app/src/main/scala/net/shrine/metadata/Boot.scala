@@ -1,7 +1,8 @@
 package net.shrine.metadata
 
 import akka.actor.{ActorRef, ActorSystem, Props}
-import net.shrine.problem.{ProblemConfigSource, ProblemHandler}
+import net.shrine.problem.ProblemHandler
+import net.shrine.source.ConfigSource
 import spray.servlet.WebBoot
 
 import scala.util.control.NonFatal
@@ -20,7 +21,7 @@ class Boot extends WebBoot {
   // the service actor replies to incoming HttpRequests
   override val serviceActor: ActorRef = startServiceActor()
 
-  def startActorSystem() = try ActorSystem("MetaDataActors",MetaConfigSource.config)
+  def startActorSystem() = try ActorSystem("MetaDataActors",ConfigSource.config)
   catch {
     case NonFatal(x) => CannotStartMetaData(x); throw x
     case x: ExceptionInInitializerError => CannotStartMetaData(x); throw x
@@ -29,7 +30,7 @@ class Boot extends WebBoot {
   def startServiceActor() = try {
     //TODO: create a common interface for Problems to hide behind, so that it doesn't exist anywhere in the code
     //TODO: except for when brought into scope by a DatabaseProblemHandler
-    val handler:ProblemHandler = ProblemConfigSource.getObject("shrine.problem.problemHandler", ProblemConfigSource.config)
+    val handler:ProblemHandler = ConfigSource.getObject("shrine.problem.problemHandler", ConfigSource.config)
     handler.warmUp()
 
     // the service actor replies to incoming HttpRequests

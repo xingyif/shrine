@@ -1,6 +1,6 @@
 package net.shrine.qep.audit
 
-import net.shrine.qep.QepConfigSource
+import net.shrine.source.ConfigSource
 import net.shrine.util.ShouldMatchersForJUnit
 import org.junit.{After, Before, Test}
 
@@ -15,7 +15,7 @@ class QepQueryAuditTest extends ShouldMatchersForJUnit {// with TestWithDatabase
   @Test
   def testApply() {
 
-    QepConfigSource.configForBlock("shrine.qep.audit.useQepAudit","true",this.getClass.getSimpleName){
+    ConfigSource.configForBlock("shrine.qep.audit.useQepAudit","true",this.getClass.getSimpleName){
 
       QepAuditDb.db.insertQepQuery(qepAuditData)
 

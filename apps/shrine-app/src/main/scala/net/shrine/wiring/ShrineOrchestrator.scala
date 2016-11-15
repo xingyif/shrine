@@ -2,14 +2,14 @@ package net.shrine.wiring
 
 import javax.sql.DataSource
 
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.Config
 import net.shrine.adapter.AdapterComponents
 import net.shrine.adapter.dao.AdapterDao
-import net.shrine.adapter.service._
+import net.shrine.adapter.service.{AdapterRequestHandler, AdapterResource, AdapterService, I2b2AdminResource, I2b2AdminService}
 import net.shrine.broadcaster.dao.HubDao
 import net.shrine.broadcaster.dao.squeryl.SquerylHubDao
 import net.shrine.broadcaster.service.HubComponents
-import net.shrine.client._
+import net.shrine.client.{EndpointConfig, JerseyHttpClient, OntClient, Poster, PosterOntClient}
 import net.shrine.config.ConfigExtensions
 import net.shrine.config.mappings.AdapterMappings
 import net.shrine.crypto.{BouncyKeyStoreCollection, KeyStoreDescriptorParser, SignerVerifierAdapter, TrustParam}
@@ -20,6 +20,7 @@ import net.shrine.ont.data.OntClientOntologyMetadata
 import net.shrine.protocol.{HiveCredentials, NodeId, ResultOutputType, ResultOutputTypes}
 import net.shrine.qep.{I2b2BroadcastResource, QueryEntryPointComponents, ShrineResource}
 import net.shrine.slick.TestableDataSourceCreator
+import net.shrine.source.ConfigSource
 import net.shrine.status.StatusJaxrs
 import org.squeryl.internals.DatabaseAdapter
 
@@ -46,7 +47,7 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
   //todo another pass to put things only used in one place into that place's apply(Config)
 
   //Load config from file on the classpath called "shrine.conf"
-  lazy val config: Config = ConfigFactory.load("shrine")
+  lazy val config: Config = ConfigSource.config
 
   val shrineConfig = config.getConfig("shrine")
 
