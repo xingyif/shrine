@@ -12,22 +12,32 @@
     AdapterController.$inject = ['$app', '$log'];
     function AdapterController ($app, $log) {
         var vm = this;
+        vm.adapterError = false;
+        vm.i2b2Error = false;
+        vm.summaryError = false;
 
         init();
 
         function init () {
             $app.model.getAdapter()
-                .then(setAdapter, handleFailure)
+                .then(setAdapter, handleAdapterError)
                 .then($app.model.getI2B2)
-                .then(setI2B2, handleFailure);
+                .then(setI2B2, handlei2b2Error);
 
             $app.model.getSummary()
-                .then(setSummary, handleFailure);
+                .then(setSummary, handleSummaryError);
         }
 
-        function handleFailure(failure) {
-            // TODO: HANDLE FAILURE
-            $log.error(JSON.stringify(failure));
+        function handleAdapterError(failure) {
+            vm.adapterError = failure;
+        }
+
+        function handlei2b2Error(failure) {
+            vm.i2b2Error = failure;
+        }
+
+        function handleSummaryError(failure) {
+            vm.summaryError = failure;
         }
 
 

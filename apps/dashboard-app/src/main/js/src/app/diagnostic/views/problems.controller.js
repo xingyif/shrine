@@ -72,6 +72,7 @@
         function init () {
             vm.isOpen = false;
             vm.date = new Date();
+            vm.problemsError = false;
 
             vm.dateOptions = {max: new Date()};
             vm.pageSizes = [5, 10, 20];
@@ -102,7 +103,7 @@
                 return arr.join("");
             };
 
-            $app.model.getProblems().then(setProblems)
+            $app.model.getProblems().then(setProblems, handleProblemsFailure)
         }
 
         function handleButton(value) {
@@ -228,6 +229,10 @@
                 }
             }
             return chars.join('');
+        }
+
+        function handleProblemsFailure(failure) {
+            vm.problemsError = failure;
         }
 
     }
