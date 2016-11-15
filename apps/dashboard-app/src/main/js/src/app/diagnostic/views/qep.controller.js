@@ -21,7 +21,7 @@
 
             $app.model.getOptionalParts()
                 .then(setOptions, handleOptionsFailure)
-                .then($app.model.getQep, handleFailure)
+                .then($app.model.getQep)
                 .then(setQep, handleQepFailure);
         }
 
