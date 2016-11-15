@@ -57,7 +57,7 @@ trait DashboardService extends HttpService with Loggable {
       pathPrefix("status")
       pathPrefix("verifySignature")
       verifySignature
-    } ~ complete(StatusCodes.BadRequest)
+    }
   }
 
   /** logs the request method, uri and response at info level */
