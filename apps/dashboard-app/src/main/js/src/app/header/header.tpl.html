@@ -9,10 +9,14 @@
 
         <div class="pull-right shrine-institution-logo"></div>
 
-
         <h2 ng-show="m.siteAlias" style="margin:auto auto;color: #ff3333;" class="shrine-brand">
             {{m.siteAlias.toUpperCase()}}
         </h2>
+
+            <a class="fa fa-home"
+               style="font-size:3rem;cursor: pointer;float:right;margin-top:.5em;margin-right:0;position: relative;"
+               ng-show="m.siteAlias"
+               ng-click="goHome()"></a>
 
         <!-- /.navbar-header -->
         <user-status></user-status>

@@ -395,7 +395,6 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
       sealRoute(route) ~> check {
 
       assertResult(Unauthorized)(status)
-      println(new String(body.data.toByteArray))
     }
   }
 

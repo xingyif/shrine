@@ -49,7 +49,6 @@
                 ['Owner',             keystore.owner],
                 ['Issuer',            keystore.issuer],
                 ['Expires',           keystore.expires],
-                ['Private Key Alias', keystore.caTrustedAlias],
                 ['MD5 Signature',     keystore.md5Signature],
                 ['SHA256 Signature',  keystore.sha256Signature]
             ];

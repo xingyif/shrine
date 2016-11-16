@@ -7,8 +7,6 @@
      * @type {string[]}
      */
     HeaderController.$inject = ['$app', '$scope']
-    function HeaderController($app, $scope) {
-        $scope.m.siteAlias = true;
-    }
+    function HeaderController($app, $scope) {}
 
 })();

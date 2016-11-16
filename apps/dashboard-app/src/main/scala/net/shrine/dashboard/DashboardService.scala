@@ -177,7 +177,7 @@ trait DashboardService extends HttpService with Loggable {
         case _ => ConfigSource.config.getObject("shrine.hub.downstreamNodes").values.head.unwrapped.toString
       }
 
-      val remoteDashboardPort = urlToParse.split(':')(2).split('/')(0)
+      val remoteDashboardPort = urlToParse.split(':')(2).split('/')(0) // TODO: Do ports vary between sites?
       val remoteDashboardProtocol = urlToParse.split("://")(0)
       val remoteDashboardPathPrefix = "shrine-dashboard/fromDashboard" // I don't think this needs to be configurable
 

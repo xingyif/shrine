@@ -155,7 +155,7 @@ object KeyStoreReport {
     val certCollection: BouncyKeyStoreCollection = ShrineOrchestrator.certCollection
     val maybeCaEntry: Option[KeyStoreEntry] = certCollection match {
       case DownStreamCertCollection(_, caEntry, _) => Some(caEntry)
-      case HubCertCollection(caEntry, _, _)        => Some(caEntry)
+      case HubCertCollection(_, caEntry, _)        => Some(caEntry)
       case px: PeerCertCollection                  => None
     }
     val siteStatusesPreZip = ShaVerificationService(certCollection.remoteSites.toList)
