@@ -171,7 +171,7 @@ object KeyStoreReport {
       }
     }
 
-    lazy val blockForSiteStatuses = siteStatuses.map(fut => Try(Await.result(fut._1, new FiniteDuration(10, duration.SECONDS))) match {
+    lazy val blockForSiteStatuses = siteStatuses.map(fut => Try(Await.result(fut._1, new FiniteDuration(5, duration.SECONDS))) match {
       case Success(Some(status)) => status
       case Success(None)         => Log.warn("There was an issue with the verifySignature endpoint, check that we have network connectivity")
         SiteStatus(certCollection.remoteSites(fut._2).alias, false, false, "", true)
@@ -512,7 +512,7 @@ object ShaVerificationService extends Loggable with DefaultJsonSupport {
   val certCollection = ShrineOrchestrator.certCollection
 
   def sendHttpRequest(httpRequest: HttpRequest): Future[HttpResponse] = {
-    implicit val timeout: Timeout = Timeout.durationToTimeout(new FiniteDuration(10, duration.SECONDS)) //10 seconds
+    implicit val timeout: Timeout = Timeout.durationToTimeout(new FiniteDuration(5, duration.SECONDS)) //5 seconds
 
     implicit def json4sFormats: Formats = DefaultFormats
 
@@ -604,9 +604,4 @@ object ShaVerificationService extends Loggable with DefaultJsonSupport {
     override def description: String = s"verifySig produced the invalid response `$response`"
   }
 
-  def main(args: Array[String]): Unit = {
-    val entry = CertificateCreator.createSelfSignedCertEntry("boo", "der", "derder")
-
-    println(Await.result(curl(RemoteSite("shrine-dev1.catalyst", Some(entry), "alias", "6443")), new FiniteDuration(10, duration.SECONDS)))
-  }
 }
