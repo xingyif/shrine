@@ -214,7 +214,7 @@ object I2b2 {
   def apply(): I2b2 = new I2b2(
     pmUrl = ShrineOrchestrator.pmPoster.url,
     crcUrl = ShrineOrchestrator.adapterComponents.map(_.i2b2AdminService.crcUrl),
-    ontUrl = "", //todo
+    ontUrl = "", //todo. Grab from HiveConfig?
     i2b2Domain = ShrineOrchestrator.crcHiveCredentials.domain,
     username = ShrineOrchestrator.crcHiveCredentials.username,
     crcProject = ShrineOrchestrator.crcHiveCredentials.projectId,
@@ -562,7 +562,12 @@ object ShaVerificationService extends Loggable with DefaultJsonSupport {
 
 
   def curl(site: RemoteSite): MaybeSiteStatus = {
-    val sha256 = UtilHasher.encodeCert(certCollection.myEntry.cert, "SHA-256")
+    val shaEntry = certCollection match {
+      case HubCertCollection(_, caEntry, _) => caEntry
+      case PeerCertCollection(my, _, _) => my
+      case DownStreamCertCollection(_, caEntry, _) => caEntry
+    }
+    val sha256 = UtilHasher.encodeCert(shaEntry.cert, "SHA-256")
     implicit val formats = org.json4s.DefaultFormats
     val request = Post(s"https://${site.url}:${site.port}/shrine-dashboard/status/verifySignature")
       .withEntity( // For some reason, FormData isn't producing the correct HTTP call, so we do it manually
@@ -578,8 +583,8 @@ object ShaVerificationService extends Loggable with DefaultJsonSupport {
            case Some(ShaResponse(ShaResponse.badFormat, false)) =>
              error(s"Somehow, this client is sending an incorrectly formatted SHA256 signature to the dashboard. Offending sig: $sha256")
              None
-           case Some(ShaResponse(sha256, true))                 => Some(SiteStatus(site.alias, theyHaveMine = true, haveTheirs = doWeHaveCert(sha256), site.url))
-           case Some(ShaResponse(sha256, false))                => Some(SiteStatus(site.alias, theyHaveMine = false, haveTheirs = doWeHaveCert(sha256), site.url))
+           case Some(ShaResponse(sha, true))                 => Some(SiteStatus(site.alias, theyHaveMine = true, haveTheirs = doWeHaveCert(sha), site.url))
+           case Some(ShaResponse(sha, false))                => Some(SiteStatus(site.alias, theyHaveMine = false, haveTheirs = doWeHaveCert(sha), site.url))
            case None                                            =>
              InvalidVerifySignatureResponse(rawResponse)
              None

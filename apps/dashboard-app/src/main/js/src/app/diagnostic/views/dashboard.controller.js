@@ -46,14 +46,25 @@
                     tempList.push(abbreviatedEntry)
             }
 
-            vm.otherDashboards = [['Self', '']].concat(map(entryToPair, tempList));
+            vm.otherDashboards = [['Hub', '']].concat(map(entryToPair, tempList));
+            vm.otherDashboards.sort(comparator);
             vm.clearCache = clearCache;
             vm.switchDashboard = switchDashboard;
         }
 
+        function comparator(first, second) {
+            if (first[0] == 'Hub') {
+                return -2;
+            } else {
+                var less = first[0].toLowerCase() < second[0].toLowerCase();
+                var eq = first[0].toLowerCase() == second[0].toLowerCase();
+                return less? -1: eq? 0 : 1
+            }
+        }
+
         function switchDashboard(url, alias) {
             $app.model.toDashboard.url = url;
-            $app.model.m.siteAlias = alias == 'Self'? '': alias;
+            $app.model.m.siteAlias = alias == 'Hub'? '': alias;
             clearCache();
             $location.url("/diagnostic/summary");
         }

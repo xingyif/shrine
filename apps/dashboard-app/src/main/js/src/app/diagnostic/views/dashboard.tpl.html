@@ -3,9 +3,9 @@
     <div ng-show="!vm.keyStoreError"
          style="
          display: flex;
-         justify-content: flex-start;
-         align-content: flex-start;
-         flex-flow: row wrap">
+         justify-content: center;
+         align-content: center;
+         flex-flow: column wrap">
 
         <div ng-repeat="dashboard in vm.otherDashboards" style="min-width:25%;height:10%">
             <button ng-click="vm.switchDashboard(dashboard[1], dashboard[0])"

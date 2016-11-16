@@ -20,7 +20,6 @@ final class KeyStoreDescriptorParserTest extends ShouldMatchersForJUnit {
                 privateKeyAlias="baz"
                 keyStoreType="jks"
                 caCertAliases = [foo, bar]
-                trustModelIsHub = true
                 """),
         ConfigFactory.parseString(
           """
@@ -28,7 +27,10 @@ final class KeyStoreDescriptorParserTest extends ShouldMatchersForJUnit {
             |  site1 = "https://localhost:8080/shrine/"
             |}
           """.stripMargin),
-        ConfigFactory.empty()
+        ConfigFactory.parseString(
+          """
+            |trustModelIsHub = true
+          """.stripMargin)
       )
           
       descriptor.file should be("foo")
@@ -57,6 +59,7 @@ final class KeyStoreDescriptorParserTest extends ShouldMatchersForJUnit {
             |broadcasterServiceEndpoint {
             |  url = "https://localhost:8080/shrine/"
             |}
+            |trustModelIsHub = true
           """.stripMargin)
       )
           
@@ -75,9 +78,7 @@ final class KeyStoreDescriptorParserTest extends ShouldMatchersForJUnit {
                 file="foo"
                 password="bar"
                 privateKeyAlias="baz"
-                trustModelIsHub = true
                 caCertAliases = [carra ca]
-                isHub = true
                 """),
         ConfigFactory.parseString(
           """
@@ -86,7 +87,10 @@ final class KeyStoreDescriptorParserTest extends ShouldMatchersForJUnit {
             |  site2 = "https://someOtherSite:8888/shrine/test"
             |}
           """.stripMargin),
-        ConfigFactory.empty()
+        ConfigFactory.parseString(
+          """
+            |trustModelIsHub = true
+          """.stripMargin)
       )
           
       descriptor.file should be("foo")
@@ -106,7 +110,6 @@ final class KeyStoreDescriptorParserTest extends ShouldMatchersForJUnit {
                 file="foo"
                 password="bar"
                 keyStoreType="jks"
-                trustModelIsHub = false
                 aliasMap = {
                   site1 = "node1"
                 }
@@ -117,7 +120,11 @@ final class KeyStoreDescriptorParserTest extends ShouldMatchersForJUnit {
             |  site1 = "https://somePeerSite:9999/shrine/blah"
             |}
           """.stripMargin),
-        ConfigFactory.empty()
+        ConfigFactory.parseString(
+          """
+            |trustModelIsHub = false
+          """.stripMargin
+        )
       )
 
       descriptor.file should be("foo")

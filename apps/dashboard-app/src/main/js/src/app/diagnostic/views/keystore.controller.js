@@ -61,6 +61,7 @@
 
             vm.downStreamValidation = downStreamValidation(keystore);
             vm.peerCertValidation   = peerCertValidation(keystore);
+            vm.hubCertValidation    = hubCertValidation(keystore);
             vm.keyStoreContents     = keyStoreContents(keystore)
         }
 
@@ -85,6 +86,22 @@
             }
         }
 
+        function hubCertValidation(keystore) {
+            function handleStatus(siteStatus) {
+                if (siteStatus.timeOutError) {
+                    return [siteStatus.siteAlias, "Timed Out"]
+                } else {
+                    return [siteStatus.siteAlias, siteStatus.theyHaveMine]
+                }
+            }
+
+            if (keystore.remoteSiteStatuses.length > 0 && keystore.remoteSiteStatuses[0].length == 2) {
+                return map(handleStatus, keystore.remoteSiteStatuses)
+            } else {
+                return []
+            }
+        }
+
         function peerCertValidation(keystore) {
             function handleStatus(siteStatus) {
                 if (siteStatus.timeOutError) {
@@ -93,8 +110,11 @@
                     return [siteStatus.siteAlias, siteStatus.theyHaveMine, siteStatus.haveTheirs]
                 }
             }
-
-            return map(handleStatus, keystore.remoteSiteStatuses)
+            if (keystore.remoteSiteStatuses.length > 0 && keystore.remoteSiteStatuses[0].length == 3) {
+                return map(handleStatus, keystore.remoteSiteStatuses)
+            } else {
+                return [];
+            }
         }
 
         function handleKeyStoreFailure(failure) {

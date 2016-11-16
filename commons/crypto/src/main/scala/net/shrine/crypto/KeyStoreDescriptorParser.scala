@@ -32,8 +32,8 @@ object KeyStoreDescriptorParser extends Loggable {
     import scala.collection.JavaConversions._
 
     def getTrustModel: TrustModel = {
-      val hasModel = keyStoreConfig.hasPath(trustModel)
-      if (hasModel && !keyStoreConfig.getBoolean(trustModel))
+      val hasModel = qepConfig.hasPath(trustModel)
+      if (hasModel && !qepConfig.getBoolean(trustModel))
         PeerToPeerModel
       else if (hasModel && keyStoreConfig.hasPath(isHub))
         SingleHubModel(keyStoreConfig.getBoolean(isHub))
@@ -41,7 +41,7 @@ object KeyStoreDescriptorParser extends Loggable {
         warn(s"Did not specify whether this is the hub or a downStreamNode, assuming it ${if (hubConfig.isEmpty) "isn't" else "is"} because the hub config is ${if (hubConfig.isEmpty) "empty" else "defined"}")
         SingleHubModel(!hubConfig.isEmpty)
       } else {
-        info("No Trust Model specified for this network configuration, assuming that a PeerToPeer configuration is being used")
+        info("No Trust Model specified for this network configuration, assuming that a SingleHub configuration is being used")
         PeerToPeerModel
       }
     }
@@ -49,7 +49,7 @@ object KeyStoreDescriptorParser extends Loggable {
     val tm = getTrustModel
 
     def parseUrl(url: String): String = {
-      url.split("(https://)|(:.*)")(1)
+      url.split("(://)|(:.*)")(1)
     }
 
     def parsePort(url:String): String = {
@@ -80,7 +80,7 @@ object KeyStoreDescriptorParser extends Loggable {
 
     def parseRemoteSiteFromQep: Seq[RemoteSiteDescriptor] = {
       val aliases = getCaCertAliases
-      assert(aliases.nonEmpty, "There has to be at least one caCertAlias") // TODO: Better error handling
+      assert(aliases.nonEmpty, "There has to be at least one caCertAlias")
       val qepUrl = qepConfig.getString(s"$qepEndpoint.$url")
       RemoteSiteDescriptor("Hub", Some(aliases.head), parseUrl(qepUrl), parsePort(qepUrl)) +: Nil
     }
