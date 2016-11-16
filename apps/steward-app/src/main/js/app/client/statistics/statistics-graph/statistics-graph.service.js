@@ -40,7 +40,8 @@ var Service;
         }
 
         function getCountAsPercentage(userQueryCount, maxQueryCount) {
-            return 100 * (userQueryCount / maxQueryCount);
+            var basePct = 20;
+            return 100 * (userQueryCount / maxQueryCount) + basePct;
         }
 
         function clearUsers() {
