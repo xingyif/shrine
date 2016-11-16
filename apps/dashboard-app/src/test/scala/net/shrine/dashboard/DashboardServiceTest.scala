@@ -310,7 +310,7 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
       route ~> check {
       assertResult(NotFound)(status)
       implicit val formats = ShaResponse.json4sFormats
-      assertResult(ShaResponse("65:AA:60:6C:CD:56:1F:C2:A6:90:AE:C9:01:61:96:B2:A5:EA:A5:05:A5:55:27:18:24:45:73:8F:15:A9:09:03", false)) (
+      assertResult(ShaResponse("0E:5D:D1:10:68:2B:63:F4:66:E2:50:41:EA:13:AF:1A:F9:99:DB:40:6A:F7:EE:39:F2:1A:0D:51:7A:44:09:7A", false)) (
         parse(new String(body.data.toByteArray)).extract[ShaResponse])
     }
   }
@@ -322,7 +322,7 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
       route ~> check {
       assertResult(OK)(status)
       implicit val formats = ShaResponse.json4sFormats
-      assertResult(ShaResponse("65:AA:60:6C:CD:56:1F:C2:A6:90:AE:C9:01:61:96:B2:A5:EA:A5:05:A5:55:27:18:24:45:73:8F:15:A9:09:03", true))(
+      assertResult(ShaResponse("0E:5D:D1:10:68:2B:63:F4:66:E2:50:41:EA:13:AF:1A:F9:99:DB:40:6A:F7:EE:39:F2:1A:0D:51:7A:44:09:7A", true))(
         parse(new String(body.data.toByteArray)).extract[ShaResponse]
       )
     }

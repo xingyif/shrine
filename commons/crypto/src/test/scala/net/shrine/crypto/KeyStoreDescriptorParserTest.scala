@@ -51,9 +51,12 @@ final class KeyStoreDescriptorParserTest extends ShouldMatchersForJUnit {
                 privateKeyAlias="baz"
                 keyStoreType="pkcs12"
                 caCertAliases = [carra ca]
-                trustModelIsHub = true
                 """),
-        ConfigFactory.empty(),
+        ConfigFactory.parseString(
+          """
+            |create = false
+          """.stripMargin
+        ),
         ConfigFactory.parseString(
           """
             |broadcasterServiceEndpoint {
@@ -82,6 +85,7 @@ final class KeyStoreDescriptorParserTest extends ShouldMatchersForJUnit {
                 """),
         ConfigFactory.parseString(
           """
+            |create = true
             |downstreamNodes = {
             |  site1 = "https://someRemoteSite:7777/shrine/test"
             |  site2 = "https://someOtherSite:8888/shrine/test"

@@ -19,7 +19,7 @@ object KeyStoreDescriptorParser extends Loggable {
     val keyStoreType    = "keyStoreType"
     val caCertAliases   = "caCertAliases"
     val trustModel      = "trustModelIsHub"
-    val isHub           = "isHub"
+    val isHub           = "create"
     val qepEndpoint     = "broadcasterServiceEndpoint"
     val url             = "url"
     val downStreamNodes = "downstreamNodes"
@@ -35,13 +35,13 @@ object KeyStoreDescriptorParser extends Loggable {
       val hasModel = qepConfig.hasPath(trustModel)
       if (hasModel && !qepConfig.getBoolean(trustModel))
         PeerToPeerModel
-      else if (hasModel && keyStoreConfig.hasPath(isHub))
-        SingleHubModel(keyStoreConfig.getBoolean(isHub))
+      else if (hasModel && hubConfig.hasPath(isHub))
+        SingleHubModel(hubConfig.getBoolean(isHub))
       else if (hasModel) {
         warn(s"Did not specify whether this is the hub or a downStreamNode, assuming it ${if (hubConfig.isEmpty) "isn't" else "is"} because the hub config is ${if (hubConfig.isEmpty) "empty" else "defined"}")
         SingleHubModel(!hubConfig.isEmpty)
       } else {
-        info("No Trust Model specified for this network configuration, assuming that a SingleHub configuration is being used")
+        info("No Trust Model specified for this network configuration, assuming that a Peer configuration is being used")
         PeerToPeerModel
       }
     }

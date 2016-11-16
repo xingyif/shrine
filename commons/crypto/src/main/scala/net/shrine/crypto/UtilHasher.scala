@@ -30,7 +30,12 @@ case class UtilHasher(certCollection: BouncyKeyStoreCollection) {
   }
 
   def handleSig(sha256:String): ShaResponse = {
-    val mySha =  UtilHasher.encodeCert(certCollection.myEntry.cert, "SHA-256")
+    val myEntry =  certCollection match {
+      case PeerCertCollection(my, _, _) => my
+      case DownStreamCertCollection(_, caEntry, _) => caEntry
+      case HubCertCollection(_, caEntry, _) => caEntry
+    }
+    val mySha = UtilHasher.encodeCert(myEntry.cert, "SHA-256")
     if (validSignatureFormat(sha256)) {
       containsCertWithSig(sha256).fold(ShaResponse(mySha, found = false): ShaResponse)(_ => ShaResponse(mySha, found = true))
     } else {
