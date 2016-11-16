@@ -1,5 +1,7 @@
 package net.shrine.crypto
 
+import java.net.URL
+
 import com.typesafe.config.{Config, ConfigValue, ConfigValueType}
 import net.shrine.config.ConfigExtensions
 import net.shrine.log.Loggable
@@ -49,11 +51,11 @@ object KeyStoreDescriptorParser extends Loggable {
     val tm = getTrustModel
 
     def parseUrl(url: String): String = {
-      url.split("(://)|(:.*)")(1)
+      new URL(url).getHost
     }
 
     def parsePort(url:String): String = {
-      url.split(':')(2).split('/')(0)
+      new URL(url).getPort.toString
     }
 
     def getRemoteSites: Seq[RemoteSiteDescriptor] = {
