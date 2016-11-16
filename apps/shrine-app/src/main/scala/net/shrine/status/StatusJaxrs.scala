@@ -214,7 +214,7 @@ object I2b2 {
   def apply(): I2b2 = new I2b2(
     pmUrl = ShrineOrchestrator.pmPoster.url,
     crcUrl = ShrineOrchestrator.adapterComponents.map(_.i2b2AdminService.crcUrl),
-    ontUrl = "", //todo. Grab from HiveConfig?
+    ontUrl = "", //todo. Grab from HiveConfigd?
     i2b2Domain = ShrineOrchestrator.crcHiveCredentials.domain,
     username = ShrineOrchestrator.crcHiveCredentials.username,
     crcProject = ShrineOrchestrator.crcHiveCredentials.projectId,
