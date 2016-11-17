@@ -43,6 +43,7 @@ begin
         end loop;
     end if;
 end;
+/
 -- end autoincrement
 -- alter table SHRINE_QUERY change flag_message flag_message CLOB;
 
@@ -81,6 +82,7 @@ begin
         end loop;
     end if;
 end;
+/
 -- end autoincrement
 
 
@@ -119,6 +121,7 @@ begin
         end loop;
     end if;
 end;
+/
 -- end autoincrement
 
 create table COUNT_RESULT(
@@ -153,6 +156,7 @@ begin
         end loop;
     end if;
 end;
+/
 -- end autoincrement
 
 create table BREAKDOWN_RESULT(
@@ -187,6 +191,7 @@ begin
         end loop;
     end if;
 end;
+/
 -- end autoincrement
 
 create table PRIVILEGED_USER(
@@ -221,6 +226,7 @@ begin
         end loop;
     end if;
 end;
+/
 -- end autoincrement
 
 
@@ -234,3 +240,4 @@ create or REPLACE TRIGGER problems_triggerid_id BEFORE INSERT ON
               into :new."id"
               FROM   dual;
             END;
+            /
