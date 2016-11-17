@@ -7,7 +7,7 @@ import net.shrine.broadcaster.dao.HubDao
 import net.shrine.broadcaster.{BroadcastAndAggregationService, NodeHandle, SigningBroadcastAndAggregationService}
 import net.shrine.client.Poster
 import net.shrine.config.ConfigExtensions
-import net.shrine.crypto.KeyStoreCertCollection
+import net.shrine.crypto.BouncyKeyStoreCollection
 import net.shrine.dao.squeryl.SquerylInitializer
 import net.shrine.hms.authentication.EcommonsPmAuthenticator
 import net.shrine.hms.authorization.HmsDataStewardAuthorizationService
@@ -16,6 +16,9 @@ import net.shrine.protocol.ResultOutputType
 import net.shrine.qep.dao.AuditDao
 import net.shrine.qep.dao.squeryl.SquerylAuditDao
 import net.shrine.qep.dao.squeryl.tables.Tables
+import net.shrine.util.{PeerToPeerModel, SingleHubModel, TrustModel}
+
+import scala.util.Try
 
 /**
   * @author david 
@@ -29,7 +32,7 @@ case class QueryEntryPointComponents(shrineService: QepService,
 object QueryEntryPointComponents extends Loggable {
   def apply(
              qepConfig:Config,
-             certCollection: KeyStoreCertCollection,
+             certCollection: BouncyKeyStoreCollection,
              breakdownTypes: Set[ResultOutputType],
              broadcastDestinations: Option[Set[NodeHandle]],
              hubDao: HubDao, //todo the QEP should not need the hub dao
@@ -37,9 +40,9 @@ object QueryEntryPointComponents extends Loggable {
              pmPoster: Poster //todo could really have its own
            ):QueryEntryPointComponents = {
 
-    val commonName: String = certCollection.myCommonName.getOrElse {
+    val commonName: String = certCollection.myEntry.commonName.getOrElse {
       val hostname = java.net.InetAddress.getLocalHost.getHostName
-      warn(s"No common name available from ${certCollection.descriptor}. Using $hostname instead.")
+      warn(s"No common name available from ${certCollection.myEntry}. Using $hostname instead.")
       hostname
     }
 
@@ -76,7 +79,8 @@ object QueryEntryPointComponents extends Loggable {
         broadcastService,
         breakdownTypes
       ),
-      auditDao)
+      auditDao
+    )
   }
 }
 

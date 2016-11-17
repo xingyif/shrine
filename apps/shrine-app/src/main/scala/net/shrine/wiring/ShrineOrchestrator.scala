@@ -1,9 +1,8 @@
 package net.shrine.wiring
 
-import java.io.File
 import javax.sql.DataSource
 
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.Config
 import net.shrine.adapter.AdapterComponents
 import net.shrine.adapter.dao.AdapterDao
 import net.shrine.adapter.service.{AdapterRequestHandler, AdapterResource, AdapterService, I2b2AdminResource, I2b2AdminService}
@@ -13,7 +12,7 @@ import net.shrine.broadcaster.service.HubComponents
 import net.shrine.client.{EndpointConfig, JerseyHttpClient, OntClient, Poster, PosterOntClient}
 import net.shrine.config.ConfigExtensions
 import net.shrine.config.mappings.AdapterMappings
-import net.shrine.crypto.{DefaultSignerVerifier, KeyStoreCertCollection, KeyStoreDescriptorParser, TrustParam}
+import net.shrine.crypto.{BouncyKeyStoreCollection, KeyStoreDescriptorParser, SignerVerifierAdapter, TrustParam}
 import net.shrine.dao.squeryl.{DataSourceSquerylInitializer, SquerylDbAdapterSelecter, SquerylInitializer}
 import net.shrine.happy.{HappyShrineResource, HappyShrineService}
 import net.shrine.log.Loggable
@@ -21,6 +20,7 @@ import net.shrine.ont.data.OntClientOntologyMetadata
 import net.shrine.protocol.{HiveCredentials, NodeId, ResultOutputType, ResultOutputTypes}
 import net.shrine.qep.{I2b2BroadcastResource, QueryEntryPointComponents, ShrineResource}
 import net.shrine.slick.TestableDataSourceCreator
+import net.shrine.source.ConfigSource
 import net.shrine.status.StatusJaxrs
 import org.squeryl.internals.DatabaseAdapter
 
@@ -44,19 +44,18 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
   //todo another pass to put things only used in one place into that place's apply(Config)
 
   //Load config from file on the classpath called "shrine.conf"
-  lazy val config: Config = ConfigFactory.load("shrine")
+  lazy val config: Config = ConfigSource.config
 
   val shrineConfig = config.getConfig("shrine")
 
   protected lazy val nodeId: NodeId = NodeId(shrineConfig.getString("humanReadableNodeName"))
 
   //TODO: Don't assume keystore lives on the filesystem, could come from classpath, etc
-  lazy val keyStoreDescriptor = shrineConfig.getConfigured("keystore",KeyStoreDescriptorParser(_))
-  lazy val certCollection: KeyStoreCertCollection = KeyStoreCertCollection.fromFileRecoverWithClassPath(keyStoreDescriptor)
-  protected lazy val keystoreTrustParam: TrustParam = TrustParam.SomeKeyStore(certCollection)
+  lazy val keyStoreDescriptor = KeyStoreDescriptorParser(shrineConfig.getConfig("keystore"), shrineConfig.getConfigOrEmpty("hub"), shrineConfig.getConfigOrEmpty("queryEntryPoint"))
+  lazy val certCollection: BouncyKeyStoreCollection = BouncyKeyStoreCollection.fromFileRecoverWithClassPath(keyStoreDescriptor)
+  protected lazy val keystoreTrustParam: TrustParam = TrustParam.BouncyKeyStore(certCollection)
   //todo used by the adapterServide and happyShrineService, but not by the QEP. maybe each can have its own signerVerivier
-  lazy val signerVerifier: DefaultSignerVerifier = new DefaultSignerVerifier(certCollection)
-
+  lazy val signerVerifier = SignerVerifierAdapter(certCollection)
   protected lazy val dataSource: DataSource = TestableDataSourceCreator.dataSource(shrineConfig.getConfig("squerylDataSource.database"))
   protected lazy val squerylAdapter: DatabaseAdapter = SquerylDbAdapterSelecter.determineAdapter(shrineConfig.getString("shrineDatabaseType"))
   protected lazy val squerylInitializer: SquerylInitializer = new DataSourceSquerylInitializer(dataSource, squerylAdapter)
@@ -100,8 +99,6 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
   }
     else None //todo eventually make this just another downstream node accessed via loopback
 
-  val hubConfig = shrineConfig.getConfig("hub")
-
   lazy val hubComponents: Option[HubComponents] = shrineConfig.getOptionConfiguredIf("hub",HubComponents(_,
     keystoreTrustParam,
     nodeId,
@@ -113,7 +110,7 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
   //todo anything that requires qepConfig should be inside QueryEntryPointComponents's apply
   protected lazy val qepConfig = shrineConfig.getConfig("queryEntryPoint")
 
-  lazy val queryEntryPointComponents:Option[QueryEntryPointComponents] = shrineConfig.getOptionConfiguredIf("queryEntryPoint",QueryEntryPointComponents(_,
+  lazy val queryEntryPointComponents:Option[QueryEntryPointComponents] = shrineConfig.getOptionConfiguredIf("queryEntryPoint", QueryEntryPointComponents(_,
     certCollection,
     breakdownTypes,
     hubComponents.map(_.broadcastDestinations),
@@ -151,7 +148,7 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
   
 
 
-  def poster(keystoreCertCollection: KeyStoreCertCollection)(endpoint: EndpointConfig): Poster = {
+  def poster(keystoreCertCollection: BouncyKeyStoreCollection)(endpoint: EndpointConfig): Poster = {
     val httpClient = JerseyHttpClient(keystoreCertCollection, endpoint)
 
     Poster(endpoint.url.toString, httpClient)

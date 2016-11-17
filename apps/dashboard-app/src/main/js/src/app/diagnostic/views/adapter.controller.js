@@ -9,56 +9,86 @@
      *
      * @type {string[]}
      */
-    AdapterController.$inject = ['$app'];
-    function AdapterController ($app) {
+    AdapterController.$inject = ['$app', '$log'];
+    function AdapterController ($app, $log) {
         var vm = this;
+        vm.adapterError = false;
+        vm.i2b2Error = false;
+        vm.summaryError = false;
 
         init();
 
         function init () {
-            var all     = $app.model.cache['all'];
-            var config  = $app.model.cache['config'];
+            $app.model.getAdapter()
+                .then(setAdapter, handleAdapterError)
+                .then($app.model.getI2B2)
+                .then(setI2B2, handlei2b2Error);
 
-            setAdapter(all,config);
-            setConfiguration(config);
-            setMappings(config);
+            $app.model.getSummary()
+                .then(setSummary, handleSummaryError);
+        }
+
+        function handleAdapterError(failure) {
+            vm.adapterError = failure;
+        }
+
+        function handlei2b2Error(failure) {
+            vm.i2b2Error = failure;
+        }
+
+        function handleSummaryError(failure) {
+            vm.summaryError = failure;
         }
 
 
-
-        function setAdapter (all,config) {
+        function setSummary (summary) {
             vm.adapter  = {
-                term:           config.networkStatusQuery,
-                success:        all.adapter.result.response.errorResponse === undefined
+                term:           summary.ontologyTerm, //config.networkStatusQuery,
+                success:        summary.queryResult.response.problemDigest === undefined
             };
 
-            if (all.adapter.result.response.errorResponse) {
-                vm.adapter.errorData = all.adapter.result.response.errorResponse.problem;
+            if (summary.queryResult.response.problemDigest !== undefined) {
+                vm.adapter.errorData = summary.queryResult.response.problemDigest;
             }
             else {
-                vm.adapter.description = all.adapter.result.response.runQueryResponse.queryResults.
-                    queryResult.setSize;
-                vm.adapter.description += ' ' + all.adapter.result.response.runQueryResponse.queryResults.
-                        queryResult.resultType.description;
+                //TODO FIGURE OUT THE CORRECT FIELDS FOR SUCCESSFUL QUERY RESULT
+                vm.adapter.description =  summary.queryResult.response.singleNodeResult.setSize;
+                vm.adapter.description += ' ';
+                vm.adapter.description += summary.queryResult.response.singleNodeResult.resultType
+                                            .i2b2Options.description;
             }
         }
 
-        function setConfiguration (config) {
-            vm.configuration = {
-                crcEndpointURL:     config.adapter.crcEndpointUrl,
-                crcProjectId:       config.hiveCredentials.crcProjectId,
-                domain:             config.hiveCredentials.domain,
-                username:           config.hiveCredentials.username,
-                password:           config.hiveCredentials.password,
-                lockoutThreshold:   config.adapter.adapterLockoutAttemptsThreshold
+
+        function formatDate(maybeEpoch) {
+            if (!(maybeEpoch && isFinite(maybeEpoch))) {
+                return 'UNKNOWN';
+            } else {
+                var d = new Date(maybeEpoch);
+                return d.toUTCString();
             }
         }
 
-        function setMappings (config) {
+        function setAdapter (adapter) {
             vm.mappings = {
-                mappsingsFilename:  config.adapter.adapterMappingsFilename
+                mappingsFilename:  adapter.adapterMappingsFilename,
+                mappingsDate:      formatDate(adapter.adapterMappingsDate)
+            };
+
+            vm.configuration = {
+                crcEndpointURL:     adapter.crcEndpointUrl,
+                crcProjectId:       "", //config.hiveCredentials.crcProjectId,
+                domain:             "", //config.hiveCredentials.domain,
+                username:           "", //config.hiveCredentials.username,
+                password:           "REDACTED", //config.hiveCredentials.password,
+                lockoutThreshold:   adapter.adapterLockoutAttemptsThreshold
             };
         }
 
+        function setI2B2 (i2b2) {
+            vm.configuration.crcProjectId = i2b2.crcProject;
+            vm.configuration.domain = i2b2.i2b2Domain;
+            vm.configuration.username = i2b2.username;
+        }
     }
 })();

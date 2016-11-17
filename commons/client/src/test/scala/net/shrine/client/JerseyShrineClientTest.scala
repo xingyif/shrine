@@ -1,5 +1,6 @@
 package net.shrine.client
 
+import net.shrine.crypto.NewTestKeyStore
 import net.shrine.util.ShouldMatchersForJUnit
 import net.shrine.crypto.TrustParam.AcceptAllCerts
 import net.shrine.protocol.AggregatedReadInstanceResultsResponse
@@ -25,9 +26,9 @@ import net.shrine.protocol.ShrineResponse
 import net.shrine.protocol.query.QueryDefinition
 import net.shrine.protocol.query.Term
 import net.shrine.util.XmlDateHelper
-import net.shrine.crypto.TestKeystore
 import net.shrine.protocol.QueryMaster
 import net.shrine.protocol.DefaultBreakdownResultOutputTypes
+
 import scala.util.Success
 import scala.util.Try
 
@@ -64,7 +65,7 @@ final class JerseyShrineClientTest extends ShouldMatchersForJUnit {
     }
       
     doTestConstructor(new JerseyShrineClient(uri, projectId, authn, DefaultBreakdownResultOutputTypes.toSet, AcceptAllCerts))
-    doTestConstructor(new JerseyShrineClient(uri, projectId, authn, DefaultBreakdownResultOutputTypes.toSet, TestKeystore.trustParam))
+    doTestConstructor(new JerseyShrineClient(uri, projectId, authn, DefaultBreakdownResultOutputTypes.toSet, NewTestKeyStore.trustParam))
     
     intercept[IllegalArgumentException] {
       new JerseyShrineClient(null, projectId, authn, DefaultBreakdownResultOutputTypes.toSet, AcceptAllCerts)
@@ -94,7 +95,7 @@ final class JerseyShrineClientTest extends ShouldMatchersForJUnit {
 
     val value = "laskjdasjklfhkasf"
 
-    val client = new JerseyShrineClient(uri, projectId, authn, DefaultBreakdownResultOutputTypes.toSet, TestKeystore.trustParam)
+    val client = new JerseyShrineClient(uri, projectId, authn, DefaultBreakdownResultOutputTypes.toSet, NewTestKeyStore.trustParam)
     
     val unmarshalled: Foo = client.perform(true)(client.webResource, _ => Foo(value).toXml.toString)
 

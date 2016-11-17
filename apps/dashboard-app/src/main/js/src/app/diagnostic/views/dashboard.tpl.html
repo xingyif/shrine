@@ -1,0 +1,17 @@
+<div>
+    <div ng-show="!vm.keyStoreError"
+         style="
+         display: flex;
+         justify-content: center;
+         align-content: center;
+         flex-flow: column wrap">
+
+        <div ng-repeat="dashboard in vm.otherDashboards" style="width:25%;height:10%">
+            <button ng-click="vm.switchDashboard(dashboard[1], dashboard[0])"
+                    style="padding:5px 10px 5px 10px; font-size:x-large;%"
+                    class="btn btn-primary btn-block">
+                {{dashboard[0]}}
+            </button>
+        </div>
+    </div>
+</div>

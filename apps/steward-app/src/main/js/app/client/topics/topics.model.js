@@ -30,13 +30,14 @@
             rejectTopic: rejectTopic
         };
 
-        /* 
-            preserve method signature to allow flexibility in controller,
-            note undefined passed in place of state. 
+        // -- private -- //
+
+        /*  -- preserve method signature to allow flexibility in controller 
+            -- note undefined passed in place of state -- 
         */
         function getResearcherTopics(skip, limit, state, sortBy, sortDirection) {
             var url = service.getUrl(urls.researcherTopics, skip,
-                limit, state, sortBy, sortDirection);
+                limit, undefined, sortBy, sortDirection);
 
             return $http.get(url)
                 .then(parseTopics, onFail);

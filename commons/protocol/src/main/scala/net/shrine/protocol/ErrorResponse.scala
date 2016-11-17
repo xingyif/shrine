@@ -52,7 +52,7 @@ object ErrorResponse extends XmlUnmarshaller[ErrorResponse] with I2b2Unmarshalle
   val rootTagName = "errorResponse"
 
   def apply(problem:Problem) = {
-    LoggingProblemHandler.handleProblem(problem) //todo someday hook up to the proper problem handler hierarchy.
+    //Is this needed? LoggingProblemHandler.handleProblem(problem) //todo someday hook up to the proper problem handler hierarchy.
     new ErrorResponse(problem.summary,problem.toDigest)
   }
 

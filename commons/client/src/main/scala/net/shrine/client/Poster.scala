@@ -1,6 +1,6 @@
 package net.shrine.client
 
-import net.shrine.crypto.KeyStoreCertCollection
+import net.shrine.crypto.BouncyKeyStoreCollection
 
 /**
  * @author clint
@@ -16,7 +16,7 @@ final case class Poster(url: String, httpClient: HttpClient) {
 
 object Poster {
   //todo a version based on config
-  def apply(keystoreCertCollection: KeyStoreCertCollection,endpoint: EndpointConfig):Poster = {
+  def apply(keystoreCertCollection: BouncyKeyStoreCollection, endpoint: EndpointConfig):Poster = {
 
     val httpClient = JerseyHttpClient(keystoreCertCollection, endpoint)
 

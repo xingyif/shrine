@@ -1,0 +1,2 @@
+{"shouldQuerySelf":false,"create":true,"downstreamNodes":[{"name":"some hospital","url":"http://example.com/foo/requests"},{"name":"PHS","url":"http://example.com/phs/requests"},{"name":"CHB","url":"http://example.com/chb/requests"},{"name":"SHRINE Cell","url":"not applicable"}]}
+

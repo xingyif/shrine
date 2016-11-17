@@ -4,7 +4,7 @@ package net.shrine.crypto
  * @author clint
  * @date Nov 22, 2013
  */
-final case class KeyStoreType private (val name: String) {
+final case class KeyStoreType private (name: String) {
   override def toString: String = name
 }
 

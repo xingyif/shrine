@@ -38,6 +38,7 @@ case class Obfuscator(binSize:Int,stdDev:Double,noiseClamp:Int) {
     }
   }
 
+//note that the bounds of this obfuscation are actually clamp + binSize/2
   def obfuscate(l: Long): Long = {
 
     def roundToNearest(i: Double, n: Double): Long = {
@@ -55,17 +56,26 @@ case class Obfuscator(binSize:Int,stdDev:Double,noiseClamp:Int) {
       else noise
     }
 
-    //bin
-    val binned = roundToNearest(l, binSize)
+    if((l > noiseClamp) && (l > 10)) { //todo fix with SHRINE-1716
+      //bin
+      val binned = roundToNearest(l, binSize)
 
-    //add noise
-    val noised = binned + clampedGaussian(binned, noiseClamp)
+      //add noise
+      val noised = binned + clampedGaussian(binned, noiseClamp)
 
-    //bin again
-    roundToNearest(noised, binSize)
+      //bin again
+      val rounded = roundToNearest(noised, binSize)
+
+      //finally, if rounded is clamp or smaller, report that the result is too small.
+      if ((rounded > noiseClamp) && (rounded > 10)) rounded //todo fix with SHRINE-1716
+      else Obfuscator.LESS_THAN_CLAMP //will be reported as "$clamped or fewer"
+    }
+    else Obfuscator.LESS_THAN_CLAMP
   }
 }
 
 object Obfuscator {
   def apply(config:Config): Obfuscator = Obfuscator(config.getInt("binSize"),config.getDouble("sigma"),config.getInt("clamp"))
+
+  val LESS_THAN_CLAMP = -1L
 }

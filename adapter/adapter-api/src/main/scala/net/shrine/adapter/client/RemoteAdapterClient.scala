@@ -22,6 +22,8 @@ import net.shrine.protocol.Result
 import scala.util.{Failure, Success, Try}
 import net.shrine.protocol.ResultOutputType
 
+import scala.collection.immutable.Stream.Empty
+
 /**
  * @author clint
  * @since Nov 15, 2013
@@ -113,7 +115,14 @@ case class HttpErrorCodeFromAdapter(url:String,statusCode:Int,responseBody:Strin
 
   override def description: String = s"Hub received error code $statusCode from the adapter at $url"
 
-  override def detailsXml:NodeSeq = <details>{s"Http response body was $responseBody"}</details>
+  override def detailsXml:NodeSeq = {
+    if (responseBody.isEmpty)
+      <details>"Error response contained no body"</details>
+    else {
+      val result = s"Http response body was $responseBody"
+      <details>{result}</details>
+    }
+  }
 }
 
 case class CouldNotParseXmlFromAdapter(url:String,statusCode:Int,responseBody:String,saxx: SAXParseException) extends AbstractProblem(ProblemSources.Adapter) {

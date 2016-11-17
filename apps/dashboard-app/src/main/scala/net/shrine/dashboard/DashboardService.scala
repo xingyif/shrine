@@ -4,23 +4,27 @@ import akka.actor.Actor
 import akka.event.Logging
 import net.shrine.authentication.UserAuthenticator
 import net.shrine.authorization.steward.OutboundUser
+import net.shrine.config.ConfigExtensions
+import net.shrine.crypto.{BouncyKeyStoreCollection, KeyStoreDescriptorParser, UtilHasher}
+import net.shrine.dashboard.httpclient.HttpClientDirectives.{forwardUnmatchedPath, requestUriThenRoute}
 import net.shrine.dashboard.jwtauth.ShrineJwtAuthenticator
 import net.shrine.i2b2.protocol.pm.User
-import net.shrine.status.protocol.{Config => StatusProtocolConfig}
-import net.shrine.dashboard.httpclient.HttpClientDirectives.{forwardUnmatchedPath, requestUriThenRoute}
 import net.shrine.log.Loggable
 import net.shrine.problem.{ProblemDigest, Problems}
 import net.shrine.serialization.NodeSeqSerializer
+import net.shrine.source.ConfigSource
+import net.shrine.spray._
+import net.shrine.status.protocol.{Config => StatusProtocolConfig}
+import net.shrine.util.SingleHubModel
+import org.json4s.native.JsonMethods.{parse => json4sParse}
+import org.json4s.{DefaultFormats, Formats}
 import shapeless.HNil
 import spray.http.{HttpRequest, HttpResponse, StatusCodes, Uri}
 import spray.httpx.Json4sSupport
-import spray.routing.directives.LogEntry
 import spray.routing._
-import org.json4s.{DefaultFormats, Formats}
-import org.json4s.native.JsonMethods.{parse => json4sParse}
+import spray.routing.directives.LogEntry
 
 import scala.collection.immutable.Iterable
-import scala.concurrent.duration.{Duration, FiniteDuration, SECONDS}
 import scala.concurrent.ExecutionContext.Implicits.global
 
 /**
@@ -42,14 +46,18 @@ class DashboardServiceActor extends Actor with DashboardService {
   * A web service that provides the Dashboard endpoints. It is a trait to support testing independent of Akka.
   */
 
-trait DashboardService extends HttpService with Json4sSupport with Loggable {
-  implicit def json4sFormats: Formats = DefaultFormats
+trait DashboardService extends HttpService with Loggable {
 
-  val userAuthenticator = UserAuthenticator(DashboardConfigSource.config)
+  val userAuthenticator = UserAuthenticator(ConfigSource.config)
 
   //don't need to do anything special for unauthorized users, but they do need access to a static form.
-  lazy val route:Route = gruntWatchCorsSupport{
-    redirectToIndex ~ staticResources ~ makeTrouble ~ about ~ authenticatedInBrowser ~ authenticatedDashboard
+  lazy val route:Route = gruntWatchCorsSupport {
+    redirectToIndex ~ staticResources ~ makeTrouble ~ about ~ authenticatedInBrowser ~ authenticatedDashboard ~ post {
+      // Chicken and egg problem; Can't check status of certs validation between sites if you need valid certs to exchange messages
+      pathPrefix("status")
+      pathPrefix("verifySignature")
+      verifySignature
+    }
   }
 
   /** logs the request method, uri and response at info level */
@@ -91,6 +99,7 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
     logRequestResponse(logEntryForRequestResponse _) { //logging is controlled by Akka's config, slf4j, and log4j config
       get { //all remote dashboard calls are gets.
         authenticate(ShrineJwtAuthenticator.authenticate) { user =>
+          info(s"Sucessfully authenticated user `$user`")
           adminRoute(user)
         }
       }
@@ -133,12 +142,12 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
   def adminRoute(user:User):Route = get {
 
     pathPrefix("happy") {
-      val happyBaseUrl: String = DashboardConfigSource.config.getString("shrine.dashboard.happyBaseUrl")
+      val happyBaseUrl: String = ConfigSource.config.getString("shrine.dashboard.happyBaseUrl")
 
       forwardUnmatchedPath(happyBaseUrl)
     } ~
       pathPrefix("messWithHappyVersion") { //todo is this used?
-      val happyBaseUrl: String = DashboardConfigSource.config.getString("shrine.dashboard.happyBaseUrl")
+      val happyBaseUrl: String = ConfigSource.config.getString("shrine.dashboard.happyBaseUrl")
 
         def pullClasspathFromConfig(httpResponse:HttpResponse,uri:Uri):Route = {
           ctx => {
@@ -149,37 +158,69 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
 
         requestUriThenRoute(happyBaseUrl+"/version",pullClasspathFromConfig)
       } ~
-      pathPrefix("ping") {complete("pong")}~
-      pathPrefix("status"){statusRoute(user)}
+    pathPrefix("ping")   { complete("pong") }~
+    pathPrefix("status") { statusRoute(user) }
   }
 
   //Manually test this by running a curl command
-  //curl -k -w "\n%{response_code}\n" -u dave:kablam "https://shrine-dev1.catalyst:6443/shrine-dashboard/toDashboard/shrine-dev2.catalyst/shrine-dashboard/fromDashboard/ping"
+  //curl -k -w "\n%{response_code}\n" -u dave:kablam "https://shrine-dev1.catalyst:6443/shrine-dashboard/toDashboard/shrine-dev2.catalyst/ping"
   /**
     * Forward a request from this dashboard to a remote dashboard
     */
   def toDashboardRoute(user:User):Route = get {
 
     pathPrefix(Segment) { dnsName =>
-      val remoteDashboardProtocol = DashboardConfigSource.config.getString("shrine.dashboard.remoteDashboard.protocol")
-      val remoteDashboardPort = DashboardConfigSource.config.getString("shrine.dashboard.remoteDashboard.port")
-      val remoteDashboardPathPrefix = DashboardConfigSource.config.getString("shrine.dashboard.remoteDashboard.pathPrefix")
+      import scala.collection.JavaConversions._
 
-      val baseUrl = s"$remoteDashboardProtocol$dnsName$remoteDashboardPort/$remoteDashboardPathPrefix"
+      val urlToParse: String = KeyStoreInfo.keyStoreDescriptor.trustModel match {
+        case SingleHubModel(false) => ConfigSource.config.getString("shrine.queryEntryPoint.broadcasterServiceEndpoint.url")
+        case _ => ConfigSource.config.getObject("shrine.hub.downstreamNodes").values.head.unwrapped.toString
+      }
 
-      forwardUnmatchedPath(baseUrl,Some(ShrineJwtAuthenticator.createOAuthCredentials(user)))
+      val remoteDashboardPort = urlToParse.split(':')(2).split('/')(0) // TODO: Do ports vary between sites?
+      val remoteDashboardProtocol = urlToParse.split("://")(0)
+      val remoteDashboardPathPrefix = "shrine-dashboard/fromDashboard" // I don't think this needs to be configurable
+
+      val baseUrl = s"$remoteDashboardProtocol://$dnsName:$remoteDashboardPort/$remoteDashboardPathPrefix"
+
+      forwardUnmatchedPath(baseUrl,Some(ShrineJwtAuthenticator.createOAuthCredentials(user, dnsName)))
     }
   }
 
+
   def statusRoute(user:User):Route = get {
-    pathPrefix("config"){getConfig}~
-      pathPrefix("classpath"){getClasspath}~
-      pathPrefix("options"){getOptionalParts}~  //todo rename path to optionalParts
-      pathPrefix("summary"){getSummary}~
-      pathPrefix("problems"){getProblems}
+    val( adapter ,  hub ,  i2b2 ,  keystore ,  optionalParts ,  qep ,  summary ) =
+       ("adapter", "hub", "i2b2", "keystore", "optionalParts", "qep", "summary")
+    pathPrefix("classpath")   { getClasspath }~
+    pathPrefix("config")      { getConfig }~
+    pathPrefix("problems")    { getProblems }~
+    pathPrefix(adapter)       { getFromSubService(adapter) }~
+    pathPrefix(hub)           { getFromSubService(hub) }~
+    pathPrefix(i2b2)          { getFromSubService(i2b2) }~
+    pathPrefix(keystore)      { getFromSubService(keystore) }~
+    pathPrefix(optionalParts) { getFromSubService(optionalParts) }~
+    pathPrefix(qep)           { getFromSubService(qep) }~
+    pathPrefix(summary)       { getFromSubService(summary) }
   }
 
-  val statusBaseUrl = DashboardConfigSource.config.getString("shrine.dashboard.statusBaseUrl")
+  val statusBaseUrl = ConfigSource.config.getString("shrine.dashboard.statusBaseUrl")
+
+  // TODO: Move this over to Status API?
+  lazy val verifySignature:Route = {
+
+    formField("sha256".as[String].?) { sha256: Option[String] =>
+      val response = sha256.map(s => KeyStoreInfo.hasher.handleSig(s))
+      implicit val format = ShaResponse.json4sFormats
+      response match {
+        case None                                           => complete(StatusCodes.BadRequest)
+        case Some(sh@ShaResponse(ShaResponse.badFormat, _)) => complete(StatusCodes.BadRequest -> sh)
+        case Some(sh@ShaResponse(_, false))                 => complete(StatusCodes.NotFound -> sh)
+        case Some(sh@ShaResponse(_, true))                  => complete(StatusCodes.OK -> sh)
+      }
+    }
+  }
+
+
 
   lazy val getConfig:Route = {
 
@@ -209,12 +250,8 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
     requestUriThenRoute(statusBaseUrl + "/config",pullClasspathFromConfig)
   }
 
-  lazy val getOptionalParts:Route = {
-    requestUriThenRoute(statusBaseUrl + "/optionalParts")
-  }
-
-  lazy val getSummary:Route = {
-    requestUriThenRoute(statusBaseUrl + "/summary")
+  def getFromSubService(key: String):Route = {
+    requestUriThenRoute(s"$statusBaseUrl/$key")
   }
 
   // table based view, can see N problems at a time. Front end sends how many problems that they want
@@ -227,30 +264,46 @@ trait DashboardService extends HttpService with Json4sSupport with Loggable {
 
     val db = Problems.DatabaseConnector
 
-    parameters("offset".as[Int].?(0), "n".as[Int].?(20), "epoch".as[Long].?) {(offsetPreMod, nPreMax, epoch: Option[Long]) => {
-      val n = Math.max(0, nPreMax)
-      val moddedOffset = floorMod(Math.max(0, offsetPreMod), n)
+    // Intellij loudly complains if you use parameters instead of chained parameter calls.
+    // ¯\_(ツ)_/¯
+    parameter("offset".as[Int].?(0)) {(offsetPreMod:Int) => {
+      parameter("n".as[Int].?(20)) {(nPreMax:Int) =>
+        parameter("epoch".as[Long].?) {(epoch:Option[Long]) =>
+          val n = Math.max(0, nPreMax)
+          val moddedOffset = floorMod(Math.max(0, offsetPreMod), n)
 
-      val query = for {
-        result <- db.IO.sizeAndProblemDigest(n, moddedOffset)
-      } yield (result._2, floorMod(Math.max(0, moddedOffset), n), n, result._1)
+          val query = for {
+            result <- db.IO.sizeAndProblemDigest(n, moddedOffset)
+          } yield (result._2, floorMod(Math.max(0, moddedOffset), n), n, result._1)
 
-      val query2 = for {
-        dateOffset <- db.IO.findIndexOfDate(epoch.getOrElse(0))
-        moddedOffset = floorMod(dateOffset, n)
-        result <- db.IO.sizeAndProblemDigest(n, moddedOffset)
-      } yield (result._2, moddedOffset, n, result._1)
+          val query2 = for {
+            dateOffset <- db.IO.findIndexOfDate(epoch.getOrElse(0))
+            moddedOffset = floorMod(dateOffset, n)
+            result <- db.IO.sizeAndProblemDigest(n, moddedOffset)
+          } yield (result._2, moddedOffset, n, result._1)
 
-      val response: ProblemResponse = ProblemResponse.tupled(db.runBlocking(if (epoch.isEmpty) query else query2))
-      implicit val formats = response.json4sMarshaller
-      complete(response)
-    }}
+          val queryReal = if (epoch.isEmpty) query else query2
+          val tupled = db.runBlocking(queryReal)
+          val response: ProblemResponse = ProblemResponse(tupled._1, tupled._2, tupled._3, tupled._4)
+          implicit val formats = response.json4sMarshaller
+          complete(response)
+    }}}}
   }
-
 }
 
 case class ProblemResponse(size: Int, offset: Int, n: Int, problems: Seq[ProblemDigest]) extends Json4sSupport {
   override implicit def json4sFormats: Formats = DefaultFormats + new NodeSeqSerializer
+}
+
+object KeyStoreInfo {
+  val config             = ConfigSource.config
+  val keyStoreDescriptor = KeyStoreDescriptorParser(
+    config.getConfig("shrine.keystore"),
+    config.getConfigOrEmpty("shrine.hub"),
+    config.getConfigOrEmpty("shrine.queryEntryPoint"))
+  val certCollection     = BouncyKeyStoreCollection.fromFileRecoverWithClassPath(keyStoreDescriptor)
+  val hasher             = UtilHasher(certCollection)
+
 }
 
 /**
@@ -311,9 +364,9 @@ case class ShrineConfig(isHub:Boolean,
                         queryEntryPoint:QEP,
                         networkStatusQuery:String,
                         configMap:Map[String, String]
-                       )
+                       ) extends DefaultJsonSupport
 
-object ShrineConfig{
+object ShrineConfig extends DefaultJsonSupport {
   def apply(config:ParsedConfig):ShrineConfig = {
     val hub               = Hub(config)
     val isHub             = config.isHub
@@ -447,19 +500,19 @@ object QEP{
 //adapted from https://gist.github.com/joseraya/176821d856b43b1cfe19
 object gruntWatchCorsSupport extends Directive0 with RouteConcatenation {
 
-  import spray.http.HttpHeaders.{`Access-Control-Allow-Methods`, `Access-Control-Max-Age`, `Access-Control-Allow-Headers`,`Access-Control-Allow-Origin`}
-  import spray.routing.directives.RespondWithDirectives.respondWithHeaders
-  import spray.routing.directives.MethodDirectives.options
-  import spray.routing.directives.RouteDirectives.complete
-  import spray.http.HttpMethods.{OPTIONS,GET,POST}
   import spray.http.AllOrigins
+  import spray.http.HttpHeaders.{`Access-Control-Allow-Headers`, `Access-Control-Allow-Methods`, `Access-Control-Allow-Origin`, `Access-Control-Max-Age`}
+  import spray.http.HttpMethods.{GET, OPTIONS, POST}
+  import spray.routing.directives.MethodDirectives.options
+  import spray.routing.directives.RespondWithDirectives.respondWithHeaders
+  import spray.routing.directives.RouteDirectives.complete
 
   private val allowOriginHeader = `Access-Control-Allow-Origin`(AllOrigins)
   private val optionsCorsHeaders = List(
     `Access-Control-Allow-Headers`("Origin, X-Requested-With, Content-Type, Accept, Accept-Encoding, Accept-Language, Host, Referer, User-Agent, Authorization"),
     `Access-Control-Max-Age`(1728000)) //20 days
 
-  val gruntWatch:Boolean = DashboardConfigSource.config.getBoolean("shrine.dashboard.gruntWatch")
+  val gruntWatch:Boolean = ConfigSource.config.getBoolean("shrine.dashboard.gruntWatch")
 
   override def happly(f: (HNil) => Route): Route = {
     if(gruntWatch) {

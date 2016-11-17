@@ -52,3 +52,5 @@ create index "stewardResponseIndex" on "queries" ("stewardResponse");
 create index "topicIdIndex" on "queries" ("topic");
 create table "userTopic" ("researcher" VARCHAR(254) NOT NULL,"topicId" INTEGER NOT NULL,"state" VARCHAR(254) NOT NULL,"changedBy" VARCHAR(254) NOT NULL,"changeDate" NUMBER NOT NULL);
 create unique index "researcherTopicIdIndex" on "userTopic" ("researcher","topicId");
+
+create table "userAudit" ("researcher" VARCHAR(254) NOT NULL,"queryCount" INTEGER NOT NULL,"changeDate" NUMBER NOT NULL);

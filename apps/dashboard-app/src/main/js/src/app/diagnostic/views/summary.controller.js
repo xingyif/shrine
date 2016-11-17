@@ -10,10 +10,12 @@
      * Summary Controller.
      *
      */
-    SummaryController.$inject = ['$app', '$sce']
-    function SummaryController ($app, $sce) {
+    SummaryController.$inject = ['$app', '$sce', '$log']
+    function SummaryController ($app, $sce, $log) {
         var vm          = this;
-
+        var unknown     = 'UNKNOWN';
+        vm.summaryError = false;
+        vm.i2b2Error    = false;
         init();
 
         
@@ -21,11 +23,28 @@
          *
          */
         function init() {
-            $app.model.getHappyAll()
-                .then(setSummary, onHappyFail);
+            $app.model.getSummary()
+                .then(setSummary, handleSummaryFailure);
 
-            $app.model.getConfig()
-                .then(setConfig, onConfigFail);
+            $app.model.getI2B2()
+                .then(setI2B2, handleI2B2Failure);
+        }
+
+        function handleSummaryFailure(failure) {
+            vm.summaryError = failure;
+        }
+
+        function handleI2B2Failure(failure) {
+            vm.i2b2Error = failure;
+        }
+
+        function formatDate(maybeEpoch) {
+            if (!(maybeEpoch && isFinite(maybeEpoch))) {
+                return unknown;
+            } else {
+                var d = new Date(maybeEpoch);
+                return d.toUTCString();
+            }
         }
 
 
@@ -33,55 +52,20 @@
          *
          * @param summary
          */
-        function setSummary(happyAll) {
-
-            // -- cache summary and all -- //
-            $app.model.cache['all']     = happyAll.all;
-            $app.model.cache['summary'] = happyAll.summary;
-
-            // -- set viewmodel  -- //
-            vm.summary              = happyAll.summary;
+        function setSummary(summary) {
+            vm.summary              = summary;
+            if (vm.summary.adapterMappingsFileName === undefined) {
+                vm.summary.adapterMappingsFileName = unknown;
+            } else if (vm.summary.adapterMappingsDate === undefined) {
+                vm.summary.adapterMappingsDate = unknown;
+            } else {
+                vm.summary.adapterMappingsDate = formatDate(vm.summary.adapterMappingsDate);
+            }
             return this;
         }
 
-
-        /**
-         *
-         * @returns {*}
-         */
-        function getConfig() {
-             return $app.model.getConfig();
-        }
-
-
-        /**
-         *
-         * @param config
-         */
-        function setConfig(config) {
-
-            // -- cache the config --
-            $app.model.cache['config']  =  config;
-            vm.config                   = config;
-            return this;
-        }
-
-
-        /**
-         *
-         * @param data
-         */
-        function onHappyFail(data) {
-            vm.trustedHtml  = $sce.trustAsHtml(data);
-        }
-
-
-        /**
-         *
-         * @param data
-         */
-        function onConfigFail (data) {
-            vm.trustedHtml  = $sce.trustAsHtml(data);
+        function setI2B2(i2b2) {
+            vm.ontProject = i2b2.ontProject;
         }
     }
 })();

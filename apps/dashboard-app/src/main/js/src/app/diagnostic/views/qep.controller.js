@@ -10,60 +10,44 @@
      *
      * @type {string[]}
      */
-    QEPController.$inject = ['$app'];
-    function QEPController ($app) {
+    QEPController.$inject = ['$app', '$log'];
+    function QEPController ($app, $log) {
         var vm = this;
-
+        vm.optionsError = false;
+        vm.qepError = false;
         init();
 
         function init () {
-            var config = $app.model.cache['config'];
-            setIsDownstream(config);
-            setStewardEnabled(config);
-            setBroadcasterUrl(config);
-            setSteward(config);
+
+            $app.model.getOptionalParts()
+                .then(setOptions, handleOptionsFailure)
+                .then($app.model.getQep)
+                .then(setQep, handleQepFailure);
         }
 
-
-        /**
-         *
-         * @param config
-         */
-        function setIsDownstream (config) {
-            vm.isDownstream = config.isHub === false;
+        function handleOptionsFailure(failure) {
+            //TODO: HANDLE FAILURE
+            vm.optionsError = failure;
         }
 
-
-        /**
-         *
-         * @param config
-         */
-        function setStewardEnabled (config) {
-            vm.isStewardEnabled = config.queryEntryPoint.shrineSteward !== undefined;
+        function handleQepFailure(failure) {
+            //TODO: HANDLE FAILURE
+            vm.qepError = failure;
         }
 
-
-        /**
-         *
-         */
-        function setBroadcasterUrl (config) {
-            vm.broadcasterUrl = (vm.isDownstream === true && config.queryEntryPoint.broadcasterServiceEndpointUrl !== undefined)?
-                config.queryEntryPoint.broadcasterServiceEndpointUrl : "UNKNOWN";
-        }
-
-
-        /**
-         *
-         */
-        function setSteward (config) {
-            if(vm.isStewardEnabled === true && vm.isStewardEnabled === true) {
-                vm.steward = {
-                    qepUsername:    config.queryEntryPoint.shrineSteward.qepUserName,
-                    stewardBaseUrl: config.queryEntryPoint.shrineSteward.stewardBaseUrl,
-                    password:       "REDACTED"
-                }
-            }
+        function setOptions(options) {
+            vm.isStewardEnabled = options.stewardEnabled;
+            vm.isDownstream = !options.isHub;
 
         }
+
+        function setQep(qep) {
+            vm.steward = qep.steward;
+            vm.broadcasterUrl = (vm.isDownstream && qep.broadcasterUrl !== undefined)?
+                                    qep.broadcasterUrl:
+                                    'Unknown';
+            vm.trustModel = qep.trustModel;
+        }
+
     }
 })();

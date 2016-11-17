@@ -16,6 +16,7 @@ create table SHRINE_QUERY(
   index ix_SHRINE_QUERY_username_domain (username, domain),
   query_xml text
 ) engine=innodb default charset=latin1;
+alter table SHRINE_QUERY change flag_message flag_message text;
 
 create table QUERY_RESULT(
   id int not null auto_increment,

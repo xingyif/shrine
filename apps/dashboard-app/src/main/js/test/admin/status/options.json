@@ -1,1 +1,0 @@
-{"isHub":true,"stewardEnabled":false,"shouldQuerySelf":false, "downstreamNodes":[{"name":"PHS","url":"http://example.com/phs"},{"name":"\"some hospital\"","url":"http://example.com/foo"},{"name":"CHB","url":"http://example.com/chb"}]}

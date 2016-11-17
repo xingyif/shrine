@@ -9,10 +9,10 @@ import net.shrine.qep.I2b2QepService
 import net.shrine.client.ShrineClient
 import net.shrine.client.JerseyShrineClient
 import net.shrine.protocol.AuthenticationInfo
-import net.shrine.crypto.TrustParam
 import net.shrine.client.Poster
 import net.shrine.client.JerseyHttpClient
 import net.shrine.broadcaster.BroadcasterClient
+import net.shrine.crypto.TrustParam
 import net.shrine.protocol.DefaultBreakdownResultOutputTypes
 
 object Hubs {

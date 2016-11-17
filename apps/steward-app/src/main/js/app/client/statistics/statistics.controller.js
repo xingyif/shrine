@@ -7,23 +7,32 @@
 
     StatisticsController.$inject = ['StatisticsModel', 'StewardService', '$scope'];
     function StatisticsController(model, service, $scope) {
+        var showOntClass = 'ont-overlay';
+        var hideOntClass = 'ont-hidden';
 
         var stats = this;
+        stats.ontClass = hideOntClass;
         var startDate = new Date();
         var endDate = new Date();
         startDate.setDate(endDate.getDate() - 7);
 
         stats.getDateString = service.commonService.dateService.utcToMMDDYYYY;
         stats.timestampToUtc = service.commonService.dateService.timestampToUtc;
-
+        stats.viewDigest = viewDigest;
         stats.startDate = startDate; 
         stats.endDate = endDate;
 
         stats.isValid = true;
         stats.startOpened = false;
         stats.endOpened = false;
-        stats.queriesPerUser = {};
         stats.topicsPerState = {};
+        stats.ontology = {};
+
+        stats.graphData = {
+            total: 0,
+            users: []
+        };
+
         stats.format = 'MM/dd/yyyy';
 
         stats.openStart = openStart;
@@ -33,6 +42,8 @@
         stats.parseStateTitle = parseStateTitle;
         stats.parseStateCount = parseStateCount;
         stats.getResults = getResults;
+        stats.viewDigest = viewDigest;
+
 
         // -- start -- //
         init();
@@ -97,15 +108,27 @@
             return title;
         }
 
+        function viewDigest(data) {
+            var secondsPerDay = 86400000;
+            var startUtc = stats.timestampToUtc(stats.startDate);
+            var endUtc = stats.timestampToUtc(stats.endDate) + secondsPerDay;
+            model.getUserQueryHistory(data.userName.toLowerCase(), startUtc, endUtc)
+            .then(function (result) {
+                stats.ontology = result.queryRecords;
+                stats.ontClass = showOntClass;
+            });
+        }
+
         function parseStateCount(state) {
             var member = stats.parseStateTitle(state);
             return state[member];
         }
 
         function getResults(startUtc, endUtc) {
+
             model.getQueriesPerUser(startUtc, endUtc)
                 .then(function (result) {
-                    stats.queriesPerUser = result;
+                    stats.graphData = result;
                 });
 
             model.getTopicsPerState(startUtc, endUtc)

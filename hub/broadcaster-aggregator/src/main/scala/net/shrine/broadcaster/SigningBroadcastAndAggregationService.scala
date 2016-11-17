@@ -4,7 +4,7 @@ import com.typesafe.config.Config
 import net.shrine.broadcaster.dao.HubDao
 import net.shrine.client.{EndpointConfig, Poster}
 import net.shrine.config.ConfigExtensions
-import net.shrine.crypto.{DefaultSignerVerifier, KeyStoreCertCollection, Signer, SigningCertStrategy}
+import net.shrine.crypto.{BouncyKeyStoreCollection, Signer, SignerVerifierAdapter, SigningCertStrategy}
 import net.shrine.protocol.ResultOutputType
 
 /**
@@ -13,21 +13,22 @@ import net.shrine.protocol.ResultOutputType
  */
 final case class SigningBroadcastAndAggregationService(broadcasterClient: BroadcasterClient,
                                                        signer: Signer,
-                                                       signingCertStrategy: SigningCertStrategy) extends AbstractBroadcastAndAggregationService(broadcasterClient,
-  signer.sign(_, signingCertStrategy)) {
+                                                       signingCertStrategy: SigningCertStrategy)
+  extends AbstractBroadcastAndAggregationService(broadcasterClient, signer.sign(_, signingCertStrategy))
+{
   override def attachSigningCert: Boolean = signingCertStrategy == SigningCertStrategy.Attach
 }
 
 object SigningBroadcastAndAggregationService {
 
   def apply(qepConfig:Config,
-            shrineCertCollection: KeyStoreCertCollection,
+            shrineCertCollection: BouncyKeyStoreCollection,
             breakdownTypes: Set[ResultOutputType], //todo I'm surprised you need this to support a remote hub. Figure out why. Remove if possible
             broadcastDestinations: Option[Set[NodeHandle]], //todo remove when you use loopback for a local hub
             hubDao: HubDao //todo remove when you use loopback for a local hub
            ):SigningBroadcastAndAggregationService = {
 
-    val signerVerifier: DefaultSignerVerifier = new DefaultSignerVerifier(shrineCertCollection)
+    val signerVerifier: Signer = SignerVerifierAdapter(shrineCertCollection)
 
     val broadcasterClient: BroadcasterClient = {
       //todo don't bother with a distinction between local and remote QEPs. Just use loopback.

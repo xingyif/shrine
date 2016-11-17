@@ -24,17 +24,26 @@
      * assumption is that remote rest structure is mimicked on local test folder.
      * @returns
      */
-    function getUrl (endpoint, extension) {
-
+    function getUrl (endpoint, extension, toDashboard) {
         // -- local -- //
         var testUrl     = 'test/',
             urlKey      = 'shrine-dashboard';
 
         extension = extension || '.json';
         // -- testing locally or deploy -- //
-        return (isTest())?
-            (testUrl + endpoint + extension): getDeployUrl(urlKey) + endpoint;
+        if (isTest()) {
+            return testUrl + endpoint + extension
+        } else if (!toDashboard) {
+            return getDeployUrl(urlKey) + endpoint;
+        } else {
+            return getDeployUrl(urlKey) + 'toDashboard/' + toDashboard + '/' + removeAdmin(endpoint);
+        }
     }
+
+    function removeAdmin(url) {
+        return url.split('admin/').join('');
+    }
+
 
 
     /**

@@ -1,12 +1,10 @@
 package net.shrine.status
 
-import java.io.File
-
 import com.typesafe.config.ConfigFactory
-import net.shrine.util.ShouldMatchersForJUnit
+import net.shrine.util.{ShouldMatchersForJUnit, SingleHubModel}
+import org.json4s.native.Serialization
 import org.json4s.{DefaultFormats, Formats}
 import org.junit.Test
-import org.json4s.native.Serialization
 
 import scala.collection.immutable.Map
 
@@ -48,16 +46,16 @@ class StatusJaxrsTest extends ShouldMatchersForJUnit {
   def testSummary() = {
 
     val summaryString = statusJaxrs.summary
-
     val summary = Serialization.read[Summary](summaryString)
 
     summary.isHub should be (true)
     summary.adapterMappingsFileName.isDefined should be (true)
-    summary.adapterMappingsDate.isEmpty should be (true)
+    summary.adapterMappingsDate.isEmpty should be (false)
     summary.adapterOk should be (true)
     summary.keystoreOk should be (true)
     summary.hubOk should be (false)
     summary.qepOk should be (true)
+
   }
 
   @Test
@@ -99,7 +97,6 @@ class StatusJaxrsTest extends ShouldMatchersForJUnit {
   def testQep() = {
 
     val string = statusJaxrs.qep
-
     val actual = Serialization.read[Qep](string)
 
     actual.create should be (true)
@@ -108,6 +105,8 @@ class StatusJaxrsTest extends ShouldMatchersForJUnit {
     actual.authorizationType should be ("StewardQueryAuthorizationService")
     actual.includeAggregateResults should be (false)
     actual.maxQueryWaitTimeMillis should be (300000000L)
+    actual.trustModel should be (SingleHubModel(true).description)
+    actual.trustModelIsHub should be (true)
   }
 
   @Test
@@ -122,12 +121,9 @@ class StatusJaxrsTest extends ShouldMatchersForJUnit {
 
   @Test
   def testKeyStore() = {
-
     val string = statusJaxrs.keystore
-
+    println(string)
     val actual = Serialization.read[KeyStoreReport](string)
-
-    println(s"KeyStoreReport is $actual")
   }
 
 }

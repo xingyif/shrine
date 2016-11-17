@@ -9,8 +9,8 @@ import net.shrine.audit.{NetworkQueryId, QueryName, Time, UserName}
 import net.shrine.log.Loggable
 import net.shrine.problem.{AbstractProblem, ProblemDigest, ProblemSources}
 import net.shrine.protocol.{DefaultBreakdownResultOutputTypes, DeleteQueryRequest, FlagQueryRequest, I2b2ResultEnvelope, QueryMaster, QueryResult, ReadPreviousQueriesRequest, ReadPreviousQueriesResponse, RenameQueryRequest, ResultOutputType, ResultOutputTypes, RunQueryRequest, UnFlagQueryRequest}
-import net.shrine.qep.QepConfigSource
 import net.shrine.slick.{CouldNotRunDbIoActionException, TestableDataSourceCreator}
+import net.shrine.source.ConfigSource
 import net.shrine.util.XmlDateHelper
 import slick.driver.JdbcProfile
 
@@ -335,11 +335,10 @@ case class ProblemDigest(codec: String, stampText: String, summary: String, desc
 
 object QepQuerySchema {
 
-  val allConfig:Config = QepConfigSource.config
+  val allConfig:Config = ConfigSource.config
   val config:Config = allConfig.getConfig("shrine.queryEntryPoint.audit.database")
 
-  val slickProfileClassName = config.getString("slickProfileClassName")
-  val slickProfile:JdbcProfile = QepConfigSource.objectForName(slickProfileClassName)
+  val slickProfile:JdbcProfile = ConfigSource.getObject("slickProfileClassName", config)
 
   import net.shrine.config.{ConfigExtensions, Keys}
   val moreBreakdowns: Set[ResultOutputType] = config.getOptionConfigured("breakdownResultOutputTypes",ResultOutputTypes.fromConfig).getOrElse(Set.empty)

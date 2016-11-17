@@ -5,6 +5,7 @@
   "main": "./app/server/server-mock.js",
   "devDependencies": {
     "bower": "v1.7.9",
+    "browserify": "^13.1.0",
     "del": "v2.2.1",
     "gulp": "v3.9.1",
     "gulp-concat": "v2.6.0",
@@ -16,6 +17,7 @@
     "gulp-jshint": "v2.0.1",
     "gulp-load-plugins": "v1.2.4",
     "gulp-print": "v2.0.1",
+    "gulp-sass": "^2.3.2",
     "gulp-sequence": "v0.4.5",
     "gulp-server-livereload": "v1.8.1",
     "jasmine": "v2.4.1",
@@ -23,15 +25,18 @@
     "jshint": "v2.9.2",
     "jshint-stylish": "v2.2.0",
     "karma": "v1.1.0",
+    "karma-browserify": "^5.1.0",
     "karma-jasmine": "v1.0.2",
     "karma-phantomjs-launcher": "v1.0.1",
     "phantomjs-prebuilt": "v2.1.7",
+    "sass": "^0.5.0",
+    "watchify": "^3.7.0",
     "wiredep": "v4.0.0",
     "yargs": "v4.7.1"
   },
   "scripts": {
     "test": "gulp build",
-    "start": "node ~/dev/hms/server/server-mock"
+    "start": "node ./app/server/steward-api"
   },
   "repository": {
     "type": "git",

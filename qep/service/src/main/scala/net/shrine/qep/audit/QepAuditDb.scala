@@ -7,8 +7,8 @@ import com.typesafe.config.Config
 import net.shrine.audit.{NetworkQueryId, QueryName, QueryTopicId, QueryTopicName, ShrineNodeId, Time, UserName}
 import net.shrine.log.Loggable
 import net.shrine.protocol.RunQueryRequest
-import net.shrine.qep.QepConfigSource
 import net.shrine.slick.{NeedsWarmUp, TestableDataSourceCreator}
+import net.shrine.source.ConfigSource
 import slick.driver.JdbcProfile
 
 import scala.concurrent.duration.{Duration, DurationInt}
@@ -119,11 +119,10 @@ case class QepAuditSchema(jdbcProfile: JdbcProfile) extends Loggable {
 
 object QepAuditSchema {
 
-  val allConfig:Config = QepConfigSource.config
+  val allConfig:Config = ConfigSource.config
   val config:Config = allConfig.getConfig("shrine.queryEntryPoint.audit.database")
 
-  val slickProfileClassName = config.getString("slickProfileClassName")
-  val slickProfile:JdbcProfile = QepConfigSource.objectForName(slickProfileClassName)
+  val slickProfile:JdbcProfile = ConfigSource.getObject("slickProfileClassName", config)
 
   val schema = QepAuditSchema(slickProfile)
 }

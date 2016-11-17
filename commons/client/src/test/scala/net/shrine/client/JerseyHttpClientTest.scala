@@ -4,13 +4,10 @@ import org.junit.Test
 import com.sun.jersey.api.client.config.DefaultClientConfig
 import com.sun.jersey.client.urlconnection.HTTPSProperties
 import net.shrine.util.ShouldMatchersForJUnit
-import net.shrine.crypto.KeyStoreCertCollection
-import net.shrine.crypto.TrustParam
-import TrustParam.AcceptAllCerts
-import TrustParam.SomeKeyStore
-import net.shrine.crypto.KeyStoreDescriptor
-import net.shrine.crypto.TestKeystore
 import com.sun.jersey.api.client.config.ClientConfig
+import net.shrine.crypto.TrustParam.AcceptAllCerts
+import net.shrine.crypto.{KeyStoreDescriptor, NewTestKeyStore, TrustParam}
+
 import scala.language.reflectiveCalls
 
 /**
@@ -103,7 +100,7 @@ final class JerseyHttpClientTest extends ShouldMatchersForJUnit {
       val uri = "http://example.com"
 
       {
-        val client = createJerseyClient(TestKeystore.trustParam, timeout)
+        val client = createJerseyClient(NewTestKeyStore.trustParam, timeout)
 
         doChecksCertsClientTest(client)
 

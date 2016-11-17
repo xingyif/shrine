@@ -65,7 +65,7 @@
             }
         }
 
-        var html    = buildHtmlFromJson(preProcessJson(vm.data['configMap']));
+        var html    = buildHtmlFromJson(vm.data);
         e.append(htmlStart + html + htmlEnd);
         compileRef(e.contents())(s);
     }
@@ -130,43 +130,6 @@
         }
 
         return html;
-    }
-
-    // IE11 doesn't support
-    function stringIncludes(haystack, needle) {
-        var arr = haystack.split("");
-        for (var i = 0; i < arr.length; i++) {
-            if (arr[i] == needle) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    function preProcessJson (object) {
-        var result = {};
-        for (key in object) {
-            if (object.hasOwnProperty(key)) {
-                if (!stringIncludes(key, ".")) {
-                    result[key] = object[key]
-                } else {
-                    var split = key.split(".");
-                    var prev = result;
-                    for (var i = 0; i < split.length; i++) {
-                        var cur = split[i];
-                        if (!(cur in prev)) {
-                            prev[cur] = {}
-                        }
-                        if (i == split.length - 1) {
-                            prev[cur] = object[key];
-                        } else {
-                            prev = prev[cur]
-                        }
-                    }
-                }
-            }
-        }
-        return result;
     }
 
     function isPrimitive (element) {

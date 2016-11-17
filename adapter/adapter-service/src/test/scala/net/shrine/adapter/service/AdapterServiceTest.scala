@@ -4,8 +4,6 @@ import net.shrine.util.ShouldMatchersForJUnit
 import org.junit.Test
 import net.shrine.protocol.NodeId
 import net.shrine.protocol.DeleteQueryResponse
-import net.shrine.crypto.DefaultSignerVerifier
-import net.shrine.crypto.TestKeystore
 import net.shrine.protocol.AuthenticationInfo
 import net.shrine.protocol.Credential
 import net.shrine.protocol.BroadcastMessage
@@ -13,10 +11,9 @@ import net.shrine.protocol.DeleteQueryRequest
 import net.shrine.adapter.AdapterMap
 import net.shrine.adapter.DeleteQueryAdapter
 import net.shrine.adapter.dao.MockAdapterDao
-import net.shrine.adapter.RenameQueryAdapter
 import net.shrine.protocol.RenameQueryRequest
 import net.shrine.protocol.ErrorResponse
-import net.shrine.crypto.SigningCertStrategy
+import net.shrine.crypto.{NewTestKeyStore, SignerVerifierAdapter, SigningCertStrategy}
 
 /**
  * @author clint
@@ -47,7 +44,7 @@ final class AdapterServiceTest extends ShouldMatchersForJUnit {
 
   @Test
   def testHandleRequest {
-    val signerVerifier = new DefaultSignerVerifier(TestKeystore.certCollection)
+    val signerVerifier = SignerVerifierAdapter(NewTestKeyStore.certCollection)
 
     val authn = AuthenticationInfo("d", "u", Credential("p", false))
     
@@ -74,7 +71,7 @@ final class AdapterServiceTest extends ShouldMatchersForJUnit {
 
       val resultForUnhandledQueryType = service.handleRequest(signerVerifier.sign(BroadcastMessage(authn, unhandledReq), SigningCertStrategy.DontAttach))
 
-      resultForUnhandledQueryType.elapsed should equal(0.milliseconds)
+      //resultForUnhandledQueryType.elapsed should equal(0.milliseconds)
       resultForUnhandledQueryType.origin should equal(nodeId)
       resultForUnhandledQueryType.response.getClass should equal(classOf[ErrorResponse])
     }

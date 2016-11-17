@@ -3,6 +3,7 @@ package net.shrine.steward
 import net.shrine.authorization.steward._
 import net.shrine.i2b2.protocol.pm.User
 import net.shrine.protocol.Credential
+import net.shrine.source.ConfigSource
 import net.shrine.steward.db.{QueryParameters, StewardDatabase, UserRecord}
 import org.json4s.native.JsonMethods.parse
 import org.junit.runner.RunWith
@@ -43,8 +44,8 @@ class StewardServiceTest extends FlatSpec with ScalatestRouteTest with TestWithD
   val badCredentials = BasicHttpCredentials("qep","wrongPassword")
 
   val researcherUser = User(
-    fullName = researcherUserName,
-    username = researcherFullName,
+    fullName = researcherFullName,
+    username = researcherUserName,
     domain = "domain",
     credential = new Credential("ben's password",false),
     params = Map(),
@@ -52,8 +53,8 @@ class StewardServiceTest extends FlatSpec with ScalatestRouteTest with TestWithD
   )
 
   val stewardUser = User(
-    fullName = stewardUserName,
-    username = stewardFullName,
+    fullName = stewardFullName,
+    username = stewardUserName,
     domain = "domain",
     credential = new Credential("dave's password",false),
     params = Map(stewardRole -> "true"),
@@ -71,7 +72,7 @@ class StewardServiceTest extends FlatSpec with ScalatestRouteTest with TestWithD
 
   "StewardService" should  "return an OK and the correct createTopicsMode name" in {
 
-    StewardConfigSource.configForBlock(StewardConfigSource.createTopicsModeConfigKey,CreateTopicsMode.Pending.name,s"${CreateTopicsMode.Pending.name} test") {
+    ConfigSource.configForBlock(CreateTopicsMode.createTopicsModeConfigKey,CreateTopicsMode.Pending.name,s"${CreateTopicsMode.Pending.name} test") {
       {
         Get(s"/about/createTopicsMode") ~>
           route ~> check {
@@ -79,30 +80,30 @@ class StewardServiceTest extends FlatSpec with ScalatestRouteTest with TestWithD
           assertResult(OK)(status)
           val createTopicsModeName = new String(body.data.toByteArray)
 
-          assertResult(s""""${StewardConfigSource.createTopicsInState.name}"""")(createTopicsModeName)
+          assertResult(s""""${CreateTopicsMode.createTopicsInState.name}"""")(createTopicsModeName)
           assertResult(s""""${CreateTopicsMode.Pending.name}"""")(createTopicsModeName)
         }
       }
     }
-    StewardConfigSource.configForBlock(StewardConfigSource.createTopicsModeConfigKey,CreateTopicsMode.Approved.name,s"${CreateTopicsMode.Approved.name} test") {
+    ConfigSource.configForBlock(CreateTopicsMode.createTopicsModeConfigKey,CreateTopicsMode.Approved.name,s"${CreateTopicsMode.Approved.name} test") {
       Get(s"/about/createTopicsMode") ~>
         route ~> check {
 
         assertResult(OK)(status)
         val createTopicsModeName = new String(body.data.toByteArray)
 
-        assertResult( s""""${StewardConfigSource.createTopicsInState.name}"""")(createTopicsModeName)
+        assertResult( s""""${CreateTopicsMode.createTopicsInState.name}"""")(createTopicsModeName)
         assertResult( s""""${CreateTopicsMode.Approved.name}"""")(createTopicsModeName)
       }
     }
-    StewardConfigSource.configForBlock(StewardConfigSource.createTopicsModeConfigKey,CreateTopicsMode.TopicsIgnoredJustLog.name,s"${CreateTopicsMode.TopicsIgnoredJustLog.name} test") {
+    ConfigSource.configForBlock(CreateTopicsMode.createTopicsModeConfigKey,CreateTopicsMode.TopicsIgnoredJustLog.name,s"${CreateTopicsMode.TopicsIgnoredJustLog.name} test") {
       Get(s"/about/createTopicsMode") ~>
         route ~> check {
 
         assertResult(OK)(status)
         val createTopicsModeName = new String(body.data.toByteArray)
 
-        assertResult( s""""${StewardConfigSource.createTopicsInState.name}"""")(createTopicsModeName)
+        assertResult( s""""${CreateTopicsMode.createTopicsInState.name}"""")(createTopicsModeName)
         assertResult( s""""${CreateTopicsMode.TopicsIgnoredJustLog.name}"""")(createTopicsModeName)
       }
     }
@@ -226,7 +227,7 @@ class StewardServiceTest extends FlatSpec with ScalatestRouteTest with TestWithD
   "StewardService" should " accept query requests with no topic in 'just log and approve everything' mode " in {
 
 
-    StewardConfigSource.configForBlock(StewardConfigSource.createTopicsModeConfigKey,CreateTopicsMode.TopicsIgnoredJustLog.name,s"${CreateTopicsMode.TopicsIgnoredJustLog.name} test") {
+    ConfigSource.configForBlock(CreateTopicsMode.createTopicsModeConfigKey,CreateTopicsMode.TopicsIgnoredJustLog.name,s"${CreateTopicsMode.TopicsIgnoredJustLog.name} test") {
       Post(s"/qep/requestQueryAccess/user/${researcherUserName}", InboundShrineQuery(5, "test query", "Not even using a topic")) ~>
         addCredentials(qepCredentials) ~>
         route ~> check {
@@ -644,7 +645,7 @@ class StewardServiceTest extends FlatSpec with ScalatestRouteTest with TestWithD
       val queries = parse(queriesJson).extract[QueryHistory]
 
       assertResult(3)(queries.queryRecords.size)
-      assertResult(queries.queryRecords)(sixQueries.sortBy(_.name).drop(2).take(3))
+      assertResult(queries.queryRecords)(sixQueries.sortBy(_.name).slice(2, 5))
     }
 
   }
@@ -865,7 +866,7 @@ class StewardServiceTest extends FlatSpec with ScalatestRouteTest with TestWithD
 
   "StewardService" should " place new topics in the Approved state in auto-approve mode" in {
 
-    StewardConfigSource.configForBlock(StewardConfigSource.createTopicsModeConfigKey,CreateTopicsMode.TopicsIgnoredJustLog.name,s"${CreateTopicsMode.TopicsIgnoredJustLog.name} test") {
+    ConfigSource.configForBlock(CreateTopicsMode.createTopicsModeConfigKey,CreateTopicsMode.TopicsIgnoredJustLog.name,s"${CreateTopicsMode.TopicsIgnoredJustLog.name} test") {
       Post(s"/researcher/requestTopicAccess",InboundTopicRequest(uncontroversialTopic.name,uncontroversialTopic.description)) ~>
         addCredentials(researcherCredentials) ~>
         route ~> check {

@@ -59,11 +59,10 @@ final class ShrineProxyServlet(val proxy: ShrineProxy) extends HttpServlet {
       
       out.write(responseFromProxiedUrl)
     } catch {
-      case e: Exception => {
+      case e: Exception =>
         logger.error("ProxyServlet error:", e)
 
         throw new ServletException(e)
-      }
     } finally {
       out.flush()
       out.close()

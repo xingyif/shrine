@@ -1,0 +1,108 @@
+.digest { 
+  ul{
+    top: 15rem;
+    left: 5rem;
+    float: left; 
+    clear: left;
+    margin:.25em;
+    padding:0;
+    
+    &::before{
+      display:none
+    };
+
+    li{
+      display: block; 
+      position: relative; 
+      float: left; 
+      clear: both;
+      right:auto;
+      padding-left: 1em;
+      width:auto;
+      text-align: center; 
+      color:white;
+      animation: showterm .25s;
+      a{
+        display: block; 
+        position: relative; float: left; 
+        z-index: 4;
+        margin:.25em; 
+        padding:.25em;
+        background: white;
+        color: #C0C0C0; 
+        border: 2px solid #94a0b4;
+        border-radius: .5rem;
+        transition: all .75s;
+        font-weight: 300;
+        font-family: sans-serif;
+      };
+    }
+  };
+  .expandable{
+    position: absolute; 
+    z-index: 4;
+    top:0; 
+    left:-.5em;
+    margin:.65em; 
+    padding:0;
+    width:.8em; 
+    height: .8em; 
+    text-align:center; 
+    line-height: .6em; 
+    font-size: 1em; 
+    background-color: white;
+    color: #C0C0C0; 
+    border: 1px solid #94a0b4;
+    border-radius: .25rem;
+  };
+
+  & > ul{
+    position: relative; 
+    font-family: "Georgia"; 
+
+    &:before{
+      left:.5em;
+    };
+
+    &:after{
+      display: none;
+    };
+  }
+
+}
+
+@keyframes showterm{
+  0% {top: -.5rem; opacity: 0}
+  100% {top: 0rem; opacity: 1}
+}
+
+ul:after{
+	color: blue;
+	border:solid gray 1px;
+	border-radius: .1em;
+}
+
+ul>li>a{	
+	color: blue;
+	background: white;
+}
+
+
+.digest li span.expandable:hover,
+.digest li span.expandable:hover + a,
+.digest li span.expandable:hover + a + ul li a,
+.digest li a:hover,
+.digest li a:hover + ul li a {
+  background: rgba(50, 130, 136, 0) !important; 
+  color: #fff; 
+  cursor: pointer; 
+	z-index: 1000;
+  text-decoration: none;
+}
+
+.digest li a:hover + ul li::after,
+.digest li a:hover + ul li::before,
+.digest li a:hover + ul::before,
+.digest li a:hover + ul ul::before {
+  border-color:  #99C794 !important;
+}

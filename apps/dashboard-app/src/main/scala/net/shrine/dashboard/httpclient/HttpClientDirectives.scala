@@ -2,24 +2,22 @@ package net.shrine.dashboard.httpclient
 
 import java.io.InputStream
 import java.security.cert.X509Certificate
-import javax.net.ssl.{X509TrustManager, SSLContext}
+import javax.net.ssl.{SSLContext, X509TrustManager}
 
-import net.shrine.dashboard.DashboardConfigSource
 import net.shrine.log.Loggable
 import spray.can.Http
 import akka.io.IO
 import akka.actor.{ActorRef, ActorSystem}
-import spray.can.Http.{HostConnectorSetup, ConnectionAttemptFailedException}
-import spray.http.{HttpCredentials, HttpHeaders, HttpHeader, HttpEntity, StatusCodes, HttpRequest, HttpResponse, Uri}
+import spray.can.Http.{ConnectionAttemptFailedException, HostConnectorSetup}
+import spray.http.{HttpCredentials, HttpEntity, HttpHeader, HttpHeaders, HttpRequest, HttpResponse, StatusCodes, Uri}
 import spray.io.ClientSSLEngineProvider
 import spray.routing.{RequestContext, Route}
 import akka.pattern.ask
+import net.shrine.source.ConfigSource
 
-import scala.concurrent.{TimeoutException, Await, Future, blocking}
-
+import scala.concurrent.{Await, Future, TimeoutException, blocking}
 import scala.concurrent.duration.DurationInt
 import scala.language.postfixOps
-
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.control.NonFatal
 
@@ -31,7 +29,7 @@ import scala.util.control.NonFatal
  * @since 9/14/15
  */
 trait HttpClientDirectives extends Loggable {
-  implicit val system = ActorSystem("dashboardServer",DashboardConfigSource.config)
+  implicit val system = ActorSystem("dashboardServer",ConfigSource.config)
 
   /**
     * Proxy the request to the specified base uri appended with the unmatched path.

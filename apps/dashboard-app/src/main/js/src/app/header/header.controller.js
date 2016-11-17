@@ -6,9 +6,7 @@
      *
      * @type {string[]}
      */
-    HeaderController.$inject = ['$app']
-    function HeaderController($app) {
-
-    }
+    HeaderController.$inject = ['$app', '$scope']
+    function HeaderController($app, $scope) {}
 
 })();

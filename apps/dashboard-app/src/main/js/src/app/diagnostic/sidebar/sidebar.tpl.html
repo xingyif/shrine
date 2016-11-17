@@ -9,7 +9,7 @@
             </span>
             <span ui-sref-active="shrine-on">
                 <a href="#shrine-diagnostic2" class="list-group-item shrine-off"
-                   ui-sref="diagnostic.i2b2-connections" data-toggle="collapse">I2B2
+                   ui-sref="diagnostic.i2b2-connections" data-toggle="collapse">i2b2
                     Connections</a>
             </span>
             <span ui-sref-active="shrine-on">
@@ -32,8 +32,12 @@
                 <a href="#shrine-diagnostic7" class="list-group-item shrine-off"
                    ui-sref="diagnostic.config" data-toggle="collapse">Config File</a>
             </span>
-            <span ui-sref-active="shrine-on">
+            <span ui-sref-active="shrine-on" ng-if="vm.options.isHub">
                 <a href="#shrine-diagnostic8" class="list-group-item shrine-off"
+                   ui-sref="diagnostic.dashboard" data-toggle="collapse">Remote Dashboards</a>
+            </span>
+            <span ui-sref-active="shrine-on">
+                <a href="#shrine-diagnostic9" class="list-group-item shrine-off"
                    ui-sref="diagnostic.problems" data-toggle="collapse">Problem Log</a>
             </span>
             <!-- if hub and there are downstream nodes -->

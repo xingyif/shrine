@@ -10,30 +10,32 @@
      *
      * @type {string[]}
      */
-    HubController.$inject = ['$app'];
-    function HubController ($app) {
+    HubController.$inject = ['$app', '$log'];
+    function HubController ($app, $log) {
         var vm = this;
-
+        vm.hubError = false;
         init();
 
         /**
          *
          */
         function init () {
-            var config = $app.model.cache['config'];
-            setDownstreamNodes(config);
+            $app.model.getHub()
+                .then(setDownstreamNodes, handleFailure);
         }
 
+        function handleFailure (failure) {
+            vm.hubError = failure;
+        }
 
         /**
          *
-         * @param config
+         * @param hub
          */
-        function setDownstreamNodes (conf) {
-            var config = angular.copy(conf);
+        function setDownstreamNodes (hub) {
+            vm.shouldQuerySelf = hub.shouldQuerySelf;
 
-            vm.shouldQuerySelf = config.hub.shouldQuerySelf;
-            vm.downstreamNodes = config.hub.downstreamNodes;
+            vm.downstreamNodes = hub.downstreamNodes;
 
             if(vm.shouldQuerySelf === true) {
                 vm.downstreamNodes.unshift({

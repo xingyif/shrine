@@ -4,7 +4,7 @@
         .module('shrine-tools')
         .factory("$app", DiagnosticService);
 
-    DiagnosticService.$inject = ['UtilsService', 'DiagnosticModel']
+    DiagnosticService.$inject = ['UtilsService', 'DiagnosticModel'];
     function DiagnosticService(utilsService, diagnosticModel) {
 
         var _app = {
@@ -13,6 +13,9 @@
             utils:   extendUtils(utilsService),
             model:   diagnosticModel
         };
+
+        var m = true;
+        _app.m = true;
 
         return _app;
 

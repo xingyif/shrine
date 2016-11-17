@@ -1,22 +1,29 @@
 <div>
-    <table class="table table-striped">
-        <thead>
-        <tr>
-            <td colspan="2">
-                Downstream Nodes
-            </td>
-        </tr>
-        <tr>
-            <td>
-                Site
-            </td>
-            <td>
-                URL
-            </td>
-        </tr>
-        </thead>
+    <error-handler error="vm.hubError" error-name="'hub'"></error-handler>
+    <div ng-hide="vm.hubError">
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <td colspan="2">
+                    These are the sites that this SHRINE hub will
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    Downstream Nodes
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    Site
+                </td>
+                <td>
+                    URL
+                </td>
+            </tr>
+            </thead>
 
-        <tbody>
+            <tbody>
             <tr ng-repeat="node in vm.downstreamNodes track by $index">
                 <td>
                     {{node.name}}
@@ -25,6 +32,7 @@
                     {{node.url}}
                 </td>
             </tr>
-        </tbody>
-    </table>
+            </tbody>
+        </table>
+    </div>
 </div>

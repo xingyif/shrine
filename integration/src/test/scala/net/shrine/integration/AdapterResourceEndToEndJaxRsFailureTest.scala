@@ -1,14 +1,11 @@
 package net.shrine.integration
 
+import net.shrine.adapter.service.AdapterResource
+import net.shrine.crypto.{NewTestKeyStore, SignerVerifierAdapter, SigningCertStrategy}
+import net.shrine.protocol.{BroadcastMessage, DeleteQueryRequest, ErrorResponse}
 import org.junit.Test
-import net.shrine.protocol.{BroadcastMessage, DefaultBreakdownResultOutputTypes, DeleteQueryRequest, DeleteQueryResponse, ErrorResponse, Result}
-import net.shrine.crypto.DefaultSignerVerifier
-import net.shrine.crypto.TestKeystore
 
 import scala.concurrent.Await
-import com.sun.jersey.api.client.UniformInterfaceException
-import net.shrine.adapter.service.AdapterResource
-import net.shrine.crypto.SigningCertStrategy
 
 /**
  * @author clint
@@ -27,7 +24,7 @@ final class AdapterResourceEndToEndJaxRsFailureTest extends AbstractAdapterResou
     
     val unsigned = BroadcastMessage(networkAuthn, DeleteQueryRequest("some-project", 1.minute, networkAuthn, masterId))
     
-    val signer = new DefaultSignerVerifier(TestKeystore.certCollection)
+    val signer = SignerVerifierAdapter(NewTestKeyStore.certCollection)
     
     val signed = signer.sign(unsigned, SigningCertStrategy.Attach)
 

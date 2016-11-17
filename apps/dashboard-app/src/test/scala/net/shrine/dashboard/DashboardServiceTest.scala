@@ -6,18 +6,20 @@ import java.util.Date
 import io.jsonwebtoken.impl.TextCodec
 import io.jsonwebtoken.{Jwts, SignatureAlgorithm}
 import net.shrine.authorization.steward.OutboundUser
-import net.shrine.crypto.{KeyStoreCertCollection, KeyStoreDescriptorParser}
+import net.shrine.config.ConfigExtensions
+import net.shrine.crypto.{BouncyKeyStoreCollection, KeyStoreDescriptorParser}
 import net.shrine.dashboard.jwtauth.ShrineJwtAuthenticator
 import net.shrine.i2b2.protocol.pm.User
 import net.shrine.protocol.Credential
+import net.shrine.source.ConfigSource
+import net.shrine.spray.ShaResponse
 import org.json4s.native.JsonMethods.parse
 import org.junit.runner.RunWith
 import org.scalatest.FlatSpec
 import org.scalatest.junit.JUnitRunner
-import spray.http.StatusCodes.{OK, PermanentRedirect, Unauthorized}
-import spray.http.{BasicHttpCredentials, OAuth2BearerToken}
+import spray.http.StatusCodes.{NotFound, OK, PermanentRedirect, Unauthorized}
+import spray.http.{BasicHttpCredentials, FormData, OAuth2BearerToken, StatusCodes}
 import spray.testkit.ScalatestRouteTest
-
 
 import scala.language.postfixOps
 
@@ -60,6 +62,7 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
 
         assertResult(OK)(status)
 
+        implicit val formats = OutboundUser.json4sFormats
         val userJson = new String(body.data.toByteArray)
         val outboundUser = parse(userJson).extract[OutboundUser]
         assertResult(adminOutboundUser)(outboundUser)
@@ -75,7 +78,7 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
       assertResult(OK)(status)
 
       val response = new String(body.data.toByteArray)
-      assertResult(""""AuthenticationFailed"""")(response)
+      assertResult("""AuthenticationFailed""")(response)
     }
   }
 
@@ -125,7 +128,6 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
       assertResult(OK)(status)
 
       val allString = new String(body.data.toByteArray)
-      //println(allString)
       //todo test it to see if it's right
     }
   }
@@ -167,9 +169,9 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
     }
   }
 
-  "DashboardService" should  "return an OK for admin/status/options" in {
+  "DashboardService" should  "return an OK for admin/status/optionalParts" in {
 
-    Get(s"/admin/status/options") ~>
+    Get(s"/admin/status/optionalParts") ~>
       addCredentials(adminCredentials) ~>
       route ~> check {
 
@@ -191,6 +193,65 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
     }
   }
 
+  "DashboardService" should  "return an OK for admin/status/adapter" in {
+
+    Get(s"/admin/status/adapter") ~>
+      addCredentials(adminCredentials) ~>
+      route ~> check {
+
+      assertResult(OK)(status)
+
+      val adapter = new String(body.data.toByteArray)
+    }
+  }
+
+  "DashboardService" should  "return an OK for admin/status/hub" in {
+
+    Get(s"/admin/status/hub") ~>
+      addCredentials(adminCredentials) ~>
+      route ~> check {
+
+      assertResult(OK)(status)
+
+      val hub = new String(body.data.toByteArray)
+    }
+  }
+
+  "DashboardService" should  "return an OK for admin/status/i2b2" in {
+
+    Get(s"/admin/status/i2b2") ~>
+      addCredentials(adminCredentials) ~>
+      route ~> check {
+
+      assertResult(OK)(status)
+
+      val i2b2 = new String(body.data.toByteArray)
+    }
+  }
+
+  "DashboardService" should  "return an OK for admin/status/keystore" in {
+
+    Get(s"/admin/status/keystore") ~>
+      addCredentials(adminCredentials) ~>
+      route ~> check {
+
+      assertResult(OK)(status)
+
+      val keystore = new String(body.data.toByteArray)
+    }
+  }
+
+  "DashboardService" should  "return an OK for admin/status/qep" in {
+
+    Get(s"/admin/status/qep") ~>
+      addCredentials(adminCredentials) ~>
+      route ~> check {
+
+      assertResult(OK)(status)
+
+      val qep = new String(body.data.toByteArray)
+    }
+  }
 
   "DashboardService" should "return an OK for admin/status/problems" in {
 
@@ -225,30 +286,76 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
       }
   }
 
+  "DashboardService" should "return a BadRequest for admin/status/signature with no signature parameter" in {
+    Post("/status/verifySignature") ~>
+    addCredentials(adminCredentials) ~>
+    route ~> check {
+      assertResult(StatusCodes.BadRequest)(status)
+    }
+  }
+
+  "DashboardService" should "return a BadRequest for admin/status/signature with a malformatted signature parameter" in {
+    Post("/status/verifySignature", FormData(Seq("sha256" -> "foo"))) ~>
+      addCredentials(adminCredentials) ~>
+      route ~> check {
+      assertResult(StatusCodes.BadRequest)(status)
+      implicit val formats = ShaResponse.json4sFormats
+      assertResult(ShaResponse(ShaResponse.badFormat, false))(parse(new String(body.data.toByteArray)).extract[ShaResponse])
+    }
+  }
+
+  "DashboardService" should "return a NotFound for admin/status/signature with a correctly formatted parameter that is not in the keystore" in {
+    Post("/status/verifySignature", FormData(Seq("sha256" -> "00:00:00:00:00:00:00:7C:4B:FD:8D:A8:0A:C7:A4:AA:13:3E:22:B3:57:A7:C6:B0:95:15:1B:22:C0:E5:15:9A"))) ~>
+      addCredentials(adminCredentials) ~>
+      route ~> check {
+      assertResult(NotFound)(status)
+      implicit val formats = ShaResponse.json4sFormats
+      assertResult(ShaResponse("0E:5D:D1:10:68:2B:63:F4:66:E2:50:41:EA:13:AF:1A:F9:99:DB:40:6A:F7:EE:39:F2:1A:0D:51:7A:44:09:7A", false)) (
+        parse(new String(body.data.toByteArray)).extract[ShaResponse])
+    }
+  }
+
+  "DashboardService" should "return an OK for admin/status/signature with a valid sha256 hash" in {
+    val post = Post("/status/verifySignature", FormData(Seq("sha256" -> "0E:5D:D1:10:68:2B:63:F4:66:E2:50:41:EA:13:AF:1A:F9:99:DB:40:6A:F7:EE:39:F2:1A:0D:51:7A:44:09:7A")))
+      post ~>
+      addCredentials(adminCredentials) ~>
+      route ~> check {
+      assertResult(OK)(status)
+      implicit val formats = ShaResponse.json4sFormats
+      assertResult(ShaResponse("0E:5D:D1:10:68:2B:63:F4:66:E2:50:41:EA:13:AF:1A:F9:99:DB:40:6A:F7:EE:39:F2:1A:0D:51:7A:44:09:7A", true))(
+        parse(new String(body.data.toByteArray)).extract[ShaResponse]
+      )
+    }
+  }
+
+
   val dashboardCredentials = BasicHttpCredentials(adminUserName,"shh!")
 
   "DashboardService" should  "return an OK and pong for fromDashboard/ping" in {
 
     Get(s"/fromDashboard/ping") ~>
-      addCredentials(ShrineJwtAuthenticator.createOAuthCredentials(adminUser)) ~>
+      addCredentials(ShrineJwtAuthenticator.createOAuthCredentials(adminUser, "")) ~>
       route ~> check {
 
       assertResult(OK)(status)
 
       val string = new String(body.data.toByteArray)
 
-      assertResult(""""pong"""")(string)
+      assertResult("pong")(string)
     }
   }
 
   "DashboardService" should  "reject a fromDashboard/ping with an expired jwts header" in {
 
-    val config = DashboardConfigSource.config
-    val shrineCertCollection: KeyStoreCertCollection = KeyStoreCertCollection.fromFileRecoverWithClassPath(KeyStoreDescriptorParser(config.getConfig("shrine.keystore")))
+    val config = ConfigSource.config
+    val shrineCertCollection: BouncyKeyStoreCollection = BouncyKeyStoreCollection.fromFileRecoverWithClassPath(KeyStoreDescriptorParser(
+      config.getConfig("shrine.keystore"),
+      config.getConfigOrEmpty("shrine.hub"),
+      config.getConfigOrEmpty("shrine.queryEntryPoint")))
 
-    val base64Cert = new String(TextCodec.BASE64URL.encode(shrineCertCollection.myCert.get.getEncoded))
+    val base64Cert = new String(TextCodec.BASE64URL.encode(shrineCertCollection.myEntry.cert.getEncoded))
 
-    val key: PrivateKey = shrineCertCollection.myKeyPair.privateKey
+    val key: PrivateKey = shrineCertCollection.myEntry.privateKey.get
     val expiration: Date = new Date(System.currentTimeMillis() - 300 * 1000) //bad for 5 minutes
     val jwtsString = Jwts.builder().
         setHeaderParam("kid", base64Cert).
@@ -267,12 +374,15 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
 
   "DashboardService" should  "reject a fromDashboard/ping with no subject" in {
 
-    val config = DashboardConfigSource.config
-    val shrineCertCollection: KeyStoreCertCollection = KeyStoreCertCollection.fromClassPathResource(KeyStoreDescriptorParser(config.getConfig("shrine.keystore")))
+    val config = ConfigSource.config
+    val shrineCertCollection: BouncyKeyStoreCollection = BouncyKeyStoreCollection.fromFileRecoverWithClassPath(KeyStoreDescriptorParser(
+      config.getConfig("shrine.keystore"),
+      config.getConfigOrEmpty("shrine.hub"),
+      config.getConfigOrEmpty("shrine.queryEntryPoint")))
 
-    val base64Cert = new String(TextCodec.BASE64URL.encode(shrineCertCollection.myCert.get.getEncoded))
+    val base64Cert = new String(TextCodec.BASE64URL.encode(shrineCertCollection.myEntry.cert.getEncoded))
 
-    val key: PrivateKey = shrineCertCollection.myKeyPair.privateKey
+    val key: PrivateKey = shrineCertCollection.myEntry.privateKey.get
     val expiration: Date = new Date(System.currentTimeMillis() + 30 * 1000)
     val jwtsString = Jwts.builder().
         setHeaderParam("kid", base64Cert).
@@ -307,7 +417,7 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
     }
   }
 
-  /*
+
   "DashboardService" should  "not find a bogus web service to talk to" in {
 
     Get(s"/toDashboard/bogus.harvard.edu/ping") ~>
@@ -319,7 +429,6 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
       assertResult(NotFound)(status)
     }
   }
-*/
 
 }
 

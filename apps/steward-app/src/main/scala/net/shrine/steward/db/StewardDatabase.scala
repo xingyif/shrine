@@ -5,11 +5,12 @@ import java.util.concurrent.atomic.AtomicInteger
 import javax.sql.DataSource
 
 import com.typesafe.config.Config
-import net.shrine.authorization.steward.{Date, ExternalQueryId, InboundShrineQuery, InboundTopicRequest, OutboundShrineQuery, OutboundTopic, OutboundUser, QueriesPerUser, QueryContents, QueryHistory, ResearchersTopics, StewardQueryId, StewardsTopics, TopicId, TopicIdAndName, TopicState, TopicStateName, TopicsPerState, UserName, researcherRole, stewardRole}
+import net.shrine.authorization.steward.{Date, ExternalQueryId, InboundShrineQuery, InboundTopicRequest, OutboundShrineQuery, OutboundTopic, OutboundUser, QueriesPerUser, QueryContents, QueryHistory, ResearcherToAudit, ResearchersTopics, StewardQueryId, StewardsTopics, TopicId, TopicIdAndName, TopicState, TopicStateName, TopicsPerState, UserName, researcherRole, stewardRole}
 import net.shrine.i2b2.protocol.pm.User
 import net.shrine.log.Loggable
 import net.shrine.slick.{NeedsWarmUp, TestableDataSourceCreator}
-import net.shrine.steward.{CreateTopicsMode, StewardConfigSource}
+import net.shrine.source.ConfigSource
+import net.shrine.steward.CreateTopicsMode
 import slick.dbio.Effect.Read
 import slick.driver.JdbcProfile
 
@@ -59,7 +60,7 @@ case class StewardDatabase(schemaDef:StewardSchema,dataSource: DataSource) exten
   }
 
   def createRequestForTopicAccess(user:User,topicRequest:InboundTopicRequest):TopicRecord = {
-    val createInState = StewardConfigSource.createTopicsInState
+    val createInState = CreateTopicsMode.createTopicsInState
     val now = System.currentTimeMillis()
     val topicRecord = TopicRecord(Some(nextTopicId.getAndIncrement),topicRequest.name,topicRequest.description,user.username,now,createInState.topicState)
     val userTopicRecord = UserTopicRecord(user.username,topicRecord.id.get,TopicState.approved,user.username,now)
@@ -187,7 +188,7 @@ case class StewardDatabase(schemaDef:StewardSchema,dataSource: DataSource) exten
 
     //todo upsertUser(user) when the info is available from the PM
     val noOpDBIOForState: DBIOAction[TopicState, NoStream, Effect.Read] = DBIO.successful {
-      if (StewardConfigSource.createTopicsInState == CreateTopicsMode.TopicsIgnoredJustLog) TopicState.approved
+      if (CreateTopicsMode.createTopicsInState == CreateTopicsMode.TopicsIgnoredJustLog) TopicState.approved
       else TopicState.createTopicsModeRequiresTopic
     }
 
@@ -211,6 +212,9 @@ case class StewardDatabase(schemaDef:StewardSchema,dataSource: DataSource) exten
       case (Some(id),None) =>
         if(state == TopicState.unknownForUser) None
         else throw new IllegalStateException(s"How did you get here for $userId with $id and $state for $shrineQuery")
+      case (None,Some(name)) =>
+        if(state == TopicState.unknownForUser) None
+        else throw new IllegalStateException(s"How did you get here for $userId with no topic id but a topic name of $name and $state for $shrineQuery")
     }
     (state,topicIdAndName)
   }
@@ -312,6 +316,63 @@ case class StewardDatabase(schemaDef:StewardSchema,dataSource: DataSource) exten
   lazy val nextTopicId:AtomicInteger = new AtomicInteger({
     dbRun(allTopicQuery.map(_.id).max.result).getOrElse(0) + 1
   })
+
+  def selectAllAuditRequests: Seq[UserAuditRecord] = {
+    dbRun(allUserAudits.result)
+  }
+
+  def selectMostRecentAuditRequests: Seq[UserAuditRecord] = {
+    dbRun(mostRecentUserAudits.result)
+  }
+
+  def selectResearchersToAudit(maxQueryCountBetweenAudits:Int,minTimeBetweenAudits:Duration,now:Date):Seq[ResearcherToAudit] = {
+
+    //todo one round with the db instead of O(researchers)
+
+    //for each researcher
+    //horizon = if the researcher has had an audit
+    //                date of last audit
+    //             else if no audit yet
+    //                date of first query
+    val researchersToHorizons: Map[UserName, Date] = dbRun(for{
+      dateOfFirstQuery: Seq[(UserName, Date)] <- leastRecentUserQuery.map(record => record.researcherId -> record.date).result
+      mostRecentAudit: Seq[(UserName, Date)] <- mostRecentUserAudits.map(record => record.researcher -> record.changeDate).result
+    } yield {
+      dateOfFirstQuery.toMap ++ mostRecentAudit.toMap
+    })
+
+    val researchersToHorizonsAndCounts = researchersToHorizons.map{ researcherDate =>
+
+      val queryParameters = QueryParameters(researcherIdOption = Some(researcherDate._1),
+                                            minDate = Some(researcherDate._2))
+
+      val count:Int = dbRun(shrineQueryCountQuery(queryParameters,None).length.result)
+      (researcherDate._1,(researcherDate._2,count))
+    }
+
+    //audit if oldest query within the horizon is >= minTimeBetweenAudits in the past and the researcher has run at least one query since.
+    val oldestAllowed = System.currentTimeMillis() - minTimeBetweenAudits.toMillis
+    val timeBasedAudit = researchersToHorizonsAndCounts.filter(x => x._2._2 > 0 && x._2._1 <= oldestAllowed)
+
+    //audit if the researcher has run >= maxQueryCountBetweenAudits queries since horizon?
+    val queryBasedAudit = researchersToHorizonsAndCounts.filter(x => x._2._2 >= maxQueryCountBetweenAudits)
+
+    val toAudit = timeBasedAudit ++ queryBasedAudit
+
+    val namesToOutboundUsers: Map[UserName, OutboundUser] = dbRun(outboundUsersForNamesAction(toAudit.keySet))
+
+    toAudit.map(x => ResearcherToAudit(namesToOutboundUsers(x._1),x._2._2,x._2._1,now)).to[Seq]
+  }
+
+  def logAuditRequests(auditRequests:Seq[ResearcherToAudit],now:Date) {
+    dbRun{
+      allUserAudits ++= auditRequests.map(x => UserAuditRecord(researcher = x.researcher.userName,
+                                                                queryCount = x.count,
+                                                                changeDate = now
+                                                              ))
+    }
+  }
+
 }
 
 /**
@@ -323,7 +384,7 @@ case class StewardSchema(jdbcProfile: JdbcProfile) extends Loggable {
   import jdbcProfile.api._
 
   def ddlForAllTables = {
-    allUserQuery.schema ++ allTopicQuery.schema ++ allQueryTable.schema ++ allUserTopicQuery.schema
+    allUserQuery.schema ++ allTopicQuery.schema ++ allQueryTable.schema ++ allUserTopicQuery.schema ++ allUserAudits.schema
   }
 
   //to get the schema, use the REPL
@@ -426,7 +487,28 @@ case class StewardSchema(jdbcProfile: JdbcProfile) extends Loggable {
         userTopicRecord.changedBy,
         userTopicRecord.changeDate
         ))
+  }
 
+  class UserAuditTable(tag:Tag) extends Table[UserAuditRecord](tag,"userAudit") {
+    def researcher = column[UserName]("researcher")
+    def queryCount = column[Int]("queryCount")
+    def changeDate = column[Date]("changeDate")
+
+    def * = (researcher, queryCount, changeDate) <> (fromRow, toRow)
+
+    def fromRow = (fromParams _).tupled
+
+    def fromParams(researcher:UserName,
+                   queryCount:Int,
+                   changeDate:Date): UserAuditRecord = {
+      UserAuditRecord(researcher,queryCount, changeDate)
+    }
+
+    def toRow(record: UserAuditRecord):Option[(UserName,Int,Date)] =
+      Some((record.researcher,
+        record.queryCount,
+        record.changeDate
+        ))
   }
 
   class QueryTable(tag:Tag) extends Table[ShrineQueryRecord](tag,"queries") {
@@ -485,20 +567,28 @@ case class StewardSchema(jdbcProfile: JdbcProfile) extends Loggable {
   val allTopicQuery = TableQuery[TopicTable]
   val allQueryTable = TableQuery[QueryTable]
   val allUserTopicQuery = TableQuery[UserTopicTable]
+  val allUserAudits = TableQuery[UserAuditTable]
 
   val mostRecentTopicQuery: Query[TopicTable, TopicRecord, Seq] = for(
     topic <- allTopicQuery if !allTopicQuery.filter(_.id === topic.id).filter(_.changeDate > topic.changeDate).exists
   ) yield topic
 
+  val mostRecentUserAudits: Query[UserAuditTable, UserAuditRecord, Seq] = for(
+    record <- allUserAudits if !allUserAudits.filter(_.researcher === record.researcher).filter(_.changeDate > record.changeDate).exists
+  ) yield record
+
+  val leastRecentUserQuery: Query[QueryTable, ShrineQueryRecord, Seq] = for(
+    record <- allQueryTable if !allQueryTable.filter(_.researcherId === record.researcherId).filter(_.date < record.date).exists
+  ) yield record
+
 }
 
 object StewardSchema {
 
-  val allConfig:Config = StewardConfigSource.config
+  val allConfig:Config = ConfigSource.config
   val config:Config = allConfig.getConfig("shrine.steward.database")
 
-  val slickProfileClassName = config.getString("slickProfileClassName")
-  val slickProfile:JdbcProfile = StewardConfigSource.objectForName(slickProfileClassName)
+  val slickProfile:JdbcProfile = ConfigSource.getObject("slickProfileClassName", config)
 
   val schema = StewardSchema(slickProfile)
 }
@@ -631,6 +721,15 @@ case class UserTopicRecord(researcher:UserName,
                             state:TopicState,
                             changedBy:UserName,
                             changeDate:Date)
+
+case class UserAuditRecord(researcher:UserName,
+                           queryCount:Int,
+                           changeDate:Date) {
+  def sameExceptForTimes(userAuditRecord: UserAuditRecord):Boolean = {
+    (researcher == userAuditRecord.researcher) &&
+      (queryCount == userAuditRecord.queryCount)
+  }
+}
 
 case class TopicDoesNotExist(topicId:TopicId) extends IllegalArgumentException(s"No topic for id $topicId")
 

@@ -1,8 +1,8 @@
 package net.shrine.utilities.batchquerier.components
 
-import net.shrine.utilities.batchquerier.HasTrustParam
 import net.shrine.crypto.TrustParam
-import TrustParam.AcceptAllCerts
+import net.shrine.crypto.TrustParam.AcceptAllCerts
+import net.shrine.utilities.batchquerier.HasTrustParam
 
 /**
  * @author clint

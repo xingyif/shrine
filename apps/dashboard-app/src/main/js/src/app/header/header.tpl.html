@@ -1,13 +1,24 @@
-<nav class="navbar navbar-default navbar-static-top shrine-navbar" role="navigation"
-     style="margin-bottom: 0">
+<div>
+    <nav class="navbar navbar-default navbar-static-top shrine-navbar" role="navigation"
+         style="margin-bottom: 0">
 
-    <div class="shrine-brand">
-        <strong>SHRINE</strong> {{title.toUpperCase()}}
-    </div>
+        <div class="shrine-brand">
+            <strong>SHRINE</strong> {{title.toUpperCase()}}
+        </div>
 
-    <div class="pull-right shrine-institution-logo"></div>
 
-    <!-- /.navbar-header -->
-    <user-status></user-status>
-</nav>
+        <div class="pull-right shrine-institution-logo"></div>
 
+        <h2 ng-show="m.siteAlias" style="margin:auto auto;color: #ff3333;" class="shrine-brand">
+            {{m.siteAlias.toUpperCase()}}
+        </h2>
+
+            <a class="fa fa-home"
+               style="font-size:3rem;cursor: pointer;float:right;margin-top:.5em;margin-right:0;position: relative;"
+               ng-show="m.siteAlias"
+               ng-click="goHome()"></a>
+
+        <!-- /.navbar-header -->
+        <user-status></user-status>
+    </nav>
+</div>

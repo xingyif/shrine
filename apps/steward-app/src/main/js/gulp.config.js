@@ -2,7 +2,6 @@
 module.exports = function () {
     // -- dependencies -- //
     var wiredep = require('wiredep');
-
     var bowerJS = wiredep({ devDependencies: true })['js'];//grab .js dev depenencies.
     var bowerCSS = wiredep({ devDependencies: true })['css'];
     var bowerFnt = [
@@ -19,6 +18,8 @@ module.exports = function () {
     var srcFiles = clientDir + '**/!(*.spec)+(.js)';
     var moduleFiles = clientDir + '**/*.module.js';
     var specFiles = clientDir + '**/*.spec.js';
+    var sassFiles = src + 'sass/**/*.scss';
+    var cssDir = assets + 'css/';
 
     var config = {
         index: 'index.html',
@@ -36,10 +37,12 @@ module.exports = function () {
             src + '/config/**/*'
         ],
         cssFiles: [
-            assets + '**/*.css'
+            assets + '**/shrine.css'
         ],
         assetFiles: [assets + '**/*', src + 'config/**/*'],
         clientDir: clientDir,
+        sassFiles: sassFiles,
+        cssDir: cssDir,
         bower: {
             json: require('./bower.json'),
             directory: './bower_components/',
@@ -76,11 +79,11 @@ module.exports = function () {
                     { type: 'text-summary' } //outputs to console.
                 ]
             },
-            preprocessors: {}
+            frameworks: ['jasmine', 'browserify'],
+            preprocessors: { /** files that use require **/
+                './app/client/**/*.browserify.spec.js': ['browserify']
+            }
         };
-
-        options.preprocessors[clientDir + '**/!(*.spec)+(.js)'] = ['coverage'];
-
         return options;
     }
 

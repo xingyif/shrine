@@ -6,6 +6,7 @@ import net.shrine.authentication.UserAuthenticator
 import net.shrine.authorization.steward._
 import net.shrine.i2b2.protocol.pm.User
 import net.shrine.serialization.NodeSeqSerializer
+import net.shrine.source.ConfigSource
 import net.shrine.steward.db._
 import net.shrine.steward.pmauth.Authorizer
 import org.json4s.native.Serialization
@@ -39,7 +40,7 @@ class StewardServiceActor extends Actor with StewardService {
 trait StewardService extends HttpService with Json4sSupport {
   implicit def json4sFormats: Formats = DefaultFormats + new NodeSeqSerializer
 
-  val userAuthenticator = UserAuthenticator(StewardConfigSource.config)
+  val userAuthenticator = UserAuthenticator(ConfigSource.config)
 
   //don't need to do anything special for unauthorized users, but they do need access to a static form.
   lazy val route:Route = gruntWatchCorsSupport{
@@ -115,7 +116,7 @@ trait StewardService extends HttpService with Json4sSupport {
   lazy val about = pathPrefix("about") {
     path("createTopicsMode") {
       get {
-        complete(StewardConfigSource.createTopicsInState.name)
+        complete(CreateTopicsMode.createTopicsInState.name)
       }
     }
   }
@@ -234,7 +235,10 @@ trait StewardService extends HttpService with Json4sSupport {
     matchQueryParameters(userIdOption) { queryParameters:QueryParameters =>
       val queryHistory = StewardDatabase.db.selectQueryHistory(queryParameters, topicIdOption)
 
-      if (asJson.getOrElse(false)) complete(queryHistory.convertToJson) else complete(queryHistory)
+      if (asJson.getOrElse(false))
+        complete(queryHistory.convertToJson)
+      else
+        complete(queryHistory)
     }
   }
 
@@ -353,7 +357,7 @@ object gruntWatchCorsSupport extends Directive0 with RouteConcatenation {
     `Access-Control-Allow-Headers`("Origin, X-Requested-With, Content-Type, Accept, Accept-Encoding, Accept-Language, Host, Referer, User-Agent, Authorization"),
     `Access-Control-Max-Age`(1728000)) //20 days
 
-  val gruntWatch:Boolean = StewardConfigSource.config.getBoolean("shrine.steward.gruntWatch")
+  val gruntWatch:Boolean = ConfigSource.config.getBoolean("shrine.steward.gruntWatch")
 
   override def happly(f: (HNil) => Route): Route = {
     if(gruntWatch) {

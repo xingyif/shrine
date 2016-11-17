@@ -9,10 +9,10 @@ import net.shrine.adapter.service.{AdapterService, I2b2AdminService}
 import net.shrine.adapter.translators.{ExpressionTranslator, QueryDefinitionTranslator}
 import net.shrine.client.{EndpointConfig, Poster}
 import net.shrine.config.mappings.{AdapterMappings, AdapterMappingsSource, ClasspathFormatDetectingAdapterMappingsSource}
-import net.shrine.crypto.{DefaultSignerVerifier, KeyStoreCertCollection}
 import net.shrine.dao.squeryl.SquerylInitializer
 import net.shrine.protocol.{HiveCredentials, NodeId, RequestType, ResultOutputType}
 import net.shrine.config.{ConfigExtensions, DurationConfigParser}
+import net.shrine.crypto.{BouncyKeyStoreCollection, SignerVerifierAdapter}
 import net.shrine.log.Log
 
 import scala.concurrent.duration.Duration
@@ -27,20 +27,21 @@ case class AdapterComponents(
                               adapterService: AdapterService,
                               i2b2AdminService: I2b2AdminService,
                               adapterDao: AdapterDao,
-                              adapterMappings: AdapterMappings)
+                              adapterMappings: AdapterMappings,
+                              lastModified: Long
+                            )
 
 object AdapterComponents {
   //todo try and trim this argument list back
-  def apply(
-             adapterConfig:Config, //config is "shrine.adapter"
-             certCollection: KeyStoreCertCollection,
-             squerylInitializer: SquerylInitializer,
-             breakdownTypes: Set[ResultOutputType],
-             crcHiveCredentials: HiveCredentials,
-             signerVerifier: DefaultSignerVerifier,
-             pmPoster: Poster,
-             nodeId: NodeId
-           ):AdapterComponents = {
+  def apply(adapterConfig: Config,
+            certCollection: BouncyKeyStoreCollection,
+            squerylInitializer: SquerylInitializer,
+            breakdownTypes: Set[ResultOutputType],
+            crcHiveCredentials: HiveCredentials,
+            signerVerifier: SignerVerifierAdapter,
+            pmPoster: Poster,
+            nodeId: NodeId):
+  AdapterComponents = {
     val crcEndpoint: EndpointConfig = adapterConfig.getConfigured("crcEndpoint",EndpointConfig(_))
 
     val crcPoster: Poster = Poster(certCollection,crcEndpoint)
@@ -71,7 +72,7 @@ object AdapterComponents {
       countsAndMilliseconds.map(pairConfig => (pairConfig.getLong("count"),pairConfig.getLong("milliseconds").milliseconds))
     }
 
-    val obfuscator:Obfuscator = adapterConfig.getConfigured("obfucscation",Obfuscator(_))
+    val obfuscator:Obfuscator = adapterConfig.getConfigured("obfuscation",Obfuscator(_))
 
     Log.info(s"obfuscator is $obfuscator")
 
@@ -149,6 +150,7 @@ object AdapterComponents {
         runQueryAdapter = runQueryAdapter
       ),
       adapterDao = adapterDao,
-      adapterMappings = adapterMappings)
+      adapterMappings = adapterMappings,
+      lastModified = adapterMappingsSource.lastModified)
   }
 }

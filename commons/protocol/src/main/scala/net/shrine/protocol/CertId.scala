@@ -15,6 +15,7 @@ import net.shrine.util.OptionEnrichments
 final case class CertId(serial: BigInteger, name: Option[String] = None) extends XmlMarshaller {
   override def toXml: NodeSeq = XmlUtil.stripWhitespace {
     import OptionEnrichments._
+    Nil
     
     <certId>
       <serial>{ serial }</serial>

@@ -41,7 +41,7 @@
     init();
 
     function init() {
-      $app.model.getOptions()
+      $app.model.getOptionalParts()
           .then(setOptions);
     }
 

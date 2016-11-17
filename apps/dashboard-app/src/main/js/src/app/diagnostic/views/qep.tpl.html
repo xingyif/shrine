@@ -1,39 +1,46 @@
 <div>
-    <table class="table table-striped">
-        <thead>
-        <tr>
-            <td colspan="2">
-                Query Entry Point Modes
-            </td>
-        </tr>
-        </thead>
+    <error-handler error="vm.optionsError" error-name="'options'"></error-handler>
+    <error-handler error="vm.qepError" error-name="'qep'"></error-handler>
+    <div ng-hide="vm.qepError || vm.optionsError">
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <td colspan="2">
+                    Query Entry Point Modes
+                </td>
+            </tr>
+            </thead>
 
-        <tbody>
-        <tr>
-            <td>
-                SHRINE Data Steward
-            </td>
-            <td ng-if="vm.isStewardEnabled" style="color:green">
-                Enabled
-            </td>
-            <td ng-if="!vm.isStewardEnabled" style="color:red">
-                Disabled
-            </td>
-        </tr>
-        </tbody>
-    </table>
+            <tbody>
+            <tr>
+                <td>
+                    SHRINE Data Steward
+                </td>
+                <td ng-if="vm.isStewardEnabled" style="color:green">
+                    Enabled
+                </td>
+                <td ng-if="!vm.isStewardEnabled" style="color:red">
+                    Disabled
+                </td>
+            </tr>
+            <tr>
+                <td>Trust Model</td>
+                <td><label>{{vm.trustModel}}</label></td>
+            </tr>
+            </tbody>
+        </table>
 
-    <table class="table table-striped" ng-if="vm.isDownstream">
-        <thead>
-        <tr>
-            <td colspan="2">
-                Network Hub
-            </td>
-        </tr>
-        </thead>
+        <table class="table table-striped" ng-if="vm.isDownstream">
+            <thead>
+            <tr>
+                <td colspan="2">
+                    Network Hub
+                </td>
+            </tr>
+            </thead>
 
-        <tbody>
-            <tr >
+            <tbody>
+            <tr>
                 <td>
                     URL
                 </td>
@@ -41,11 +48,11 @@
                     {{vm.broadcasterUrl}}
                 </td>
             </tr>
-        </tbody>
-    </table>
+            </tbody>
+        </table>
 
-    <table class="table table-striped" ng-if="vm.isStewardEnabled">
-        <thead>
+        <table class="table table-striped" ng-if="vm.isStewardEnabled">
+            <thead>
             <tr>
                 <td colspan="2">
                     SHRINE Data Steward
@@ -54,16 +61,16 @@
             <tr>
                 <td colspan="2">
                     <p>
-                        The Steward Base URL should only go up to the port number of its URL.  SHRINE assumes the Steward<br/>
-                        exists at "/steward" and appends the rest.  Steward-approved queries will be submitted to i2b2 using<br/>
+                        The Steward Base URL should only go up to the port number of its URL. SHRINE assumes the Steward<br/>
+                        exists at "/steward" and appends the rest. Steward-approved queries will be submitted to i2b2 using<br/>
                         the provided credentials.
                     </p>
                 </td>
             </tr>
-        </thead>
+            </thead>
 
-        <tbody>
-            <tr >
+            <tbody>
+            <tr>
                 <td>
                     Steward Base URL
                 </td>
@@ -71,7 +78,7 @@
                     {{vm.steward.stewardBaseUrl}}
                 </td>
             </tr>
-            <tr >
+            <tr>
                 <td>
                     QEP Username
                 </td>
@@ -79,7 +86,7 @@
                     {{vm.steward.qepUsername}}
                 </td>
             </tr>
-            <tr >
+            <tr>
                 <td>
                     QEP Password
                 </td>
@@ -87,6 +94,7 @@
                     {{vm.steward.password}}
                 </td>
             </tr>
-        </tbody>
-    </table>
+            </tbody>
+        </table>
+    </div>
 </div>

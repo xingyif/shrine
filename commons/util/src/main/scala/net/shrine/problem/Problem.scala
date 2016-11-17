@@ -2,13 +2,14 @@ package net.shrine.problem
 
 import java.net.InetAddress
 import java.util.Date
-import java.util.concurrent.Executors
 
 import net.shrine.log.Loggable
 import net.shrine.serialization.{XmlMarshaller, XmlUnmarshaller}
+import net.shrine.slick.NeedsWarmUp
+import net.shrine.source.ConfigSource
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.{ExecutionContext, Future, Promise}
+import scala.concurrent.Future
 import scala.xml.{Elem, Node, NodeSeq}
 
 /**
@@ -146,30 +147,55 @@ object Stamp {
 abstract class AbstractProblem(source:ProblemSources.ProblemSource) extends Problem {
   def timer = System.currentTimeMillis
   override val stamp = Stamp(source, timer)
-  private val config = ProblemConfigSource.config.getConfig("shrine.problem")
-  hackToHandleAfterInitialization(ProblemConfigSource.getObject("problemHandler", config))
+  private val config = ConfigSource.config.getConfig("shrine.problem")
+  hackToHandleAfterInitialization(ConfigSource.getObject("problemHandler", config))
 }
 
-trait ProblemHandler {
+trait ProblemHandler extends NeedsWarmUp {
   def handleProblem(problem:Problem)
 }
 
 /**
-  * An example problem handler
+  * Write problems to the default log
   */
 object LoggingProblemHandler extends ProblemHandler with Loggable {
   override def handleProblem(problem: Problem): Unit = {
-
     problem.throwable.fold(error(problem.toString))(throwable =>
       error(problem.toString,throwable)
     )
   }
+
+  override def warmUp(): Unit = Unit
 }
 
-object DatabaseProblemHandler extends ProblemHandler {
+object DatabaseProblemHandler extends ProblemHandler with Loggable {
   override def handleProblem(problem: Problem): Unit = {
     Problems.DatabaseConnector.insertProblem(problem.toDigest)
   }
+
+  override def warmUp(): Unit = Problems.warmUp
+}
+
+object LogAndDatabaseProblemHandler extends ProblemHandler {
+  override def handleProblem(problem: Problem): Unit = {
+    LoggingProblemHandler.handleProblem(problem)
+    DatabaseProblemHandler.handleProblem(problem)
+  }
+
+  override def warmUp(): Unit = {
+    LoggingProblemHandler.warmUp()
+    DatabaseProblemHandler.warmUp()
+  }
+}
+
+/**
+  * Mainly for testing, when you don't want problems to print a bunch
+  * to stdout
+  */
+object NoOpProblemHandler extends ProblemHandler {
+  override def handleProblem(problem: Problem): Unit = Unit
+
+  override def warmUp(): Unit = Unit
 }
 
 object ProblemSources{
@@ -179,12 +205,14 @@ object ProblemSources{
   }
 
   case object Adapter extends ProblemSource
+  case object Commons extends ProblemSource
+  case object Dsa extends ProblemSource
   case object Hub extends ProblemSource
   case object Qep extends ProblemSource
-  case object Dsa extends ProblemSource
+  case object ShrineApp extends ProblemSource
   case object Unknown extends ProblemSource
 
-  def problemSources = Set(Adapter,Hub,Qep,Dsa,Unknown)
+  def problemSources = Set(Adapter,Commons,Dsa,Hub,Qep,Unknown)
 }
 
 case class ProblemNotYetEncoded(internalSummary:String,t:Option[Throwable] = None) extends AbstractProblem(ProblemSources.Unknown){

@@ -587,7 +587,7 @@ i2b2.CRC.ctrlr.QueryStatus.prototype = function() {
 
 			var resultTitle = " - ",
 				name 		= " patients",
-				offsetText 	= " +-3",
+				offsetText 	= " +-10", // todo fix with SHRINE-1716
 				isException = i2b2.PM.model.isObfuscated === false;
 
 			//default to 10.

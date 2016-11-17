@@ -39,7 +39,7 @@ final class ReadQueryDefinitionAggregatorTest extends ShouldMatchersForJUnit {
     val result2 = Result(NodeId("Y"), 1.second, response2)
     
     //TODO: test handling error responses
-    val actual = aggregator.aggregate(Vector(result1, result2), Nil).asInstanceOf[ReadQueryDefinitionResponse]
+    val actual = aggregator.aggregate(Vector(result1, result2), Nil,null).asInstanceOf[ReadQueryDefinitionResponse]
     
     actual should not be(null)
     
