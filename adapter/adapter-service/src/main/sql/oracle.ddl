@@ -45,8 +45,6 @@ begin
 end;
 /
 -- end autoincrement
--- alter table SHRINE_QUERY change flag_message flag_message CLOB;
-
 
 create table QUERY_RESULT (
   id NUMBER not null,
