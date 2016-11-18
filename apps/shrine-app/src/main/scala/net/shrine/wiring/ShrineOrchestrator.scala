@@ -82,6 +82,8 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
     pmPoster,
     nodeId
   ))
+  if (adapterComponents.isEmpty)
+    warn("Adapter Components is improperly configured, please check the adapter section in shrine.conf")
 
   //todo maybe just break demeter too use this
   lazy val adapterService: Option[AdapterService] = adapterComponents.map(_.adapterService)
