@@ -3,7 +3,7 @@
   Filter By Topic:
   <div> 
 	<button class="tdd-btn">
-    <span ng-init="dropdown.selected={title: 'All'}" style="overflow: hidden;">{{dropdown.selected.title}}</span>&nbsp;&nbsp;<span class="dropdown-arrow"></span>
+    <span ng-init="dropdown.selected={title: 'All'}">{{dropdown.selected.title}}</span>&nbsp;&nbsp;<span class="dropdown-arrow"></span>
     <ul class="tdd-list">
       <li ng-class="{'active': dropdown.selected.id === undefined}" ng-click="dropdown.selected={title: 'All'}; topicSelected()">
         <a href="" >All</a>
