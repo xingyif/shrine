@@ -136,7 +136,7 @@ case class KeyStoreReport(
                            privateKeyAlias: Option[String],
                            owner: Option[String],
                            issuer: Option[String],
-                           expires: Date,
+                           expires: Long,
                            md5Signature: String,
                            sha256Signature: String,
                            caTrustedAlias: Option[String],
@@ -184,7 +184,7 @@ object KeyStoreReport {
       privateKeyAlias = keyStoreDescriptor.privateKeyAlias,
       owner = sortFormat(certCollection.myEntry.cert.getSubjectDN.getName),
       issuer = sortFormat(certCollection.myEntry.cert.getIssuerDN.getName),
-      expires = certCollection.myEntry.cert.getNotAfter,
+      expires = certCollection.myEntry.cert.getNotAfter.getTime,
       md5Signature = UtilHasher.encodeCert(certCollection.myEntry.cert, "MD5"),
       sha256Signature = UtilHasher.encodeCert(certCollection.myEntry.cert, "SHA-256"),
       //todo sha1 signature if needed

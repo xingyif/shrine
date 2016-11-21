@@ -48,7 +48,7 @@
                 ['Alias',             keystore.privateKeyAlias],
                 ['Owner',             keystore.owner],
                 ['Issuer',            keystore.issuer],
-                ['Expires',           keystore.expires],
+                ['Expires',           new Date(keystore.expires).toUTCString()],
                 ['MD5 Signature',     keystore.md5Signature],
                 ['SHA256 Signature',  keystore.sha256Signature]
             ];
