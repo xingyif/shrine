@@ -82,6 +82,8 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
     pmPoster,
     nodeId
   ))
+  if (adapterComponents.isEmpty)
+    warn("Adapter Components is improperly configured, please check the adapter section in shrine.conf")
 
   //todo maybe just break demeter too use this
   lazy val adapterService: Option[AdapterService] = adapterComponents.map(_.adapterService)
@@ -121,7 +123,7 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
 
   protected lazy val pmUrlString: String = pmEndpoint.url.toString
 
-  private lazy val ontEndpoint: EndpointConfig = shrineConfig.getConfigured("ontEndpoint", EndpointConfig(_))
+  private[shrine] lazy val ontEndpoint: EndpointConfig = shrineConfig.getConfigured("ontEndpoint", EndpointConfig(_))
   protected lazy val ontPoster: Poster = Poster(certCollection,ontEndpoint)
 
   //todo only used by happy outside of here

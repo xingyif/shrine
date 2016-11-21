@@ -14,6 +14,7 @@ import xml.NodeSeq
  *       licensed as Lgpl Open Source
  * @link http://www.gnu.org/licenses/lgpl.html
  */
+//TODO: Do we use this anymore? If it's only in happy, it can be removed
 final case class HiveConfig(val crcUrl: String, val ontologyUrl: String) extends XmlMarshaller {
   override def toXml = XmlUtil.stripWhitespace {
     <hiveConfig>

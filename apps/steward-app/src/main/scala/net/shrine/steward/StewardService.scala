@@ -231,16 +231,19 @@ trait StewardService extends HttpService with Json4sSupport {
     }
   }
 
-  def getQueryHistoryForUserByTopic(userIdOption:Option[UserName],topicIdOption:Option[TopicId], asJson: Option[Boolean]) = get {
-    matchQueryParameters(userIdOption) { queryParameters:QueryParameters =>
-      val queryHistory = StewardDatabase.db.selectQueryHistory(queryParameters, topicIdOption)
+  def getQueryHistoryForUserByTopic(userIdOption: Option[UserName],
+                                    topicIdOption: Option[TopicId],
+                                    asJson: Option[Boolean]) =
+    get {
+      matchQueryParameters(userIdOption) { queryParameters: QueryParameters =>
+        val queryHistory = StewardDatabase.db.selectQueryHistory(queryParameters, topicIdOption)
 
-      if (asJson.getOrElse(false))
-        complete(queryHistory.convertToJson)
-      else
-        complete(queryHistory)
+        if (asJson.getOrElse(false))
+          complete(queryHistory.convertToJson)
+        else
+          complete(queryHistory)
+      }
     }
-  }
 
   def requestTopicAccess(user:User):Route = post {
     entity(as[InboundTopicRequest]) { topicRequest: InboundTopicRequest =>

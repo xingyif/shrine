@@ -136,7 +136,7 @@ case class KeyStoreReport(
                            privateKeyAlias: Option[String],
                            owner: Option[String],
                            issuer: Option[String],
-                           expires: Date,
+                           expires: Long,
                            md5Signature: String,
                            sha256Signature: String,
                            caTrustedAlias: Option[String],
@@ -184,7 +184,7 @@ object KeyStoreReport {
       privateKeyAlias = keyStoreDescriptor.privateKeyAlias,
       owner = sortFormat(certCollection.myEntry.cert.getSubjectDN.getName),
       issuer = sortFormat(certCollection.myEntry.cert.getIssuerDN.getName),
-      expires = certCollection.myEntry.cert.getNotAfter,
+      expires = certCollection.myEntry.cert.getNotAfter.getTime,
       md5Signature = UtilHasher.encodeCert(certCollection.myEntry.cert, "MD5"),
       sha256Signature = UtilHasher.encodeCert(certCollection.myEntry.cert, "SHA-256"),
       //todo sha1 signature if needed
@@ -214,7 +214,7 @@ object I2b2 {
   def apply(): I2b2 = new I2b2(
     pmUrl = ShrineOrchestrator.pmPoster.url,
     crcUrl = ShrineOrchestrator.adapterComponents.map(_.i2b2AdminService.crcUrl),
-    ontUrl = "", //todo. Grab from HiveConfigd?
+    ontUrl = ShrineOrchestrator.ontEndpoint.url.toString,
     i2b2Domain = ShrineOrchestrator.crcHiveCredentials.domain,
     username = ShrineOrchestrator.crcHiveCredentials.username,
     crcProject = ShrineOrchestrator.crcHiveCredentials.projectId,
