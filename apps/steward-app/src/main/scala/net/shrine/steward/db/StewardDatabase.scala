@@ -219,15 +219,18 @@ case class StewardDatabase(schemaDef:StewardSchema,dataSource: DataSource) exten
     (state,topicIdAndName)
   }
 
-  def selectQueryHistory(queryParameters: QueryParameters,topicParameter:Option[TopicId]):QueryHistory = {
+  def selectQueryHistory(queryParameters: QueryParameters, topicParameter:Option[TopicId]):
+  QueryHistory = {
 
-    val (count,shrineQueries,topics,userNamesToOutboundUsers) = dbRun(for {
-      count <- shrineQueryCountQuery(queryParameters,topicParameter).length.result
+    val topicQuery = for {
+      count <- shrineQueryCountQuery(queryParameters, topicParameter).length.result
       shrineQueries <- shrineQuerySelectQuery(queryParameters, topicParameter).result
       topics <- mostRecentTopicQuery.filter(_.id.inSet(shrineQueries.map(_.topicId).to[Set].flatten)).result
       userNamesToOutboundUsers <- outboundUsersForNamesAction(shrineQueries.map(_.userId).to[Set] ++ (topics.map(_.createdBy) ++ topics.map(_.changedBy)).to[Set])
 
-    } yield (count,shrineQueries,topics,userNamesToOutboundUsers))
+    } yield (count, shrineQueries, topics, userNamesToOutboundUsers)
+
+    val (count, shrineQueries, topics, userNamesToOutboundUsers) = dbRun(topicQuery)
 
     val topicIdsToTopics: Map[Option[TopicId], TopicRecord] = topics.map(x => (x.id, x)).toMap
 
@@ -242,8 +245,7 @@ case class StewardDatabase(schemaDef:StewardSchema,dataSource: DataSource) exten
       queryRecord.createOutboundShrineQuery(outboundTopic, outboundUser)
     }
 
-    val result = QueryHistory(count,queryParameters.skipOption.getOrElse(0),shrineQueries.map(toOutboundShrineQuery))
-    result
+    QueryHistory(count, queryParameters.skipOption.getOrElse(0), shrineQueries.map(toOutboundShrineQuery))
   }
 
   private def outboundUsersForNamesAction(userNames:Set[UserName]):DBIOAction[Map[UserName, OutboundUser], NoStream, Read] = {

@@ -123,7 +123,7 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
 
   protected lazy val pmUrlString: String = pmEndpoint.url.toString
 
-  private lazy val ontEndpoint: EndpointConfig = shrineConfig.getConfigured("ontEndpoint", EndpointConfig(_))
+  private[shrine] lazy val ontEndpoint: EndpointConfig = shrineConfig.getConfigured("ontEndpoint", EndpointConfig(_))
   protected lazy val ontPoster: Poster = Poster(certCollection,ontEndpoint)
 
   //todo only used by happy outside of here

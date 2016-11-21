@@ -1087,7 +1087,9 @@ button.ont-close {
       opacity: 0;
       visibility: hidden;
       -webkit-transition: 0.3s ease;
-      transition: 0.3s ease; }
+      transition: 0.3s ease;
+      max-height: 600px;
+      overflow: auto; }
       .topic-dropdown .tdd-btn .tdd-list a {
         display: block;
         border-bottom: 1px solid rgba(0, 0, 0, 0.05);
