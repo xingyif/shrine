@@ -62,7 +62,6 @@ class StatusJaxrsTest extends ShouldMatchersForJUnit {
   def testI2b2() = {
 
     val i2b2String = statusJaxrs.i2b2
-    println(i2b2String)
     val i2b2 = Serialization.read[I2b2](i2b2String)
 
     i2b2.crcUrl.isDefined should be (true)
