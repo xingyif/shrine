@@ -38,17 +38,14 @@
     // -- scope --//
     var vm = this;
     vm.toDashboard = $app.model.toDashboard;
-
+    vm.hasHub = function() {return false};
     init();
 
     function init() {
       $app.model.getOptionalParts()
-          .then(setOptions);
-
-      $app.model.getQep()
+          .then(setOptions)
+          .then($app.model.getQep)
           .then(setQep);
-
-      vm.hasHub = function() {return hasHub(vm.trustModelIsHub, vm.options.isHub, vm.toDashboard.url)};
     }
 
 
@@ -59,6 +56,7 @@
 
     function setQep(data) {
       vm.trustModelIsHub = data.trustModelIsHub;
+      vm.hasHub = function() {return hasHub(vm.trustModelIsHub, vm.options.isHub, vm.toDashboard.url)};
     }
 
     function hasHub(trustModelIsHub, isHub, toDashboardUrl) {
