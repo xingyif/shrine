@@ -9,11 +9,11 @@ import spray.routing.{HttpService, _}
 import scala.util.Try
 
 /**
-  * Created by ty on 11/8/16.
+  * A simple API for reporting what's in the metaData section within shrine.conf
   */
 trait MetaDataService extends HttpService with Loggable {
   lazy val config = ConfigSource.config.getConfig("shrine.metaData")
-  val info =
+  val homeInfo =
     """
       |The SHRINE Metadata service. This is a simple API that gives you
       |read access to the metaData section within SHRINE's configuration.
@@ -31,10 +31,10 @@ trait MetaDataService extends HttpService with Loggable {
       parameter("key") { (key: String) =>
         complete(handleKey(key))
       } ~ complete(handleAll)
-    }} ~ complete(info)
+    }} ~ complete(homeInfo)
 
   def handleAll:(StatusCode, String) = {
-    StatusCodes.OK -> config.root.render(ConfigRenderOptions.concise())
+    StatusCodes.OK -> config.root.render(ConfigRenderOptions.concise()) // returns it as JSON.
   }
 
   def handleKey(key: String): (StatusCode, String) = {
