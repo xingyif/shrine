@@ -40,6 +40,7 @@ import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{Await, Future, duration}
 import scala.util.control.NonFatal
 import scala.util.{Failure, Success, Try}
+import scala.xml.NodeSeq
 
 /**
   * A subservice that shares internal state of the shrine servlet.
@@ -597,11 +598,17 @@ object ShaVerificationService extends Loggable with DefaultJsonSupport {
     InvalidVerifySignatureResponse(response)
     None
   }
+}
 
-  case class InvalidVerifySignatureResponse(response: String) extends AbstractProblem(ProblemSources.ShrineApp) {
-    override def summary: String = "The client for handling certificate diagnostic across Dashboards in the Status Service received an invalid response from verifySignature"
 
-    override def description: String = s"verifySig produced the invalid response `$response`"
-  }
+case class InvalidVerifySignatureResponse(response: String) extends AbstractProblem(ProblemSources.ShrineApp) {
+  override def summary: String = "The client for handling certificate diagnostic across Dashboards in the Status Service received an invalid response from shrine-dashboard/admin/status/verifySignature"
 
+  override def description: String = s"See details for incorrect response:"
+
+  override def throwable: Option[Throwable] = Some(InvalidResponseException(response))
+}
+
+case class InvalidResponseException(response: String) extends IllegalStateException {
+  override def getMessage: String = s"Invalid response `$response`"
 }
