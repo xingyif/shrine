@@ -47,7 +47,7 @@
              */
             function timeout() {
                 clearCredentials();
-                $location.url("/login");
+                $app.model.safeLogout();
             }
 
             $rootScope.idleBroadcast = function() {

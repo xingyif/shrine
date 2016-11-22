@@ -28,8 +28,8 @@
      *
      * @type {string[]}
      */
-    UserStatusController.$inject = ['$location', '$app'];
-    function UserStatusController ($location, $app) {
+    UserStatusController.$inject = ['$app'];
+    function UserStatusController ($app, $log) {
         var vm = this;
 
         vm.isUserLoggedIn   = isUserLoggedIn;
@@ -61,7 +61,7 @@
          *
          */
         function logout () {
-            $location.path('/login');
+            $app.model.safeLogout();
         }
     }
 
