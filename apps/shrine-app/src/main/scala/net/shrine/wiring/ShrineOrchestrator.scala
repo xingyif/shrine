@@ -54,7 +54,7 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
   lazy val keyStoreDescriptor = KeyStoreDescriptorParser(shrineConfig.getConfig("keystore"), shrineConfig.getConfigOrEmpty("hub"), shrineConfig.getConfigOrEmpty("queryEntryPoint"))
   lazy val certCollection: BouncyKeyStoreCollection = BouncyKeyStoreCollection.fromFileRecoverWithClassPath(keyStoreDescriptor)
   protected lazy val keystoreTrustParam: TrustParam = TrustParam.BouncyKeyStore(certCollection)
-  //todo used by the adapterServide and happyShrineService, but not by the QEP. maybe each can have its own signerVerivier
+  //todo used by the adapterService and happyShrineService, but not by the QEP. maybe each can have its own signerVerifier
   lazy val signerVerifier = SignerVerifierAdapter(certCollection)
   protected lazy val dataSource: DataSource = TestableDataSourceCreator.dataSource(shrineConfig.getConfig("squerylDataSource.database"))
   protected lazy val squerylAdapter: DatabaseAdapter = SquerylDbAdapterSelecter.determineAdapter(shrineConfig.getString("shrineDatabaseType"))
