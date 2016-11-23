@@ -1,8 +1,6 @@
 package net.shrine.status
 
-import java.security.Security
 import java.security.cert.X509Certificate
-import java.util.Date
 import javax.net.ssl.{KeyManager, SSLContext, X509TrustManager}
 import javax.ws.rs.core.{MediaType, Response}
 import javax.ws.rs.{GET, Path, Produces, WebApplicationException}
@@ -31,7 +29,7 @@ import org.json4s.{DefaultFormats, Formats}
 import spray.can.Http
 import spray.can.Http.{HostConnectorInfo, HostConnectorSetup}
 import spray.client.pipelining._
-import spray.http.{ContentType, ContentTypes, FormData, HttpCharsets, HttpEntity, HttpHeaders, HttpRequest, HttpResponse, MediaTypes}
+import spray.http.{ContentType, HttpCharsets, HttpEntity, HttpRequest, HttpResponse, MediaTypes}
 import spray.io.{ClientSSLEngineProvider, PipelineContext, SSLContextProvider}
 
 import scala.collection.JavaConverters._
@@ -40,7 +38,6 @@ import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{Await, Future, duration}
 import scala.util.control.NonFatal
 import scala.util.{Failure, Success, Try}
-import scala.xml.NodeSeq
 
 /**
   * A subservice that shares internal state of the shrine servlet.
@@ -257,25 +254,15 @@ object Qep {
     includeAggregateResults = queryEntryPointComponents.fold(false)(_.i2b2Service.includeAggregateResult),
     authenticationType = queryEntryPointComponents.fold("")(_.i2b2Service.authenticator.getClass.getSimpleName),
     steward = queryEntryPointComponents.flatMap(qec => checkStewardAuthorization(qec.shrineService.authorizationService)),
-    broadcasterUrl = queryEntryPointComponents.flatMap(qec => checkBroadcasterUrl(qec.i2b2Service.broadcastAndAggregationService)),
+    broadcasterUrl = queryEntryPointComponents.flatMap(_.shrineService.broadcastAndAggregationService.broadcasterUrl.map(_.toString)),
     trustModel = ShrineOrchestrator.keyStoreDescriptor.trustModel.description,
     trustModelIsHub = ShrineOrchestrator.keyStoreDescriptor.trustModel match {
       case sh: SingleHubModel => true
       case PeerToPeerModel    => false
-    }
-  )
+    })
 
   def checkStewardAuthorization(auth: QueryAuthorizationService): Option[Steward] = auth match {
     case sa: StewardQueryAuthorizationService => Some(Steward(sa.stewardBaseUrl.toString, sa.qepUserName))
-    case _                                    => None
-  }
-
-  //TODO: Double check with Dave that this is the right url
-  def checkBroadcasterUrl(broadcaster: BroadcastAndAggregationService): Option[String] = broadcaster match {
-    case a: HubBroadcastAndAggregationService => a.broadcasterClient match {
-      case PosterBroadcasterClient(poster, _) => Some(poster.url)
-      case _                                  => None
-    }
     case _                                    => None
   }
 }

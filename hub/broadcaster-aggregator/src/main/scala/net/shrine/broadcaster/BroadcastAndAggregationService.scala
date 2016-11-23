@@ -1,7 +1,10 @@
 package net.shrine.broadcaster
 
+import java.net.URL
+
 import net.shrine.log.Loggable
 import net.shrine.protocol.ShrineRequest
+
 import scala.concurrent.Future
 import net.shrine.protocol.ShrineResponse
 import net.shrine.aggregation.Aggregator
@@ -47,6 +50,7 @@ trait BroadcastAndAggregationService extends Loggable {
   
   private def newQueryId = BroadcastMessage.Ids.next
 
+  def broadcasterUrl:Option[URL]
 
   def attachSigningCert:Boolean
 
