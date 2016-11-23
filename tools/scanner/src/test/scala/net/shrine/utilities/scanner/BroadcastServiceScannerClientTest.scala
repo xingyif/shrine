@@ -121,6 +121,7 @@ object BroadcastServiceScannerClientTest {
     }
 
     override def attachSigningCert: Boolean = false
+    override val broadcasterUrl = None
   }
 
   private final class MockRetrieveResultsBroadcastAndAggregationService extends BroadcastAndAggregationService {
@@ -141,5 +142,6 @@ object BroadcastServiceScannerClientTest {
     }
 
     override def attachSigningCert: Boolean = false
+    override val broadcasterUrl = None
   }
 }
