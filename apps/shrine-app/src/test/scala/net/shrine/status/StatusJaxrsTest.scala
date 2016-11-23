@@ -1,6 +1,7 @@
 package net.shrine.status
 
-import com.typesafe.config.ConfigFactory
+import
+com.typesafe.config.ConfigFactory
 import net.shrine.util.{ShouldMatchersForJUnit, SingleHubModel}
 import org.json4s.native.Serialization
 import org.json4s.{DefaultFormats, Formats}
@@ -106,6 +107,7 @@ class StatusJaxrsTest extends ShouldMatchersForJUnit {
     actual.maxQueryWaitTimeMillis should be (300000000L)
     actual.trustModel should be (SingleHubModel(true).description)
     actual.trustModelIsHub should be (true)
+    actual.broadcasterUrl shouldNot be (None)
   }
 
   @Test
