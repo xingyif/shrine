@@ -57,12 +57,6 @@ final case class AdapterResource(service: AdapterRequestHandler) extends Loggabl
     
     builderAttempt.get.build()
   }
-
-  @GET
-  @Path("requests")
-  def handleGet: Response = {
-    Response.ok.entity("THIS IS A TEST THIS IS A TEST EHLLO").build()
-  }
 }
 
 //NB: extends Handler => Resource for smoother testing
