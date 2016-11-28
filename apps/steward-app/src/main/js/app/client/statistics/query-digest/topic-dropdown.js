@@ -37,7 +37,6 @@
             var dropdown = scope.dropdown;
             if (after && after.length) {
                 dropdown.topics = after;
-                clearWatch();
             }
         });
     }
