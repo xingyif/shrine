@@ -7,16 +7,16 @@ import scala.util
 
 /**
  * @author clint
- * @date Feb 13, 2014
+ * @since Feb 13, 2014
  */
 trait NonI2b2ShrineResponse extends BaseShrineResponse
 
 object NonI2b2ShrineResponse {
   def fromXml(breakdownTypes: Set[ResultOutputType])(xml: NodeSeq): Try[NonI2b2ShrineResponse] = {
-    val rootTagName = xml.head.label
+    val rootTagName: String = xml.head.label
     
     unmarshallers.get(rootTagName).map(_.fromXml(xml)).getOrElse {
-      util.Failure(new Exception(s"Didn't recognize root tag name '$rootTagName' in XML '$xml'; supported tag names are ${unmarshallers.keySet.mkString(",")}"))
+      util.Failure(new RootTagNotFoundException(rootTagName,xml,unmarshallers.keySet.map(_.toString)))
     }
   }
   
@@ -31,3 +31,6 @@ object NonI2b2ShrineResponse {
     companion.rootTagName -> companion
   }
 }
+
+case class RootTagNotFoundException(rootTagName: String,xml:NodeSeq,possibleRootTags:Set[String])
+  extends Exception(s"Didn't recognize root tag name '$rootTagName' in XML '$xml'; supported tag names are ${possibleRootTags.mkString(",")}")
