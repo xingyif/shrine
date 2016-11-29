@@ -63,12 +63,14 @@
             };
 
             var username = 'ben';
-            var queryString = '?asJson=true';
-            var url = stewardService.getUrl('steward/queryHistory/user') + '/' +  username + queryString;
+            var queryString = '&asJson=true';
+            var skip, limit, state, sortBy, sortDirection, startDate = 0, endDate = 300000;
+            var url = stewardService.getUrl('steward/queryHistory/user' + '/' +  username , skip, limit, state,
+                sortBy, sortDirection, startDate, endDate) + queryString;
 
             $httpBackend.expectGET(url).respond(mockData);
 
-            statisticsModel.getUserQueryHistory(username)
+            statisticsModel.getUserQueryHistory(username, startDate, endDate)
                 .then(function (data) {
                     expect(data.totalCount).toBe(mockData.totalCount);
                 });

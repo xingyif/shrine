@@ -28,15 +28,12 @@
             for (var i = 0; i < ln; i++) {
                 var record = queryRecords[i];
                 var topic = record.topic;
-                if (topic && (topicId === undefined || topicId === topic.id)) {
+                var isAllOrFilteredByTopic = (topicId === undefined || topicId === topic.id);
+
+                if (isAllOrFilteredByTopic) {
                     var str = record.queryContents;
                     ontology = traverse(str.queryDefinition.expr, record.externalId, ontology);
                     queryCount++;
-
-                    if (!topics[record.topic.id]) {
-                        topics[record.topic.id] = record.topic;
-                    }
-
                     appendTopicIfUnique(topic, topics);
                 }
             }
@@ -57,6 +54,11 @@
         }
 
         function appendTopicIfUnique(topic, topics) {
+
+            if (!topic) {
+                return;
+            }
+
             var id = topic.id;
 
             if (!topics[id]) {
