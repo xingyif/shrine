@@ -21,26 +21,29 @@
          */
         function buildOntology(queryRecords, topicId) {
             var ln = queryRecords.length;
-            var queryCount = 0;
             var ontology = new OntologyTerm('SHRINE');
             var topics = {};
+            var parsingAllTopics = topicId === undefined;
+            var filteringByTopic;
 
             for (var i = 0; i < ln; i++) {
                 var record = queryRecords[i];
                 var topic = record.topic;
-                var isAllOrFilteredByTopic = (topicId === undefined || topicId === topic.id);
+                filteringByTopic = !parsingAllTopics && (topic && topicId === topic.id);
 
-                if (isAllOrFilteredByTopic) {
+                appendTopicIfUnique(topic, topics);
+
+                if (parsingAllTopics || filteringByTopic) {
                     var str = record.queryContents;
                     ontology = traverse(str.queryDefinition.expr, record.externalId, ontology);
-                    queryCount++;
-                    appendTopicIfUnique(topic, topics);
                 }
             }
 
             ontology.userName = (ln) ? queryRecords[0].user.userName : '';
-            ontology.topics = formatTopicsToArray(topics);
-            ontology.queryCount = queryCount;
+            if (parsingAllTopics) {
+                ontology.topics = formatTopicsToArray(topics);
+            }
+            ontology.queryCount = ln;
             return ontology;
         }
 
@@ -49,7 +52,6 @@
             var keys = Object.keys(topicObject);
             Object.keys(topicObject)
                 .forEach(function (key) { topicArray.push(topicObject[key]); });
-
             return topicArray;
         }
 

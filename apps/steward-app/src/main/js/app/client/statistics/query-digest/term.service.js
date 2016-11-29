@@ -12,7 +12,7 @@
 
         function getPct(queryCount, maxCount) {
             var result = Math.floor((queryCount / maxCount) * 100);
-            return result;
+            return Math.ceil(result);
         }
 
         function getStyleByFrequency(queryCount, maxCount) {
