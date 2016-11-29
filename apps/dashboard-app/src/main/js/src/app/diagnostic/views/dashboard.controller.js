@@ -70,9 +70,7 @@
         }
 
         function clearCache() {
-            for (var member in $app.model.cache) {
-                if($app.model.cache.hasOwnProperty(member)) delete $app.model.cache[member];
-            }
+            $app.model.clearCache();
         }
 
         function entryToPair(entry){

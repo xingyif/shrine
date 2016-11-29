@@ -24,9 +24,9 @@ import net.shrine.authentication.NotAuthenticatedException
 import net.shrine.protocol.AggregatedReadQueryResultResponse
 
 /**
- * @author clint
- * @date Jan 14, 2014
- */
+  * @author clint
+  * @date Jan 14, 2014
+  */
 final class BroadcastServiceScannerClientTest extends ShouldMatchersForJUnit {
   private val authn = AuthenticationInfo("d", "u", Credential("p", false))
 
@@ -121,6 +121,7 @@ object BroadcastServiceScannerClientTest {
     }
 
     override def attachSigningCert: Boolean = false
+    override val broadcasterUrl = None
   }
 
   private final class MockRetrieveResultsBroadcastAndAggregationService extends BroadcastAndAggregationService {
@@ -141,5 +142,6 @@ object BroadcastServiceScannerClientTest {
     }
 
     override def attachSigningCert: Boolean = false
+    override val broadcasterUrl = None
   }
 }

@@ -1,5 +1,7 @@
 package net.shrine.broadcaster
 
+import java.net.URL
+
 import com.typesafe.config.Config
 import net.shrine.broadcaster.dao.HubDao
 import net.shrine.client.{EndpointConfig, Poster}
@@ -13,7 +15,8 @@ import net.shrine.protocol.ResultOutputType
  */
 final case class SigningBroadcastAndAggregationService(broadcasterClient: BroadcasterClient,
                                                        signer: Signer,
-                                                       signingCertStrategy: SigningCertStrategy)
+                                                       signingCertStrategy: SigningCertStrategy,
+                                                       override val broadcasterUrl: Option[URL] = None)
   extends AbstractBroadcastAndAggregationService(broadcasterClient, signer.sign(_, signingCertStrategy))
 {
   override def attachSigningCert: Boolean = signingCertStrategy == SigningCertStrategy.Attach
@@ -30,7 +33,7 @@ object SigningBroadcastAndAggregationService {
 
     val signerVerifier: Signer = SignerVerifierAdapter(shrineCertCollection)
 
-    val broadcasterClient: BroadcasterClient = {
+    val (broadcasterClient, broadcasterUrl): (BroadcasterClient, Option[URL]) = {
       //todo don't bother with a distinction between local and remote QEPs. Just use loopback.
       val remoteHubEndpoint = qepConfig.getOptionConfigured("broadcasterServiceEndpoint", EndpointConfig(_))
       remoteHubEndpoint.fold{
@@ -39,9 +42,9 @@ object SigningBroadcastAndAggregationService {
         val broadcaster: AdapterClientBroadcaster = AdapterClientBroadcaster(broadcastDestinations.get, hubDao)
 
         val broadcastClient:BroadcasterClient = InJvmBroadcasterClient(broadcaster)
-        broadcastClient
+        (broadcastClient, None: Option[URL])
       }{ hubEndpointConfig =>
-        PosterBroadcasterClient(Poster(shrineCertCollection,hubEndpointConfig), breakdownTypes)
+        (PosterBroadcasterClient(Poster(shrineCertCollection,hubEndpointConfig), breakdownTypes), Some(hubEndpointConfig.url))
       }
     }
 
@@ -49,7 +52,7 @@ object SigningBroadcastAndAggregationService {
     val attachSigningCerts: Boolean = qepConfig.getOption("attachSigningCert", _.getBoolean).getOrElse(false)
     val signingCertStrategy:SigningCertStrategy = if(attachSigningCerts) SigningCertStrategy.Attach else SigningCertStrategy.DontAttach
 
-    new SigningBroadcastAndAggregationService(broadcasterClient, signerVerifier, signingCertStrategy)
+    new SigningBroadcastAndAggregationService(broadcasterClient, signerVerifier, signingCertStrategy, broadcasterUrl)
   }
 
 }

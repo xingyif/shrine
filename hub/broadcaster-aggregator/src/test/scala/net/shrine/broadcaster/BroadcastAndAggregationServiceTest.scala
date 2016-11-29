@@ -172,5 +172,6 @@ object BroadcastAndAggregationServiceTest {
     }
 
     override def attachSigningCert: Boolean = false
+    override val broadcasterUrl = None
   }
 }

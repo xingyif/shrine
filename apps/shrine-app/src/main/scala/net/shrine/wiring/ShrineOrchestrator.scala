@@ -54,7 +54,7 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
   lazy val keyStoreDescriptor = KeyStoreDescriptorParser(shrineConfig.getConfig("keystore"), shrineConfig.getConfigOrEmpty("hub"), shrineConfig.getConfigOrEmpty("queryEntryPoint"))
   lazy val certCollection: BouncyKeyStoreCollection = BouncyKeyStoreCollection.fromFileRecoverWithClassPath(keyStoreDescriptor)
   protected lazy val keystoreTrustParam: TrustParam = TrustParam.BouncyKeyStore(certCollection)
-  //todo used by the adapterServide and happyShrineService, but not by the QEP. maybe each can have its own signerVerivier
+  //todo used by the adapterService and happyShrineService, but not by the QEP. maybe each can have its own signerVerifier
   lazy val signerVerifier = SignerVerifierAdapter(certCollection)
   protected lazy val dataSource: DataSource = TestableDataSourceCreator.dataSource(shrineConfig.getConfig("squerylDataSource.database"))
   protected lazy val squerylAdapter: DatabaseAdapter = SquerylDbAdapterSelecter.determineAdapter(shrineConfig.getString("shrineDatabaseType"))
@@ -82,6 +82,8 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
     pmPoster,
     nodeId
   ))
+  if (adapterComponents.isEmpty)
+    warn("Adapter Components is improperly configured, please check the adapter section in shrine.conf")
 
   //todo maybe just break demeter too use this
   lazy val adapterService: Option[AdapterService] = adapterComponents.map(_.adapterService)
@@ -121,7 +123,7 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
 
   protected lazy val pmUrlString: String = pmEndpoint.url.toString
 
-  private lazy val ontEndpoint: EndpointConfig = shrineConfig.getConfigured("ontEndpoint", EndpointConfig(_))
+  private[shrine] lazy val ontEndpoint: EndpointConfig = shrineConfig.getConfigured("ontEndpoint", EndpointConfig(_))
   protected lazy val ontPoster: Poster = Poster(certCollection,ontEndpoint)
 
   //todo only used by happy outside of here

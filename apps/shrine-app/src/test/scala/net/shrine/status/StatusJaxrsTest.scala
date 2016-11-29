@@ -1,6 +1,7 @@
 package net.shrine.status
 
-import com.typesafe.config.ConfigFactory
+import
+com.typesafe.config.ConfigFactory
 import net.shrine.util.{ShouldMatchersForJUnit, SingleHubModel}
 import org.json4s.native.Serialization
 import org.json4s.{DefaultFormats, Formats}
@@ -62,7 +63,6 @@ class StatusJaxrsTest extends ShouldMatchersForJUnit {
   def testI2b2() = {
 
     val i2b2String = statusJaxrs.i2b2
-
     val i2b2 = Serialization.read[I2b2](i2b2String)
 
     i2b2.crcUrl.isDefined should be (true)
@@ -107,6 +107,7 @@ class StatusJaxrsTest extends ShouldMatchersForJUnit {
     actual.maxQueryWaitTimeMillis should be (300000000L)
     actual.trustModel should be (SingleHubModel(true).description)
     actual.trustModelIsHub should be (true)
+    actual.broadcasterUrl shouldNot be (None)
   }
 
   @Test
@@ -122,7 +123,6 @@ class StatusJaxrsTest extends ShouldMatchersForJUnit {
   @Test
   def testKeyStore() = {
     val string = statusJaxrs.keystore
-    println(string)
     val actual = Serialization.read[KeyStoreReport](string)
   }
 
