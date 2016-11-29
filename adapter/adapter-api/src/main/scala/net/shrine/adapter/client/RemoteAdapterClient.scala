@@ -14,14 +14,9 @@ import scala.xml.{NodeSeq, XML}
 import com.sun.jersey.api.client.ClientHandlerException
 import net.shrine.client.{HttpResponse, Poster, TimeoutException}
 import net.shrine.problem.{AbstractProblem, ProblemNotYetEncoded, ProblemSources}
-import net.shrine.protocol.BroadcastMessage
-import net.shrine.protocol.ErrorResponse
-import net.shrine.protocol.NodeId
-import net.shrine.protocol.Result
+import net.shrine.protocol.{BroadcastMessage, ErrorResponse, NodeId, Result, ResultOutputType, RootTagNotFoundException}
 
 import scala.util.{Failure, Success, Try}
-import net.shrine.protocol.ResultOutputType
-
 import scala.collection.immutable.Stream.Empty
 
 /**
@@ -75,6 +70,7 @@ final class RemoteAdapterClient private (nodeId:NodeId,val poster: Poster, val b
         case Failure(x) => {
           val errorResponse = x match {
             case sx: SAXParseException => ErrorResponse(CouldNotParseXmlFromAdapter(poster.url,response.statusCode,responseXml,sx))
+            case rtnfx: RootTagNotFoundException => ErrorResponse(CouldNotParseXmlFromAdapter(poster.url,response.statusCode,responseXml,rtnfx))
             case _ => ErrorResponse(ProblemNotYetEncoded(s"Couldn't understand response from adapter at '${poster.url}': $responseXml", x))
           }
           Result(nodeId, 0.milliseconds, errorResponse)
@@ -125,13 +121,13 @@ case class HttpErrorCodeFromAdapter(url:String,statusCode:Int,responseBody:Strin
   }
 }
 
-case class CouldNotParseXmlFromAdapter(url:String,statusCode:Int,responseBody:String,saxx: SAXParseException) extends AbstractProblem(ProblemSources.Adapter) {
+case class CouldNotParseXmlFromAdapter(url:String,statusCode:Int,responseBody:String,x: Exception) extends AbstractProblem(ProblemSources.Adapter) {
 
-  override def throwable = Some(saxx)
+  override def throwable = Some(x)
 
   override def summary: String = s"Hub could not parse response from adapter"
 
-  override def description: String = s"Hub could not parse xml from $url due to ${saxx.toString}"
+  override def description: String = s"Hub could not parse xml from $url due to ${x.toString}"
 
   override def detailsXml:NodeSeq = <details>
     {s"Http response code was $statusCode and the body was $responseBody"}
