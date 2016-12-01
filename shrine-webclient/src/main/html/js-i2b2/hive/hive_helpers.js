@@ -801,7 +801,53 @@ i2b2.h.BuildSniffPack = function(cellName, cellFuncName, results, signalOrigin) 
 }
 
 
+i2b2.h.getFormattedResult = getFormattedResult;
+i2b2.h.getMinResultText = getMinResultText;
+i2b2.h.isMinObfuscation = isMinObfuscation;
 
+/**
+ * Method for creating obfuscation text
+ * @param: rawResult - If null or undefined, will default to 0. 
+ */
+function getFormattedResult(rawResult) {
+
+	var resultTitle = ' - ';
+	var obfuscationSetting = i2b2.hive.cfg.obfuscation;
+	var isException = i2b2.PM.model.isObfuscated === false;
+	rawResult = rawResult || 0;
+
+	if (isException) {
+		return resultTitle += rawResult + ' ' + i2b2.hive.cfg.resultName;
+	}
+
+	resultTitle += (rawResult  >= obfuscationSetting) ? getResultText(rawResult) : getMinResultText();
+
+	return resultTitle;
+}
+
+/**
+ * Method for getting default result text if result is less than minimum obfuscation value.
+ */
+function getMinResultText() { 
+	i2b2.hive.cfg.obfuscation + ' ' + i2b2.hive.cfg.resultName + ' or fewer';
+}
+
+/**
+ * True if title represents a result value that is less than the obfuscation minimum value.
+ * @param: title of a node.
+ */
+function isMinObfuscation (title) {
+	return !!title.indexOf(getMinResultText()) > 0;
+}
+
+/**
+ * Format raw query count as texxt
+ * @param: Raw query count. 
+ */
+function getResultText(rawResult) {
+	var text = rawResult + ' +-' + i2b2.hive.cfg.obfuscation + ' ' + i2b2.hive.cfg.resultName;
+	return text; 
+}
 
 console.timeEnd('execute time');
 console.groupEnd();

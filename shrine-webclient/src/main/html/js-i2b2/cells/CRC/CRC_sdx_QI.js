@@ -316,7 +316,7 @@ i2b2.sdx.TypeControllers.QI.getChildRecords = function(sdxParentNode, onComplete
 							if (i2b2.PM.model.userRoles.lastIndexOf("DATA_AGG") > -1) {
 								title = t+" - "+oRecord.size+" patients";
 							} else {
-								title = t+" - 10 patients or fewer";
+								title = t + " - " + i2b2.h.getMinResultText();
 							}
 						}
 						o.titleCRC = title;
@@ -352,7 +352,7 @@ i2b2.sdx.TypeControllers.QI.getChildRecords = function(sdxParentNode, onComplete
 							if (i2b2.PM.model.userRoles.lastIndexOf("DATA_AGG") > -1) {
 								title = t+" - "+oRecord.size+" patients";
 							} else {
-								title = t+" - 10 patients or fewer";
+								title = t + " - " + i2b2.h.getMinResultText();
 							}
 						}
 					    o.titleCRC = title;
