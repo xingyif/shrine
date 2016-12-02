@@ -285,7 +285,7 @@ i2b2.CRC.view.downloadData.getCSVFromResultsHash = function() {
 				var thisRowColItem = finalResultsArray[i][j];
 				if(thisRowColItem)
 				{
-					if(i2b2.h.isMinObfuscation(thisRowColItem.trim()){
+					if(i2b2.h.isMinObfuscation(thisRowColItem.trim())) {
 						thisRowColItem = 0;
 					}
 						

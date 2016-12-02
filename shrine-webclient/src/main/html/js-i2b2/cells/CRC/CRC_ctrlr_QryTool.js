@@ -2841,8 +2841,7 @@ function QueryToolController() {
 					if(thisRowColItem)
 					{
 						
-						if(i2b2.h.isMinObfuscation(thisRowColItem.trim())
-						{
+						if(i2b2.h.isMinObfuscation(thisRowColItem.trim())){
 							thisRowColItem = 0;
 						}
 							
