@@ -837,7 +837,7 @@ function getMinResultText() {
  * @param: title of a node.
  */
 function isMinObfuscation (title) {
-	return !!title.indexOf(getMinResultText()) > 0;
+	return title.indexOf(getMinResultText()) > 0;
 }
 
 /**
