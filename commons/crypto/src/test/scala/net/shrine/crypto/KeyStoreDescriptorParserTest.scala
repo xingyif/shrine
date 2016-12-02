@@ -114,7 +114,7 @@ final class KeyStoreDescriptorParserTest extends ShouldMatchersForJUnit {
                 file="foo"
                 password="bar"
                 keyStoreType="jks"
-                aliasMapF = {
+                aliasMap = {
                   site1 = "node1"
                 }
                 """),
