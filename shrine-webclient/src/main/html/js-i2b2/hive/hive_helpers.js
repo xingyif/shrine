@@ -829,7 +829,7 @@ function getFormattedResult(rawResult) {
  * Method for getting default result text if result is less than minimum obfuscation value.
  */
 function getMinResultText() { 
-	i2b2.hive.cfg.obfuscation + ' ' + i2b2.hive.cfg.resultName + ' or fewer';
+	return i2b2.hive.cfg.obfuscation + ' ' + i2b2.hive.cfg.resultName + ' or fewer';
 }
 
 /**
