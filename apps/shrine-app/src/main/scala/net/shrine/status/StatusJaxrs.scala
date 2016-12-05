@@ -274,9 +274,8 @@ object DownstreamNodes {
 }
 
 object DownstreamNode {
-  def apply(nodeHandle: NodeHandle): DownstreamNode = new DownstreamNode(
-    nodeHandle.nodeId.name,
-    nodeHandle.client.url.map(_.toString).getOrElse("not applicable"))
+  def apply(nodeHandle: NodeHandle): DownstreamNode =
+    nodeHandle.client.url.fold(new DownstreamNode("self", "not applicable"))(url => new DownstreamNode(nodeHandle.nodeId.name, url.toString))
 }
 
 case class Adapter(crcEndpointUrl: String,
