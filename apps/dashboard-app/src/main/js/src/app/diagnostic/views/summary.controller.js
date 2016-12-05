@@ -43,7 +43,7 @@
                 return unknown;
             } else {
                 var d = new Date(maybeEpoch);
-                return d.toUTCString();
+                return $app.model.formatDate(d);
             }
         }
 
