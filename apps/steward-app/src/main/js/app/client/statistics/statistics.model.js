@@ -1,11 +1,11 @@
-    (function() {
+(function () {
     'use strict';
 
     angular
         .module('shrine.steward.statistics')
         .factory('StatisticsModel', StatisticsModel);
 
-    StatisticsModel.$inject = ['$http','StewardService', 'HistoryModel'];
+    StatisticsModel.$inject = ['$http', 'StewardService', 'HistoryModel'];
     function StatisticsModel($http, StewardService, HistoryModel) {
         var service = StewardService;
         var urls = {
@@ -45,14 +45,10 @@
         }
 
         function getUserQueryHistory(username, startDate, endDate) {
-            var queryString = '?asJson=true';
+            var queryString = '&asJson=true';
             var skip, limit, state, sortBy, sortDirection;
-            /*
-                todo: service not ready for date range.  
-            var url = service.getUrl(urls.userQueryHistory + '/' +  username + queryString, skip,
-                limit, state, sortBy, sortDirection, startDate, endDate);
-            */
-            var url = service.getUrl(urls.userQueryHistory + '/' +  username + queryString);
+            var url = service.getUrl(urls.userQueryHistory + '/' + username, skip,
+                limit, state, sortBy, sortDirection, startDate, endDate) + queryString;
             return $http.get(url)
                 .then(parseQueryHistory, onFail);
         }
@@ -75,11 +71,11 @@
 
         function parseTopicsPerState(result) {
 
-            var total  = result.data.total,
+            var total = result.data.total,
                 states = result.data.topicsPerState;
 
             return {
-                total:  total,
+                total: total,
                 states: states
             };
         }

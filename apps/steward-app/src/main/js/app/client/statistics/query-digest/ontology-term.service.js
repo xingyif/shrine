@@ -21,29 +21,29 @@
          */
         function buildOntology(queryRecords, topicId) {
             var ln = queryRecords.length;
-            var queryCount = 0;
             var ontology = new OntologyTerm('SHRINE');
             var topics = {};
+            var parsingAllTopics = topicId === undefined;
+            var filteringByTopic;
 
             for (var i = 0; i < ln; i++) {
                 var record = queryRecords[i];
                 var topic = record.topic;
-                if (topic && (topicId === undefined || topicId === topic.id)) {
+                filteringByTopic = !parsingAllTopics && (topic && topicId === topic.id);
+
+                appendTopicIfUnique(topic, topics);
+
+                if (parsingAllTopics || filteringByTopic) {
                     var str = record.queryContents;
                     ontology = traverse(str.queryDefinition.expr, record.externalId, ontology);
-                    queryCount++;
-
-                    if (!topics[record.topic.id]) {
-                        topics[record.topic.id] = record.topic;
-                    }
-
-                    appendTopicIfUnique(topic, topics);
                 }
             }
 
             ontology.userName = (ln) ? queryRecords[0].user.userName : '';
-            ontology.topics = formatTopicsToArray(topics);
-            ontology.queryCount = queryCount;
+            if (parsingAllTopics) {
+                ontology.topics = formatTopicsToArray(topics);
+            }
+            ontology.queryCount = ln;
             return ontology;
         }
 
@@ -52,11 +52,15 @@
             var keys = Object.keys(topicObject);
             Object.keys(topicObject)
                 .forEach(function (key) { topicArray.push(topicObject[key]); });
-
             return topicArray;
         }
 
         function appendTopicIfUnique(topic, topics) {
+
+            if (!topic) {
+                return;
+            }
+
             var id = topic.id;
 
             if (!topics[id]) {

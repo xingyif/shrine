@@ -3,7 +3,7 @@
 
 
 	// -- register directive with angular -- //
-	angular.module('shrine-tools')
+	angular.module('shrine-tools', ['ngRoute'])
 		.directive('header', Header);
 
 
@@ -32,18 +32,19 @@
 	 *
 	 * @type {string[]}
 	 */
-	HeaderController.$inject = ['$app', '$scope', '$location'];
-	function HeaderController($app, $scope, $location) {
+	HeaderController.$inject = ['$app', '$scope', '$location', '$route'];
+	function HeaderController($app, $scope, $location, $route) {
 		$scope.m = $app.model.m;
 		$scope.goHome = goHome;
 
 
         function goHome() {
-
+            //todo remove duplication with dashboardcontroller
             $app.model.toDashboard.url = '';
             $app.model.m.siteAlias = '';
             clearCache();
             $location.url("/diagnostic/summary");
+            $route.reload();
         }
 
         function clearCache() {

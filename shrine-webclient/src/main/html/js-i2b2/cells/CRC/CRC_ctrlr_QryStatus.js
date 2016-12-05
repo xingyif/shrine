@@ -114,7 +114,7 @@ i2b2.CRC.ctrlr.QueryStatus.prototype = function() {
 							if ( params[i2].firstChild.nodeValue < 4) {
 								var value = "<3";	
 							} else {
-								var value = params[i2].firstChild.nodeValue + "&plusmn;3" ;
+								var value = params[i2].firstChild.nodeValue + "+-" + i2b2.h.getObfuscationValue();
 							}
 						} else
 						{
@@ -268,7 +268,7 @@ i2b2.CRC.ctrlr.QueryStatus.prototype = function() {
 							{
 							    var value = "<3";
 							} else {
-								var value = i2b2.h.XPath(xml_v, 'descendant::total_time_second/text()/..')[i2].firstChild.nodeValue + "&plusmn;3";
+								var value = i2b2.h.XPath(xml_v, 'descendant::total_time_second/text()/..')[i2].firstChild.nodeValue + "+-" + i2b2.h.getObfuscationValue();
 							}
 						} else
 						{
@@ -477,10 +477,10 @@ i2b2.CRC.ctrlr.QueryStatus.prototype = function() {
 					self.dispDIV.innerHTML += "<div style=\"clear: both; margin-left: 30px; float: left; height: 16px; line-height: 16px;\">"
 						+ "Patient Count"
 						+ ": <font color=\"#0000dd\">"
-						+ getObfuscatedResult(qriObj.setSize, 10)
+						+ i2b2.h.getFormattedResult(qriObj.setSize)
 						+ "</font></div>";
 
-					resultString += 'Patient Count' + getObfuscatedResult(qriObj.setSize, 10) + '\n'; //BG
+					resultString += 'Patient Count' + i2b2.h.getFormattedResult(qriObj.setSize) + '\n'; //BG
 					
 					
 					//grab breakdown data.
@@ -505,9 +505,9 @@ i2b2.CRC.ctrlr.QueryStatus.prototype = function() {
 						self.dispDIV.innerHTML += "<div style=\"clear: both; margin-left: 40px; float: left; height: 16px; line-height: 16px;\">"
 							+ brdObj.name
 							+ ": <font color=\"#0000dd\">"
-							+ getObfuscatedResult(brdObj.value, 10)
+							+ i2b2.h.getFormattedResult(brdObj.value)
 							+ "</font></div>";
-						resultString += brdObj.name + getObfuscatedResult(brdObj.value, 10) + '\n'; //BG
+						resultString += brdObj.name + i2b2.h.getFormattedResult(brdObj.value) + '\n'; //BG
 					}
 				}
 				i2b2.CRC.ctrlr.currentQueryResults = new i2b2.CRC.ctrlr.QueryResults(resultString);
@@ -577,33 +577,6 @@ i2b2.CRC.ctrlr.QueryStatus.prototype = function() {
 
             }[breakdownType];
         };
-
-		/**
-		 * Method for hiding the precise value of a query below a certain result.
-		 * @param resultCount 			- the number of results from a query.
-		 * @param obfuscationSetting 	- do not reveal this number of results
-		 */
-		function getObfuscatedResult(resultCount, obfuscationSetting) {
-
-			var resultTitle = " - ",
-				name 		= " patients",
-				offsetText 	= " +-10", // todo fix with SHRINE-1716
-				isException = i2b2.PM.model.isObfuscated === false;
-
-			//default to 10.
-			obfuscationSetting = (arguments.length > 1) ? arguments[1] : 10;
-
-			//if user role is an exception.  return result.
-			if (isException) {
-				return resultTitle += resultCount + name;
-			}
-
-			resultTitle +=  ((resultCount >= obfuscationSetting)?
-				resultCount + offsetText + name: obfuscationSetting + name + " or fewer");
-
-			return resultTitle;
-		}
-
 
         /**
          * Grab data for node, return empty string if none.

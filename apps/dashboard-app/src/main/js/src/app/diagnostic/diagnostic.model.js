@@ -46,6 +46,7 @@
             safeLogout:        safeLogout,
             clearCache:        clearCache,
             map:               map,
+            formatDate:        formatDate,
             cache:             cache,
             toDashboard:       toDashboard,
             m:                 m
@@ -57,6 +58,24 @@
                 result.push(func(list[i]))
             }
             return result;
+        }
+
+        function formatDate(dateObject) {
+            return [dateObject.getUTCFullYear(), "-",
+                    pad2(dateObject.getUTCMonth()), "-",
+                    pad2(dateObject.getUTCDay()), " ",
+                    pad2(dateObject.getUTCHours()), ":",
+                    pad2(dateObject.getUTCMinutes()), ":",
+                    pad2(dateObject.getUTCSeconds())].join("");
+        }
+
+        function pad2(stringLikeThing) {
+            // Does javascript provide a string format thing? Would love to write %02d here.
+            var stringed = "" + stringLikeThing;
+            if (stringed.length > 2) {
+                return stringed;
+            }
+            return ("00" + stringed).slice(-2);
         }
 
         /**
@@ -124,6 +143,7 @@
         }
 
         // IE11 doesn't support string includes
+        // This only searchers for characters, not arbitrary strings
         function stringIncludes(haystack, needle) {
             var arr = haystack.split("");
             for (var i = 0; i < arr.length; i++) {

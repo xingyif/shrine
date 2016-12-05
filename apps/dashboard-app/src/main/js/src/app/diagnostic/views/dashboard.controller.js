@@ -5,7 +5,7 @@
     'use strict';
 
     // -- register controller with angular -- //
-    angular.module('shrine-tools')
+    angular.module('shrine-tools', ['ngRoute'])
         .controller('DashboardController', DashboardController);
 
 
@@ -13,8 +13,8 @@
      *
      * @type {string[]}
      */
-    DashboardController.$inject = ['$app', '$log', '$location'];
-    function DashboardController ($app, $log, $location) {
+    DashboardController.$inject = ['$app', '$log', '$location', '$route'];
+    function DashboardController ($app, $log, $location, $route) {
         var vm = this;
         var map = $app.model.map;
         vm.keyStoreError = false;
@@ -62,11 +62,13 @@
             }
         }
 
+        //todo remove duplication with header.js
         function switchDashboard(url, alias) {
             $app.model.toDashboard.url = url;
             $app.model.m.siteAlias = alias == 'Hub'? '': alias;
             clearCache();
             $location.url("/diagnostic/summary");
+            $route.reload();
         }
 
         function clearCache() {

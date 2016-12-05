@@ -38,6 +38,7 @@ case class AuditEmailer(maxQueryCountBetweenAudits:Int,
                        ) {
   def audit() = {
     //gather a list of users to audit
+    Log.info("Auditing users")
     val now = System.currentTimeMillis()
     val researchersToAudit: Seq[ResearcherToAudit] = StewardDatabase.db.selectResearchersToAudit(maxQueryCountBetweenAudits,
       minTimeBetweenAudits,

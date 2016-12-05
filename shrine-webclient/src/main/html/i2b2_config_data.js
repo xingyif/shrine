@@ -8,6 +8,8 @@
         clientHelpUrl: 'help/pdf/shrine-client-guide.pdf',
         networkHelpUrl:'help/pdf/shrine-network-guide.pdf',
         wikiBaseUrl:    'https://open.med.harvard.edu/wiki/display/SHRINE/',
+        obfuscation: 10,
+        resultName: "patients",
   //JIRA|SHRINE-519:Charles McGow
   // -------------------------------------------------------------------------------------------
   // THESE ARE ALL THE DOMAINS A USER CAN LOGIN TO
