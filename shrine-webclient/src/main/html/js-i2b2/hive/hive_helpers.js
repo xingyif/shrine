@@ -812,12 +812,12 @@ i2b2.h.isMinObfuscation = isMinObfuscation;
 function getFormattedResult(rawResult) {
 
 	var resultTitle = ' - ';
-	var obfuscationSetting = i2b2.hive.cfg.obfuscation;
+	var obfuscationSetting = getObfuscationValue();
 	var isException = i2b2.PM.model.isObfuscated === false;
 	rawResult = rawResult || 0;
 
 	if (isException) {
-		return resultTitle += rawResult + ' ' + i2b2.hive.cfg.resultName;
+		return resultTitle += rawResult + ' ' + getResultNameValue();
 	}
 
 	resultTitle += (rawResult  >= obfuscationSetting) ? getResultText(rawResult) : getMinResultText();
@@ -829,7 +829,7 @@ function getFormattedResult(rawResult) {
  * Method for getting default result text if result is less than minimum obfuscation value.
  */
 function getMinResultText() { 
-	return i2b2.hive.cfg.obfuscation + ' ' + i2b2.hive.cfg.resultName + ' or fewer';
+	return getObfuscationValue() + ' ' + getResultNameValue() + ' or fewer';
 }
 
 /**
@@ -845,8 +845,18 @@ function isMinObfuscation (title) {
  * @param: Raw query count. 
  */
 function getResultText(rawResult) {
-	var text = rawResult + ' +-' + i2b2.hive.cfg.obfuscation + ' ' + i2b2.hive.cfg.resultName;
+	var text = rawResult + ' +-' + getObfuscationValue() + ' ' + getResultNameValue();
 	return text; 
+}
+
+function getObfuscationValue () {
+	var defaultObfuscationVal = 10;
+	return i2b2.hive.cfg.obfuscation || defaultObfuscationVal;
+}
+
+function getResultNameValue () {
+	var defaultResultNameValue = 'patients';
+	return i2b2.hive.cfg.resultName || defaultResultNameValue;
 }
 
 console.timeEnd('execute time');
