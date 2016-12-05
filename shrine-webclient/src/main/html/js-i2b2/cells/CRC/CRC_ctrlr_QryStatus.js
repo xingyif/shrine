@@ -114,7 +114,7 @@ i2b2.CRC.ctrlr.QueryStatus.prototype = function() {
 							if ( params[i2].firstChild.nodeValue < 4) {
 								var value = "<3";	
 							} else {
-								var value = params[i2].firstChild.nodeValue + "+-" + i2b2.hive.cfg.obfuscation;
+								var value = params[i2].firstChild.nodeValue + "+-" + i2b2.h.getObfuscationValue();
 							}
 						} else
 						{
@@ -268,7 +268,7 @@ i2b2.CRC.ctrlr.QueryStatus.prototype = function() {
 							{
 							    var value = "<3";
 							} else {
-								var value = i2b2.h.XPath(xml_v, 'descendant::total_time_second/text()/..')[i2].firstChild.nodeValue + "+-" + i2b2.hive.cfg.obfuscation;
+								var value = i2b2.h.XPath(xml_v, 'descendant::total_time_second/text()/..')[i2].firstChild.nodeValue + "+-" + i2b2.h.getObfuscationValue();
 							}
 						} else
 						{

@@ -1152,7 +1152,7 @@ function QueryToolController() {
                     for (var i2 = 0; i2 < params.length; i2++) {
                         var name = params[i2].getAttribute("name");
                         //  $('infoQueryStatusText').innerHTML += "<div style=\"margin-left: 20px; clear: both; height: 16px; line-height: 16px;\">";
-                        $('infoQueryStatusText').innerHTML += "<div style=\"clear: both; margin-left: 20px; float: left; height: 16px; line-height: 16px;\">" + params[i2].getAttribute("column") +  ": <font color=\"#0000dd\">" + params[i2].firstChild.nodeValue + "" +  (i2b2.PM.model.userRoles.indexOf("DATA_LDS") == -1 ? "+-" + i2b2.hive.cfg.obfuscation : "")  +   "</font></div>";
+                        $('infoQueryStatusText').innerHTML += "<div style=\"clear: both; margin-left: 20px; float: left; height: 16px; line-height: 16px;\">" + params[i2].getAttribute("column") +  ": <font color=\"#0000dd\">" + params[i2].firstChild.nodeValue + "" +  (i2b2.PM.model.userRoles.indexOf("DATA_LDS") == -1 ? "+-" + i2b2.h.getObfuscationValue() : "")  +   "</font></div>";
                         //$('infoQueryStatusText').innerHTML += "</div>";                       //i2b2.h.XPath(newxml, 'descendant-or-self::result/data')[0].firstChild.nodeValue;
 
                     }

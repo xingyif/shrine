@@ -804,6 +804,7 @@ i2b2.h.BuildSniffPack = function(cellName, cellFuncName, results, signalOrigin) 
 i2b2.h.getFormattedResult = getFormattedResult;
 i2b2.h.getMinResultText = getMinResultText;
 i2b2.h.isMinObfuscation = isMinObfuscation;
+i2b2.h.getObfuscationValue = getObfuscationValue;
 
 /**
  * Method for creating obfuscation text
