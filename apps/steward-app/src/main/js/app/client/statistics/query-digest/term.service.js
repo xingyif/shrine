@@ -11,8 +11,9 @@
         };
 
         function getPct(queryCount, maxCount) {
-            var result = Math.floor((queryCount / maxCount) * 100);
-            return Math.ceil(result);
+            var maxPct = 100;
+            var result = Math.ceil((queryCount / maxCount) * maxPct);
+            return (result > maxPct) ? maxPct : result;
         }
 
         function getStyleByFrequency(queryCount, maxCount) {

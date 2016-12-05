@@ -18,15 +18,17 @@
     OntologyTerm.prototype.maxTermUsedCount = 0;
 
     OntologyTerm.prototype.addQuery = function (queryId, queryData) {
+
+        this.queryCount++;
+
+        if (this.queryCount > OntologyTerm.prototype.maxTermUsedCount) {
+                OntologyTerm.prototype.maxTermUsedCount = this.queryCount;
+        }
         if (!this.queries[queryId]) {
             this.queries[queryId] = queryData;
-            this.queryCount = this.getQueries().length;
-
-            if (this.queryCount > OntologyTerm.prototype.maxTermUsedCount) {
-                OntologyTerm.prototype.maxTermUsedCount = this.queryCount;
-            }
         }
     };
+
 
     OntologyTerm.prototype.getQueries = function () {
         return Object.keys(this.queries);
