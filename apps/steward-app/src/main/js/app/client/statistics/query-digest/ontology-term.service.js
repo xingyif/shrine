@@ -25,6 +25,7 @@
             var topics = {};
             var parsingAllTopics = topicId === undefined;
             var filteringByTopic;
+            var filteredCount = 0;
 
             for (var i = 0; i < ln; i++) {
                 var record = queryRecords[i];
@@ -36,6 +37,7 @@
                 if (parsingAllTopics || filteringByTopic) {
                     var str = record.queryContents;
                     ontology = traverse(str.queryDefinition.expr, record.externalId, ontology);
+                    filteredCount ++;
                 }
             }
 
@@ -43,7 +45,7 @@
             if (parsingAllTopics) {
                 ontology.topics = formatTopicsToArray(topics);
             }
-            ontology.queryCount = ln;
+            ontology.queryCount = filteredCount;
             return ontology;
         }
 
