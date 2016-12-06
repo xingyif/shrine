@@ -19,7 +19,7 @@
     "branch": "master",
     "commit": "e4a396dccd07851186c130bf33dfc08d39d964a7"
   },
-  "_source": "git://github.com/panpeter/sb-admin-2.git",
+  "_source": "https://github.com/panpeter/sb-admin-2.git",
   "_target": "*",
   "_originalSource": "sb-admin-2"
 }

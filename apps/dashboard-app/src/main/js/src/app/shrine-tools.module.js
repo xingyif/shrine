@@ -7,6 +7,7 @@
         'ui.bootstrap',
         'ui.bootstrap.modal',
         'angular-loading-bar',
+        'ngRoute',
         'shrine.common'/*,
         'shrine.common.authentication'*/
     ];
