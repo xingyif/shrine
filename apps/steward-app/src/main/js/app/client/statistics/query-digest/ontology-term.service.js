@@ -36,7 +36,7 @@
 
                 if (parsingAllTopics || filteringByTopic) {
                     var str = record.queryContents;
-                    ontology = traverse(str.queryDefinition.expr, record.externalId, ontology);
+                    ontology = traverse(str.queryDefinition.expr || str.queryDefinition.subQuery, record.externalId, ontology);
                     filteredCount ++;
                 }
             }
