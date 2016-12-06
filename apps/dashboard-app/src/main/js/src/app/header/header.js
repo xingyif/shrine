@@ -3,9 +3,8 @@
 
 
 	// -- register directive with angular -- //
-	angular.module('shrine-tools')//, ['ngRoute'])
+	angular.module('shrine-tools')
 		.directive('header', Header);
-
 
 	/**
 	 *
@@ -32,8 +31,8 @@
 	 *
 	 * @type {string[]}
 	 */
-	HeaderController.$inject = ['$app', '$scope', '$location'];//, '$route'];
-	function HeaderController($app, $scope, $location) {//, $route) {
+	HeaderController.$inject = ['$app', '$scope', '$location'];
+	function HeaderController($app, $scope, $location) {
 		$scope.m = $app.model.m;
 		$scope.goHome = goHome;
 
@@ -44,7 +43,8 @@
             $app.model.m.siteAlias = '';
             clearCache();
             $location.url("/diagnostic/summary");
-            //$route.reload();
+            $location.url("/diagnostic/problems");
+            $location.url("/diagnostic/summary");
         }
 
         function clearCache() {
@@ -64,6 +64,3 @@
 	}
 
 })();
-
-
-
