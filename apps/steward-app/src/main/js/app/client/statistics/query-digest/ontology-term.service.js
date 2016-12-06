@@ -37,7 +37,7 @@
                 if (parsingAllTopics || filteringByTopic) {
                     var str = record.queryContents;
                     ontology = traverse(str.queryDefinition.expr || str.queryDefinition.subQuery, record.externalId, ontology);
-                    filteredCount ++;
+                    filteredCount++;
                 }
             }
 
@@ -45,7 +45,7 @@
             if (parsingAllTopics) {
                 ontology.topics = formatTopicsToArray(topics);
             }
-            ontology.queryCount = filteredCount;
+            ontology.queryCount = filteringByTopic ? filteredCount : ln;
             return ontology;
         }
 
