@@ -62,7 +62,7 @@
       visibility: hidden;
       -webkit-transition: 0.3s ease;
       transition: 0.3s ease;
-      max-height: 80vh;
+      max-height: 75vh;
       overflow: auto; }
       .topic-dropdown .tdd-btn .tdd-list a {
         display: block;
