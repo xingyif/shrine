@@ -1115,7 +1115,8 @@ button.ont-close {
     .topic-dropdown .tdd-list li {
       z-index: 100;
       position: relative;
-      padding: 0 20px; }
+      padding: 0 20px;
+      color: white; }
       .topic-dropdown .tdd-list li.active {
         color: #5380F7; }
       .topic-dropdown .tdd-list li:first-child {
