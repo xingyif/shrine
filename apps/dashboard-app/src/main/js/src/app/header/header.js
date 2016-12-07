@@ -39,10 +39,12 @@
 
 
         function goHome() {
-
+            //todo remove duplication with dashboardcontroller
             $app.model.toDashboard.url = '';
             $app.model.m.siteAlias = '';
             clearCache();
+            $location.url("/diagnostic/summary");
+            $location.url("/diagnostic/problems");
             $location.url("/diagnostic/summary");
         }
 

@@ -62,6 +62,7 @@
             }
         }
 
+        //todo remove duplication with header.js
         function switchDashboard(url, alias) {
             $app.model.toDashboard.url = url;
             $app.model.m.siteAlias = alias == 'Hub'? '': alias;
