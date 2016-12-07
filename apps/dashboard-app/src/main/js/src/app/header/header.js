@@ -38,18 +38,10 @@
             //todo remove duplication with dashboardcontroller
             $app.model.toDashboard.url = '';
             $app.model.m.siteAlias = '';
-            clearCache();
+            $app.model.clearCache();
             $location.url("/diagnostic/summary");
             $location.url("/diagnostic/problems");
             $location.url("/diagnostic/summary");
-        }
-
-        function clearCache() {
-            for (var member in $app.model.cache) {
-                if ($app.model.cache.hasOwnProperty(member)) {
-                    delete $app.model.cache[member];
-                }
-            }
         }
     }
 

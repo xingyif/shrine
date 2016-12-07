@@ -1,5 +1,9 @@
 /**
- * Created by ty on 11/7/16.
+ * Controller for the Remote Dashboards panel.
+ * Parses the keystore get call, and has to handle
+ * some tricky caching logic with the model backend
+ * (namely we don't want to reset the dashboard links themselves
+ *  between remoteDashboard visits)
  */
 (function () {
     'use strict';
@@ -42,7 +46,7 @@
             var tempList = [];
             for (var i = 0; i < modelStatuses.length; i++) {
                 var abbreviatedEntry = modelStatuses[i];
-                if (abbreviatedEntry.url != "")
+                if (abbreviatedEntry.url != "") // ignore self
                     tempList.push(abbreviatedEntry)
             }
 
@@ -52,9 +56,15 @@
             vm.switchDashboard = switchDashboard;
         }
 
+        /**
+         * Lexicographic sort where Hub is always first. I'm sure there's a more
+         * golf-way of writing this.
+         */
         function comparator(first, second) {
             if (first[0] == 'Hub') {
                 return -2;
+            } else if (second[0] == 'Hub') {
+                return 2;
             } else {
                 var less = first[0].toLowerCase() < second[0].toLowerCase();
                 var eq = first[0].toLowerCase() == second[0].toLowerCase();
