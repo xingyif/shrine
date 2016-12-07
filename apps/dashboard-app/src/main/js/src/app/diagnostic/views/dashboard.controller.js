@@ -5,7 +5,7 @@
     'use strict';
 
     // -- register controller with angular -- //
-    angular.module('shrine-tools', ['ngRoute'])
+    angular.module('shrine-tools')
         .controller('DashboardController', DashboardController);
 
 
@@ -13,8 +13,8 @@
      *
      * @type {string[]}
      */
-    DashboardController.$inject = ['$app', '$log', '$location', '$route'];
-    function DashboardController ($app, $log, $location, $route) {
+    DashboardController.$inject = ['$app', '$log', '$location'];
+    function DashboardController ($app, $log, $location) {
         var vm = this;
         var map = $app.model.map;
         vm.keyStoreError = false;
@@ -68,7 +68,6 @@
             $app.model.m.siteAlias = alias == 'Hub'? '': alias;
             clearCache();
             $location.url("/diagnostic/summary");
-            $route.reload();
         }
 
         function clearCache() {
