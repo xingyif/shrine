@@ -45,7 +45,7 @@
             if (parsingAllTopics) {
                 ontology.topics = formatTopicsToArray(topics);
             }
-            ontology.queryCount = filteringByTopic ? filteredCount : ln;
+            ontology.queryCount = parsingAllTopics ? ln : filteredCount;
             return ontology;
         }
 
