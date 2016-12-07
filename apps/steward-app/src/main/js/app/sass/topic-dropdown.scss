@@ -49,6 +49,7 @@
       text-transform: uppercase;
       overflow: hidden;
       cursor: pointer;
+  };
 
       .tdd-list {
         position: absolute;
@@ -113,13 +114,12 @@
         };
       };
 
-      &:focus .tdd-list, &:active .tdd-list {
+      .tdd-list-open {
         -webkit-transform: translate(0, 20px);
         transform: translate(0, 20px);
-        opacity: 1;
-        visibility: visible;
+        opacity: 1 !important;
+        visibility: visible !important;
       };
-  };
 }
 
 
