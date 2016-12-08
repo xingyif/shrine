@@ -44,6 +44,8 @@
             $app.model.m.siteAlias = '';
             clearCache();
             $location.url("/diagnostic/summary");
+            $location.url("/diagnostic/i2b2-connections");
+            $location.url("/diagnostic/summary");
         }
 
         function clearCache() {
