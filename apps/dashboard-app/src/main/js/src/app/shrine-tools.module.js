@@ -5,6 +5,7 @@
         'oc.lazyLoad',
         'ui.router',
         'ui.bootstrap',
+        'angular-loading-bar',
         'ui.bootstrap.modal',
         'shrine.common'/*,
         'shrine.common.authentication'*/
