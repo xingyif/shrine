@@ -29,8 +29,8 @@
      *
      * @type {string[]}
      */
-    HeaderController.$inject = ['$app', '$scope', '$location', '$window'];
-    function HeaderController($app, $scope, $location, $window) {
+    HeaderController.$inject = ['$app', '$scope', '$location'];
+    function HeaderController($app, $scope, $location) {
         $scope.m = $app.model.m;
         $scope.goHome = goHome;
 
@@ -40,7 +40,12 @@
             $app.model.m.siteAlias = '';
             clearCache();
             $location.url("/diagnostic/summary");
-            $window.reload();
+            if ($app.model.reloadSummary) {
+                $app.model.reloadSummary();
+                // This is kind of gross, but the only way to reload the
+                // summary is to reinitialize it, and as they live in
+                // separate controllers we have to communicate through the model.
+            }
         }
 
         function clearCache() {
