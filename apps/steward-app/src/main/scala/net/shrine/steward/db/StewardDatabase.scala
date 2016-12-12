@@ -49,8 +49,14 @@ case class StewardDatabase(schemaDef:StewardSchema,dataSource: DataSource) exten
       }
     } catch {
       case tax:TopicAcessException => throw tax
-      case tx:TimeoutException => throw CouldNotRunDbIoActionException(dataSource, tx)
-      case NonFatal(x) => throw CouldNotRunDbIoActionException(dataSource, x)
+      case tx:TimeoutException =>
+        val x = CouldNotRunDbIoActionException(dataSource, tx)
+        StewardDatabaseProblem(x)
+        throw x
+      case NonFatal(nfx) =>
+        val x = CouldNotRunDbIoActionException(dataSource, nfx)
+        StewardDatabaseProblem(x)
+        throw x
     }
   }
 
