@@ -16,9 +16,9 @@
         var unknown     = 'UNKNOWN';
         vm.summaryError = false;
         vm.i2b2Error    = false;
+        $app.model.reloadSummary = init;
         init();
 
-        
         /**
          *
          */

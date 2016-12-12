@@ -24,18 +24,20 @@
             var ontology = new OntologyTerm('SHRINE');
             var topics = {};
             var parsingAllTopics = topicId === undefined;
-            var filteringByTopic;
+            var filteringByThisTopic;
+            var filteredCount = 0;
 
             for (var i = 0; i < ln; i++) {
                 var record = queryRecords[i];
                 var topic = record.topic;
-                filteringByTopic = !parsingAllTopics && (topic && topicId === topic.id);
+                filteringByThisTopic = !parsingAllTopics && (topic && topicId === topic.id);
 
                 appendTopicIfUnique(topic, topics);
 
-                if (parsingAllTopics || filteringByTopic) {
+                if (parsingAllTopics || filteringByThisTopic) {
                     var str = record.queryContents;
-                    ontology = traverse(str.queryDefinition.expr, record.externalId, ontology);
+                    ontology = traverse(str.queryDefinition.expr || str.queryDefinition.subQuery, record.externalId, ontology);
+                    filteredCount++;
                 }
             }
 
@@ -43,7 +45,7 @@
             if (parsingAllTopics) {
                 ontology.topics = formatTopicsToArray(topics);
             }
-            ontology.queryCount = ln;
+            ontology.queryCount = parsingAllTopics ? ln : filteredCount;
             return ontology;
         }
 
