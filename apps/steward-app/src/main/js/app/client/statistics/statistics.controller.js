@@ -72,7 +72,7 @@
 
             //@todo: create Date.ceil and Date.floor methods.
             stats.startDate.setHours(0, 0, 0, 0);
-            stats.endDate.setHours(24, 0, 0, 0);
+            stats.endDate.setHours(23, 59, 59, 999);
 
             //can validate date range here.
             startUtc = stats.timestampToUtc(stats.startDate);
