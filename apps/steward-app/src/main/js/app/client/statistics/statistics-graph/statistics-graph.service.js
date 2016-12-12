@@ -14,7 +14,8 @@ var Service;
             getMaxUser: getMaxUser,
             getMaxUserQueryCount: getMaxUserQueryCount,
             getCountAsPercentage: getCountAsPercentage,
-            formatUsername: formatUsername
+            formatUsername: formatUsername,
+            clearUsers: clearUsers
         };
 
         function getSortedUsers(users) {
@@ -46,6 +47,10 @@ var Service;
 
         function formatUsername(username) {
             return (username.length > 10) ? username.substring(0, 10) + '...' : username;
+        }
+
+        function clearUsers() {
+            sortedUsers = [];
         }
     }
 

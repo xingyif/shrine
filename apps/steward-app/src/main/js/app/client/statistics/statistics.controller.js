@@ -19,7 +19,7 @@
         stats.getDateString = service.commonService.dateService.utcToMMDDYYYY;
         stats.timestampToUtc = service.commonService.dateService.timestampToUtc;
         stats.viewDigest = viewDigest;
-        stats.startDate = startDate; 
+        stats.startDate = startDate;
         stats.endDate = endDate;
 
         stats.isValid = true;
@@ -64,18 +64,21 @@
         function validateRange() {
 
             var startUtc, endUtc;
-            var secondsPerDay = 86400000;
 
             if (stats.startDate === undefined || stats.endDate === undefined) {
                 stats.isValid = false;
                 return;
             }
 
+            //@todo: create Date.ceil and Date.floor methods.
+            stats.startDate.setHours(0, 0, 0, 0);
+            stats.endDate.setHours(23, 59, 59, 999);
+
             //can validate date range here.
             startUtc = stats.timestampToUtc(stats.startDate);
-            endUtc = stats.timestampToUtc(stats.endDate) + secondsPerDay;
+            endUtc = stats.timestampToUtc(stats.endDate);
 
-             if (endUtc - startUtc <= 0) {
+            if (endUtc - startUtc <= 0) {
                 stats.isValid = false;
             } else {
                 stats.isValid = true;
@@ -87,9 +90,8 @@
         function addDateRange() {
 
             if (stats.validateRange()) {
-                var secondsPerDay = 86400000;
                 stats.getResults(stats.timestampToUtc(stats.startDate),
-                    stats.timestampToUtc(stats.endDate) + secondsPerDay);
+                    stats.timestampToUtc(stats.endDate));
             }
         }
 
@@ -109,14 +111,13 @@
         }
 
         function viewDigest(data) {
-            var secondsPerDay = 86400000;
             var startUtc = stats.timestampToUtc(stats.startDate);
-            var endUtc = stats.timestampToUtc(stats.endDate) + secondsPerDay;
+            var endUtc = stats.timestampToUtc(stats.endDate);
             model.getUserQueryHistory(data.userName.toLowerCase(), startUtc, endUtc)
-            .then(function (result) {
-                stats.ontology = result.queryRecords;
-                stats.ontClass = showOntClass;
-            });
+                .then(function (result) {
+                    stats.ontology = result.queryRecords;
+                    stats.ontClass = showOntClass;
+                });
         }
 
         function parseStateCount(state) {

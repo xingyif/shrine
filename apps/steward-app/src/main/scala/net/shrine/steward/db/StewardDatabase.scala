@@ -1,6 +1,7 @@
 package net.shrine.steward.db
 
 import java.sql.SQLException
+import java.util.concurrent.TimeoutException
 import java.util.concurrent.atomic.AtomicInteger
 import javax.sql.DataSource
 
@@ -8,7 +9,8 @@ import com.typesafe.config.Config
 import net.shrine.authorization.steward.{Date, ExternalQueryId, InboundShrineQuery, InboundTopicRequest, OutboundShrineQuery, OutboundTopic, OutboundUser, QueriesPerUser, QueryContents, QueryHistory, ResearcherToAudit, ResearchersTopics, StewardQueryId, StewardsTopics, TopicId, TopicIdAndName, TopicState, TopicStateName, TopicsPerState, UserName, researcherRole, stewardRole}
 import net.shrine.i2b2.protocol.pm.User
 import net.shrine.log.Loggable
-import net.shrine.slick.{NeedsWarmUp, TestableDataSourceCreator}
+import net.shrine.problem.{AbstractProblem, ProblemSources}
+import net.shrine.slick.{CouldNotRunDbIoActionException, NeedsWarmUp, TestableDataSourceCreator}
 import net.shrine.source.ConfigSource
 import net.shrine.steward.CreateTopicsMode
 import slick.dbio.Effect.Read
@@ -19,6 +21,7 @@ import scala.concurrent.duration.{Duration, DurationInt}
 import scala.concurrent.{Await, Future, blocking}
 import scala.language.postfixOps
 import scala.util.Try
+import scala.util.control.NonFatal
 /**
  * Database access code for the data steward service.
  *
@@ -37,10 +40,23 @@ case class StewardDatabase(schemaDef:StewardSchema,dataSource: DataSource) exten
 
   def dropTables() = schemaDef.dropTables(database)
 
+  //todo share code from DashboardProblemDatabase.scala . It's a lot richer. See SHRINE-1835
   def dbRun[R](action: DBIOAction[R, NoStream, Nothing]):R = {
-    val future: Future[R] = database.run(action)
-    blocking {
-      Await.result(future, 10 seconds)
+    try {
+      val future: Future[R] = database.run(action)
+      blocking {
+        Await.result(future, 10 seconds)
+      }
+    } catch {
+      case tax:TopicAcessException => throw tax
+      case tx:TimeoutException =>
+        val x = CouldNotRunDbIoActionException(dataSource, tx)
+        StewardDatabaseProblem(x)
+        throw x
+      case NonFatal(nfx) =>
+        val x = CouldNotRunDbIoActionException(dataSource, nfx)
+        StewardDatabaseProblem(x)
+        throw x
     }
   }
 
@@ -733,8 +749,18 @@ case class UserAuditRecord(researcher:UserName,
   }
 }
 
-case class TopicDoesNotExist(topicId:TopicId) extends IllegalArgumentException(s"No topic for id $topicId")
+abstract class TopicAcessException(topicId: TopicId,message:String) extends IllegalArgumentException(message)
 
-case class ApprovedTopicCanNotBeChanged(topicId:TopicId) extends IllegalStateException(s"Topic $topicId has been ${TopicState.approved}")
+case class TopicDoesNotExist(topicId:TopicId) extends TopicAcessException(topicId,s"No topic for id $topicId")
 
-case class DetectedAttemptByWrongUserToChangeTopic(topicId:TopicId,userId:UserName,ownerId:UserName) extends IllegalArgumentException(s"$userId does not own $topicId; $ownerId owns it.")
+case class ApprovedTopicCanNotBeChanged(topicId:TopicId) extends TopicAcessException(topicId,s"Topic $topicId has been ${TopicState.approved}")
+
+case class DetectedAttemptByWrongUserToChangeTopic(topicId:TopicId,userId:UserName,ownerId:UserName) extends TopicAcessException(topicId,s"$userId does not own $topicId; $ownerId owns it.")
+
+case class StewardDatabaseProblem(cnrdiax:CouldNotRunDbIoActionException) extends AbstractProblem(ProblemSources.Dsa) {
+  override def summary: String = "The DSA's database failed due to an exception."
+
+  override def description: String = s"TThe DSAs database failed due to $cnrdiax"
+
+  override def throwable = Some(cnrdiax)
+}
