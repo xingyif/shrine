@@ -16,6 +16,7 @@
         var unknown     = 'UNKNOWN';
         vm.summaryError = false;
         vm.i2b2Error    = false;
+        vm.loading      = true;
         $app.model.reloadSummary = init;
         init();
 
@@ -23,6 +24,7 @@
          *
          */
         function init() {
+            vm.loading      = true;
             $app.model.getSummary()
                 .then(setSummary, handleSummaryFailure);
 
@@ -53,7 +55,8 @@
          * @param summary
          */
         function setSummary(summary) {
-            vm.summary              = summary;
+            vm.loading = false;
+            vm.summary = summary;
             if (vm.summary.adapterMappingsFileName === undefined) {
                 vm.summary.adapterMappingsFileName = unknown;
             } else if (vm.summary.adapterMappingsDate === undefined) {
