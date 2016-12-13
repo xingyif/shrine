@@ -27,17 +27,23 @@
             var filteringByThisTopic;
             var filteredCount = 0;
 
+            //hoisting
+            var record, topic, contents, expression
+
             for (var i = 0; i < ln; i++) {
-                var record = queryRecords[i];
-                var topic = record.topic;
+                record = queryRecords[i];
+                topic = record.topic;
                 filteringByThisTopic = !parsingAllTopics && (topic && topicId === topic.id);
 
                 appendTopicIfUnique(topic, topics);
 
                 if (parsingAllTopics || filteringByThisTopic) {
-                    var str = record.queryContents;
-                    ontology = traverse(str.queryDefinition.expr || str.queryDefinition.subQuery, record.externalId, ontology);
-                    filteredCount++;
+                    contents = record.queryContents.;
+                    expression = record.queryContents.queryDefinition.expr || record.queryContents.queryDefinition.subQuery;
+                    if (expression) {
+                        ontology = traverse(expression, record.externalId, ontology);
+                        filteredCount++;
+                    }
                 }
             }
 
@@ -77,10 +83,15 @@
          */
         function traverse(obj, queryId, terms) {
 
+            // -- abandom ship! (thanks IE)
+            if (typeof (obj) !== 'object') {
+                return terms;
+            }
+
             var keys = Object.keys(obj);
 
             // -- nothing to search, we're done. -- //
-            if (typeof (obj) !== 'object' || !keys.length) {
+            if (!keys.length) {
                 return terms;
             }
 
