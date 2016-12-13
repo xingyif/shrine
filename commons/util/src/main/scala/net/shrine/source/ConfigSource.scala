@@ -1,6 +1,6 @@
 package net.shrine.source
 
-import com.typesafe.config.{Config, ConfigException, ConfigFactory, ConfigValueFactory}
+import com.typesafe.config.{Config, ConfigException, ConfigFactory}
 import net.shrine.log.Log
 
 import scala.util.control.NonFatal
