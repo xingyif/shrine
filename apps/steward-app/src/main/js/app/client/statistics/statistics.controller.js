@@ -43,7 +43,7 @@
         stats.parseStateCount = parseStateCount;
         stats.getResults = getResults;
         stats.viewDigest = viewDigest;
-
+        stats.broadcastReset = broadcastReset;
 
         // -- start -- //
         init();
@@ -136,6 +136,10 @@
                 .then(function (result) {
                     stats.topicsPerState = result;
                 });
+        }
+
+        function broadcastReset() {
+            $scope.$broadcast('reset-digest');
         }
     }
 })();

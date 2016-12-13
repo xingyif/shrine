@@ -30,11 +30,19 @@
         var dropdown = this;
         dropdown.ontologyTermService = OntologyTermService;
         dropdown.topics = $scope.topics;
+        dropdown.reset = reset;
+
+        function reset(events, data) {
+            dropdown.selected = {
+                title: 'All'
+            };
+        }
     }
 
     function TopicDropdownLinker(scope) {
-        var clearWatch = scope.$watch('topics', function (after, before) {
+        var clearTopicsWatch = scope.$watch('topics', function (after, before) {
             var dropdown = scope.dropdown;
+            scope.$on('reset-digest', dropdown.reset);
             if (after && after.length) {
                 dropdown.topics = after;
             }

@@ -46,13 +46,8 @@
 		</statistics-graph>
 	</div>
 	<query-digest ontology="stats.ontology" class="{{stats.ontClass}}">
-		<button ng-click="stats.ontClass= 'ont-hidden'" class="ont-close">x</button>
+		<button ng-click="stats.ontClass= 'ont-hidden'; stats.broadcastReset()" class="ont-close">x</button>
     </query-digest>
-
-	
-
-
-
 
 
 	<table class=" table table-striped ">
