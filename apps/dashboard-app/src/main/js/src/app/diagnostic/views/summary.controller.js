@@ -10,8 +10,8 @@
      * Summary Controller.
      *
      */
-    SummaryController.$inject = ['$app', '$sce', '$log']
-    function SummaryController ($app, $sce, $log) {
+    SummaryController.$inject = ['$app', '$sce', '$log', '$timeout'];
+    function SummaryController ($app, $sce, $log, $timeout) {
         var vm          = this;
         var unknown     = 'UNKNOWN';
         vm.summaryError = false;
@@ -24,12 +24,19 @@
          *
          */
         function init() {
-            vm.loading      = true;
+            vm.loading = true;
+            var fifteenSeconds = 15*1000;
             $app.model.getSummary()
                 .then(setSummary, handleSummaryFailure);
 
             $app.model.getI2B2()
                 .then(setI2B2, handleI2B2Failure);
+
+            $timeout(setTimeoutError, fifteenSeconds);
+        }
+
+        function setTimeoutError() {
+            vm.loading = false;
         }
 
         function handleSummaryFailure(failure) {
