@@ -32,6 +32,9 @@
         dropdown.topics = $scope.topics;
         dropdown.reset = reset;
 
+        /**
+         * Reset handler.
+         */
         function reset(events, data) {
             dropdown.selected = {
                 title: 'All'
@@ -42,7 +45,10 @@
     function TopicDropdownLinker(scope) {
         var clearTopicsWatch = scope.$watch('topics', function (after, before) {
             var dropdown = scope.dropdown;
+
+            // -- listen for reset --//
             scope.$on('reset-digest', dropdown.reset);
+
             if (after && after.length) {
                 dropdown.topics = after;
             }
