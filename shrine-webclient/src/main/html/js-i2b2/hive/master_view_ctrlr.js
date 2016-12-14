@@ -50,10 +50,6 @@ i2b2.hive.MasterView = {
 			}
 		}
 		if (newMode) {
-			if (newMode == "Analysis" && !i2b2.h.allowAnalysis() ) {
-				alert('Analysis tools are disabled - This access attempt has been logged to the server.');
-				return false;
-			}
 // TODO: move this into a view controller?
 			// change new link to selected state
 			var tn = $("viewMode-"+newMode);
