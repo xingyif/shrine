@@ -62,8 +62,8 @@
 
         function formatDate(dateObject) {
             return [dateObject.getUTCFullYear(), "-",
-                    pad2(dateObject.getUTCMonth()), "-",
-                    pad2(dateObject.getUTCDate() + 1), " ",
+                    pad2(dateObject.getUTCMonth() + 1), "-",
+                    pad2(dateObject.getUTCDate()), " ",
                     pad2(dateObject.getUTCHours()), ":",
                     pad2(dateObject.getUTCMinutes()), ":",
                     pad2(dateObject.getUTCSeconds())].join("");
