@@ -50,7 +50,7 @@ trait HttpClientDirectives extends Loggable {
     */
   def requestWithUnmatchedPath(baseUri:Uri, route:(HttpResponse,Uri) => Route,maybeCredentials:Option[HttpCredentials] = None): Route = {
     ctx => {
-      val resourceUri = baseUri.withPath(baseUri.path.++(ctx.unmatchedPath))
+      val resourceUri = baseUri.withPath(baseUri.path.++(ctx.unmatchedPath)).withQuery(baseUri.query)
       requestUriThenRoute(resourceUri,route,maybeCredentials)(ctx)
     }
   }
