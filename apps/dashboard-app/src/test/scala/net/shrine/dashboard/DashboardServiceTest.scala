@@ -119,9 +119,9 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
 
   }
 
-  "DashboardService" should  "return an OK and the right version string for an admin/happy/all test" in {
+  "DashboardService" should  "return an OK and the right version string for an admin/happy/all?extra=true test" in {
 
-    Get(s"/admin/happy/all") ~>
+    Get(s"/admin/happy/all?extra=true") ~>
       addCredentials(adminCredentials) ~>
       route ~> check {
 
