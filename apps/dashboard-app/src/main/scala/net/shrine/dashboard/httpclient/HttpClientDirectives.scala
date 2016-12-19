@@ -36,6 +36,7 @@ trait HttpClientDirectives extends Loggable {
     *
     */
   def forwardUnmatchedPath(baseUri: Uri,maybeCredentials:Option[HttpCredentials] = None): Route = {
+    info(s"forwardUnmatchedPath: Base URI: $baseUri. Base URI Queries: ${baseUri.query}")
     def completeWithEntityAsString(httpResponse:HttpResponse,uri:Uri):Route = {
       ctx => {
         ctx.complete(httpResponse.entity.asString)
@@ -50,6 +51,7 @@ trait HttpClientDirectives extends Loggable {
     */
   def requestWithUnmatchedPath(baseUri:Uri, route:(HttpResponse,Uri) => Route,maybeCredentials:Option[HttpCredentials] = None): Route = {
     ctx => {
+      info(s"requestWithUnmatchedPath: Base URI: $baseUri. Base URI Queries: ${baseUri.query}")
       val resourceUri = baseUri.withPath(baseUri.path.++(ctx.unmatchedPath)).withQuery(baseUri.query)
       requestUriThenRoute(resourceUri,route,maybeCredentials)(ctx)
     }
