@@ -16,7 +16,6 @@
     font-size: 1.3em;
     color: #63BCF8; }
   .topic-dropdown .tdd-btn {
-    text-align: left;
     max-width: 1000px;
     outline: 0;
     /* takes care of blue outline */

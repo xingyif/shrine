@@ -8,9 +8,8 @@
          float: left">
 
         <div ng-repeat="dashboard in vm.otherDashboards" style="min-width:25%;min-height:10%">
-            <button ng-click="dashboard[2]? vm.switchDashboard(dashboard[1], dashboard[0]): 0"
+            <button ng-click="vm.switchDashboard(dashboard[1], dashboard[0])"
                     style="padding:5px 10px 5px 10px; font-size:x-large;%"
-                    ng-style="dashboard[2]? {}: {opacity:.6, cursor:'not-allowed'}"
                     class="btn btn-primary btn-block">
                 {{dashboard[0]}}
             </button>

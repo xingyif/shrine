@@ -50,7 +50,7 @@
                     tempList.push(abbreviatedEntry)
             }
 
-            vm.otherDashboards = [['Hub', '', true]].concat(map(entryToPair, tempList));
+            vm.otherDashboards = [['Hub', '']].concat(map(entryToPair, tempList));
             vm.otherDashboards.sort(comparator);
             vm.clearCache = clearCache;
             vm.switchDashboard = switchDashboard;
@@ -85,7 +85,7 @@
         }
 
         function entryToPair(entry){
-            return [entry.siteAlias, entry.url, entry.theyHaveMine && entry.haveTheirs && !entry.timeOutError];
+            return [entry.siteAlias, entry.url];
         }
     }
 })();
