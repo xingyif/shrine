@@ -5,7 +5,7 @@
  */
 
 // -- globals -- //
-var gulp = require('gulp');
+const gulp = require('gulp');
 var args = require('yargs').argv;
 var config = require('./gulp.config')();
 var $ = require('gulp-load-plugins')({ lazy: true });
