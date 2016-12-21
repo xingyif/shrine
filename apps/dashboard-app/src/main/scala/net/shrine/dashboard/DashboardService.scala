@@ -183,6 +183,7 @@ trait DashboardService extends HttpService with Loggable {
 
       val baseUrl = s"$remoteDashboardProtocol://$dnsName:$remoteDashboardPort/$remoteDashboardPathPrefix"
 
+      info(s"toDashboardRoute: BaseURL: $baseUrl")
       forwardUnmatchedPath(baseUrl,Some(ShrineJwtAuthenticator.createOAuthCredentials(user, dnsName)))
     }
   }

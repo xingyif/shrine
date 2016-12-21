@@ -5,7 +5,7 @@
 	<span ng-repeat="user in graph.graphData.users">
 		<graph-bar value="{{user._2}}" 
 		percentage="{{graph.toPercentage(user._2)}}"
-		username="{{user._1.userName}}" 
+		username="{{graph.formatUsername(user._1.userName)}}" 
 		ng-click="graph.graphClick({data:user._1})">
 	</span> 
 </div>

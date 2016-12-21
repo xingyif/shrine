@@ -20,8 +20,8 @@ import org.scalatest.{FlatSpec, Matchers}
   */
 @RunWith(classOf[JUnitRunner])
 class DownStreamCertCollectionTest extends FlatSpec with Matchers {
-  val descriptor = NewTestKeyStore.descriptor
-  val heyo       = "Heyo!".getBytes("UTF-8")
+  val descriptor: KeyStoreDescriptor = NewTestKeyStore.descriptor
+  val heyo      : Array[Byte] = "Heyo!".getBytes("UTF-8")
 
 
   "A down stream cert collection" should "build and verify its own messages" in {

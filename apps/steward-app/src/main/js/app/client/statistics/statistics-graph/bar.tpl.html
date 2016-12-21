@@ -2,7 +2,7 @@
     <div class="user ">
         {{username}}
     </div>
-    <div class="bar" style="max-width: {{percentage}}%">
+    <div class="bar" ng-style="{'max-width': percentage + '%'}">
         {{value}} queries
     </div>
 </div>

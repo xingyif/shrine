@@ -10,12 +10,13 @@
      * Summary Controller.
      *
      */
-    SummaryController.$inject = ['$app', '$sce', '$log']
-    function SummaryController ($app, $sce, $log) {
+    SummaryController.$inject = ['$app', '$sce', '$log', '$timeout'];
+    function SummaryController ($app, $sce, $log, $timeout) {
         var vm          = this;
         var unknown     = 'UNKNOWN';
         vm.summaryError = false;
         vm.i2b2Error    = false;
+        vm.loading      = true;
         $app.model.reloadSummary = init;
         init();
 
@@ -23,11 +24,19 @@
          *
          */
         function init() {
+            vm.loading = true;
+            var fifteenSeconds = 15*1000;
             $app.model.getSummary()
                 .then(setSummary, handleSummaryFailure);
 
             $app.model.getI2B2()
                 .then(setI2B2, handleI2B2Failure);
+
+            $timeout(setTimeoutError, fifteenSeconds);
+        }
+
+        function setTimeoutError() {
+            vm.loading = false;
         }
 
         function handleSummaryFailure(failure) {
@@ -53,7 +62,8 @@
          * @param summary
          */
         function setSummary(summary) {
-            vm.summary              = summary;
+            vm.loading = false;
+            vm.summary = summary;
             if (vm.summary.adapterMappingsFileName === undefined) {
                 vm.summary.adapterMappingsFileName = unknown;
             } else if (vm.summary.adapterMappingsDate === undefined) {

@@ -9,32 +9,30 @@
     function StatisticsController(model, service, $scope) {
         var showOntClass = 'ont-overlay';
         var hideOntClass = 'ont-hidden';
-
         var stats = this;
-        stats.ontClass = hideOntClass;
         var startDate = new Date();
         var endDate = new Date();
-        startDate.setDate(endDate.getDate() - 7);
 
+        // -- public vars --//
+        stats.ontClass = hideOntClass;
+        startDate.setDate(endDate.getDate() - 7);
         stats.getDateString = service.commonService.dateService.utcToMMDDYYYY;
         stats.timestampToUtc = service.commonService.dateService.timestampToUtc;
         stats.viewDigest = viewDigest;
-        stats.startDate = startDate; 
+        stats.startDate = startDate;
         stats.endDate = endDate;
-
         stats.isValid = true;
         stats.startOpened = false;
         stats.endOpened = false;
         stats.topicsPerState = {};
         stats.ontology = {};
-
         stats.graphData = {
             total: 0,
             users: []
         };
-
         stats.format = 'MM/dd/yyyy';
 
+        // --  public methods --//
         stats.openStart = openStart;
         stats.openEnd = openEnd;
         stats.validateRange = validateRange;
@@ -43,7 +41,7 @@
         stats.parseStateCount = parseStateCount;
         stats.getResults = getResults;
         stats.viewDigest = viewDigest;
-
+        stats.broadcastReset = broadcastReset;
 
         // -- start -- //
         init();
@@ -61,21 +59,25 @@
             stats.endOpened = true;
         }
 
+        // -- @todo: code sloppy, refactor --//
         function validateRange() {
 
             var startUtc, endUtc;
-            var secondsPerDay = 86400000;
 
             if (stats.startDate === undefined || stats.endDate === undefined) {
                 stats.isValid = false;
                 return;
             }
 
-            //can validate date range here.
-            startUtc = stats.timestampToUtc(stats.startDate);
-            endUtc = stats.timestampToUtc(stats.endDate) + secondsPerDay;
+            //@todo: abstract to date methods. i.e. dateService.floor(date) and dateService.ceil(date)
+            stats.startDate.setHours(0, 0, 0, 0);
+            stats.endDate.setHours(23, 59, 59, 999);
 
-             if (endUtc - startUtc <= 0) {
+            //@todo: abstract to reusable Date validate range method i.e dateService.validate(startDate, endDate).
+            startUtc = stats.timestampToUtc(stats.startDate);
+            endUtc = stats.timestampToUtc(stats.endDate);
+
+            if (endUtc - startUtc <= 0) {
                 stats.isValid = false;
             } else {
                 stats.isValid = true;
@@ -87,9 +89,8 @@
         function addDateRange() {
 
             if (stats.validateRange()) {
-                var secondsPerDay = 86400000;
                 stats.getResults(stats.timestampToUtc(stats.startDate),
-                    stats.timestampToUtc(stats.endDate) + secondsPerDay);
+                    stats.timestampToUtc(stats.endDate));
             }
         }
 
@@ -109,14 +110,14 @@
         }
 
         function viewDigest(data) {
-            var secondsPerDay = 86400000;
             var startUtc = stats.timestampToUtc(stats.startDate);
-            var endUtc = stats.timestampToUtc(stats.endDate) + secondsPerDay;
+            var endUtc = stats.timestampToUtc(stats.endDate);
+
             model.getUserQueryHistory(data.userName.toLowerCase(), startUtc, endUtc)
-            .then(function (result) {
-                stats.ontology = result.queryRecords;
-                stats.ontClass = showOntClass;
-            });
+                .then(function (result) {
+                    stats.ontology = result.queryRecords;
+                    stats.ontClass = showOntClass;
+                });
         }
 
         function parseStateCount(state) {
@@ -135,6 +136,10 @@
                 .then(function (result) {
                     stats.topicsPerState = result;
                 });
+        }
+
+        function broadcastReset() {
+            $scope.$broadcast('reset-digest');
         }
     }
 })();
