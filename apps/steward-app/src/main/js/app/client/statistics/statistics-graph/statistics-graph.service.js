@@ -14,6 +14,7 @@ var Service;
             getMaxUser: getMaxUser,
             getMaxUserQueryCount: getMaxUserQueryCount,
             getCountAsPercentage: getCountAsPercentage,
+            formatUsername: formatUsername,
             clearUsers: clearUsers
         };
 
@@ -42,6 +43,10 @@ var Service;
         function getCountAsPercentage(userQueryCount, maxQueryCount) {
             var basePct = 20;
             return 100 * (userQueryCount / maxQueryCount) + basePct;
+        }
+
+        function formatUsername(username) {
+            return (username.length > 10) ? username.substring(0, 10) + '...' : username;
         }
 
         function clearUsers() {

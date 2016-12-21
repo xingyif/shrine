@@ -285,8 +285,10 @@ i2b2.CRC.view.downloadData.getCSVFromResultsHash = function() {
 				var thisRowColItem = finalResultsArray[i][j];
 				if(thisRowColItem)
 				{
-					if((thisRowColItem.trim().indexOf("10 patients or fewer"))>0)
+					if(i2b2.h.isMinObfuscation(thisRowColItem.trim())) {
 						thisRowColItem = 0;
+					}
+						
 					if(i==0 && j==0)
 						content += "<td>&nbsp;</td>";
 					else{

@@ -29,18 +29,24 @@
         //graphService = svc;
         graph.graphData = $scope.graphData;
         graph.toPercentage = toPercentage;
+        graph.formatUsername = formatUsername;
         graph.graphClick = $scope.graphClick;
         graph.clearUsers = svc.clearUsers;
+        graph.formatUsername = formatUsername;
 
         function toPercentage(value) {
             var maxQueryCount = svc.getMaxUserQueryCount(graph.graphData.users) || 1;
             return svc.getCountAsPercentage(value, maxQueryCount);
         }
+
+        function formatUsername(username) {
+            return svc.formatUsername(username);
+        }
     }
 
     StatisticsGraphLink.$inject = ['scope'];
     function StatisticsGraphLink(scope) {
-        scope.$watch('graphData', function(before, after) {
+        scope.$watch('graphData', function (before, after) {
             var graph = scope.graph;
             graph.graphData = scope.graphData;
             graph.clearUsers();

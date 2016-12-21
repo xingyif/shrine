@@ -7,11 +7,12 @@
         .factory('DiagnosticModel', DiagnosticModel);
 
 
-    DiagnosticModel.$inject = ['$http', '$q', 'UrlGetter'];
-    function DiagnosticModel (h, q, urlGetter) {
+    DiagnosticModel.$inject = ['$http', '$q', 'UrlGetter', '$location'];
+    function DiagnosticModel (h, q, urlGetter, $location) {
 
         var toDashboard = {url:''};
         var cache = {};
+        // used solely for remote dashboard persistence
         var m = {};
 
         m.remoteSiteStatuses = [];
@@ -42,7 +43,10 @@
             getProblems:       getProblemsMaker(),
             getQep:            getJsonMaker(Config.QepEndpoint, 'qep'),
             getSummary:        getJsonMaker(Config.SummaryEndpoint, 'summary'),
+            safeLogout:        safeLogout,
+            clearCache:        clearCache,
             map:               map,
+            formatDate:        formatDate,
             cache:             cache,
             toDashboard:       toDashboard,
             m:                 m
@@ -54,6 +58,40 @@
                 result.push(func(list[i]))
             }
             return result;
+        }
+
+        function formatDate(dateObject) {
+            return [dateObject.getUTCFullYear(), "-",
+                    pad2(dateObject.getUTCMonth()), "-",
+                    pad2(dateObject.getUTCDate()), " ",
+                    pad2(dateObject.getUTCHours()), ":",
+                    pad2(dateObject.getUTCMinutes()), ":",
+                    pad2(dateObject.getUTCSeconds())].join("");
+        }
+
+        function pad2(stringLikeThing) {
+            // Does javascript provide a string format thing? Would love to write %02d here.
+            var stringed = "" + stringLikeThing;
+            if (stringed.length > 2) {
+                return stringed;
+            }
+            return ("00" + stringed).slice(-2);
+        }
+
+        /**
+         * Clears the current remote dashboard before logging out.
+         */
+        function safeLogout() {
+            clearCache();
+            toDashboard.url = '';
+            m.siteAlias = '';
+            $location.path('/login');
+        }
+
+        function clearCache() {
+            for (var member in cache) {
+                if(cache.hasOwnProperty(member)) delete cache[member];
+            }
         }
 
 
@@ -105,6 +143,7 @@
         }
 
         // IE11 doesn't support string includes
+        // This only searchers for characters, not arbitrary strings
         function stringIncludes(haystack, needle) {
             var arr = haystack.split("");
             for (var i = 0; i < arr.length; i++) {

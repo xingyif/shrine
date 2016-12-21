@@ -4,13 +4,13 @@ import net.shrine.log.Loggable
 
 import scala.util.Try
 import scala.util.control.NonFatal
-import javax.ws.rs.POST
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
+import javax.ws.rs.{GET, POST, Path, Produces}
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 import javax.ws.rs.core.Response.ResponseBuilder
-import net.shrine.protocol.{ResultOutputTypes, BroadcastMessage, ResultOutputType}
+
+import net.shrine.protocol.{BroadcastMessage, ResultOutputType, ResultOutputTypes}
+
 import scala.xml.XML
 import net.shrine.util.StringEnrichments
 
@@ -36,15 +36,13 @@ final case class AdapterResource(service: AdapterRequestHandler) extends Loggabl
 
       Response.ok.entity(responseString)
     }.recover {
-      case NonFatal(e) => {
+      case NonFatal(e) =>
         error("Error processing request: ", e)
-
-        throw e;
-      }
+        throw e
     }
 
     def handleParseError(e: Throwable): Try[ResponseBuilder] = {
-      debug(s"Failed to unmarshal broadcast message XML: '$messageXml'")
+      debug(s"Failed to unmarshall broadcast message XML: '$messageXml'")
 
       error("Couldn't understand request: ", e)
 

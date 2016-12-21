@@ -42,6 +42,7 @@ case class AuditEmailer(maxQueryCountBetweenAudits:Int,
     val researchersToAudit: Seq[ResearcherToAudit] = StewardDatabase.db.selectResearchersToAudit(maxQueryCountBetweenAudits,
       minTimeBetweenAudits,
       now)
+    Log.info(s"Auditing users ${researchersToAudit.map(_.researcher.userName).mkString(", ")}")
     if (researchersToAudit.nonEmpty){
 
       val auditLines = researchersToAudit.sortBy(_.count).reverse.map { researcher =>

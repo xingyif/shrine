@@ -1,8 +1,6 @@
 package net.shrine.status
 
-import java.security.Security
 import java.security.cert.X509Certificate
-import java.util.Date
 import javax.net.ssl.{KeyManager, SSLContext, X509TrustManager}
 import javax.ws.rs.core.{MediaType, Response}
 import javax.ws.rs.{GET, Path, Produces, WebApplicationException}
@@ -31,7 +29,7 @@ import org.json4s.{DefaultFormats, Formats}
 import spray.can.Http
 import spray.can.Http.{HostConnectorInfo, HostConnectorSetup}
 import spray.client.pipelining._
-import spray.http.{ContentType, ContentTypes, FormData, HttpCharsets, HttpEntity, HttpHeaders, HttpRequest, HttpResponse, MediaTypes}
+import spray.http.{ContentType, HttpCharsets, HttpEntity, HttpRequest, HttpResponse, MediaTypes}
 import spray.io.{ClientSSLEngineProvider, PipelineContext, SSLContextProvider}
 
 import scala.collection.JavaConverters._
@@ -136,7 +134,7 @@ case class KeyStoreReport(
                            privateKeyAlias: Option[String],
                            owner: Option[String],
                            issuer: Option[String],
-                           expires: Date,
+                           expires: Long,
                            md5Signature: String,
                            sha256Signature: String,
                            caTrustedAlias: Option[String],
@@ -184,10 +182,9 @@ object KeyStoreReport {
       privateKeyAlias = keyStoreDescriptor.privateKeyAlias,
       owner = sortFormat(certCollection.myEntry.cert.getSubjectDN.getName),
       issuer = sortFormat(certCollection.myEntry.cert.getIssuerDN.getName),
-      expires = certCollection.myEntry.cert.getNotAfter,
+      expires = certCollection.myEntry.cert.getNotAfter.getTime,
       md5Signature = UtilHasher.encodeCert(certCollection.myEntry.cert, "MD5"),
       sha256Signature = UtilHasher.encodeCert(certCollection.myEntry.cert, "SHA-256"),
-      //todo sha1 signature if needed
       caTrustedAlias = maybeCaEntry.map(_.aliases.first),
       caTrustedSignature = maybeCaEntry.map(entry => UtilHasher.encodeCert(entry.cert, "MD5")),
       remoteSiteStatuses = blockForSiteStatuses,
@@ -214,7 +211,7 @@ object I2b2 {
   def apply(): I2b2 = new I2b2(
     pmUrl = ShrineOrchestrator.pmPoster.url,
     crcUrl = ShrineOrchestrator.adapterComponents.map(_.i2b2AdminService.crcUrl),
-    ontUrl = "", //todo. Grab from HiveConfigd?
+    ontUrl = ShrineOrchestrator.ontEndpoint.url.toString,
     i2b2Domain = ShrineOrchestrator.crcHiveCredentials.domain,
     username = ShrineOrchestrator.crcHiveCredentials.username,
     crcProject = ShrineOrchestrator.crcHiveCredentials.projectId,
@@ -251,30 +248,21 @@ object Qep {
   def apply(): Qep = new Qep(
     maxQueryWaitTimeMillis = queryEntryPointComponents.fold(0L)(_.i2b2Service.queryTimeout.toMicros),
     create = queryEntryPointComponents.isDefined,
+    //todo: delete attatchSingingCert
     attachSigningCert = queryEntryPointComponents.fold(false)(_.i2b2Service.broadcastAndAggregationService.attachSigningCert),
     authorizationType = queryEntryPointComponents.fold("")(_.i2b2Service.authorizationService.getClass.getSimpleName),
     includeAggregateResults = queryEntryPointComponents.fold(false)(_.i2b2Service.includeAggregateResult),
     authenticationType = queryEntryPointComponents.fold("")(_.i2b2Service.authenticator.getClass.getSimpleName),
     steward = queryEntryPointComponents.flatMap(qec => checkStewardAuthorization(qec.shrineService.authorizationService)),
-    broadcasterUrl = queryEntryPointComponents.flatMap(qec => checkBroadcasterUrl(qec.i2b2Service.broadcastAndAggregationService)),
+    broadcasterUrl = queryEntryPointComponents.flatMap(_.shrineService.broadcastAndAggregationService.broadcasterUrl.map(_.toString)),
     trustModel = ShrineOrchestrator.keyStoreDescriptor.trustModel.description,
     trustModelIsHub = ShrineOrchestrator.keyStoreDescriptor.trustModel match {
       case sh: SingleHubModel => true
       case PeerToPeerModel    => false
-    }
-  )
+    })
 
   def checkStewardAuthorization(auth: QueryAuthorizationService): Option[Steward] = auth match {
     case sa: StewardQueryAuthorizationService => Some(Steward(sa.stewardBaseUrl.toString, sa.qepUserName))
-    case _                                    => None
-  }
-
-  //TODO: Double check with Dave that this is the right url
-  def checkBroadcasterUrl(broadcaster: BroadcastAndAggregationService): Option[String] = broadcaster match {
-    case a: HubBroadcastAndAggregationService => a.broadcasterClient match {
-      case PosterBroadcasterClient(poster, _) => Some(poster.url)
-      case _                                  => None
-    }
     case _                                    => None
   }
 }
@@ -286,9 +274,8 @@ object DownstreamNodes {
 }
 
 object DownstreamNode {
-  def apply(nodeHandle: NodeHandle): DownstreamNode = new DownstreamNode(
-    nodeHandle.nodeId.name,
-    nodeHandle.client.url.map(_.toString).getOrElse("not applicable"))
+  def apply(nodeHandle: NodeHandle): DownstreamNode =
+    nodeHandle.client.url.fold(new DownstreamNode("self", "not applicable"))(url => new DownstreamNode(nodeHandle.nodeId.name, url.toString))
 }
 
 case class Adapter(crcEndpointUrl: String,
@@ -434,6 +421,7 @@ object Summary {
       case NonFatal(x) =>
         Log.info("Problem while getting ontology version", x)
         s"Unavailable due to: ${x.getMessage}"
+      // TODO: Investigate whether a Fatal exception is being thrown
     }
 
     Summary(
@@ -597,11 +585,17 @@ object ShaVerificationService extends Loggable with DefaultJsonSupport {
     InvalidVerifySignatureResponse(response)
     None
   }
+}
 
-  case class InvalidVerifySignatureResponse(response: String) extends AbstractProblem(ProblemSources.ShrineApp) {
-    override def summary: String = "The client for handling certificate diagnostic across Dashboards in the Status Service received an invalid response from verifySignature"
 
-    override def description: String = s"verifySig produced the invalid response `$response`"
-  }
+case class InvalidVerifySignatureResponse(response: String) extends AbstractProblem(ProblemSources.ShrineApp) {
+  override def summary: String = "The client for handling certificate diagnostic across Dashboards in the Status Service received an invalid response from shrine-dashboard/admin/status/verifySignature"
 
+  override def description: String = s"See details for incorrect response:"
+
+  override def throwable: Option[Throwable] = Some(InvalidResponseException(response))
+}
+
+case class InvalidResponseException(response: String) extends IllegalStateException {
+  override def getMessage: String = s"Invalid response `$response`"
 }

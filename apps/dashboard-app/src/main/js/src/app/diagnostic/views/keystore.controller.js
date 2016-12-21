@@ -48,7 +48,7 @@
                 ['Alias',             keystore.privateKeyAlias],
                 ['Owner',             keystore.owner],
                 ['Issuer',            keystore.issuer],
-                ['Expires',           keystore.expires],
+                ['Expires',           $app.model.formatDate(new Date(keystore.expires))],
                 ['MD5 Signature',     keystore.md5Signature],
                 ['SHA256 Signature',  keystore.sha256Signature]
             ];
@@ -95,11 +95,7 @@
                 }
             }
 
-            if (keystore.remoteSiteStatuses.length > 0 && keystore.remoteSiteStatuses[0].length == 2) {
-                return map(handleStatus, keystore.remoteSiteStatuses)
-            } else {
-                return []
-            }
+            return map(handleStatus, keystore.remoteSiteStatuses)
         }
 
         function peerCertValidation(keystore) {
@@ -110,11 +106,7 @@
                     return [siteStatus.siteAlias, siteStatus.theyHaveMine, siteStatus.haveTheirs]
                 }
             }
-            if (keystore.remoteSiteStatuses.length > 0 && keystore.remoteSiteStatuses[0].length == 3) {
-                return map(handleStatus, keystore.remoteSiteStatuses)
-            } else {
-                return [];
-            }
+            return map(handleStatus, keystore.remoteSiteStatuses)
         }
 
         function handleKeyStoreFailure(failure) {

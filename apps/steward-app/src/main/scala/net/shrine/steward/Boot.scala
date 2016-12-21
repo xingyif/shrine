@@ -53,6 +53,8 @@ class Boot extends WebBoot with Loggable {
 
     val emailConfig = config.getConfig("shrine.steward.emailDataSteward")
 
+    info(s"The steward's email config is ${emailConfig}")
+
     if (emailConfig.getBoolean("sendAuditEmails") && AuditEmailer.configCheck(config)) {
 
       try {

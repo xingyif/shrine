@@ -1,21 +1,12 @@
 package net.shrine.wiring
 
 import java.net.URL
-import scala.concurrent.duration.DurationInt
-import org.junit.Test
-import net.shrine.util.ShouldMatchersForJUnit
-import javax.ws.rs.core.MediaType
-import net.shrine.adapter.client.InJvmAdapterClient
-import net.shrine.adapter.client.RemoteAdapterClient
-import net.shrine.adapter.service.AdapterRequestHandler
-import net.shrine.broadcaster.{IdAndUrl, NodeHandle}
-import net.shrine.client.JerseyHttpClient
-import net.shrine.client.Poster
+
+import net.shrine.broadcaster.IdAndUrl
 import net.shrine.crypto.TrustParam.AcceptAllCerts
-import net.shrine.protocol.BroadcastMessage
-import net.shrine.protocol.NodeId
-import net.shrine.protocol.Result
-import net.shrine.protocol.DefaultBreakdownResultOutputTypes
+import net.shrine.protocol.{DefaultBreakdownResultOutputTypes, NodeId}
+import net.shrine.util.ShouldMatchersForJUnit
+import org.junit.Test
 
 /**
  * @author clint

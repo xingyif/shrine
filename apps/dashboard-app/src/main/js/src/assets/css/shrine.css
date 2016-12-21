@@ -847,3 +847,8 @@ i.shrine-close:hover{
     border:1px solid #94a0b4;
     color:#000
 }
+
+/* hack to turn off the Clear button in the problems datepicker */
+ul.dropdown-menu li span.btn-group button.btn.btn-sm.btn-danger.ng-binding {
+    display: none;
+}

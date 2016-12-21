@@ -16,7 +16,7 @@
                 <a href="#shrine-diagnostic3" class="list-group-item shrine-off"
                    ui-sref="diagnostic.keystore" data-toggle="collapse">Keystore</a>
             </span>
-            <span ui-sref-active="shrine-on" ng-if="vm.options.isHub">
+            <span ui-sref-active="shrine-on" ng-if="vm.hasHub()">
                 <a href="#shrine-diagnostic4" class="list-group-item shrine-off"
                    ui-sref="diagnostic.hub" data-toggle="collapse">Hub</a>
             </span>
@@ -30,7 +30,7 @@
             </span>
             <span ui-sref-active="shrine-on">
                 <a href="#shrine-diagnostic7" class="list-group-item shrine-off"
-                   ui-sref="diagnostic.config" data-toggle="collapse">Config File</a>
+                   ui-sref="diagnostic.config" data-toggle="collapse">Config</a>
             </span>
             <span ui-sref-active="shrine-on" ng-if="vm.options.isHub">
                 <a href="#shrine-diagnostic8" class="list-group-item shrine-off"
