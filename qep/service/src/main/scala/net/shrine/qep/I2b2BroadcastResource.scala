@@ -81,7 +81,7 @@ final case class I2b2BroadcastResource(i2b2RequestHandler: I2b2RequestHandler, b
     }
 
     def handleParseError(e: Throwable): Try[ResponseBuilder] = Try {
-      debug(s"Failed to unmarshal i2b2 request.")//todo would be good to log : $i2b2Request")
+      debug(s"Failed to unmarshal i2b2 request $i2b2Request")
 
       error("Couldn't understand request: ", e)
 
