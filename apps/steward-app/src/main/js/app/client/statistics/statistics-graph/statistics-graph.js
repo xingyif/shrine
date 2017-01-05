@@ -36,7 +36,8 @@
 
         function toPercentage(value) {
             var maxQueryCount = svc.getMaxUserQueryCount(graph.graphData.users) || 1;
-            return svc.getCountAsPercentage(value, maxQueryCount);
+            var minQueryCount = svc.getMinUserQueryCount(graph.graphData.users) || 1;
+            return svc.getCountAsPercentage(value, minQueryCount, maxQueryCount);
         }
 
         function formatUsername(username) {
