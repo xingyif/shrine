@@ -14,24 +14,31 @@ var Service;
             getMaxUser: getMaxUser,
             getMaxUserQueryCount: getMaxUserQueryCount,
             getCountAsPercentage: getCountAsPercentage,
+            getMinUserQueryCount: getMinUserQueryCount,
+            getMinUser: getMinUser,
+            formatUsername: formatUsername,
             clearUsers: clearUsers
         };
 
         function getSortedUsers(users) {
-
             if (!sortedUsers.length) {
-                sortedUsers = _.sortBy(users, [function (o) { 
-                    console.log(o);
+                sortedUsers = _.sortBy(users, [function (o) {
                     return o._2;
-                }]).reverse();
+                }]);
             }
 
             return sortedUsers;
         }
 
+        function getMinUser(users) {
+            var sortedUsers = getSortedUsers(users);
+            var length = sortedUsers.length
+            return (length) ? sortedUsers[length - 1] : sortedUsers;
+        }
+
         function getMaxUser(users) {
             var sortedUsers = getSortedUsers(users);
-            return (!!sortedUsers.length) ? sortedUsers[0] : sortedUsers;
+            return (sortedUsers.length) ? sortedUsers[0] : sortedUsers;
         }
 
         function getMaxUserQueryCount(users) {
@@ -39,9 +46,20 @@ var Service;
             return maxUser._2;
         }
 
-        function getCountAsPercentage(userQueryCount, maxQueryCount) {
+        function getMinUserQueryCount(users) {
+            var minUser = getMinUser(users);
+            return minUser._2;
+        }
+
+        function getCountAsPercentage(userQueryCount, minQueryCount, maxQueryCount) {
             var basePct = 20;
-            return 100 * (userQueryCount / maxQueryCount) + basePct;
+            var pct = 100 * (userQueryCount / maxQueryCount);
+            var minAllowablePct = basePct + (userQueryCount - minQueryCount);
+            return (pct < basePct) ? minAllowablePct : pct;
+        }
+
+        function formatUsername(username) {
+            return (username.length > 10) ? username.substring(0, 10) + '...' : username;
         }
 
         function clearUsers() {

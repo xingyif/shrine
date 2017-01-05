@@ -28,6 +28,7 @@
             return new Date(utc).toDateString();
         }
 
+
         function timestampToUtc(timestamp) {
             return Date.parse(timestamp);
         }

@@ -185,7 +185,6 @@ object KeyStoreReport {
       expires = certCollection.myEntry.cert.getNotAfter.getTime,
       md5Signature = UtilHasher.encodeCert(certCollection.myEntry.cert, "MD5"),
       sha256Signature = UtilHasher.encodeCert(certCollection.myEntry.cert, "SHA-256"),
-      //todo sha1 signature if needed
       caTrustedAlias = maybeCaEntry.map(_.aliases.first),
       caTrustedSignature = maybeCaEntry.map(entry => UtilHasher.encodeCert(entry.cert, "MD5")),
       remoteSiteStatuses = blockForSiteStatuses,
@@ -249,6 +248,7 @@ object Qep {
   def apply(): Qep = new Qep(
     maxQueryWaitTimeMillis = queryEntryPointComponents.fold(0L)(_.i2b2Service.queryTimeout.toMicros),
     create = queryEntryPointComponents.isDefined,
+    //todo: delete attatchSingingCert
     attachSigningCert = queryEntryPointComponents.fold(false)(_.i2b2Service.broadcastAndAggregationService.attachSigningCert),
     authorizationType = queryEntryPointComponents.fold("")(_.i2b2Service.authorizationService.getClass.getSimpleName),
     includeAggregateResults = queryEntryPointComponents.fold(false)(_.i2b2Service.includeAggregateResult),
@@ -571,8 +571,8 @@ object ShaVerificationService extends Loggable with DefaultJsonSupport {
            case Some(ShaResponse(ShaResponse.badFormat, false)) =>
              error(s"Somehow, this client is sending an incorrectly formatted SHA256 signature to the dashboard. Offending sig: $sha256")
              None
-           case Some(ShaResponse(sha, true))                 => Some(SiteStatus(site.alias, theyHaveMine = true, haveTheirs = doWeHaveCert(sha), site.url))
-           case Some(ShaResponse(sha, false))                => Some(SiteStatus(site.alias, theyHaveMine = false, haveTheirs = doWeHaveCert(sha), site.url))
+           case Some(ShaResponse(sha, true))                    => Some(SiteStatus(site.alias, theyHaveMine = true, haveTheirs = doWeHaveCert(sha), site.url))
+           case Some(ShaResponse(sha, false))                   => Some(SiteStatus(site.alias, theyHaveMine = false, haveTheirs = doWeHaveCert(sha), site.url))
            case None                                            =>
              InvalidVerifySignatureResponse(rawResponse)
              None

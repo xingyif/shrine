@@ -20,10 +20,10 @@
     OntologyTerm.prototype.addQuery = function (queryId, queryData) {
 
         this.queryCount++;
-
         if (this.queryCount > OntologyTerm.prototype.maxTermUsedCount) {
-                OntologyTerm.prototype.maxTermUsedCount = this.queryCount;
+            OntologyTerm.prototype.maxTermUsedCount = this.queryCount;
         }
+
         if (!this.queries[queryId]) {
             this.queries[queryId] = queryData;
         }

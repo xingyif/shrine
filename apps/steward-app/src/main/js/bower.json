@@ -58,5 +58,8 @@
         "scss/font-awesome.scss"
       ]
     }
+  },
+  "resolutions": {
+    "angular": "1.5.8"
   }
 }

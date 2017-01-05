@@ -118,4 +118,17 @@
             </tbody>
         </table>
     </div>
+    <div ng-hide="vm.summary">
+        <div ng-hide="vm.loading" style="display:flex;justify-content: center">
+            <h3 style="color: red;">Timeout or Error while calling Summary, please check the Problems tab if available</h3>
+            <div ng-show="vm.summaryError">
+                <h4>Summary Error</h4>
+                <span>{{vm.summaryError}}</span>
+            </div>
+            <div ng-show="vm.i2b2Error">
+                <h4>i2b2 Error</h4>
+                <span>{{vm.i2b2Error}}</span>
+            </div>
+        </div>
+    </div>
 </div>
