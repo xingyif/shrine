@@ -395,10 +395,12 @@ i2b2.CRC.view.downloadData.exportTableToCSV = function () {
 	{
 		var mylink = document.createElement('a');
 		var csvData = 'data:application/csv;charset=utf-8,' + encodeURIComponent(csv);
+		var evObj = document.createEvent('MouseEvents');
 		mylink.download = filename;
 		mylink.href = csvData;
 		document.body.appendChild(mylink);
-		mylink.click();
+		evObj.initEvent( 'click', true, true );
+		mylink.dispatchEvent(evObj);
 	}
 }
 
