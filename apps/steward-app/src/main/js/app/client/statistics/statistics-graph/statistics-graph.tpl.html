@@ -2,10 +2,17 @@
 	<span ng-if="graph.graphData.users.length === 0">
 		There is no Data for this time period.
 	</span>
-	<span ng-repeat="user in graph.graphData.users">
-		<graph-bar value="{{user._2}}" 
-		percentage="{{graph.toPercentage(user._2)}}"
-		username="{{graph.formatUsername(user._1.userName)}}" 
-		ng-click="graph.graphClick({data:user._1})">
-	</span> 
+	<div ng-repeat="user in graph.graphData.users">
+		<div class="bar-bg">
+			<div class="user ">
+				{{graph.formatUsername(user._1.username)}}
+			</div>
+			<div class="bar" ng-style="{'max-width': {{graph.toPercentage(user._2)}} + '%'}" ng-click="graph.graphClick({data:user._1})">
+				{{user._2}} queries
+			</div>
+		</div>
+
+		
+	</div> 
+	
 </div>

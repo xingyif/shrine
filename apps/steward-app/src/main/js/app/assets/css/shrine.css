@@ -762,10 +762,8 @@ i.shrine-close:hover {
 
 .stats-graph-container {
   border-bottom: none;
-  /*border-left: 1px solid #125c8a;;*/
-  overflow: auto;
-  padding-top: .6em;
-  /*background: linear-gradient(#048DBE, #025978) !important;*/ }
+  overflow: hidden;
+  padding-top: .6em; }
 
 .stats-ontology-container {
   overflow: auto;
@@ -774,6 +772,8 @@ i.shrine-close:hover {
 .stats-graph-container .bar-bg {
   background-color: white;
   height: 30px;
+  left: 13rem;
+  top: -24px;
   margin: 0 auto 10px auto;
   line-height: 30px;
   font-size: 16px;

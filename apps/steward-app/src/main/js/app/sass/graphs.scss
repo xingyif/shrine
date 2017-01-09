@@ -33,10 +33,8 @@
 .stats-graph-container {
     @extend .stats-stage-base;
     border-bottom: none;
-    /*border-left: 1px solid #125c8a;;*/
-    overflow: auto;
+    overflow: hidden;
     padding-top: .6em;
-    /*background: linear-gradient(#048DBE, #025978) !important;*/
 }
 
 .stats-ontology-container{
@@ -48,6 +46,8 @@
 .stats-graph-container  .bar-bg{
   background-color: rgba(255, 255, 255, 1);
   height: 30px;
+  left: 13rem;
+  top: -24px;
   margin: 0 auto 10px auto;
   line-height: 30px;
   font-size: 16px;

@@ -23,7 +23,7 @@ ShrineMockService.prototype.getMockBen = function () {
   return {
     fullName: 'Steward Test Researcher Ben',
     roles: ['Researcher'],
-    userName: 'ben'
+    username: 'ben'
   };
 };
 

@@ -71,12 +71,18 @@ StewardMockService.prototype.getQueriesPerUser = function () {
     'Dr. Evil': 280
   };
 
-  var keys = Object.keys(users);
-  var queriesPerUser = []
+  var jira1847Users = {
+    'nn80': 43,
+    'ij22': 52,
+    'shrine': 16
+  };
+
+  var keys = Object.keys(jira1847Users);
+  var queriesPerUser = [];
 
   for (var i = 0; i < keys.length; i++) {
     var user = this.getMockUser(keys[i]);
-    var numberOfQueries = users[keys[i]];
+    var numberOfQueries = jira1847Users[keys[i]];
     queriesPerUser.push({
       _1: user,
       _2: numberOfQueries

@@ -30,13 +30,13 @@ var Service;
             return sortedUsers;
         }
 
-        function getMinUser(users) {
+        function getMaxUser(users) {
             var sortedUsers = getSortedUsers(users);
-            var length = sortedUsers.length
+            var length = sortedUsers.length;
             return (length) ? sortedUsers[length - 1] : sortedUsers;
         }
 
-        function getMaxUser(users) {
+        function getMinUser(users) {
             var sortedUsers = getSortedUsers(users);
             return (sortedUsers.length) ? sortedUsers[0] : sortedUsers;
         }
@@ -52,10 +52,8 @@ var Service;
         }
 
         function getCountAsPercentage(userQueryCount, minQueryCount, maxQueryCount) {
-            var basePct = 20;
-            var pct = 100 * (userQueryCount / maxQueryCount);
-            var minAllowablePct = basePct + (userQueryCount - minQueryCount);
-            return (pct < basePct) ? minAllowablePct : pct;
+            var pct = 50 * (userQueryCount / maxQueryCount);
+            return pct + 15;
         }
 
         function formatUsername(username) {
