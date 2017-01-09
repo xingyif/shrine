@@ -37,12 +37,6 @@
         it('getMaxUserQueryCount should exist', function () {
             expect(typeof (statsGraphService.getMaxUserQueryCount)).toBe('function');
         });
-        it('getMinUser should exist', function () {
-            expect(typeof (statsGraphService.getMinUser)).toBe('function');
-        });
-        it('getMinUserQueryCount should exist', function () {
-            expect(typeof (statsGraphService.getMinUserQueryCount)).toBe('function');
-        });
         it('getCountAsPercentage should exist', function () {
             expect(typeof (statsGraphService.getCountAsPercentage)).toBe('function');
         });
@@ -62,16 +56,10 @@
 
         it('getSortedUsers should work', function () {
             var sortedUsers = statsGraphService.getSortedUsers(users);
-            var minUser = sortedUsers[0];
-            var maxUser = sortedUsers.reverse()[0];
-            expect(minUser._2).toBe(1);
+            var maxUser = sortedUsers[0];
             expect(maxUser._2).toBe(7);
         });
 
-        it('getMinUserQueryCount should work', function () {
-            var minUserQueryCount = statsGraphService.getMinUserQueryCount(users);
-            expect(minUserQueryCount).toBe(1);
-        });
 
         it('getMaxUserQueryCount should work', function () {
             var maxUserQueryCount = statsGraphService.getMaxUserQueryCount(users);
@@ -79,18 +67,18 @@
         });
 
        it('getCountAsPercentage should work as expected for values over 20%', function () {
-           var pct = statsGraphService.getCountAsPercentage(50, 10, 100);
-            expect(pct).toBe(50);
+           var pct = statsGraphService.getCountAsPercentage(50, 100);
+            expect(pct).toBe(45);
         });
 
         it('getCountAsPercentage should work as expected minimum query values under 20%', function () {
-           var pct = statsGraphService.getCountAsPercentage(10, 10, 100);
-            expect(pct).toBe(20);
+           var pct = statsGraphService.getCountAsPercentage(10, 100);
+            expect(pct).toBe(25);
         });
 
         it('getCountAsPercentage should work as expected for values under 20% but greater than minimum', function () {
-           var pct = statsGraphService.getCountAsPercentage(13, 10, 100);
-            expect(pct).toBe(23);
+           var pct = statsGraphService.getCountAsPercentage(13, 100);
+            expect(pct).toBe(26.5);
         });
     }
 })();

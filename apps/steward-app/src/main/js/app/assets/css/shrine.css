@@ -772,8 +772,6 @@ i.shrine-close:hover {
 .stats-graph-container .bar-bg {
   background-color: white;
   height: 30px;
-  left: 13rem;
-  top: -24px;
   margin: 0 auto 10px auto;
   line-height: 30px;
   font-size: 16px;
