@@ -68,7 +68,7 @@ final class RunQueryAdapterTest extends AbstractSquerylAdapterTest with ShouldMa
 
   private val authn = AuthenticationInfo("some-domain", "username", Credential("jksafhkjaf", false))
 
-  private val adapterLockoutThreshold = 99
+  private val adapterLockoutThreshold = 0
 
   private val altI2b2ErrorXml = XmlUtil.stripWhitespace {
     <ns5:response xmlns:ns2="http://www.i2b2.org/xsd/hive/pdo/1.1/" xmlns:ns4="http://www.i2b2.org/xsd/cell/crc/psm/1.1/" xmlns:ns3="http://www.i2b2.org/xsd/cell/crc/pdo/1.1/" xmlns:tns="http://axis2.crc.i2b2.harvard.edu" xmlns:ns9="http://www.i2b2.org/xsd/cell/ont/1.1/" xmlns:ns5="http://www.i2b2.org/xsd/hive/msg/1.1/" xmlns:ns6="http://www.i2b2.org/xsd/cell/crc/psm/querydefinition/1.1/" xmlns:ns7="http://www.i2b2.org/xsd/cell/crc/psm/analysisdefinition/1.1/" xmlns:ns10="http://www.i2b2.org/xsd/hive/msg/result/1.1/" xmlns:ns8="http://www.i2b2.org/xsd/cell/pm/1.1/">

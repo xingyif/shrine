@@ -46,11 +46,11 @@
             var tempList = [];
             for (var i = 0; i < modelStatuses.length; i++) {
                 var abbreviatedEntry = modelStatuses[i];
-                if (abbreviatedEntry.url != "") // ignore self
+                if (!(abbreviatedEntry.url == "" && abbreviatedEntry.theyHaveMine && abbreviatedEntry.haveTheirs && !abbreviatedEntry.timeOutError)) // ignore hub
                     tempList.push(abbreviatedEntry)
             }
 
-            vm.otherDashboards = [['Hub', '', true]].concat(map(entryToPair, tempList));
+            vm.otherDashboards = [['Hub', '', true]].concat(map(entryToTriple, tempList));
             vm.otherDashboards.sort(comparator);
             vm.clearCache = clearCache;
             vm.switchDashboard = switchDashboard;
@@ -84,7 +84,7 @@
             $app.model.clearCache();
         }
 
-        function entryToPair(entry){
+        function entryToTriple(entry){
             return [entry.siteAlias, entry.url, entry.theyHaveMine && entry.haveTheirs && !entry.timeOutError];
         }
     }

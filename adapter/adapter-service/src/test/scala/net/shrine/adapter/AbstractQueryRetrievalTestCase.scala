@@ -358,7 +358,7 @@ object AbstractQueryRetrievalTestCase {
       dao = dao,
       hiveCredentials = AbstractQueryRetrievalTestCase.hiveCredentials,
       conceptTranslator = translator,
-      adapterLockoutAttemptsThreshold = 10000,
+      adapterLockoutAttemptsThreshold = 0,
       doObfuscation = doObfuscation,
       runQueriesImmediately = true,
       breakdownTypes = DefaultBreakdownResultOutputTypes.toSet,
