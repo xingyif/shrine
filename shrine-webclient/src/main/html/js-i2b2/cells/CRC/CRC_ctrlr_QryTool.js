@@ -74,6 +74,22 @@ function QueryToolController() {
         var scopedCallback = new i2b2_scopedCallback();
         scopedCallback.scope = this;
         scopedCallback.callback = function(results) {
+
+			// -- abandon ship! --//
+			if(results.error) {
+				// redraw the Query Tool GUI
+            	i2b2.CRC.ctrlr.QT._redrawPanelCount();
+            	i2b2.CRC.ctrlr.QT.doScrollFirst();
+            	// hide the loading mask
+            	i2b2.h.LoadingMask.hide();
+            	i2b2.CRC.ctrlr.QT.temporalGroup = 0;
+            	i2b2.CRC.ctrlr.QT._redrawAllPanels();
+				alert(results.errorMsg);
+				return;
+			}
+
+
+
             var cl_queryMasterId = qm_id;
             // THIS function is used to process the AJAX results of the getChild call
             //      results data object contains the following attributes:

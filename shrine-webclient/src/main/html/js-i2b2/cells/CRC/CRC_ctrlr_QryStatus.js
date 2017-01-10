@@ -300,12 +300,12 @@ i2b2.CRC.ctrlr.QueryStatus.prototype = function() {
 			try {
 				var self = i2b2.CRC.ctrlr.currentQueryStatus;
 				i2b2.CRC.ctrlr.history.queryDeleteNoPrompt(self.QM.id);
-					clearInterval(private_refreshInterrupt);
-					private_refreshInterrupt = false;
-					private_singleton_isRunning = false;
-					$('runBoxText').innerHTML = "Run Query";
-					self.dispDIV.innerHTML += '<div style="clear:both; height:16px; line-height:16px; text-align:center; color:r#ff0000;">QUERY CANCELLED</div>';
-					i2b2.CRC.ctrlr.currentQueryStatus = false; 
+				clearInterval(private_refreshInterrupt);
+				private_refreshInterrupt = false;
+				private_singleton_isRunning = false;
+				$('runBoxText').innerHTML = "Run Query";
+				self.dispDIV.innerHTML += '<div style="clear:both; height:16px; line-height:16px; text-align:center; color:r#ff0000;">QUERY CANCELLED</div>';
+				i2b2.CRC.ctrlr.currentQueryStatus = false; 
 			} catch (e) {}	
 		}
 	}
