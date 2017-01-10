@@ -398,6 +398,12 @@ i2b2.CRC.view.downloadData.exportTableToCSV = function () {
 		var evObj = document.createEvent('MouseEvents');
 		mylink.download = filename;
 		mylink.href = csvData;
+
+		// -- if safari, open in new window. -- //
+		if(!myLink.download) {
+			mayLink.target = '_blank';
+		}
+		
 		document.body.appendChild(mylink);
 		evObj.initEvent( 'click', true, true );
 		mylink.dispatchEvent(evObj);
