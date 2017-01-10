@@ -84,7 +84,7 @@ final class NetworkSimulationTest extends AbstractSquerylAdapterTest with Should
       dao = dao,
       hiveCredentials = hiveCredentials,
       conceptTranslator = translator,
-      adapterLockoutAttemptsThreshold = 10000,
+      adapterLockoutAttemptsThreshold = 0,
       doObfuscation = false,
       runQueriesImmediately = false,
       breakdownTypes = DefaultBreakdownResultOutputTypes.toSet,

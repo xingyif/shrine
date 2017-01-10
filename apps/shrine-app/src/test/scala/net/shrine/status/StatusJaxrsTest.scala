@@ -116,7 +116,7 @@ class StatusJaxrsTest extends ShouldMatchersForJUnit {
 
     val actual = Serialization.read[Adapter](string)
 
-    actual.adapterLockoutAttemptsThreshold should be (10)
+    actual.adapterLockoutAttemptsThreshold should be (0)
   }
 
   @Test
