@@ -394,15 +394,21 @@ i2b2.CRC.view.downloadData.exportTableToCSV = function () {
 	else
 	{
 		var mylink = document.createElement('a');
-		var csvData = 'data:application/csv;charset=utf-8,' + encodeURIComponent(csv);
-		var evObj = document.createEvent('MouseEvents');
-		mylink.download = filename;
-		mylink.href = csvData;
 
 		// -- if safari, open in new window. -- //
-		if(!mylink.download) {
+		if(mylink.download === undefined) {
 			mayLink.target = '_blank';
 		}
+		else {
+			mylink.download = filename;
+		}
+
+		var csvData = 'data:application/csv;charset=utf-8,' + encodeURIComponent(csv);
+		var evObj = document.createEvent('MouseEvents');
+		
+		mylink.href = csvData;
+
+		
 		
 		document.body.appendChild(mylink);
 		evObj.initEvent( 'click', true, true );
