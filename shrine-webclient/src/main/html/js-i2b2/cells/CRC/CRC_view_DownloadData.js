@@ -400,7 +400,7 @@ i2b2.CRC.view.downloadData.exportTableToCSV = function () {
 		mylink.href = csvData;
 
 		// -- if safari, open in new window. -- //
-		if(!myLink.download) {
+		if(!mylink.download) {
 			mayLink.target = '_blank';
 		}
 		
