@@ -571,8 +571,7 @@ object ShaVerificationService extends Loggable with DefaultJsonSupport {
            case Some(ShaResponse(ShaResponse.badFormat, false)) =>
              error(s"Somehow, this client is sending an incorrectly formatted SHA256 signature to the dashboard. Offending sig: $sha256")
              None
-           case Some(ShaResponse(sha, true))                    => Some(SiteStatus(site.alias, theyHaveMine = true, haveTheirs = doWeHaveCert(sha), site.url))
-           case Some(ShaResponse(sha, false))                   => Some(SiteStatus(site.alias, theyHaveMine = false, haveTheirs = doWeHaveCert(sha), site.url))
+           case Some(ShaResponse(sha, haveMine))                => Some(SiteStatus(site.alias, theyHaveMine = haveMine, haveTheirs = doWeHaveCert(sha), site.url))
            case None                                            =>
              InvalidVerifySignatureResponse(rawResponse)
              None
