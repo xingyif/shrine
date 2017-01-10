@@ -397,7 +397,7 @@ i2b2.CRC.view.downloadData.exportTableToCSV = function () {
 
 		// -- if safari, open in new window. -- //
 		if(mylink.download === undefined) {
-			myLink.target = '_blank';
+			mylink.target = '_blank';
 		}
 		else {
 			mylink.download = filename;
