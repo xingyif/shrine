@@ -59,7 +59,7 @@ final class I2b2AdminResourceEndToEndJaxrsTest extends AbstractI2b2AdminResource
       dao = dao,
       hiveCredentials = HiveCredentials("d", "u", "pwd", "pid"),
       conceptTranslator = translator,
-      adapterLockoutAttemptsThreshold = 1000,
+      adapterLockoutAttemptsThreshold = 0,
       doObfuscation = false,
       runQueriesImmediately = true,
       breakdownTypes = DefaultBreakdownResultOutputTypes.toSet,
