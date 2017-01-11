@@ -38,7 +38,7 @@ router.get('/steward/topics', function (req, res) {
   var response = {
     skipped: 0,
     totalCount: 50,
-    userId: user.username
+    userId: user.userName
   };
 
   response.topics = topics;
@@ -50,7 +50,7 @@ router.get('/researcher/topics', function (req, res) {
   var response = {
     skipped: 0,
     totalCount: 50,
-    userId: user.username
+    userId: user.userName
   };
   var topics = service.getTopics(20, 'Pending');
 
@@ -115,7 +115,7 @@ router.get('/steward/queryHistory', function (req, res) {
   res.json(response);
 });
 
-router.get('/steward/queryHistory/user/:username', function (req, res) {
+router.get('/steward/queryHistory/user/:userName', function (req, res) {
   var response = service.getJSONQueryHistory();
   res.json(response);
 });

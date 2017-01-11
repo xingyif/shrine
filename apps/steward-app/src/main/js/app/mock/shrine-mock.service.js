@@ -37,7 +37,7 @@ ShrineMockService.prototype.getMockDave = function() {
 
 ShrineMockService.prototype.getMockUser = function (name) {
   var user = this.getMockBen();
-  user.username = name;
+  user.userName = name;
   user.fullName = name;
   return user;
 }

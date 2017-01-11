@@ -14,7 +14,7 @@ var Service;
             getMaxUser: getMaxUser,
             getMaxUserQueryCount: getMaxUserQueryCount,
             getCountAsPercentage: getCountAsPercentage,
-            formatUsername: formatUsername,
+            formatuserName: formatuserName,
             clearUsers: clearUsers
         };
 
@@ -45,8 +45,8 @@ var Service;
             return pct + 20;
         }
 
-        function formatUsername(username) {
-            return (username.length > 10) ? username.substring(0, 10) + '...' : username;
+        function formatuserName(userName) {
+            return (userName.length > 10) ? userName.substring(0, 10) + '...' : userName;
         }
 
         function clearUsers() {

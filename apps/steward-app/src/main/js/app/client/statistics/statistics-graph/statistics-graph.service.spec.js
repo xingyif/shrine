@@ -41,16 +41,16 @@
             expect(typeof (statsGraphService.getCountAsPercentage)).toBe('function');
         });
         it('formatUserame should exist', function () {
-            expect(typeof (statsGraphService.formatUsername)).toBe('function');
+            expect(typeof (statsGraphService.formatuserName)).toBe('function');
         });
 
-        it('formatUsername should truncate benajamindanielcarmen to benjaminda...', function () {
-            var result = statsGraphService.formatUsername('benjamindanielcarmen');
+        it('formatuserName should truncate benajamindanielcarmen to benjaminda...', function () {
+            var result = statsGraphService.formatuserName('benjamindanielcarmen');
             expect(result).toBe('benjaminda...');
         });
 
-        it('formatUsername should not truncate ben', function () {
-            var result = statsGraphService.formatUsername('ben');
+        it('formatuserName should not truncate ben', function () {
+            var result = statsGraphService.formatuserName('ben');
             expect(result).toBe('ben');
         });
 

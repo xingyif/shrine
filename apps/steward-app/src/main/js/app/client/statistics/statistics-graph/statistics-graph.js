@@ -29,18 +29,18 @@
         //graphService = svc;
         graph.graphData = $scope.graphData;
         graph.toPercentage = toPercentage;
-        graph.formatUsername = formatUsername;
+        graph.formatuserName = formatuserName;
         graph.graphClick = $scope.graphClick;
         graph.clearUsers = svc.clearUsers;
-        graph.formatUsername = formatUsername;
+        graph.formatuserName = formatuserName;
 
         function toPercentage(value) {
             var maxQueryCount = svc.getMaxUserQueryCount(graph.graphData.users) || 1;
             return svc.getCountAsPercentage(value, maxQueryCount);
         }
 
-        function formatUsername(username) {
-            return svc.formatUsername(username);
+        function formatuserName(userName) {
+            return svc.formatuserName(userName);
         }
     }
 

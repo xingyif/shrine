@@ -5,7 +5,7 @@
 	<div ng-repeat="user in graph.graphData.users">
 		<div class="bar-bg">
 			<div class="user ">
-				{{graph.formatUsername(user._1.userName)}}
+				{{graph.formatuserName(user._1.userName)}}
 			</div>
 			<div class="bar" ng-style="{'max-width': {{graph.toPercentage(user._2)}} + '%'}" ng-click="graph.graphClick({data:user._1})">
 				{{user._2}} queries
