@@ -75,7 +75,7 @@ function QueryToolController() {
         scopedCallback.scope = this;
         scopedCallback.callback = function(results) {
 
-			// -- abandon ship! --//
+			// -- run awaaaaay! --//
 			if(results.error) {
 				// redraw the Query Tool GUI
             	i2b2.CRC.ctrlr.QT._redrawPanelCount();
