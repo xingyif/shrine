@@ -113,7 +113,7 @@
             var startUtc = stats.timestampToUtc(stats.startDate);
             var endUtc = stats.timestampToUtc(stats.endDate);
 
-            model.getUserQueryHistory(data.username.toLowerCase(), startUtc, endUtc)
+            model.getUserQueryHistory(data.userName.toLowerCase(), startUtc, endUtc)
                 .then(function (result) {
                     stats.ontology = result.queryRecords;
                     stats.ontClass = showOntClass;
