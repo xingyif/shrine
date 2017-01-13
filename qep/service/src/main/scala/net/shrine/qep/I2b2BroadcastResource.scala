@@ -13,6 +13,7 @@ import net.shrine.qep.queries.QepDatabaseProblem
 import net.shrine.serialization.I2b2Marshaller
 import net.shrine.slick.CouldNotRunDbIoActionException
 import net.shrine.util.XmlUtil
+import org.xml.sax.SAXParseException
 
 import scala.util.Try
 import scala.util.control.NonFatal
@@ -51,7 +52,8 @@ final case class I2b2BroadcastResource(i2b2RequestHandler: I2b2RequestHandler, b
       case nax:NotAuthenticatedException => ErrorResponse(nax.problem)
       case cnrdax:CouldNotRunDbIoActionException => ErrorResponse(QepDatabaseProblem(cnrdax))
       case sqlx:SQLException => ErrorResponse(QepDatabaseProblem(sqlx))
-      case imfx:I2B2MessageFormatException => ErrorResponse(QepCouldNotInterpretRequest(imfx))
+      case imfx:I2B2MessageFormatException => ErrorResponse(QepCouldNotInterpretRequest(i2b2Request,imfx))
+      case saxx:SAXParseException => ErrorResponse(QepCouldNotInterpretRequest(i2b2Request,saxx))
       case _ => ErrorResponse(ProblemNotYetEncoded("The QEP encountered an unforeseen problem while processing an i2b2 request",e))
     }
 
@@ -97,10 +99,18 @@ final case class I2b2BroadcastResource(i2b2RequestHandler: I2b2RequestHandler, b
   }
 }
 
-case class QepCouldNotInterpretRequest(x:Exception) extends AbstractProblem(ProblemSources.Qep){
+case class QepCouldNotInterpretRequest(i2b2Request:String,x:Exception) extends AbstractProblem(ProblemSources.Qep){
   override val summary = "The QEP could not interpret a request."
 
   override val throwable = Some(x)
 
   override val description = x.getMessage
+
+  override val detailsXml: NodeSeq = NodeSeq.fromSeq(
+    <details>
+      Request contents:'{i2b2Request}'
+
+      {throwableDetail.getOrElse("")}
+    </details>
+  )
 }

@@ -1,7 +1,7 @@
 package net.shrine.protocol
 
 import net.shrine.log.Loggable
-import net.shrine.problem.{LoggingProblemHandler, Problem, ProblemDigest}
+import net.shrine.problem.{ Problem, ProblemDigest}
 
 import scala.xml.{NodeBuffer, NodeSeq}
 import net.shrine.util.XmlUtil
@@ -91,15 +91,16 @@ object ErrorResponse extends XmlUnmarshaller[ErrorResponse] with I2b2Unmarshalle
         typeText <- conditionXml attribute "type" if typeText == "ERROR"
                                                     statusMessage = XmlUtil.trim(conditionXml)
                                                     problemDigest = ErrorStatusFromCrc(Option(statusMessage),xml.text).toDigest//here's another place where an ERROR can have no ProblemDigest
+
       } yield {
         ErrorResponse(statusMessage,problemDigest)
       }
     }
 
-    parseFormatA.recoverWith { case NonFatal(e) => {
+    parseFormatA.recoverWith { case NonFatal(e) =>
       warn(s"Encountered a problem while parsing an error from I2B2 with 'format A', trying 'format B' ${xml.text}",e)
       parseFormatB
-    } }.get
+    }.get
   }
 
   /**
