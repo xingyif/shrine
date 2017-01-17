@@ -63,7 +63,7 @@ case class StatusJaxrs(shrineConfig: TsConfig) extends Loggable {
   @Path("config")
   def config: String = {
     //todo probably better to reach out and grab the config from ManuallyWiredShrineJaxrsResources once it is a singleton
-    Serialization.write(shrineConfig)
+    Serialization.write(Json4sConfig(shrineConfig))
   }
 
   @GET
@@ -111,7 +111,7 @@ case class StatusJaxrs(shrineConfig: TsConfig) extends Loggable {
   @GET
   @Path("keystore")
   def keystore: String = {
-    Serialization.write(KeyStoreReport(shrineConfig.getConfig("keystore")))
+    Serialization.write(KeyStoreReport(shrineConfig.getConfig("shrine.keystore")))
   }
 
 
