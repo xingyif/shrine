@@ -1,0 +1,20 @@
+{
+  "queryID": "some-uuid",
+  "topicID": "some-uuid",
+  "userID": "some-user-id",
+  "startTime": 1091201,
+  "i2b2QueryText": "some-xml",
+  "extraXmlBaggage": "some-xml",
+  "queryResults": [
+    {
+      "status": "Failure",
+      "resultID": "some-uuid",
+      "adapterID": "some-uuid",
+      "count": 129084,
+      "problemDigest": {
+      },
+      "flagMessages?": {
+      }
+    }
+  ]
+}

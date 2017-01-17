@@ -13,7 +13,7 @@ import com.typesafe.config.{ConfigFactory, Config => TsConfig}
 import net.shrine.authorization.{QueryAuthorizationService, StewardQueryAuthorizationService}
 import net.shrine.broadcaster._
 import net.shrine.client.PosterOntClient
-import net.shrine.config.ConfigExtensions
+import net.shrine.config.{ConfigExtensions, DurationConfigParser}
 import net.shrine.crypto._
 import net.shrine.log.{Log, Loggable}
 import net.shrine.ont.data.OntClientOntologyMetadata
@@ -34,8 +34,8 @@ import spray.io.{ClientSSLEngineProvider, PipelineContext, SSLContextProvider}
 
 import scala.collection.JavaConverters._
 import scala.collection.immutable.{Map, Seq, Set}
-import scala.concurrent.duration.FiniteDuration
-import scala.concurrent.{Await, Future, duration}
+import scala.concurrent.duration.{Duration, FiniteDuration}
+import scala.concurrent.{Await, Future}
 import scala.util.control.NonFatal
 import scala.util.{Failure, Success, Try}
 
@@ -63,7 +63,7 @@ case class StatusJaxrs(shrineConfig: TsConfig) extends Loggable {
   @Path("config")
   def config: String = {
     //todo probably better to reach out and grab the config from ManuallyWiredShrineJaxrsResources once it is a singleton
-    Serialization.write(Json4sConfig(shrineConfig))
+    Serialization.write(shrineConfig)
   }
 
   @GET
@@ -111,7 +111,7 @@ case class StatusJaxrs(shrineConfig: TsConfig) extends Loggable {
   @GET
   @Path("keystore")
   def keystore: String = {
-    Serialization.write(KeyStoreReport())
+    Serialization.write(KeyStoreReport(shrineConfig.getConfig("keystore")))
   }
 
 
@@ -148,7 +148,9 @@ case class KeyStoreReport(
 //todo build new API for the dashboard to use to check signatures
 
 object KeyStoreReport {
-  def apply(): KeyStoreReport = {
+  def apply(keystoreConfig: TsConfig): KeyStoreReport = {
+    val parseDuration = (config: TsConfig) => (path: String) => DurationConfigParser.parseDuration(config.getString(path))
+    val timeoutDuration = keystoreConfig.getOption("verifyTimeout", _.getString).map(DurationConfigParser.parseDuration).getOrElse(Duration.create(5, "minutes"))
     val keyStoreDescriptor: KeyStoreDescriptor = ShrineOrchestrator.keyStoreDescriptor
     val certCollection: BouncyKeyStoreCollection = ShrineOrchestrator.certCollection
     val maybeCaEntry: Option[KeyStoreEntry] = certCollection match {
@@ -156,7 +158,7 @@ object KeyStoreReport {
       case HubCertCollection(_, caEntry, _)        => Some(caEntry)
       case px: PeerCertCollection                  => None
     }
-    val siteStatusesPreZip = ShaVerificationService(certCollection.remoteSites.toList)
+    val siteStatusesPreZip = ShaVerificationService(certCollection.remoteSites.toList, timeoutDuration)
     val siteStatuses = siteStatusesPreZip.zipWithIndex
 
     def sortFormat(input: String): Option[String] = {
@@ -169,7 +171,7 @@ object KeyStoreReport {
       }
     }
 
-    lazy val blockForSiteStatuses = siteStatuses.map(fut => Try(Await.result(fut._1, new FiniteDuration(5, duration.SECONDS))) match {
+    lazy val blockForSiteStatuses = siteStatuses.map(fut => Try(Await.result(fut._1, timeoutDuration)) match {
       case Success(Some(status)) => status
       case Success(None)         => Log.warn("There was an issue with the verifySignature endpoint, check that we have network connectivity")
         SiteStatus(certCollection.remoteSites(fut._2).alias, false, false, "", true)
@@ -223,6 +225,7 @@ object I2b2 {
 }
 
 case class DownstreamNode(name: String, url: String)
+//case class DownstreamNode1(remoteSite)
 
 // Replaces StewardQueryAuthorizationService so that we never transmit a password
 case class Steward(stewardBaseUrl: String, qepUsername: String, password: String = "REDACTED")
@@ -499,8 +502,8 @@ object ShaVerificationService extends Loggable with DefaultJsonSupport {
 
   val certCollection = ShrineOrchestrator.certCollection
 
-  def sendHttpRequest(httpRequest: HttpRequest): Future[HttpResponse] = {
-    implicit val timeout: Timeout = Timeout.durationToTimeout(new FiniteDuration(5, duration.SECONDS)) //5 seconds
+  def sendHttpRequest(httpRequest: HttpRequest, timeoutDuration: FiniteDuration): Future[HttpResponse] = {
+    implicit val timeout: Timeout = Timeout.durationToTimeout(timeoutDuration)
 
     implicit def json4sFormats: Formats = DefaultFormats
 
@@ -546,10 +549,11 @@ object ShaVerificationService extends Loggable with DefaultJsonSupport {
 
   type MaybeSiteStatus = Future[Option[SiteStatus]]
 
-  def apply(sites: Seq[RemoteSite]): Seq[MaybeSiteStatus] = sites.map(curl)
+  def apply(sites: Seq[RemoteSite], timeoutDuration: FiniteDuration): Seq[MaybeSiteStatus] =
+    sites.map(s => curl(s, timeoutDuration))
 
 
-  def curl(site: RemoteSite): MaybeSiteStatus = {
+  def curl(site: RemoteSite, timeoutDuration: FiniteDuration): MaybeSiteStatus = {
     val shaEntry = certCollection match {
       case HubCertCollection(_, caEntry, _) => caEntry
       case PeerCertCollection(my, _, _) => my
@@ -565,7 +569,7 @@ object ShaVerificationService extends Loggable with DefaultJsonSupport {
             HttpCharsets.`UTF-8`),
           s"sha256=$sha256"))
 
-    for {response <- sendHttpRequest(request)
+    for {response <- sendHttpRequest(request, timeoutDuration)
          rawResponse = new String(response.entity.data.toByteArray)
          status = parseOpt(rawResponse).fold(handleError(rawResponse))(_.extractOpt[ShaResponse] match {
            case Some(ShaResponse(ShaResponse.badFormat, false)) =>
