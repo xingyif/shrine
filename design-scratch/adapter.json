@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "title": "Adapter",
+  "description": "Represents an adapter running on top of some i2b2 instance",
+  "properties": {
+    "name": { "type": "string" },
+    "ID": { "type": "uuid" }
+  },
+  "required": [
+    "name",
+    "ID"
+  ]
+}
