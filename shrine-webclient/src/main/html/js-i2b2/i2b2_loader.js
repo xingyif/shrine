@@ -8,19 +8,10 @@
  * updated 9-15-08: RC4 launch [Nick Benik] 
  */
 
-
 // build the global i2b2.hive namespace
 var i2b2 = {sdx:{TypeControllers:{},Master:{_sysData:{}}},events:{},hive:{cfg:{},helpers:{},base_classes:{}},h:{}};
-if (undefined==i2b2) { var i2b2 = {}; }
-if (undefined==i2b2.sdx) { i2b2.sdx = {}; }	
-if (undefined==i2b2.events) { i2b2.events = {}; }	
-if (undefined==i2b2.hive) { i2b2.hive = {}; }	
-if (undefined==i2b2.hive.cfg) { i2b2.hive.cfg = {}; }	
-if (undefined==i2b2.h) { i2b2.h = {}; }
-if (undefined==i2b2.hive.base_classes) { i2b2.hive.base_classes = {}; }
 
-
-i2b2.ClientVersion = "1.6"; 
+i2b2.ClientVersion = "1.6"; //@todo: make configurable.
 
 //     ||
 //     ||		

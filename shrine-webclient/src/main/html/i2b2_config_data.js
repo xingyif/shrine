@@ -16,7 +16,7 @@
   lstDomains: [
                 { domain: "i2b2demo",
                   name: "SHRINE",
-                  urlCellPM: "http://127.0.0.1/i2b2/services/PMService/",
+                  urlCellPM: "http://localhost:6443/i2b2/",
                   allowAnalysis: true,
                   debug: true,
                   isSHRINE: true

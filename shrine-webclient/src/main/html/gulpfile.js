@@ -1,6 +1,6 @@
-/ -- globals -- //
+// -- globals -- //
 const gulp = require('gulp');
-const buildDir = './html';
+const buildDir = './';
 
 gulp.task('serve', function () {
     var server = require('gulp-server-livereload');
