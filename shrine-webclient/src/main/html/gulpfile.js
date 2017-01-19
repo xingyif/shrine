@@ -1,9 +1,11 @@
-var gulp = require('gulp');
+/ -- globals -- //
+const gulp = require('gulp');
+const buildDir = './html';
 
-gulp.task('default', function () {
+gulp.task('serve', function () {
     var server = require('gulp-server-livereload');
-    console.log('starting server at: ./');
-    return gulp.src('./')
+    console.log('starting server at: ' + buildDir);
+    return gulp.src(buildDir)
         .pipe(server({
             livereload: true,
             open: true,
