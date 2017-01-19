@@ -1,5 +1,5 @@
 {
-  urlProxy: "/shrine-proxy/request",	
+  urlProxy: "http://localhost:6443/shrine-proxy/request/",	
   urlFramework: "js-i2b2/",
   loginTimeout: 15, // in seconds
   //JIRA|SHRINE-519:Charles McGow
@@ -16,7 +16,7 @@
   lstDomains: [
                 { domain: "i2b2demo",
                   name: "SHRINE",
-                  urlCellPM: "http://localhost:6443/i2b2/",
+                  urlCellPM: "http://services.i2b2.org/i2b2/services/PMService/",
                   allowAnalysis: true,
                   debug: true,
                   isSHRINE: true
