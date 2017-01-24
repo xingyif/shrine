@@ -1,5 +1,16 @@
 {
-  "name": "some-name",
-  "description": "This is a description",
-  "ID": "some-uuid"
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "title": "Topic.",
+  "description": "Represents the topic that shrine queries run under",
+  "properties": {
+    "name": { "type": "string" },
+    "description": { "type": "string" },
+    "ID": { "type": "uuid" }
+  },
+  "required": [
+    "name",
+    "description",
+    "ID"
+  ]
 }
