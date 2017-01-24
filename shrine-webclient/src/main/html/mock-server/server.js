@@ -30,58 +30,52 @@ console.log('I2B2SERVER Mock Server started on port: ' + port);
 // -- routes --//
 
 router.post('/', function (req, res) {
-  var requestType = parseRequestType(req);
+  var requestType = parseRequest(req);
   var fileName = getFilename(requestType);
-
-  console.log('\n\n');
-  console.log(req.body);
-   
-
-  var xml = fs.readFileSync('./getUserAuth.xml');
+  var xml = fs.readFileSync('./' + fileName);
+  
   res.header('Content-Type', 'text/xml').send(xml);
 });
 
 
 
-function getFilename (requestType) {
-  switch (requestType) {
-
-    case 'i2b2:request':
-      return 'getUserAuth.xml';
-      break;
-
-    case 'CRC_QRY_getResultType':
-      return 'getQRY_getResultType.xml'
-      break;
-    
-    case 'CRC_QRY_getQueryMasterList_fromUserId':
-      return 'getQueryMasterList_fromUserId.xml'
-      break;
-  
-    default:
-      return null;
-      break;
-  }
-}
 
 
 /*
- Any request with an XML payload will be parsed and a JavaScript object produced on req.body 
+ Any request with an XML payload will be parsed and a JavaScript requestect produced on req.body 
  corresponding to the request payload. 
  This is messy refactor.
 */
-function parseRequestType(req) {
+function parseRequest(request) {
+  request = request.body;
+  var requestTypes = ['i2b2:request', 'ns2:request', 'ns3:request', 'ns6:request'];
+  var requestType = requestTypes.find(t => request[t] !== undefined);
+  request =  (request[requestType] && request[requestType].message_body) ?
+    request[requestType].message_body : null;
 
-  if(req.body['i2b2:request']){
-    return 'i2b2:request';
+    return parseBodyRequest(request);
+}
+
+function parseBodyRequest(request) {
+  var bodyTypes = ['pm:get_user_configuration', 'ns4:get_categories', 'ns4:get_schemes', 'ns7:sheriff_header', 'ns4:psmheader'];
+  var bodyType = bodyTypes.find(t => request[t] !== undefined);
+
+  if(bodyType == 'ns4:psmheader') {
+    bodyType = request['ns4:psmheader'].request_type;
   }
 
-  if (req.body['ns6:request']) {
-    return req.body['ns6:request'].message_body['ns4:psmheader'].request_type;
-  }
+  return bodyType;
+}
 
-  if (req.body['ns6:request']) {
-    return req.body['ns6:request'].message_body['ns4:psmheader'].request_type;
-  }
+function getFilename(value) {
+  let fileMap = {
+    'pm:get_user_configuration': 'getUserAuth.xml',
+    'ns4:get_categories': 'GetCategories.xml',
+    'ns4:get_schemes': 'GetSchemes.xml',
+    'ns7:sheriff_header': 'getUserAuth.xml',
+    'CRC_QRY_getResultType': 'getQRY_getResultType.xml',
+    'CRC_QRY_getQueryMasterList_fromUserId': 'getQueryMasterList_fromUserId.xml'
+  };
 
+  return fileMap[value];
 }
