@@ -44,12 +44,7 @@
         }
 
         function formatDate(maybeEpoch) {
-            if (!(maybeEpoch && isFinite(maybeEpoch))) {
-                return unknown;
-            } else {
-                var d = new Date(maybeEpoch);
-                return $app.model.formatDate(d);
-            }
+            return $app.model.formatDate(new Date(maybeEpoch));
         }
 
 
