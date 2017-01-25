@@ -1,5 +1,6 @@
 {
-  urlProxy: "http://localhost:6443/shrine-proxy/request/",	
+  //urlProxy: "http://localhost:6443/shrine-proxy/request/",
+  urlProxy: "/shrine-proxy/request",	
   urlFramework: "js-i2b2/",
   loginTimeout: 15, // in seconds
   //JIRA|SHRINE-519:Charles McGow
