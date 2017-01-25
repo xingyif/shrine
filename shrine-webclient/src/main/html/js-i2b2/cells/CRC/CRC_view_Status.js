@@ -35,9 +35,11 @@ i2b2.CRC.view.status.showDisplay = function() {
 	$('infoQueryStatusText').parentNode.parentNode.select('DIV.tabBox.tabQueryStatus')[0].addClassName('active');
 	$('infoQueryStatusText').show();
 	//BG
-	$('infoQueryStatusChart').hide(); 
+	
+	; 
 	$('infoQueryStatusReport').hide();
 	$('infoDownloadStatusData').hide();
+	$('shrinePlugin').hide();
 	//BG
 }
 
@@ -46,6 +48,14 @@ i2b2.CRC.view.status.showDisplay = function() {
 i2b2.CRC.view.status.selectTab = function(tabCode) {
 	// toggle between the Navigate and Find Terms tabs
 	switch (tabCode) {
+		case 'shrine':
+		    this.currentTab = 'status';
+			this.cellRoot.view['status'].hideDisplay();
+			this.cellRoot.view['graphs'].hideDisplay();
+			this.cellRoot.view['queryReport'].hideDisplay();  
+			this.cellRoot.view['downloadData'].hideDisplay();
+			i2b2.SHRINE.plugin.showDisplay();
+		break;
 		case "graphs":
 			this.currentTab = 'graphs';
 			this.cellRoot.view['graphs'].showDisplay();
@@ -158,6 +168,7 @@ i2b2.CRC.view.status.ResizeHeight = function()
 						$('infoQueryStatusText').style.height = h - 97;
 						$('infoQueryStatusChart').style.height = h - 97;
 						$('infoQueryStatusReport').style.height = h - 97;
+						$('shrinePlugin').style.height = h - 97;
 						ve.top = 45;
 						$('crcQueryToolBox').hide();
 					} else {
@@ -165,6 +176,7 @@ i2b2.CRC.view.status.ResizeHeight = function()
 						$('infoQueryStatusChart').style.height = '100px';//BG
 						$('infoQueryStatusReport').style.height = '100px';//BG
 						$('infoDownloadStatusData').style.height = '100px';//BG
+						$('shrinePlugin').style.height = '100px';
 						ve.top = h-198;
 						$('crcQueryToolBox').show();
 						
@@ -177,6 +189,7 @@ i2b2.CRC.view.status.ResizeHeight = function()
 						$('infoQueryStatusChart').style.height = h - 97;
 						$('infoQueryStatusReport').style.height = h - 97;
 						$('infoDownloadStatusData').style.height = h - 97;
+						$('shrinePlugin').style.height = h - 97;
 						ve.top = 45;
 						$('crcQueryToolBox').hide();
 					} else {
@@ -184,6 +197,7 @@ i2b2.CRC.view.status.ResizeHeight = function()
 						$('infoQueryStatusChart').style.height = '144px';//BG
 						$('infoQueryStatusReport').style.height = '144px';//BG
 						$('infoDownloadStatusData').style.height = '144px';//BG
+						$('shrinePlugin').style.height = '144px';
 						ve.top = h-196;
 						$('crcQueryToolBox').show();
 					}

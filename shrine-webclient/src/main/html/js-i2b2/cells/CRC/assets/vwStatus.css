@@ -50,7 +50,7 @@ DIV#crcStatusBox DIV.StatusBoxReport {
         overflow: auto;
 }
 
-DIV#crcStatusBox DIV.StatusBoxDownload {
+DIV#crcStatusBox DIV.StatusBoxDownload,  DIV#crcStatusBox DIV.shrinePluginContent{
         background: #FFFFFF none repeat scroll 0%;
         border: 1px solid #667788;
         height: 144px;

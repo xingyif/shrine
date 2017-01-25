@@ -2,8 +2,9 @@
 // every file in this list will be loaded after the cell's Init function is called
 {
   files: [
-    "SHRINE_ctrl.js",
-    "i2b2_msgs.js"
+    "shrine.controller.js",
+    "i2b2_msgs.js",
+    "shrine.js"
   ],
   css: [],
   config: {
@@ -12,6 +13,7 @@
     description: "The SHRINE cell...",
     category: ["core","cell","shrine"],
     newTopicURL: "https://shrine-hostname.here:6443/steward/client/index.html",
-    readApprovedURL:"https://shrine-hostname.here:6443/shrine/rest/i2b2/request" 
+    readApprovedURL:"https://shrine-hostname.here:6443/shrine/rest/i2b2/request",
+    wrapperHtmlFile: "./js-shrine/wrapper.html" 
   }
 }

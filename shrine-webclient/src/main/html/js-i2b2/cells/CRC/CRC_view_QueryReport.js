@@ -38,6 +38,7 @@ i2b2.CRC.view.queryReport.showDisplay = function() {
 	
 	$('infoQueryStatusText').hide();
 	$('infoQueryStatusChart').hide();
+	$('shrinePlugin').hide();
 	$('infoQueryStatusReport').show();
 	// if($('infoQueryStatusReport').innerHTML=="")
 	$('infoQueryStatusReport').innerHTML=="";

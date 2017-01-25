@@ -424,8 +424,6 @@ $.noConflict();
                 <a href="Javascript:void(0);" onClick="i2b2.PM.doLogout();">Logout</a>		</div>	</td>
     </tr>
 </table>
-
-
 <div id="screenQueryData" style="display:none">
 
 
@@ -904,14 +902,25 @@ $.noConflict();
 		<div class="tabBox tabDownloadData" onClick="i2b2.CRC.view.status.selectTab('downloadData')"> 
 			<div>Download Results</div>
 		</div>
+        <div class="tabBox shrineTab" onClick="i2b2.CRC.view.status.selectTab('shrine')"> 
+			<div>SHRINE</div>
+		</div>
 		<!-- BG -->
     </div>
     <div class="StatusBox">
-        <div id="infoQueryStatusText" class="StatusBoxText" oncontextmenu="return false"></div>
+        <div id="infoQueryStatusText" class="StatusBoxText" oncontextmenu="return false">
+            <!--iframe src="https://codepen.io/JoeHana/pen/sFiBm" style="
+                width: 100%;
+                height: 100%;
+                overflow: hidden;">
+                </iframe-->
+        </div>
 		<!-- BG -->
 		<div id="infoQueryStatusChart" class="StatusBoxChart" oncontextmenu="return false" style="display:none"></div>
 		<div id="infoQueryStatusReport" class="StatusBoxReport" oncontextmenu="return false" style="display:none"></div>
-		<div id="infoDownloadStatusData" class="StatusBoxDownload" oncontextmenu="return false" style="display:none"></div>
+        <div id="infoDownloadStatusData" class="StatusBoxDownload" oncontextmenu="return false" style="display:none"></div>
+        <div id="shrinePlugin" class="shrinePluginContent" oncontextmenu="return false" style="display:none;">
+        </div>
 		<!-- BG -->
     </div>
 </div>
