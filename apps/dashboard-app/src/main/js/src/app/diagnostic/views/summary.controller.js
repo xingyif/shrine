@@ -44,7 +44,12 @@
         }
 
         function formatDate(maybeEpoch) {
-            return $app.model.formatDate(new Date(maybeEpoch));
+            if (maybeEpoch && typeof maybeEpoch == "number") {
+                var d = new Date(maybeEpoch);
+                return $app.model.formatDate(d);
+            } else {
+                return unknown;
+            }
         }
 
 
