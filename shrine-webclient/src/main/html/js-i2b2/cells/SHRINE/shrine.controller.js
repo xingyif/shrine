@@ -17,7 +17,7 @@
 		if (i2b2.h.isSHRINE()) {
 			loadTopics(type, args);
 			renderTopics();
-			initPlugin();
+			bootstrap();
 		}
 	}
 
@@ -116,7 +116,7 @@
 		};
 	}
 
-	function initPlugin() {
+	function bootstrap() {
 		var config = i2b2.SHRINE.cfg.config;
 		jQuery('#' + i2b2.SHRINE.plugin.viewName).load(config.wrapperHtmlFile, function (response, status, xhr) {
 			var test = '';

@@ -43,7 +43,7 @@ Splitter = function( name, config )
 	// fires when splitter is dragged
 	this.resizeOtherComponents = function()
 	{
-	        if (i2b2.ONT != undefined)
+	    if (i2b2.ONT != undefined)
 		i2b2.ONT.view.main.splitterDragged();		// resize ONT
 		if (i2b2.WORK != undefined)
 		i2b2.WORK.view.main.splitterDragged();		// resize WORK
