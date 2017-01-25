@@ -63,9 +63,9 @@
             if (vm.summary.adapterMappingsFileName === undefined) {
                 vm.summary.adapterMappingsFileName = unknown;
             } else if (vm.summary.adapterMappingsDate === undefined) {
-                vm.summary.adapterMappingsDate = unknown;
+                vm.adapterMappingsDate = unknown;
             } else {
-                vm.summary.adapterMappingsDate = formatDate(vm.summary.adapterMappingsDate);
+                vm.adapterMappingsDate = formatDate(vm.summary.adapterMappingsDate);
             }
             return this;
         }
