@@ -267,7 +267,7 @@ trait DashboardService extends HttpService with Loggable {
 
     // Intellij loudly complains if you use parameters instead of chained parameter calls.
     // ¯\_(ツ)_/¯
-    parameter("offset".as[Int].?(0)) {(offsetPreMod:Int) => {
+    parameter("offset".as[Int].?(0)) {(offsetPreMod:Int) =>
       parameter("n".as[Int].?(20)) {(nPreMax:Int) =>
         parameter("epoch".as[Long].?) {(epoch:Option[Long]) =>
           val n = Math.max(0, nPreMax)
@@ -288,7 +288,7 @@ trait DashboardService extends HttpService with Loggable {
           val response: ProblemResponse = ProblemResponse(tupled._1, tupled._2, tupled._3, tupled._4)
           implicit val formats = response.json4sMarshaller
           complete(response)
-    }}}}
+    }}}
   }
 }
 
