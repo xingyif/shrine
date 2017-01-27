@@ -6,7 +6,9 @@
   "devDependencies": {
     "bower": "v1.7.9",
     "browserify": "^13.1.0",
+    "cors": "^2.8.1",
     "del": "v2.2.1",
+    "express": "^4.14.0",
     "gulp": "v3.9.1",
     "gulp-concat": "v2.6.0",
     "gulp-connect": "v4.1.0",
