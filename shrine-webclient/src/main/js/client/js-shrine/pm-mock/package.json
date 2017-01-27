@@ -1,0 +1,22 @@
+{
+  "name": "i2b2-mock",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "start": "",
+  "scripts": {
+    "test": "node test",
+    "start": "node i2b2 -api"
+  },
+  "author": "‘Ben <benjamin_carmen@hms.harvard.edu>",
+  "license": "MIT",
+  "devDependencies": {
+    "body-parser": "^1.15.2",
+    "cors": "^2.8.1",
+    "express": "^4.14.0"
+  },
+  "dependencies": {
+    "body-parser": "^1.16.0",
+    "body-parser-xml": "^1.1.0"
+  }
+}
