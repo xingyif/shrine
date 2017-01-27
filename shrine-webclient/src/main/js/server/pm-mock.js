@@ -1,5 +1,8 @@
 
-//http://localhost:8000/shrine-proxy/request
+/*
+This is a first stab at a i2b2 pm-mock 
+  @todo:  refactor/cleanup this module.
+*/
 var express = require('express');
 var cors = require('cors');
 var bodyParser = require('body-parser');
@@ -11,35 +14,33 @@ var router = express.Router();
 var fs = require('fs');
 var isAuthorized = false;
 
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());
-app.use(bodyParser.xml({
-  limit: '1GB',   // Reject payload bigger than 1 MB 
-  xmlParseOptions: {
-    normalize: true,     // Trim whitespace inside text nodes 
-    normalizeTags: true, // Transform tags to lowercase 
-    explicitArray: false // Only put nodes in array if >1 
-  }
-}));
 
-app.use(cors());
-app.use('/shrine-proxy/request', router);
-app.listen(port);
-console.log('I2B2SERVER Mock Server started on port: ' + port);
+function start(dir) {
+  app.use(bodyParser.urlencoded({ extended: true }));
+  app.use(bodyParser.json());
+  app.use(bodyParser.xml({
+    limit: '1GB',   // Reject payload bigger than 1 MB 
+    xmlParseOptions: {
+      normalize: true,     // Trim whitespace inside text nodes 
+      normalizeTags: true, // Transform tags to lowercase 
+      explicitArray: false // Only put nodes in array if >1 
+    }
+  }));
 
-// -- routes --//
+  app.use(cors());
+  app.use('/shrine-proxy/request', router);
+  app.listen(port);
+  console.log('I2B2SERVER Mock Server started on port: ' + port);
 
-router.post('/', function (req, res) {
-  var requestType = parseRequest(req);
-  var fileName = getFilename(requestType);
-  var xml = fs.readFileSync('./i2b2-xml/' + fileName);
-  
-  res.header('Content-Type', 'text/xml').send(xml);
-});
+  // -- routes --//
 
-
-
-
+  router.post('/', function (req, res) {
+    var requestType = parseRequest(req);
+    var fileName = getFilename(requestType);
+    var xml = fs.readFileSync('./' + dir+ '/i2b2-xml/' + fileName);
+    res.header('Content-Type', 'text/xml').send(xml);
+  });
+}
 
 /*
  Any request with an XML payload will be parsed and a JavaScript requestect produced on req.body 
@@ -50,17 +51,17 @@ function parseRequest(request) {
   request = request.body;
   var requestTypes = ['i2b2:request', 'ns2:request', 'ns3:request', 'ns6:request'];
   var requestType = requestTypes.find(t => request[t] !== undefined);
-  request =  (request[requestType] && request[requestType].message_body) ?
+  request = (request[requestType] && request[requestType].message_body) ?
     request[requestType].message_body : null;
 
-    return parseBodyRequest(request);
+  return parseBodyRequest(request);
 }
 
 function parseBodyRequest(request) {
   var bodyTypes = ['pm:get_user_configuration', 'ns4:get_categories', 'ns4:get_schemes', 'ns7:sheriff_header', 'ns4:psmheader'];
   var bodyType = bodyTypes.find(t => request[t] !== undefined);
 
-  if(bodyType == 'ns4:psmheader') {
+  if (bodyType == 'ns4:psmheader') {
     bodyType = request['ns4:psmheader'].request_type;
   }
 
@@ -79,3 +80,5 @@ function getFilename(value) {
 
   return fileMap[value];
 }
+
+module.exports = {start: start};
