@@ -1,5 +1,5 @@
 System.config({
-  baseURL: document.URL.replace('index.html',''),
+  baseURL: document.URL.replace("index.html",""),
   defaultJSExtensions: true,
   transpiler: "babel",
   babelOptions: {
