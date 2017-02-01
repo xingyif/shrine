@@ -82,6 +82,6 @@ class Structures extends FlatSpec with Matchers {
     queryResult.flags shouldBe flags
     queryResult.breakdowns.length shouldBe 1
     queryResult.breakdowns.head shouldBe breakdown
-    SuccessResult(queryResult.json.copy(_.count = 40)).count shouldBe 40
+    SuccessResult(queryResult.json.copy(_.count = 40)).get.count shouldBe 40
   }
 }
