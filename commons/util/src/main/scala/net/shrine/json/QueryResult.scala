@@ -51,6 +51,8 @@ final class SuccessResult(val json: Json) extends QueryResult {
   }
 
   override def hashCode(): Int = default.hash(fields)
+
+  override def toString: String = s"SuccessResult$fields"
 }
 
 object SuccessResult {
@@ -68,6 +70,8 @@ object SuccessResult {
 final class PendingResult(val json: Json) extends QueryResult {
   override def equals(that: scala.Any): Boolean =
     that.isInstanceOf[PendingResult]
+
+  override def toString: String = "PendingResult()"
 }
 
 object PendingResult {
@@ -75,6 +79,7 @@ object PendingResult {
     if (JsonCompare.==(json.status, "status"))
       Some(new PendingResult(json))
     else None
+
 }
 
             // <--=== Failure Result ===--> //
@@ -88,6 +93,8 @@ final class FailureResult(val json: Json) extends QueryResult {
   }
 
   override def hashCode(): Int = problemDigest.hashCode
+
+  override def toString: String = s"FailureResult($problemDigest)"
 }
 
 object FailureResult {
