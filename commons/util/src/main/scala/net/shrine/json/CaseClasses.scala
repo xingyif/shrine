@@ -13,13 +13,15 @@ case class User(userName: String, domain: String, id: UUID)
 // TODO: separate case classes? Could just have a Breakdown
 // TODO: class with an enum field
 object Breakdown {
-  def fromStringResults(string: String, results: List[BreakdownProperty]): Option[Breakdown] = string.toLowerCase match {
-    case "gender" => Some(GenderBreakdown(results))
-    case "age" => Some(AgeBreakdown(results))
-    case "race" => Some(RaceBreakdown(results))
-    case "vital status" => Some(VitalStatusBreakdown(results))
-    case _ => None
-  }
+  def fromStringResults(string: String, results: List[BreakdownProperty]):
+  Option[Breakdown] =
+    string.toLowerCase match {
+      case "gender" => Some(GenderBreakdown(results))
+      case "age" => Some(AgeBreakdown(results))
+      case "race" => Some(RaceBreakdown(results))
+      case "vital status" => Some(VitalStatusBreakdown(results))
+      case _ => None
+    }
 }
 
 sealed trait Breakdown {

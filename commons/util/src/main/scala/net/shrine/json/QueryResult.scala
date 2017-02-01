@@ -2,7 +2,6 @@ package net.shrine.json
 
 import java.util.UUID
 
-import net.shrine.json.Extractors._
 import net.shrine.problem.ProblemDigest
 import rapture.json._
 
@@ -18,7 +17,6 @@ import scala.xml.Node
   * which to create. Defines structural equality and unapply methods for each
   * while still being backed by the dynamic json ast
   */
-
 object QueryResult {
   def apply(json: Json): Option[QueryResult] =
     SuccessResult(json)
@@ -31,7 +29,7 @@ sealed trait QueryResult {
   val status: String = json.status.as[String]
 }
 
-                     // <--=== Success Result ===--> //
+            // <--=== Success Result ===--> //
 
 final class SuccessResult(val json: Json) extends QueryResult {
   val resultId: UUID = json.resultId.as[UUID]
@@ -40,11 +38,12 @@ final class SuccessResult(val json: Json) extends QueryResult {
   val noiseTerms: NoiseTerms = json.noiseTerms.as[NoiseTerms]
   val i2b2Mapping: Node = json.i2b2Mapping.as[Node]
   // TODO: Once we figure out what flags are, replace them with a concrete type
-  val flags: List[String]         = json.flags.as[List[String]]
+  val flags: List[String] = json.flags.as[List[String]]
   val breakdowns: List[Breakdown] = json.breakdowns.as[List[Breakdown]]
 
   // This allows us to define structural equality on the fields themselves
-  private[SuccessResult] val fields = (resultId, adapterId, count, noiseTerms, i2b2Mapping, flags, breakdowns)
+  private[SuccessResult] val fields =
+    (resultId, adapterId, count, noiseTerms, i2b2Mapping, flags, breakdowns)
 
   override def equals(that: scala.Any): Boolean = that match {
     case sr: SuccessResult => sr.fields == fields
@@ -60,14 +59,15 @@ object SuccessResult {
     if (JsonCompare.==(json.status, "success"))
       // This is shorter than doing a .is for every field.
       Try(new SuccessResult(json)).toOption
-  else
+    else
       None
 }
 
-                     // <--=== Pending Result ===--> //
+            // <--=== Pending Result ===--> //
 
 final class PendingResult(val json: Json) extends QueryResult {
-  override def equals(that: scala.Any): Boolean = that.isInstanceOf[PendingResult]
+  override def equals(that: scala.Any): Boolean =
+    that.isInstanceOf[PendingResult]
 }
 
 object PendingResult {
@@ -77,7 +77,7 @@ object PendingResult {
     else None
 }
 
-                     // <--=== Failure Result ===--> //
+            // <--=== Failure Result ===--> //
 
 final class FailureResult(val json: Json) extends QueryResult {
   val problemDigest: ProblemDigest = json.problemDigest.as[ProblemDigest]
@@ -96,7 +96,8 @@ object FailureResult {
       Some(new FailureResult(json))
     else None
 
-  def unapply(arg: FailureResult): Option[ProblemDigest] = Some(arg.problemDigest)
+  def unapply(arg: FailureResult): Option[ProblemDigest] =
+    Some(arg.problemDigest)
 }
 
 // Just a private helper since I was using this three times
