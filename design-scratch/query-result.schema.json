@@ -42,7 +42,7 @@
         "description": "The category and list of results for this breakdown",
         "properties": {
           "category": {
-            "type": { "enum": [ "Gender", "Age", "Race", "Vital Status"]},
+            "type": { "enum": [ "Gender", "Age", "Race", "Vital Status"]}
           },
           "results": {
             "type": "array",
