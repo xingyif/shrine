@@ -1,0 +1,98 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "title": "Query Result",
+  "description": "Represents a result that can come back from a site for a query",
+  "properties": {
+    "status": {
+      "type": { "enum" : [ "success", "pending", "failure"]},
+      "description": "The current status of the result (especially useful for async results)"
+    },
+    "resultID": {
+      "type": "uuid",
+      "description": "A unique identifier for this result"
+    },
+    "adapterID": {
+      "type": "uuid",
+      "description": "A unique identifier for the node that this result came from. Only present for success statuses."
+    },
+    "count": {
+      "type": "integer",
+      "description": "The primary count of patients coming back for this query. Only present for success statuses."
+    },
+    "noiseTerms": {
+      "type": "object",
+      "description": "The noise that we inject into the returned count for obfuscation purposes. Only present for success statuses.",
+      "properties": {
+        "clamp": { "type": "integer" },
+        "sigma": { "type": "integer" },
+        "rounding": { "type": "integer" }
+      },
+      "required": [
+        "clamp",
+        "sigma",
+        "rounding"
+      ]
+    },
+    "breakdowns": {
+      "type": "array",
+      "description": "The optional breakdowns that the user requested. Only present for success statuses.",
+      "items": {
+        "type": "object",
+        "description": "The category and list of results for this breakdown",
+        "properties": {
+          "category": {
+            "type": { "enum": [ "Gender", "Age", "Race", "Vital Status"]}
+          },
+          "results": {
+            "type": "array",
+            "description": "The name/count pairs associated with a breakdown",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "The name of the result for a breakdown, e.g., Male for Gender"
+                },
+                "count": {
+                  "type": "integer",
+                  "description": "The number of patients associated with this breakdown",
+                  "minimum": 0
+                }
+              },
+              "required": [
+                "name",
+                "count"
+              ]
+            }
+          }
+        },
+        "required": [
+          "category",
+          "results"
+        ]
+      }
+    },
+    "i2b2Mapping": {
+      "type": "xml",
+      "description": "Use this to run this query at the i2b2 site associated with the result's nodes, only present for success statuses"
+    },
+    "problemDigest": {
+      "type": "object",
+      "description": "The improved error that was associated with this query failing at the node site"
+    },
+    "flagMessages?": {
+      "type": "object",
+      "description": "Not pinned down yet"
+    }
+  },
+  "required": [
+    "status",
+    "resultID",
+    "adapterID",
+    "count",
+    "noiseTerms",
+    "breakdowns",
+    "i2b2Mapping"
+  ]
+}

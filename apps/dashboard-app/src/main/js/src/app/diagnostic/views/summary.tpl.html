@@ -24,7 +24,7 @@
             </tr>
             <tr>
                 <td colspan="2">
-                    This site is currently using <label>{{vm.summary.adapterMappingsFileName}}</label> for mappings, last edited on <label>{{vm.summary.adapterMappingsDate}}</label>
+                    This site is currently using <label>{{vm.summary.adapterMappingsFileName}}</label> for mappings, last edited on <label>{{vm.adapterMappingsDate}}</label>
                 </td>
             </tr>
             </tbody>
@@ -119,15 +119,16 @@
         </table>
     </div>
     <div ng-hide="vm.summary">
-        <div ng-hide="vm.loading" style="display:flex;justify-content: center">
-            <h3 style="color: red;">Timeout or Error while calling Summary, please check the Problems tab if available</h3>
+        <div ng-hide="vm.loading" style="display:flex;justify-content: center;flex-direction:column">
             <div ng-show="vm.summaryError">
-                <h4>Summary Error</h4>
-                <span>{{vm.summaryError}}</span>
+                <h4 class="error">Summary Error: {{vm.summaryError.statusText}}</h4>
+                <span>Error message:</span>
+                <pre>{{vm.summaryError.data}}</pre>
             </div>
             <div ng-show="vm.i2b2Error">
-                <h4>i2b2 Error</h4>
-                <span>{{vm.i2b2Error}}</span>
+                <h4 class="error">i2b2 Error: {{vm.i2b2Error.statusText}}</h4>
+                <span>Error Message:</span>
+                <span>{{vm.i2b2Error.data}}</span>
             </div>
         </div>
     </div>

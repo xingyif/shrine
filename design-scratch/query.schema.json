@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "title": "Query schema.",
+  "description": "A query represents a single row in the previous queries table on the web-client. It contains information relating to the query (its id, what topic it's under, what user ran it), as well as an array of query result objects",
+  "properties": {
+    "queryID": {
+      "type": "uuid",
+      "description": "A UUID used to uniquely identify this query"
+    },
+    "topicID": {
+      "type": "uuid",
+      "description": "A UUID used to uniquely identify the topic that this query runs under"
+    },
+    "userID": {
+      "type": "uuid",
+      "description": "A UUID used to uniquely identify the user that ran this query"
+    },
+    "startTime": {
+      "type": "integer",
+      "description": "The epoch integer that represents when this query was ran"
+    },
+    "i2b2QueryText": {
+      "type": "xml",
+      "description": "The origin query, which we keep for communication with i2b2. This is an xml string"
+    },
+    "extraXmlBaggage": {
+      "type": "xml",
+      "description": "Extra xml that the query needs access to"
+    },
+    "queryResults": {
+      "type": "array",
+      "description": "The results coming back from the sites this query was sent to",
+      "items": {
+        "type": "queryResult",
+        "description": "See 'query-result.schema.json'"
+      }
+    }
+  },
+  "required": [
+    "queryID",
+    "topicID",
+    "userID",
+    "startTime",
+    "i2b2QueryText",
+    "extraXmlBaggage",
+    "queryResults"
+  ]
+}

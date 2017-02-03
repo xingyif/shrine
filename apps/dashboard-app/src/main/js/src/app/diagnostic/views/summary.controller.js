@@ -14,6 +14,7 @@
     function SummaryController ($app, $sce, $log, $timeout) {
         var vm          = this;
         var unknown     = 'UNKNOWN';
+        vm.summary      = false;
         vm.summaryError = false;
         vm.i2b2Error    = false;
         vm.loading      = true;
@@ -25,34 +26,29 @@
          */
         function init() {
             vm.loading = true;
-            var fifteenSeconds = 15*1000;
             $app.model.getSummary()
                 .then(setSummary, handleSummaryFailure);
 
             $app.model.getI2B2()
                 .then(setI2B2, handleI2B2Failure);
-
-            $timeout(setTimeoutError, fifteenSeconds);
-        }
-
-        function setTimeoutError() {
-            vm.loading = false;
         }
 
         function handleSummaryFailure(failure) {
             vm.summaryError = failure;
+            vm.loading = false
         }
 
         function handleI2B2Failure(failure) {
             vm.i2b2Error = failure;
+            vm.loading = false
         }
 
         function formatDate(maybeEpoch) {
-            if (!(maybeEpoch && isFinite(maybeEpoch))) {
-                return unknown;
-            } else {
+            if (maybeEpoch && typeof maybeEpoch == "number") {
                 var d = new Date(maybeEpoch);
                 return $app.model.formatDate(d);
+            } else {
+                return unknown;
             }
         }
 
@@ -67,9 +63,9 @@
             if (vm.summary.adapterMappingsFileName === undefined) {
                 vm.summary.adapterMappingsFileName = unknown;
             } else if (vm.summary.adapterMappingsDate === undefined) {
-                vm.summary.adapterMappingsDate = unknown;
+                vm.adapterMappingsDate = unknown;
             } else {
-                vm.summary.adapterMappingsDate = formatDate(vm.summary.adapterMappingsDate);
+                vm.adapterMappingsDate = formatDate(vm.summary.adapterMappingsDate);
             }
             return this;
         }

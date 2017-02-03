@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "title": "User",
+  "description": "Represents a Shrine user",
+  "properties": {
+    "userName": { "type": "string" },
+    "ID": { "type": "uuid" },
+    "domain": {
+      "type": "string",
+      "description": "The domain this user is registered with"
+    }
+  },
+  "required": [
+    "userName",
+    "ID",
+    "domain"
+  ]
+}
