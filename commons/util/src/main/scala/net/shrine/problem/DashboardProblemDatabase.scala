@@ -3,7 +3,7 @@ package net.shrine.problem
 import java.util.concurrent.TimeoutException
 import javax.sql.DataSource
 
-import com.typesafe.config.Config
+import com.typesafe.config.{Config, ConfigException}
 import net.shrine.slick.{CouldNotRunDbIoActionException, NeedsWarmUp, TestableDataSourceCreator}
 import net.shrine.source.ConfigSource
 import slick.dbio.SuccessAction
@@ -13,6 +13,7 @@ import slick.jdbc.meta.MTable
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
+import scala.util.{Failure, Success, Try}
 import scala.util.control.NonFatal
 import scala.xml.XML
 
@@ -25,6 +26,11 @@ import scala.xml.XML
 object Problems extends NeedsWarmUp {
   val config:Config = ConfigSource.config.getConfig("shrine.dashboard.database")
   val slickProfile:JdbcProfile = ConfigSource.getObject("slickProfileClassName", config)
+  val timeout = Try(ConfigSource.config.getInt("shrine.problem.timeout").seconds) match {
+    case Success(timeout) => timeout
+    case Failure(exception: ConfigException.Missing) => 30
+    case Failure(exception) => throw exception
+  }
 
   import slickProfile.api._
 
@@ -174,7 +180,7 @@ object Problems extends NeedsWarmUp {
     /**
       * Synchronized copy of db.run
       */
-    def runBlocking[R](dbio: DBIOAction[R, NoStream, _], timeout: Duration = new FiniteDuration(15, SECONDS)): R = {
+    def runBlocking[R](dbio: DBIOAction[R, NoStream, _], timeout: Duration = timeout): R = {
       try {
         Await.result(this.run(dbio), timeout)
       } catch {
@@ -183,7 +189,7 @@ object Problems extends NeedsWarmUp {
       }
     }
 
-    def insertProblem(problem: ProblemDigest, timeout: Duration = new FiniteDuration(15, SECONDS)) = {
+    def insertProblem(problem: ProblemDigest, timeout: Duration = timeout) = {
       runBlocking(Queries += problem, timeout)
     }
 
