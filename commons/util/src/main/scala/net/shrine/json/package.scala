@@ -27,11 +27,4 @@ package object json {
     Json.extractor[Json].map(new Query(_))
   implicit val queryResult: Extractor[QueryResult, Json] =
     Json.extractor[Json].map(QueryResult(_).get)
-  implicit val breakdown: Extractor[Breakdown, Json] =
-    Json.extractor[Json]
-      .map(json =>
-          Breakdown
-            .fromStringResults(json.category.as[String],
-                               json.results.as[List[BreakdownProperty]])
-            .get)
 }
