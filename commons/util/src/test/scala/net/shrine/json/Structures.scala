@@ -20,7 +20,7 @@ class Structures extends FlatSpec with Matchers {
   val extraXml = <extra><extra2><extra3>lots of extra</extra3></extra2></extra>
   val noiseTerms = NoiseTerms(10, 11, 12)
   val resultCount = 1000
-  val breakdown = GenderBreakdown(List(BreakdownProperty("male", 70), BreakdownProperty("female", 30)))
+  val breakdown = Breakdown("gender", List(BreakdownProperty("male", 70), BreakdownProperty("female", 30)))
   val flags = List("hey", "what's", "that", "sound")
   val queryJson =
     json"""{
