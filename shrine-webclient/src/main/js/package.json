@@ -1,0 +1,31 @@
+{
+  "name": "shrine-webclient",
+  "version": "1.0.0",
+  "description": "SHRINE fork of the i2b2 Webclient",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://open.med.harvard.edu/stash/scm/shrine/shrine.git"
+  },
+  "keywords": [
+    "Harvard",
+    "Medical",
+    "School",
+    "HMS",
+    "SHRINE",
+    "I2B2"
+  ],
+  "author": "Ben Carmen",
+  "license": "MIT",
+  "devDependencies": {
+    "express": "^4.14.0",
+    "gulp": "^3.9.1",
+    "gulp-server-livereload": "^1.9.2"
+  },
+  "dependencies": {
+    "request": "^2.79.0"
+  }
+}

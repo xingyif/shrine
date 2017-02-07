@@ -1,0 +1,86 @@
+DIV#crcStatusBox {
+	position: absolute;
+}
+
+DIV#crcStatusBox DIV.tabTextBox {
+}
+	
+DIV#crcStatusBox DIV.StatusBox {
+	background: #BBCCEE none repeat scroll 0%;
+	border: 1px solid #667788;
+	clear: both;
+	display: block;
+	overflow: hidden;
+	padding: 5px;
+	position: relative;
+	top: -1px;
+	height: auto;
+	width: auto;
+	z-index: 0;
+}
+
+DIV#crcStatusBox DIV.StatusBoxText {
+	background: #FFFFFF none repeat scroll 0%;
+	border: 1px solid #667788;
+	height: 144px;
+	overflow: hidden;
+	padding: 1px 5px;
+	width: auto;
+	overflow: auto;
+}
+
+/* BG */
+DIV#crcStatusBox DIV.StatusBoxChart {
+        background: #FFFFFF none repeat scroll 0%;
+        border: 1px solid #667788;
+        height: 144px;
+	    width: auto;
+        overflow: hidden;
+        padding: 1px 5px;
+        overflow: auto;
+}
+
+DIV#crcStatusBox DIV.StatusBoxReport {
+        background: #FFFFFF none repeat scroll 0%;
+        border: 1px solid #667788;
+        height: 144px;
+	    width: auto;
+        overflow: hidden;
+        padding: 1px 5px;
+        overflow: auto;
+}
+
+DIV#crcStatusBox DIV.StatusBoxDownload,  DIV#crcStatusBox DIV.shrinePluginContent{
+        background: #FFFFFF none repeat scroll 0%;
+        border: 1px solid #667788;
+        height: 144px;
+	    width: auto;
+        overflow: hidden;
+        padding: 1px 5px;
+        overflow: auto;
+}
+
+table#resultsTable td, th {
+  width: 4rem;
+  height: 2rem;
+  border: 1px solid #ccc;
+  text-align: center;
+}
+
+table#resultsTable th {
+  background: lightblue;
+  border-color: white;
+}
+
+table#resultsTable body {
+  padding: 1rem;
+}
+
+/* Graph styling */
+.chartDiv {
+	width: auto;
+	/* padding-top:20px; */
+	padding-bottom: 20px;
+}
+/* BG */
+
