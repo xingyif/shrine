@@ -27,13 +27,13 @@ object QueryResult {
 sealed trait QueryResult {
   val json: Json
   val status: String = json.status.as[String]
+  val resultId: UUID = json.resultId.as[UUID]
+  val adapterId: UUID = json.adapterId.as[UUID]
 }
 
             // <--=== Success Result ===--> //
 
 final class SuccessResult(val json: Json) extends QueryResult {
-  val resultId: UUID = json.resultId.as[UUID]
-  val adapterId: UUID = json.adapterId.as[UUID]
   val count: Int = json.count.as[Int]
   val noiseTerms: NoiseTerms = json.noiseTerms.as[NoiseTerms]
   val i2b2Mapping: Node = json.i2b2Mapping.as[Node]
@@ -77,7 +77,7 @@ final class PendingResult(val json: Json) extends QueryResult {
 object PendingResult {
   def apply(json: Json): Option[PendingResult] =
     if (JsonCompare.==(json.status, "status"))
-      Some(new PendingResult(json))
+      Try(new PendingResult(json)).toOption
     else None
 
 }
@@ -99,8 +99,8 @@ final class FailureResult(val json: Json) extends QueryResult {
 
 object FailureResult {
   def apply(json: Json): Option[FailureResult] =
-    if (JsonCompare.==(json.status, "failure") && json.problemDigest.is[ProblemDigest])
-      Some(new FailureResult(json))
+    if (JsonCompare.==(json.status, "failure"))
+      Try(new FailureResult(json)).toOption
     else None
 
   def unapply(arg: FailureResult): Option[ProblemDigest] =

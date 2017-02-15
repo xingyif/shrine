@@ -25,6 +25,14 @@ package object json {
     Json.extractor[String].map(UUID.fromString)
   implicit val query: Extractor[Query, Json] =
     Json.extractor[Json].map(new Query(_))
+  implicit val successResult: Extractor[SuccessResult, Json] =
+    Json.extractor[Json].map(new SuccessResult(_))
+  implicit val failureResult: Extractor[FailureResult, Json] =
+    Json.extractor[Json].map(new FailureResult(_))
+  implicit val pendingResult: Extractor[PendingResult, Json] =
+    Json.extractor[Json].map(new PendingResult(_))
   implicit val queryResult: Extractor[QueryResult, Json] =
-    Json.extractor[Json].map(QueryResult(_).get)
+    successResult
+      .orElse(failureResult)
+      .orElse(pendingResult)
 }

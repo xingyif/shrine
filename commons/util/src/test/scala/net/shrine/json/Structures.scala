@@ -30,50 +30,54 @@ class Structures extends FlatSpec with Matchers {
               "startTime": $startTime,
               "i2b2QueryText": ${i2b2Xml.toString},
               "extraXml": ${extraXml.toString},
-              "queryResults": [
-                {
-                   "status": "success",
-                   "resultId": ${uid.toString},
-                   "adapterId": ${uid.toString},
-                   "count": $resultCount,
-                   "noiseTerms": {
-                      "sigma": ${noiseTerms.sigma},
-                      "clamp": ${noiseTerms.clamp},
-                      "rounding": ${noiseTerms.rounding}
-                   },
-                   "i2b2Mapping": ${i2b2Xml.toString},
-                   "flags": $flags,
-                   "breakdowns": [
-                     {
-                       "category": "gender",
-                       "results": [
-                         {
-                           "name": "male",
-                           "count": 70
-                         },
-                         {
-                           "name": "female",
-                           "count": 30
-                         }
-                       ]
-                     }
-                   ]
-                }
-              ]
+              "queryResults": [ ${uid.toString} ],
            }
+    """
+  val queryResultJson =
+    json"""{
+             "status": "success",
+             "resultId": ${uid.toString},
+             "adapterId": ${uid.toString},
+             "count": $resultCount,
+             "noiseTerms": {
+                "sigma": ${noiseTerms.sigma},
+                "clamp": ${noiseTerms.clamp},
+                "rounding": ${noiseTerms.rounding}
+             },
+             "i2b2Mapping": ${i2b2Xml.toString},
+             "flags": $flags,
+             "breakdowns": [
+               {
+                 "category": "gender",
+                 "results": [
+                   {
+                     "name": "male",
+                     "count": 70
+                   },
+                   {
+                     "name": "female",
+                     "count": 30
+                   }
+                 ]
+               }
+             ]
+          }
     """
 
   "query" should "be parsed as the query structure" in {
     queryJson.is[Query] shouldBe true
+    queryResultJson.is[QueryResult] shouldBe true
     val query = queryJson.as[Query]
+    val queryResult = queryResultJson.as[SuccessResult]
     query.json shouldBe queryJson
-    List(query.userId, query.topicId, query.queryId).foreach(_ shouldBe uid)
+    queryResult.json shouldBe queryResultJson
+    List(query.userId, query.topicId, query.queryId, queryResult.resultId, queryResult.adapterId)
+      .foreach(_ shouldBe uid)
     query.startTime shouldBe startTime
     query.i2b2QueryText shouldBe i2b2Xml
     query.extraXml shouldBe extraXml
     query.queryResults.length shouldBe 1
-    query.queryResults.head.isInstanceOf[SuccessResult] shouldBe true
-    val queryResult = query.queryResults.head.asInstanceOf[SuccessResult]
+    query.queryResults.head shouldBe uid
     queryResult.status shouldBe "success"
     List(queryResult.resultId, queryResult.adapterId).foreach(_ shouldBe uid)
     queryResult.count shouldBe resultCount

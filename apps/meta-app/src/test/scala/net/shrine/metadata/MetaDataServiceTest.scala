@@ -37,6 +37,16 @@ class MetaDataServiceTest extends FlatSpec with ScalatestRouteTest with MetaData
     }
   }
 
+  "MetaDataService" should "return an OK and 10 for a nested data" in {
+    Get(s"/data?key=object.objectVal") ~> route ~> check {
+      implicit val formats = DefaultFormats
+      val result = Integer.valueOf(body.data.asString)
+
+      assertResult(OK)(status)
+      assertResult(result)(10)
+    }
+  }
+
   "MetaDataService" should "return an OK for all data" in {
     Get(s"/data") ~> route ~> check {
       implicit val formats = DefaultFormats
