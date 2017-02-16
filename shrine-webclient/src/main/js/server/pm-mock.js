@@ -40,6 +40,10 @@ function start(dir) {
     var xml = fs.readFileSync('./' + dir+ '/i2b2-xml/' + fileName);
     res.header('Content-Type', 'text/xml').send(xml);
   });
+
+  router.get('/shrine-metadata/data', function(req, res) {
+    res.json('steward@steward.com');
+  });
 }
 
 /*

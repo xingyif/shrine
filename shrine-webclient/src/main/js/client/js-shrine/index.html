@@ -1,34 +1,48 @@
 <html>
-    <head>
-        <link href="https://fonts.googleapis.com/css?family=Bree+Serif|Source+Sans+Pro:200,200i,300,300i,400,400i,600,600i,700,700i,900,900i" rel="stylesheet">
+
+<head>
+    <link href="https://fonts.googleapis.com/css?family=Bree+Serif|Source+Sans+Pro:200,200i,300,300i,400,400i,600,600i,700,700i,900,900i"
+        rel="stylesheet">
         <link href="./style.css" rel="stylesheet">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-    </head>
+</head>
 
-    <body>
-        <div class="content">
-            <p>If you have questions about your query results, contact the Data Steward at your site.</p>
-            <div class="email js-email">
-                <button class="button button--large js-button mailto">Email Data Steward</button>
-            </div>
+<body>
+    <div class="content">
+        <p>If you have questions about your query results, contact the Data Steward at your site.</p>
+        <div class="email js-email">
+            <button class="button button--large js-button mailto">Email Data Steward</button>
         </div>
-    
-        <script src="https://code.jquery.com/jquery-3.1.1.slim.min.js" 
-        integrity="sha256-/SIrNqv8h6QGKDuNoLGA4iret+kyesCkHGzVUUV0shc="
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.1.1.min.js" integrity="sha256-/SIrNqv8h6QGKDuNoLGA4iret+kyesCkHGzVUUV0shc="
         crossorigin="anonymous">
         </script>
         <script>
             $(document).ready(function () {
-                var sMailto = "mailto:dataSteward@dataSteward.com";
+
+
+                var sMailto = "mailto:";
                 var sSubject = 'subject=' + encodeURIComponent('I want more info on Query "Query Name Here"');
                 var body = encodeURIComponent("I would like to learn about...");
-                $(".mailto").on('click', function() {
-                    var sBody = "body=" + body;
-                    var mail = sMailto + "?" + sSubject + "&" + sBody;
-                    console.log('mailTo URL length:', mail.length);
-                    document.location.href = mail;
-                });
+                var url = "http://localhost:6443/shrine-proxy/request/shrine-metadata/data/"
+
+
+                $.ajax(url)
+                    .done(function (data) { 
+                        sMailto += data;
+                        $(".mailto").on('click', function () {
+                            var sBody = "body=" + body;
+                            var mail = sMailto + "?" + sSubject + "&" + sBody;
+                            document.location.href = mail;
+                        });
+                    })
+                    .fail(function () { 
+                        alert("error retrieving steward email."); 
+                    });
+
             });
         </script>
-    </body>
+</body>
+
 </html>
