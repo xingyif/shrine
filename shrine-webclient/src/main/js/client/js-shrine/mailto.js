@@ -1,0 +1,55 @@
+(function () {
+    'use strict';
+
+    /*
+        Simple mailto initialization.
+    */
+
+    $(document).ready(function () {
+        init();
+    });
+
+    function init() {
+        fetchStewardEmail('shrine-metadata/data?key=stewardEmail')
+            .then(initMailTo)
+            .then(hideLoading)
+            .fail(notifyOfFailure);
+    }
+
+    function fetchStewardEmail(url) {
+        return $.ajax(url);
+    }
+
+    function hideLoading() {
+        $('.init-div').addClass('mailto-hidden');
+    }
+
+    function showContent() {
+        $('.content').removeClass('mailto-hidden');
+    }
+
+    function initMailTo(address) {
+        var sMailto = 'mailto:' + address;
+        var sSubject = 'subject=' + encodeURIComponent('Question from a SHRINE User');
+        var body = encodeURIComponent('Please enter the suggested information and your question. Your data steward will reply to this email.' +
+        '\n\n***Never send patient information, passwords, or other sensitive information by email****' +
+        '\nName:' +
+        '\nTitle:' +
+        '\nUser name (to log into SHRINE):' +
+        '\nTelephone Number (optional):' +
+        '\nPreferred email address (optional):' +
+        '\n\nQuestion or Comment:');  
+
+        $('.mailto').on('click', function () {
+            var sBody = 'body=' + body;
+            var mail = sMailto + '?' + sSubject + '&' + sBody;
+            document.location.href = mail;
+        });
+
+        showContent();
+    }
+
+    function notifyOfFailure(data) {
+        $('.init-div').html('<div>' + data.responseText + '</div>');
+    }
+}());
