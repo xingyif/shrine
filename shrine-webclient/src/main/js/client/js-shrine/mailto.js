@@ -10,10 +10,17 @@
     });
 
     function init() {
-        fetchStewardEmail('shrine-metadata/data?key=stewardEmail')
+        fetchStewardEmail(getUrl())
             .then(initMailTo)
             .then(hideLoading)
             .fail(notifyOfFailure);
+    }
+
+    function getUrl() {
+        var port = '6443';
+        var url = document.URL;
+        var service = '/shrine-metadata/data?key=stewardEmail';
+        return url.substring(0, url.indexOf(port) + port.length) + service;
     }
 
     function fetchStewardEmail(url) {
