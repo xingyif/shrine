@@ -50,7 +50,7 @@
         $('.mailto').on('click', function () {
             var sBody = 'body=' + body;
             var mail = sMailto + '?' + sSubject + '&' + sBody;
-            document.location.href = mail;
+            window.top.location = mail;
         });
 
         showContent();
