@@ -29,6 +29,7 @@ sealed trait QueryResult {
   val status: String = json.status.as[String]
   val resultId: UUID = json.resultId.as[UUID]
   val adapterId: UUID = json.adapterId.as[UUID]
+  val queryId: UUID = json.queryId.as[UUID]
 }
 
             // <--=== Success Result ===--> //

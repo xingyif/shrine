@@ -30,7 +30,7 @@ class Structures extends FlatSpec with Matchers {
               "startTime": $startTime,
               "i2b2QueryText": ${i2b2Xml.toString},
               "extraXml": ${extraXml.toString},
-              "queryResults": [ ${uid.toString} ],
+              "queryResults": [ ${uid.toString} ]
            }
     """
   val queryResultJson =
@@ -38,6 +38,7 @@ class Structures extends FlatSpec with Matchers {
              "status": "success",
              "resultId": ${uid.toString},
              "adapterId": ${uid.toString},
+             "queryId": ${uid.toString},
              "count": $resultCount,
              "noiseTerms": {
                 "sigma": ${noiseTerms.sigma},
@@ -79,7 +80,7 @@ class Structures extends FlatSpec with Matchers {
     query.queryResults.length shouldBe 1
     query.queryResults.head shouldBe uid
     queryResult.status shouldBe "success"
-    List(queryResult.resultId, queryResult.adapterId).foreach(_ shouldBe uid)
+    List(queryResult.resultId, queryResult.adapterId, queryResult.queryId).foreach(_ shouldBe uid)
     queryResult.count shouldBe resultCount
     queryResult.noiseTerms shouldBe noiseTerms
     queryResult.i2b2Mapping shouldBe i2b2Xml
