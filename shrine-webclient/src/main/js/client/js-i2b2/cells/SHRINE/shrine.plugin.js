@@ -36,7 +36,10 @@
     function clearAllTabs() {
         $(pluginId).parentNode.parentNode
             .select('DIV.tabBox.active')
-            .each(el => el.removeClassName('active'));
+            .each(function(el) {
+                el.removeClassName('active');
+            });
+            /* IE is no fun!  .each(el => el.removeClassName('active'));*/
     }
 
     function setShrineTabActive() {
@@ -49,7 +52,11 @@
     }
 
     function hideContent() {
-        contentIds.each(id => $(id).hide());
+        contentIds
+        .each(function(id) {
+            $(id).hide();
+        })
+        /*@ie no fun! .each(id => $(id).hide());*/
     }
 
     function hideDisplay() {
