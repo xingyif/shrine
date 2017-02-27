@@ -45,7 +45,7 @@
         '\nUser name (to log into SHRINE):' +
         '\nTelephone Number (optional):' +
         '\nPreferred email address (optional):' +
-        '\n\nQuestion or Comment:');  
+        '\n\nQuestion or Comment:');
 
         $('.mailto').on('click', function () {
             var sBody = 'body=' + body;
@@ -57,6 +57,9 @@
     }
 
     function notifyOfFailure(data) {
-        $('.init-div').html('<div>' + data.responseText + '</div>');
+        var errorText = 'The Steward contact form is not configured for your site,' +
+            ' please contact your site administration to enable this functionality.';
+
+        $('.init-div').html('<div>' + errorText + '</div>');
     }
 }());
