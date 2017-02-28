@@ -20,25 +20,26 @@ class Structures extends FlatSpec with Matchers {
   val extraXml = <extra><extra2><extra3>lots of extra</extra3></extra2></extra>
   val noiseTerms = NoiseTerms(10, 11, 12)
   val resultCount = 1000
+  val j = Json(Topic("hey", "hey", uid))
   val breakdown = Breakdown("gender", List(BreakdownProperty("male", 70), BreakdownProperty("female", 30)))
   val flags = List("hey", "what's", "that", "sound")
   val queryJson =
     json"""{
-              "queryId": ${uid.toString},
-              "topicId": ${uid.toString},
-              "userId": ${uid.toString},
+              "queryId": $uid,
+              "topicId": $uid,
+              "userId": $uid,
               "startTime": $startTime,
               "i2b2QueryText": ${i2b2Xml.toString},
               "extraXml": ${extraXml.toString},
-              "queryResults": [ ${uid.toString} ]
+              "queryResults": [ $uid ]
            }
     """
   val queryResultJson =
     json"""{
              "status": "success",
-             "resultId": ${uid.toString},
-             "adapterId": ${uid.toString},
-             "queryId": ${uid.toString},
+             "resultId": $uid,
+             "adapterId": $uid,
+             "queryId": $uid,
              "count": $resultCount,
              "noiseTerms": {
                 "sigma": ${noiseTerms.sigma},

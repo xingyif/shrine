@@ -35,4 +35,5 @@ package object json {
     successResult
       .orElse(failureResult)
       .orElse(pendingResult)
+  implicit val uuidSerializer = Json.serializer[Json].contramap[UUID](uuid => Json(uuid.toString))
 }

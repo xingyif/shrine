@@ -36,6 +36,8 @@ final class Query(val json: Json) {
   }
 
   override def hashCode(): Int = default.hash(fields)
+
+  override def toString: String = json.toBareString
 }
 
 object Query {
