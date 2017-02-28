@@ -258,6 +258,7 @@ i2b2.sdx.Master.AttachType = function(containerID, typeCode, options) {
 	console.groupEnd();
 }
 	
+	//'QPD1', 'CONCPT', 'DropHandler'
 // ================================================================================================== //
 i2b2.sdx.Master.setHandlerCustom = function(containerID, typeCode, handlerName, newHandlerFunction) {
 	// containerID: string

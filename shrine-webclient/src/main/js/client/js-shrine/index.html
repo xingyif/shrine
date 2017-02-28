@@ -1,13 +1,32 @@
 <html>
-    <head>
-        <link rel="stylesheet" href="jspm_packages/github/twbs/bootstrap@3.3.7/css/bootstrap.css">
-    </head>
 
-    <body aurelia-app>
-        <script src="jspm_packages/system.js"></script>
-        <script src="config.js"></script>
-        <script>
-            System.import('aurelia-bootstrapper');
-        </script>
-    </body>
+<head>
+    <link href='https://fonts.googleapis.com/css?family=Bree+Serif|Source+Sans+Pro:200,200i,300,300i,400,400i,600,600i,700,700i,900,900i'
+        rel='stylesheet'>
+        <link href='./style.css' rel='stylesheet'>
+        <meta name='viewport' content='width=device-width, initial-scale=1'>
+
+        <style>
+            .mailto-hidden {
+                display: none;
+            }
+        </style>
+</head>
+
+<body>
+    <div class='content mailto-hidden'>
+        <p>If you have questions about your query results or this SHRINE network, contact the Data Steward at your site.</p>
+        <div class='email js-email'>
+            <button class='button button--large js-button mailto'>Email Data Steward</button>
+        </div>
+    </div>
+    <div class='init-div'>
+        Initializing...
+    </div>
+    <script src='jquery.min.js'>
+    </script>
+    <script src='mailto.js'>
+    </script>
+</body>
+
 </html>

@@ -190,7 +190,6 @@ i2b2.CRC.ctrlr.QueryStatus.prototype = function() {
 			self.dispDIV.innerHTML += '</div>';
 			if (foundError == false) {
 				if (rec.QRS_DisplayType == "CATNUM") {
-
                     //make call to get QRSI.
 					i2b2.CRC.ajax.getQueryResultInstanceList_fromQueryResultInstanceId("CRC:QueryStatus", {qr_key_value: rec.QRS_ID}, scopedCallbackQRSI);
 				} else if ((rec.QRS_DisplayType == "LIST") && (foundError == false)) {

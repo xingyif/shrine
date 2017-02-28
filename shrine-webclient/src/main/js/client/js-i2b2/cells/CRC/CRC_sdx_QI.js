@@ -227,7 +227,6 @@ i2b2.sdx.TypeControllers.QI.getChildRecords = function(sdxParentNode, onComplete
 		// extract records from XML msg
 		var ps = results.refXML.getElementsByTagName('query_result_instance');
 		var dm = i2b2.CRC.model.QueryMasters;
-		var x_plusmn_pats = 3;
 		
 		for(var i1=0; i1<ps.length; i1++) {
 			var o = new Object;
@@ -291,34 +290,8 @@ i2b2.sdx.TypeControllers.QI.getChildRecords = function(sdxParentNode, onComplete
 				switch (o.result_type) {
 					case "PATIENTSET":
 						o.PRS_id = i2b2.h.getXNodeVal(ps[i1],'result_instance_id');
-						// use given title if it exist otherwise generate a title
-						try {
-							var t = o.description;
-							
-							if((t != null) &&
-							   (t == "AGGREGATED")
-							){
-							  x_plusmn_pats = ((ps.length) - 1) * 3;
-							}
-							
-						} catch(e) { var t = null; }
-						if (!t) { t="Patient Set"; }
-						
-						// create the title using shrine setting
-						if (oRecord.size >= 10) {
-							if (i2b2.PM.model.userRoles.lastIndexOf("DATA_AGG") > -1) {
-								title = t+" - "+oRecord.size+" patients";
-							} else {
-								title = t+" - "+oRecord.size+"&nbsp;&plusmn;"+ x_plusmn_pats + 
-									" patients";
-							}
-						} else {
-							if (i2b2.PM.model.userRoles.lastIndexOf("DATA_AGG") > -1) {
-								title = t+" - "+oRecord.size+" patients";
-							} else {
-								title = t + " - " + i2b2.h.getMinResultText();
-							}
-						}
+						var t = o.description || 'Patient Set';
+						title = t + i2b2.h.getFormattedResult(oRecord.size);
 						o.titleCRC = title;
 						o.title = pn.parent.sdxInfo.sdxDisplayName + ' [PATIENTSET_'+o.PRS_id+']';
 						o.result_instance_id = o.PRS_id;
@@ -326,38 +299,10 @@ i2b2.sdx.TypeControllers.QI.getChildRecords = function(sdxParentNode, onComplete
 						break;
 					case "PATIENT_COUNT_XML":
 					    o.PRC_id = i2b2.h.getXNodeVal(ps[i1],'result_instance_id');
-						// use given title if it exist otherwise generate a title
-					    try {
-							var t = o.description;
-							
-							if((t != null) &&
-							   (t == "AGGREGATED")
-							){
-							  x_plusmn_pats = ((ps.length) - 1) * 3;
-							}
-							
-						} catch(e) { var t = null; }
-						if (!t) { t="Patient Count"; }
-						
-						// create the title using shrine setting
-						if (oRecord.size >= 10) {
-							//@pcori_webclient 
-							if (i2b2.PM.model.userRoles.lastIndexOf("DATA_AGG") > -1) {
-								title = t+" - "+oRecord.size+" patients";
-							} else {
-								title = t+" - "+oRecord.size+"&nbsp;&plusmn;"+ x_plusmn_pats + 
-									" patients";
-							}
-						} else {
-							if (i2b2.PM.model.userRoles.lastIndexOf("DATA_AGG") > -1) {
-								title = t+" - "+oRecord.size+" patients";
-							} else {
-								title = t + " - " + i2b2.h.getMinResultText();
-							}
-						}
+						var t = o.description || 'Patient Count';
+						title = t + i2b2.h.getFormattedResult(oRecord.size);
 					    o.titleCRC = title;
 						o.title = pn.parent.sdxInfo.sdxDisplayName + ' [PATIENT_COUNT_XML_'+o.PRC_id+']';
-						//o.title = 'PATIENT_COUNT_XML_'+o.PRC_id;
 						o.result_instance_id = o.PRC_id;
 						sdxDataNodeChild = i2b2.sdx.Master.EncapsulateData('PRC',o);
 						break;
@@ -377,10 +322,7 @@ i2b2.sdx.TypeControllers.QI.getChildRecords = function(sdxParentNode, onComplete
 						var d = new Date().getTime();
 						o.titleCRC = title;
 						o.result_instance_id = d;
-						
 						o.title = pn.parent.sdxInfo.sdxDisplayName + ' [PATIENT_COUNT_XML_'+ d +']';
-						//o.title = 'PATIENT_COUNT_XML_'+o.PRC_id;
-						//o.result_instance_id = o.PRC_id;
 						sdxDataNodeChild = i2b2.sdx.Master.EncapsulateData('PRC',o);
 						break;
 				}

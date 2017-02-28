@@ -1,7 +1,7 @@
 {
-  "name": "shrine-plugin",
+  "name": "js-shrine",
   "version": "1.0.0",
-  "description": "SHRINE i2b2 plugin",
+  "description": "SHRINE i2b2 Webclient Plugin",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -9,19 +9,6 @@
   "author": "‘Ben <benjamin_carmen@hms.harvard.edu>",
   "license": "MIT",
   "dependencies": {
-    "jspm": "^0.16.51"
-  },
-  "jspm": {
-    "dependencies": {
-      "aurelia-bootstrapper": "npm:aurelia-bootstrapper@^2.0.1",
-      "aurelia-framework": "npm:aurelia-framework@^1.0.8",
-      "aurelia-pal-browser": "npm:aurelia-pal-browser@^1.1.0",
-      "bootstrap": "github:twbs/bootstrap@^3.3.7"
-    },
-    "devDependencies": {
-      "babel": "npm:babel-core@^5.8.24",
-      "babel-runtime": "npm:babel-runtime@^5.8.24",
-      "core-js": "npm:core-js@^1.1.4"
-    }
+    "jquery": "^3.1.1"
   }
 }
