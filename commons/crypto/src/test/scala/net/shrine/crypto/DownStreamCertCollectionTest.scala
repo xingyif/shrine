@@ -23,7 +23,6 @@ class DownStreamCertCollectionTest extends FlatSpec with Matchers {
   val descriptor: KeyStoreDescriptor = NewTestKeyStore.descriptor
   val heyo      : Array[Byte] = "Heyo!".getBytes("UTF-8")
 
-
   "A down stream cert collection" should "build and verify its own messages" in {
     val hubCertCollection = BouncyKeyStoreCollection.fromFileRecoverWithClassPath(descriptor) match {
       case hub: DownStreamCertCollection => hub
