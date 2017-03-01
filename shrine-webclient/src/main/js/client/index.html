@@ -647,9 +647,9 @@ $.noConflict();
             <a href="JavaScript:i2b2.CRC.view.history.showOptions();"><img src="assets/images/options.gif" border="0" width="16" height="16" alt="Show Options" title="Show Options" /></a>
             <a href="JavaScript:i2b2.CRC.view.history.ZoomView();"><img id="histZoomImg" width="16" height="16" border="0" src="js-i2b2/cells/WORK/assets/zoom_icon.gif" alt="Resize Workspace" title="Resize Workspace" /></a>			</div>
     </div>
-    <div class="bodyBox">
+    <!--div class="bodyBox">
         <div id="crcHistoryData" oncontextmenu="return false"></div>
-    </div>
+    </div-->
 </div>
 <!-- ############### </CRC History View> ############### -->
 
@@ -893,22 +893,25 @@ $.noConflict();
 			<a href="JavaScript:i2b2.CRC.view.status.ZoomView();"><img width="16" height="16" border="0" src="js-i2b2/cells/CRC/assets/zoom_icon.gif" alt="Resize Workspace" /></a>
         </div>
 		<!-- BG -->
-		<div class="tabBox tabQueryGraphs" onClick="i2b2.CRC.view.status.selectTab('graphs')">
+		<div class="tabBox tabQueryGraphs" onClick="i2b2.CRC.view.status.selectTab('graphs')" style="display:none">
 			<div>Graph Results</div>
 		</div>
-		<div class="tabBox tabQueryReport" onClick="i2b2.CRC.view.status.selectTab('queryReport')">
+		<div class="tabBox tabQueryReport" onClick="i2b2.CRC.view.status.selectTab('queryReport')" style="display:none">
 			<div>Query Report</div>
 		</div>
-		<div class="tabBox tabDownloadData" onClick="i2b2.CRC.view.status.selectTab('downloadData')"> 
+		<div class="tabBox tabDownloadData" onClick="i2b2.CRC.view.status.selectTab('downloadData')" style="display:none"> 
 			<div>Download Results</div>
 		</div>
-        <div class="tabBox shrineTab" onClick="i2b2.CRC.view.status.selectTab('shrine')"> 
+        <div class="tabBox shrineTab" onClick="i2b2.CRC.view.status.selectTab('shrine')" style="display:none"> 
 			<div>Contact</div>
 		</div>
 		<!-- BG -->
     </div>
     <div class="StatusBox">
-        <div id="infoQueryStatusText" class="StatusBoxText" oncontextmenu="return false">
+
+       <div id="crcHistoryData" oncontextmenu="return false">History</div>
+
+        <div id="infoQueryStatusText" class="StatusBoxText" oncontextmenu="return false" style="display:none">
             <!--iframe src="https://codepen.io/JoeHana/pen/sFiBm" style="
                 width: 100%;
                 height: 100%;

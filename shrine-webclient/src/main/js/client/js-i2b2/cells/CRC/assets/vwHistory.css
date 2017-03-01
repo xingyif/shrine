@@ -7,7 +7,8 @@ DIV#crcHistoryBox DIV.tabBox > DIV {}
 
 DIV#crcHistoryBox DIV.tabBox.active {}
 DIV#crcHistoryBox DIV.tabBox.active > DIV {}
-	
+
+DIV#crcStatusBox DIV.bodyBox,	
 DIV#crcHistoryBox DIV.bodyBox {
 	background:#BBCCEE none repeat scroll 0% 50%;
 	border:1px solid #667788;
@@ -22,6 +23,7 @@ DIV#crcHistoryBox DIV.bodyBox {
 	z-index:0;
 }
 
+DIV#crcStatusBox DIV#crcHistoryData,
 DIV#crcHistoryBox DIV#crcHistoryData {
 	background: #FFFFFF none repeat scroll 0%;
 	border: 1px solid #667788;
