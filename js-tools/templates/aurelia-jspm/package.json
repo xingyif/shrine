@@ -11,6 +11,7 @@
   "devDependencies": {
     "browser-sync": "^2.18.8",
     "gulp": "^3.9.1",
+    "gulp-server-livereload": "^1.9.2",
     "jasmine": "^2.5.3",
     "jspm": "^0.16.52",
     "karma": "^1.5.0",
