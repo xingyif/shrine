@@ -14,6 +14,7 @@ System.config({
     "npm:*": "jspm_packages/npm/*",
     "*": "src/*"
   },
+
   map: {
     "aurelia-bootstrapper": "npm:aurelia-bootstrapper@2.0.1",
     "aurelia-framework": "npm:aurelia-framework@1.1.0",
