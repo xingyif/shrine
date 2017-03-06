@@ -1,4 +1,7 @@
-module.exports = function (config) {
+// Karma configuration
+// Generated on Fri Dec 05 2014 16:49:29 GMT-0500 (EST)
+
+module.exports = function(config) {
   config.set({
 
     // base path that will be used to resolve all patterns (eg. files, exclude)
@@ -8,29 +11,42 @@ module.exports = function (config) {
     // available frameworks: https://npmjs.org/browse/keyword/karma-adapter
     frameworks: ['jspm', 'jasmine'],
 
-    //jspm path descrepancies
-    proxies: {
-      '/node_modules/': 'base/node_modules',
-      '/jspm_packages/' : '/base/jspm_packages',
-      '/src/src/': '/base/src/'
+    jspm: {
+      // Edit this to your needs
+      loadFiles: ['test/unit/setup.js', 'test/unit/**/*.js'],
+      serveFiles: ['src/**/*.*'],
+      paths: {
+        '*': 'src/*',
+        'test/*': 'test/*',
+        'github:*': 'jspm_packages/github/*',
+        'npm:*': 'jspm_packages/npm/*'
+      }
     },
 
-    jspm: {
-      config: 'config.js',
-      stripExtension: false,
-      loadFiles: [
-        'src/**/*.spec.js'
-      ],
-      serveFiles: [
-        'jspm_packages/**/*.js',
-        'node_modules/**/*.js',
-        'src/**/!(*.spec).js'
-      ]
-    },
+    // list of files / patterns to load in the browser
+    files: [],
+
+    // list of files to exclude
+    exclude: [],
+
 
     // preprocess matching files before serving them to the browser
     // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
     preprocessors: {
+      'test/**/*.js': ['babel'],
+      'src/**/*.js': ['babel']
+    },
+    'babelPreprocessor': {
+      options: {
+        sourceMap: 'inline',
+        presets: [ ['es2015', { loose: true }], 'stage-1'],
+        plugins: [
+          'syntax-flow',
+          'transform-decorators-legacy',
+          'transform-flow-strip-types',
+          [ 'istanbul', { 'ignore': 'test/' } ]
+        ]
+      }
     },
 
     // test results reporter to use
@@ -49,24 +65,14 @@ module.exports = function (config) {
     logLevel: config.LOG_INFO,
 
     // enable / disable watching file and executing tests whenever any file changes
-    autoWatch: false,
+    autoWatch: true,
 
     // start these browsers
     // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
-    browsers: ['PhantomJS'],
-
-    plugins: [
-      'karma-jspm',
-      'karma-jasmine',
-      'karma-phantomjs-launcher'
-    ],
+    browsers: ['Chrome'],
 
     // Continuous Integration mode
     // if true, Karma captures browsers, runs the tests and exits
-    singleRun: true,
-
-    // Concurrency level
-    // how many browser should be started simultaneous
-    concurrency: Infinity
-  })
-}
+    singleRun: false
+  });
+};

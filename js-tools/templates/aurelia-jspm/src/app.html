@@ -1,15 +1,10 @@
 <template>
-    <div>
-        ${message}
-    </div>
-    <div>
-        <img src.bind="image"><img>
-    </div>
-    <div>
-        <input type="text" value.bind="input">
-    </div>
-    <div>
-        ${input}
-    </div>
+  <require from="nav-bar.html"></require>
+  <require from="bootstrap/css/bootstrap.css"></require>
 
-</template>>
+  <nav-bar router.bind="router"></nav-bar>
+
+  <div class="page-host">
+    <router-view></router-view>
+  </div>
+</template>
