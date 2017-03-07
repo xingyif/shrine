@@ -1,0 +1,1 @@
+{"version":3,"sources":["views/mailto/mailto.config.js"],"names":["MailConfig","mailto","subject","encodeURIComponent","body"],"mappings":";;;;;;;kCAAaA,U,GAAa;AACtBC,wBAAQ,SADc;AAEtBC,yBAAS,aAAaC,mBAAmB,6BAAnB,CAFA;AAGtBC,sBAAOD,mBAAmB,0GACtB,+FADsB,GAEtB,SAFsB,GAGtB,UAHsB,GAItB,mCAJsB,GAKtB,gCALsB,GAMtB,uCANsB,GAOtB,0BAPG;AAHe,a","file":"mailto.config.js","sourceRoot":"/src"}
