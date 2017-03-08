@@ -13,6 +13,7 @@ export class MailTo {
         this.service.fetchStewardEmail()
             .then(email => {
                 window.top.location = this.getComposition(email);
+                return this;
             });
     }
 
