@@ -31,6 +31,7 @@ System.register(['aurelia-framework', 'views/mailto/mailto.service', 'views/mail
 
                     this.service.fetchStewardEmail().then(function (email) {
                         window.top.location = _this.getComposition(email);
+                        return _this;
                     });
                 };
 
