@@ -20,11 +20,19 @@
             if (isUserNotLoggedIn()) {
                 $location.path(defaultRoute);
             }
+            else if(isNextRouteLogin(next)) {
+                StewardService.logoutUser();
+            }
         }
 
         function isUserNotLoggedIn() {
             var currentUser = StewardService.getAppUser();
             return (!currentUser || !currentUser.isLoggedIn);
+        }
+
+        function isNextRouteLogin(next) {
+           var nextRoute = next.split("/").reverse()[0];
+           return nextRoute === 'login';
         }
     }
 })();
