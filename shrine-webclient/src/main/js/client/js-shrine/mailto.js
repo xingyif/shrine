@@ -1,6 +1,21 @@
 (function () {
     'use strict';
 
+    var sMailto = 'mailto:${stewardEmail}';
+    var sSubject = 'subject=' + encodeURIComponent('Question from a SHRINE User');
+    var body = encodeURIComponent('Please enter the suggested information and your question. Your data steward will reply to this email.' +
+        '\n\n***Never send patient information, passwords, or other sensitive information by email****' +
+        '\nName:' +
+        '\nTitle:' +
+        '\nUser name (to log into SHRINE):' +
+        '\nTelephone Number (optional):' +
+        '\nPreferred email address (optional):' +
+        '\n\nQuestion or Comment:');
+
+    var sBody = 'body=' + body;
+    var mail = sMailto + '?' + sSubject + '&' + sBody;
+
+
     /*
         Simple mailto initialization.
     */
@@ -10,10 +25,15 @@
     });
 
     function init() {
-        fetchStewardEmail(getUrl())
-            .then(initMailTo)
-            .then(hideLoading)
-            .fail(notifyOfFailure);
+        $('.mailto').on('click', function () {
+            fetchStewardEmail(getUrl())
+                .then(setStewardEmail)
+                .fail(setEmailToEmpty)
+                .always(sendToBrowser);
+        });
+
+        hideLoading();
+        showContent();
     }
 
     function getUrl() {
@@ -35,28 +55,16 @@
         $('.content').removeClass('mailto-hidden');
     }
 
-    function initMailTo(address) {
-        var sMailto = 'mailto:' + address.split('\"')[1];
-        var sSubject = 'subject=' + encodeURIComponent('Question from a SHRINE User');
-        var body = encodeURIComponent('Please enter the suggested information and your question. Your data steward will reply to this email.' +
-        '\n\n***Never send patient information, passwords, or other sensitive information by email****' +
-        '\nName:' +
-        '\nTitle:' +
-        '\nUser name (to log into SHRINE):' +
-        '\nTelephone Number (optional):' +
-        '\nPreferred email address (optional):' +
-        '\n\nQuestion or Comment:');  
-
-        $('.mailto').on('click', function () {
-            var sBody = 'body=' + body;
-            var mail = sMailto + '?' + sSubject + '&' + sBody;
-            window.top.location = mail;
-        });
-
-        showContent();
+    function setStewardEmail(address) {
+        var stewardEmail = address.split('\"')[1];
+        mail = mail.replace('${stewardEmail}', stewardEmail);
     }
 
-    function notifyOfFailure(data) {
-        $('.init-div').html('<div>' + data.responseText + '</div>');
+    function setEmailToEmpty() {
+        mail = mail.replace('${stewardEmail}', '');
+    }
+
+    function sendToBrowser() {
+        window.top.location = mail;
     }
 }());
