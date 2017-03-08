@@ -28,6 +28,7 @@ target/
 # Ignore Node & Bower regardless of context
 ###################
 **/node_modules/
+**/jspm_packages
 **/bower_components/
 **/build/
 **/*.tmp
