@@ -1,7 +1,7 @@
 package net.shrine.utilities.jerseyhttpclienttool
 
 import com.typesafe.config.ConfigFactory
-import net.shrine.client.{EndpointConfig, JerseyHttpClient}
+import net.shrine.client.{EndpointConfig, HttpResponse, JerseyHttpClient}
 import net.shrine.crypto.{BouncyKeyStoreCollection, KeyStoreDescriptorParser}
 import net.shrine.config.ConfigExtensions
 
@@ -18,8 +18,6 @@ object JerseyHttpClientTool {
 
     val config = ConfigFactory.load()
 
-    println(config)
-
     val shrineConfig = config.getConfig("shrine")
     val qepConfig = shrineConfig.getConfig("queryEntryPoint")
 
@@ -34,7 +32,8 @@ object JerseyHttpClientTool {
     val httpClient = JerseyHttpClient(certCollection, endpoint)
 
     try {
-      httpClient.post(s"test", endpoint.url.toString)
+      val response: HttpResponse = httpClient.post(s"test", endpoint.url.toString)
+      println(s"Success with $response")
     }
     catch {
       case NonFatal(x) => x.printStackTrace()
