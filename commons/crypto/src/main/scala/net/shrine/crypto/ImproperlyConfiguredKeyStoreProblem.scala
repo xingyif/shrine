@@ -36,10 +36,6 @@ object CryptoErrors {
     s"Could not find a KeyStore Entry corresponding to the aliases '${comma(entries)}"
   final def NotSignedByCa(entries: Entries, caEntry: KeyStoreEntry) =
     s"The private entries `${comma(entries)}` were not signed by the ca entry `${caEntry.aliases.first}`"
-  final def RequiresExactlyTwoEntries(entries: Entries) =
-    s"Hub based networks require exactly two entries in the KeyStore, found ${entries.size} entries: `${comma(entries)}`"
-  final def RequiresExactlyOnePrivateKey(entries: Entries) =
-    s"Hub based networks require exactly one private key entry in the KeyStore, found ${entries.size} with private keys: `${comma(entries)}"
   final def PrivateEntryIsCaEntry(aliases: Iterable[String]) =
     s"Your private cert must not also be your CA cert. Intersecting aliases: `${aliases.mkString(", ")}`"
   final def ExpiredCertificates(entries: Entries) =

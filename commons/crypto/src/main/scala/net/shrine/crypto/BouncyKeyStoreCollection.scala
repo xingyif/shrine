@@ -66,39 +66,13 @@ object BouncyKeyStoreCollection extends Loggable {
     val values = keyStore.aliases().map(alias =>
       (alias, keyStore.getCertificate(alias), Option(keyStore.getKey(alias, descriptor.password.toCharArray).asInstanceOf[PrivateKey])))
     val entries = values.map(value => KeyStoreEntry(value._2.asInstanceOf[X509Certificate], NonEmptySeq(value._1, Nil), value._3)).toSet
-    if (entries.exists(_.isExpired()))
-      Left(configureError(ExpiredCertificates(entries.filter(_.isExpired()))))
-    else
-      descriptor.trustModel match {
-        case PeerToPeerModel       => createPeerCertCollection(entries, descriptor)
-        case SingleHubModel(isHub) => createHubCertCollectionWithHttps(entries, descriptor, isHub)
-      }
-  }
+    //OK to try to use an expired cert, but still log a Problem
+    if (entries.exists(_.isExpired())) configureError(ExpiredCertificates(entries.filter(_.isExpired())))
 
-  def createHubCertCollection(entries: Set[KeyStoreEntry], descriptor: KeyStoreDescriptor, isHub: Boolean):
-    EitherCertError =
-  {
-    if (entries.size != 2)
-      Left(configureError(RequiresExactlyTwoEntries(entries)))
-    else if (entries.count(_.privateKey.isDefined) != 1)
-      Left(configureError(RequiresExactlyOnePrivateKey(entries.filter(_.privateKey.isDefined))))
-    else {
-      val partition    = entries.partition(_.privateKey.isDefined)
-      val privateEntry = partition._1.head
-      val caEntry      = partition._2.head
-      val rsds = descriptor.remoteSiteDescriptors
-
-      if (!isHub && rsds.head.keyStoreAlias.get != caEntry.aliases.first)
-        Left(configureError(IncorrectAliasMapping(rsds.head.keyStoreAlias.get +: Nil, caEntry +: Nil)))
-      else if (isHub && privateEntry.wasSignedBy(caEntry))
-        Right(HubCertCollection(privateEntry, caEntry, rsds.map(rsd => RemoteSite(rsd.url, None, rsd.siteAlias, rsd.port))))
-      else if (privateEntry.wasSignedBy(caEntry)) {
-        val rsd = rsds.head
-        Right(DownStreamCertCollection(privateEntry, caEntry, RemoteSite(rsd.url, Some(caEntry), rsd.siteAlias, rsd.port)))
-      }
-      else
-        Left(configureError(NotSignedByCa(privateEntry +: Nil, caEntry)))
-      }
+    descriptor.trustModel match {
+      case PeerToPeerModel       => createPeerCertCollection(entries, descriptor)
+      case SingleHubModel(isHub) => createHubCertCollectionWithHttps(entries, descriptor, isHub)
+    }
   }
 
   def createHubCertCollectionWithHttps(entries: Set[KeyStoreEntry], descriptor: KeyStoreDescriptor, isHub: Boolean):
