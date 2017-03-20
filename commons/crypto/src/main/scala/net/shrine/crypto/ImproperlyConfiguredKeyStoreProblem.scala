@@ -26,6 +26,8 @@ object CryptoErrors {
     "Could not find a key in the KeyStore with a PrivateKey. Without one, SHRINE cannot sign messages."
   final val CouldNotFindCa =
     "You must specify at least one ca cert alias corresponding to a PrivateKey entry for the Hub in a non PeerToPeer network"
+  final val CouldNotFindCaOrSigningQuery =
+    "There must be a public entry in the keystore corresponding to the Hub, and a private entry signed by it."
   final def TooManyPrivateKeys(entries: Entries)  =
     s"There are ${entries.size} entries in the KeyStore with a PrivateKey. Please specify which one to use for signing queries under `privateKeyAlias` in the configuration file."
   final def CouldNotFindAlias(alias: String) =

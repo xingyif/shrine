@@ -71,7 +71,7 @@ object BouncyKeyStoreCollection extends Loggable {
     else
       descriptor.trustModel match {
         case PeerToPeerModel       => createPeerCertCollection(entries, descriptor)
-        case SingleHubModel(isHub) => createHubCertCollection(entries, descriptor, isHub)
+        case SingleHubModel(isHub) => createHubCertCollectionWithHttps(entries, descriptor, isHub)
       }
   }
 
@@ -99,6 +99,26 @@ object BouncyKeyStoreCollection extends Loggable {
       else
         Left(configureError(NotSignedByCa(privateEntry +: Nil, caEntry)))
       }
+  }
+
+  def createHubCertCollectionWithHttps(entries: Set[KeyStoreEntry], descriptor: KeyStoreDescriptor, isHub: Boolean):
+    EitherCertError =
+  {
+    val rsds = descriptor.remoteSiteDescriptors
+    val hubSigningPair = for {
+      hubEntry <- entries.find(e => e.privateKey.isEmpty && e.aliases.intersect(descriptor.caCertAliases).nonEmpty)
+      signingEntry <- entries.find(e => e.privateKey.isDefined && e.wasSignedBy(hubEntry))
+    } yield (hubEntry, signingEntry)
+    hubSigningPair.fold[EitherCertError](Left(configureError(CouldNotFindCaOrSigningQuery)))(pair => {
+      val (hub, signing) = pair
+      if (isHub) {
+        val remoteSites = rsds.map(r => RemoteSite(r.url, Some(hub), r.siteAlias, r.port))
+        Right(HubCertCollection(signing, hub, remoteSites))
+      } else {
+        val rsd = rsds.head
+        Right(DownStreamCertCollection(signing, hub, RemoteSite(rsd.url, Some(hub), rsd.siteAlias, rsd.port)))
+      }
+    })
   }
 
   def remoteDescriptorToRemoteSite(descriptor: KeyStoreDescriptor, entries: Set[KeyStoreEntry]): Seq[RemoteSite] = {
