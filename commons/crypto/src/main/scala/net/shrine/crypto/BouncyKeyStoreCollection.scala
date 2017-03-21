@@ -55,6 +55,7 @@ object BouncyKeyStoreCollection extends Loggable {
   /**
     * Creates a cert collection from a keyStore. Returns an Either to abstract away
     * try catches/problem construction until the end.
+    *
     * @return [[EitherCertError]]
     */
   def createCertCollection(keyStore: KeyStore, descriptor: KeyStoreDescriptor):
@@ -71,11 +72,11 @@ object BouncyKeyStoreCollection extends Loggable {
 
     descriptor.trustModel match {
       case PeerToPeerModel       => createPeerCertCollection(entries, descriptor)
-      case SingleHubModel(isHub) => createHubCertCollectionWithHttps(entries, descriptor, isHub)
+      case SingleHubModel(isHub) => createCentralCertCollection(entries, descriptor, isHub)
     }
   }
 
-  def createHubCertCollectionWithHttps(entries: Set[KeyStoreEntry], descriptor: KeyStoreDescriptor, isHub: Boolean):
+  def createCentralCertCollection(entries: Set[KeyStoreEntry], descriptor: KeyStoreDescriptor, isHub: Boolean):
     EitherCertError =
   {
     val rsds = descriptor.remoteSiteDescriptors
