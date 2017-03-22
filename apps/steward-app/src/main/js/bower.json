@@ -44,13 +44,6 @@
     "font-awesome": "v4.6.3"
   },
   "overrides": {
-    "bootstrap": {
-      "main": [
-        "dist/js/bootstrap.min.js",
-        "dist/css/bootstrap.css",
-        "less/bootstrap.less"
-      ]
-    },
     "font-awesome": {
       "main": [
         "css/font-awesome.css",
