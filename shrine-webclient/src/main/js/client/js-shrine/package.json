@@ -77,7 +77,7 @@
       "aurelia-templating-resources": "npm:aurelia-templating-resources@^1.0.0",
       "aurelia-templating-router": "npm:aurelia-templating-router@^1.0.0",
       "fetch": "github:github/fetch@^1.0.0",
-      "jquery": "npm:jquery@^2.2.4",
+      "jquery": "npm:jquery@^3.1.1",
       "text": "github:systemjs/plugin-text@^0.0.8"
     },
     "devDependencies": {}
