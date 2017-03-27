@@ -44,6 +44,11 @@ function start(dir) {
   router.get('/shrine-metadata/data', function(req, res) {
     res.json('steward@steward.com');
   });
+
+  router.get('/shrine/api/previous-queries', (req, res) => {
+    const result = require('./data/async-queries');
+    res.json(result);
+  })
 }
 
 /*

@@ -4,9 +4,8 @@ const server = require('gulp-server-livereload');
 const pmMock = require('./server/pm-mock');
 const indexDir = './client/';
 
-gulp.task('serve', function () { 
-    
-    pmMock.start('server');
+gulp.task('serve', ['pm'], function () { 
+
 
     return gulp.src(indexDir)
         .pipe(server({
@@ -15,3 +14,7 @@ gulp.task('serve', function () {
             port: '8000'
         }));
 });
+
+gulp.task('pm', function () {
+    pmMock.start('server');
+})

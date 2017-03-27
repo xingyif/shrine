@@ -1,7 +1,7 @@
 System.register(['aurelia-framework', 'aurelia-fetch-client', 'fetch'], function (_export, _context) {
     "use strict";
 
-    var inject, HttpClient, _createClass, _dec, _class, QueryViewerService;
+    var inject, HttpClient, _createClass, _dec, _class, nodesPerScreen, QueryViewerService;
 
     function _classCallCheck(instance, Constructor) {
         if (!(instance instanceof Constructor)) {
@@ -34,6 +34,8 @@ System.register(['aurelia-framework', 'aurelia-fetch-client', 'fetch'], function
                 };
             }();
 
+            nodesPerScreen = 5;
+
             _export('QueryViewerService', QueryViewerService = (_dec = inject(HttpClient), _dec(_class = function () {
                 function QueryViewerService(http) {
                     var _this = this;
@@ -52,6 +54,44 @@ System.register(['aurelia-framework', 'aurelia-fetch-client', 'fetch'], function
                         return response.json();
                     }).catch(function (error) {
                         return error;
+                    });
+                };
+
+                QueryViewerService.prototype.getNodes = function getNodes(queries) {
+                    return queries.length > 0 ? queries[0].results.map(function (result) {
+                        return result.node;
+                    }) : [];
+                };
+
+                QueryViewerService.prototype.getScreens = function getScreens(nodes, queries) {
+                    return new Promise(function (resolve, reject) {
+                        var lastNodeIndex = nodes.length;
+                        var screens = [];
+
+                        var _loop = function _loop(i) {
+                            var endIndex = i + nodesPerScreen < lastNodeIndex ? i + nodesPerScreen : lastNodeIndex - 1;
+                            var screenId = String(nodes[i]).substr(0, 1) + '-' + String(nodes[endIndex]).substr(0, 1);
+                            var screenNodes = nodes.slice(i, endIndex);
+                            var screenQueries = queries.map(function (query) {
+                                return {
+                                    id: query.id,
+                                    name: query.name,
+                                    results: query.results.slice(i, endIndex)
+                                };
+                            });
+
+                            screens.push({
+                                name: screenId,
+                                nodes: screenNodes,
+                                queries: screenQueries
+                            });
+                        };
+
+                        for (var i = 0; i < lastNodeIndex; i = i + nodesPerScreen) {
+                            _loop(i);
+                        }
+
+                        resolve(screens);
                     });
                 };
 

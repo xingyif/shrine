@@ -9,19 +9,6 @@ System.register(['aurelia-framework', 'views/query-viewer/query-viewer.service']
         }
     }
 
-    function getNodes(queries) {
-        return queries.length > 0 ? queries[0].results.map(function (result) {
-            return result.node;
-        }) : [];
-    }
-
-    function sliceResultsForScreen(queries, start, end) {
-        return queries.map(function (query) {
-            var q = Object.assign({}, query);
-            q.results = query.results.slice(start, end);
-            return q;
-        });
-    }
     return {
         setters: [function (_aureliaFramework) {
             inject = _aureliaFramework.inject;
@@ -57,45 +44,21 @@ System.register(['aurelia-framework', 'views/query-viewer/query-viewer.service']
 
                     this.screenIndex = 0;
                     this.service = service;
-                    this.nodes = [];
                     this.service.fetchPreviousQueries().then(function (result) {
-                        _this.queries = result.queries;
-                        if (_this.nodes.length === 0) {
-                            _this.nodes = getNodes(_this.queries);
-                        }
-
-                        _this.screenIndex = 1;
-                        _this.screenNodes = _this.nodes.slice(_this.sliceStart, _this.sliceEnd);
-                        _this.testQueries = sliceResultsForScreen(_this.queries, _this.sliceStart, _this.sliceEnd);
+                        var queries = result.queries;
+                        var nodes = _this.service.getNodes(queries);
+                        return service.getScreens(nodes, queries);
+                    }).then(function (screens) {
+                        _this.screens = screens;
                     }).catch(function (error) {
                         return console.log(error);
                     });
                 }
 
                 _createClass(QueryViewer, [{
-                    key: 'screens',
+                    key: 'slidePct',
                     get: function get() {
-                        var lastNodeIndex = this.nodes.length;
-                        var testResult = [];
-
-                        for (var i = 0; i < lastNodeIndex; i = i + nodesPerScreen) {
-                            var start = this.nodes[i];
-                            var endIndex = i + nodesPerScreen < lastNodeIndex ? i + nodesPerScreen : lastNodeIndex - 1;
-                            var end = this.nodes[endIndex];
-                            testResult.push(String(start).substr(0, 1) + '-' + String(end).substr(0, 1));
-                        }
-
-                        return testResult;
-                    }
-                }, {
-                    key: 'sliceStart',
-                    get: function get() {
-                        return this.screenIndex * nodesPerScreen;
-                    }
-                }, {
-                    key: 'sliceEnd',
-                    get: function get() {
-                        return this.sliceStart + nodesPerScreen;
+                        return String(-100 * this.screenIndex) + '%';
                     }
                 }]);
 

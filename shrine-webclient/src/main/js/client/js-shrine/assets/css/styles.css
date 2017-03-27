@@ -85,7 +85,9 @@ body,
 
 .box {
   width: 100%;
+  /*
   transform: translate(-100%, 0%);
+  */
   transition: all .2s ease; }
 
 .box.blue {
