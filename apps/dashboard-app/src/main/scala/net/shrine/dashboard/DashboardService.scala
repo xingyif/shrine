@@ -1,5 +1,7 @@
 package net.shrine.dashboard
 
+import java.net.MalformedURLException
+
 import akka.actor.Actor
 import akka.event.Logging
 import net.shrine.authentication.UserAuthenticator
@@ -10,7 +12,7 @@ import net.shrine.dashboard.httpclient.HttpClientDirectives.{forwardUnmatchedPat
 import net.shrine.dashboard.jwtauth.ShrineJwtAuthenticator
 import net.shrine.i2b2.protocol.pm.User
 import net.shrine.log.Loggable
-import net.shrine.problem.{ProblemDigest, Problems}
+import net.shrine.problem.{AbstractProblem, Problem, ProblemDigest, ProblemSources, Problems, Stamp}
 import net.shrine.serialization.NodeSeqSerializer
 import net.shrine.source.ConfigSource
 import net.shrine.spray._
@@ -26,6 +28,7 @@ import spray.routing.directives.LogEntry
 
 import scala.collection.immutable.Iterable
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.util.{Failure, Success, Try}
 
 /**
   * Mixes the DashboardService trait with an Akka Actor to provide the actual service.
@@ -177,7 +180,12 @@ trait DashboardService extends HttpService with Loggable {
         case _ => ConfigSource.config.getObject("shrine.hub.downstreamNodes").values.head.unwrapped.toString
       }
 
-      val jURL = new java.net.URL(urlToParse)
+      val jURL = Try(new java.net.URL(urlToParse)) match {
+        case Failure(exception) =>
+          MalformedURLProblem(exception, urlToParse)
+          throw exception
+        case Success(url) => url
+      }
       val remoteDashboardPathPrefix = jURL.getPath.replaceFirst("shrine/rest/adapter/requests", "shrine-dashboard/fromDashboard") // I don't think this needs to be configurable
 
       val baseUrl = s"${jURL.getProtocol}://$dnsName:${jURL.getPort}$remoteDashboardPathPrefix"
@@ -187,6 +195,13 @@ trait DashboardService extends HttpService with Loggable {
     }
   }
 
+  case class MalformedURLProblem(malformattedURLException: Throwable, malformattedURL: String) extends AbstractProblem(ProblemSources.Dashboard) {
+    override val throwable = Some(malformattedURLException)
+
+    override def summary: String = s"Encountered a malformatted url `$malformattedURL` while parsing urls from downstream nodes"
+
+    override def description: String = description
+  }
 
   def statusRoute(user:User):Route = get {
     val( adapter ,  hub ,  i2b2 ,  keystore ,  optionalParts ,  qep ,  summary ) =
