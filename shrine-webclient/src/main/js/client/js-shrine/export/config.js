@@ -199,9 +199,31 @@ System.config({
       "indexof": "npm:indexof@0.0.1"
     }
   },
+  depCache: {
+    "views/mailto/mailto.js": [
+      "aurelia-framework",
+      "views/mailto/mailto.service",
+      "views/mailto/mailto.config"
+    ],
+    "views/mailto/mailto.service.js": [
+      "aurelia-framework",
+      "aurelia-fetch-client",
+      "fetch"
+    ],
+    "views/query-viewer/query-viewer.js": [
+      "aurelia-framework",
+      "views/query-viewer/query-viewer.service"
+    ],
+    "views/query-viewer/query-viewer.service.js": [
+      "aurelia-framework",
+      "aurelia-fetch-client",
+      "fetch"
+    ]
+  },
   bundles: {
     "app-build.js": [
       "main.js",
+      "repository/pm-repository.js",
       "shell.html!github:systemjs/plugin-text@0.0.8.js",
       "shell.js",
       "views/mailto/mailto.config.js",
@@ -211,7 +233,8 @@ System.config({
       "views/query-viewer/query-table.html!github:systemjs/plugin-text@0.0.8.js",
       "views/query-viewer/query-table.js",
       "views/query-viewer/query-viewer.html!github:systemjs/plugin-text@0.0.8.js",
-      "views/query-viewer/query-viewer.js"
+      "views/query-viewer/query-viewer.js",
+      "views/query-viewer/query-viewer.service.js"
     ],
     "aurelia.js": [
       "github:github/fetch@1.0.0.js",
@@ -299,21 +322,6 @@ System.config({
       "npm:aurelia-templating@1.1.1/aurelia-templating.js",
       "npm:jquery@2.2.4.js",
       "npm:jquery@2.2.4/dist/jquery.js"
-    ]
-  },
-  depCache: {
-    "views/mailto/mailto.js": [
-      "aurelia-framework",
-      "views/mailto/mailto.service",
-      "views/mailto/mailto.config"
-    ],
-    "views/mailto/mailto.service.js": [
-      "aurelia-framework",
-      "aurelia-fetch-client",
-      "fetch"
-    ],
-    "views/query-viewer/query-table.js": [
-      "aurelia-framework"
     ]
   }
 });
