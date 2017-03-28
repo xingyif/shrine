@@ -15,9 +15,10 @@
                     <table cellpadding="0" cellspacing="0" border="0">
                         <thead>
                             <tr>
-                                <th></th>
-                                <th repeat.for="node of screen.nodes">
-                                    ${node}
+                                <th class="tbl-header">
+                                </th>
+                                <th repeat.for="node of screen.nodes" class="tbl-header">
+                                    <div class="hideextra">${node}</div>
                                 </th>
                             </tr>
                         </thead>
