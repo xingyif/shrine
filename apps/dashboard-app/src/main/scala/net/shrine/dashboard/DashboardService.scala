@@ -194,6 +194,10 @@ trait DashboardService extends HttpService with Loggable {
               case Some(downstreamUrl) =>
                 val remoteDashboardPathPrefix = downstreamUrl.getPath
                   .replaceFirst("shrine/rest/adapter/requests", "shrine-dashboard/fromDashboard") // I don't think this needs to be configurable
+                val port = if (downstreamUrl.getPort == -1)
+                  downstreamUrl.getDefaultPort
+                else
+                  downstreamUrl.getPort
 
                 val baseUrl = s"${downstreamUrl.getProtocol}://$dnsName:${downstreamUrl.getPort}$remoteDashboardPathPrefix"
 

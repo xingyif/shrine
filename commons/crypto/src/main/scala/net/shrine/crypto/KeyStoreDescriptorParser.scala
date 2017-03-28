@@ -50,12 +50,14 @@ object KeyStoreDescriptorParser extends Loggable {
 
     val tm = getTrustModel
 
-    def parseUrl(url: String): String = {
-      new URL(url).getHost
-    }
+    def parseUrl(url: String): String = new URL(url).getHost
 
     def parsePort(url:String): String = {
-      new URL(url).getPort.toString
+      val jURL = new URL(url)
+      if (jURL.getPort == -1)
+        jURL.getDefaultPort.toString
+      else
+        jURL.getPort.toString
     }
 
     def getRemoteSites: Seq[RemoteSiteDescriptor] = {

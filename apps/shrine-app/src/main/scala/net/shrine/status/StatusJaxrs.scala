@@ -42,7 +42,7 @@ import scala.util.{Failure, Success, Try}
 /**
   * A subservice that shares internal state of the shrine servlet.
   *
-  * @author david 
+  * @author david
   * @since 12/2/15
   */
 @Path("/internalstatus")
@@ -558,7 +558,7 @@ object ShaVerificationService extends Loggable with DefaultJsonSupport {
       case HubCertCollection(_, caEntry, _) => caEntry
       case PeerCertCollection(my, _, _) => my
       case DownStreamCertCollection(_, caEntry, _) => caEntry
-    }
+   }
     val sha256 = UtilHasher.encodeCert(shaEntry.cert, "SHA-256")
     implicit val formats = org.json4s.DefaultFormats
     val request = Post(s"https://${site.url}:${site.port}/shrine-dashboard/status/verifySignature")
