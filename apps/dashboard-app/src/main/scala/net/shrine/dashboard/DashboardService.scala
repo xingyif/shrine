@@ -178,9 +178,9 @@ trait DashboardService extends HttpService with Loggable {
       }
 
       val jURL = new java.net.URL(urlToParse)
-      val remoteDashboardPathPrefix = jURL.getPath.replace("shrine.*", "shrine-dashboard/fromDashboard") // I don't think this needs to be configurable
+      val remoteDashboardPathPrefix = jURL.getPath.replaceFirst("shrine.*", "shrine-dashboard/fromDashboard") // I don't think this needs to be configurable
 
-      val baseUrl = s"${jURL.getProtocol}://$dnsName:${jURL.getPort}/$remoteDashboardPathPrefix"
+      val baseUrl = s"${jURL.getProtocol}://$dnsName:${jURL.getPort}$remoteDashboardPathPrefix"
 
       info(s"toDashboardRoute: BaseURL: $baseUrl")
       forwardUnmatchedPath(baseUrl,Some(ShrineJwtAuthenticator.createOAuthCredentials(user, dnsName)))
