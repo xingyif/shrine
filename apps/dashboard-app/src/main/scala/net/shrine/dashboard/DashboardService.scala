@@ -1,7 +1,5 @@
 package net.shrine.dashboard
 
-import java.net.MalformedURLException
-
 import akka.actor.Actor
 import akka.event.Logging
 import net.shrine.authentication.UserAuthenticator
@@ -12,7 +10,7 @@ import net.shrine.dashboard.httpclient.HttpClientDirectives.{forwardUnmatchedPat
 import net.shrine.dashboard.jwtauth.ShrineJwtAuthenticator
 import net.shrine.i2b2.protocol.pm.User
 import net.shrine.log.Loggable
-import net.shrine.problem.{AbstractProblem, Problem, ProblemDigest, ProblemSources, Problems, Stamp}
+import net.shrine.problem.{AbstractProblem, ProblemDigest, ProblemSources, Problems}
 import net.shrine.serialization.NodeSeqSerializer
 import net.shrine.source.ConfigSource
 import net.shrine.spray._
@@ -175,23 +173,34 @@ trait DashboardService extends HttpService with Loggable {
     pathPrefix(Segment) { dnsName =>
       import scala.collection.JavaConversions._
 
-      val urlToParse: String = KeyStoreInfo.keyStoreDescriptor.trustModel match {
-        case SingleHubModel(false) => ConfigSource.config.getString("shrine.queryEntryPoint.broadcasterServiceEndpoint.url")
-        case _ => ConfigSource.config.getObject("shrine.hub.downstreamNodes").values.head.unwrapped.toString
+      // Check that it makes sense to call toDashboard
+      KeyStoreInfo.keyStoreDescriptor.trustModel match {
+        case SingleHubModel(false) =>
+          warn("toDashboard route called on a non-hub node, returning Forbidden")
+          complete(StatusCodes.Forbidden)
+        case _ =>
+          ConfigSource.config.getObject("shrine.hub.downstreamNodes")
+            .values
+            .map(cv => Try(new java.net.URL(cv.unwrapped().toString)) match {
+              case Failure(exception) =>
+                MalformedURLProblem(exception, cv.unwrapped().toString)
+                throw exception
+              case Success(goodUrl) => goodUrl
+            })
+            .find(_.getHost == dnsName) match {
+              case None =>
+                warn(s"Could not find a downstream node matching the requested host `$dnsName`, returning NotFound")
+                complete(StatusCodes.NotFound)
+              case Some(downstreamUrl) =>
+                val remoteDashboardPathPrefix = downstreamUrl.getPath
+                  .replaceFirst("shrine/rest/adapter/requests", "shrine-dashboard/fromDashboard") // I don't think this needs to be configurable
+
+                val baseUrl = s"${downstreamUrl.getProtocol}://$dnsName:${downstreamUrl.getPort}$remoteDashboardPathPrefix"
+
+                info(s"toDashboardRoute: BaseURL: $baseUrl")
+                forwardUnmatchedPath(baseUrl,Some(ShrineJwtAuthenticator.createOAuthCredentials(user, dnsName)))
+            }
       }
-
-      val jURL = Try(new java.net.URL(urlToParse)) match {
-        case Failure(exception) =>
-          MalformedURLProblem(exception, urlToParse)
-          throw exception
-        case Success(url) => url
-      }
-      val remoteDashboardPathPrefix = jURL.getPath.replaceFirst("shrine/rest/adapter/requests", "shrine-dashboard/fromDashboard") // I don't think this needs to be configurable
-
-      val baseUrl = s"${jURL.getProtocol}://$dnsName:${jURL.getPort}$remoteDashboardPathPrefix"
-
-      info(s"toDashboardRoute: BaseURL: $baseUrl")
-      forwardUnmatchedPath(baseUrl,Some(ShrineJwtAuthenticator.createOAuthCredentials(user, dnsName)))
     }
   }
 
