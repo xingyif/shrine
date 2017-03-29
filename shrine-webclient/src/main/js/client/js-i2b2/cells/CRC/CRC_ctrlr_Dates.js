@@ -184,7 +184,7 @@ i2b2.CRC.ctrlr.dateConstraint = {
 
 		//^(0[1-9]|1[012])(\\|\-)(0[1-9]|[12][0-9]|3[01])(\\|\-)(19|20)\d\d$
 		///^\d{1,2}(\-|\/|\.)\d{1,2}\1\d{4}$/
-		var rxDate = /^(0[1-9]|1[012])(\/|\-)(0[1-9]|[12][0-9]|3[01])(\/|\-)(19|20)\d\d$/;
+		var rxDate = /^([1-9]|0[1-9]|1[012])(\/|\-)([1-9]|0[1-9]|[12][0-9]|3[01])(\/|\-)(19|20)\d\d$/;
 		var DateRecord = {};
 		var startChecked = $('checkboxDateStart').checked;
 		var endChecked = $('checkboxDateEnd').checked;
