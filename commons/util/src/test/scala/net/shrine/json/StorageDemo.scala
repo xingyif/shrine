@@ -5,10 +5,10 @@ import java.util.UUID
 import jawn.Parser.parseFromString
 import rapture.json._
 import rapture.json.jsonBackends.jawn._
-import slick.dbio.DBIOAction
 import slick.dbio.Effect.Write
-import slick.driver.SQLiteDriver.api._
-
+import slick.driver.{JdbcProfile, SQLiteDriver}
+import slick.jdbc.JdbcBackend.Database
+import net.shrine.json.{Query => ShrineQuery}
 import scala.concurrent.Await
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
@@ -25,24 +25,19 @@ class StorageDemo {}
 object Storage {
 
   def main(args: Array[String]): Unit = {
-    import Schema._
-    val path = "commons/util/src/test/resources/test.db"
-    val f = new File(path)
-    if (f.exists)
-      f.delete
+    val db = Database.forConfig("sqlite")
+    //forURL(s"jdbc:sqlite::memory:", driver = "org.sqlite.JDBC")
+    val dao = DAO(SQLiteDriver)
 
-    val db = Database.forURL(s"jdbc:sqlite:$path", driver = "org.sqlite.JDBC")
-    val schema = queryRunsQuery.schema ++
-        topics.schema ++
-        queryResults.schema ++
-        users.schema ++
-        adapters.schema ++
-        queries.schema
     val uid = UUID.randomUUID()
     val startTime = System.currentTimeMillis()
     val i2b2Xml = <ami2b2>suchi2b2, wow</ami2b2>
     val extraXml =
-      <extra><extra2><extra3>lots of extra</extra3></extra2></extra>
+      <extra>
+        <extra2>
+          <extra3>lots of extra</extra3>
+        </extra2>
+      </extra>
     val noiseTerms = NoiseTerms(10, 11, 12)
     val resultCount = 1000
     val j = Json(Topic("hey", "hey", uid))
@@ -92,67 +87,32 @@ object Storage {
              ]
           }
     """
-    val query = Query(queryJson).get
+    val query = ShrineQuery(queryJson).get
     val queryResult = QueryResult(queryResultJson).get
     val user = User("user", "domain", uid)
     val topic = Topic("topic", "domain", uid)
     val adapter = Adapter("adapter", uid)
-    val drop = schema.drop
-    val setup = schema.create
 
     val jq = json"""{"q": {"q2": 20}, "epoch": 12842184}"""
     val insertQuery =
-      SlickQueries.insert(query, user, topic, adapter, queryResult) match {
-        case Left(s) => throw new IllegalArgumentException(s)
+      dao.SlickQueries.insert(query, user, topic, adapter, queryResult) match {
+        case Left(s)        => throw new IllegalArgumentException(s)
         case Right(dbQuery) => dbQuery
       }
-
-    val results = Await.result(db.run(for {
-      _ <- setup
-      _ <- insertQuery
-      a <- queries.result
-    } yield a), 10.seconds)
+    //    Await.result(db.run(setup), 10.seconds)
+    import dao.profile.api._
+    val acts = dao.SlickQueries.create
+      .andThen(insertQuery)
+      .andThen(dao.queryRunsQuery.result)
+    val results = Await.result(db.run(acts), 10.seconds)
     println(results)
   }
+}
 
-  object SlickQueries {
-    import Schema._
+  case class DAO(profile: JdbcProfile) {
+    import profile.api._
 
-    def insert(query: Query,
-               user: User,
-               topic: Topic,
-               adapter: Adapter,
-               result: QueryResult)
-      : Either[String, DBIOAction[Unit, NoStream, Write]] = {
-      if (result.queryId != query.queryId)
-        Left("The result's queryId does not match the query's queryId")
-      else if (query.topicId != topic.id)
-        Left("The query's topicId does not match the topic's id")
-      else if (query.userId != user.id)
-        Left("The query's userId does not match the user's id")
-      else if (result.adapterId != adapter.id)
-        Left("The query result's adapterId does not match the adapter's id")
-      else
-        Right(
-          DBIO.seq(
-            // Have to upsert here, as these items may already be in the table
-            queries.insertOrUpdate(query),
-            queryResults.insertOrUpdate(result),
-            users.insertOrUpdate(user),
-            topics.insertOrUpdate(topic),
-            adapters.insertOrUpdate(adapter),
-            queryRunsQuery += (UUID
-              .randomUUID(), query.queryId, result.resultId, user.id, topic.id, adapter.id)
-          ))
-    }
-
-    def updateResult(resultId: UUID, result: QueryResult) =
-      queryResults.filter(_.queryResultId === resultId).update(result)
-  }
-
-  object Schema {
-
-    class Queries(tag: Tag) extends Table[Query](tag, "QUERIES") {
+    class Queries(tag: Tag) extends Table[ShrineQuery](tag, "QUERIES") {
       def queryId = column[UUID]("query_id", O.PrimaryKey)
 
       def queryDate = column[Long]("query_epoch")
@@ -161,8 +121,8 @@ object Storage {
 
       def * = (queryId, queryDate, queryJson) <> (
         (row: (UUID, Long, String)) =>
-          Json(parseFromString(row._3).get).as[Query],
-        (query: Query) =>
+          Json(parseFromString(row._3).get).as[ShrineQuery],
+        (query: ShrineQuery) =>
           Some((query.queryId, query.startTime, query.json.toBareString))
       )
     }
@@ -273,5 +233,44 @@ object Storage {
     }
 
     val queryRunsQuery = TableQuery[QueryRuns]
+
+    object SlickQueries {
+//      def selectAllForQuery(queryId: UUID): Query[QueryRuns, (UUID, UUID, UUID, UUID, UUID, UUID), Seq] =
+//        for {
+//          (qid, rid, uid, tid, aid) <- queryRunsQuery.filter(_.queryId === queryId)
+//          (q, r, u, t, a) <- queries join users on (_.queryId === queryId && _.userId === uid)
+//        }
+
+      def insert(query: ShrineQuery,
+                 user: User,
+                 topic: Topic,
+                 adapter: Adapter,
+                 result: QueryResult)
+      : Either[String, DBIOAction[Unit, NoStream, Write]] = {
+        if (result.queryId != query.queryId)
+          Left("The result's queryId does not match the query's queryId")
+        else if (query.topicId != topic.id)
+          Left("The query's topicId does not match the topic's id")
+        else if (query.userId != user.id)
+          Left("The query's userId does not match the user's id")
+        else if (result.adapterId != adapter.id)
+          Left("The query result's adapterId does not match the adapter's id")
+        else
+          Right(
+            DBIO.seq(
+              // Have to upsert here, as these items may already be in the table
+              queries.insertOrUpdate(query),
+              queryResults.insertOrUpdate(result),
+              users.insertOrUpdate(user),
+              topics.insertOrUpdate(topic),
+              adapters.insertOrUpdate(adapter),
+              queryRunsQuery += (UUID
+                .randomUUID(), query.queryId, result.resultId, user.id, topic.id, adapter.id)
+            ))
+    }
+      def schema = queries.schema ++ users.schema ++ topics.schema ++ adapters.schema ++ queryResults.schema ++ queryRunsQuery.schema
+      def create = schema.create
   }
 }
+
+
