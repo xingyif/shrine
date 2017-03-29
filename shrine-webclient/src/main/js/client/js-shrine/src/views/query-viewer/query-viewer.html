@@ -1,11 +1,13 @@
 <template>
-    <ul class="circle-pagination">
-        <li repeat.for="screen of screens" 
-        class="${screenIndex === $index? 'active' : ''}"
-        click.delegate="screenIndex = $index">
-            <div>${screen.name}</div>
-        </li>
-    </ul>
+    <div style="width: 100%; text-align: center">  
+        <ul class="circle-pagination">
+            <li repeat.for="screen of screens" 
+            class="${screenIndex === $index? 'active' : ''}"
+            click.delegate="screenIndex = $index">
+                <div>${screen.name}</div>
+            </li>
+        </ul>
+    </div>
     <div class="box-wrapper">
         <div class="box" repeat.for="screen of screens" style="transform: translate(${slidePct}, 0%)">
             <section>
