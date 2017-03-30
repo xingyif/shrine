@@ -12,7 +12,7 @@ import scala.util.Try
   * A simple API for reporting what's in the metaData section within shrine.conf
   */
 trait MetaDataService extends HttpService with Loggable {
-  lazy val config = ConfigSource.config.getConfig("shrine.metaData")
+  lazy val staticDataConfig = ConfigSource.config.getConfig("shrine.metaData")
   val homeInfo =
     """
       |The SHRINE Metadata service. This is a simple API that gives you
@@ -25,6 +25,11 @@ trait MetaDataService extends HttpService with Loggable {
       |if on a browser just add /data?key={{your key}} to the end of the url).
     """.stripMargin
 
+
+  //todo add authentication and authorization
+  //todo add a separate service to answer for the QEP, maybe even separate this one from it.
+  //todo add url path for username/queryResults/display (someday filter by time, or queries and adapters, or ...)
+  //todo add skip & limit, simple filtering (avoid SQL injection)
   lazy val route: Route = get {
     pathPrefix("ping") { complete("pong")} ~
     pathPrefix("data") {
@@ -34,12 +39,17 @@ trait MetaDataService extends HttpService with Loggable {
     }} ~ complete(homeInfo)
 
   def handleAll:(StatusCode, String) = {
-    StatusCodes.OK -> config.root.render(ConfigRenderOptions.concise()) // returns it as JSON.
+    StatusCodes.OK -> staticDataConfig.root.render(ConfigRenderOptions.concise()) // returns it as JSON.
   }
 
   def handleKey(key: String): (StatusCode, String) = {
-    Try(StatusCodes.OK -> config.getValue(key).render(ConfigRenderOptions.concise()))
+    Try(StatusCodes.OK -> staticDataConfig.getValue(key).render(ConfigRenderOptions.concise()))
       .getOrElse(StatusCodes.NotFound ->
         s"Could not find a value for the specified path `$key`")
   }
+
+
+  //todo use QepQueryDb.db.selectPreviousQueriesByUserAndDomain to select some queries
+  //todo use rapture to turn them into json
+
 }
