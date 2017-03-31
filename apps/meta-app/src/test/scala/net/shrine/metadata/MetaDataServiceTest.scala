@@ -26,4 +26,13 @@ class MetaDataServiceTest extends FlatSpec with ScalatestRouteTest with MetaData
     }
   }
 
+  "MetaDataService" should "access the staticData service and return an OK and 10 for a nested data" in {
+    Get(s"/staticData?key=object.objectVal") ~> staticDataRoute ~> check {
+      implicit val formats = DefaultFormats
+      val result = Integer.valueOf(body.data.asString)
+
+      assertResult(OK)(status)
+      assertResult(result)(10)
+    }
+  }
 }

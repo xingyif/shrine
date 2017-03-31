@@ -39,9 +39,9 @@ class StaticDataServiceTest extends FlatSpec with ScalatestRouteTest with Static
       assertResult(OK)(status)
     }
   }
-/*
+
   "StaticDataService" should "return an Ok and a list for a data" in {
-    Get("/metaData?key=list") ~> staticDataRoute ~> check {
+    Get("/staticData?key=list") ~> staticDataRoute ~> check {
       implicit val formats = DefaultFormats
       val result = new String(body.data.toByteArray)
 
@@ -80,5 +80,5 @@ class StaticDataServiceTest extends FlatSpec with ScalatestRouteTest with Static
 
     }
   }
-  */
+
 }
