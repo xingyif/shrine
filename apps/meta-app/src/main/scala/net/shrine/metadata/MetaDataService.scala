@@ -1,55 +1,27 @@
 package net.shrine.metadata
 
-import com.typesafe.config.ConfigRenderOptions
 import net.shrine.log.Loggable
-import net.shrine.source.ConfigSource
-import spray.http.{StatusCode, StatusCodes}
 import spray.routing.{HttpService, _}
 
-import scala.util.Try
-
 /**
-  * A simple API for reporting what's in the metaData section within shrine.conf
+  * An outer API to mix in sub services
   */
-trait MetaDataService extends HttpService with Loggable {
-  lazy val staticDataConfig = ConfigSource.config.getConfig("shrine.metaData")
-  val homeInfo =
+trait MetaDataService extends HttpService
+  with StaticDataService
+  with Loggable {
+  val shrineInfo =
     """
-      |The SHRINE Metadata service. This is a simple API that gives you
-      |read access to the metaData section within SHRINE's configuration.
-      |You can access this data by key, or by accessing the entire metaData
-      |config section at once. To access everything at once, make a GET
-      |to shrine-metadata/data (if on a browser, just add /data to the
-      |end of the current url). To access values by key, make a GET to
-      |shrine-metadata/data?key={{your key here without braces}} (again,
-      |if on a browser just add /data?key={{your key}} to the end of the url).
+      |The SHRINE Metadata service.
+      |
+      |This web API gives you access to sub-services within this shrine node.
+      |You can access these services by calling shrine-medadata/[service name].
+      |You can learn more about each service by calling shrine-metadata/[service name]
+      |for top-level information about each.
     """.stripMargin
 
+  lazy val route: Route = pingRoute ~ staticDataRoute
 
-  //todo add authentication and authorization
-  //todo add a separate service to answer for the QEP, maybe even separate this one from it.
-  //todo add url path for username/queryResults/display (someday filter by time, or queries and adapters, or ...)
-  //todo add skip & limit, simple filtering (avoid SQL injection)
-  lazy val route: Route = get {
-    pathPrefix("ping") { complete("pong")} ~
-    pathPrefix("data") {
-      parameter("key") { (key: String) =>
-        complete(handleKey(key))
-      } ~ complete(handleAll)
-    }} ~ complete(homeInfo)
-
-  def handleAll:(StatusCode, String) = {
-    StatusCodes.OK -> staticDataConfig.root.render(ConfigRenderOptions.concise()) // returns it as JSON.
+  lazy val pingRoute: Route = get {
+    pathPrefix("ping") { complete("pong")}
   }
-
-  def handleKey(key: String): (StatusCode, String) = {
-    Try(StatusCodes.OK -> staticDataConfig.getValue(key).render(ConfigRenderOptions.concise()))
-      .getOrElse(StatusCodes.NotFound ->
-        s"Could not find a value for the specified path `$key`")
-  }
-
-
-  //todo use QepQueryDb.db.selectPreviousQueriesByUserAndDomain to select some queries
-  //todo use rapture to turn them into json
-
 }
