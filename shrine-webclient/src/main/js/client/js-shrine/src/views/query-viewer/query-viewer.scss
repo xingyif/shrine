@@ -122,8 +122,16 @@ table{
   border: 1px solid rgba(98,108,146,0.3);
 }
 
+.tbl-content tr{
+  cursor: pointer;
+}
+
+.tbl-content tr:hover{
+  background: rgba(98,108,146, .3) !important;
+}
+
 th{
-  padding: 2px 5px;
+  padding: 2px 4px 4px 2px;
   text-align: center;
   font-weight: 500;
   font-size: .75rem;
