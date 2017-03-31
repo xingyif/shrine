@@ -34,7 +34,7 @@ System.register(['aurelia-framework', 'aurelia-fetch-client', 'fetch'], function
                 };
             }();
 
-            nodesPerScreen = 5;
+            nodesPerScreen = 10;
 
             _export('QueryViewerService', QueryViewerService = (_dec = inject(HttpClient), _dec(_class = function () {
                 function QueryViewerService(http) {

@@ -34,7 +34,7 @@ System.register(['aurelia-framework', 'views/query-viewer/query-viewer.service']
                 };
             }();
 
-            nodesPerScreen = 5;
+            nodesPerScreen = 10;
 
             _export('QueryViewer', QueryViewer = (_dec = inject(QueryViewerService), _dec(_class = function () {
                 function QueryViewer(service) {
@@ -54,6 +54,10 @@ System.register(['aurelia-framework', 'views/query-viewer/query-viewer.service']
                         return console.log(error);
                     });
                 }
+
+                QueryViewer.prototype.attached = function attached() {
+                    this.boxWrapper = document.getElementsByClassName('box-wrapper')[0];
+                };
 
                 _createClass(QueryViewer, [{
                     key: 'slidePct',

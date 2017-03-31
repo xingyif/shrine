@@ -2,7 +2,7 @@ import { inject } from 'aurelia-framework';
 import { HttpClient } from 'aurelia-fetch-client';
 import 'fetch';
 
-const nodesPerScreen = 5;
+const nodesPerScreen = 10;
 
 @inject(HttpClient)
 export class QueryViewerService {

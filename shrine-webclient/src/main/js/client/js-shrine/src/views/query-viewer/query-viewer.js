@@ -2,7 +2,7 @@ import { inject } from 'aurelia-framework';
 import { QueryViewerService } from 'views/query-viewer/query-viewer.service';
 
 // -- config -- //
-const nodesPerScreen = 5;
+const nodesPerScreen = 10;
 
 @inject(QueryViewerService)
 export class QueryViewer {
@@ -22,6 +22,9 @@ export class QueryViewer {
             .catch(error => console.log(error));
     }
 
+    attached() {
+         this.boxWrapper = document.getElementsByClassName('box-wrapper')[0];
+    }
     get slidePct() {
         return String(-100 * this.screenIndex) + '%';
     }
