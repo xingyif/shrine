@@ -22,9 +22,6 @@ export class QueryViewer {
             .catch(error => console.log(error));
     }
 
-    attached() {
-         this.boxWrapper = document.getElementsByClassName('box-wrapper')[0];
-    }
     get slidePct() {
         return String(-100 * this.screenIndex) + '%';
     }

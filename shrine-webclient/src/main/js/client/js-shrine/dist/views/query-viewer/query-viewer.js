@@ -55,10 +55,6 @@ System.register(['aurelia-framework', 'views/query-viewer/query-viewer.service']
                     });
                 }
 
-                QueryViewer.prototype.attached = function attached() {
-                    this.boxWrapper = document.getElementsByClassName('box-wrapper')[0];
-                };
-
                 _createClass(QueryViewer, [{
                     key: 'slidePct',
                     get: function get() {
