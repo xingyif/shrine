@@ -27,7 +27,7 @@ function getInstutionResults(numberOfInstitutions = 100, resultBase = 10000000) 
     for (let i = 0; i < length; i++) {
         const institution = institutions[i];
         console.log(institution);
-        const result = resultBase + i + ' patients';
+        const result = resultBase + i;
         resultSet.push({
             node: institution,
             result: result
@@ -36,3 +36,4 @@ function getInstutionResults(numberOfInstitutions = 100, resultBase = 10000000) 
 
     return resultSet;
 }
+
