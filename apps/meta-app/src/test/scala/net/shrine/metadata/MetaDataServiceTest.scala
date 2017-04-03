@@ -1,16 +1,22 @@
 package net.shrine.metadata
 
 import akka.actor.ActorRefFactory
+import net.shrine.i2b2.protocol.pm.User
+import net.shrine.protocol.Credential
 import org.json4s.DefaultFormats
 import org.json4s.native.JsonMethods.parse
 import org.junit.runner.RunWith
 import org.scalatest.FlatSpec
 import org.scalatest.junit.JUnitRunner
+import spray.http.BasicHttpCredentials
 import spray.testkit.ScalatestRouteTest
+
+import scala.concurrent.ExecutionContext
 
 @RunWith(classOf[JUnitRunner])
 class MetaDataServiceTest extends FlatSpec with ScalatestRouteTest with MetaDataService {
   override def actorRefFactory: ActorRefFactory = system
+  override implicit val ec: ExecutionContext = ExecutionContext.Implicits.global
 
   import scala.concurrent.duration._
   implicit val routeTestTimeout = RouteTestTimeout(10.seconds)
@@ -22,7 +28,7 @@ class MetaDataServiceTest extends FlatSpec with ScalatestRouteTest with MetaData
       val result = new String(body.data.toByteArray)
 
       assertResult(OK)(status)
-      assertResult(result)("pong")
+      assertResult("pong")(result)
     }
   }
 
@@ -32,7 +38,21 @@ class MetaDataServiceTest extends FlatSpec with ScalatestRouteTest with MetaData
       val result = Integer.valueOf(body.data.asString)
 
       assertResult(OK)(status)
-      assertResult(result)(10)
+      assertResult(10)(result)
+    }
+  }
+
+  val researcherUserName = "ben"
+  val researcherFullName = researcherUserName
+
+  val researcherCredentials = BasicHttpCredentials(researcherUserName,"kapow")
+
+  val brokenCredentials = BasicHttpCredentials(researcherUserName,"wrong password")
+
+  "MetaDataService" should "access the qep service and return an OK for its instructions after a login" in {
+    Get(s"/qep") ~> staticDataRoute ~> check {
+
+      assertResult(OK)(status)
     }
   }
 }
