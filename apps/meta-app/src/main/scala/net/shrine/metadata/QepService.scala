@@ -1,13 +1,14 @@
 package net.shrine.metadata
 
 import com.typesafe.config.ConfigRenderOptions
+import net.shrine.authorization.steward.{Date, TopicState, UserName}
 import net.shrine.i2b2.protocol.pm.User
 import net.shrine.log.Loggable
 import net.shrine.source.ConfigSource
 import spray.http.{StatusCode, StatusCodes}
 import spray.routing.{HttpService, _}
 
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 
 /**
   * An API to support the web client's work with queries.
@@ -35,9 +36,35 @@ trait QepService extends HttpService with Loggable {
     """.stripMargin
 
 
-  def qepDataRoute(user:User): Route = pathPrefix("qep")  {
-     get {
-       complete(qepInfo) //todo start here
-    }} ~ complete(qepInfo)
+  def qepRoute(user: User): Route = pathPrefix("qep") {
+    get {
+      queryResults(user)
+    }
+  } ~ complete(qepInfo)
 
+  def queryResults(user: User): Route = pathPrefix("queryResults") {
+    matchQueryParameters(Some(user.username)){ queryParameters:QueryParameters =>
+      complete(queryParameters.toString)
+    }
+  }
+
+  def matchQueryParameters(userName: Option[UserName])(parameterRoute: QueryParameters => Route): Route = {
+
+    parameters('skip.as[Int].?, 'limit.as[Int].?) { (skipOption, limitOption) =>
+
+      val qp = QueryParameters(
+        userName,
+        skipOption,
+        limitOption
+      )
+      parameterRoute(qp)
+    }
+  }
 }
+
+//todo move to QepQueryDb class
+case class QueryParameters(
+                            researcherIdOption:Option[UserName] = None,
+                            skipOption:Option[Int] =  None,
+                            limitOption:Option[Int] = None //todo deadline, maybe version, someday
+                          )

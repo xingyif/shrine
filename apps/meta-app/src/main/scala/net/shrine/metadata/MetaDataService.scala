@@ -56,7 +56,7 @@ trait MetaDataService extends HttpService
   }
 
   lazy val authenticatedRoute: Route = authenticate(userAuthenticator.basicUserAuthenticator) { user:User =>
-      qepDataRoute(user)
+      qepRoute(user)
   }
 
   lazy val userAuthenticator = UserAuthenticator(ConfigSource.config)

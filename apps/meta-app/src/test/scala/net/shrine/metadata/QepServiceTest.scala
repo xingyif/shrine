@@ -22,13 +22,33 @@ class QepServiceTest extends FlatSpec with ScalatestRouteTest with QepService {
   implicit val routeTestTimeout = RouteTestTimeout(10.seconds)
   import spray.http.StatusCodes._
 
-  "QepService" should "return an OK for a dead-end route" in {
-    Get(s"/qep") ~> qepDataRoute(researcherUser) ~> check {
+  "QepService" should "return an OK and qepInfo for a dead-end route" in {
+    Get(s"/qep") ~> qepRoute(researcherUser) ~> check {
       implicit val formats = DefaultFormats
       val result = body.data.asString
 
       assertResult(OK)(status)
       assertResult(qepInfo)(result)
+    }
+  }
+
+  "QepService" should "return an OK and a table of data for a queryResults request" in {
+    Get(s"/qep/queryResults") ~> qepRoute(researcherUser) ~> check {
+      implicit val formats = DefaultFormats
+      val result = body.data.asString
+
+      assertResult(OK)(status)
+      //todo check json result      assertResult(qepInfo)(result)
+    }
+  }
+
+  "QepService" should "return an OK and a table of data for a queryResults request with different skip and limit values" in {
+    Get(s"/qep/queryResults?skip=2&limit=2") ~> qepRoute(researcherUser) ~> check {
+      implicit val formats = DefaultFormats
+      val result = body.data.asString
+
+      assertResult(OK)(status)
+      //todo check json result      assertResult(qepInfo)(result)
     }
   }
 
