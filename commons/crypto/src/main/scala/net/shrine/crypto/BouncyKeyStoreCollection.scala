@@ -55,6 +55,7 @@ object BouncyKeyStoreCollection extends Loggable {
   /**
     * Creates a cert collection from a keyStore. Returns an Either to abstract away
     * try catches/problem construction until the end.
+    *
     * @return [[EitherCertError]]
     */
   def createCertCollection(keyStore: KeyStore, descriptor: KeyStoreDescriptor):
@@ -66,39 +67,33 @@ object BouncyKeyStoreCollection extends Loggable {
     val values = keyStore.aliases().map(alias =>
       (alias, keyStore.getCertificate(alias), Option(keyStore.getKey(alias, descriptor.password.toCharArray).asInstanceOf[PrivateKey])))
     val entries = values.map(value => KeyStoreEntry(value._2.asInstanceOf[X509Certificate], NonEmptySeq(value._1, Nil), value._3)).toSet
-    if (entries.exists(_.isExpired()))
-      Left(configureError(ExpiredCertificates(entries.filter(_.isExpired()))))
-    else
-      descriptor.trustModel match {
-        case PeerToPeerModel       => createPeerCertCollection(entries, descriptor)
-        case SingleHubModel(isHub) => createHubCertCollection(entries, descriptor, isHub)
-      }
+    //OK to try to use an expired cert, but still log a Problem
+    if (entries.exists(_.isExpired())) configureError(ExpiredCertificates(entries.filter(_.isExpired())))
+
+    descriptor.trustModel match {
+      case PeerToPeerModel       => createPeerCertCollection(entries, descriptor)
+      case SingleHubModel(isHub) => createCentralCertCollection(entries, descriptor, isHub)
+    }
   }
 
-  def createHubCertCollection(entries: Set[KeyStoreEntry], descriptor: KeyStoreDescriptor, isHub: Boolean):
+  def createCentralCertCollection(entries: Set[KeyStoreEntry], descriptor: KeyStoreDescriptor, isHub: Boolean):
     EitherCertError =
   {
-    if (entries.size != 2)
-      Left(configureError(RequiresExactlyTwoEntries(entries)))
-    else if (entries.count(_.privateKey.isDefined) != 1)
-      Left(configureError(RequiresExactlyOnePrivateKey(entries.filter(_.privateKey.isDefined))))
-    else {
-      val partition    = entries.partition(_.privateKey.isDefined)
-      val privateEntry = partition._1.head
-      val caEntry      = partition._2.head
-      val rsds = descriptor.remoteSiteDescriptors
-
-      if (!isHub && rsds.head.keyStoreAlias.get != caEntry.aliases.first)
-        Left(configureError(IncorrectAliasMapping(rsds.head.keyStoreAlias.get +: Nil, caEntry +: Nil)))
-      else if (isHub && privateEntry.wasSignedBy(caEntry))
-        Right(HubCertCollection(privateEntry, caEntry, rsds.map(rsd => RemoteSite(rsd.url, None, rsd.siteAlias, rsd.port))))
-      else if (privateEntry.wasSignedBy(caEntry)) {
+    val rsds = descriptor.remoteSiteDescriptors
+    val hubSigningPair = for {
+      hubEntry <- entries.find(e => e.privateKey.isEmpty && e.aliases.intersect(descriptor.caCertAliases).nonEmpty)
+      signingEntry <- entries.find(e => e.privateKey.isDefined && e.wasSignedBy(hubEntry))
+    } yield (hubEntry, signingEntry)
+    hubSigningPair.fold[EitherCertError](Left(configureError(CouldNotFindCaOrSigningQuery)))(pair => {
+      val (hub, signing) = pair
+      if (isHub) {
+        val remoteSites = rsds.map(r => RemoteSite(r.url, Some(hub), r.siteAlias, r.port))
+        Right(HubCertCollection(signing, hub, remoteSites))
+      } else {
         val rsd = rsds.head
-        Right(DownStreamCertCollection(privateEntry, caEntry, RemoteSite(rsd.url, Some(caEntry), rsd.siteAlias, rsd.port)))
+        Right(DownStreamCertCollection(signing, hub, RemoteSite(rsd.url, Some(hub), rsd.siteAlias, rsd.port)))
       }
-      else
-        Left(configureError(NotSignedByCa(privateEntry +: Nil, caEntry)))
-      }
+    })
   }
 
   def remoteDescriptorToRemoteSite(descriptor: KeyStoreDescriptor, entries: Set[KeyStoreEntry]): Seq[RemoteSite] = {

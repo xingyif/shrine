@@ -1,5 +1,6 @@
 .yui-skin-sam .qryTemporalConstraint .yuimenu .bd {
 	width:300px;
+	overflow: hidden;
 }
 
 DIV#crcQueryToolBox {
@@ -52,7 +53,7 @@ DIV#crcQueryToolBox DIV.queryLabel {
 	float:left;
 
 	xposition:absolute;
-	xz-index:99999;
+	z-index:99999;
 }
 
 DIV#crcQueryToolBox DIV#queryName {
@@ -179,7 +180,7 @@ DIV#crcQueryToolBox DIV#runBox {
 	float: left;
 	margin:0px 5px 0px 0px;
 	width:72px;
-	xz-index:5;
+	z-index:5;
 	overflow:hidden;
 }
 

@@ -52,7 +52,7 @@ trait StewardService extends HttpService with Json4sSupport {
   }
 
   lazy val fullLogRoute = logRequestResponse(logEntryForRequestResponse _) {
-    qepRoute ~ authenticatedInBrowser
+    routeForQepUser ~ authenticatedInBrowser
   }
 
   // logs just the request method, uri and response at info level
@@ -127,7 +127,7 @@ trait StewardService extends HttpService with Json4sSupport {
     }
   }
 
-  def qepRoute:Route = pathPrefix("qep") {
+  def routeForQepUser:Route = pathPrefix("qep") {
     authenticate(userAuthenticator.basicUserAuthenticator) { user =>
 
       StewardDatabase.db.upsertUser(user)
