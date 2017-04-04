@@ -6,7 +6,6 @@ const indexDir = './client/';
 
 gulp.task('serve', ['pm'], function () { 
 
-
     return gulp.src(indexDir)
         .pipe(server({
             livereload: true,
@@ -17,4 +16,4 @@ gulp.task('serve', ['pm'], function () {
 
 gulp.task('pm', function () {
     pmMock.start('server');
-})
+});
