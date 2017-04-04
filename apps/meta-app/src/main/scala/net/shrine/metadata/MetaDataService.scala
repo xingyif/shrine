@@ -55,15 +55,8 @@ trait MetaDataService extends HttpService
     pathEnd {complete(shrineInfo)}
   }
 
-  lazy val authenticatedRoute: Route = reportIfFailedToAuthenticate {
-    authenticate(userAuthenticator.basicUserAuthenticator) { user:User =>
+  lazy val authenticatedRoute: Route = authenticate(userAuthenticator.basicUserAuthenticator) { user:User =>
       qepDataRoute(user)
-    }
-  }
-
-  val reportIfFailedToAuthenticate = routeRouteResponse {
-    case Rejected(List(AuthenticationFailedRejection(_,_))) =>
-      complete("AuthenticationFailed")
   }
 
   lazy val userAuthenticator = UserAuthenticator(ConfigSource.config)

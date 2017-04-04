@@ -30,8 +30,9 @@ trait StaticDataService extends HttpService with Loggable {
     (pathPrefix("staticData") | pathPrefix("data")) {  //todo phase out "data" as the path prefix. Prefer "staticData"
       parameter("key") { (key: String) =>
         complete(handleKey(key))
-      } ~ complete(handleAll)
-    }} ~ complete(staticInfo)
+      } ~ complete(handleAll) ~
+      pathEnd ( complete(staticInfo) )
+    }}
 
   def handleAll:(StatusCode, String) = {
     StatusCodes.OK -> staticDataConfig.root.render(ConfigRenderOptions.concise()) // returns it as JSON.

@@ -33,7 +33,7 @@ class MetaDataServiceTest extends FlatSpec with ScalatestRouteTest with MetaData
   }
 
   "MetaDataService" should "access the staticData service and return an OK and 10 for a nested data" in {
-    Get(s"/staticData?key=object.objectVal") ~> staticDataRoute ~> check {
+    Get(s"/staticData?key=object.objectVal") ~> route ~> check {
       implicit val formats = DefaultFormats
       val result = Integer.valueOf(body.data.asString)
 
@@ -46,13 +46,22 @@ class MetaDataServiceTest extends FlatSpec with ScalatestRouteTest with MetaData
   val researcherFullName = researcherUserName
 
   val researcherCredentials = BasicHttpCredentials(researcherUserName,"kapow")
-
   val brokenCredentials = BasicHttpCredentials(researcherUserName,"wrong password")
 
   "MetaDataService" should "access the qep service and return an OK for its instructions after a login" in {
-    Get(s"/qep") ~> staticDataRoute ~> check {
-
+    Get(s"/qep") ~>  addCredentials(researcherCredentials) ~> route ~>
+    check {
       assertResult(OK)(status)
     }
+  }
+
+  "MetaDataService" should "not access the qep service without a username and password" in {
+    Get(s"/qep") ~>  sealRoute(route) ~>
+      check { assertResult(Unauthorized)(status) }
+  }
+
+  "MetaDataService" should "not access the qep service with an incorrect password" in {
+    Get(s"/qep") ~>  addCredentials(brokenCredentials) ~>  sealRoute(route) ~>
+      check { assertResult(Unauthorized)(status) }
   }
 }

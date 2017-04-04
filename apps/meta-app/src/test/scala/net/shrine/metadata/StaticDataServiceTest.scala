@@ -20,7 +20,6 @@ class StaticDataServiceTest extends FlatSpec with ScalatestRouteTest with Static
   implicit val routeTestTimeout = RouteTestTimeout(10.seconds)
   import spray.http.StatusCodes._
 
-
   "StaticDataService" should "return an OK and 10 for a nested data" in {
     Get(s"/staticData?key=object.objectVal") ~> staticDataRoute ~> check {
       implicit val formats = DefaultFormats
@@ -80,5 +79,4 @@ class StaticDataServiceTest extends FlatSpec with ScalatestRouteTest with Static
 
     }
   }
-
 }
