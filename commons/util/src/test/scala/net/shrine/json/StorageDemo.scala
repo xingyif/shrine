@@ -1,14 +1,17 @@
 package net.shrine.json
 import java.io.File
+import java.nio.charset.Charset
 import java.util.UUID
 
+import com.typesafe.config.ConfigFactory
 import jawn.Parser.parseFromString
 import rapture.json._
 import rapture.json.jsonBackends.jawn._
 import slick.dbio.Effect.Write
-import slick.driver.{JdbcProfile, SQLiteDriver}
+import slick.driver.{H2Driver, JdbcProfile, MySQLDriver, SQLiteDriver}
 import slick.jdbc.JdbcBackend.Database
 import net.shrine.json.{Query => ShrineQuery}
+
 import scala.concurrent.Await
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
@@ -25,9 +28,6 @@ class StorageDemo {}
 object Storage {
 
   def main(args: Array[String]): Unit = {
-    val db = Database.forConfig("sqlite")
-    //forURL(s"jdbc:sqlite::memory:", driver = "org.sqlite.JDBC")
-    val dao = DAO(SQLiteDriver)
 
     val uid = UUID.randomUUID()
     val startTime = System.currentTimeMillis()
@@ -87,43 +87,63 @@ object Storage {
              ]
           }
     """
-    val query = ShrineQuery(queryJson).get
-    val queryResult = QueryResult(queryResultJson).get
+    val queryResults = (0 to 10).map(i =>
+      QueryResult(queryResultJson.copy(_.resultId = UUID.randomUUID()))
+        .get)
+    val query = Query(queryJson.copy(_.queryResults = queryResults.map(_.resultId))).get
     val user = User("user", "domain", uid)
     val topic = Topic("topic", "domain", uid)
     val adapter = Adapter("adapter", uid)
 
-    val jq = json"""{"q": {"q2": 20}, "epoch": 12842184}"""
-    val insertQuery =
-      dao.SlickQueries.insert(query, user, topic, adapter, queryResult) match {
-        case Left(s)        => throw new IllegalArgumentException(s)
-        case Right(dbQuery) => dbQuery
-      }
-    //    Await.result(db.run(setup), 10.seconds)
-    import dao.profile.api._
-    val acts = dao.SlickQueries.create
-      .andThen(insertQuery)
-      .andThen(dao.queryRunsQuery.result)
-    val results = Await.result(db.run(acts), 10.seconds)
-    println(results)
+    val sqliteDB = Database.forConfig("sqlite", ConfigFactory.load("shrine.conf"))
+    val h2DB = Database.forConfig("h2", ConfigFactory.load("shrine.conf"))
+    val sqliteDAO = DAO(SQLiteDriver)
+    val h2DAO = DAO(H2Driver)
+    //    Await.result(sqliteDB.run(setup), 10.seconds)
+    Seq((sqliteDAO, sqliteDB), (h2DAO, h2DB)).foreach(daodb => {
+      val (dao, db) = daodb
+      import dao.profile.api._
+      val insertQueries = queryResults.map(queryResult =>
+        dao.SlickQueries.insert(query, user, topic, adapter, queryResult) match {
+          case Left(s) => throw new IllegalArgumentException(s)
+          case Right(dbQuery) => dbQuery
+      })
+      val acts = dao.SlickQueries.create
+        .andThen(DBIO.sequence(insertQueries))
+        .andThen(dao.queryRunsQuery.result)
+        .andThen(sqliteDAO.SlickQueries.selectJsonForQuery(uid))
+      val results = Await.result(db.run(acts), 10.seconds)
+      println(results)
+    })
+//    println(h2DAO.SlickQueries.create.statements.mkString(";\n"))
+//    println(DAO(MySQLDriver).SlickQueries.create.statements.mkString(";\n"))
   }
 }
 
   case class DAO(profile: JdbcProfile) {
     import profile.api._
 
+    val charset = "UTF-8"
+    def bytesToJson(bytes: Array[Byte]): Json = {
+      Json(jawn.Parser.parseFromString(new String(bytes, charset)).get)
+    }
+
+    def jsonToBytes(json: Json): Array[Byte] = {
+      json.toBareString.getBytes(charset)
+    }
+
     class Queries(tag: Tag) extends Table[ShrineQuery](tag, "QUERIES") {
       def queryId = column[UUID]("query_id", O.PrimaryKey)
 
       def queryDate = column[Long]("query_epoch")
 
-      def queryJson = column[String]("query_json")
+      def queryJson = column[Array[Byte]]("query_json")
 
       def * = (queryId, queryDate, queryJson) <> (
-        (row: (UUID, Long, String)) =>
-          Json(parseFromString(row._3).get).as[ShrineQuery],
+        (row: (UUID, Long, Array[Byte])) =>
+          bytesToJson(row._3).as[ShrineQuery],
         (query: ShrineQuery) =>
-          Some((query.queryId, query.startTime, query.json.toBareString))
+          Some((query.queryId, query.startTime, jsonToBytes(query.json)))
       )
     }
 
@@ -133,13 +153,13 @@ object Storage {
         extends Table[QueryResult](tag, "QUERYRESULTS") {
       def queryResultId = column[UUID]("query_result_id", O.PrimaryKey)
 
-      def queryResultJson = column[String]("query_result_json")
+      def queryResultJson = column[Array[Byte]]("query_result_json")
 
       def * =
-        (queryResultId, queryResultJson) <> ((row: (UUID, String)) =>
-          Json(parseFromString(row._2).get).as[QueryResult],
+        (queryResultId, queryResultJson) <> ((row: (UUID, Array[Byte])) =>
+          bytesToJson(row._2).as[QueryResult],
         (result: QueryResult) =>
-          Some((result.resultId, result.json.toBareString)))
+          Some((result.resultId, jsonToBytes(result.json))))
     }
 
     val queryResults = TableQuery[QueryResults]
@@ -148,12 +168,12 @@ object Storage {
 
       def userId = column[UUID]("user_id", O.PrimaryKey)
 
-      def userJson = column[String]("user_json")
+      def userJson = column[Array[Byte]]("user_json")
 
       def * = {
-        (userId, userJson) <> ((row: (UUID, String)) =>
-          Json(parseFromString(row._2).get).as[User],
-        (user: User) => Some((user.id, Json(user).toBareString)))
+        (userId, userJson) <> ((row: (UUID, Array[Byte])) =>
+          bytesToJson(row._2).as[User],
+        (user: User) => Some((user.id, jsonToBytes(Json(user)))))
       }
     }
 
@@ -162,12 +182,12 @@ object Storage {
     class Topics(tag: Tag) extends Table[Topic](tag, "TOPICS") {
       def topicId = column[UUID]("topic_id", O.PrimaryKey)
 
-      def topicJson = column[String]("topic_json")
+      def topicJson = column[Array[Byte]]("topic_json")
 
       def * =
-        (topicId, topicJson) <> ((row: (UUID, String)) =>
-          Json(jawn.Parser.parseFromString(row._2).get).as[Topic],
-        (topic: Topic) => Some((topic.id, Json(topic).toBareString)))
+        (topicId, topicJson) <> ((row: (UUID, Array[Byte])) =>
+          bytesToJson(row._2).as[Topic],
+        (topic: Topic) => Some((topic.id, jsonToBytes(Json(topic)))))
     }
 
     val topics = TableQuery[Topics]
@@ -175,19 +195,19 @@ object Storage {
     class Adapters(tag: Tag) extends Table[Adapter](tag, "ADAPTERS") {
       def adapterId = column[UUID]("adapter_id", O.PrimaryKey)
 
-      def adapterJson = column[String]("adapter_json")
+      def adapterJson = column[Array[Byte]]("adapter_json")
 
       def * =
-        (adapterId, adapterJson) <> ((row: (UUID, String)) =>
-          Json(jawn.Parser.parseFromString(row._2).get).as[Adapter],
-        (adapter: Adapter) => Some((adapter.id, Json(adapter).toBareString)))
+        (adapterId, adapterJson) <> ((row: (UUID, Array[Byte])) =>
+          bytesToJson(row._2).as[Adapter],
+        (adapter: Adapter) => Some((adapter.id, jsonToBytes(Json(adapter)))))
     }
 
     val adapters = TableQuery[Adapters]
 
     class QueryRuns(tag: Tag)
-        extends Table[(UUID, UUID, UUID, UUID, UUID, UUID)](tag, "QUERYRUNS") {
-      def queryRunId = column[UUID]("query_run_id", O.PrimaryKey)
+        extends Table[(Int, UUID, UUID, UUID, UUID, UUID)](tag, "QUERYRUNS") {
+      def queryRunId = column[Int]("query_run_id", O.PrimaryKey, O.AutoInc)
 
       def queryId = column[UUID]("query_id")
 
@@ -235,11 +255,39 @@ object Storage {
     val queryRunsQuery = TableQuery[QueryRuns]
 
     object SlickQueries {
-//      def selectAllForQuery(queryId: UUID): Query[QueryRuns, (UUID, UUID, UUID, UUID, UUID, UUID), Seq] =
-//        for {
-//          (qid, rid, uid, tid, aid) <- queryRunsQuery.filter(_.queryId === queryId)
-//          (q, r, u, t, a) <- queries join users on (_.queryId === queryId && _.userId === uid)
-//        }
+      def selectAllForQuery(queryId: UUID) =
+        for {
+          queryRun <- queryRunsQuery.filter(_.queryId === queryId)
+          q <- queries if q.queryId === queryRun.queryId
+          r <- queryResults if r.queryResultId === queryRun.queryResultId
+          u <- users if u.userId === queryRun.userId
+          t <- topics if t.topicId === queryRun.topicId
+          a <- adapters if a.adapterId === queryRun.adapterId
+        } yield(q, r, u, t, a)
+
+      // Generates the json for a given query Id
+      def selectJsonForQuery(queryId: UUID) = {
+        val allResults = selectAllForQuery(queryId)
+        allResults.result.map(t => {
+          t.headOption.map{
+            case (query, _, user, topic, _) =>
+              val queryJson = query.json
+              val jb = JsonBuffer.construct(queryJson.$root.copy(), Vector())
+              jb -= "userId"
+              jb -= "topicId"
+              jb.user = user
+              jb.topic = topic
+              jb.queryResults = t.map{
+                case (_, queryResult, _, _, adapter) =>
+                  val jb2 = JsonBuffer.construct(queryResult.json.$root.copy(), Vector())
+                  jb2 -= "adapterId"
+                  jb2.adapter = adapter
+                  jb2
+              }
+              Json(jb)
+          }.getOrElse(json"""{}""")
+        })
+      }
 
       def insert(query: ShrineQuery,
                  user: User,
@@ -264,8 +312,7 @@ object Storage {
               users.insertOrUpdate(user),
               topics.insertOrUpdate(topic),
               adapters.insertOrUpdate(adapter),
-              queryRunsQuery += (UUID
-                .randomUUID(), query.queryId, result.resultId, user.id, topic.id, adapter.id)
+              queryRunsQuery += (0, query.queryId, result.resultId, user.id, topic.id, adapter.id)
             ))
     }
       def schema = queries.schema ++ users.schema ++ topics.schema ++ adapters.schema ++ queryResults.schema ++ queryRunsQuery.schema
