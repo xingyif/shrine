@@ -4,8 +4,9 @@
 html,
 body {
   height: 100%;
-}
-body {
+}*/
+.mailto {
+  box-sizing: border-box;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -15,13 +16,13 @@ body {
   font-family: 'Source Sans Pro', serif;
   color: #333;
   background: #f2f2f2;
-}
+  height: 100%; }
 
-p {
+.mailto p {
   font-size: 16px;
-  line-height: 1.6em;
-}
-.button {
+  line-height: 1.6em; }
+
+.mailto .button {
   border: 1px solid #6576a8;
   background: #6d85ad;
   border: 0;
@@ -32,31 +33,29 @@ p {
   text-decoration: none;
   letter-spacing: 1px;
   color: #fff;
-  cursor: pointer;
-}
-.button:hover {
-  background: #9cb8d9;
-}
-.button:active {
-  background: #6576a8;
-}
-.button--large {
+  cursor: pointer; }
+
+.mailto .button:hover {
+  background: #9cb8d9; }
+
+.mailto .button:active {
+  background: #6576a8; }
+
+.mailto .button--large {
   position: relative;
   padding: 15px 30px;
   border-radius: 5px;
-  font-size: 16px;
-}
-.button--large:active {
-  top: 1px;
-}
-.content {
-  text-align: center;
+  font-size: 16px; }
+
+.mailto .button--large:active {
+  top: 1px; }
+
+.mailto .content {
   max-width: 350px;
-}
-.email {
-  position: relative;
-}
-*/
+  text-align: center; }
+
+.mailto .email {
+  position: relative; }
 
 @import url(http://fonts.googleapis.com/css?family=Roboto:400,500,300,700);
 body {

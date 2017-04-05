@@ -8,7 +8,8 @@
 	// -- events -- //
 	i2b2.events.afterLogin.subscribe(loginSuccessHandler);
 
-	// --  private -- //
+
+	 // -- @todo: boostrap the Webclient plugin tabs here. -- //
 	function loginSuccessHandler(type, args) {
 		if (i2b2.hive.cfg.lstCells.SHRINE.serverLoaded) {
 			i2b2.PM.model.shrine_domain = true;

@@ -902,26 +902,23 @@ $.noConflict();
 		<div class="tabBox tabDownloadData" onClick="i2b2.CRC.view.status.selectTab('downloadData')"> 
 			<div>Download Results</div>
 		</div>
-        <div class="tabBox shrineTab" onClick="i2b2.CRC.view.status.selectTab('shrine')"> 
+        <!-- todo:  bootstrap this section from the shrine cell -->
+        <div class="tabBox mailto" onClick="i2b2.SHRINE.plugin.navigateTo('mailto')"> 
 			<div>Contact</div>
 		</div>
-		<!-- BG -->
+        <div class="tabBox query-viewer" onClick="i2b2.SHRINE.plugin.navigateTo('query-viewer')"> 
+			<div>Query Viewer</div>
+		</div>
     </div>
     <div class="StatusBox">
         <div id="infoQueryStatusText" class="StatusBoxText" oncontextmenu="return false">
-            <!--iframe src="https://codepen.io/JoeHana/pen/sFiBm" style="
-                width: 100%;
-                height: 100%;
-                overflow: hidden;">
-                </iframe-->
         </div>
-		<!-- BG -->
 		<div id="infoQueryStatusChart" class="StatusBoxChart" oncontextmenu="return false" style="display:none"></div>
 		<div id="infoQueryStatusReport" class="StatusBoxReport" oncontextmenu="return false" style="display:none"></div>
         <div id="infoDownloadStatusData" class="StatusBoxDownload" oncontextmenu="return false" style="display:none"></div>
+        <!-- todo:  bootstrap this section from the shrine  cell -->
         <div id="shrinePlugin" class="shrinePluginContent" oncontextmenu="return false" style="display:none;">
         </div>
-		<!-- BG -->
     </div>
 </div>
 

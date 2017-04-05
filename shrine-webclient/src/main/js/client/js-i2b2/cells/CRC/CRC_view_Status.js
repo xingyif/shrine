@@ -48,14 +48,6 @@ i2b2.CRC.view.status.showDisplay = function() {
 i2b2.CRC.view.status.selectTab = function(tabCode) {
 	// toggle between the Navigate and Find Terms tabs
 	switch (tabCode) {
-		case 'shrine':
-		    this.currentTab = 'status';
-			this.cellRoot.view['status'].hideDisplay();
-			this.cellRoot.view['graphs'].hideDisplay();
-			this.cellRoot.view['queryReport'].hideDisplay();  
-			this.cellRoot.view['downloadData'].hideDisplay();
-			i2b2.SHRINE.plugin.showDisplay();
-		break;
 		case "graphs":
 			this.currentTab = 'graphs';
 			this.cellRoot.view['graphs'].showDisplay();
@@ -91,6 +83,13 @@ i2b2.CRC.view.status.selectTab = function(tabCode) {
 					i2b2.CRC.view.downloadData.createCSV();
 			}
 			break;
+		default :
+		    this.currentTab = 'shrine';
+			this.cellRoot.view['status'].hideDisplay();
+			this.cellRoot.view['graphs'].hideDisplay();
+			this.cellRoot.view['queryReport'].hideDisplay();  
+			this.cellRoot.view['downloadData'].hideDisplay();
+		break;
 	}
 }
 //BG
