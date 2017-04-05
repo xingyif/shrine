@@ -1,9 +1,11 @@
 package net.shrine.metadata
 
 import com.typesafe.config.ConfigRenderOptions
+import net.shrine.audit.NetworkQueryId
 import net.shrine.authorization.steward.{Date, TopicState, UserName}
 import net.shrine.i2b2.protocol.pm.User
 import net.shrine.log.Loggable
+import net.shrine.qep.queries.{FullQueryResult, QepQuery, QepQueryDb, QepQueryFlag}
 import net.shrine.source.ConfigSource
 import spray.http.{StatusCode, StatusCodes}
 import spray.routing.{HttpService, _}
@@ -16,6 +18,8 @@ import scala.util.{Failure, Success, Try}
   * The current API supplies information about previous running queries. Eventually this will support accessing
   * information about queries running now and the ability to submit queries.
   */
+
+//todo  maybe move this to the qep/service module
 trait QepService extends HttpService with Loggable {
   val qepInfo =
     """
@@ -44,7 +48,22 @@ trait QepService extends HttpService with Loggable {
 
   def queryResults(user: User): Route = pathPrefix("queryResults") {
     matchQueryParameters(Some(user.username)){ queryParameters:QueryParameters =>
-      complete(queryParameters.toString)
+
+      val queries: Seq[QepQuery] = QepQueryDb.db.selectPreviousQueriesByUserAndDomain(
+        userName = user.username,
+        domain = user.domain,
+        skip = queryParameters.skipOption,
+        limit = queryParameters.limitOption
+      )
+
+      //todo revisit json structure to remove junk
+      val flags: Map[NetworkQueryId, QepQueryFlag] = QepQueryDb.db.selectMostRecentQepQueryFlagsFor(queries.map(q => q.networkId).to[Set])
+      val queryResults: Map[NetworkQueryId, Map[String, FullQueryResult]] = queries.flatMap(q => QepQueryDb.db.selectMostRecentFullQueryResultsFor(q.networkId)).groupBy(_.networkQueryId).map(q => q._1 -> q._2.groupBy(_.adapterNode).map(r => r._1 -> r._2.head))
+      val adapters: Seq[String] = QepQueryDb.db.selectDistinctAdaptersWithResults
+
+      val table = ResultsTable(adapters,queries,flags,queryResults)
+
+      complete(table.toString)
     }
   }
 
@@ -68,3 +87,10 @@ case class QueryParameters(
                             skipOption:Option[Int] =  None,
                             limitOption:Option[Int] = None //todo deadline, maybe version, someday
                           )
+
+case class ResultsTable(
+  adapters:Seq[String], //todo type for adapter name
+  queries:Seq[QepQuery],
+  flags:Map[NetworkQueryId,QepQueryFlag],
+  queryResults:Map[NetworkQueryId,Map[String,FullQueryResult]]
+)
