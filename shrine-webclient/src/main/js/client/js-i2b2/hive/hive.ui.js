@@ -133,7 +133,17 @@ YAHOO.extend(Splitter, YAHOO.util.DD,
 	onDrag: function(e)
 	{
 		this.dragged();
+	},
+
+	onMouseDown: function(e) {
+		jQuery('#shrine-plugin').css('display', 'none');
+	},
+
+	onMouseUp: function(e) {
+		jQuery('#shrine-plugin').css('display', 'inline');
 	}
+
+
 });
 
 

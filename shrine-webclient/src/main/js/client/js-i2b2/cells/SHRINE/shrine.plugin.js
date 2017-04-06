@@ -5,7 +5,7 @@
 (function () {
     'use strict';
     var pluginId = 'shrinePlugin';
-    var tabId = 'shrineTab';
+    //var tabId = 'shrineTab';
     var contentIds = [
         'infoQueryStatusText',
         'infoQueryStatusChart',
@@ -19,6 +19,7 @@
     i2b2.SHRINE.plugin.showDisplay = showDisplay;
     i2b2.SHRINE.plugin.hideDisplay = hideDisplay;
     i2b2.SHRINE.plugin.ZoomView = zoomView;
+    i2b2.SHRINE.plugin.navigateTo = navigateTo;
 
 
     function zoomView() {
@@ -26,9 +27,9 @@
         jQuery('#shrinePlugin').css('height', height);
     }
 
-    function showDisplay() {
+    function showDisplay(route) {
         clearAllTabs();
-        setShrineTabActive();
+        setShrineTabActive(route);
         hideContent();
         $(pluginId).show();
     }
@@ -42,12 +43,12 @@
             /* IE is no fun!  .each(el => el.removeClassName('active'));*/
     }
 
-    function setShrineTabActive() {
+    function setShrineTabActive(route) {
         // set us as active
         $(pluginId)
             .parentNode
             .parentNode
-            .select('DIV.tabBox.' + tabId)[0]
+            .select('DIV.tabBox.' + route)[0]
             .addClassName('active');
     }
 
@@ -60,6 +61,14 @@
     }
 
     function hideDisplay() {
-        $(pluginId).hide();
+        $(pluginId).hide(e);
+    }
+
+    // -- @todo: pass through messaging to the child frame. -- //
+    function navigateTo(route) {
+        i2b2.CRC.view.status.selectTab('shrine');
+        showDisplay(route);
+        var pluginLocation = window.frames['shrine-plugin'].window.location;
+        pluginLocation.href = pluginLocation.origin + pluginLocation.pathname + '#' + route;
     }
 })();
