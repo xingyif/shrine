@@ -61,14 +61,14 @@ trait QepService extends HttpService with Loggable {
 
       val table: ResultsTable = ResultsTable(adapters,queryResults,flags)
       import rapture.json._
-      import rapture.json.formatters.humanReadable._
       import rapture.json.jsonBackends.jawn._
       import rapture._
 
       val jsonTable: Json = Json(table)
+//      import rapture.json.formatters.humanReadable._
+//      val foramttedTable = Json.format(jsonTable)(humanReadable(jsonTable))
 
-      complete(jsonTable.toString())
-//      complete(Json.format(jsonTable).toString)
+      complete(jsonTable.toBareString)
     }
   }
 
@@ -95,7 +95,7 @@ case class QueryParameters(
 
 case class ResultsTable(
   adapters:Seq[String], //todo type for adapter name
-  rows:Seq[ResultsRow],
+  queryResults:Seq[ResultsRow],
   flags:Map[NetworkQueryId,QepQueryFlag]
 )
 

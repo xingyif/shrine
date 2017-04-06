@@ -45,11 +45,11 @@ class QepServiceTest extends FlatSpec with ScalatestRouteTest with QepService {
     changeDate = System.currentTimeMillis()
   )
 
-  val qepResultRowFromExampleCom = QueryResultRow(
+  val qepResultRowFromMgh = QueryResultRow(
     resultId = 10L,
     networkQueryId = 1L,
     instanceId = 100L,
-    adapterNode = "example.com",
+    adapterNode = "MGH",
     resultType = Some(ResultOutputType.PATIENT_COUNT_XML),
     size = 30L,
     startDate = Some(System.currentTimeMillis() - 60),
@@ -59,11 +59,55 @@ class QepServiceTest extends FlatSpec with ScalatestRouteTest with QepService {
     changeDate = System.currentTimeMillis() - 30
   )
 
+  val qepResultRowFromPartners = QueryResultRow(
+    resultId = 10L,
+    networkQueryId = 1L,
+    instanceId = 100L,
+    adapterNode = "Partners",
+    resultType = Some(ResultOutputType.PATIENT_COUNT_XML),
+    size = 300L,
+    startDate = Some(System.currentTimeMillis() - 60),
+    endDate = Some(System.currentTimeMillis() - 30),
+    status = QueryResult.StatusType.Finished,
+    statusMessage = None,
+    changeDate = System.currentTimeMillis() - 30
+  )
+
+  val qepResultRowFromBch = QueryResultRow(
+    resultId = 10L,
+    networkQueryId = 1L,
+    instanceId = 100L,
+    adapterNode = "BCH",
+    resultType = Some(ResultOutputType.PATIENT_COUNT_XML),
+    size = 3000L,
+    startDate = Some(System.currentTimeMillis() - 60),
+    endDate = Some(System.currentTimeMillis() - 30),
+    status = QueryResult.StatusType.Finished,
+    statusMessage = None,
+    changeDate = System.currentTimeMillis() - 30
+  )
+
+  val qepResultRowFromDfci = QueryResultRow(
+    resultId = 10L,
+    networkQueryId = 1L,
+    instanceId = 100L,
+    adapterNode = "DFCI",
+    resultType = Some(ResultOutputType.PATIENT_COUNT_XML),
+    size = 30000L,
+    startDate = Some(System.currentTimeMillis() - 60),
+    endDate = Some(System.currentTimeMillis() - 30),
+    status = QueryResult.StatusType.Finished,
+    statusMessage = None,
+    changeDate = System.currentTimeMillis() - 30
+  )
 
   "QepService" should "return an OK and a table of data for a queryResults request" in {
 
     QepQueryDb.db.insertQepQuery(qepQuery)
-    QepQueryDb.db.insertQepResultRow(qepResultRowFromExampleCom)
+    QepQueryDb.db.insertQepResultRow(qepResultRowFromBch)
+    QepQueryDb.db.insertQepResultRow(qepResultRowFromMgh)
+    QepQueryDb.db.insertQepResultRow(qepResultRowFromDfci)
+    QepQueryDb.db.insertQepResultRow(qepResultRowFromPartners)
 
     Get(s"/qep/queryResults") ~> qepRoute(researcherUser) ~> check {
       implicit val formats = DefaultFormats
@@ -71,10 +115,11 @@ class QepServiceTest extends FlatSpec with ScalatestRouteTest with QepService {
 
       assertResult(OK)(status)
 
+/*
       println("************")
       println(result)
       println("************")
-
+*/
       //todo check json result      assertResult(qepInfo)(result)
     }
   }
