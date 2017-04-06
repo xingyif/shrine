@@ -55,6 +55,20 @@ System.register(['aurelia-framework', 'views/query-viewer/query-viewer.service']
                     });
                 }
 
+                QueryViewer.prototype.isUnresolved = function isUnresolved(status) {
+                    return ['ERROR', 'PENDING'].indexOf(status) >= 0;
+                };
+
+                QueryViewer.prototype.getStatusStyle = function getStatusStyle(status) {
+                    if (status === 'ERROR') {
+                        return '#FF0000';
+                    } else if (status === 'PENDING') {
+                        return '#00FF00';
+                    }
+
+                    return '';
+                };
+
                 _createClass(QueryViewer, [{
                     key: 'slidePct',
                     get: function get() {

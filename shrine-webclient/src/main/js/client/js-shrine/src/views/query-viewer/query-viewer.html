@@ -11,9 +11,6 @@
     <div class="box-wrapper">
         <div class="box" repeat.for="screen of screens" css="transform: translate(${slidePct}, 0%);">
             <section>
-                <!-- ${boxWrapper.offsetWidth} -->
-                <!--for demo wrap>
-                <!--h1>Fixed Table header</h1-->
                 <div>
                     <table cellpadding="0" cellspacing="0" border="0">
                         <thead>
@@ -35,7 +32,7 @@
                                 <th>
                                     <div class="hideextra">${query.name}</div>
                                 </th>
-                                <td repeat.for="result of query.results">
+                                <td repeat.for="result of query.results" css = "${isUnresolved(result.result)? 'color:' +  getStatusStyle(result.result) : ''}">
                                     ${result.result}
                                 </td>
                             </tr>

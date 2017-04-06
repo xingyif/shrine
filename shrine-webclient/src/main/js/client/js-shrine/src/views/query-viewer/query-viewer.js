@@ -25,6 +25,22 @@ export class QueryViewer {
     get slidePct() {
         return String(-100 * this.screenIndex) + '%';
     }
+
+    isUnresolved(status) {
+        return ['ERROR', 'PENDING'].indexOf(status) >= 0;
+    }
+
+    getStatusStyle(status) {
+        if(status === 'ERROR') {
+            return '#FF0000';
+        }
+
+        else if (status === 'PENDING') {
+            return '#00FF00';
+        }
+
+        return '';
+    }
 }
 
 
