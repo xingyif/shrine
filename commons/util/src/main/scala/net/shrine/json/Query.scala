@@ -19,7 +19,7 @@ final class Query(val json: Json) {
   val startTime: Long = json.startTime.as[Long]
   val i2b2QueryText: Node = json.i2b2QueryText.as[Node]
   val extraXml: Node = json.extraXml.as[Node]
-  val queryResults: List[QueryResult] = json.queryResults.as[List[QueryResult]]
+  val queryResults: List[UUID] = json.queryResults.as[List[UUID]]
 
   private[Query] val fields = (queryId,
                                topicId,
@@ -36,6 +36,8 @@ final class Query(val json: Json) {
   }
 
   override def hashCode(): Int = default.hash(fields)
+
+  override def toString: String = json.toBareString
 }
 
 object Query {

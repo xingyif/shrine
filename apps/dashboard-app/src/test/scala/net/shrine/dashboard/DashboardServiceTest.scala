@@ -418,15 +418,15 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
   }
 
 
-  "DashboardService" should  "not find a bogus web service to talk to" in {
-
+  "DashboardService" should "not be able to make a toDashboard request" in {
+    // Can't make a request because it's configured as a downstream node
     Get(s"/toDashboard/bogus.harvard.edu/ping") ~>
       addCredentials(adminCredentials) ~>
       sealRoute(route) ~> check {
 
       val string = new String(body.data.toByteArray)
 
-      assertResult(NotFound)(status)
+      assertResult(StatusCodes.Forbidden)(status)
     }
   }
 

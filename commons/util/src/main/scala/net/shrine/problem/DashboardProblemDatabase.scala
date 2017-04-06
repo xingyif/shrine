@@ -24,7 +24,7 @@ import scala.xml.XML
   * @since 07/16
   */
 object Problems extends NeedsWarmUp {
-  val config:Config = ConfigSource.config.getConfig("shrine.dashboard.database")
+  val config:Config = ConfigSource.config.getConfig("shrine.problem.database")
   val slickProfile:JdbcProfile = ConfigSource.getObject("slickProfileClassName", config)
   val timeout: Duration = Try(ConfigSource.config.getInt("shrine.problem.timeout")) match {
     case Success(timeout) => timeout.seconds

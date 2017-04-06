@@ -10,7 +10,7 @@ import net.shrine.dashboard.httpclient.HttpClientDirectives.{forwardUnmatchedPat
 import net.shrine.dashboard.jwtauth.ShrineJwtAuthenticator
 import net.shrine.i2b2.protocol.pm.User
 import net.shrine.log.Loggable
-import net.shrine.problem.{ProblemDigest, Problems}
+import net.shrine.problem.{AbstractProblem, ProblemDigest, ProblemSources, Problems}
 import net.shrine.serialization.NodeSeqSerializer
 import net.shrine.source.ConfigSource
 import net.shrine.spray._
@@ -26,6 +26,7 @@ import spray.routing.directives.LogEntry
 
 import scala.collection.immutable.Iterable
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.util.{Failure, Success, Try}
 
 /**
   * Mixes the DashboardService trait with an Akka Actor to provide the actual service.
@@ -172,22 +173,48 @@ trait DashboardService extends HttpService with Loggable {
     pathPrefix(Segment) { dnsName =>
       import scala.collection.JavaConversions._
 
-      val urlToParse: String = KeyStoreInfo.keyStoreDescriptor.trustModel match {
-        case SingleHubModel(false) => ConfigSource.config.getString("shrine.queryEntryPoint.broadcasterServiceEndpoint.url")
-        case _ => ConfigSource.config.getObject("shrine.hub.downstreamNodes").values.head.unwrapped.toString
+      // Check that it makes sense to call toDashboard
+      KeyStoreInfo.keyStoreDescriptor.trustModel match {
+        case SingleHubModel(false) =>
+          warn("toDashboard route called on a non-hub node, returning Forbidden")
+          complete(StatusCodes.Forbidden)
+        case _ =>
+          ConfigSource.config.getObject("shrine.hub.downstreamNodes")
+            .values
+            .map(cv => Try(new java.net.URL(cv.unwrapped().toString)) match {
+              case Failure(exception) =>
+                MalformedURLProblem(exception, cv.unwrapped().toString)
+                throw exception
+              case Success(goodUrl) => goodUrl
+            })
+            .find(_.getHost == dnsName) match {
+              case None =>
+                warn(s"Could not find a downstream node matching the requested host `$dnsName`, returning NotFound")
+                complete(StatusCodes.NotFound)
+              case Some(downstreamUrl) =>
+                val remoteDashboardPathPrefix = downstreamUrl.getPath
+                  .replaceFirst("shrine/rest/adapter/requests", "shrine-dashboard/fromDashboard") // I don't think this needs to be configurable
+                val port = if (downstreamUrl.getPort == -1)
+                  downstreamUrl.getDefaultPort
+                else
+                  downstreamUrl.getPort
+
+                val baseUrl = s"${downstreamUrl.getProtocol}://$dnsName:$port$remoteDashboardPathPrefix"
+
+                info(s"toDashboardRoute: BaseURL: $baseUrl")
+                forwardUnmatchedPath(baseUrl,Some(ShrineJwtAuthenticator.createOAuthCredentials(user, dnsName)))
+            }
       }
-
-      val remoteDashboardPort = urlToParse.split(':')(2).split('/')(0) // TODO: Do ports vary between sites?
-      val remoteDashboardProtocol = urlToParse.split("://")(0)
-      val remoteDashboardPathPrefix = "shrine-dashboard/fromDashboard" // I don't think this needs to be configurable
-
-      val baseUrl = s"$remoteDashboardProtocol://$dnsName:$remoteDashboardPort/$remoteDashboardPathPrefix"
-
-      info(s"toDashboardRoute: BaseURL: $baseUrl")
-      forwardUnmatchedPath(baseUrl,Some(ShrineJwtAuthenticator.createOAuthCredentials(user, dnsName)))
     }
   }
 
+  case class MalformedURLProblem(malformattedURLException: Throwable, malformattedURL: String) extends AbstractProblem(ProblemSources.Dashboard) {
+    override val throwable = Some(malformattedURLException)
+
+    override def summary: String = s"Encountered a malformatted url `$malformattedURL` while parsing urls from downstream nodes"
+
+    override def description: String = description
+  }
 
   def statusRoute(user:User):Route = get {
     val( adapter ,  hub ,  i2b2 ,  keystore ,  optionalParts ,  qep ,  summary ) =
@@ -220,7 +247,6 @@ trait DashboardService extends HttpService with Loggable {
       }
     }
   }
-
 
 
   lazy val getConfig:Route = {

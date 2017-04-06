@@ -33,8 +33,21 @@ class QepQueryDbTest extends ShouldMatchersForJUnit {
     deleted = false,
     dateCreated = System.currentTimeMillis(),
     queryXml = "testXML",
-    changeDate = System.currentTimeMillis()
+    changeDate = System.currentTimeMillis() - 1000
   )
+
+  val thirdQepQuery = QepQuery(
+    networkId = 3L,
+    userName = "ben",
+    userDomain = "testDomain",
+    queryName = "testQuery",
+    expression = Some("testExpression"),
+    dateCreated = System.currentTimeMillis(),
+    deleted = false,
+    queryXml = "testXML",
+    changeDate = System.currentTimeMillis() - 2000
+  )
+
 
   val flag = QepQueryFlag(
     networkQueryId = 1L,
@@ -58,9 +71,32 @@ class QepQueryDbTest extends ShouldMatchersForJUnit {
 
     QepQueryDb.db.insertQepQuery(qepQuery)
     QepQueryDb.db.insertQepQuery(secondQepQuery)
+    QepQueryDb.db.insertQepQuery(thirdQepQuery)
 
-    val results = QepQueryDb.db.selectPreviousQueriesByUserAndDomain("ben","testDomain",100)
-    results should equal(Seq(qepQuery))
+    val results = QepQueryDb.db.selectPreviousQueriesByUserAndDomain("ben","testDomain")
+    results should equal(Seq(qepQuery,thirdQepQuery))
+  }
+
+  @Test
+  def testSelectQepQueriesForUserWithLimit() {
+
+    QepQueryDb.db.insertQepQuery(qepQuery)
+    QepQueryDb.db.insertQepQuery(secondQepQuery)
+    QepQueryDb.db.insertQepQuery(thirdQepQuery)
+
+    val results = QepQueryDb.db.selectPreviousQueriesByUserAndDomain("ben","testDomain",None,Some(100))
+    results should equal(Seq(qepQuery,thirdQepQuery))
+  }
+
+  @Test
+  def testSelectQepQueriesForUserWithSkipAndLimit() {
+
+    QepQueryDb.db.insertQepQuery(qepQuery)
+    QepQueryDb.db.insertQepQuery(secondQepQuery)
+    QepQueryDb.db.insertQepQuery(thirdQepQuery)
+
+    val results = QepQueryDb.db.selectPreviousQueriesByUserAndDomain("ben","testDomain",Some(1),Some(100))
+    results should equal(Seq(thirdQepQuery))
   }
 
   @Test

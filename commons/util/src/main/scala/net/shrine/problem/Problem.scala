@@ -232,6 +232,7 @@ object ProblemSources {
     def pretty = getClass.getSimpleName.dropRight(1)
   }
 
+  case object Dashboard extends ProblemSource
   case object Adapter extends ProblemSource
   case object Commons extends ProblemSource
   case object Dsa extends ProblemSource

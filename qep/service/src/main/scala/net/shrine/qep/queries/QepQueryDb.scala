@@ -66,15 +66,23 @@ case class QepQueryDb(schemaDef:QepQuerySchema,dataSource: DataSource,timeout:Du
   }
 
   def selectPreviousQueries(request: ReadPreviousQueriesRequest):ReadPreviousQueriesResponse = {
-    val previousQueries: Seq[QepQuery] = selectPreviousQueriesByUserAndDomain(request.authn.username,request.authn.domain,request.fetchSize)
+    val previousQueries: Seq[QepQuery] = selectPreviousQueriesByUserAndDomain(
+      request.authn.username,
+      request.authn.domain,
+      None,
+      Some(request.fetchSize))
     val flags:Map[NetworkQueryId,QepQueryFlag] = selectMostRecentQepQueryFlagsFor(previousQueries.map(_.networkId).to[Set])
     val queriesAndFlags = previousQueries.map(x => (x,flags.get(x.networkId)))
 
     ReadPreviousQueriesResponse(queriesAndFlags.map(x => x._1.toQueryMaster(x._2)))
   }
 
-  def selectPreviousQueriesByUserAndDomain(userName: UserName, domain: String, limit:Int):Seq[QepQuery] = {
-    dbRun(mostRecentVisibleQepQueries.filter(r => r.userName === userName && r.userDomain === domain).sortBy(x => x.changeDate.desc).take(limit).result)
+  def selectPreviousQueriesByUserAndDomain(userName: UserName, domain: String, skip:Option[Int] = None, limit:Option[Int] = None):Seq[QepQuery] = {
+    val q = mostRecentVisibleQepQueries.filter(r => r.userName === userName && r.userDomain === domain).sortBy(x => x.changeDate.desc)
+    val qWithSkip = skip.fold(q)(q.drop)
+    val qWithLimit = limit.fold(qWithSkip)(qWithSkip.take)
+
+    dbRun(qWithLimit.result)
   }
 
   def renamePreviousQuery(request:RenameQueryRequest):Unit = {
@@ -340,7 +348,7 @@ object QepQuerySchema {
 
   val slickProfile:JdbcProfile = ConfigSource.getObject("slickProfileClassName", config)
 
-  import net.shrine.config.{ConfigExtensions, Keys}
+  import net.shrine.config.ConfigExtensions
   val moreBreakdowns: Set[ResultOutputType] = config.getOptionConfigured("breakdownResultOutputTypes",ResultOutputTypes.fromConfig).getOrElse(Set.empty)
 
   val schema = QepQuerySchema(slickProfile,moreBreakdowns)
