@@ -45,19 +45,27 @@ trait QepService extends HttpService with Loggable {
   def queryResults(user: User): Route = pathPrefix("queryResults") {
     matchQueryParameters(Some(user.username)){ queryParameters:QueryParameters =>
 
+      debug(s"Searching for query results with $queryParameters")
+
       val queries: Seq[QepQuery] = QepQueryDb.db.selectPreviousQueriesByUserAndDomain(
         userName = user.username,
         domain = user.domain,
         skip = queryParameters.skipOption,
         limit = queryParameters.limitOption
       )
+      debug(s"Got queries: ${queries.size}")
 
       //todo revisit json structure to remove things the front-end doesn't use
       val adapters: Seq[String] = QepQueryDb.db.selectDistinctAdaptersWithResults
+      debug(s"Got adapters: ${adapters}")
 
       val queryResults: Seq[ResultsRow] = queries.map(q => ResultsRow(q,QepQueryDb.db.selectMostRecentFullQueryResultsFor(q.networkId).map(Result(_))))
 
+      debug(s"Got queryResults: ${queryResults.size}")
+
       val flags: Map[NetworkQueryId, QepQueryFlag] = QepQueryDb.db.selectMostRecentQepQueryFlagsFor(queries.map(q => q.networkId).to[Set])
+
+      debug(s"Got flags: ${queryResults.size}")
 
       val table: ResultsTable = ResultsTable(adapters,queryResults,flags)
       import rapture.json._
