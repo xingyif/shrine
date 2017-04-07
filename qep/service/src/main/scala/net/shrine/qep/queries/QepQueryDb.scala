@@ -78,11 +78,18 @@ case class QepQueryDb(schemaDef:QepQuerySchema,dataSource: DataSource,timeout:Du
   }
 
   def selectPreviousQueriesByUserAndDomain(userName: UserName, domain: String, skip:Option[Int] = None, limit:Option[Int] = None):Seq[QepQuery] = {
+
+    debug(s"start selectPreviousQueriesByUserAndDomain $userName $domain")
+
     val q = mostRecentVisibleQepQueries.filter(r => r.userName === userName && r.userDomain === domain).sortBy(x => x.changeDate.desc)
     val qWithSkip = skip.fold(q)(q.drop)
     val qWithLimit = limit.fold(qWithSkip)(qWithSkip.take)
 
-    dbRun(qWithLimit.result)
+    val result = dbRun(qWithLimit.result)
+
+    debug(s"finished selectPreviousQueriesByUserAndDomain with $result")
+
+    result
   }
 
   def renamePreviousQuery(request:RenameQueryRequest):Unit = {
