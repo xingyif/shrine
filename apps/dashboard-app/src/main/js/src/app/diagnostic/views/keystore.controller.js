@@ -73,7 +73,7 @@
         }
 
         function downStreamValidation(keystore) {
-            if (keystore.remoteSiteStatuses.length == 0) {
+            if (keystore.remoteSiteStatuses.length === 0) {
                 return [];
             }
             var remoteSite = keystore.remoteSiteStatuses[0];
