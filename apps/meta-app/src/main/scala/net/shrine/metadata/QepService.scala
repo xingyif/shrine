@@ -8,6 +8,10 @@ import net.shrine.protocol.ResultOutputType
 import net.shrine.qep.queries.{FullQueryResult, QepQuery, QepQueryDb, QepQueryFlag}
 import spray.routing._
 
+import rapture.json._
+import rapture.json.jsonBackends.jawn._
+import rapture.json.formatters.humanReadable
+
 /**
   * An API to support the web client's work with queries.
   *
@@ -60,15 +64,11 @@ trait QepService extends HttpService with Loggable {
       val flags: Map[NetworkQueryId, QepQueryFlag] = QepQueryDb.db.selectMostRecentQepQueryFlagsFor(queries.map(q => q.networkId).to[Set])
 
       val table: ResultsTable = ResultsTable(adapters,queryResults,flags)
-      import rapture.json._
-      import rapture.json.jsonBackends.jawn._
-      import rapture._
 
       val jsonTable: Json = Json(table)
-//      import rapture.json.formatters.humanReadable._
-//      val foramttedTable = Json.format(jsonTable)(humanReadable(jsonTable))
+      val formattedTable: String = Json.format(jsonTable)(humanReadable())
 
-      complete(jsonTable.toBareString)
+      complete(formattedTable)
     }
   }
 
