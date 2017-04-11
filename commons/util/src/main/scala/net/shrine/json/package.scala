@@ -17,6 +17,8 @@ import scala.xml.{Node, NodeSeq, XML}
   *        the website is slightly out of date
   */
 package object json {
+  def toBuffer(json: Json): JsonBuffer =
+    JsonBuffer.construct(json.$root.copy(), Vector())
   implicit val node: Extractor[Node, Json] =
     Json.extractor[String].map(XML.loadString)
   implicit val nodeSeq: Extractor[NodeSeq, Json] =
@@ -35,5 +37,30 @@ package object json {
     successResult
       .orElse(failureResult)
       .orElse(pendingResult)
-  implicit val uuidSerializer = Json.serializer[Json].contramap[UUID](uuid => Json(uuid.toString))
+  implicit val nSuccessResult: Extractor[NSuccessResult, Json] =
+    Json.extractor[Json].map(NSuccessResult(_).get)
+  implicit val nFailureResult: Extractor[NFailureResult, Json] =
+    Json.extractor[Json].map(NFailureResult(_).get)
+  implicit val nPendingResult: Extractor[NPendingResult, Json] =
+    Json.extractor[Json].map(NPendingResult(_).get)
+  implicit val nestedQueryResult: Extractor[NestedQueryResult, Json] =
+    nSuccessResult
+      .orElse(nFailureResult)
+      .orElse(nPendingResult)
+  implicit val nestedQuery: Extractor[NestedQuery, Json] =
+    Json
+      .extractor[Json]
+      .map(
+        js =>
+          NestedQuery(
+            js.queryID.as[UUID],
+            js.topic.as[Topic],
+            js.user.as[User],
+            js.startTime.as[Long],
+            js.i2b2QueryText.as[Node],
+            js.extraXml.as[Node],
+            js.queryResults.as[List[NestedQueryResult]]
+        ))
+  implicit val uuidSerializer: AnyRef with Serializer[UUID, Json] =
+    Json.serializer[Json].contramap[UUID](uuid => Json(uuid.toString))
 }

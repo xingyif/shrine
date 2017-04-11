@@ -113,7 +113,7 @@ object Storage {
         .andThen(dao.queryRunsQuery.result)
         .andThen(sqliteDAO.SlickQueries.selectJsonForQuery(uid))
       val results = Await.result(db.run(acts), 10.seconds)
-      println(results)
+      println(results.get.nestedQuery)
     })
 //    println(h2DAO.SlickQueries.create.statements.mkString(";\n"))
 //    println(DAO(MySQLDriver).SlickQueries.create.statements.mkString(";\n"))
@@ -269,23 +269,22 @@ object Storage {
       def selectJsonForQuery(queryId: UUID) = {
         val allResults = selectAllForQuery(queryId)
         allResults.result.map(t => {
-          t.headOption.map{
+          t.headOption.flatMap{
             case (query, _, user, topic, _) =>
-              val queryJson = query.json
-              val jb = JsonBuffer.construct(queryJson.$root.copy(), Vector())
+              val jb = toBuffer(query.json)
               jb -= "userId"
               jb -= "topicId"
               jb.user = user
               jb.topic = topic
               jb.queryResults = t.map{
                 case (_, queryResult, _, _, adapter) =>
-                  val jb2 = JsonBuffer.construct(queryResult.json.$root.copy(), Vector())
+                  val jb2 = toBuffer(queryResult.json)
                   jb2 -= "adapterId"
                   jb2.adapter = adapter
                   jb2
               }
-              Json(jb)
-          }.getOrElse(json"""{}""")
+              JsonQuery(Json(jb))
+          }
         })
       }
 

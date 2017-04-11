@@ -77,7 +77,7 @@ final class PendingResult(val json: Json) extends QueryResult {
 
 object PendingResult {
   def apply(json: Json): Option[PendingResult] =
-    if (JsonCompare.==(json.status, "status"))
+    if (JsonCompare.==(json.status, "pending"))
       Try(new PendingResult(json)).toOption
     else None
 

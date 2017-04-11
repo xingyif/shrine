@@ -77,6 +77,7 @@ class JsonDemos extends FlatSpec with Matchers {
     extraStuffAccount match {
       case json""" {"person": $p, "overdue": false} """ =>
         fail("Did not match overdue as expected")
+      // Note that you don't need money for the match
       case json""" {"person": $p, "overdue": true } """ =>
         person shouldBe p.as[Person]
       case _ => fail("Did not match as expected")
