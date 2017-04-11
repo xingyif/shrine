@@ -1,11 +1,14 @@
-* {
+/** {
   box-sizing: border-box;
 }
 html,
 body {
   height: 100%;
-}
-body {
+}*/
+
+
+.mailto {
+  box-sizing: border-box;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -15,13 +18,16 @@ body {
   font-family: 'Source Sans Pro', serif;
   color: #333;
   background: #f2f2f2;
+  height: 100%
 }
 
-p {
+.mailto p {
   font-size: 16px;
   line-height: 1.6em;
 }
-.button {
+
+
+.mailto .button {
   border: 1px solid #6576a8;
   background: #6d85ad;
   border: 0;
@@ -34,25 +40,25 @@ p {
   color: #fff;
   cursor: pointer;
 }
-.button:hover {
+.mailto .button:hover {
   background: #9cb8d9;
 }
-.button:active {
+.mailto .button:active {
   background: #6576a8;
 }
-.button--large {
+.mailto .button--large {
   position: relative;
   padding: 15px 30px;
   border-radius: 5px;
   font-size: 16px;
 }
-.button--large:active {
+.mailto .button--large:active {
   top: 1px;
 }
-.content {
-  text-align: center;
+.mailto .content {
   max-width: 350px;
+  text-align: center;
 }
-.email {
+.mailto .email {
   position: relative;
 }

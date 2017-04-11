@@ -78,11 +78,18 @@ case class QepQueryDb(schemaDef:QepQuerySchema,dataSource: DataSource,timeout:Du
   }
 
   def selectPreviousQueriesByUserAndDomain(userName: UserName, domain: String, skip:Option[Int] = None, limit:Option[Int] = None):Seq[QepQuery] = {
+
+    debug(s"start selectPreviousQueriesByUserAndDomain $userName $domain")
+
     val q = mostRecentVisibleQepQueries.filter(r => r.userName === userName && r.userDomain === domain).sortBy(x => x.changeDate.desc)
     val qWithSkip = skip.fold(q)(q.drop)
     val qWithLimit = limit.fold(qWithSkip)(qWithSkip.take)
 
-    dbRun(qWithLimit.result)
+    val result = dbRun(qWithLimit.result)
+
+    debug(s"finished selectPreviousQueriesByUserAndDomain with $result")
+
+    result
   }
 
   def renamePreviousQuery(request:RenameQueryRequest):Unit = {
@@ -146,11 +153,12 @@ case class QepQueryDb(schemaDef:QepQuerySchema,dataSource: DataSource,timeout:Du
     )
   }
 
+//todo only used in tests. Is that OK?
   def selectMostRecentQepResultRowsFor(networkId:NetworkQueryId): Seq[QueryResultRow] = {
     dbRun(mostRecentQueryResultRows.filter(_.networkQueryId === networkId).result)
   }
 
-  def selectMostRecentQepResultsFor(networkId:NetworkQueryId): Seq[QueryResult] = {
+  def selectMostRecentFullQueryResultsFor(networkId:NetworkQueryId): Seq[FullQueryResult] = {
 
     val (queryResults, breakdowns,problems) = dbRun(
       for {
@@ -168,10 +176,16 @@ case class QepQueryDb(schemaDef:QepQuerySchema,dataSource: DataSource,timeout:Du
 
     val adapterNodesToProblemDigests: Map[String, ProblemDigest] = problems.groupBy(_.adapterNode).map(nodeToProblem => nodeToProblem._1 -> seqOfOneProblemRowToProblemDigest(nodeToProblem._2) )
 
-    queryResults.map(r => r.toQueryResult(
-      resultIdsToI2b2ResultEnvelopes.getOrElse(r.resultId,Map.empty),
+    queryResults.map(r => FullQueryResult(r,
+      resultIdsToI2b2ResultEnvelopes.get(r.resultId),
       adapterNodesToProblemDigests.get(r.adapterNode)
     ))
+  }
+
+  def selectMostRecentQepResultsFor(networkId:NetworkQueryId): Seq[QueryResult] = {
+    val fullQueryResults = selectMostRecentFullQueryResultsFor(networkId)
+
+    fullQueryResults.map(_.toQueryResult)
   }
 
   def insertQueryBreakdown(breakdownResultsRow:QepQueryBreakdownResultsRow) = {
@@ -180,6 +194,10 @@ case class QepQueryDb(schemaDef:QepQuerySchema,dataSource: DataSource,timeout:Du
 
   def selectAllBreakdownResultsRows: Seq[QepQueryBreakdownResultsRow] = {
     dbRun(allBreakdownResultsRows.result)
+  }
+
+  def selectDistinctAdaptersWithResults:Seq[String] = {
+   dbRun(allQueryResultRows.map(_.adapterNode).distinct.result).sorted
   }
 }
 
@@ -427,6 +445,59 @@ object QepQueryFlag extends ((NetworkQueryId,Boolean,String,Long) => QepQueryFla
 
 }
 
+//todo replace with a class per state
+case class FullQueryResult(
+                            resultId:Long,
+                            networkQueryId:NetworkQueryId,
+                            instanceId:Long,
+                            adapterNode:String,
+                            resultType:Option[ResultOutputType],
+                            count:Long,
+                            startDate:Option[Long],
+                            endDate:Option[Long],
+                            status:QueryResult.StatusType,
+                            statusMessage:Option[String],
+                            changeDate:Long,
+                            breakdowns:Option[Map[ResultOutputType,I2b2ResultEnvelope]],
+                            problemDigest:Option[ProblemDigest]
+                          ) {
+
+  def toQueryResult = QueryResult(
+    resultId = resultId,
+    instanceId = instanceId,
+    resultType = resultType,
+    setSize = count,
+    startDate = startDate.map(XmlDateHelper.toXmlGregorianCalendar),
+    endDate = endDate.map(XmlDateHelper.toXmlGregorianCalendar),
+    description = Some(adapterNode),
+    statusType = status,
+    statusMessage = statusMessage,
+    breakdowns = breakdowns.getOrElse(Map.empty),
+    problemDigest = problemDigest
+  )
+}
+
+object FullQueryResult {
+  def apply(row:QueryResultRow,
+            breakdowns:Option[Map[ResultOutputType,I2b2ResultEnvelope]],
+            problemDigest:Option[ProblemDigest]):FullQueryResult = {
+    FullQueryResult(resultId = row.resultId,
+      networkQueryId = row.networkQueryId,
+      instanceId = row.instanceId,
+      adapterNode = row.adapterNode,
+      resultType = row.resultType,
+      count = row.size,
+      startDate = row.startDate,
+      endDate = row.endDate,
+      status = row.status,
+      statusMessage = row.statusMessage,
+      changeDate = row.changeDate,
+      breakdowns = breakdowns,
+      problemDigest = problemDigest
+    )
+  }
+}
+
 case class QueryResultRow(
                            resultId:Long,
                            networkQueryId:NetworkQueryId,
@@ -440,21 +511,6 @@ case class QueryResultRow(
                            statusMessage:Option[String],
                            changeDate:Long
                          ) {
-
-  def toQueryResult(breakdowns:Map[ResultOutputType,I2b2ResultEnvelope],problemDigest:Option[ProblemDigest]) = QueryResult(
-    resultId = resultId,
-    instanceId = instanceId,
-    resultType = resultType,
-    setSize = size,
-    startDate = startDate.map(XmlDateHelper.toXmlGregorianCalendar),
-    endDate = endDate.map(XmlDateHelper.toXmlGregorianCalendar),
-    description = Some(adapterNode),
-    statusType = status,
-    statusMessage = statusMessage,
-    breakdowns = breakdowns,
-    problemDigest = problemDigest
-  )
-
 }
 
 object QueryResultRow extends ((Long,NetworkQueryId,Long,String,Option[ResultOutputType],Long,Option[Long],Option[Long],QueryResult.StatusType,Option[String],Long) => QueryResultRow)

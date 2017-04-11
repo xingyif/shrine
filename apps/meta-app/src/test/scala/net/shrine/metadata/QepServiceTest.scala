@@ -2,7 +2,8 @@ package net.shrine.metadata
 
 import akka.actor.ActorRefFactory
 import net.shrine.i2b2.protocol.pm.User
-import net.shrine.protocol.Credential
+import net.shrine.protocol.{Credential, QueryResult, ResultOutputType}
+import net.shrine.qep.queries.{QepQuery, QepQueryDb, QueryResultRow}
 import org.json4s.DefaultFormats
 import org.json4s.native.JsonMethods.parse
 import org.junit.runner.RunWith
@@ -32,16 +33,97 @@ class QepServiceTest extends FlatSpec with ScalatestRouteTest with QepService {
     }
   }
 
+  val qepQuery = QepQuery(
+    networkId = 1L,
+    userName = "ben",
+    userDomain = "testDomain",
+    queryName = "testQuery",
+    expression = Some("testExpression"),
+    dateCreated = System.currentTimeMillis(),
+    deleted = false,
+    queryXml = "testXML",
+    changeDate = System.currentTimeMillis()
+  )
+
+  val qepResultRowFromMgh = QueryResultRow(
+    resultId = 10L,
+    networkQueryId = 1L,
+    instanceId = 100L,
+    adapterNode = "MGH",
+    resultType = Some(ResultOutputType.PATIENT_COUNT_XML),
+    size = 30L,
+    startDate = Some(System.currentTimeMillis() - 60),
+    endDate = Some(System.currentTimeMillis() - 30),
+    status = QueryResult.StatusType.Finished,
+    statusMessage = None,
+    changeDate = System.currentTimeMillis() - 30
+  )
+
+  val qepResultRowFromPartners = QueryResultRow(
+    resultId = 10L,
+    networkQueryId = 1L,
+    instanceId = 100L,
+    adapterNode = "Partners",
+    resultType = Some(ResultOutputType.PATIENT_COUNT_XML),
+    size = 300L,
+    startDate = Some(System.currentTimeMillis() - 60),
+    endDate = Some(System.currentTimeMillis() - 30),
+    status = QueryResult.StatusType.Finished,
+    statusMessage = None,
+    changeDate = System.currentTimeMillis() - 30
+  )
+
+  val qepResultRowFromBch = QueryResultRow(
+    resultId = 10L,
+    networkQueryId = 1L,
+    instanceId = 100L,
+    adapterNode = "BCH",
+    resultType = Some(ResultOutputType.PATIENT_COUNT_XML),
+    size = 3000L,
+    startDate = Some(System.currentTimeMillis() - 60),
+    endDate = Some(System.currentTimeMillis() - 30),
+    status = QueryResult.StatusType.Finished,
+    statusMessage = None,
+    changeDate = System.currentTimeMillis() - 30
+  )
+
+  val qepResultRowFromDfci = QueryResultRow(
+    resultId = 10L,
+    networkQueryId = 1L,
+    instanceId = 100L,
+    adapterNode = "DFCI",
+    resultType = Some(ResultOutputType.PATIENT_COUNT_XML),
+    size = 30000L,
+    startDate = Some(System.currentTimeMillis() - 60),
+    endDate = Some(System.currentTimeMillis() - 30),
+    status = QueryResult.StatusType.Finished,
+    statusMessage = None,
+    changeDate = System.currentTimeMillis() - 30
+  )
+
   "QepService" should "return an OK and a table of data for a queryResults request" in {
+
+    QepQueryDb.db.insertQepQuery(qepQuery)
+    QepQueryDb.db.insertQepResultRow(qepResultRowFromBch)
+    QepQueryDb.db.insertQepResultRow(qepResultRowFromMgh)
+    QepQueryDb.db.insertQepResultRow(qepResultRowFromDfci)
+    QepQueryDb.db.insertQepResultRow(qepResultRowFromPartners)
+
     Get(s"/qep/queryResults") ~> qepRoute(researcherUser) ~> check {
       implicit val formats = DefaultFormats
       val result = body.data.asString
 
       assertResult(OK)(status)
+
+/*
+      println("************")
+      println(result)
+      println("************")
+*/
       //todo check json result      assertResult(qepInfo)(result)
     }
   }
-
+/* todo
   "QepService" should "return an OK and a table of data for a queryResults request with different skip and limit values" in {
     Get(s"/qep/queryResults?skip=2&limit=2") ~> qepRoute(researcherUser) ~> check {
       implicit val formats = DefaultFormats
@@ -51,14 +133,14 @@ class QepServiceTest extends FlatSpec with ScalatestRouteTest with QepService {
       //todo check json result      assertResult(qepInfo)(result)
     }
   }
-
+*/
   val researcherUserName = "ben"
   val researcherFullName = researcherUserName
 
   val researcherUser = User(
     fullName = researcherUserName,
     username = researcherFullName,
-    domain = "domain",
+    domain = "testDomain",
     credential = new Credential("researcher's password",false),
     params = Map(),
     rolesByProject = Map()
