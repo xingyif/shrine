@@ -3,7 +3,8 @@ package net.shrine.json
 import java.util.UUID
 
 import net.shrine.problem.ProblemDigest
-import rapture.json.{Json, JsonBuffer}
+import rapture.json._
+import jsonBackends.jawn._
 
 import scala.xml.Node
 
@@ -102,7 +103,7 @@ object Statuses {
 case class JsonQuery(json: Json, nestedQuery: NestedQuery) {
   val normalized:Seq[(Query, QueryResult, User, Topic, Adapter)] = {
     val qb = toBuffer(json)
-    val qrs = qb.queryResults.as[List[Json]].map(rj => {
+    val qrs = json.queryResults.as[List[Json]].map(rj => {
       val rb = toBuffer(rj)
       val a = rb.adapter.as[Adapter]
       rb.adapterId = a.id
