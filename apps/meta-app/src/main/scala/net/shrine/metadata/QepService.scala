@@ -1,12 +1,12 @@
 package net.shrine.metadata
 
-import net.shrine.audit.NetworkQueryId
-import net.shrine.authorization.steward.UserName //todo move username to some more primitive part
+import net.shrine.audit.{NetworkQueryId, QueryName, Time}
+import net.shrine.authorization.steward.UserName
 import net.shrine.i2b2.protocol.pm.User
 import net.shrine.log.Loggable
 import net.shrine.protocol.ResultOutputType
 import net.shrine.qep.queries.{FullQueryResult, QepQuery, QepQueryDb, QepQueryFlag}
-import spray.routing.{HttpService, _}
+import spray.routing._
 
 /**
   * An API to support the web client's work with queries.
@@ -53,7 +53,9 @@ trait QepService extends HttpService with Loggable {
       //todo revisit json structure to remove things the front-end doesn't use
       val adapters: Seq[String] = QepQueryDb.db.selectDistinctAdaptersWithResults
 
-      val queryResults: Seq[ResultsRow] = queries.map(q => ResultsRow(q,QepQueryDb.db.selectMostRecentFullQueryResultsFor(q.networkId).map(Result(_))))
+      val queryResults: Seq[ResultsRow] = queries.map(q => ResultsRow(
+        query = QueryCell(q),
+        adaptersToResults = QepQueryDb.db.selectMostRecentFullQueryResultsFor(q.networkId).map(Result(_))))
 
       val flags: Map[NetworkQueryId, QepQueryFlag] = QepQueryDb.db.selectMostRecentQepQueryFlagsFor(queries.map(q => q.networkId).to[Set])
 
@@ -98,9 +100,27 @@ case class ResultsTable(
 )
 
 case class ResultsRow(
-  query:QepQuery,
+  query:QueryCell,
   adaptersToResults: Seq[Result]
 )
+
+case class QueryCell(
+                      networkId:NetworkQueryId,
+                      queryName: QueryName,
+                      dateCreated: Time,
+                      queryXml: String,
+                      changeDate: Time
+                    )
+
+object QueryCell {
+  def apply(qepQuery: QepQuery): QueryCell = QueryCell(
+    networkId = qepQuery.networkId,
+    queryName = qepQuery.queryName,
+    dateCreated = qepQuery.dateCreated,
+    queryXml = qepQuery.queryXml,
+    changeDate = qepQuery.changeDate
+  )
+}
 
 case class Result (
   resultId:Long,
@@ -109,8 +129,6 @@ case class Result (
   adapterNode:String,
   resultType:Option[ResultOutputType],
   count:Long,
-  startDate:Option[Long],
-  endDate:Option[Long],
   status:String, //todo QueryResult.StatusType,
   statusMessage:Option[String],
   changeDate:Long
@@ -126,8 +144,6 @@ object Result {
     adapterNode = fullQueryResult.adapterNode,
     resultType = fullQueryResult.resultType,
     count = fullQueryResult.count,
-    startDate = fullQueryResult.startDate,
-    endDate = fullQueryResult.endDate,
     status = fullQueryResult.status.toString,
     statusMessage = fullQueryResult.statusMessage,
     changeDate = fullQueryResult.changeDate
