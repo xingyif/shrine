@@ -30,12 +30,9 @@ export class QueryViewerService {
     }
 
     get url() {
-        const port = '6443';
         const url = document.URL;
-        const service = '/shrine-metadata/';
-        // https://shrine-qa2.catalyst:6443/shrine-metadata/qep/queryResults
-        //const service = '6443/shrine-proxy/request/shrine/api/';
-        return url.substring(0, url.indexOf(port) + port.length) + service;
+        const service = ':6443/shrine-metadata/';
+        return url.substring(0, url.lastIndexOf(':')) + service;
     }
 
     getScreens(nodes, queries) {

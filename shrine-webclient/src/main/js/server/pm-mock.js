@@ -28,13 +28,13 @@ function start(dir) {
   }));
 
   app.use(cors());
-  app.use('/shrine-proxy/request', router);
+  app.use('/', router);
   app.listen(port);
   console.log('I2B2SERVER Mock Server started on port: ' + port);
 
   // -- routes --//
 
-  router.post('/', function (req, res) {
+  router.post('/shrine-proxy/request', function (req, res) {
     var requestType = parseRequest(req);
     var fileName = getFilename(requestType);
     var xml = fs.readFileSync('./' + dir+ '/i2b2-xml/' + fileName);
@@ -45,7 +45,7 @@ function start(dir) {
     res.json('steward@steward.com');
   });
 
-  router.get('/shrine/api/previous-queries', (req, res) => {
+  router.get('/shrine-metadata/qep/queryResults', (req, res) => {
     const result = require('./data/curl-async-queries');
     res.json(result);
   })

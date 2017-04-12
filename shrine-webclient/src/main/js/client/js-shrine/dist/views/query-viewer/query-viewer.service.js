@@ -117,11 +117,9 @@ System.register(['aurelia-framework', 'aurelia-fetch-client', 'fetch'], function
                 _createClass(QueryViewerService, [{
                     key: 'url',
                     get: function get() {
-                        var port = '6443';
                         var url = document.URL;
-                        var service = '/shrine-metadata/';
-
-                        return url.substring(0, url.indexOf(port) + port.length) + service;
+                        var service = ':6443/shrine-metadata/';
+                        return url.substring(0, url.lastIndexOf(':')) + service;
                     }
                 }]);
 

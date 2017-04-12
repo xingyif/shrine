@@ -27,9 +27,8 @@ export class MailToService {
 
     
      get url() {
-        const port = '6443';
         const url = document.URL;
-        const service = '/shrine-metadata/'; //data?key=stewardEmail';
-        return url.substring(0, url.indexOf(port) + port.length) + service;
+        const service = ':6443/shrine-metadata/';
+        return url.substring(0, url.lastIndexOf(':')) + service;
     }
 }
