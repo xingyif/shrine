@@ -15,6 +15,7 @@ import net.shrine.log.Loggable
 import net.shrine.util.{StringEnrichments, XmlUtil}
 
 import scala.concurrent.duration._
+import scala.util.Try
 
 /**
  * @author Bill Simons
@@ -27,10 +28,10 @@ import scala.concurrent.duration._
  * NOTICE: This software comes with NO guarantees whatsoever and is
  * licensed as Lgpl Open Source
  * @link http://www.gnu.org/licenses/lgpl.html
- * 
+ *
  * NB: text/xml is the default mediatype to support i2b2, which apparently requires this media type, and the majority
  * of HttpClients created by Shrine are used to talk to i2b2 services.
- * 
+ *
  * TODO: Allow specifying credentials, to allow unit testing the Sheriff client classes.
  */
 final case class JerseyHttpClient(trustParam: TrustParam,
@@ -46,12 +47,12 @@ final case class JerseyHttpClient(trustParam: TrustParam,
   override def post(input: String, url: String): HttpResponse = {
     def prettyPrintIfXml(s: String): String = {
       import StringEnrichments._
-      
+
       s.tryToXml.map(_.head).map(XmlUtil.prettyPrint).getOrElse(s)
     }
 
     debug(s"Invoking '$url' with '${prettyPrintIfXml(input)}'") //todo log the input when safe
-    
+
     val resp = createJerseyResource(client, url, credentials).entity(input, mediaType).post(classOf[ClientResponse])
 
     val httpResponse = HttpResponse(resp.getStatus, resp.getEntity(classOf[String]))
@@ -87,17 +88,36 @@ object JerseyHttpClient {
    * From a SO post inspired from http://java.sun.com/javase/6/docs/technotes/guides/security/jsse/JSSERefGuide.html
    */
   private[client] def trustManager(keystore: KeyStore): X509TrustManager = {
-
     //The Spin PKIX X509TrustManager that we will delegate to.
     val trustManagerFactory: TrustManagerFactory = TrustManagerFactory.getInstance("PKIX")
 
-    trustManagerFactory.init(keystore)
+    trustManagerFactory.init(null:java.security.KeyStore)
+    val caCerts =
+      trustManagerFactory.getTrustManagers.collect {
+        case trustManager: X509TrustManager => trustManager
+      }.headOption.getOrElse {
+        throw new IllegalStateException("Couldn't initialize SSL TrustManager: No X509TrustManagers found")
+      }
 
-    //Look for an instance of X509TrustManager.  If found, use that.
-    trustManagerFactory.getTrustManagers.collect {
-      case trustManager: X509TrustManager => trustManager
-    }.headOption.getOrElse {
-      throw new IllegalStateException("Couldn't initialize SSL TrustManager: No X509TrustManagers found")
+    trustManagerFactory.init(keystore)
+    val customCerts =
+      trustManagerFactory.getTrustManagers.collect {
+        case trustManager: X509TrustManager => trustManager
+      }.headOption.getOrElse {
+        throw new IllegalStateException("Couldn't initialize SSL TrustManager: No X509TrustManagers found")
+      }
+
+    new X509TrustManager {
+      override def checkServerTrusted(x509Certificates: Array[X509Certificate], s: String): Unit =
+        Try(customCerts.checkServerTrusted(x509Certificates, s))
+          .getOrElse(caCerts.checkServerTrusted(x509Certificates, s))
+
+      override def checkClientTrusted(x509Certificates: Array[X509Certificate], s: String): Unit =
+        Try(customCerts.checkClientTrusted(x509Certificates, s))
+          .getOrElse(caCerts.checkClientTrusted(x509Certificates, s))
+
+      override def getAcceptedIssuers: Array[X509Certificate] =
+        customCerts.getAcceptedIssuers ++ caCerts.getAcceptedIssuers
     }
   }
 
@@ -120,16 +140,16 @@ object JerseyHttpClient {
 
   def createJerseyResource(client: Client, url: String, credentials: Option[HttpCredentials]): WebResource = {
     val resource = client.resource(url)
-    
+
     for {
       HttpCredentials(username, password) <- credentials
     } {
       resource.addFilter(new HTTPBasicAuthFilter(username, password))
     }
-    
+
     resource
   }
-  
+
   def createJerseyClient(trustParam: TrustParam, timeout: Duration/* = 5.minutes*/): Client = {
     def tlsContext = SSLContext.getInstance("TLS")
 
