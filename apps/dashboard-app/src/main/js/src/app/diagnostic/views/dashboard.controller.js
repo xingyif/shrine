@@ -12,13 +12,12 @@
     angular.module('shrine-tools')
         .controller('DashboardController', DashboardController);
 
-
     /**
      *
      * @type {string[]}
      */
     DashboardController.$inject = ['$app', '$log', '$location'];
-    function DashboardController ($app, $log, $location) {
+    function DashboardController($app, $log, $location) {
         var vm = this;
         var map = $app.model.map;
         vm.keyStoreError = false;
@@ -28,12 +27,12 @@
         /**
          *
          */
-        function init () {
+        function init() {
             $app.model.getKeystore()
                 .then(setDashboard, handleFailure);
         }
 
-        function handleFailure (failure) {
+        function handleFailure(failure) {
             vm.keyStoreError = failure;
         }
 
@@ -41,13 +40,16 @@
          *
          * @param keystore
          */
-        function setDashboard (keystore) {
+        function setDashboard(keystore) {
             var modelStatuses = $app.model.m.remoteSiteStatuses;
             var tempList = [];
             for (var i = 0; i < modelStatuses.length; i++) {
                 var abbreviatedEntry = modelStatuses[i];
-                if (!(abbreviatedEntry.url == "" && abbreviatedEntry.theyHaveMine && abbreviatedEntry.haveTheirs && !abbreviatedEntry.timeOutError)) // ignore hub
+                if (!(abbreviatedEntry.url === "" && abbreviatedEntry.theyHaveMine
+                      && abbreviatedEntry.haveTheirs && !abbreviatedEntry.timeOutError)) // ignore hub
+                {
                     tempList.push(abbreviatedEntry)
+                }
             }
 
             vm.otherDashboards = [['Hub', '', true]].concat(map(entryToTriple, tempList));
@@ -61,21 +63,21 @@
          * golf-way of writing this.
          */
         function comparator(first, second) {
-            if (first[0] == 'Hub') {
+            if (first[0] === 'Hub') {
                 return -2;
-            } else if (second[0] == 'Hub') {
+            } else if (second[0] === 'Hub') {
                 return 2;
             } else {
                 var less = first[0].toLowerCase() < second[0].toLowerCase();
-                var eq = first[0].toLowerCase() == second[0].toLowerCase();
-                return less? -1: eq? 0 : 1
+                var eq = first[0].toLowerCase() === second[0].toLowerCase();
+                return less ? -1 : eq ? 0 : 1
             }
         }
 
         //todo remove duplication with header.js
         function switchDashboard(url, alias) {
             $app.model.toDashboard.url = url;
-            $app.model.m.siteAlias = alias == 'Hub'? '': alias;
+            $app.model.m.siteAlias = alias === 'Hub' ? '' : alias;
             clearCache();
             $location.url("/diagnostic/summary");
         }
@@ -84,7 +86,7 @@
             $app.model.clearCache();
         }
 
-        function entryToTriple(entry){
+        function entryToTriple(entry) {
             return [entry.siteAlias, entry.url, entry.theyHaveMine && entry.haveTheirs && !entry.timeOutError];
         }
     }
