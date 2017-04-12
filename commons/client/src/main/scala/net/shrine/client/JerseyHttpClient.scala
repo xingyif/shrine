@@ -11,7 +11,7 @@ import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter
 import com.sun.jersey.client.urlconnection.HTTPSProperties
 import net.shrine.crypto.TrustParam.{AcceptAllCerts, BouncyKeyStore}
 import net.shrine.crypto.{BouncyKeyStoreCollection, TrustParam}
-import net.shrine.log.Loggable
+import net.shrine.log.{Log, Loggable}
 import net.shrine.util.{StringEnrichments, XmlUtil}
 
 import scala.concurrent.duration._
@@ -108,13 +108,29 @@ object JerseyHttpClient {
       }
 
     new X509TrustManager {
-      override def checkServerTrusted(x509Certificates: Array[X509Certificate], s: String): Unit =
-        Try(customCerts.checkServerTrusted(x509Certificates, s))
-          .getOrElse(caCerts.checkServerTrusted(x509Certificates, s))
+      override def checkServerTrusted(x509Certificates: Array[X509Certificate], s: String): Unit = {
+        val custom = Try(customCerts.checkServerTrusted(x509Certificates, s))
+        if (custom.isFailure) {
+          val ca = Try(caCerts.checkServerTrusted(x509Certificates, s))
+          if (ca.isFailure) {
+            Log.error(this, custom.failed.get)
+            Log.error(this, ca.failed.get)
+            throw ca.failed.get
+          }
+        }
+      }
 
-      override def checkClientTrusted(x509Certificates: Array[X509Certificate], s: String): Unit =
-        Try(customCerts.checkClientTrusted(x509Certificates, s))
-          .getOrElse(caCerts.checkClientTrusted(x509Certificates, s))
+      override def checkClientTrusted(x509Certificates: Array[X509Certificate], s: String): Unit = {
+        val custom = Try(customCerts.checkClientTrusted(x509Certificates, s))
+        if (custom.isFailure) {
+          val ca = Try(caCerts.checkClientTrusted(x509Certificates, s))
+          if (ca.isFailure) {
+            Log.error(this, custom.failed.get)
+            Log.error(this, ca.failed.get)
+            throw ca.failed.get
+          }
+        }
+      }
 
       override def getAcceptedIssuers: Array[X509Certificate] =
         customCerts.getAcceptedIssuers ++ caCerts.getAcceptedIssuers
