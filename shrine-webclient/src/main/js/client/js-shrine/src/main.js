@@ -3,6 +3,13 @@ export function configure(aurelia) {
         .standardConfiguration()
         .developmentLogging();
 
-        aurelia.start()
-            .then(() => aurelia.setRoot('shell'));
+    aurelia.start()
+        .then(() => aurelia.setRoot('shell'));
+        
+    //@todo: cleanup.
+    var shrine = {
+        auth: sessionStorage.getItem('shrine.auth')
+    };
+    sessionStorage.removeItem('shrine.auth');
+    aurelia.use.instance('shrine', shrine);
 }

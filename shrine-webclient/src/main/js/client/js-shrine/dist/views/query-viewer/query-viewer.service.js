@@ -1,7 +1,7 @@
 System.register(['aurelia-framework', 'aurelia-fetch-client', 'fetch'], function (_export, _context) {
     "use strict";
 
-    var inject, HttpClient, _createClass, _dec, _class, nodesPerScreen, QueryViewerService;
+    var inject, HttpClient, _createClass, _dec, _class, maxNodesPerScreen, QueryViewerService;
 
     function _classCallCheck(instance, Constructor) {
         if (!(instance instanceof Constructor)) {
@@ -34,74 +34,94 @@ System.register(['aurelia-framework', 'aurelia-fetch-client', 'fetch'], function
                 };
             }();
 
-            nodesPerScreen = 10;
+            maxNodesPerScreen = 10;
 
-            _export('QueryViewerService', QueryViewerService = (_dec = inject(HttpClient), _dec(_class = function () {
-                function QueryViewerService(http) {
+            _export('QueryViewerService', QueryViewerService = (_dec = inject(HttpClient, 'shrine'), _dec(_class = function () {
+                function QueryViewerService(http, shrine) {
                     var _this = this;
 
                     _classCallCheck(this, QueryViewerService);
 
-                    http.configure(function (config) {
-                        config.useStandardConfiguration().withBaseUrl(_this.url);
-                    });
+                    if (http !== undefined) {
+                        http.configure(function (config) {
+                            config.useStandardConfiguration().withBaseUrl(_this.url).withDefaults({
+                                headers: {
+                                    'Authorization': 'Basic ' + shrine.auth
+                                }
+                            });
+                        });
 
-                    this.http = http;
+                        this.http = http;
+                    }
                 }
 
                 QueryViewerService.prototype.fetchPreviousQueries = function fetchPreviousQueries() {
-                    return this.http.fetch('previous-queries').then(function (response) {
+                    return this.http.fetch('qep/queryResults').then(function (response) {
                         return response.json();
                     }).catch(function (error) {
                         return error;
                     });
                 };
 
-                QueryViewerService.prototype.getNodes = function getNodes(queries) {
-                    return queries.length > 0 ? queries[0].results.map(function (result) {
-                        return result.node;
-                    }) : [];
-                };
-
                 QueryViewerService.prototype.getScreens = function getScreens(nodes, queries) {
+                    var _this2 = this;
+
                     return new Promise(function (resolve, reject) {
-                        var lastNodeIndex = nodes.length;
+                        var lastNodeIndex = nodes.sort().length;
                         var screens = [];
-
-                        var _loop = function _loop(i) {
-                            var endIndex = i + nodesPerScreen < lastNodeIndex ? i + nodesPerScreen : lastNodeIndex - 1;
-                            var screenId = String(nodes[i]).substr(0, 1) + '-' + String(nodes[endIndex]).substr(0, 1);
-                            var screenNodes = nodes.slice(i, endIndex);
-                            var screenQueries = queries.map(function (query) {
-                                return {
-                                    id: query.id,
-                                    name: query.name,
-                                    results: query.results.slice(i, endIndex)
-                                };
-                            });
-
+                        for (var i = 0; i < lastNodeIndex; i = i + maxNodesPerScreen) {
+                            var numberOfNodesOnScreen = _this2.getNumberOfNodesOnScreen(nodes, i, maxNodesPerScreen);
+                            var endIndex = numberOfNodesOnScreen - 1;
+                            var screenId = _this2.getScreenId(nodes, i, endIndex);
+                            var screenNodes = nodes.slice(i, numberOfNodesOnScreen);
+                            var screenNodesToQueriesMap = _this2.mapQueriesToScreenNodes(screenNodes, queries, _this2.findQueriesForNode);
                             screens.push({
-                                name: screenId,
+                                id: screenId,
                                 nodes: screenNodes,
-                                queries: screenQueries
+                                results: screenNodesToQueriesMap
                             });
-                        };
-
-                        for (var i = 0; i < lastNodeIndex; i = i + nodesPerScreen) {
-                            _loop(i);
                         }
-
                         resolve(screens);
                     });
+                };
+
+                QueryViewerService.prototype.mapQueriesToScreenNodes = function mapQueriesToScreenNodes(nodes, queries) {
+                    var results = [];
+                    queries.forEach(function (q, i) {
+                        var result = {
+                            name: q.query.queryName,
+                            id: q.query.networkId,
+                            nodeResults: []
+                        };
+                        nodes.forEach(function (n) {
+                            result.nodeResults.push(q.adaptersToResults.find(function (a) {
+                                return a.adapterNode === n;
+                            }));
+                        });
+                        results.push(result);
+                    });
+                    return results;
+                };
+
+                QueryViewerService.prototype.getNumberOfNodesOnScreen = function getNumberOfNodesOnScreen(nodes, startIndex) {
+                    var numNodes = startIndex + maxNodesPerScreen;
+                    return numNodes < nodes.length ? numNodes : nodes.length;
+                };
+
+                QueryViewerService.prototype.getScreenId = function getScreenId(nodes, start, end) {
+                    var startNode = nodes[start];
+                    var endNode = nodes[end];
+                    return String(startNode).substr(0, 1) + '-' + String(endNode).substr(0, 1);
                 };
 
                 _createClass(QueryViewerService, [{
                     key: 'url',
                     get: function get() {
-                        var port = '8000';
+                        var port = '6443';
                         var url = document.URL;
-                        var service = '6443/shrine-proxy/request/shrine/api/';
-                        return url.substring(0, url.indexOf(port)) + service;
+                        var service = '/shrine-metadata/';
+
+                        return url.substring(0, url.indexOf(port) + port.length) + service;
                     }
                 }]);
 

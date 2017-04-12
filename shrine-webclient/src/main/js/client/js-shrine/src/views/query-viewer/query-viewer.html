@@ -1,10 +1,12 @@
 <template>
+    <require from="views/query-viewer/result-style.converter"></require>
+    <require from="views/query-viewer/result-value.converter"></require>
+
     <div style="width: 100%; text-align: center">  
-        <ul class="circle-pagination">
-            <li repeat.for="screen of screens" 
-            class="${screenIndex === $index? 'active' : ''}"
+        <ul class="circle-pagination" if.bind="showCircles">
+            <li repeat.for="screen of screens" class="${screenIndex === $index? 'active' : ''}"
             click.delegate="screenIndex = $index">
-                <div>${screen.name}</div>
+                <div>${screen.id}</div>
             </li>
         </ul>
     </div>
@@ -12,6 +14,7 @@
         <div class="box" repeat.for="screen of screens" css="transform: translate(${slidePct}, 0%);">
             <section>
                 <div>
+                    
                     <table cellpadding="0" cellspacing="0" border="0">
                         <thead>
                             <tr>
@@ -28,13 +31,21 @@
                 <div class="tbl-content">
                     <table cellpadding="0" cellspacing="0" border="0">
                         <tbody>
-                            <tr repeat.for="query of screen.queries" css="background: ${$odd? 'rgba(98,108,146, .1)' : 'white'}">
+                            <tr repeat.for="result of screen.results" css="background: ${$odd? 'rgba(98,108,146, .1)' : 'white'}">
                                 <th>
-                                    <div class="hideextra">${query.name}</div>
+                                    <div class="hideextra">${result.name}</div>
                                 </th>
-                                <td repeat.for="result of query.results" css = "${isUnresolved(result.result)? 'color:' +  getStatusStyle(result.result) : ''}">
-                                    ${result.result}
+
+                                <!-- use a value converter -->
+                              <td repeat.for="nodeResult of result.nodeResults" 
+                                    css="${nodeResult | resultStyle}">
+                                    ${nodeResult | result}
                                 </td>
+
+                                <!--td repeat.for="nodeResult of result.nodeResults" 
+                                    css="${getCSSFromStatus(nodeResult, isUnresolved, getColorValue, 'color')}">
+                                    ${result.result}
+                                </td-->
                             </tr>
                         </tbody>
                     </table>
