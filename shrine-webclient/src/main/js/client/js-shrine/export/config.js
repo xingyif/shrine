@@ -199,37 +199,17 @@ System.config({
       "indexof": "npm:indexof@0.0.1"
     }
   },
-  depCache: {
-    "views/mailto/mailto.js": [
-      "aurelia-framework",
-      "views/mailto/mailto.service",
-      "views/mailto/mailto.config"
-    ],
-    "views/mailto/mailto.service.js": [
-      "aurelia-framework",
-      "aurelia-fetch-client",
-      "fetch"
-    ],
-    "views/query-viewer/query-viewer.js": [
-      "aurelia-framework",
-      "views/query-viewer/query-viewer.service"
-    ],
-    "views/query-viewer/query-viewer.service.js": [
-      "aurelia-framework",
-      "aurelia-fetch-client",
-      "fetch"
-    ]
-  },
   bundles: {
     "app-build.js": [
       "main.js",
-      "repository/pm-repository.js",
+      "repository/qep.repository.js",
       "shell.html!github:systemjs/plugin-text@0.0.8.js",
       "shell.js",
       "views/mailto/mailto.config.js",
       "views/mailto/mailto.html!github:systemjs/plugin-text@0.0.8.js",
       "views/mailto/mailto.js",
       "views/mailto/mailto.service.js",
+      "views/query-viewer/query-viewer.config.js",
       "views/query-viewer/query-viewer.html!github:systemjs/plugin-text@0.0.8.js",
       "views/query-viewer/query-viewer.js",
       "views/query-viewer/query-viewer.service.js",
@@ -322,6 +302,31 @@ System.config({
       "npm:aurelia-templating@1.1.1/aurelia-templating.js",
       "npm:jquery@2.2.4.js",
       "npm:jquery@2.2.4/dist/jquery.js"
+    ]
+  },
+  depCache: {
+    "repository/qep.repository.js": [
+      "aurelia-framework",
+      "aurelia-fetch-client",
+      "fetch"
+    ],
+    "views/mailto/mailto.js": [
+      "aurelia-framework",
+      "views/mailto/mailto.service",
+      "views/mailto/mailto.config"
+    ],
+    "views/mailto/mailto.service.js": [
+      "aurelia-framework",
+      "repository/qep.repository"
+    ],
+    "views/query-viewer/query-viewer.js": [
+      "aurelia-framework",
+      "views/query-viewer/query-viewer.service"
+    ],
+    "views/query-viewer/query-viewer.service.js": [
+      "aurelia-framework",
+      "repository/qep.repository",
+      "./query-viewer.config"
     ]
   }
 });

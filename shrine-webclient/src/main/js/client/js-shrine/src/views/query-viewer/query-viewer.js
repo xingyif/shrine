@@ -1,9 +1,6 @@
 import { inject } from 'aurelia-framework';
 import { QueryViewerService } from 'views/query-viewer/query-viewer.service';
 
-// -- config -- //
-const nodesPerScreen = 10;
-
 @inject(QueryViewerService)
 export class QueryViewer {
     constructor(service) {

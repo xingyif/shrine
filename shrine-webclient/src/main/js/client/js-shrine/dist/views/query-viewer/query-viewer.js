@@ -1,7 +1,7 @@
 System.register(['aurelia-framework', 'views/query-viewer/query-viewer.service'], function (_export, _context) {
     "use strict";
 
-    var inject, QueryViewerService, _createClass, _dec, _class, nodesPerScreen, QueryViewer;
+    var inject, QueryViewerService, _createClass, _dec, _class, QueryViewer;
 
     function _classCallCheck(instance, Constructor) {
         if (!(instance instanceof Constructor)) {
@@ -33,8 +33,6 @@ System.register(['aurelia-framework', 'views/query-viewer/query-viewer.service']
                     return Constructor;
                 };
             }();
-
-            nodesPerScreen = 10;
 
             _export('QueryViewer', QueryViewer = (_dec = inject(QueryViewerService), _dec(_class = function () {
                 function QueryViewer(service) {
