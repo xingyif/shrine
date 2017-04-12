@@ -8,7 +8,6 @@
 	// -- events -- //
 	i2b2.events.afterLogin.subscribe(loginSuccessHandler);
 
-
 	 // -- @todo: boostrap the Webclient plugin tabs here. -- //
 	function loginSuccessHandler(type, args) {
 		if (i2b2.hive.cfg.lstCells.SHRINE.serverLoaded) {
@@ -119,9 +118,7 @@
 
 	function bootstrap() {
 		var config = i2b2.SHRINE.cfg.config;
-		jQuery('#' + i2b2.SHRINE.plugin.viewName).load(config.wrapperHtmlFile, function (response, status, xhr) {
-			var test = '';
-		});
+		jQuery('#' + i2b2.SHRINE.plugin.viewName).load(config.wrapperHtmlFile, function (response, status, xhr) {});
 	}
 })();
 

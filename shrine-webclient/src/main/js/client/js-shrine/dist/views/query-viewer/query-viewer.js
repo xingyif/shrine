@@ -43,31 +43,19 @@ System.register(['aurelia-framework', 'views/query-viewer/query-viewer.service']
                     _classCallCheck(this, QueryViewer);
 
                     this.screenIndex = 0;
+                    this.showCircles = false;
                     this.service = service;
                     this.service.fetchPreviousQueries().then(function (result) {
-                        var queries = result.queries;
-                        var nodes = _this.service.getNodes(queries);
+                        var queries = result.queryResults;
+                        var nodes = result.adapters;
                         return service.getScreens(nodes, queries);
                     }).then(function (screens) {
                         _this.screens = screens;
+                        _this.showCircles = _this.screens.length > 1;
                     }).catch(function (error) {
                         return console.log(error);
                     });
                 }
-
-                QueryViewer.prototype.isUnresolved = function isUnresolved(status) {
-                    return ['ERROR', 'PENDING'].indexOf(status) >= 0;
-                };
-
-                QueryViewer.prototype.getStatusStyle = function getStatusStyle(status) {
-                    if (status === 'ERROR') {
-                        return '#FF0000';
-                    } else if (status === 'PENDING') {
-                        return '#00FF00';
-                    }
-
-                    return '';
-                };
 
                 _createClass(QueryViewer, [{
                     key: 'slidePct',

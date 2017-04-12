@@ -13,12 +13,12 @@ console.group('Load & Execute component file: cells > PM > ctrlr');
 console.time('execute time');
 
 // ================================================================================================== //
-i2b2.PM.doLogin = function() {
+i2b2.PM.doLogin = function () {
 	i2b2.PM.model.shrine_domain = false;
 	// change the cursor
 	// show on GUI that work is being done
 	i2b2.h.LoadingMask.show();
-	
+
 	// copy the selected domain info into our main data model
 	var e = 'The following problems were encountered:';
 	var val = i2b2.PM.udlogin.inputUser.value;
@@ -33,6 +33,7 @@ i2b2.PM.doLogin = function() {
 	} else {
 		e += "\n  Password is empty";
 	}
+	sessionStorage.setItem('shrine.auth', btoa(login_username + ':' + login_password));
 	var p = i2b2.PM.udlogin.inputDomain;
 	var val = p.options[p.selectedIndex].value;
 	if (!val.blank()) {
@@ -71,7 +72,7 @@ i2b2.PM.doLogin = function() {
 	// call the PM Cell's communicator Object
 	var callback = new i2b2_scopedCallback(i2b2.PM._processUserConfig, i2b2.PM);
 	var parameters = {
-		domain: login_domain, 
+		domain: login_domain,
 		is_shrine: shrine_domain,
 		project: login_project,
 		username: login_username,
@@ -101,67 +102,66 @@ i2b2.PM._processUserConfig = function (data) {
 	try {
 		var t = i2b2.h.XPath(data.refXML, '//user/password')[0]; //[@token_ms_timeout]
 		i2b2.PM.model.login_password = i2b2.h.Xml2String(t);
-		
+
 		var timeout = t.getAttribute('token_ms_timeout');
-		if (timeout == undefined ||  timeout < 300001)
-		{
-		 i2b2.PM.model.IdleTimer.start(1800000-300000); //timeout); //timeout-60000);		
-			
+		if (timeout == undefined || timeout < 300001) {
+			i2b2.PM.model.IdleTimer.start(1800000 - 300000); //timeout); //timeout-60000);		
+
 		} else {
-		
-		 i2b2.PM.model.IdleTimer.start(timeout-300000); //timeout); //timeout-60000);		
+
+			i2b2.PM.model.IdleTimer.start(timeout - 300000); //timeout); //timeout-60000);		
 		}
 	} catch (e) {
 		//console.error("Could not find returned password node in login XML");
-		i2b2.PM.model.login_password = "<password>"+data.msgParams.sec_pass+"</password>\n";
-	}	
+		i2b2.PM.model.login_password = "<password>" + data.msgParams.sec_pass + "</password>\n";
+	}
 	// clear the password
 	i2b2.PM.udlogin.inputPass.value = "";
-	
+
 	if (i2b2.PM.model.reLogin) {
 		i2b2.h.LoadingMask.hide();
-		try { i2b2.PM.view.modal.login.hide(); } catch(e) {}
+		try { i2b2.PM.view.modal.login.hide(); } catch (e) { }
 		i2b2.PM.model.reLogin = false;
-		
+
 		return;
-	}	
-	
-		i2b2.PM.model.isAdmin = false;
-	try { 
+	}
+
+	i2b2.PM.model.isAdmin = false;
+	try {
 		var t = i2b2.h.XPath(data.refXML, '//user/full_name')[0];
 		i2b2.PM.model.login_fullname = i2b2.h.Xml2String(t);
-	} catch(e) {}	
-	try { 
+	} catch (e) { }
+	try {
 		var t = i2b2.h.XPath(data.refXML, '//user/is_admin')[0];
-		if (Boolean.parseTo(i2b2.h.getXNodeVal(t, 'is_admin')) ) {
+		if (Boolean.parseTo(i2b2.h.getXNodeVal(t, 'is_admin'))) {
 			i2b2.PM.model.isAdmin = true;
-		}		
-	} catch(e) {}		
+		}
+	} catch (e) { }
 	i2b2.PM.model.login_domain = data.msgParams.sec_domain;
 	i2b2.PM.model.shrine_domain = Boolean.parseTo(data.msgParams.is_shrine);
 	i2b2.PM.model.login_project = data.msgParams.sec_project;
-	i2b2.PM.model.loginXML = data.refXML; 
+	i2b2.PM.model.loginXML = data.refXML;
 	console.info("AJAX Login Successful! Updated: i2b2.PM.model");
 
 	// hide the modal form if needed
-	try { i2b2.PM.view.modal.login.hide(); } catch(e) {}
+	try { i2b2.PM.view.modal.login.hide(); } catch (e) { }
 
 	i2b2.PM.cfg.cellURL = i2b2.PM.model.url;  // remember the url
 	// if user has more than one project display a modal dialog box to have them select one
 	var xml = data.refXML;
 
-	var projs = i2b2.h.XPath(xml, 'descendant::user/project[@id]');	
-	console.debug(projs.length+' project(s) discovered for user');
+	var projs = i2b2.h.XPath(xml, 'descendant::user/project[@id]');
+	console.debug(projs.length + ' project(s) discovered for user');
 	// populate the Project data into the data model
 	i2b2.PM.model.projects = {};
-	for (var i=0; i<projs.length; i++) {
+	for (var i = 0; i < projs.length; i++) {
 		// save data into model
 		var code = projs[i].getAttribute('id');
 		i2b2.PM.model.projects[code] = {};
 		i2b2.PM.model.projects[code].name = i2b2.h.getXNodeVal(projs[i], 'name');
 		var roledetails = i2b2.h.XPath(projs[i], 'descendant-or-self::role');
 		i2b2.PM.model.projects[code].roles = {};
-		i2b2.PM.model.projects[code].path = i2b2.h.getXNodeVal(projs[i],'path');
+		i2b2.PM.model.projects[code].path = i2b2.h.getXNodeVal(projs[i], 'path');
 		/*
 		for (var d=0; d<roledetails.length; d++) {
 			//alert(roledetails[d].textContent);
@@ -176,48 +176,47 @@ i2b2.PM._processUserConfig = function (data) {
 		// details`
 		var projdetails = i2b2.h.XPath(projs[i], 'descendant-or-self::param[@name]');
 		i2b2.PM.model.projects[code].details = {};
-		for (var d=0; d<projdetails.length; d++) {
+		for (var d = 0; d < projdetails.length; d++) {
 			var paramName = projdetails[d].getAttribute('name');
 			// BUG FIX - Firefox splits large values into multiple 4k text nodes... use Firefox-specific function to read concatenated value
 			if (projdetails[d].textContent) {
 				i2b2.PM.model.projects[code].details[paramName] = projdetails[d].textContent;
 			} else if (projdetails[d].firstChild) {
-				i2b2.PM.model.projects[code].details[paramName] = projdetails[d].firstChild.nodeValue.unescapeHTML();				
+				i2b2.PM.model.projects[code].details[paramName] = projdetails[d].firstChild.nodeValue.unescapeHTML();
 			}
 		}
 	}
 
-	 if (!i2b2.PM.model.isAdmin && i2b2.PM.model.admin_only)
-	{
+	if (!i2b2.PM.model.isAdmin && i2b2.PM.model.admin_only) {
 		alert("Requires ADMIN role, please contact your system administrator");
-		try { i2b2.PM.view.modal.login.show(); } catch(e) {}
+		try { i2b2.PM.view.modal.login.show(); } catch (e) { }
 		return true;
-	} else if (i2b2.PM.model.admin_only) {	
+	} else if (i2b2.PM.model.admin_only) {
 		// default to the first project
-		$('crcQueryToolBox').hide(); 
+		$('crcQueryToolBox').hide();
 		i2b2.PM.model.login_project = ""; //i2b2.h.XPath(projs[0], 'attribute::id')[0].nodeValue;
 		i2b2.PM._processLaunchFramework();
-	} else 	if (projs.length == 0) {
+	} else if (projs.length == 0) {
 		// show project selection dialog if needed	
-		try { i2b2.h.LoadingMask.hide(); } catch(e) {}
+		try { i2b2.h.LoadingMask.hide(); } catch (e) { }
 		// better error messages
 		var s = i2b2.h.XPath(xml, 'descendant::result_status/status[@type="ERROR"]');
 		if (s.length > 0) {
 			// we have a proper error msg
 			try {
-					alert("ERROR: "+s[0].firstChild.nodeValue);				
+				alert("ERROR: " + s[0].firstChild.nodeValue);
 			} catch (e) {
 				alert("An unknown error has occured during your login attempt!");
 			}
 		} else if (i2b2.PM.model.login_fullname != "") {
-			alert("Your account does not have access to any i2b2 projects.");		
-		//} else if (s == null || s == "") {
-		//	alert("The PM Cell is down or the address in the properties file is incorrect.");	
+			alert("Your account does not have access to any i2b2 projects.");
+			//} else if (s == null || s == "") {
+			//	alert("The PM Cell is down or the address in the properties file is incorrect.");	
 		} else {
-			alert("The PM Cell is down or the address in the properties file is incorrect.");	
+			alert("The PM Cell is down or the address in the properties file is incorrect.");
 			//alert("Your account does not have access to any i2b2 projects.");		
 		}
-		try { i2b2.PM.view.modal.login.show(); } catch(e) {}
+		try { i2b2.PM.view.modal.login.show(); } catch (e) { }
 		return true;
 	} else if (projs.length == 1) {
 		// default to the only project the user has access to
@@ -229,7 +228,7 @@ i2b2.PM._processUserConfig = function (data) {
 				i2b2.PM.view.modal.announcementDialog.showAnnouncement(announcement);
 				return;
 			}
-		} catch(e) {}
+		} catch (e) { }
 		i2b2.PM._processLaunchFramework();
 	} else {
 		// display list of possible projects for the user to select
@@ -240,7 +239,7 @@ i2b2.PM._processUserConfig = function (data) {
 
 
 // ================================================================================================== //
-i2b2.PM.doLogout = function() {
+i2b2.PM.doLogout = function () {
 	// bug fix - must reload page to avoid dirty data from lingering
 	window.location.reload();
 }
@@ -248,13 +247,13 @@ i2b2.PM.doLogout = function() {
 
 i2b2.PM.view.modal.projectDialog = {
 	loginXML: false,
-	showProjects: function() {
+	showProjects: function () {
 		var dataXML = i2b2.PM.model.loginXML;
 		var thisRef = i2b2.PM.view.modal.projectDialog;
 		if (!$("i2b2_projects_modal_dialog")) {
 			var htmlFrag = i2b2.PM.model.html.projDialog;
-			Element.insert(document.body,htmlFrag);
-		
+			Element.insert(document.body, htmlFrag);
+
 			if (!thisRef.yuiDialog) {
 				thisRef.yuiDialog = new YAHOO.widget.SimpleDialog("i2b2_projects_modal_dialog", {
 					zindex: 700,
@@ -263,10 +262,12 @@ i2b2.PM.view.modal.projectDialog = {
 					constraintoviewport: true,
 					close: false
 				});
-				var kl = new YAHOO.util.KeyListener("i2b2_projects_modal_dialog", { keys:13 },  							
-																  { fn:i2b2.PM.view.modal.projectDialog.loadProject,
-																	scope:i2b2.PM.view.modal.projectDialog,
-																	correctScope:true }, "keydown" );
+				var kl = new YAHOO.util.KeyListener("i2b2_projects_modal_dialog", { keys: 13 },
+					{
+						fn: i2b2.PM.view.modal.projectDialog.loadProject,
+						scope: i2b2.PM.view.modal.projectDialog,
+						correctScope: true
+					}, "keydown");
 				thisRef.yuiDialog.cfg.queueProperty("keylisteners", kl);
 				thisRef.yuiDialog.render(document.body);
 				// show the form
@@ -278,7 +279,7 @@ i2b2.PM.view.modal.projectDialog = {
 		$('loginProjs').focus();
 		// load the project data
 		var pli = $('loginProjs');
-		while( pli.hasChildNodes() ) { pli.removeChild( pli.lastChild ); }
+		while (pli.hasChildNodes()) { pli.removeChild(pli.lastChild); }
 		// populate the Project data into the form
 		for (var code in i2b2.PM.model.projects) {
 			// dropdown
@@ -286,7 +287,7 @@ i2b2.PM.view.modal.projectDialog = {
 			pno.setAttribute('value', code);
 			var pnt = document.createTextNode(i2b2.PM.model.projects[code].name);
 			pno.appendChild(pnt);
-			pli.appendChild(pno);			
+			pli.appendChild(pno);
 		}
 		// select first project
 		$('loginProjs').selectedIndex = 0;
@@ -294,15 +295,15 @@ i2b2.PM.view.modal.projectDialog = {
 		// display the details for the currently selected project
 		i2b2.PM.view.modal.projectDialog.renderDetails();
 	},
-	renderDetails: function() {
+	renderDetails: function () {
 		// clear the details display
 		var pli = $('projectAttribs');
-		while( pli.hasChildNodes() ) { pli.removeChild( pli.lastChild ); }
-		
+		while (pli.hasChildNodes()) { pli.removeChild(pli.lastChild); }
+
 		// get the currently selected project
 		var p = $('loginProjs');
 		var projectCode = p.options[p.selectedIndex].value;
-		
+
 		// show details
 		for (var i in i2b2.PM.model.projects[projectCode].details) {
 			// ignore "announcement" param
@@ -317,17 +318,17 @@ i2b2.PM.view.modal.projectDialog = {
 					part.innerHTML = i;
 					part = rec.select('.value')[0];
 					part.innerHTML = i2b2.PM.model.projects[projectCode].details[i];
-				} catch(e) {}
+				} catch (e) { }
 				pli.appendChild(rec);
 			}
 		}
 		if (!i) {
-			Element.insert(pli,'<DIV class="NoDetails">No additional information is available.</DIV>');
+			Element.insert(pli, '<DIV class="NoDetails">No additional information is available.</DIV>');
 		} else {
-			Element.insert(pli,'<DIV style="clear:both;"></DIV>');
+			Element.insert(pli, '<DIV style="clear:both;"></DIV>');
 		}
 	},
-	loadProject: function(ProjId) {
+	loadProject: function (ProjId) {
 		if (!ProjId) {
 			// get the ID of the currently selected project in the dropdown
 			var p = $('loginProjs');
@@ -343,13 +344,13 @@ i2b2.PM.view.modal.projectDialog = {
 				i2b2.PM.view.modal.announcementDialog.showAnnouncement(announcement);
 				return;
 			}
-		} catch(e) {}
+		} catch (e) { }
 		i2b2.PM._processLaunchFramework();
 	}
 }
 
 i2b2.PM.view.modal.announcementDialog = {
-	showAnnouncement: function(msg) {
+	showAnnouncement: function (msg) {
 
 		var thisRef = i2b2.PM.view.modal.announcementDialog;
 		if (!thisRef.yuiDialog) {
@@ -361,31 +362,31 @@ i2b2.PM.view.modal.announcementDialog = {
 				close: false
 			});
 			thisRef.yuiDialog.cfg.queueProperty("buttons",
-				[{text: "Yes, I agree", handler:i2b2.PM.view.modal.announcementDialog.clickOK, isDefault:true},
-				 {text: "No, I disagree", handler:i2b2.PM.view.modal.announcementDialog.clickCancel}
+				[{ text: "Yes, I agree", handler: i2b2.PM.view.modal.announcementDialog.clickOK, isDefault: true },
+				{ text: "No, I disagree", handler: i2b2.PM.view.modal.announcementDialog.clickCancel }
 				]);
 			thisRef.yuiDialog.render(document.body);
 			// show the form
 			thisRef.yuiDialog.show();
 		}
-		
+
 		// display the announcement text
 		$('PM-announcement-title').innerHTML = i2b2.PM.model.login_project + " Announcements";
 
-		$('PM-announcement-body').innerHTML =  msg.replace(/&lt;/g, '<', 'gm').replace(/&gt;/g, '>');
+		$('PM-announcement-body').innerHTML = msg.replace(/&lt;/g, '<', 'gm').replace(/&gt;/g, '>');
 
 		// show the form
 		$('PM-announcement-panel').show();
 		thisRef.yuiDialog.show();
 		thisRef.yuiDialog.center();
 	},
-	clickOK: function() {
+	clickOK: function () {
 		this.hide();
 		if (!i2b2.hive.isLoaded) {
 			i2b2.PM._processLaunchFramework();
 		}
 	},
-	clickCancel: function(){
+	clickCancel: function () {
 		this.hide();
 		i2b2.PM.doLogout();
 	}
@@ -396,13 +397,13 @@ i2b2.PM.view.modal.announcementDialog = {
 // ================================================================================================================================
 // NEW FRAMEWORK LAUNCH CODE (cells can timeout on failure instead of hanging the entire load process)
 // ================================================================================================================================
-i2b2.PM._processLaunchFramework = function() {
+i2b2.PM._processLaunchFramework = function () {
 	i2b2.hive.isLoaded = false;
 	var oXML = i2b2.PM.model.loginXML;
 
 	// create signal sender for afterLogin event
-	i2b2.events.afterCellInit.subscribe((function(type,args) {
-		if (i2b2.hive.isLoaded) { 
+	i2b2.events.afterCellInit.subscribe((function (type, args) {
+		if (i2b2.hive.isLoaded) {
 			// turn off our watchdog timer
 			if (i2b2.PM.WDT) { clearTimeout(i2b2.PM.WDT); }
 			return;
@@ -434,25 +435,24 @@ i2b2.PM._processLaunchFramework = function() {
 	// extract additional user/project information
 	i2b2.PM.model.userRoles = [];
 	i2b2.PM.model.isObfuscated = true;
-	var roles = i2b2.h.XPath(oXML, "//user/project[@id='"+i2b2.PM.model.login_project+"']/role/text()");
+	var roles = i2b2.h.XPath(oXML, "//user/project[@id='" + i2b2.PM.model.login_project + "']/role/text()");
 	var l = roles.length;
-	for (var i=0; i<l; i++) {
+	for (var i = 0; i < l; i++) {
 		if (i2b2.PM.model.userRoles.indexOf(roles[i].nodeValue) == -1)
 			i2b2.PM.model.userRoles.push(roles[i].nodeValue);
-			if (roles[i].nodeValue == "DATA_AGG")
-			{
-				i2b2.PM.model.isObfuscated = false;	
-			}
+		if (roles[i].nodeValue == "DATA_AGG") {
+			i2b2.PM.model.isObfuscated = false;
+		}
 	}
 
 	// process cell listing
 	var cellIDs = {};
 	var c = i2b2.h.XPath(oXML, "//cell_data/@id");
 	var l = c.length;
-	for (var i=0; i<l; i++) {
+	for (var i = 0; i < l; i++) {
 		try {
 			cellIDs[c[i].nodeValue] = true;
-		} catch(e) {
+		} catch (e) {
 			console.error("Invalid Node Info!");
 		}
 	}
@@ -469,35 +469,32 @@ i2b2.PM._processLaunchFramework = function() {
 				//cellRef.name = i2b2.h.getXNodeVal(x, "name");
 				//cellRef.url = i2b2.h.getXNodeVal(x, "url");
 				//cellRef.xmlStr = i2b2.h.Xml2String(x);
-				var  y = i2b2.h.XPath(oXML,"//cell_data[@id='"+cellKey+"']");
+				var y = i2b2.h.XPath(oXML, "//cell_data[@id='" + cellKey + "']");
 
-				for(var i=y.length; i>=0; i--)
-				{
+				for (var i = y.length; i >= 0; i--) {
 
-					var  x = i2b2.h.XPath(oXML,"//cell_data[@id='"+cellKey+"']")[i-1];
+					var x = i2b2.h.XPath(oXML, "//cell_data[@id='" + cellKey + "']")[i - 1];
 
-					if( i2b2.h.getXNodeVal(x,"project_path")== i2b2.PM.model.projects[i2b2.PM.model.login_project].path )
-					{
-						cellRef.name = i2b2.h.getXNodeVal(x,"name");
-						cellRef.project_path = i2b2.h.getXNodeVal(x,"project_path");
-						cellRef.url = i2b2.h.getXNodeVal(x,"url");
+					if (i2b2.h.getXNodeVal(x, "project_path") == i2b2.PM.model.projects[i2b2.PM.model.login_project].path) {
+						cellRef.name = i2b2.h.getXNodeVal(x, "name");
+						cellRef.project_path = i2b2.h.getXNodeVal(x, "project_path");
+						cellRef.url = i2b2.h.getXNodeVal(x, "url");
 						cellRef.xmlStr = i2b2.h.Xml2String(x);
 					}
 				}
 
-				if(!cellRef.name)
-				{
-					var  x = i2b2.h.XPath(oXML,"//cell_data[@id='"+cellKey+"']")[0];
-					cellRef.name = i2b2.h.getXNodeVal(x,"name");
-					cellRef.project_path = i2b2.h.getXNodeVal(x,"project_path");
-					cellRef.url = i2b2.h.getXNodeVal(x,"url");
+				if (!cellRef.name) {
+					var x = i2b2.h.XPath(oXML, "//cell_data[@id='" + cellKey + "']")[0];
+					cellRef.name = i2b2.h.getXNodeVal(x, "name");
+					cellRef.project_path = i2b2.h.getXNodeVal(x, "project_path");
+					cellRef.url = i2b2.h.getXNodeVal(x, "url");
 					cellRef.xmlStr = i2b2.h.Xml2String(x);
 				}
 
 				// params
-				var x = i2b2.h.XPath(oXML, "//cell_data[@id='"+cellKey+"']/param[@name]");
+				var x = i2b2.h.XPath(oXML, "//cell_data[@id='" + cellKey + "']/param[@name]");
 				var l = x.length;
-				for (var i=0; i<l; i++) {
+				for (var i = 0; i < l; i++) {
 					var n = i2b2.h.XPath(x[i], "attribute::name")[0].nodeValue;
 					cellRef.params[n] = x[i].firstChild.nodeValue;
 				}
@@ -508,29 +505,27 @@ i2b2.PM._processLaunchFramework = function() {
 					i2b2.hive.cfg.lstCells[cellKey] = cellRef;
 				}
 			} catch (e) {
-				console.error("Error occurred while processing PM cell config msg about cell:"+cellKey);
+				console.error("Error occurred while processing PM cell config msg about cell:" + cellKey);
 				deleteKeys[cellKey] = true;
 			}
 		} else {
 			//Remove cells.plugins that dont have right access to
-			 //if (i2b2.PM.model.userRoles.indexOf(i2b2.hive.cfg.lstCells[cellKey].roles) == -1) {
+			//if (i2b2.PM.model.userRoles.indexOf(i2b2.hive.cfg.lstCells[cellKey].roles) == -1) {
 			//	deleteKeys[cellKey] = true;				 
-			 //}
-			 if (!i2b2.PM.model.admin_only) {
-			 var roleFound = -1;
-			for (var i=0; i<i2b2.hive.cfg.lstCells[cellKey].roles.length; i++) {
-				roleFound = 0;
-				 if (i2b2.PM.model.userRoles.indexOf(i2b2.hive.cfg.lstCells[cellKey].roles[i]) != -1)
-				 {
-					roleFound = 1;
-					break; 
-				 }
-			 }
-			 if (roleFound == 0)
-			 {
-				 deleteKeys[cellKey] = true;				 
-			 }
-			 }
+			//}
+			if (!i2b2.PM.model.admin_only) {
+				var roleFound = -1;
+				for (var i = 0; i < i2b2.hive.cfg.lstCells[cellKey].roles.length; i++) {
+					roleFound = 0;
+					if (i2b2.PM.model.userRoles.indexOf(i2b2.hive.cfg.lstCells[cellKey].roles[i]) != -1) {
+						roleFound = 1;
+						break;
+					}
+				}
+				if (roleFound == 0) {
+					deleteKeys[cellKey] = true;
+				}
+			}
 			// no need to load the cell unless forced
 			if (cellKey != "PM" && !i2b2.hive.cfg.lstCells[cellKey].forceLoading) {
 				// add to the delete list
@@ -539,7 +534,7 @@ i2b2.PM._processLaunchFramework = function() {
 		}
 	}
 
-    // purge all non-used cells from the cells listing and i2b2 namespace
+	// purge all non-used cells from the cells listing and i2b2 namespace
 	for (var cellKey in deleteKeys) {
 		delete i2b2.hive.cfg.lstCells[cellKey];
 		if (i2b2[cellKey] && i2b2[cellKey].cellCode) {
@@ -565,7 +560,7 @@ i2b2.PM._processLaunchFramework = function() {
 			if (i2b2.hive.cfg.lstCells[cellKey]) {
 				t[cellKey] = true;
 			} else {
-				console.error("CELL CONFIGURATION ERROR! ["+cellKey+"]");
+				console.error("CELL CONFIGURATION ERROR! [" + cellKey + "]");
 				delete i2b2[cellKey];
 			}
 		}
@@ -574,14 +569,14 @@ i2b2.PM._processLaunchFramework = function() {
 	delete t;
 
 	// start our watchdog time (WDT) 
-	if (i2b2.hive.cfg.loginTimeout) { 
+	if (i2b2.hive.cfg.loginTimeout) {
 		var t = i2b2.hive.cfg.loginTimeout;
 	} else {
 		var t = 120;
 	}
 	t = t * 1000;
 	i2b2.PM.WDT = setTimeout("i2b2.PM.trigger_WDT()", t);
-	
+
 	// Initialize the Cell Stubs
 	for (var cellKey in i2b2.hive.cfg.LoadedCells) {
 		// is it a cell
@@ -589,8 +584,8 @@ i2b2.PM._processLaunchFramework = function() {
 			try {
 				var cfg = i2b2.hive.cfg.lstCells[cellKey];
 				i2b2[cellKey].Init(cfg.url, cfg.params);
-			} catch(e) {
-				console.error("CELL INITIALIZATION FAILURE! ["+cellKey+"]");
+			} catch (e) {
+				console.error("CELL INITIALIZATION FAILURE! [" + cellKey + "]");
 				delete i2b2[cellKey];
 				i2b2.hive.cfg.LoadedCells[cellKey] = false;
 			}
@@ -600,20 +595,20 @@ i2b2.PM._processLaunchFramework = function() {
 };
 
 
-i2b2.PM.trigger_WDT = function() {
+i2b2.PM.trigger_WDT = function () {
 	console.warn('CHECKING FOR STUCK CELLS');
 	var foundStuckCells = false
 	for (var cellKey in i2b2.hive.cfg.LoadedCells) {
-		if (i2b2.hive.cfg.LoadedCells[cellKey] && !i2b2[cellKey].isLoaded) { 
+		if (i2b2.hive.cfg.LoadedCells[cellKey] && !i2b2[cellKey].isLoaded) {
 			// clear stuck module
-			console.error("FOUND STUCK CELL: "+cellKey);
+			console.error("FOUND STUCK CELL: " + cellKey);
 			foundStuckCells = true;
 		}
 	}
 	if (!foundStuckCells) { return true; }
 	if (confirm("Some modules are still attempted to load.\nDo you want to continue waiting?")) {
 		// reset WDT
-		if (i2b2.hive.cfg.loginTimeout) { 
+		if (i2b2.hive.cfg.loginTimeout) {
 			var t = i2b2.hive.cfg.loginTimeout;
 		} else {
 			var t = 120;
@@ -626,13 +621,13 @@ i2b2.PM.trigger_WDT = function() {
 		// clear any unloaded modules
 		console.warn("CLEARING STUCK CELLS...");
 		for (var cellKey in i2b2.hive.cfg.LoadedCells) {
-			if (i2b2.hive.cfg.LoadedCells[cellKey] && !i2b2[cellKey].isLoaded) { 
+			if (i2b2.hive.cfg.LoadedCells[cellKey] && !i2b2[cellKey].isLoaded) {
 				// clear stuck module
-				console.error("CELL FORCEFULLY UNLOADED: "+cellKey);
+				console.error("CELL FORCEFULLY UNLOADED: " + cellKey);
 				i2b2.hive.cfg.LoadedCells[cellKey] = false;
 				delete i2b2[cellKey];
 			}
-		}				
+		}
 		// recheck loading status (which will now pass)
 		i2b2.events.afterCellInit.fire();
 	}

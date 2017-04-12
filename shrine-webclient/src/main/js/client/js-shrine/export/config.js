@@ -232,7 +232,9 @@ System.config({
       "views/mailto/mailto.service.js",
       "views/query-viewer/query-viewer.html!github:systemjs/plugin-text@0.0.8.js",
       "views/query-viewer/query-viewer.js",
-      "views/query-viewer/query-viewer.service.js"
+      "views/query-viewer/query-viewer.service.js",
+      "views/query-viewer/result-style.converter.js",
+      "views/query-viewer/result-value.converter.js"
     ],
     "aurelia.js": [
       "github:github/fetch@1.0.0.js",

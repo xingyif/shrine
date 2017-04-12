@@ -46,7 +46,7 @@ function start(dir) {
   });
 
   router.get('/shrine/api/previous-queries', (req, res) => {
-    const result = require('./data/async-queries').getQueryResults();
+    const result = require('./data/curl-async-queries');
     res.json(result);
   })
 }

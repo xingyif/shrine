@@ -8,38 +8,25 @@ const nodesPerScreen = 10;
 export class QueryViewer {
     constructor(service) {
         this.screenIndex = 0;
+        this.showCircles = false;
         this.service = service;
         this.service
             .fetchPreviousQueries()
             .then(result => {
-                const queries = result.queries;
-                const nodes = this.service.getNodes(queries);
+                const queries = result.queryResults;
+                const nodes = result.adapters  
                 return service.getScreens(nodes, queries);
             })
             .then(screens => {
                 this.screens = screens;
+                this.showCircles = this.screens.length > 1;
             })
             .catch(error => console.log(error));
     }
 
+    // -- @todo: optimize with 'computedFrom' decorator  or value converter-- //
     get slidePct() {
         return String(-100 * this.screenIndex) + '%';
-    }
-
-    isUnresolved(status) {
-        return ['ERROR', 'PENDING'].indexOf(status) >= 0;
-    }
-
-    getStatusStyle(status) {
-        if(status === 'ERROR') {
-            return '#FF0000';
-        }
-
-        else if (status === 'PENDING') {
-            return '#00FF00';
-        }
-
-        return '';
     }
 }
 
