@@ -22,7 +22,6 @@ System.register([], function (_export, _context) {
 
         return !value || value.status === errorStatus ? errorColor : altColor;
     }
-
     return {
         setters: [],
         execute: function () {
