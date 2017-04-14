@@ -1,9 +1,8 @@
 
-const basePath = '../../../src/views/query-viewer/'
 import { QueryViewerService } from '../../../src/views/query-viewer/query-viewer.service';
 import { QueryViewerConfig } from '../../../src/views/query-viewer/query-viewer.config';
 const asyncQueryResult = require('./async-queries-mock');
-console.log(asyncQueryResult);
+
 describe('queryViewerService and asyncQueryResult should be initialized', () => {
     const queries = asyncQueryResult.queryResults;
     const nodes = asyncQueryResult.adapters;
