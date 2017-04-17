@@ -61,7 +61,7 @@ describe('Value Converters should convert viewModel values to usable style and t
             status: "FINISHED",
             count: -1
         }
-        const expectedResult = '<10';
+        const expectedResult = '<=10';
         const result = resultValueConverter.toView(negativeCount);
         expect(result).toBe(expectedResult);
     });
