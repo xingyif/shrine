@@ -19,7 +19,7 @@ System.register(['aurelia-framework', 'repository/qep.repository', './query-view
         }],
         execute: function () {
             _export('QueryViewerService', QueryViewerService = (_dec = inject(QEPRepository, QueryViewerConfig), _dec(_class = function () {
-                function QueryViewerService(repository, config) {
+                function QueryViewerService(repository, config, i2b2Svc) {
                     _classCallCheck(this, QueryViewerService);
 
                     this.repository = repository;

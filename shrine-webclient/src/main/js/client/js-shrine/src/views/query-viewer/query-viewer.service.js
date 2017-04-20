@@ -1,10 +1,11 @@
-import { inject } from 'aurelia-framework';
+import {inject} from 'aurelia-framework';
 import {QEPRepository} from 'repository/qep.repository';
 import {QueryViewerConfig} from './query-viewer.config';
 
+
 @inject(QEPRepository, QueryViewerConfig)
 export class QueryViewerService {
-    constructor(repository, config) {
+    constructor(repository, config, i2b2Svc) {
         this.repository = repository;
         this.config = config;
     }

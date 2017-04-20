@@ -7,6 +7,6 @@ export class ResultValueConverter {
         if (value.status !== "FINISHED") {
             return value.status;
         }
-        return value.count < 0? '<10' : value.count;
+        return value.count < 0? '<=10' : value.count;
     }
 }
