@@ -73,6 +73,10 @@ body,
     text-overflow: ellipsis; }
   .box-wrapper > .box section {
     margin: 20 0 6 0; }
+    .box-wrapper > .box section .v-full {
+      height: 100%; }
+    .box-wrapper > .box section .v-full > table {
+      padding-bottom: 10%; }
     .box-wrapper > .box section .v-min {
       height: 100px; }
     .box-wrapper > .box section .v-min > table {

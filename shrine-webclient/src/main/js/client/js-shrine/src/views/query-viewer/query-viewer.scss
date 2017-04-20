@@ -37,7 +37,10 @@ body,
   section{
     margin: 20 0 6 0;
      .v-full {
-       
+       height: 100%
+     }
+     .v-full > table{
+       padding-bottom: 10%;
      }
      .v-min{
        height: 100px;
