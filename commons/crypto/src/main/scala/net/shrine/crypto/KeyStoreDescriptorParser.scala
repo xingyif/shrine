@@ -34,17 +34,16 @@ object KeyStoreDescriptorParser extends Loggable {
     import scala.collection.JavaConversions._
 
     def getTrustModel: TrustModel = {
-      val hasModel = qepConfig.hasPath(trustModel)
-      if (hasModel && !qepConfig.getBoolean(trustModel))
+
+      println(qepConfig)
+
+      if (!qepConfig.getBoolean(trustModel))
         PeerToPeerModel
-      else if (hasModel && hubConfig.hasPath(isHub))
+      else if (hubConfig.hasPath(isHub))
         SingleHubModel(hubConfig.getBoolean(isHub))
-      else if (hasModel) {
+      else {
         warn(s"Did not specify whether this is the hub or a downStreamNode, assuming it ${if (hubConfig.isEmpty) "isn't" else "is"} because the hub config is ${if (hubConfig.isEmpty) "empty" else "defined"}")
         SingleHubModel(!hubConfig.isEmpty)
-      } else {
-        info("No Trust Model specified for this network configuration, assuming that a Peer configuration is being used")
-        PeerToPeerModel
       }
     }
 

@@ -157,7 +157,6 @@ final class KeyStoreDescriptorParserTest extends ShouldMatchersForJUnit {
                 file="foo"
                 password="bar"
                 privateKeyAlias="baz"
-                trustModelIsHub = false
                 aliasMap = {
                   site1 = "downstream1"
                   site2 = "downstream2"
@@ -169,7 +168,11 @@ final class KeyStoreDescriptorParserTest extends ShouldMatchersForJUnit {
               |  site1 = "https://someRemoteSite:7777/shrine/test"
               |}
             """.stripMargin),
-          ConfigFactory.empty()
+          ConfigFactory.parseString(
+            """
+              |trustModelIsHub = false
+            """.stripMargin
+          )
         )
       }
     }
@@ -182,7 +185,6 @@ final class KeyStoreDescriptorParserTest extends ShouldMatchersForJUnit {
                 file="foo"
                 password="bar"
                 privateKeyAlias="baz"
-                trustModelIsHub = false
                 aliasMap = {
                   site1 = "downstream1"
                   site2 = "downstream2"
@@ -195,7 +197,11 @@ final class KeyStoreDescriptorParserTest extends ShouldMatchersForJUnit {
               |  site3 = "https://someRemoteSite:7777/shrine/test"
               |}
             """.stripMargin),
-          ConfigFactory.empty()
+          ConfigFactory.parseString(
+            """
+              |trustModelIsHub = false
+            """.stripMargin
+          )
         )
       }
     }
