@@ -46,7 +46,7 @@ System.register(['aurelia-framework', 'views/query-viewer/query-viewer.service',
                     return e.action !== 'ADD';
                 };
                 i2b2Svc.onResize(function (a, b) {
-                    return _this.vertStyle = b.find(isMinimized) ? 'v-min' : '';
+                    return _this.vertStyle = b.find(isMinimized) ? 'v-min' : 'v-full';
                 });
                 i2b2Svc.onHistory(refresh);
 
