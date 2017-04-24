@@ -39,6 +39,8 @@
             dropdown.selected = {
                 title: 'All'
             };
+
+            dropdown.open = false;
         }
     }
 
