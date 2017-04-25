@@ -1,49 +1,24 @@
 import { inject } from 'aurelia-framework';
-import { HttpClient } from 'aurelia-fetch-client';
-import 'fetch';
+import {QEPRepository} from 'repository/qep.repository';
+import {QueryViewerConfig} from './query-viewer.config';
 
-const maxNodesPerScreen = 10;
-
-@inject(HttpClient, 'shrine')
+@inject(QEPRepository, QueryViewerConfig)
 export class QueryViewerService {
-    constructor(http, shrine) {
-        if (http !== undefined) {
-            http.configure(config => {
-                config
-                    .useStandardConfiguration()
-                    .withBaseUrl(this.url)
-                    .withDefaults({
-                        headers: {
-                            'Authorization': 'Basic ' + shrine.auth
-                        }
-                    });
-            });
-
-            this.http = http;
-        }
+    constructor(repository, config) {
+        this.repository = repository;
+        this.config = config;
     }
 
     fetchPreviousQueries() {
-        return this.http.fetch('qep/queryResults')
-            .then(response => response.json())
-            .catch(error => error);
-    }
-
-    get url() {
-        const port = '6443';
-        const url = document.URL;
-        const service = '/shrine-metadata/';
-        // https://shrine-qa2.catalyst:6443/shrine-metadata/qep/queryResults
-        //const service = '6443/shrine-proxy/request/shrine/api/';
-        return url.substring(0, url.indexOf(port) + port.length) + service;
+        return this.repository.fetchPreviousQueries();
     }
 
     getScreens(nodes, queries) {
         return new Promise((resolve, reject) => {
             const lastNodeIndex = nodes.sort().length;
             const screens = [];
-            for (let i = 0; i < lastNodeIndex; i = i + maxNodesPerScreen) {
-                const numberOfNodesOnScreen = this.getNumberOfNodesOnScreen(nodes, i, maxNodesPerScreen);
+            for (let i = 0; i < lastNodeIndex; i = i + this.config.maxNodesPerScreen) {
+                const numberOfNodesOnScreen = this.getNumberOfNodesOnScreen(nodes, i, this.config.maxNodesPerScreen);
                 const endIndex = numberOfNodesOnScreen - 1;
                 const screenId = this.getScreenId(nodes, i, endIndex);
                 const screenNodes = nodes.slice(i, numberOfNodesOnScreen);
@@ -75,7 +50,7 @@ export class QueryViewerService {
     }
 
     getNumberOfNodesOnScreen(nodes, startIndex) {
-        const numNodes = startIndex + maxNodesPerScreen;
+        const numNodes = startIndex + this.config.maxNodesPerScreen;
         return numNodes < nodes.length ? numNodes : nodes.length;
     }
 

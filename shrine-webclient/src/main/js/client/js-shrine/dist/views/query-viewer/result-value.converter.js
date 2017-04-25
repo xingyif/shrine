@@ -12,7 +12,7 @@ System.register([], function (_export, _context) {
     return {
         setters: [],
         execute: function () {
-            _export("ResultValueConverter", ResultValueConverter = function () {
+            _export('ResultValueConverter', ResultValueConverter = function () {
                 function ResultValueConverter() {
                     _classCallCheck(this, ResultValueConverter);
                 }
@@ -25,13 +25,13 @@ System.register([], function (_export, _context) {
                     if (value.status !== "FINISHED") {
                         return value.status;
                     }
-                    return value.count;
+                    return value.count < 0 ? '<10' : value.count;
                 };
 
                 return ResultValueConverter;
             }());
 
-            _export("ResultValueConverter", ResultValueConverter);
+            _export('ResultValueConverter', ResultValueConverter);
         }
     };
 });

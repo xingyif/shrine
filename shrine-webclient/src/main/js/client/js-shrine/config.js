@@ -200,6 +200,11 @@ System.config({
     }
   },
   depCache: {
+    "repository/qep.repository.js": [
+      "aurelia-framework",
+      "aurelia-fetch-client",
+      "fetch"
+    ],
     "views/mailto/mailto.js": [
       "aurelia-framework",
       "views/mailto/mailto.service",
@@ -207,8 +212,7 @@ System.config({
     ],
     "views/mailto/mailto.service.js": [
       "aurelia-framework",
-      "aurelia-fetch-client",
-      "fetch"
+      "repository/qep.repository"
     ],
     "views/query-viewer/query-viewer.js": [
       "aurelia-framework",
@@ -216,20 +220,22 @@ System.config({
     ],
     "views/query-viewer/query-viewer.service.js": [
       "aurelia-framework",
-      "aurelia-fetch-client",
-      "fetch"
+      "repository/qep.repository",
+      "./query-viewer.config"
     ]
   },
   bundles: {
     "app-build.js": [
       "main.js",
-      "repository/pm-repository.js",
+      "repository/qep.repository.js",
       "shell.html!github:systemjs/plugin-text@0.0.8.js",
       "shell.js",
       "views/mailto/mailto.config.js",
       "views/mailto/mailto.html!github:systemjs/plugin-text@0.0.8.js",
       "views/mailto/mailto.js",
       "views/mailto/mailto.service.js",
+      "views/query-viewer/box-style.converter.js",
+      "views/query-viewer/query-viewer.config.js",
       "views/query-viewer/query-viewer.html!github:systemjs/plugin-text@0.0.8.js",
       "views/query-viewer/query-viewer.js",
       "views/query-viewer/query-viewer.service.js",

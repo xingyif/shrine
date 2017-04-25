@@ -241,6 +241,7 @@ i2b2.PM._processUserConfig = function (data) {
 // ================================================================================================== //
 i2b2.PM.doLogout = function () {
 	// bug fix - must reload page to avoid dirty data from lingering
+	sessionStorage.removeItem('shrine.auth');
 	window.location.reload();
 }
 

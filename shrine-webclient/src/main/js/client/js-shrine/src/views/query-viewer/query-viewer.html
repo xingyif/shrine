@@ -1,6 +1,7 @@
 <template>
     <require from="views/query-viewer/result-style.converter"></require>
     <require from="views/query-viewer/result-value.converter"></require>
+    <require from="views/query-viewer/box-style.converter"></require>
 
     <div style="width: 100%; text-align: center">  
         <ul class="circle-pagination" if.bind="showCircles">
@@ -11,10 +12,9 @@
         </ul>
     </div>
     <div class="box-wrapper">
-        <div class="box" repeat.for="screen of screens" css="transform: translate(${slidePct}, 0%);">
+        <div class="box" repeat.for="screen of screens" css="screenIndex | boxStyle">
             <section>
                 <div>
-                    
                     <table cellpadding="0" cellspacing="0" border="0">
                         <thead>
                             <tr>
@@ -35,17 +35,10 @@
                                 <th>
                                     <div class="hideextra">${result.name}</div>
                                 </th>
-
-                                <!-- use a value converter -->
                               <td repeat.for="nodeResult of result.nodeResults" 
                                     css="${nodeResult | resultStyle}">
                                     ${nodeResult | result}
                                 </td>
-
-                                <!--td repeat.for="nodeResult of result.nodeResults" 
-                                    css="${getCSSFromStatus(nodeResult, isUnresolved, getColorValue, 'color')}">
-                                    ${result.result}
-                                </td-->
                             </tr>
                         </tbody>
                     </table>

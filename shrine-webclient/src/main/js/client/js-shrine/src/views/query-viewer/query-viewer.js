@@ -1,8 +1,5 @@
-import { inject } from 'aurelia-framework';
+import { inject, computedFrom } from 'aurelia-framework';
 import { QueryViewerService } from 'views/query-viewer/query-viewer.service';
-
-// -- config -- //
-const nodesPerScreen = 10;
 
 @inject(QueryViewerService)
 export class QueryViewer {
@@ -22,11 +19,6 @@ export class QueryViewer {
                 this.showCircles = this.screens.length > 1;
             })
             .catch(error => console.log(error));
-    }
-
-    // -- @todo: optimize with 'computedFrom' decorator  or value converter-- //
-    get slidePct() {
-        return String(-100 * this.screenIndex) + '%';
     }
 }
 

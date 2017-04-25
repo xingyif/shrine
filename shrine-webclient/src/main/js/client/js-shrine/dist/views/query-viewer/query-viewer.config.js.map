@@ -1,0 +1,1 @@
+{"version":3,"sources":["views/query-viewer/query-viewer.config.js"],"names":["QueryViewerConfig","maxNodesPerScreen"],"mappings":";;;;;;;yCAAaA,iB,GAAoB;AAC7BC,mCAAoB;AADS,a","file":"query-viewer.config.js","sourceRoot":"/src"}
