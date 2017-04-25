@@ -1,0 +1,1 @@
+{"version":3,"sources":["views/query-viewer/query-viewer.model.js"],"names":["QueryViewerModel","isLoaded","screens"],"mappings":";;;;;;;;;;;;;;wCAAaA,gB,GACT,4BAAc;AAAA;;AACV,qBAAKC,QAAL,GAAgB,KAAhB;AACA,qBAAKC,OAAL,GAAe,EAAf;AACH,a","file":"query-viewer.model.js","sourceRoot":"/src"}

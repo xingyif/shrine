@@ -214,6 +214,7 @@ System.config({
       "views/query-viewer/query-viewer.config.js",
       "views/query-viewer/query-viewer.html!github:systemjs/plugin-text@0.0.8.js",
       "views/query-viewer/query-viewer.js",
+      "views/query-viewer/query-viewer.model.js",
       "views/query-viewer/query-viewer.service.js",
       "views/query-viewer/result-style.converter.js",
       "views/query-viewer/result-value.converter.js"
@@ -324,7 +325,8 @@ System.config({
     "views/query-viewer/query-viewer.js": [
       "aurelia-framework",
       "views/query-viewer/query-viewer.service",
-      "common/i2b2.service.js"
+      "common/i2b2.service.js",
+      "./query-viewer.model"
     ],
     "views/query-viewer/query-viewer.service.js": [
       "aurelia-framework",

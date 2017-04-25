@@ -72,9 +72,9 @@ StewardMockService.prototype.getQueriesPerUser = function () {
   };
 
   var jira1847Users = {
-    'nn80': 43,
+    'nn80': 50,
     'ij22': 52,
-    'shrine': 16
+    'shrine': 51
   };
 
   var keys = Object.keys(jira1847Users);

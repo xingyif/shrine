@@ -5,6 +5,8 @@ export class I2B2Service {
         this.onHistory = f => (i2b2)? i2b2.CRC.ctrlr.history.events.onDataUpdate.subscribe(f) : null;
     }
 }
+
+//@todo compose these functions?
 const getLib = (context, lib) => hasParent(context) ? getParent(context)[lib] : null;
 const getParent = (context) => context.parent.window;
 const hasParent = (context) => context && context.parent && context.parent.window;
