@@ -106,6 +106,7 @@
                     topics.length = data.totalCount;
                     sortData.length = data.totalCount;
                     sortData.totalPages = Math.ceil(sortData.length / sortData.limit);
+
                 });
         }
 
@@ -114,6 +115,7 @@
             $scope.$watch('sortData.state', function (newVal, oldVal) {
                 if (oldVal !== newVal) {
                     refreshTopics();
+                    setDefaultState();
                 }
             });
         }
