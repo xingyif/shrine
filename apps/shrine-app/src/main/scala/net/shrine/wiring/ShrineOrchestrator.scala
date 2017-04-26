@@ -14,7 +14,6 @@ import net.shrine.config.ConfigExtensions
 import net.shrine.config.mappings.AdapterMappings
 import net.shrine.crypto.{BouncyKeyStoreCollection, KeyStoreDescriptorParser, SignerVerifierAdapter, TrustParam}
 import net.shrine.dao.squeryl.{DataSourceSquerylInitializer, SquerylDbAdapterSelecter, SquerylInitializer}
-import net.shrine.happy.{HappyShrineResource, HappyShrineService}
 import net.shrine.log.Loggable
 import net.shrine.ont.data.OntClientOntologyMetadata
 import net.shrine.protocol.{HiveCredentials, NodeId, ResultOutputType, ResultOutputTypes}
@@ -33,7 +32,7 @@ import org.squeryl.internals.DatabaseAdapter
 object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
 
   override def resources: Iterable[AnyRef] = {
-    Seq(happyResource,statusJaxrs) ++
+    Seq(statusJaxrs) ++
       shrineResource ++
       i2b2BroadcastResource ++
       adapterResource ++
@@ -136,8 +135,6 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
     new OntClientOntologyMetadata(ontClient)
   }
 
-  protected lazy val happyResource: HappyShrineResource = new HappyShrineResource(HappyShrineService)
-
   protected lazy val statusJaxrs: StatusJaxrs = StatusJaxrs(config)
 
   protected lazy val shrineResource: Option[ShrineResource] = queryEntryPointComponents.map(x => ShrineResource(x.shrineService))
@@ -147,7 +144,7 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
   protected lazy val adapterResource: Option[AdapterResource] = adapterService.map(AdapterResource(_))
 
   protected lazy val i2b2AdminResource: Option[I2b2AdminResource] = i2b2AdminService.map(I2b2AdminResource(_, breakdownTypes))
-  
+
 
 
   def poster(keystoreCertCollection: BouncyKeyStoreCollection)(endpoint: EndpointConfig): Poster = {

@@ -143,7 +143,7 @@
         }
 
         // IE11 doesn't support string includes
-        // This only searchers for characters, not arbitrary strings
+        // This only searches for characters, not arbitrary strings
         function stringIncludes(haystack, needle) {
             var arr = haystack.split("");
             for (var i = 0; i < arr.length; i++) {
