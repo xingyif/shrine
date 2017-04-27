@@ -225,7 +225,9 @@ td a, td a:hover {
   padding-right: 20px;
   padding-left: 20px;
   padding-top: 30px;
-  padding-bottom: 30px; }
+  padding-bottom: 30px;
+  width: 100%;
+  margin-left: 30%; }
 
 /*!
  * Start Bootstrap - SB Admin 2 Bootstrap Admin Theme (http://startbootstrap.com)
