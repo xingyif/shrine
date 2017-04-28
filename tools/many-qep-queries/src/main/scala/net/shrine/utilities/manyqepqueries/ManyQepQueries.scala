@@ -11,7 +11,7 @@ import scala.util.Random
 
 /**
  * @author dwalend
- * @since 1.21
+ * @since 1.23.3.1
  */
 
 object ManyQepQueries {
@@ -67,7 +67,7 @@ object ManyQepQueries {
         resultsToInsert.foreach(nToR => QepQueryDb.db.insertQueryResult(nToR._1,nToR._2))
       }
 
-      println("previousQueries transferred from the local adapter to the QEP cache.")
+      println("previousQueries and queryResults injected into the QEP cache.")
     }
     catch {
       case wnoa:WrongNumberOfArguments =>
@@ -83,10 +83,9 @@ object ManyQepQueries {
     def printUsage(): Unit = {
       println(
         """
-          |Usage: ./adapter-queries-to-qep DOMAIN ADAPTER_CONF SHRINE_CONF
-          |Copy previous queries from users in DOMAIN from the local shrine_query_history database to the local qepAudit database.
+          |Usage: ./many-qep-queries NUMBER_OF_ADAPTERS NUMBER_OF_QUERIES ADAPTER_CONF SHRINE_CONF
+          |Inject previous queries and results into the local qepAuditDB database.
           |
-          |DOMAIN is an I2B2 PM Cell domain name used by the local QEPs researchers.
           |ADAPTER_CONF is a configuration file for this tool. This conf file takes precedence over the SHRINE_CONF file.
           |  See conf/adapter-queries-to-qep.conf for an example.
           |SHRINE_CONF is the local configuration file, usually /opt/shrine/tomcat/lib/shrine.conf .
@@ -95,7 +94,7 @@ object ManyQepQueries {
           |            1 known error
           |            2 unknown error (with an accompanying stack trace).
           |
-          |Example: ./adapter-queries-to-qep i2b2demo conf/adapter-queries-to-qep.conf /opt/shrine/tomcat/lib/shrine.conf
+          |Example: ./many-qep-queries 63 40 conf/adapter-queries-to-qep.conf /opt/shrine/tomcat/lib/shrine.conf
         """.stripMargin)
     }
 
