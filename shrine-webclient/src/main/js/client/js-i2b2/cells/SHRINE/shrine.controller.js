@@ -68,7 +68,6 @@
 		$('crcDlgResultOutputPRS').hide();
 	}
 
-
 	/*
 	* Change this value in the config file [\i2b2\cells\SHRINE\cell_config_data.js]
 	*/

@@ -223,7 +223,7 @@ i2b2.CRC.ctrlr.dateConstraint = {
 		if(startDate && endDate) {
 			var start = new Date(startDate);
 			var end = new Date(endDate);
-			if(start.valueOf() >=  end.valueOf()) {
+			if(start.valueOf() >  end.valueOf()) {
 				sDateError = "Invalid Date Range\n";
 			}
 		}

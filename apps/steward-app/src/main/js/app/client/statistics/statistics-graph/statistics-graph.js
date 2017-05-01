@@ -26,7 +26,6 @@
     StatisticsGraphController.$inject = ['$scope', 'StatisticsGraphService'];
     function StatisticsGraphController($scope, svc) {
         var graph = this;
-        //graphService = svc;
         graph.graphData = $scope.graphData;
         graph.toPercentage = toPercentage;
         graph.formatuserName = formatuserName;

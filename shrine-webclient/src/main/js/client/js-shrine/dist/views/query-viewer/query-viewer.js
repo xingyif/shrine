@@ -1,7 +1,7 @@
-System.register(['aurelia-framework', 'views/query-viewer/query-viewer.service'], function (_export, _context) {
+System.register(['aurelia-framework', 'views/query-viewer/query-viewer.service', 'common/i2b2.service.js', './query-viewer.model'], function (_export, _context) {
     "use strict";
 
-    var inject, computedFrom, QueryViewerService, _dec, _class, QueryViewer;
+    var inject, computedFrom, QueryViewerService, I2B2Service, QueryViewerModel, _dec, _class, QueryViewer;
 
     function _classCallCheck(instance, Constructor) {
         if (!(instance instanceof Constructor)) {
@@ -15,9 +15,13 @@ System.register(['aurelia-framework', 'views/query-viewer/query-viewer.service']
             computedFrom = _aureliaFramework.computedFrom;
         }, function (_viewsQueryViewerQueryViewerService) {
             QueryViewerService = _viewsQueryViewerQueryViewerService.QueryViewerService;
+        }, function (_commonI2b2ServiceJs) {
+            I2B2Service = _commonI2b2ServiceJs.I2B2Service;
+        }, function (_queryViewerModel) {
+            QueryViewerModel = _queryViewerModel.QueryViewerModel;
         }],
         execute: function () {
-            _export('QueryViewer', QueryViewer = (_dec = inject(QueryViewerService), _dec(_class = function QueryViewer(service) {
+            _export('QueryViewer', QueryViewer = (_dec = inject(QueryViewerService, I2B2Service, QueryViewerModel), _dec(_class = function QueryViewer(service, i2b2Svc, model) {
                 var _this = this;
 
                 _classCallCheck(this, QueryViewer);
@@ -25,16 +29,36 @@ System.register(['aurelia-framework', 'views/query-viewer/query-viewer.service']
                 this.screenIndex = 0;
                 this.showCircles = false;
                 this.service = service;
-                this.service.fetchPreviousQueries().then(function (result) {
-                    var queries = result.queryResults;
-                    var nodes = result.adapters;
-                    return service.getScreens(nodes, queries);
-                }).then(function (screens) {
+                this.vertStyle = 'v-min';
+
+                var parseResultToScreens = function parseResultToScreens(result) {
+                    return _this.service.getScreens(result.adapters, result.queryResults);
+                };
+                var setVM = function setVM(screens) {
                     _this.screens = screens;
                     _this.showCircles = _this.screens.length > 1;
-                }).catch(function (error) {
-                    return console.log(error);
+                    model.screens = screens;
+                    model.isLoaded = true;
+                };
+                var refresh = function refresh() {
+                    return _this.service.fetchPreviousQueries().then(parseResultToScreens).then(setVM).catch(function (error) {
+                        return console.log(error);
+                    });
+                };
+
+                var init = function init() {
+                    return model.isLoaded ? setVM(model.screens) : refresh();
+                };
+
+                var isMinimized = function isMinimized(e) {
+                    return e.action !== 'ADD';
+                };
+                i2b2Svc.onResize(function (a, b) {
+                    return _this.vertStyle = b.find(isMinimized) ? 'v-min' : 'v-full';
                 });
+                i2b2Svc.onHistory(refresh);
+
+                init();
             }) || _class));
 
             _export('QueryViewer', QueryViewer);

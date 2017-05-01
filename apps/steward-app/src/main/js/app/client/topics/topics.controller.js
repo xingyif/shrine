@@ -39,11 +39,11 @@
 
         init();
 
-        function setDefaultState() {
+        function setDefaultState(state) {
 
             // -- local vars -- //
             var sortData = topics.sortData;
-            sortData.state = service.states.state1; // -- pending, approved, rejected --//
+            sortData.state = state || service.states.state1; // -- pending, approved, rejected --//
             sortData.sortDirection = 'ascending';
             sortData.arrowClass = 'fa-caret-up';
             sortData.column = 'changeDate';
@@ -106,6 +106,7 @@
                     topics.length = data.totalCount;
                     sortData.length = data.totalCount;
                     sortData.totalPages = Math.ceil(sortData.length / sortData.limit);
+
                 });
         }
 
@@ -114,6 +115,7 @@
             $scope.$watch('sortData.state', function (newVal, oldVal) {
                 if (oldVal !== newVal) {
                     refreshTopics();
+                    setDefaultState(topics.sortData.state);
                 }
             });
         }
