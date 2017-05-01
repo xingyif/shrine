@@ -53,10 +53,13 @@ System.register(['aurelia-framework', 'views/query-viewer/query-viewer.service',
                 var isMinimized = function isMinimized(e) {
                     return e.action !== 'ADD';
                 };
-                i2b2Svc.onResize(function (a, b) {
+                var setVertStyle = function setVertStyle(a, b) {
                     return _this.vertStyle = b.find(isMinimized) ? 'v-min' : 'v-full';
-                });
+                };
+                i2b2Svc.onResize(setVertStyle);
                 i2b2Svc.onHistory(refresh);
+
+                i2b2Svc.loadQuery(1763902267746379960);
 
                 init();
             }) || _class));

@@ -24,6 +24,9 @@ System.register([], function (_export, _context) {
                 this.onHistory = function (f) {
                     return i2b2 ? i2b2.CRC.ctrlr.history.events.onDataUpdate.subscribe(f) : null;
                 };
+                this.loadQuery = function (id) {
+                    return i2b2 ? i2b2.CRC.ctrlr.QT.doQueryLoad(id) : null;
+                };
             });
 
             _export('I2B2Service', I2B2Service);
