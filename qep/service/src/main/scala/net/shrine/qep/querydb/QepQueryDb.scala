@@ -1,4 +1,4 @@
-package net.shrine.qep.queries
+package net.shrine.qep.querydb
 
 import java.sql.SQLException
 import java.util.concurrent.TimeoutException

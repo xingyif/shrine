@@ -4,7 +4,7 @@ import java.io.File
 
 import com.typesafe.config.{Config, ConfigFactory}
 import net.shrine.protocol.QueryResult
-import net.shrine.qep.queries.{QepQuery, QepQueryDb}
+import net.shrine.qep.querydb.{QepQuery, QepQueryDb}
 import net.shrine.source.ConfigSource
 
 import scala.util.Random

@@ -9,7 +9,7 @@ import net.shrine.authentication.NotAuthenticatedException
 import net.shrine.log.Loggable
 import net.shrine.problem.{AbstractProblem, ProblemNotYetEncoded, ProblemSources}
 import net.shrine.protocol.{ErrorResponse, HandleableI2b2Request, I2B2MessageFormatException, I2b2RequestHandler, ResultOutputType, ShrineRequest}
-import net.shrine.qep.queries.QepDatabaseProblem
+import net.shrine.qep.querydb.QepDatabaseProblem
 import net.shrine.serialization.I2b2Marshaller
 import net.shrine.slick.CouldNotRunDbIoActionException
 import net.shrine.util.XmlUtil

@@ -3,7 +3,7 @@ package net.shrine.metadata
 import akka.actor.ActorRefFactory
 import net.shrine.i2b2.protocol.pm.User
 import net.shrine.protocol.{Credential, QueryResult, ResultOutputType}
-import net.shrine.qep.queries.{QepQuery, QepQueryDb, QueryResultRow}
+import net.shrine.qep.querydb.{QepQuery, QepQueryDb, QueryResultRow}
 import org.json4s.DefaultFormats
 import org.json4s.native.JsonMethods.parse
 import org.junit.runner.RunWith

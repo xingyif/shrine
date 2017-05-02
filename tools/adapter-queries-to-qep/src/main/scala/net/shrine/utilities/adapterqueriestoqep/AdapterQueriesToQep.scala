@@ -12,7 +12,7 @@ import net.shrine.audit.NetworkQueryId
 import net.shrine.dao.squeryl.{DataSourceSquerylInitializer, SquerylDbAdapterSelecter, SquerylInitializer}
 import net.shrine.adapter.dao.squeryl.tables.{Tables => AdapterTables}
 import net.shrine.protocol.ResultOutputTypes
-import net.shrine.qep.queries.{QepQuery, QepQueryDb, QepQueryFlag}
+import net.shrine.qep.querydb.{QepQuery, QepQueryDb, QepQueryFlag}
 import net.shrine.slick.TestableDataSourceCreator
 import org.squeryl.internals.DatabaseAdapter
 import net.shrine.config.ConfigExtensions

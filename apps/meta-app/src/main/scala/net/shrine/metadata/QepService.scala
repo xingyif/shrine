@@ -5,7 +5,7 @@ import net.shrine.authorization.steward.UserName
 import net.shrine.i2b2.protocol.pm.User
 import net.shrine.log.Loggable
 import net.shrine.protocol.ResultOutputType
-import net.shrine.qep.queries.{FullQueryResult, QepQuery, QepQueryDb, QepQueryFlag}
+import net.shrine.qep.querydb.{FullQueryResult, QepQuery, QepQueryDb, QepQueryFlag}
 import spray.routing._
 
 import rapture.json._
@@ -105,7 +105,7 @@ case class ResultsRow(
 )
 
 case class QueryCell(
-                      networkId:NetworkQueryId,
+                      networkId:String, //easier to support in json, lessens the impact of using a GUID iff we can get there
                       queryName: QueryName,
                       dateCreated: Time,
                       queryXml: String,
@@ -114,7 +114,7 @@ case class QueryCell(
 
 object QueryCell {
   def apply(qepQuery: QepQuery): QueryCell = QueryCell(
-    networkId = qepQuery.networkId,
+    networkId = qepQuery.networkId.toString,
     queryName = qepQuery.queryName,
     dateCreated = qepQuery.dateCreated,
     queryXml = qepQuery.queryXml,

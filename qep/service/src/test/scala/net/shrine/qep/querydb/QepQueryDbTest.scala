@@ -1,4 +1,4 @@
-package net.shrine.qep.queries
+package net.shrine.qep.querydb
 
 import net.shrine.problem.TestProblem
 import net.shrine.protocol.QueryResult.StatusType

@@ -19,7 +19,7 @@ import net.shrine.problem._
 import net.shrine.protocol.QueryResult.StatusType
 import net.shrine.protocol.query.QueryDefinition
 import net.shrine.protocol._
-import net.shrine.qep.queries.QepDatabaseProblem
+import net.shrine.qep.querydb.QepDatabaseProblem
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.{FlatSpec, Matchers}
