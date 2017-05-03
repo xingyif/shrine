@@ -1,7 +1,7 @@
 import { inject, computedFrom } from 'aurelia-framework';
 import { QueryViewerService } from 'views/query-viewer/query-viewer.service';
 import { I2B2Service } from 'common/i2b2.service.js';
-import {QueryViewerModel} from './query-viewer.model';
+import { QueryViewerModel } from './query-viewer.model';
 
 @inject(QueryViewerService, I2B2Service, QueryViewerModel)
 export class QueryViewer {
@@ -27,7 +27,7 @@ export class QueryViewer {
             .then(setVM)
             .catch(error => console.log(error));
 
-        const init = () => (model.isLoaded)? setVM(model.screens) : refresh();
+        const init = () => (model.isLoaded) ? setVM(model.screens) : refresh();
 
         // -- add i2b2 event listener -- //
         const isMinimized = e => e.action !== 'ADD';
