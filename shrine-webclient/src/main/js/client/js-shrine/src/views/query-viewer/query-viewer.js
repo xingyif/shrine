@@ -34,10 +34,16 @@ export class QueryViewer {
         const setVertStyle = (a, b) => this.vertStyle = b.find(isMinimized) ? 'v-min' : 'v-full';
         i2b2Svc.onResize(setVertStyle);
         i2b2Svc.onHistory(refresh);
-        //testing.
-        //i2b2Svc.loadQuery(1763902267746379960);
-
         init();
+    }
+    
+    getContext(event, result) {
+        return {
+            x: event.pageX,
+            y: event.pageY,
+            id: result.id,
+            class: 'show'
+        };
     }
 }
 

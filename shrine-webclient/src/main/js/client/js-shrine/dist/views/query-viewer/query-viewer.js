@@ -21,47 +21,58 @@ System.register(['aurelia-framework', 'views/query-viewer/query-viewer.service',
             QueryViewerModel = _queryViewerModel.QueryViewerModel;
         }],
         execute: function () {
-            _export('QueryViewer', QueryViewer = (_dec = inject(QueryViewerService, I2B2Service, QueryViewerModel), _dec(_class = function QueryViewer(service, i2b2Svc, model) {
-                var _this = this;
+            _export('QueryViewer', QueryViewer = (_dec = inject(QueryViewerService, I2B2Service, QueryViewerModel), _dec(_class = function () {
+                function QueryViewer(service, i2b2Svc, model) {
+                    var _this = this;
 
-                _classCallCheck(this, QueryViewer);
+                    _classCallCheck(this, QueryViewer);
 
-                this.screenIndex = 0;
-                this.showCircles = false;
-                this.service = service;
-                this.vertStyle = 'v-min';
+                    this.screenIndex = 0;
+                    this.showCircles = false;
+                    this.service = service;
+                    this.vertStyle = 'v-min';
 
-                var parseResultToScreens = function parseResultToScreens(result) {
-                    return _this.service.getScreens(result.adapters, result.queryResults);
+                    var parseResultToScreens = function parseResultToScreens(result) {
+                        return _this.service.getScreens(result.adapters, result.queryResults);
+                    };
+                    var setVM = function setVM(screens) {
+                        _this.screens = screens;
+                        _this.showCircles = _this.screens.length > 1;
+                        model.screens = screens;
+                        model.isLoaded = true;
+                    };
+                    var refresh = function refresh() {
+                        return _this.service.fetchPreviousQueries().then(parseResultToScreens).then(setVM).catch(function (error) {
+                            return console.log(error);
+                        });
+                    };
+
+                    var init = function init() {
+                        return model.isLoaded ? setVM(model.screens) : refresh();
+                    };
+
+                    var isMinimized = function isMinimized(e) {
+                        return e.action !== 'ADD';
+                    };
+                    var setVertStyle = function setVertStyle(a, b) {
+                        return _this.vertStyle = b.find(isMinimized) ? 'v-min' : 'v-full';
+                    };
+                    i2b2Svc.onResize(setVertStyle);
+                    i2b2Svc.onHistory(refresh);
+                    init();
+                }
+
+                QueryViewer.prototype.getContext = function getContext(event, result) {
+                    return {
+                        x: event.pageX,
+                        y: event.pageY,
+                        id: result.id,
+                        class: 'show'
+                    };
                 };
-                var setVM = function setVM(screens) {
-                    _this.screens = screens;
-                    _this.showCircles = _this.screens.length > 1;
-                    model.screens = screens;
-                    model.isLoaded = true;
-                };
-                var refresh = function refresh() {
-                    return _this.service.fetchPreviousQueries().then(parseResultToScreens).then(setVM).catch(function (error) {
-                        return console.log(error);
-                    });
-                };
 
-                var init = function init() {
-                    return model.isLoaded ? setVM(model.screens) : refresh();
-                };
-
-                var isMinimized = function isMinimized(e) {
-                    return e.action !== 'ADD';
-                };
-                var setVertStyle = function setVertStyle(a, b) {
-                    return _this.vertStyle = b.find(isMinimized) ? 'v-min' : 'v-full';
-                };
-                i2b2Svc.onResize(setVertStyle);
-                i2b2Svc.onHistory(refresh);
-
-
-                init();
-            }) || _class));
+                return QueryViewer;
+            }()) || _class));
 
             _export('QueryViewer', QueryViewer);
         }
