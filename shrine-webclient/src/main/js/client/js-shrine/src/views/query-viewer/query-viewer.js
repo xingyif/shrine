@@ -35,7 +35,7 @@ export class QueryViewer {
         i2b2Svc.onResize(setVertStyle);
         i2b2Svc.onHistory(refresh);
         //testing.
-        i2b2Svc.loadQuery(1763902267746379960);
+        //i2b2Svc.loadQuery(1763902267746379960);
 
         init();
     }

@@ -27,7 +27,8 @@ module.exports = {
         "aurelia-history-browser",
         "aurelia-logging-console",
         "fetch",
-        "jquery"
+        "jquery",
+        "font-awesome"
       ],
       "options": {
         "inject": true,

@@ -1,0 +1,72 @@
+//@todo: move font includes to a central scss file.
+@import url(http://fonts.googleapis.com/css?family=Roboto:400,300&subset=latin,latin-ext);
+
+$context-radius: 5px;
+$context-font-size: 11px;
+$context-font-weight: 200;
+$context-transition-time: .2s;
+$context-color1: #fff;
+$context-color2: #ecf0f1;
+$context-color3: #c0c0c0;
+$context-color4: #626C92;
+$context-color5: #2980b9;
+$context-color6: rgba(98, 108, 146, .25);
+
+
+ul.context-menu{
+  transition:opacity $context-transition-time linear;
+  list-style:none; 
+  margin:0;
+  padding:0;
+  font: $context-font-weight $context-font-size 'Roboto', sans-serif;
+  position: absolute;
+  color: $context-color4;
+  box-shadow: 0 12px 15px 0 rgba(0, 0, 0, 0.2);
+  border-radius: $context-radius;
+  border: 1px solid $context-color6;
+  
+  *{
+    transition:color $context-transition-time, background $context-transition-time;
+  }
+  
+  &.hide{
+    visibility:hidden;
+    opacity:0;
+  }
+
+  &.show{
+    visibility:visible;
+    opacity:1;
+  }
+
+  li{
+      min-width:100px;
+      overflow: hidden;
+      white-space: nowrap;
+      padding: 6px 8px;
+      background-color: $context-color1;
+      border-bottom:1px solid $context-color2;
+    
+    a{
+      color: $context-color4;
+      text-decoration:none;
+    }
+    
+    &:hover{
+      background-color: $context-color2;
+      color: $context-color5;
+      a{
+        color: $context-color5;
+      }
+    }
+    
+    &:first-child{
+      border-radius: $context-radius $context-radius 0 0;
+    }
+    
+    &:last-child{
+      border-bottom:0;
+      border-radius: 0 0 $context-radius $context-radius;
+    } 
+  } 
+}

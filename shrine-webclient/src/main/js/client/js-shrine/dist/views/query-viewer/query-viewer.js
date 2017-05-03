@@ -59,7 +59,6 @@ System.register(['aurelia-framework', 'views/query-viewer/query-viewer.service',
                 i2b2Svc.onResize(setVertStyle);
                 i2b2Svc.onHistory(refresh);
 
-                i2b2Svc.loadQuery(1763902267746379960);
 
                 init();
             }) || _class));

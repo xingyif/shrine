@@ -23,7 +23,7 @@ System.config({
     "bluebird": "npm:bluebird@3.4.1",
     "bootstrap": "github:twbs/bootstrap@3.3.7",
     "fetch": "github:github/fetch@1.0.0",
-    "font-awesome": "npm:font-awesome@4.6.3",
+    "font-awesome": "npm:font-awesome@4.7.0",
     "jquery": "npm:jquery@2.2.4",
     "text": "github:systemjs/plugin-text@0.0.8",
     "github:jspm/nodelibs-assert@0.1.0": {
@@ -180,8 +180,8 @@ System.config({
       "isarray": "npm:isarray@1.0.0",
       "process": "github:jspm/nodelibs-process@0.1.2"
     },
-    "npm:font-awesome@4.6.3": {
-      "css": "github:systemjs/plugin-css@0.1.31"
+    "npm:font-awesome@4.7.0": {
+      "css": "github:systemjs/plugin-css@0.1.33"
     },
     "npm:inherits@2.0.1": {
       "util": "github:jspm/nodelibs-util@0.1.0"
@@ -214,6 +214,10 @@ System.config({
       "aurelia-framework",
       "repository/qep.repository"
     ],
+    "views/query-viewer/context-menu/context-menu.js": [
+      "aurelia-framework",
+      "common/i2b2.service.js"
+    ],
     "views/query-viewer/query-viewer.js": [
       "aurelia-framework",
       "views/query-viewer/query-viewer.service",
@@ -238,6 +242,8 @@ System.config({
       "views/mailto/mailto.js",
       "views/mailto/mailto.service.js",
       "views/query-viewer/box-style.converter.js",
+      "views/query-viewer/context-menu/context-menu.html!github:systemjs/plugin-text@0.0.8.js",
+      "views/query-viewer/context-menu/context-menu.js",
       "views/query-viewer/query-viewer.config.js",
       "views/query-viewer/query-viewer.html!github:systemjs/plugin-text@0.0.8.js",
       "views/query-viewer/query-viewer.js",
@@ -330,6 +336,8 @@ System.config({
       "npm:aurelia-templating-router@1.0.0/router-view.js",
       "npm:aurelia-templating@1.1.1.js",
       "npm:aurelia-templating@1.1.1/aurelia-templating.js",
+      "npm:font-awesome@4.7.0.js",
+      "npm:font-awesome@4.7.0/css/font-awesome.css!github:systemjs/plugin-css@0.1.33.js",
       "npm:jquery@2.2.4.js",
       "npm:jquery@2.2.4/dist/jquery.js"
     ]
