@@ -51,10 +51,10 @@ case class NSuccessResult(resultId: UUID,
 
 object NSuccessResult {
 
-  import Statuses._
+  import Statuses.{sameStatus,success}
 
   def apply(json: Json): Option[NSuccessResult] =
-    if (eq(json.status, success) && json.is[NSuccessResult])
+    if (sameStatus(json.status, success) && json.is[NSuccessResult])
       Some(json.as[NSuccessResult])
     else None
 }
@@ -69,7 +69,7 @@ object NPendingResult {
   import Statuses._
 
   def apply(json: Json): Option[NPendingResult] =
-    if (eq(json.status, pending) && json.is[NPendingResult])
+    if (sameStatus(json.status, pending) && json.is[NPendingResult])
       Some(json.as[NPendingResult])
     else None
 }
@@ -87,7 +87,7 @@ object NFailureResult {
   import Statuses._
 
   def apply(json: Json): Option[NFailureResult] =
-    if (eq(json.status, failure) && json.is[NFailureResult])
+    if (sameStatus(json.status, failure) && json.is[NFailureResult])
       Some(json.as[NFailureResult])
     else None
 }
@@ -96,7 +96,7 @@ object Statuses {
   val success = "success"
   val pending = "pending"
   val failure = "failure"
-  def eq(json: Json, string: String) =
+  def sameStatus(json: Json, string: String) =
     json.is[String] && json.as[String].toLowerCase == string
 }
 
