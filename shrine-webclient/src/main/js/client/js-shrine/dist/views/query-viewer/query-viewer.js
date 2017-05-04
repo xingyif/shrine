@@ -29,6 +29,7 @@ System.register(['aurelia-framework', 'views/query-viewer/query-viewer.service',
 
                     this.screenIndex = 0;
                     this.showCircles = false;
+                    this.showLoader = true;
                     this.service = service;
                     this.vertStyle = 'v-min';
 
@@ -36,6 +37,7 @@ System.register(['aurelia-framework', 'views/query-viewer/query-viewer.service',
                         return _this.service.getScreens(result.adapters, result.queryResults);
                     };
                     var setVM = function setVM(screens) {
+                        _this.showLoader = false;
                         _this.screens = screens;
                         _this.showCircles = _this.screens.length > 1;
                         model.screens = screens;

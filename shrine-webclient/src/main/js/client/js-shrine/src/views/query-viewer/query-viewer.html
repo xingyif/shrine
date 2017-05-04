@@ -5,6 +5,7 @@
     <require from="views/query-viewer/context-menu/context-menu"></require>
     <require from="views/query-viewer/loading-bar/loading-bar"></require>
 
+    <loading-bar status.bind="'Loading...'" if.bind="showLoader"></loading-bar>
     <div style="width: 100%; text-align: center">  
         <ul class="circle-pagination" if.bind="showCircles">
             <li repeat.for="screen of screens" class="${screenIndex === $index? 'active' : ''}"
@@ -30,7 +31,6 @@
                     </table>
                 </div>
                 <context-menu context.bind="context"></context-menu>
-                <loading-bar status.bind="'Loading...'"></loading-bar>
                 <div class="tbl-content ${vertStyle}">
                     <table cellpadding="0" cellspacing="0" border="0">
                         <tbody>

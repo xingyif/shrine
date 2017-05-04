@@ -10,12 +10,14 @@ export class QueryViewer {
         // -- init -- //
         this.screenIndex = 0;
         this.showCircles = false;
+        this.showLoader = true;
         this.service = service;
         this.vertStyle = 'v-min';
 
         // -- fetch queries -- //
         const parseResultToScreens = result => this.service.getScreens(result.adapters, result.queryResults);
         const setVM = screens => {
+            this.showLoader = false;
             this.screens = screens;
             this.showCircles = this.screens.length > 1;
             model.screens = screens;
