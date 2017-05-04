@@ -10,9 +10,9 @@
   $line-color: rgba(0, 0, 0, .2);
   $text-color: #626C92;
   $break-width: 50%;
-  $dot1-color:  #00ff00;
-  $dot2-color:  #ff0000;
-  $dot3-color: #4a8df8;
+  $dot1-color: #D9ECF0;
+  $dot2-color:  #6677AA;
+  $dot3-color: #D9ECF0;
   
   h1{
     color: $text-color;
@@ -48,19 +48,19 @@
   
   /*todo cleanup with mixin*/
   @-webkit-keyframes "loading"{
-    from { left: 0; opacity: .25}
+    from { left: 0; opacity: 1}
    to { left: $width; opacity: 1}
   }
   @-moz-keyframes "loading"{
-    from { left: 0; opacity: .25}
+    from { left: 0; opacity: 0}
    to { left: $width; opacity: 1}
   }
   @-o-keyframes "loading"{
-    from { left: 0; opacity: .25}
+    from { left: 0; opacity: 0}
    to { left: $width; opacity: 1}
   }
   @keyframes "loading" {
-   from { left: 0; opacity: .25}
+   from { left: 0; opacity: 0}
    to { left: $width; opacity: 1}
   }
 }
