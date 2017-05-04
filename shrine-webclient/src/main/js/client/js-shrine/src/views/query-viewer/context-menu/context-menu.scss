@@ -1,19 +1,21 @@
 //@todo: move font includes to a central scss file.
 @import url(http://fonts.googleapis.com/css?family=Roboto:400,300&subset=latin,latin-ext);
 
-$context-radius: 5px;
-$context-font-size: 11px;
-$context-font-weight: 200;
-$context-transition-time: .2s;
-$context-color1: #fff;
-$context-color2: #ecf0f1;
-$context-color3: #c0c0c0;
-$context-color4: #626C92;
-$context-color5: #2980b9;
-$context-color6: rgba(98, 108, 146, .25);
+
 
 
 ul.context-menu{
+  $context-radius: 5px;
+  $context-font-size: 11px;
+  $context-font-weight: 200;
+  $context-transition-time: .2s;
+  $context-color1: #fff;
+  $context-color2: #ecf0f1;
+  $context-color3: #c0c0c0;
+  $context-color4: #626C92;
+  $context-color5: #2980b9;
+  $context-color6: rgba(98, 108, 146, .25);
+  
   transition:opacity $context-transition-time linear;
   list-style:none; 
   margin:0;

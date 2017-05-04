@@ -1,0 +1,70 @@
+@import url(http://fonts.googleapis.com/css?family=Roboto:400,300&subset=latin,latin-ext);
+
+.loader {
+  background:#fff;
+  margin:50px 300px;
+  $width: 200px;
+  $height: 2px;
+  $font: 300 11px 'Roboto', sans-serif;
+  $margin: -30px;
+  $line-color: rgba(0, 0, 0, .2);
+  $text-color: #626C92;
+  $break-width: 50%;
+  $dot1-color:  #00ff00;
+  $dot2-color:  #ff0000;
+  $dot3-color: #4a8df8;
+  
+  h1{
+    color: $text-color;
+    font: $font; 
+  }
+  div.slider{
+    position:absolute;
+    width: $width;
+    height: $height;
+    margin-top: $margin;
+    div.line{
+      position:absolute;
+      background: $line-color;
+      width: $width;
+      height: $height;
+
+    }
+    div.break{
+      position:absolute;
+      width: $break-width;
+      height: $height;  
+    }
+    div.break.dot1{
+      animation: loading 2s infinite;             background: $dot1-color;
+    }
+    div.break.dot2{
+      animation: loading 2s 0.5s infinite;       background: $dot2-color;
+    }
+    div.break.dot3{
+      animation: loading 2s 1s infinite;         background: $dot3-color;
+    }
+  }
+  
+  /*todo cleanup with mixin*/
+  @-webkit-keyframes "loading"{
+    from { left: 0; opacity: .25}
+   to { left: $width; opacity: 1}
+  }
+  @-moz-keyframes "loading"{
+    from { left: 0; opacity: .25}
+   to { left: $width; opacity: 1}
+  }
+  @-o-keyframes "loading"{
+    from { left: 0; opacity: .25}
+   to { left: $width; opacity: 1}
+  }
+  @keyframes "loading" {
+   from { left: 0; opacity: .25}
+   to { left: $width; opacity: 1}
+  }
+}
+
+
+
+

@@ -218,6 +218,9 @@ System.config({
       "aurelia-framework",
       "common/i2b2.service.js"
     ],
+    "views/query-viewer/loading-bar/loading-bar.js": [
+      "aurelia-framework"
+    ],
     "views/query-viewer/query-viewer.js": [
       "aurelia-framework",
       "views/query-viewer/query-viewer.service",
@@ -244,6 +247,8 @@ System.config({
       "views/query-viewer/box-style.converter.js",
       "views/query-viewer/context-menu/context-menu.html!github:systemjs/plugin-text@0.0.8.js",
       "views/query-viewer/context-menu/context-menu.js",
+      "views/query-viewer/loading-bar/loading-bar.html!github:systemjs/plugin-text@0.0.8.js",
+      "views/query-viewer/loading-bar/loading-bar.js",
       "views/query-viewer/query-viewer.config.js",
       "views/query-viewer/query-viewer.html!github:systemjs/plugin-text@0.0.8.js",
       "views/query-viewer/query-viewer.js",
