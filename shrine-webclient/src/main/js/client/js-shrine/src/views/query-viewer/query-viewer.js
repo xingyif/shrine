@@ -1,7 +1,7 @@
 import { inject, computedFrom } from 'aurelia-framework';
 import { QueryViewerService } from 'views/query-viewer/query-viewer.service';
 import { I2B2Service } from 'common/i2b2.service.js';
-import {QueryViewerModel} from './query-viewer.model';
+import { QueryViewerModel } from './query-viewer.model';
 
 @inject(QueryViewerService, I2B2Service, QueryViewerModel)
 export class QueryViewer {
@@ -27,17 +27,23 @@ export class QueryViewer {
             .then(setVM)
             .catch(error => console.log(error));
 
-        const init = () => (model.isLoaded)? setVM(model.screens) : refresh();
+        const init = () => (model.isLoaded) ? setVM(model.screens) : refresh();
 
         // -- add i2b2 event listener -- //
         const isMinimized = e => e.action !== 'ADD';
         const setVertStyle = (a, b) => this.vertStyle = b.find(isMinimized) ? 'v-min' : 'v-full';
         i2b2Svc.onResize(setVertStyle);
         i2b2Svc.onHistory(refresh);
-        //testing.
-        i2b2Svc.loadQuery(1763902267746379960);
-
         init();
+    }
+    
+    getContext(event, result) {
+        return {
+            x: event.pageX,
+            y: event.pageY,
+            id: result.id,
+            class: 'show'
+        };
     }
 }
 

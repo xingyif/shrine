@@ -65,12 +65,15 @@ body,
     }
    
     tr{
+      background: white;
       cursor: pointer;
       &:hover{
         background: rgba(98,108,146, .3) !important;
       }
+      &:nth-child(odd) {background: rgba(98,108,146, .1)}
     }
-    
+   
+
     th{
       padding: 2px 4px 4px 2px;
       text-align: left;

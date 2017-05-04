@@ -983,7 +983,8 @@ button.ont-close {
 
 .tooltip-toggle {
   cursor: pointer;
-  position: relative; }
+  position: relative; 
+  }
   .tooltip-toggle::before {
     border: 1px solid rgba(255, 255, 255, 0.8);
     position: absolute;
