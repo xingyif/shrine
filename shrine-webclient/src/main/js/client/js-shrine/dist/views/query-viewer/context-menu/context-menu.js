@@ -71,6 +71,11 @@ System.register(['aurelia-framework', 'common/i2b2.service.js'], function (_expo
                     i2b2Svc.loadQuery(id);
                     _this.context.class = 'hide';
                 };
+
+                this.loadHistory = function () {
+                    _this.context.class = 'hide';
+                    i2b2Svc.onHistory();
+                };
             }, (_descriptor = _applyDecoratedDescriptor(_class2.prototype, 'context', [bindable], {
                 enumerable: true,
                 initializer: null

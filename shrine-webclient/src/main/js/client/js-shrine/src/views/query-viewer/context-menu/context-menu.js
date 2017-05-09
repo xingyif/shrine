@@ -10,5 +10,10 @@ export class ContextMenu {
             i2b2Svc.loadQuery(id);
             this.context.class = 'hide';
         }
+
+      this.loadHistory = () => {
+        this.context.class = 'hide';
+        i2b2Svc.onHistory();
+      };
     }
 }

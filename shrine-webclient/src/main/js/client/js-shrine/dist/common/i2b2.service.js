@@ -21,9 +21,7 @@ System.register([], function (_export, _context) {
                 this.onResize = function (f) {
                     return i2b2 ? i2b2.events.changedZoomWindows.subscribe(f) : null;
                 };
-                this.onHistory = function (f) {
-                    return i2b2 ? i2b2.CRC.ctrlr.history.events.onDataUpdate.subscribe(f) : null;
-                };
+                this.onHistory = i2b2 ? i2b2.CRC.view.history.doRefreshAll : null;
                 this.loadQuery = function (id) {
                     return i2b2 ? i2b2.CRC.ctrlr.QT.doQueryLoad(id) : null;
                 };
