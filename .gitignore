@@ -29,6 +29,7 @@ target/
 ###################
 **/node_modules/
 **/jspm_packages
+!**/export/jspm_packages/
 **/bower_components/
 **/build/
 **/*.tmp
