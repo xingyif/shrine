@@ -12,8 +12,8 @@ export class ContextMenu {
         }
 
       this.loadHistory = () => {
+        i2b2Svc.loadHistory();
         this.context.class = 'hide';
-        i2b2Svc.onHistory();
       };
     }
 }

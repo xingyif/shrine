@@ -73,8 +73,8 @@ System.register(['aurelia-framework', 'common/i2b2.service.js'], function (_expo
                 };
 
                 this.loadHistory = function () {
+                    i2b2Svc.loadHistory();
                     _this.context.class = 'hide';
-                    i2b2Svc.onHistory();
                 };
             }, (_descriptor = _applyDecoratedDescriptor(_class2.prototype, 'context', [bindable], {
                 enumerable: true,

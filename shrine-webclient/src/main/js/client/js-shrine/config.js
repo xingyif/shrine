@@ -199,6 +199,40 @@ System.config({
       "indexof": "npm:indexof@0.0.1"
     }
   },
+  depCache: {
+    "repository/qep.repository.js": [
+      "aurelia-framework",
+      "aurelia-fetch-client",
+      "fetch"
+    ],
+    "views/mailto/mailto.js": [
+      "aurelia-framework",
+      "views/mailto/mailto.service",
+      "views/mailto/mailto.config"
+    ],
+    "views/mailto/mailto.service.js": [
+      "aurelia-framework",
+      "repository/qep.repository"
+    ],
+    "views/query-viewer/context-menu/context-menu.js": [
+      "aurelia-framework",
+      "common/i2b2.service.js"
+    ],
+    "views/query-viewer/loading-bar/loading-bar.js": [
+      "aurelia-framework"
+    ],
+    "views/query-viewer/query-viewer.js": [
+      "aurelia-framework",
+      "views/query-viewer/query-viewer.service",
+      "common/i2b2.service.js",
+      "./query-viewer.model"
+    ],
+    "views/query-viewer/query-viewer.service.js": [
+      "aurelia-framework",
+      "repository/qep.repository",
+      "./query-viewer.config"
+    ]
+  },
   bundles: {
     "app-build.js": [
       "common/i2b2.service.js",
@@ -311,40 +345,6 @@ System.config({
       "npm:font-awesome@4.7.0/css/font-awesome.css!github:systemjs/plugin-css@0.1.33.js",
       "npm:jquery@2.2.4.js",
       "npm:jquery@2.2.4/dist/jquery.js"
-    ]
-  },
-  depCache: {
-    "repository/qep.repository.js": [
-      "aurelia-framework",
-      "aurelia-fetch-client",
-      "fetch"
-    ],
-    "views/mailto/mailto.js": [
-      "aurelia-framework",
-      "views/mailto/mailto.service",
-      "views/mailto/mailto.config"
-    ],
-    "views/mailto/mailto.service.js": [
-      "aurelia-framework",
-      "repository/qep.repository"
-    ],
-    "views/query-viewer/context-menu/context-menu.js": [
-      "aurelia-framework",
-      "common/i2b2.service.js"
-    ],
-    "views/query-viewer/loading-bar/loading-bar.js": [
-      "aurelia-framework"
-    ],
-    "views/query-viewer/query-viewer.js": [
-      "aurelia-framework",
-      "views/query-viewer/query-viewer.service",
-      "common/i2b2.service.js",
-      "./query-viewer.model"
-    ],
-    "views/query-viewer/query-viewer.service.js": [
-      "aurelia-framework",
-      "repository/qep.repository",
-      "./query-viewer.config"
     ]
   }
 });
