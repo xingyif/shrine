@@ -4,7 +4,7 @@
 	i2b2.SHRINE.RequestTopic = requestTopic;
 	i2b2.SHRINE.TopicInfo = showTopicInfo;
 	i2b2.SHRINE.view.modal.topicInfoDialog = getTopicInfoDialog();
-
+	
 	// -- events -- //
 	i2b2.events.afterLogin.subscribe(loginSuccessHandler);
 
@@ -115,9 +115,18 @@
 		};
 	}
 
+	//@todo: cleanup
 	function bootstrap() {
 		var config = i2b2.SHRINE.cfg.config;
 		jQuery('#' + i2b2.SHRINE.plugin.viewName).load(config.wrapperHtmlFile, function (response, status, xhr) {});
+
+		//i2b2 overrides
+		i2b2.events.afterQueryInit = new YAHOO.util.CustomEvent("afterQueryInit", i2b2);
+		var _queryRun = i2b2.CRC.ctrlr.QT._queryRun;
+		i2b2.CRC.ctrlr.QT._queryRun = function(name, params) {
+			_queryRun();
+			i2b2.events.afterQueryInit.fire({name: name, data: i2b2.CRC.model});
+		} 
 	}
 })();
 

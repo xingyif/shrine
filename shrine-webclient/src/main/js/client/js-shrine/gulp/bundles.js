@@ -28,6 +28,7 @@ module.exports = {
         "aurelia-logging-console",
         "fetch",
         "jquery",
+        "ramda",
         "font-awesome"
       ],
       "options": {
