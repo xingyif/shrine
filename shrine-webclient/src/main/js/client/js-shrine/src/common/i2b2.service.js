@@ -13,7 +13,7 @@ export class I2B2Service {
         const crc = _.compose(prop('CRC'), i2b2);
         const events = _.compose(prop('events'), i2b2);
         
-        //public
+        // -- @todo: makes assumption that i2b2 object conforms to predictable structure?  -- //
         this.onResize =  f => nullOrSomething((c) => c.value.changedZoomWindows.subscribe(f), events(ctx));
         this.onHistory = f => nullOrSomething((c) => c.value.ctrlr.history.events.onDataUpdate.subscribe(f), crc(ctx)); 
         this.loadHistory = () => nullOrSomething((c) => c.value.view.history.doRefreshAll(), crc(ctx));
