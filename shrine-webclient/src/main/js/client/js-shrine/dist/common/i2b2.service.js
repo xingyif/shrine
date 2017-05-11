@@ -1,7 +1,7 @@
-System.register([], function (_export, _context) {
+System.register(['ramda', './container'], function (_export, _context) {
     "use strict";
 
-    var I2B2Service;
+    var _, Container, I2B2Service;
 
     function _classCallCheck(instance, Constructor) {
         if (!(instance instanceof Constructor)) {
@@ -10,35 +10,49 @@ System.register([], function (_export, _context) {
     }
 
     return {
-        setters: [],
+        setters: [function (_ramda) {
+            _ = _ramda;
+        }, function (_container) {
+            Container = _container.Container;
+        }],
         execute: function () {
             _export('I2B2Service', I2B2Service = function I2B2Service() {
                 var context = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : window;
 
                 _classCallCheck(this, I2B2Service);
 
-                var getLib = function getLib(context, lib) {
-                    return hasParent(context) ? getParent(context)[lib] : null;
-                };
-                var getParent = function getParent(context) {
-                    return context.parent.window;
-                };
-                var hasParent = function hasParent(context) {
-                    return context && context.parent && context.parent.window;
-                };
-                var i2b2 = getLib(context, 'i2b2');
+                var ctx = Container.of(context);
+                var nullOrSomething = _.curry(function (d, f, c) {
+                    return c.hasNothing() ? d : f(c);
+                })(Container.of(null));
+                var prop = _.curry(function (el, c) {
+                    return nullOrSomething(function (v) {
+                        return v.map(_.prop(el));
+                    }, c);
+                });
+                var i2b2 = _.compose(prop('i2b2'), prop('window'), prop('parent'));
+                var crc = _.compose(prop('CRC'), i2b2);
+                var events = _.compose(prop('events'), i2b2);
 
                 this.onResize = function (f) {
-                    return i2b2 ? i2b2.events.changedZoomWindows.subscribe(f) : null;
+                    return nullOrSomething(function (c) {
+                        return c.value.changedZoomWindows.subscribe(f);
+                    }, events(ctx));
                 };
                 this.onHistory = function (f) {
-                    return i2b2 ? i2b2.CRC.ctrlr.history.events.onDataUpdate.subscribe(f) : null;
+                    return nullOrSomething(function (c) {
+                        return c.value.ctrlr.history.events.onDataUpdate.subscribe(f);
+                    }, crc(ctx));
                 };
                 this.loadHistory = function () {
-                    return i2b2 ? i2b2.CRC.view.history.doRefreshAll() : null;
+                    return nullOrSomething(function (c) {
+                        return c.value.view.history.doRefreshAll();
+                    }, crc(ctx));
                 };
                 this.loadQuery = function (id) {
-                    return i2b2 ? i2b2.CRC.ctrlr.QT.doQueryLoad(id) : null;
+                    return nullOrSomething(function (c) {
+                        return c.value.ctrlr.QT.doQueryLoad(id);
+                    }, crc(ctx));
                 };
             });
 

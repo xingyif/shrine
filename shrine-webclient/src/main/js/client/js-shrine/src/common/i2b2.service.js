@@ -1,40 +1,23 @@
 
+import * as _ from 'ramda';
+import {Container} from './container';
+
 export class I2B2Service {
     constructor(context = window) {
+
         //private
-        const getLib = (context, lib) => hasParent(context) ? getParent(context)[lib] : null;
-        const getParent = (context) => context.parent.window;
-        const hasParent = (context) => context && context.parent && context.parent.window;
-        const i2b2 = getLib(context, 'i2b2');
-
+        const ctx = Container.of(context);
+        const nullOrSomething = _.curry((d, f, c) => c.hasNothing() ? d : f(c)) (Container.of(null));
+        const prop = _.curry((el, c) => nullOrSomething((v) => v.map(_.prop(el)), c));
+        const i2b2 = _.compose(prop('i2b2'), prop('window'), prop('parent'));
+        const crc = _.compose(prop('CRC'), i2b2);
+        const events = _.compose(prop('events'), i2b2);
+        
         //public
-        this.onResize = f => (i2b2) ? i2b2.events.changedZoomWindows.subscribe(f) : null;
-        this.onHistory = f => (i2b2)? i2b2.CRC.ctrlr.history.events.onDataUpdate.subscribe(f) : null;
-        this.loadHistory = () => (i2b2)? i2b2.CRC.view.history.doRefreshAll()  : null;
-        this.loadQuery = id => (i2b2)? i2b2.CRC.ctrlr.QT.doQueryLoad(id) :  null;
+        this.onResize =  f => nullOrSomething((c) => c.value.changedZoomWindows.subscribe(f), events(ctx));
+        this.onHistory = f => nullOrSomething((c) => c.value.ctrlr.history.events.onDataUpdate.subscribe(f), crc(ctx)); 
+        this.loadHistory = () => nullOrSomething((c) => c.value.view.history.doRefreshAll(), crc(ctx));
+        this.loadQuery = id => nullOrSomething((c) => c.value.ctrlr.QT.doQueryLoad(id), crc(ctx));
     }
 }
-
-class Container {
-    constructor(v) {
-       this.__value = v;
-    }
-
-    static of(value) {
-        return new Container(value);
-    }
-
-    get value() {
-        return this.__value;
-    }
-
-    map(f) {
-        return this.hasNothing()? Container.of(null) : Container.of(f(this.value));
-    }
-
-    hasNothing() {
-        return this.value === null || this.value === undefined;
-    }
-}
-
 
