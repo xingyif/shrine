@@ -25,10 +25,11 @@ System.register(['ramda', './container'], function (_export, _context) {
                 var nullOrSomething = _.curry(function (d, f, c) {
                     return c.hasNothing() ? d : f(c);
                 })(Container.of(null));
+                var map = _.curry(function (el, v) {
+                    return v.map(_.prop(el));
+                });
                 var prop = _.curry(function (el, c) {
-                    return nullOrSomething(function (v) {
-                        return v.map(_.prop(el));
-                    }, c);
+                    return nullOrSomething(map(el), c);
                 });
                 var i2b2 = _.compose(prop('i2b2'), prop('window'), prop('parent'));
                 var crc = _.compose(prop('CRC'), i2b2);
@@ -43,6 +44,11 @@ System.register(['ramda', './container'], function (_export, _context) {
                     return nullOrSomething(function (c) {
                         return c.value.ctrlr.history.events.onDataUpdate.subscribe(f);
                     }, crc(ctx));
+                };
+                this.onQuery = function (f) {
+                    return nullOrSomething(function (c) {
+                        return c.value.afterQueryInit.subscribe(f);
+                    }, events(ctx));
                 };
                 this.loadHistory = function () {
                     return nullOrSomething(function (c) {
