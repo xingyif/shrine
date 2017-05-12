@@ -123,9 +123,9 @@
 		//i2b2 overrides
 		i2b2.events.afterQueryInit = new YAHOO.util.CustomEvent("afterQueryInit", i2b2);
 		var _queryRun = i2b2.CRC.ctrlr.QT._queryRun;
-		i2b2.CRC.ctrlr.QT._queryRun = function(name, params) {
-			_queryRun();
-			i2b2.events.afterQueryInit.fire({name: name, data: i2b2.CRC.model});
+		i2b2.CRC.ctrlr.QT._queryRun = function(name, options) {
+			_queryRun.apply(i2b2.CRC.ctrlr.QT, [name, options]);
+			i2b2.events.afterQueryInit.fire({name: name, data: options});
 		} 
 	}
 })();
