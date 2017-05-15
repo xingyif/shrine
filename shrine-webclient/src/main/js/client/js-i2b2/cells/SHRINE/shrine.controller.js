@@ -4,11 +4,11 @@
 	i2b2.SHRINE.RequestTopic = requestTopic;
 	i2b2.SHRINE.TopicInfo = showTopicInfo;
 	i2b2.SHRINE.view.modal.topicInfoDialog = getTopicInfoDialog();
-	
+
 	// -- events -- //
 	i2b2.events.afterLogin.subscribe(loginSuccessHandler);
 
-	 // -- @todo: boostrap the Webclient plugin tabs here. -- //
+	// -- @todo: boostrap the Webclient plugin tabs here. -- //
 	function loginSuccessHandler(type, args) {
 		if (i2b2.hive.cfg.lstCells.SHRINE.serverLoaded) {
 			i2b2.PM.model.shrine_domain = true;
@@ -118,16 +118,22 @@
 	//@todo: cleanup
 	function bootstrap() {
 		var config = i2b2.SHRINE.cfg.config;
-		jQuery('#' + i2b2.SHRINE.plugin.viewName).load(config.wrapperHtmlFile, function (response, status, xhr) {});
+		jQuery('#' + i2b2.SHRINE.plugin.viewName).load(config.wrapperHtmlFile, function (response, status, xhr) { });
 
 		//i2b2 overrides
 		i2b2.events.afterQueryInit = new YAHOO.util.CustomEvent("afterQueryInit", i2b2);
-		
 		var _queryRun = i2b2.CRC.ctrlr.QT._queryRun;
-		i2b2.CRC.ctrlr.QT._queryRun = function(name, options) {
-			_queryRun.apply(i2b2.CRC.ctrlr.QT, [name, options]);
-			i2b2.events.afterQueryInit.fire({name: name, data: options});
-		} 
+		i2b2.CRC.ctrlr.QT._queryRun = function (name, options) {
+			i2b2.events.afterQueryInit.fire({ name: name, data: options });
+			return _queryRun.apply(i2b2.CRC.ctrlr.QT, [name, options]);
+		}
+
+		var statusDisplay = i2b2.CRC.view.status.showDisplay;
+		i2b2.CRC.view.status.showDisplay = function () {
+			if (!jQuery('.query-viewer.active').length) {
+				return statusDisplay.apply(i2b2.CRC.view.status.showDisplay, []);
+			}
+		}
 	}
 })();
 
