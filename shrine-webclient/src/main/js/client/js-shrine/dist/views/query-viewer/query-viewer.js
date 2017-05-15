@@ -30,6 +30,7 @@ System.register(['aurelia-framework', 'views/query-viewer/query-viewer.service',
                     this.screenIndex = 0;
                     this.showCircles = false;
                     this.showLoader = true;
+                    this.immediateQuery = null;
                     this.service = service;
                     this.vertStyle = 'v-min';
 
@@ -38,6 +39,7 @@ System.register(['aurelia-framework', 'views/query-viewer/query-viewer.service',
                     };
                     var setVM = function setVM(screens) {
                         _this.showLoader = false;
+                        _this.immediateQuery = null;
                         _this.screens = screens;
                         _this.showCircles = _this.screens.length > 1;
                         model.screens = screens;
@@ -49,6 +51,9 @@ System.register(['aurelia-framework', 'views/query-viewer/query-viewer.service',
                         });
                     };
 
+                    var addQuery = function addQuery(event, data) {
+                        return _this.immediateQuery = data.name;
+                    };
                     var init = function init() {
                         return model.isLoaded ? setVM(model.screens) : refresh();
                     };
@@ -61,6 +66,7 @@ System.register(['aurelia-framework', 'views/query-viewer/query-viewer.service',
                     };
                     i2b2Svc.onResize(setVertStyle);
                     i2b2Svc.onHistory(refresh);
+                    i2b2Svc.onQuery(addQuery);
                     init();
                 }
 

@@ -11,6 +11,7 @@ export class QueryViewer {
         this.screenIndex = 0;
         this.showCircles = false;
         this.showLoader = true;
+        this.immediateQuery = null;
         this.service = service;
         this.vertStyle = 'v-min';
 
@@ -18,6 +19,7 @@ export class QueryViewer {
         const parseResultToScreens = result => this.service.getScreens(result.adapters, result.queryResults);
         const setVM = screens => {
             this.showLoader = false;
+            this.immediateQuery = null;
             this.screens = screens;
             this.showCircles = this.screens.length > 1;
             model.screens = screens;
@@ -29,6 +31,7 @@ export class QueryViewer {
             .then(setVM)
             .catch(error => console.log(error));
 
+        const addQuery = (event, data) => this.immediateQuery = data.name;
         const init = () => (model.isLoaded) ? setVM(model.screens) : refresh();
 
         // -- add i2b2 event listener -- //
@@ -36,6 +39,7 @@ export class QueryViewer {
         const setVertStyle = (a, b) => this.vertStyle = b.find(isMinimized) ? 'v-min' : 'v-full';
         i2b2Svc.onResize(setVertStyle);
         i2b2Svc.onHistory(refresh);
+        i2b2Svc.onQuery(addQuery);
         init();
     }
     
