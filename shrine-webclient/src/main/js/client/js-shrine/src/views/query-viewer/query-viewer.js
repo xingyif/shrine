@@ -31,7 +31,7 @@ export class QueryViewer {
             .then(setVM)
             .catch(error => console.log(error));
 
-        const addQuery = (event, data) => this.immediateQuery = data.name;
+        const addQuery = (event, data) => this.immediateQuery = data[0].name;
         const init = () => (model.isLoaded) ? setVM(model.screens) : refresh();
 
         // -- add i2b2 event listener -- //

@@ -52,7 +52,7 @@ System.register(['aurelia-framework', 'views/query-viewer/query-viewer.service',
                     };
 
                     var addQuery = function addQuery(event, data) {
-                        return _this.immediateQuery = data.name;
+                        return _this.immediateQuery = data[0].name;
                     };
                     var init = function init() {
                         return model.isLoaded ? setVM(model.screens) : refresh();
