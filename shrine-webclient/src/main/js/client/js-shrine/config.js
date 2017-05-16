@@ -203,6 +203,9 @@ System.config({
     }
   },
   depCache: {
+    "common/container.js": [
+      "ramda"
+    ],
     "common/i2b2.service.js": [
       "ramda",
       "./container"

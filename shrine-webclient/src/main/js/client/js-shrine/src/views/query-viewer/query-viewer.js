@@ -14,6 +14,7 @@ export class QueryViewer {
         this.runningQuery = null;
         this.service = service;
         this.vertStyle = 'v-min';
+        this.scrollRatio = 0;
 
         // -- fetch queries -- //
         const parseResultToScreens = result => this.service.getScreens(result.adapters, result.queryResults);
@@ -50,6 +51,10 @@ export class QueryViewer {
             id: result.id,
             class: 'show'
         };
+    }
+
+    onScroll(e) {
+        this.scrollRatio = (e.target.clientHeight + e.target.scrollTop)  + '/' + e.target.scrollHeight;
     }
 }
 

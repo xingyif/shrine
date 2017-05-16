@@ -33,6 +33,7 @@ System.register(['aurelia-framework', 'views/query-viewer/query-viewer.service',
                     this.runningQuery = null;
                     this.service = service;
                     this.vertStyle = 'v-min';
+                    this.scrollRatio = 0;
 
                     var parseResultToScreens = function parseResultToScreens(result) {
                         return _this.service.getScreens(result.adapters, result.queryResults);
@@ -77,6 +78,10 @@ System.register(['aurelia-framework', 'views/query-viewer/query-viewer.service',
                         id: result.id,
                         class: 'show'
                     };
+                };
+
+                QueryViewer.prototype.onScroll = function onScroll(e) {
+                    this.scrollRatio = e.target.clientHeight + e.target.scrollTop + '/' + e.target.scrollHeight;
                 };
 
                 return QueryViewer;

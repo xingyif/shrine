@@ -1,7 +1,7 @@
-System.register([], function (_export, _context) {
+System.register(['ramda'], function (_export, _context) {
     "use strict";
 
-    var _createClass, Container;
+    var _, _createClass, Container;
 
     function _classCallCheck(instance, Constructor) {
         if (!(instance instanceof Constructor)) {
@@ -10,7 +10,9 @@ System.register([], function (_export, _context) {
     }
 
     return {
-        setters: [],
+        setters: [function (_ramda) {
+            _ = _ramda;
+        }],
         execute: function () {
             _createClass = function () {
                 function defineProperties(target, props) {
@@ -30,15 +32,17 @@ System.register([], function (_export, _context) {
                 };
             }();
 
-            _export("Container", Container = function () {
-                function Container(v) {
+            _export('Container', Container = function () {
+                function Container(f) {
                     _classCallCheck(this, Container);
 
-                    this.__value = v;
+                    this.__value = f;
                 }
 
                 Container.of = function of(value) {
-                    return new Container(value);
+                    return new Container(function () {
+                        return value;
+                    });
                 };
 
                 Container.prototype.map = function map(f) {
@@ -50,16 +54,16 @@ System.register([], function (_export, _context) {
                 };
 
                 _createClass(Container, [{
-                    key: "value",
+                    key: 'value',
                     get: function get() {
-                        return this.__value;
+                        return this.__value();
                     }
                 }]);
 
                 return Container;
             }());
 
-            _export("Container", Container);
+            _export('Container', Container);
         }
     };
 });
