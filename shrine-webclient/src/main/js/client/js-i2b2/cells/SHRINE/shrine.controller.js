@@ -130,7 +130,7 @@
 
 		var statusDisplay = i2b2.CRC.view.status.showDisplay;
 		i2b2.CRC.view.status.showDisplay = function () {
-			if (!jQuery('.query-viewer.active').length) {
+			if (i2b2.CRC.view.status.currentTab === 'status' || !jQuery('.query-viewer.active').length) {
 				return statusDisplay.apply(i2b2.CRC.view.status.showDisplay, []);
 			}
 		}
