@@ -7,9 +7,7 @@ export class I2B2Service {
 
         //private
         const ctx = Container.of(context);
-        const applyIfExists = _.curry((d, f, c) => c.hasNothing() ? d : f(c)) (Container.of(null));
-        const map = _.curry((el, v) => v.map(_.prop(el)));
-        const prop = _.curry((el, c) => applyIfExists(map(el) , c));
+        const prop = _.curry((el, c) => Container.of(_.prop(el, c.value) || c.value));
         const i2b2 = _.compose(prop('i2b2'), prop('window'), prop('parent'));
         const crc = _.compose(prop('CRC'), i2b2);
         const events = _.compose(prop('events'), i2b2);

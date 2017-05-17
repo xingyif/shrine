@@ -22,14 +22,8 @@ System.register(['ramda', './container'], function (_export, _context) {
                 _classCallCheck(this, I2B2Service);
 
                 var ctx = Container.of(context);
-                var applyIfExists = _.curry(function (d, f, c) {
-                    return c.hasNothing() ? d : f(c);
-                })(Container.of(null));
-                var map = _.curry(function (el, v) {
-                    return v.map(_.prop(el));
-                });
                 var prop = _.curry(function (el, c) {
-                    return applyIfExists(map(el), c);
+                    return Container.of(_.prop(el, c.value) || c.value);
                 });
                 var i2b2 = _.compose(prop('i2b2'), prop('window'), prop('parent'));
                 var crc = _.compose(prop('CRC'), i2b2);
