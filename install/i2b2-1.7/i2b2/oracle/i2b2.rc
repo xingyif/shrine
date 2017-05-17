@@ -30,7 +30,7 @@ export I2B2_RDBMS=oracle
 export SHRINE_USER=shrine
 
 #The plaintext password for the i2b2 user Shrine should log in as.
-export SHRINE_OBFUSCATED_WEBCLIENT_PASSWORD=demouser
+export SHRINE_OBFUSCATED_WEBCLIENT_PASSWORD=examplePassword
 
 #SHRINE_OBFUSCATED_WEBCLIENT_PASSWORD hashed with i2b2's password-hashing algorithm
 if [ -f ../I2b2PasswordCryptor.java ] ; then
@@ -51,7 +51,7 @@ export JBOSS_DEPLOY_DIR="${JBOSS_HOME}/standalone/deployments"
 export I2B2_ORACLE_SID=xe #will need to change if not in i2b2 VM
 
 #Password for the Oracle system user
-export I2B2_ORACLE_SYSTEM_PASSWORD=demouser
+export I2B2_ORACLE_SYSTEM_PASSWORD=examplePassword
 
 #Directory containing the Oracle installation
 export ORACLE_HOME=/usr/lib/oracle/xe/app/oracle/product/10.2.0/server
@@ -61,25 +61,25 @@ export PATH=$PATH:${ORACLE_HOME}/bin
 
 #Oracle user for the i2b2 PM cell
 export I2B2_DB_PM_USER=i2b2pm
-export I2B2_DB_PM_PASSWORD=demouser
+export I2B2_DB_PM_PASSWORD=examplePassword
 
 #Oracle user for the i2b2 Hive
 export I2B2_DB_HIVE_USER=i2b2hive
-export I2B2_DB_HIVE_PASSWORD=demouser 
+export I2B2_DB_HIVE_PASSWORD=examplePassword
 export I2B2_DB_HIVE_JDBC_URL=jdbc:oracle:thin:@localhost:1521:${I2B2_ORACLE_SID}
 #Java DataSource name used by the i2b2 hive
 export I2B2_DB_HIVE_DATASOURCE_NAME=OntologyBootStrapDS
 
 #Oracle user for the i2b2 ontology cell
 export I2B2_DB_ONT_USER=i2b2metadata
-export I2B2_DB_ONT_PASSWORD=demouser
+export I2B2_DB_ONT_PASSWORD=examplePassword
 export I2B2_DB_ONT_JDBC_URL=jdbc:oracle:thin:@localhost:1521:${I2B2_ORACLE_SID}
 #Java DataSource name used by the i2b2 ontology cell
 export I2B2_DB_ONT_DATASOURCE_NAME=OntologyDemoDS
 
 #Oracle user for the Shrine ontology cell
 export I2B2_DB_SHRINE_ONT_USER=shrine_ont
-export I2B2_DB_SHRINE_ONT_PASSWORD=demouser
+export I2B2_DB_SHRINE_ONT_PASSWORD=examplePassword
 export I2B2_DB_SHRINE_ONT_JDBC_URL=jdbc:oracle:thin:@localhost:1521:${I2B2_ORACLE_SID}
 #Java DataSource name used by the Shrine ontology cell
 export I2B2_DB_SHRINE_ONT_DATASOURCE_NAME=OntologyShrineDS
