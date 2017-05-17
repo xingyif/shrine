@@ -15,11 +15,11 @@ export class I2B2Service {
         const events = _.compose(prop('events'), i2b2);
        
         // -- @todo: makes assumption that i2b2 object conforms to predictable structure?  -- //
-        this.onResize =  f => applyIfExists((c) => c.value.changedZoomWindows.subscribe(f), events(ctx));
-        this.onHistory = f => applyIfExists((c) => c.value.ctrlr.history.events.onDataUpdate.subscribe(f), crc(ctx)); 
-        this.onQuery = f => applyIfExists((c) => c.value.afterQueryInit.subscribe(f), events(ctx));
-        this.loadHistory = () => applyIfExists((c) => c.value.view.history.doRefreshAll(), crc(ctx));
-        this.loadQuery = id => applyIfExists((c) => c.value.ctrlr.QT.doQueryLoad(id), crc(ctx));
+        this.onResize =  f => events(ctx).map((v) => v.changedZoomWindows.subscribe(f));
+        this.onHistory = f => crc(ctx).map((v) => v.ctrlr.history.events.onDataUpdate.subscribe(f)); 
+        this.onQuery = f => events(ctx).map((v) => v.afterQueryInit.subscribe(f)); 
+        this.loadHistory = () => crc(ctx).map((v) => v.view.history.doRefreshAll());
+        this.loadQuery = id => crc(ctx).map((v) => v.ctrlr.QT.doQueryLoad(id));
     }
 }
 

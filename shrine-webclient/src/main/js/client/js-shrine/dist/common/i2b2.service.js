@@ -36,29 +36,29 @@ System.register(['ramda', './container'], function (_export, _context) {
                 var events = _.compose(prop('events'), i2b2);
 
                 this.onResize = function (f) {
-                    return applyIfExists(function (c) {
-                        return c.value.changedZoomWindows.subscribe(f);
-                    }, events(ctx));
+                    return events(ctx).map(function (v) {
+                        return v.changedZoomWindows.subscribe(f);
+                    });
                 };
                 this.onHistory = function (f) {
-                    return applyIfExists(function (c) {
-                        return c.value.ctrlr.history.events.onDataUpdate.subscribe(f);
-                    }, crc(ctx));
+                    return crc(ctx).map(function (v) {
+                        return v.ctrlr.history.events.onDataUpdate.subscribe(f);
+                    });
                 };
                 this.onQuery = function (f) {
-                    return applyIfExists(function (c) {
-                        return c.value.afterQueryInit.subscribe(f);
-                    }, events(ctx));
+                    return events(ctx).map(function (v) {
+                        return v.afterQueryInit.subscribe(f);
+                    });
                 };
                 this.loadHistory = function () {
-                    return applyIfExists(function (c) {
-                        return c.value.view.history.doRefreshAll();
-                    }, crc(ctx));
+                    return crc(ctx).map(function (v) {
+                        return v.view.history.doRefreshAll();
+                    });
                 };
                 this.loadQuery = function (id) {
-                    return applyIfExists(function (c) {
-                        return c.value.ctrlr.QT.doQueryLoad(id);
-                    }, crc(ctx));
+                    return crc(ctx).map(function (v) {
+                        return v.ctrlr.QT.doQueryLoad(id);
+                    });
                 };
             });
 
