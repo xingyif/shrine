@@ -3,7 +3,7 @@ package net.shrine.problem
 import java.util.concurrent.TimeoutException
 import javax.sql.DataSource
 
-import com.typesafe.config.{Config, ConfigException}
+import com.typesafe.config.Config
 import net.shrine.slick.{CouldNotRunDbIoActionException, NeedsWarmUp, TestableDataSourceCreator}
 import net.shrine.source.ConfigSource
 import slick.dbio.SuccessAction
@@ -13,7 +13,6 @@ import slick.jdbc.meta.MTable
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
-import scala.util.{Failure, Success, Try}
 import scala.util.control.NonFatal
 import scala.xml.XML
 
