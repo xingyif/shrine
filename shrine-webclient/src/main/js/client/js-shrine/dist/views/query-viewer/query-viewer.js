@@ -51,6 +51,7 @@ System.register(['aurelia-framework', 'views/query-viewer/query-viewer.service',
                         model.loadedCount = model.loadedCount + QueryViewerConfig.maxQueriesPerScroll;
                         model.totalQueries = 1000;
                         model.isLoaded = true;
+                        model.isFetching = false;
                     };
 
                     var refresh = function refresh() {
@@ -67,8 +68,9 @@ System.register(['aurelia-framework', 'views/query-viewer/query-viewer.service',
                     };
 
                     this.onScroll = function (e) {
-                        if (ScrollService.scrollRatio(e).value === 1 && model.moreToLoad) {
+                        if (ScrollService.scrollRatio(e).value === 1 && model.moreToLoad && !model.isFetching) {
                             refresh();
+                            model.isFetching = true;
                         }
                     };
 

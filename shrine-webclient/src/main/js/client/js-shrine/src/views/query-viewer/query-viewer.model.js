@@ -2,6 +2,7 @@
 export class QueryViewerModel{
     constructor() {
         this.isLoaded = false;
+        this.isFetching = false;
         this.loadedCount = 0;
         this.totalQueries = 0;
         this.screens = [];

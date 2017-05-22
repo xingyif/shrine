@@ -35,6 +35,7 @@ System.register([], function (_export, _context) {
                     _classCallCheck(this, QueryViewerModel);
 
                     this.isLoaded = false;
+                    this.isFetching = false;
                     this.loadedCount = 0;
                     this.totalQueries = 0;
                     this.screens = [];

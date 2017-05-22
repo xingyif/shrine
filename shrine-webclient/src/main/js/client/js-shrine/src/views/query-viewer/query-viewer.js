@@ -29,6 +29,7 @@ export class QueryViewer {
             model.loadedCount = model.loadedCount + QueryViewerConfig.maxQueriesPerScroll;
             model.totalQueries = 1000; //@todo, pull from model.
             model.isLoaded = true;
+            model.isFetching = false;
         };
 
         const refresh = () => this.service
@@ -42,8 +43,9 @@ export class QueryViewer {
 
        // -- scroll event -- //
        this.onScroll = e => {
-            if(ScrollService.scrollRatio(e).value === 1 && model.moreToLoad){
+            if(ScrollService.scrollRatio(e).value === 1 && model.moreToLoad && !model.isFetching){
                 refresh();
+                model.isFetching = true;
             }
        }
 
