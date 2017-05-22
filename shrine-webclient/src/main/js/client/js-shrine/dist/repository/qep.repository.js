@@ -51,8 +51,10 @@ System.register(['aurelia-framework', 'aurelia-fetch-client', 'fetch'], function
                     this.http = http;
                 }
 
-                QEPRepository.prototype.fetchPreviousQueries = function fetchPreviousQueries() {
-                    return this.http.fetch('qep/queryResults').then(function (response) {
+                QEPRepository.prototype.fetchPreviousQueries = function fetchPreviousQueries(limit) {
+                    var skip = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
+
+                    return this.http.fetch('qep/queryResults?limit=' + limit + '&skip=' + skip).then(function (response) {
                         return response.json();
                     }).catch(function (error) {
                         return error;

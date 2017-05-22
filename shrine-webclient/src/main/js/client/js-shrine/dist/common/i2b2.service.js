@@ -23,7 +23,7 @@ System.register(['ramda', './container'], function (_export, _context) {
 
                 var ctx = Container.of(context);
                 var prop = _.curry(function (el, c) {
-                    return Container.of(_.prop(el, c.value) || c.value);
+                    return c.value ? Container.of(_.prop(el, c.value)) : Container.of(null);
                 });
                 var i2b2 = _.compose(prop('i2b2'), prop('window'), prop('parent'));
                 var crc = _.compose(prop('CRC'), i2b2);

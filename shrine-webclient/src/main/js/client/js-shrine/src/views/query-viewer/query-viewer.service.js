@@ -10,8 +10,8 @@ export class QueryViewerService {
         this.config = config;
     }
 
-    fetchPreviousQueries() {
-        return this.repository.fetchPreviousQueries();
+    fetchPreviousQueries(limit = this.config.maxQueriesPerScroll) {
+        return this.repository.fetchPreviousQueries(limit);
     }
 
     getScreens(nodes, queries) {

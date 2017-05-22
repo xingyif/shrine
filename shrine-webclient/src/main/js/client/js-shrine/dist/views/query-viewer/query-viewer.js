@@ -1,7 +1,7 @@
-System.register(['aurelia-framework', 'views/query-viewer/query-viewer.service', 'common/i2b2.service.js', './query-viewer.model'], function (_export, _context) {
+System.register(['aurelia-framework', 'views/query-viewer/query-viewer.service', 'common/i2b2.service.js', './query-viewer.model', './scroll.service', './query-viewer.config'], function (_export, _context) {
     "use strict";
 
-    var inject, computedFrom, QueryViewerService, I2B2Service, QueryViewerModel, _dec, _class, QueryViewer;
+    var inject, computedFrom, QueryViewerService, I2B2Service, QueryViewerModel, ScrollService, QueryViewerConfig, _dec, _class, QueryViewer;
 
     function _classCallCheck(instance, Constructor) {
         if (!(instance instanceof Constructor)) {
@@ -19,6 +19,10 @@ System.register(['aurelia-framework', 'views/query-viewer/query-viewer.service',
             I2B2Service = _commonI2b2ServiceJs.I2B2Service;
         }, function (_queryViewerModel) {
             QueryViewerModel = _queryViewerModel.QueryViewerModel;
+        }, function (_scrollService) {
+            ScrollService = _scrollService.ScrollService;
+        }, function (_queryViewerConfig) {
+            QueryViewerConfig = _queryViewerConfig.QueryViewerConfig;
         }],
         execute: function () {
             _export('QueryViewer', QueryViewer = (_dec = inject(QueryViewerService, I2B2Service, QueryViewerModel), _dec(_class = function () {
@@ -44,10 +48,14 @@ System.register(['aurelia-framework', 'views/query-viewer/query-viewer.service',
                         _this.screens = screens;
                         _this.showCircles = _this.screens.length > 1;
                         model.screens = screens;
+                        model.loadedCount = model.loadedCount + QueryViewerConfig.maxQueriesPerScroll;
+                        model.totalQueries = 1000;
                         model.isLoaded = true;
+                        model.isFetching = false;
                     };
+
                     var refresh = function refresh() {
-                        return _this.service.fetchPreviousQueries().then(parseResultToScreens).then(setVM).catch(function (error) {
+                        return _this.service.fetchPreviousQueries(model.loadedCount + QueryViewerConfig.maxQueriesPerScroll).then(parseResultToScreens).then(setVM).catch(function (error) {
                             return console.log(error);
                         });
                     };
@@ -59,6 +67,13 @@ System.register(['aurelia-framework', 'views/query-viewer/query-viewer.service',
                         return model.isLoaded ? setVM(model.screens) : refresh();
                     };
 
+                    this.onScroll = function (e) {
+                        if (ScrollService.scrollRatio(e).value === 1 && model.moreToLoad && !model.isFetching) {
+                            refresh();
+                            model.isFetching = true;
+                        }
+                    };
+
                     var isMinimized = function isMinimized(e) {
                         return e.action !== 'ADD';
                     };
@@ -68,6 +83,7 @@ System.register(['aurelia-framework', 'views/query-viewer/query-viewer.service',
                     i2b2Svc.onResize(setVertStyle);
                     i2b2Svc.onHistory(refresh);
                     i2b2Svc.onQuery(addQuery);
+
                     init();
                 }
 
@@ -78,10 +94,6 @@ System.register(['aurelia-framework', 'views/query-viewer/query-viewer.service',
                         id: result.id,
                         class: 'show'
                     };
-                };
-
-                QueryViewer.prototype.onScroll = function onScroll(e) {
-                    this.scrollRatio = e.target.clientHeight + e.target.scrollTop + '/' + e.target.scrollHeight;
                 };
 
                 return QueryViewer;
