@@ -32,8 +32,9 @@ export class QEPRepository {
         return auth;
     }
 
-    fetchPreviousQueries() {
-        return this.http.fetch('qep/queryResults')
+    //https://shrine-qa2.catalyst:6443/shrine-metadata/qep/queryResults?skip=2&limit=3
+    fetchPreviousQueries(limit, skip = 0) {
+        return this.http.fetch(`qep/queryResults?limit=${limit}&skip=${skip}`)
             .then(response => response.json())
             .catch(error => error);
     }

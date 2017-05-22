@@ -225,7 +225,8 @@ System.config({
       "views/query-viewer/query-viewer.model.js",
       "views/query-viewer/query-viewer.service.js",
       "views/query-viewer/result-style.converter.js",
-      "views/query-viewer/result-value.converter.js"
+      "views/query-viewer/result-value.converter.js",
+      "views/query-viewer/scroll.service.js"
     ],
     "aurelia.js": [
       "github:github/fetch@1.0.0.js",
@@ -664,12 +665,18 @@ System.config({
       "aurelia-framework",
       "views/query-viewer/query-viewer.service",
       "common/i2b2.service.js",
-      "./query-viewer.model"
+      "./query-viewer.model",
+      "./scroll.service",
+      "./query-viewer.config"
     ],
     "views/query-viewer/query-viewer.service.js": [
       "aurelia-framework",
       "repository/qep.repository",
       "./query-viewer.config"
+    ],
+    "views/query-viewer/scroll.service.js": [
+      "ramda",
+      "common/container"
     ]
   }
 });

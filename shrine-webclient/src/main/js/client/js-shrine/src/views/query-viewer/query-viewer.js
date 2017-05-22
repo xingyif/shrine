@@ -2,6 +2,8 @@ import { inject, computedFrom } from 'aurelia-framework';
 import { QueryViewerService } from 'views/query-viewer/query-viewer.service';
 import { I2B2Service } from 'common/i2b2.service.js';
 import { QueryViewerModel } from './query-viewer.model';
+import {ScrollService} from './scroll.service';
+import {QueryViewerConfig} from './query-viewer.config';
 
 @inject(QueryViewerService, I2B2Service, QueryViewerModel)
 export class QueryViewer {
@@ -24,10 +26,13 @@ export class QueryViewer {
             this.screens = screens;
             this.showCircles = this.screens.length > 1;
             model.screens = screens;
+            model.loadedCount = model.loadedCount + QueryViewerConfig.maxQueriesPerScroll;
+            model.totalQueries = 1000; //@todo, pull from model.
             model.isLoaded = true;
         };
+
         const refresh = () => this.service
-            .fetchPreviousQueries()
+            .fetchPreviousQueries(model.loadedCount + QueryViewerConfig.maxQueriesPerScroll)
             .then(parseResultToScreens)
             .then(setVM)
             .catch(error => console.log(error));
@@ -35,12 +40,20 @@ export class QueryViewer {
         const addQuery = (event, data) => this.runningQuery = data[0].name;
         const init = () => (model.isLoaded) ? setVM(model.screens) : refresh();
 
+       // -- scroll event -- //
+       this.onScroll = e => {
+            if(ScrollService.scrollRatio(e).value === 1 && model.moreToLoad){
+                refresh();
+            }
+       }
+
         // -- add i2b2 event listener -- //
         const isMinimized = e => e.action !== 'ADD';
         const setVertStyle = (a, b) => this.vertStyle = b.find(isMinimized) ? 'v-min' : 'v-full';
         i2b2Svc.onResize(setVertStyle);
         i2b2Svc.onHistory(refresh);
         i2b2Svc.onQuery(addQuery);
+
         init();
     }
     
@@ -51,10 +64,6 @@ export class QueryViewer {
             id: result.id,
             class: 'show'
         };
-    }
-
-    onScroll(e) {
-        this.scrollRatio = (e.target.clientHeight + e.target.scrollTop)  + '/' + e.target.scrollHeight;
     }
 }
 

@@ -6,7 +6,8 @@ System.register([], function (_export, _context) {
         setters: [],
         execute: function () {
             _export("QueryViewerConfig", QueryViewerConfig = {
-                maxNodesPerScreen: 10
+                maxNodesPerScreen: 10,
+                maxQueriesPerScroll: 100
             });
 
             _export("QueryViewerConfig", QueryViewerConfig);
