@@ -30,7 +30,7 @@ export I2B2_RDBMS=sqlserver
 export SHRINE_USER=shrine
 
 #The plaintext password for the i2b2 user Shrine should log in as.
-export SHRINE_OBFUSCATED_WEBCLIENT_PASSWORD=demouser
+export SHRINE_OBFUSCATED_WEBCLIENT_PASSWORD=examplePassword
 
 #SHRINE_OBFUSCATED_WEBCLIENT_PASSWORD hashed with i2b2's password-hashing algorithm
 if [ -f ../I2b2PasswordCryptor.java ] ; then
@@ -61,7 +61,7 @@ export I2B2_DB_SERVER=[MSSQL Server (ie. sql01.mydomain.edu)]
 # NOTE: this account should already exist on the SQL Server
 # and have permission to access the database(s) used for i2b2 and shrine
 export I2B2_DB_USER=i2b2_dbo
-export I2B2_DB_PASSWORD=demouser
+export I2B2_DB_PASSWORD=examplePassword
 export I2B2_DB_SCHEMA=dbo
 
 

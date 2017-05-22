@@ -26,7 +26,7 @@ public final class UpdateCells {
 
 			System.out.println("Welcome to i2b2 Vmware 1.7");
 			System.out.println(" ");
-			System.out.println("All passwords are demouser");
+			System.out.println("All passwords are examplePassword");
 			System.out.println(" ");
 			System.out.println("To use this i2b2 server 1.7 instance with one of the following:");
 			System.out.println(" ");

@@ -1,4 +1,4 @@
--- Create user shrine/demouser
+-- Create user shrine/examplePassword
 insert into PM_USER_DATA
 (user_id, full_name, password, status_cd)
 values
