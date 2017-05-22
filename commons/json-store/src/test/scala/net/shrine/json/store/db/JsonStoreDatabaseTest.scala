@@ -8,7 +8,7 @@ import org.scalatest.{BeforeAndAfter, FlatSpec, Matchers}
 import slick.driver.H2Driver.api._
 
 import scala.concurrent.duration._
-
+/*
 /**
   * Test creation, insertion, querying, and deletion of ProblemDigest values into an
   * in-memory H2 database. Demonstrates proof of concept mapping of ProblemDigest
@@ -89,3 +89,4 @@ case class ProblemDatabaseTestProblem(source: ProblemSources.ProblemSource) exte
   override def summary: String = "This is a test problem! No user should ever see this."
   override def description: String = "Wow, this is a nice looking problem. I mean really, just look at it."
 }
+*/
