@@ -4,7 +4,7 @@ import org.junit.runner.RunWith
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.{BeforeAndAfter, FlatSpec, Matchers}
-import slick.driver.H2Driver.api._
+import slick.driver.H2Driver.api._ //todo do without this import
 
 import scala.concurrent.duration._
 

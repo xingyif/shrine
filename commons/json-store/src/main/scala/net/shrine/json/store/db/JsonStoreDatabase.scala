@@ -47,6 +47,7 @@ object JsonStoreDatabase extends NeedsWarmUp {
                                      id:UUID,
                                      version:Int,
                                      tableChangeCount:Int,
+                                     //todo get shrine version here from the system as a default value
                                      queryId:UUID,
                                      json:String
                                    )
@@ -56,14 +57,14 @@ object JsonStoreDatabase extends NeedsWarmUp {
     */
   class ShrineResultsT(tag: Tag) extends Table[ShrineResultDbEnvelope](tag, ShrineResultsQ.tableName) {
     def id = column[UUID]("id", O.PrimaryKey)
-    //def shrineVersion = column[String]("shrineVersion") //todo get shrine version here from the system as a default value
+    //def shrineVersion = column[String]("shrineVersion")
     def version = column[Int]("version") //for optimistic locking
     def tableVersion = column[Int]("tableVersion") //for change detection on a table
     def queryId = column[UUID]("queryId") //for the first pass we're asking strictly for query ids
-
     def json = column[String]("json")
-
     def * = (id, version, tableVersion, queryId, json) <> (ShrineResultDbEnvelope.tupled, ShrineResultDbEnvelope.unapply)
+
+    //todo indexes
   }
 
   /**
@@ -73,12 +74,12 @@ object JsonStoreDatabase extends NeedsWarmUp {
     /**
       * The table name
       */
-    val tableName = "results"
+    val tableName = "shrineResults"
 
     /**
       * Equivalent to Select * from Problems;
       */
-    val selectAll: ShrineResultsQ.type = this
+    val selectAll = this
 
     def selectLastTableChange = Query(this.map(_.tableVersion).max)
 
@@ -108,7 +109,7 @@ object JsonStoreDatabase extends NeedsWarmUp {
     // For SuccessAction, just a no_op.
     case object NoOperation
 
-    val shrineResults: ShrineResultsQ.type = ShrineResultsQ
+    val shrineResults = ShrineResultsQ
 
     val tableExists = MTable.getTables(ShrineResultsQ.tableName).map(_.nonEmpty)
     val createIfNotExists = tableExists.flatMap(
