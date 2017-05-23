@@ -96,7 +96,7 @@ object JsonStoreDatabase extends NeedsWarmUp {
 
   case class ShrineResultQueryParameters(
                               afterTableChange:Option[Int] = None,
-                              forQueryIds:Option[Set[UUID]] = None, //None interpreted as "all" . todo check set size < 1000 for Oracle safty if it matters.
+                              forQueryIds:Option[Set[UUID]] = None, //None interpreted as "all" . todo check set size < 1000 for Oracle safety if oracle is to be supported.
                               skipOption:Option[Int] =  None,
                               limitOption:Option[Int] = None
                             )
@@ -127,7 +127,7 @@ object JsonStoreDatabase extends NeedsWarmUp {
       }
       val limitSelect = parameters.limitOption.fold(skipSelect){ limit => skipSelect.take(limit)}
 
-      limitSelect
+      limitSelect.result
     }
 
     def selectLastTableChange = ShrineResultsQ.selectLastTableChange.result
@@ -152,6 +152,7 @@ object JsonStoreDatabase extends NeedsWarmUp {
     /**
       * Executes a series of IO actions as a single transaction, synchronous
       */
+    //todo return a value R
     def executeTransactionBlocking(actions: DBIOAction[_, NoStream, _]*)(implicit timeout: Duration): Unit = {
       try {
         Await.ready(this.executeTransaction(actions: _*), timeout)
