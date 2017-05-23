@@ -107,8 +107,17 @@ class JsonStoreDatabaseTest extends FlatSpec with BeforeAndAfter with ScalaFutur
     shrineResultContents should contain theSameElementsAs testShrineResults
     shrineResultContents should have length testShrineResults.length
 
+    val nextTestShrineResult = testShrineResults.head.copy(version = 1,tableChangeCount = 1,json="updated json")
+    connector.executeTransactionBlocking(IO.upsertShrineResult(nextTestShrineResult))
+
+    val expectedSeq: Seq[ShrineResultDbEnvelope] = nextTestShrineResult +: testShrineResults.tail
+
     connector.runBlocking(IO.countWithParameters(all)) should equal(testShrineResults.length)
-    connector.runBlocking(IO.selectResultsWithParameters(all)) should contain theSameElementsAs testShrineResults
+    connector.runBlocking(IO.selectResultsWithParameters(all)) should contain theSameElementsAs expectedSeq
+
+    val withLastTableChange = all.copy(afterTableChange = Some(1))
+    connector.runBlocking(IO.countWithParameters(withLastTableChange)) should equal(expectedSeq.count(_.tableChangeCount >= 1))
+    connector.runBlocking(IO.selectResultsWithParameters(all)) should contain theSameElementsAs expectedSeq.filter(_.tableChangeCount >= 1)
 
 
 
