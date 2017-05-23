@@ -1,14 +1,17 @@
 package net.shrine.json.store.db
 
+import java.util.UUID
+
 import net.shrine.json.store.db.JsonStoreDatabase.IOActions.NoOperation
+import net.shrine.json.store.db.JsonStoreDatabase.ShrineResultDbEnvelope
 import org.junit.runner.RunWith
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.{BeforeAndAfter, FlatSpec, Matchers}
-import slick.driver.H2Driver.api._
+//import slick.driver.H2Driver.api._
 
 import scala.concurrent.duration._
-/*
+
 /**
   * Test creation, insertion, querying, and deletion of ProblemDigest values into an
   * in-memory H2 database. Demonstrates proof of concept mapping of ProblemDigest
@@ -19,7 +22,13 @@ class JsonStoreDatabaseTest extends FlatSpec with BeforeAndAfter with ScalaFutur
   implicit val timeout = 10.seconds
   val connector = JsonStoreDatabase.DatabaseConnector
   val IO = connector.IO
-  val problemDigests = ???
+  val testShrineResults = Seq(
+    ShrineResultDbEnvelope(id = UUID.randomUUID(),version = 0,tableChangeCount = 0,queryId = UUID.randomUUID(),json = "todo"),
+    ShrineResultDbEnvelope(id = UUID.randomUUID(),version = 0,tableChangeCount = 0,queryId = UUID.randomUUID(),json = "todo"),
+    ShrineResultDbEnvelope(id = UUID.randomUUID(),version = 0,tableChangeCount = 0,queryId = UUID.randomUUID(),json = "todo"),
+    ShrineResultDbEnvelope(id = UUID.randomUUID(),version = 0,tableChangeCount = 0,queryId = UUID.randomUUID(),json = "todo"),
+    ShrineResultDbEnvelope(id = UUID.randomUUID(),version = 0,tableChangeCount = 0,queryId = UUID.randomUUID(),json = "todo")
+  )
 
   before {
     connector.runBlocking(IO.dropIfExists >> IO.tableExists) shouldBe false
@@ -36,8 +45,8 @@ class JsonStoreDatabaseTest extends FlatSpec with BeforeAndAfter with ScalaFutur
 
   "The Database" should "Connect without any problems" in {
     // Insert the suppliers and ProblemDigests
-    connector.executeTransactionBlocking(IO.problems ++= problemDigests)
-
+//    connector.executeTransactionBlocking(connector.IO.shrineResults ++= testShrineResults)
+/*
     // Test that they are all in the table
     var * = connector.runBlocking(IO.selectAll)
     * should contain theSameElementsAs problemDigests
@@ -82,11 +91,6 @@ class JsonStoreDatabaseTest extends FlatSpec with BeforeAndAfter with ScalaFutur
     val testProblem = ProblemDatabaseTestProblem(ProblemSources.Unknown)
     Thread.sleep(200)
     connector.runBlocking(IO.problems.size.result) shouldBe problemDigests.size + 1
+*/
   }
 }
-
-case class ProblemDatabaseTestProblem(source: ProblemSources.ProblemSource) extends AbstractProblem(source: ProblemSources.ProblemSource) {
-  override def summary: String = "This is a test problem! No user should ever see this."
-  override def description: String = "Wow, this is a nice looking problem. I mean really, just look at it."
-}
-*/
