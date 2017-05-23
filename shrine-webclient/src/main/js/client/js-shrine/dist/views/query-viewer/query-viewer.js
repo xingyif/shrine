@@ -41,7 +41,7 @@ System.register(['aurelia-framework', 'views/query-viewer/query-viewer.service',
 
                     var parseResultToScreens = function parseResultToScreens(result) {
                         model.totalQueries = result.rowCount;
-                        model.loadedCount = model.loadedCount + result.queryResults.length;
+                        model.loadedCount = result.queryResults.length;
                         return _this.service.getScreens(result.adapters, result.queryResults);
                     };
                     var setVM = function setVM(screens) {

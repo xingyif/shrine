@@ -21,7 +21,7 @@ export class QueryViewer {
         // -- fetch queries -- //
         const parseResultToScreens = result => {
             model.totalQueries = result.rowCount;
-            model.loadedCount = model.loadedCount + result.queryResults.length;
+            model.loadedCount = result.queryResults.length;
             return this.service.getScreens(result.adapters, result.queryResults);
         }
         const setVM = screens => {
