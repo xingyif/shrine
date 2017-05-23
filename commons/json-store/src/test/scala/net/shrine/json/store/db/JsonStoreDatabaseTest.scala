@@ -24,10 +24,10 @@ class JsonStoreDatabaseTest extends FlatSpec with BeforeAndAfter with ScalaFutur
 
   val testShrineResults = Seq(
     ShrineResultDbEnvelope(id = UUID.randomUUID(),version = 0,tableChangeCount = 0,queryId = UUID.randomUUID(),json = "todo"),
-    ShrineResultDbEnvelope(id = UUID.randomUUID(),version = 0,tableChangeCount = 0,queryId = UUID.randomUUID(),json = "todo"),
-    ShrineResultDbEnvelope(id = UUID.randomUUID(),version = 0,tableChangeCount = 0,queryId = UUID.randomUUID(),json = "todo"),
-    ShrineResultDbEnvelope(id = UUID.randomUUID(),version = 0,tableChangeCount = 0,queryId = UUID.randomUUID(),json = "todo"),
-    ShrineResultDbEnvelope(id = UUID.randomUUID(),version = 0,tableChangeCount = 0,queryId = UUID.randomUUID(),json = "todo")
+    ShrineResultDbEnvelope(id = UUID.randomUUID(),version = 0,tableChangeCount = 1,queryId = UUID.randomUUID(),json = "todo"),
+    ShrineResultDbEnvelope(id = UUID.randomUUID(),version = 0,tableChangeCount = 2,queryId = UUID.randomUUID(),json = "todo"),
+    ShrineResultDbEnvelope(id = UUID.randomUUID(),version = 0,tableChangeCount = 3,queryId = UUID.randomUUID(),json = "todo"),
+    ShrineResultDbEnvelope(id = UUID.randomUUID(),version = 0,tableChangeCount = 4,queryId = UUID.randomUUID(),json = "todo")
   )
 
   before {
@@ -64,7 +64,7 @@ class JsonStoreDatabaseTest extends FlatSpec with BeforeAndAfter with ScalaFutur
     shrineResultContents should contain theSameElementsAs testShrineResults
     shrineResultContents should have length testShrineResults.length
 
-    val nextTestShrineResult = testShrineResults.head.copy(version = 1,tableChangeCount = 1,json="updated json")
+    val nextTestShrineResult = testShrineResults.head.copy(version = 1,tableChangeCount = 5,json="updated json")
     connector.executeTransactionBlocking(IO.upsertShrineResult(nextTestShrineResult))
 
     val expectedSeq: Seq[ShrineResultDbEnvelope] = nextTestShrineResult +: testShrineResults.tail
@@ -85,14 +85,14 @@ class JsonStoreDatabaseTest extends FlatSpec with BeforeAndAfter with ScalaFutur
     shrineResultContents should have length testShrineResults.length
 
     val beforeChange: Seq[Option[Int]] = connector.runBlocking(IO.selectLastTableChange)
-    val expectedBeforeChange = Seq(Some(0))
+    val expectedBeforeChange = Seq(Some(4))
     beforeChange should equal(expectedBeforeChange)
 
-    val nextTestShrineResult = testShrineResults.head.copy(version = 1,tableChangeCount = 1,json="updated json")
+    val nextTestShrineResult = testShrineResults.head.copy(version = 1,tableChangeCount = 5,json="updated json")
     connector.executeTransactionBlocking(IO.upsertShrineResult(nextTestShrineResult))
 
     val lastChange: Seq[Option[Int]] = connector.runBlocking(IO.selectLastTableChange)
-    val expectedTableChange = Seq(Some(1))
+    val expectedTableChange = Seq(Some(5))
     lastChange should equal(expectedTableChange)
   }
 
@@ -107,7 +107,7 @@ class JsonStoreDatabaseTest extends FlatSpec with BeforeAndAfter with ScalaFutur
     shrineResultContents should contain theSameElementsAs testShrineResults
     shrineResultContents should have length testShrineResults.length
 
-    val nextTestShrineResult = testShrineResults.head.copy(version = 1,tableChangeCount = 1,json="updated json")
+    val nextTestShrineResult = testShrineResults.head.copy(version = 1,tableChangeCount = 5,json="updated json")
     connector.executeTransactionBlocking(IO.upsertShrineResult(nextTestShrineResult))
 
     val expectedSeq: Seq[ShrineResultDbEnvelope] = nextTestShrineResult +: testShrineResults.tail
@@ -115,9 +115,9 @@ class JsonStoreDatabaseTest extends FlatSpec with BeforeAndAfter with ScalaFutur
     connector.runBlocking(IO.countWithParameters(all)) should equal(testShrineResults.length)
     connector.runBlocking(IO.selectResultsWithParameters(all)) should contain theSameElementsAs expectedSeq
 
-    val withLastTableChange = all.copy(afterTableChange = Some(0))
-    connector.runBlocking(IO.countWithParameters(withLastTableChange)) should equal(expectedSeq.count(_.tableChangeCount > 0))
-    connector.runBlocking(IO.selectResultsWithParameters(withLastTableChange)) should contain theSameElementsAs expectedSeq.filter(_.tableChangeCount > 0)
+    val afterTableChange = all.copy(afterTableChange = Some(4))
+    connector.runBlocking(IO.countWithParameters(afterTableChange)) should equal(expectedSeq.count(_.tableChangeCount > 4))
+    connector.runBlocking(IO.selectResultsWithParameters(afterTableChange)) should contain theSameElementsAs expectedSeq.filter(_.tableChangeCount > 4)
 
     val expectedWithQueryIds = Seq(expectedSeq(0),expectedSeq(2),expectedSeq(4))
     val queryIds = expectedWithQueryIds.map(_.queryId).to[Set]
@@ -126,7 +126,13 @@ class JsonStoreDatabaseTest extends FlatSpec with BeforeAndAfter with ScalaFutur
     connector.runBlocking(IO.countWithParameters(withQueryIds)) should equal(expectedWithQueryIds.length)
     connector.runBlocking(IO.selectResultsWithParameters(withQueryIds)) should contain theSameElementsAs expectedWithQueryIds
 
+    val withQueryIdsAfterTableChange = all.copy(afterTableChange = Some(4),forQueryIds = Some(queryIds))
 
+    connector.runBlocking(IO.countWithParameters(withQueryIdsAfterTableChange)) should equal(expectedWithQueryIds.count(_.tableChangeCount > 4))
+    connector.runBlocking(IO.selectResultsWithParameters(withQueryIdsAfterTableChange)) should contain theSameElementsAs expectedWithQueryIds.filter(_.tableChangeCount > 4)
+
+    val skipAndLimit = all.copy(skip = Some(2),limit = Some(2))
+    connector.runBlocking(IO.selectResultsWithParameters(skipAndLimit)) should contain theSameElementsAs expectedSeq.drop(2).take(2)
   }
 
 

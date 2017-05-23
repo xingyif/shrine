@@ -95,11 +95,11 @@ object JsonStoreDatabase extends NeedsWarmUp {
   }
 
   case class ShrineResultQueryParameters(
-                              afterTableChange:Option[Int] = None,
-                              forQueryIds:Option[Set[UUID]] = None, //None interpreted as "all" . todo check set size < 1000 for Oracle safety if oracle is to be supported.
-                              skipOption:Option[Int] =  None,
-                              limitOption:Option[Int] = None
-                            )
+                                          afterTableChange:Option[Int] = None,
+                                          forQueryIds:Option[Set[UUID]] = None, //None interpreted as "all" . todo check set size < 1000 for Oracle safety if oracle is to be supported.
+                                          skip:Option[Int] =  None,
+                                          limit:Option[Int] = None
+                                        )
 
   /**
     * DBIO Actions. These are pre-defined IO actions that may be useful.
@@ -122,10 +122,10 @@ object JsonStoreDatabase extends NeedsWarmUp {
 
     def selectResultsWithParameters(parameters: ShrineResultQueryParameters) = {
       val select = ShrineResultsQ.withParameters(parameters).sortBy(_.tableVersion.desc) //newest changes first
-      val skipSelect = parameters.skipOption.fold(select){ skip =>
+      val skipSelect = parameters.skip.fold(select){ skip =>
         select.drop(skip)
       }
-      val limitSelect = parameters.limitOption.fold(skipSelect){ limit => skipSelect.take(limit)}
+      val limitSelect = parameters.limit.fold(skipSelect){ limit => skipSelect.take(limit)}
 
       limitSelect.result
     }
