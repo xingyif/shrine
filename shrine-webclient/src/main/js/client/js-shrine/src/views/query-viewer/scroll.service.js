@@ -5,7 +5,7 @@ export class ScrollService{
     
     // -- todo: join() method -- //
     static target = (p, c) => ScrollService.either('target', c, c)
-        .map((v) => ScrollService.either(p, 0, v).value);
+        .chain((v) => ScrollService.either(p, 0, v));
 
     static clientHeight = e => ScrollService.target('clientHeight', e);
     static scrollHeight = e => ScrollService.target('scrollHeight', e);
