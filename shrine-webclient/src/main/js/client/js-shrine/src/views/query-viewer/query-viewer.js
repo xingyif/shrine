@@ -19,15 +19,17 @@ export class QueryViewer {
         this.scrollRatio = 0;
 
         // -- fetch queries -- //
-        const parseResultToScreens = result => this.service.getScreens(result.adapters, result.queryResults);
+        const parseResultToScreens = result => {
+            model.totalQueries = result.rowCount;
+            model.loadedCount = result.queryResults.length;
+            return this.service.getScreens(result.adapters, result.queryResults);
+        }
         const setVM = screens => {
             this.showLoader = false;
             this.runningQuery = null;
             this.screens = screens;
             this.showCircles = this.screens.length > 1;
             model.screens = screens;
-            model.loadedCount = model.loadedCount + QueryViewerConfig.maxQueriesPerScroll;
-            model.totalQueries = 1000; //@todo, pull from model.
             model.processing = false;
         };
 
