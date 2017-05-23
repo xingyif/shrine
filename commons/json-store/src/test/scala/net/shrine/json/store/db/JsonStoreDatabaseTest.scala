@@ -115,10 +115,16 @@ class JsonStoreDatabaseTest extends FlatSpec with BeforeAndAfter with ScalaFutur
     connector.runBlocking(IO.countWithParameters(all)) should equal(testShrineResults.length)
     connector.runBlocking(IO.selectResultsWithParameters(all)) should contain theSameElementsAs expectedSeq
 
-    val withLastTableChange = all.copy(afterTableChange = Some(1))
-    connector.runBlocking(IO.countWithParameters(withLastTableChange)) should equal(expectedSeq.count(_.tableChangeCount >= 1))
-    connector.runBlocking(IO.selectResultsWithParameters(all)) should contain theSameElementsAs expectedSeq.filter(_.tableChangeCount >= 1)
+    val withLastTableChange = all.copy(afterTableChange = Some(0))
+    connector.runBlocking(IO.countWithParameters(withLastTableChange)) should equal(expectedSeq.count(_.tableChangeCount > 0))
+    connector.runBlocking(IO.selectResultsWithParameters(withLastTableChange)) should contain theSameElementsAs expectedSeq.filter(_.tableChangeCount > 0)
 
+    val expectedWithQueryIds = Seq(expectedSeq(0),expectedSeq(2),expectedSeq(4))
+    val queryIds = expectedWithQueryIds.map(_.queryId).to[Set]
+    val withQueryIds = all.copy(forQueryIds = Some(queryIds))
+
+    connector.runBlocking(IO.countWithParameters(withQueryIds)) should equal(expectedWithQueryIds.length)
+    connector.runBlocking(IO.selectResultsWithParameters(withQueryIds)) should contain theSameElementsAs expectedWithQueryIds
 
 
   }
