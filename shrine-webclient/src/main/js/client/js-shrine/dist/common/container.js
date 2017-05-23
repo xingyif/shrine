@@ -49,6 +49,14 @@ System.register(['ramda'], function (_export, _context) {
                     return this.hasNothing() ? Container.of(null) : Container.of(f(this.value));
                 };
 
+                Container.prototype.join = function join() {
+                    return this.hasNothing() ? Container.of(null) : this.value;
+                };
+
+                Container.prototype.chain = function chain(f) {
+                    return this.map(f).join();
+                };
+
                 Container.prototype.hasNothing = function hasNothing() {
                     return this.value === null || this.value === undefined;
                 };

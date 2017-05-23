@@ -28,8 +28,7 @@ export class QueryViewer {
             model.screens = screens;
             model.loadedCount = model.loadedCount + QueryViewerConfig.maxQueriesPerScroll;
             model.totalQueries = 1000; //@todo, pull from model.
-            model.isLoaded = true;
-            model.isFetching = false;
+            model.processing = false;
         };
 
         const refresh = () => this.service
@@ -39,13 +38,14 @@ export class QueryViewer {
             .catch(error => console.log(error));
 
         const addQuery = (event, data) => this.runningQuery = data[0].name;
-        const init = () => (model.isLoaded) ? setVM(model.screens) : refresh();
+        const init = () => (model.hasData) ? setVM(model.screens) : refresh();
+        const loadMoreQueries = e => ScrollService.scrollRatio(e).value === 1 && model.moreToLoad && !model.processing;
 
        // -- scroll event -- //
        this.onScroll = e => {
-            if(ScrollService.scrollRatio(e).value === 1 && model.moreToLoad && !model.isFetching){
+            if(loadMoreQueries(e)){
                 refresh();
-                model.isFetching = true;
+                model.processing = true;
             }
        }
 

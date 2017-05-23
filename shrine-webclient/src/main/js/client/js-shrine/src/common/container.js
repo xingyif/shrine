@@ -18,6 +18,14 @@ export class Container {
         return this.hasNothing() ? Container.of(null) : Container.of(f(this.value));
     }
 
+    join() {
+        return this.hasNothing()? Container.of(null) : this.value;
+    }
+
+    chain(f) {
+        return this.map(f).join();
+    }
+
     hasNothing() {
         return this.value === null || this.value === undefined;
     }

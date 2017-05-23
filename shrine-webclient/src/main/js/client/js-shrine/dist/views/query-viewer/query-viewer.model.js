@@ -34,8 +34,7 @@ System.register([], function (_export, _context) {
                 function QueryViewerModel() {
                     _classCallCheck(this, QueryViewerModel);
 
-                    this.isLoaded = false;
-                    this.isFetching = false;
+                    this.processing = false;
                     this.loadedCount = 0;
                     this.totalQueries = 0;
                     this.screens = [];
@@ -44,8 +43,12 @@ System.register([], function (_export, _context) {
                 _createClass(QueryViewerModel, [{
                     key: "moreToLoad",
                     get: function get() {
-                        console.log("loaded count " + this.loadedCount + " total queris: " + this.totalQueries);
                         return this.loadedCount < this.totalQueries;
+                    }
+                }, {
+                    key: "hasData",
+                    get: function get() {
+                        return this.screens.length > 0;
                     }
                 }]);
 

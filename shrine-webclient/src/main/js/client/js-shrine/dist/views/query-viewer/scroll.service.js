@@ -21,8 +21,8 @@ System.register(['ramda', 'common/container'], function (_export, _context) {
             }, _class.either = _.curry(function (el, d, c) {
                 return Container.of(_.prop(el, c) || d);
             }), _class.target = function (p, c) {
-                return ScrollService.either('target', c, c).map(function (v) {
-                    return ScrollService.either(p, 0, v).value;
+                return ScrollService.either('target', c, c).chain(function (v) {
+                    return ScrollService.either(p, 0, v);
                 });
             }, _class.clientHeight = function (e) {
                 return ScrollService.target('clientHeight', e);
