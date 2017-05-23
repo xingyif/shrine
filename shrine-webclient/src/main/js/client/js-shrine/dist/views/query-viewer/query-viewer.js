@@ -40,6 +40,8 @@ System.register(['aurelia-framework', 'views/query-viewer/query-viewer.service',
                     this.scrollRatio = 0;
 
                     var parseResultToScreens = function parseResultToScreens(result) {
+                        model.totalQueries = result.rowCount;
+                        model.loadedCount = model.loadedCount + result.queryResults.length;
                         return _this.service.getScreens(result.adapters, result.queryResults);
                     };
                     var setVM = function setVM(screens) {
@@ -48,8 +50,6 @@ System.register(['aurelia-framework', 'views/query-viewer/query-viewer.service',
                         _this.screens = screens;
                         _this.showCircles = _this.screens.length > 1;
                         model.screens = screens;
-                        model.loadedCount = model.loadedCount + QueryViewerConfig.maxQueriesPerScroll;
-                        model.totalQueries = 1000;
                         model.processing = false;
                     };
 
