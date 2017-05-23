@@ -8,7 +8,6 @@ import org.junit.runner.RunWith
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.{BeforeAndAfter, FlatSpec, Matchers}
-import slick.driver.H2Driver.api._ //todo do without this import
 
 import scala.concurrent.duration._
 
@@ -21,7 +20,7 @@ import scala.concurrent.duration._
 class JsonStoreDatabaseTest extends FlatSpec with BeforeAndAfter with ScalaFutures with Matchers {
   implicit val timeout = 10.seconds
   val connector = JsonStoreDatabase.DatabaseConnector
-  val IO = connector.IO
+  val IO = JsonStoreDatabase.IOActions
   val testShrineResults = Seq(
     ShrineResultDbEnvelope(id = UUID.randomUUID(),version = 0,tableChangeCount = 0,queryId = UUID.randomUUID(),json = "todo"),
     ShrineResultDbEnvelope(id = UUID.randomUUID(),version = 0,tableChangeCount = 0,queryId = UUID.randomUUID(),json = "todo"),
@@ -45,7 +44,7 @@ class JsonStoreDatabaseTest extends FlatSpec with BeforeAndAfter with ScalaFutur
 
   "The Database" should "Connect without any problems" in {
     // Insert the test records
-    connector.executeTransactionBlocking(IO.shrineResults ++= testShrineResults)
+    connector.executeTransactionBlocking(IO.insertShrineResults(testShrineResults))
 
     // Test that they are all in the table
     var shrineResultContents = connector.runBlocking(IO.selectAll)
@@ -56,7 +55,7 @@ class JsonStoreDatabaseTest extends FlatSpec with BeforeAndAfter with ScalaFutur
     connector.runBlocking(IO.clearTable >> IO.selectAll) shouldBe empty
 
     //Insert one at a time in a transaction
-    val actions = testShrineResults.map(IO.shrineResults += _)
+    val actions = testShrineResults.map(IO.upsertShrineResult)
 
     connector.executeTransactionBlocking(actions:_*)
     // Test that they are all in the table

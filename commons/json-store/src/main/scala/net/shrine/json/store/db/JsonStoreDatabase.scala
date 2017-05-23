@@ -109,8 +109,6 @@ object JsonStoreDatabase extends NeedsWarmUp {
     // For SuccessAction, just a no_op.
     case object NoOperation
 
-    val shrineResults = ShrineResultsQ
-
     val tableExists = MTable.getTables(ShrineResultsQ.tableName).map(_.nonEmpty)
     val createIfNotExists = tableExists.flatMap(
       if (_) SuccessAction(NoOperation) else ShrineResultsQ.schema.create)
@@ -135,6 +133,8 @@ object JsonStoreDatabase extends NeedsWarmUp {
     def selectLastTableChange = ShrineResultsQ.selectLastTableChange.result
 
     def upsertShrineResult(shrineResult:ShrineResultDbEnvelope) = ShrineResultsQ.insertOrUpdate(shrineResult)
+
+    def insertShrineResults(shrineResults:Seq[ShrineResultDbEnvelope]) = ShrineResultsQ ++= shrineResults
   }
 
 
@@ -142,7 +142,6 @@ object JsonStoreDatabase extends NeedsWarmUp {
     * Entry point for interacting with the database. Runs IO actions.
     */
   object DatabaseConnector {
-    val IO = IOActions
     /**
       * Executes a series of IO actions as a single transactions
       */
