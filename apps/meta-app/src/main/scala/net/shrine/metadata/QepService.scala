@@ -47,7 +47,14 @@ trait QepService extends HttpService with Loggable {
   } ~ complete(qepInfo)
 
   def queryResults(user: User): Route = pathPrefix("queryResults") {
+
     matchQueryParameters(Some(user.username)){ queryParameters:QueryParameters =>
+
+      val queryRowCount: Int = QepQueryDb.db.countPreviousQueriesByUserAndDomain(
+        userName = user.username,
+        domain = user.domain
+      )
+
       val queries: Seq[QepQuery] = QepQueryDb.db.selectPreviousQueriesByUserAndDomain(
         userName = user.username,
         domain = user.domain,
@@ -63,7 +70,7 @@ trait QepService extends HttpService with Loggable {
 
       val flags: Map[NetworkQueryId, QepQueryFlag] = QepQueryDb.db.selectMostRecentQepQueryFlagsFor(queries.map(q => q.networkId).to[Set])
 
-      val table: ResultsTable = ResultsTable(adapters,queryResults,flags)
+      val table: ResultsTable = ResultsTable(queryRowCount,queryParameters.skipOption.getOrElse(0),adapters,queryResults,flags)
 
       val jsonTable: Json = Json(table)
       val formattedTable: String = Json.format(jsonTable)(humanReadable())
@@ -94,6 +101,8 @@ case class QueryParameters(
                           )
 
 case class ResultsTable(
+  rowCount:Int,
+  rowOffset:Int,
   adapters:Seq[String], //todo type for adapter name
   queryResults:Seq[ResultsRow],
   flags:Map[NetworkQueryId,QepQueryFlag]

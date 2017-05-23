@@ -77,6 +77,12 @@ case class QepQueryDb(schemaDef:QepQuerySchema,dataSource: DataSource,timeout:Du
     ReadPreviousQueriesResponse(queriesAndFlags.map(x => x._1.toQueryMaster(x._2)))
   }
 
+  def countPreviousQueriesByUserAndDomain(userName: UserName, domain: String):Int = {
+    val q = mostRecentVisibleQepQueries.filter(r => r.userName === userName && r.userDomain === domain)
+
+    dbRun(q.size.result)
+  }
+
   def selectPreviousQueriesByUserAndDomain(userName: UserName, domain: String, skip:Option[Int] = None, limit:Option[Int] = None):Seq[QepQuery] = {
 
     debug(s"start selectPreviousQueriesByUserAndDomain $userName $domain")

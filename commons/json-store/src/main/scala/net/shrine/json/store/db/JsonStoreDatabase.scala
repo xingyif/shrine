@@ -108,7 +108,7 @@ object JsonStoreDatabase extends NeedsWarmUp {
     // For SuccessAction, just a no_op.
     case object NoOperation
 
-    val shrineResults = ShrineResultsQ
+    val shrineResults: ShrineResultsQ.type = ShrineResultsQ
 
     val tableExists = MTable.getTables(ShrineResultsQ.tableName).map(_.nonEmpty)
     val createIfNotExists = tableExists.flatMap(
