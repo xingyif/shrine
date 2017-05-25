@@ -7,9 +7,11 @@ import javax.sql.DataSource
 import com.typesafe.config.Config
 import net.shrine.slick.{CouldNotRunDbIoActionException, NeedsWarmUp, TestableDataSourceCreator}
 import net.shrine.source.ConfigSource
+import slick.dbio.Effect.Read
 import slick.dbio.SuccessAction
 import slick.driver.JdbcProfile
 import slick.jdbc.meta.MTable
+import slick.profile.{FixedSqlStreamingAction, SqlAction}
 
 import scala.concurrent.duration.{Duration, _}
 import scala.concurrent.{Await, Future}
@@ -120,7 +122,7 @@ object JsonStoreDatabase extends NeedsWarmUp {
 
     val selectAll = ShrineResultsQ.result
 
-    def selectById(id:UUID) = ShrineResultsQ.selectById(id).result
+    def selectById(id:UUID) = ShrineResultsQ.selectById(id).result.headOption
 
     def countWithParameters(parameters: ShrineResultQueryParameters) = ShrineResultsQ.withParameters(parameters).size.result
 
@@ -142,16 +144,10 @@ object JsonStoreDatabase extends NeedsWarmUp {
 
     //todo take a ShrineResult json wrapper trait instead and build up the envelope
     def putShrineResult(shrineResultDbEnvelope: ShrineResultDbEnvelope) = {
-      // get the previous record
-      selectById(shrineResultDbEnvelope.id).headOption.flatMap { (storedRecordOption: Option[ShrineResultDbEnvelope]) =>
+      // get the record from the table if it is there
+      selectById(shrineResultDbEnvelope.id).flatMap { (storedRecordOption: Option[ShrineResultDbEnvelope]) =>
         //check the version number vs the one you have
-        //todo use a fold, no-op if no value
-        println(s"found $storedRecordOption")
 
-        storedRecordOption.fold()(expected =>
-          println(s"expectedRecordVersion is $expected , actual is ${shrineResultDbEnvelope.version}"))
-
-        //todo what catches this exception??
         storedRecordOption.fold(){row =>
           if (row.version != shrineResultDbEnvelope.version) throw new IllegalStateException("Stale data in optimistic transaction")}
         //todo better exception
@@ -164,8 +160,6 @@ object JsonStoreDatabase extends NeedsWarmUp {
             version = storedRecordOption.fold(1)(row => row.version + 1)
           )
           // upsert the query result
-          println(s"newRecord is $newRecord")
-
           upsertShrineResult(newRecord)
         }
       }
@@ -176,25 +170,6 @@ object JsonStoreDatabase extends NeedsWarmUp {
     * Entry point for interacting with the database. Runs IO actions.
     */
   object DatabaseConnector {
-    /**
-      * Executes a series of IO actions as a single transactions
-      */
-    def executeTransaction(actions: DBIOAction[_, NoStream, _]*): Future[Unit] = {
-      db.run(DBIO.seq(actions:_*).transactionally)
-    }
-
-    /**
-      * Executes a series of IO actions as a single transaction, synchronous
-      */
-    //todo return a value R
-    def executeTransactionBlocking(actions: DBIOAction[_, NoStream, _]*)(implicit timeout: Duration): Unit = {
-      try {
-        Await.ready(this.executeTransaction(actions: _*), timeout)
-      } catch {
-        case tx:TimeoutException => throw CouldNotRunDbIoActionException(JsonStoreDatabase.dataSource, tx)
-        case NonFatal(x) => throw CouldNotRunDbIoActionException(JsonStoreDatabase.dataSource, x)
-      }
-    }
 
     /**
       * Straight copy of db.run
@@ -211,6 +186,27 @@ object JsonStoreDatabase extends NeedsWarmUp {
         Await.result(this.run(dbio), timeout)
       } catch {
         case tx:TimeoutException => throw CouldNotRunDbIoActionException(JsonStoreDatabase.dataSource, tx)
+          //todo catch better exception here, and rethrow
+        case NonFatal(x) => throw CouldNotRunDbIoActionException(JsonStoreDatabase.dataSource, x)
+      }
+    }
+
+    /**
+      * Straight copy of db.run
+      */
+    def runTransaction[R](dbio: DBIOAction[R, NoStream, _]): Future[R] = {
+      db.run(dbio.transactionally)
+    }
+
+    /**
+      * Synchronized copy of db.run
+      */
+    def runTransactionBlocking[R](dbio: DBIOAction[R, NoStream, _], timeout: Duration = timeout): R = {
+      try {
+        Await.result(this.run(dbio.transactionally), timeout)
+      } catch {
+        case tx:TimeoutException => throw CouldNotRunDbIoActionException(JsonStoreDatabase.dataSource, tx)
+        //todo catch better exception here, and rethrow
         case NonFatal(x) => throw CouldNotRunDbIoActionException(JsonStoreDatabase.dataSource, x)
       }
     }
