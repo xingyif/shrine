@@ -135,6 +135,41 @@ class JsonStoreDatabaseTest extends FlatSpec with BeforeAndAfter with ScalaFutur
     connector.runBlocking(IO.selectResultsWithParameters(skipAndLimit)) should contain theSameElementsAs expectedSeq.drop(2).take(2)
   }
 
+  "The Database" should "support optimistic updates" in {
+    //test putting new data
+    val firstResult = ShrineResultDbEnvelope(id = UUID.randomUUID(),version = 1,tableChangeCount = 0,queryId = UUID.randomUUID(),json = "todo")
+    val expectedFirst = Seq(firstResult.copy(tableChangeCount = 1))
+    connector.executeTransactionBlocking(IO.putShrineResult(firstResult))
+    // Test that the table is right
+    val firstShrineResultContents = connector.runBlocking(IO.selectAll)
+    firstShrineResultContents should contain theSameElementsAs expectedFirst
+    firstShrineResultContents should have length expectedFirst.length
 
+    //test a second put of new data
+    val secondResult = ShrineResultDbEnvelope(id = UUID.randomUUID(),version = 1,tableChangeCount = 0,queryId = UUID.randomUUID(),json = "todo")
+    val expectedSecond = Seq(firstResult.copy(tableChangeCount = 1),secondResult.copy(tableChangeCount = 2))
+    connector.executeTransactionBlocking(IO.putShrineResult(secondResult))
+    // Test that the table is right
+    val secondShrineResultContents = connector.runBlocking(IO.selectAll)
+    secondShrineResultContents should contain theSameElementsAs expectedSecond
+    secondShrineResultContents should have length expectedSecond.length
 
+    //test put of a new version of the first data
+    val oldFirstResult = connector.runBlocking(IO.selectById(firstResult.id).headOption).get
+    val newFirstResult = oldFirstResult.copy(json = "different json")
+    val expectedThird = Seq(newFirstResult.copy(version =2, tableChangeCount = 3),secondResult.copy(tableChangeCount = 2))
+    connector.executeTransactionBlocking(IO.putShrineResult(newFirstResult))
+    // Test that the table is right
+    val thirdShrineResultContents = connector.runBlocking(IO.selectAll)
+    thirdShrineResultContents should contain theSameElementsAs expectedThird
+    thirdShrineResultContents should have length expectedThird.length
+
+    //test failure with a stale put
+    //test put of a new version of the first data
+
+    //todo where does this failure go?
+    val staleFirstResult = oldFirstResult.copy(json = "stale object's json")
+    connector.executeTransactionBlocking(IO.putShrineResult(staleFirstResult))
+
+  }
 }

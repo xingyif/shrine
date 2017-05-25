@@ -83,6 +83,8 @@ object JsonStoreDatabase extends NeedsWarmUp {
 
     def selectLastTableChange = Query(this.map(_.tableVersion).max)
 
+    def selectById(id:UUID) = selectAll.filter{ _.id === id }
+
 //useful queries like "All the changes to results for a subset of queries since table version ..."
 
     def withParameters(parameters:ShrineResultQueryParameters) = {
@@ -118,6 +120,8 @@ object JsonStoreDatabase extends NeedsWarmUp {
 
     val selectAll = ShrineResultsQ.result
 
+    def selectById(id:UUID) = ShrineResultsQ.selectById(id).result
+
     def countWithParameters(parameters: ShrineResultQueryParameters) = ShrineResultsQ.withParameters(parameters).size.result
 
     def selectResultsWithParameters(parameters: ShrineResultQueryParameters) = {
@@ -135,8 +139,38 @@ object JsonStoreDatabase extends NeedsWarmUp {
     def upsertShrineResult(shrineResult:ShrineResultDbEnvelope) = ShrineResultsQ.insertOrUpdate(shrineResult)
 
     def insertShrineResults(shrineResults:Seq[ShrineResultDbEnvelope]) = ShrineResultsQ ++= shrineResults
-  }
 
+    //todo take a ShrineResult json wrapper trait instead and build up the envelope
+    def putShrineResult(shrineResultDbEnvelope: ShrineResultDbEnvelope) = {
+      // get the previous record
+      selectById(shrineResultDbEnvelope.id).headOption.flatMap { (storedRecordOption: Option[ShrineResultDbEnvelope]) =>
+        //check the version number vs the one you have
+        //todo use a fold, no-op if no value
+        println(s"found $storedRecordOption")
+
+        storedRecordOption.fold()(expected =>
+          println(s"expectedRecordVersion is $expected , actual is ${shrineResultDbEnvelope.version}"))
+
+        //todo what catches this exception??
+        storedRecordOption.fold(){row =>
+          if (row.version != shrineResultDbEnvelope.version) throw new IllegalStateException("Stale data in optimistic transaction")}
+        //todo better exception
+
+        // get the last table change number
+        selectLastTableChange.head.flatMap { (lastTableChangeOption: Option[Int]) =>
+          val nextTableChange = lastTableChangeOption.getOrElse(0) + 1
+          val newRecord = shrineResultDbEnvelope.copy(
+            tableChangeCount = nextTableChange,
+            version = storedRecordOption.fold(1)(row => row.version + 1)
+          )
+          // upsert the query result
+          println(s"newRecord is $newRecord")
+
+          upsertShrineResult(newRecord)
+        }
+      }
+    }
+  }
 
   /**
     * Entry point for interacting with the database. Runs IO actions.
