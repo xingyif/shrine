@@ -7,9 +7,11 @@ import javax.sql.DataSource
 import com.typesafe.config.Config
 import net.shrine.slick.{CouldNotRunDbIoActionException, NeedsWarmUp, TestableDataSourceCreator}
 import net.shrine.source.ConfigSource
+import slick.dbio.Effect.Read
 import slick.dbio.SuccessAction
 import slick.driver.JdbcProfile
 import slick.jdbc.meta.MTable
+import slick.profile.{FixedSqlStreamingAction, SqlAction}
 
 import scala.concurrent.duration.{Duration, _}
 import scala.concurrent.{Await, Future}
@@ -83,6 +85,8 @@ object JsonStoreDatabase extends NeedsWarmUp {
 
     def selectLastTableChange = Query(this.map(_.tableVersion).max)
 
+    def selectById(id:UUID) = selectAll.filter{ _.id === id }
+
 //useful queries like "All the changes to results for a subset of queries since table version ..."
 
     def withParameters(parameters:ShrineResultQueryParameters) = {
@@ -118,6 +122,8 @@ object JsonStoreDatabase extends NeedsWarmUp {
 
     val selectAll = ShrineResultsQ.result
 
+    def selectById(id:UUID) = ShrineResultsQ.selectById(id).result.headOption
+
     def countWithParameters(parameters: ShrineResultQueryParameters) = ShrineResultsQ.withParameters(parameters).size.result
 
     def selectResultsWithParameters(parameters: ShrineResultQueryParameters) = {
@@ -135,32 +141,35 @@ object JsonStoreDatabase extends NeedsWarmUp {
     def upsertShrineResult(shrineResult:ShrineResultDbEnvelope) = ShrineResultsQ.insertOrUpdate(shrineResult)
 
     def insertShrineResults(shrineResults:Seq[ShrineResultDbEnvelope]) = ShrineResultsQ ++= shrineResults
-  }
 
+    //todo take a ShrineResult json wrapper trait instead and build up the envelope
+    def putShrineResult(shrineResultDbEnvelope: ShrineResultDbEnvelope) = {
+      // get the record from the table if it is there
+      selectById(shrineResultDbEnvelope.id).flatMap { (storedRecordOption: Option[ShrineResultDbEnvelope]) =>
+        //check the version number vs the one you have
+
+        storedRecordOption.fold(){row =>
+          if (row.version != shrineResultDbEnvelope.version) throw new IllegalStateException("Stale data in optimistic transaction")}
+        //todo better exception
+
+        // get the last table change number
+        selectLastTableChange.head.flatMap { (lastTableChangeOption: Option[Int]) =>
+          val nextTableChange = lastTableChangeOption.getOrElse(0) + 1
+          val newRecord = shrineResultDbEnvelope.copy(
+            tableChangeCount = nextTableChange,
+            version = storedRecordOption.fold(1)(row => row.version + 1)
+          )
+          // upsert the query result
+          upsertShrineResult(newRecord)
+        }
+      }
+    }
+  }
 
   /**
     * Entry point for interacting with the database. Runs IO actions.
     */
   object DatabaseConnector {
-    /**
-      * Executes a series of IO actions as a single transactions
-      */
-    def executeTransaction(actions: DBIOAction[_, NoStream, _]*): Future[Unit] = {
-      db.run(DBIO.seq(actions:_*).transactionally)
-    }
-
-    /**
-      * Executes a series of IO actions as a single transaction, synchronous
-      */
-    //todo return a value R
-    def executeTransactionBlocking(actions: DBIOAction[_, NoStream, _]*)(implicit timeout: Duration): Unit = {
-      try {
-        Await.ready(this.executeTransaction(actions: _*), timeout)
-      } catch {
-        case tx:TimeoutException => throw CouldNotRunDbIoActionException(JsonStoreDatabase.dataSource, tx)
-        case NonFatal(x) => throw CouldNotRunDbIoActionException(JsonStoreDatabase.dataSource, x)
-      }
-    }
 
     /**
       * Straight copy of db.run
@@ -177,6 +186,27 @@ object JsonStoreDatabase extends NeedsWarmUp {
         Await.result(this.run(dbio), timeout)
       } catch {
         case tx:TimeoutException => throw CouldNotRunDbIoActionException(JsonStoreDatabase.dataSource, tx)
+          //todo catch better exception here, and rethrow
+        case NonFatal(x) => throw CouldNotRunDbIoActionException(JsonStoreDatabase.dataSource, x)
+      }
+    }
+
+    /**
+      * Straight copy of db.run
+      */
+    def runTransaction[R](dbio: DBIOAction[R, NoStream, _]): Future[R] = {
+      db.run(dbio.transactionally)
+    }
+
+    /**
+      * Synchronized copy of db.run
+      */
+    def runTransactionBlocking[R](dbio: DBIOAction[R, NoStream, _], timeout: Duration = timeout): R = {
+      try {
+        Await.result(this.run(dbio.transactionally), timeout)
+      } catch {
+        case tx:TimeoutException => throw CouldNotRunDbIoActionException(JsonStoreDatabase.dataSource, tx)
+        //todo catch better exception here, and rethrow
         case NonFatal(x) => throw CouldNotRunDbIoActionException(JsonStoreDatabase.dataSource, x)
       }
     }
