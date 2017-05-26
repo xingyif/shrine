@@ -54,6 +54,7 @@ export class QueryViewer {
         // -- add i2b2 event listener -- //
         const isMinimized = e => e.action !== 'ADD';
         const setVertStyle = (a, b) => this.vertStyle = b.find(isMinimized) ? 'v-min' : 'v-full';
+        this.errorDetail = i2b2Svc.errorDetail;
         i2b2Svc.onResize(setVertStyle);
         i2b2Svc.onHistory(refresh);
         i2b2Svc.onQuery(addQuery);

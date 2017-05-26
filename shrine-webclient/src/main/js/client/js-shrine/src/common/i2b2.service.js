@@ -11,6 +11,7 @@ export class I2B2Service {
         const i2b2 = _.compose(prop('i2b2'), prop('window'), prop('parent'));
         const crc = _.compose(prop('CRC'), i2b2);
         const events = _.compose(prop('events'), i2b2);
+        const shrine = _.compose(prop('SHRINE'), i2b2);
        
         // -- @todo: makes assumption that i2b2 object conforms to predictable structure?  -- //
         this.onResize =  f => events(ctx).map((v) => v.changedZoomWindows.subscribe(f));
@@ -18,6 +19,7 @@ export class I2B2Service {
         this.onQuery = f => events(ctx).map((v) => v.afterQueryInit.subscribe(f)); 
         this.loadHistory = () => crc(ctx).map((v) => v.view.history.doRefreshAll());
         this.loadQuery = id => crc(ctx).map((v) => v.ctrlr.QT.doQueryLoad(id));
+        this.errorDetail = d => shrine(ctx).map((v) => v.plugin.errorDetail(d));
     }
 }
 

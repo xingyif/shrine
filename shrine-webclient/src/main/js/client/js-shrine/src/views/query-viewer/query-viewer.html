@@ -46,10 +46,13 @@
                                 <th>
                                     <div class="hideextra">${result.name}</div>
                                 </th>
-                              <td repeat.for="nodeResult of result.nodeResults" 
-                                    css="${nodeResult | resultStyle}">
-                                    ${nodeResult | result}
-                                </td>
+                              <td repeat.for="nodeResult of result.nodeResults" css="${nodeResult | resultStyle}">
+                                  <a if.bind="nodeResult.status !== 'FINISHED'" 
+                                    click.delegate="errorDetail(nodeResult)" style="text-decoration: underline">
+                                    ${nodeResult.status}
+                                  </a>
+                                  ${nodeResult | result}
+                             </td>
                             </tr>
                         </tbody>
                     </table>
