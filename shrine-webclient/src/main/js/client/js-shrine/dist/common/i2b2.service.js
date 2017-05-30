@@ -28,6 +28,7 @@ System.register(['ramda', './container'], function (_export, _context) {
                 var i2b2 = _.compose(prop('i2b2'), prop('window'), prop('parent'));
                 var crc = _.compose(prop('CRC'), i2b2);
                 var events = _.compose(prop('events'), i2b2);
+                var shrine = _.compose(prop('SHRINE'), i2b2);
 
                 this.onResize = function (f) {
                     return events(ctx).map(function (v) {
@@ -52,6 +53,11 @@ System.register(['ramda', './container'], function (_export, _context) {
                 this.loadQuery = function (id) {
                     return crc(ctx).map(function (v) {
                         return v.ctrlr.QT.doQueryLoad(id);
+                    });
+                };
+                this.errorDetail = function (d) {
+                    return shrine(ctx).map(function (v) {
+                        return v.plugin.errorDetail(d);
                     });
                 };
             });

@@ -82,6 +82,7 @@ System.register(['aurelia-framework', 'views/query-viewer/query-viewer.service',
                     var setVertStyle = function setVertStyle(a, b) {
                         return _this.vertStyle = b.find(isMinimized) ? 'v-min' : 'v-full';
                     };
+                    this.errorDetail = i2b2Svc.errorDetail;
                     i2b2Svc.onResize(setVertStyle);
                     i2b2Svc.onHistory(refresh);
                     i2b2Svc.onQuery(addQuery);
