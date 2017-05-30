@@ -105,7 +105,7 @@
         pluginErrorDetail.show();
     }
 
-
+    // ES5 :(
     function getDialogHTML(data) {
         return '<div id="pluginErrorDetail" style="display:none;">' +
             '<div class="hd" style="background:#6677AA;">Query Error Detail</div>' +
