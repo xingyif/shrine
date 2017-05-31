@@ -7,16 +7,15 @@ import javax.sql.DataSource
 import com.typesafe.config.Config
 import net.shrine.slick.{CouldNotRunDbIoActionException, NeedsWarmUp, TestableDataSourceCreator}
 import net.shrine.source.ConfigSource
-import slick.dbio.Effect.Read
+import net.shrine.util.Versions
 import slick.dbio.SuccessAction
 import slick.driver.JdbcProfile
 import slick.jdbc.meta.MTable
-import slick.profile.{FixedSqlStreamingAction, SqlAction}
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.{Duration, _}
 import scala.concurrent.{Await, Future}
 import scala.util.control.NonFatal
-import scala.concurrent.ExecutionContext.Implicits.global
 
 /**
   * Database access to a json store via slick
@@ -48,9 +47,10 @@ object JsonStoreDatabase extends NeedsWarmUp {
   case class ShrineResultDbEnvelope(
                                      id:UUID,
                                      version:Int,
-                                     tableChangeCount:Int,
-                                     //todo get shrine version here from the system as a default value
+                                     tableVersion:Int,
+                                     shrineVersion:String = Versions.version,
                                      queryId:UUID,
+//todo probably need the adapter and the state (running vs end-state), state:String, adapterId:UUID,
                                      json:String
                                    )
 
@@ -62,11 +62,15 @@ object JsonStoreDatabase extends NeedsWarmUp {
     //def shrineVersion = column[String]("shrineVersion")
     def version = column[Int]("version") //for optimistic locking
     def tableVersion = column[Int]("tableVersion") //for change detection on a table
+    def shrineVersion = column[String]("shrineVersion") //Version of shrine that created the data
     def queryId = column[UUID]("queryId") //for the first pass we're asking strictly for query ids
     def json = column[String]("json")
-    def * = (id, version, tableVersion, queryId, json) <> (ShrineResultDbEnvelope.tupled, ShrineResultDbEnvelope.unapply)
+    def * = (id, version, tableVersion, shrineVersion, queryId, json) <> (ShrineResultDbEnvelope.tupled, ShrineResultDbEnvelope.unapply)
 
-    //todo indexes
+    def versionIndex = index(name = "versionIndex",on = version)
+    def tableVersionIndex = index(name = "tableVersionIndex",on = tableVersion)
+
+    def queryIdIndex = index(name = "queryIdIndex",on = queryId)
   }
 
   /**
@@ -100,10 +104,13 @@ object JsonStoreDatabase extends NeedsWarmUp {
 
   case class ShrineResultQueryParameters(
                                           afterTableChange:Option[Int] = None,
-                                          forQueryIds:Option[Set[UUID]] = None, //None interpreted as "all" . todo check set size < 1000 for Oracle safety if oracle is to be supported.
+                                          forQueryIds:Option[Set[UUID]] = None, //None interpreted as "all" .
                                           skip:Option[Int] =  None,
                                           limit:Option[Int] = None
-                                        )
+                                        ) {
+   //todo check forQueryIds set size < 1000 for Oracle safety if oracle is to be supported.
+  }
+
 
   /**
     * DBIO Actions. These are pre-defined IO actions that may be useful.
@@ -156,7 +163,7 @@ object JsonStoreDatabase extends NeedsWarmUp {
         selectLastTableChange.head.flatMap { (lastTableChangeOption: Option[Int]) =>
           val nextTableChange = lastTableChangeOption.getOrElse(0) + 1
           val newRecord = shrineResultDbEnvelope.copy(
-            tableChangeCount = nextTableChange,
+            tableVersion = nextTableChange,
             version = storedRecordOption.fold(1)(row => row.version + 1)
           )
           // upsert the query result
