@@ -12,14 +12,8 @@ export class MailTo {
     openEmail () {
         this.service.fetchStewardEmail()
             .then(email => {
-                window.top.location = this.getComposition(email);
-                return this;
+                window.top.location = `mailto:${email}?subject=${this.config.subject}&body=${this.config.body}`;
             });
-    }
-
-
-    getComposition(address) {
-        return this.config.mailto + address + '?' + this.config.subject + '&' + this.config.body;
     }
 }
 

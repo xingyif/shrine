@@ -30,13 +30,8 @@ System.register(['aurelia-framework', 'views/mailto/mailto.service', 'views/mail
                     var _this = this;
 
                     this.service.fetchStewardEmail().then(function (email) {
-                        window.top.location = _this.getComposition(email);
-                        return _this;
+                        window.top.location = 'mailto:' + email + '?subject=' + _this.config.subject + '&body=' + _this.config.body;
                     });
-                };
-
-                MailTo.prototype.getComposition = function getComposition(address) {
-                    return this.config.mailto + address + '?' + this.config.subject + '&' + this.config.body;
                 };
 
                 return MailTo;
