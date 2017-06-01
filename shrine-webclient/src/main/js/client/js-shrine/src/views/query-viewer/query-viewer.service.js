@@ -1,6 +1,6 @@
-import {inject} from 'aurelia-framework';
-import {QEPRepository} from 'repository/qep.repository';
-import {QueryViewerConfig} from './query-viewer.config';
+import { inject } from 'aurelia-framework';
+import { QEPRepository } from 'repository/qep.repository';
+import { QueryViewerConfig } from './query-viewer.config';
 
 
 @inject(QEPRepository, QueryViewerConfig)
@@ -10,8 +10,8 @@ export class QueryViewerService {
         this.config = config;
     }
 
-    fetchPreviousQueries() {
-        return this.repository.fetchPreviousQueries();
+    fetchPreviousQueries(limit = this.config.maxQueriesPerScroll) {
+        return this.repository.fetchPreviousQueries(limit);
     }
 
     getScreens(nodes, queries) {
@@ -26,7 +26,7 @@ export class QueryViewerService {
                 const screenNodesToQueriesMap = this.mapQueriesToScreenNodes(screenNodes, queries, this.findQueriesForNode);
                 screens.push({
                     id: screenId,
-                    nodes: screenNodes, 
+                    nodes: screenNodes,
                     results: screenNodesToQueriesMap
                 });
             }
@@ -36,14 +36,14 @@ export class QueryViewerService {
 
     mapQueriesToScreenNodes(nodes, queries) {
         const results = [];
-        queries.forEach( (q, i) => {
+        queries.forEach((q, i) => {
             const result = {
                 name: q.query.queryName,
                 id: q.query.networkId,
                 nodeResults: []
             };
             nodes.forEach(n => {
-                result.nodeResults.push(q.adaptersToResults.find( a => a.adapterNode === n));
+                result.nodeResults.push(q.adaptersToResults.find(a => a.adapterNode === n));
             });
             results.push(result);
         });
