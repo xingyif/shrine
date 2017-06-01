@@ -202,53 +202,6 @@ System.config({
       "indexof": "npm:indexof@0.0.1"
     }
   },
-  depCache: {
-    "common/container.js": [
-      "ramda"
-    ],
-    "common/i2b2.service.js": [
-      "ramda",
-      "./container"
-    ],
-    "repository/qep.repository.js": [
-      "aurelia-framework",
-      "aurelia-fetch-client",
-      "fetch"
-    ],
-    "views/mailto/mailto.js": [
-      "aurelia-framework",
-      "views/mailto/mailto.service",
-      "views/mailto/mailto.config"
-    ],
-    "views/mailto/mailto.service.js": [
-      "aurelia-framework",
-      "repository/qep.repository"
-    ],
-    "views/query-viewer/context-menu/context-menu.js": [
-      "aurelia-framework",
-      "common/i2b2.service.js"
-    ],
-    "views/query-viewer/loading-bar/loading-bar.js": [
-      "aurelia-framework"
-    ],
-    "views/query-viewer/query-viewer.js": [
-      "aurelia-framework",
-      "views/query-viewer/query-viewer.service",
-      "common/i2b2.service.js",
-      "./query-viewer.model",
-      "./scroll.service",
-      "./query-viewer.config"
-    ],
-    "views/query-viewer/query-viewer.service.js": [
-      "aurelia-framework",
-      "repository/qep.repository",
-      "./query-viewer.config"
-    ],
-    "views/query-viewer/scroll.service.js": [
-      "ramda",
-      "common/container"
-    ]
-  },
   bundles: {
     "app-build.js": [
       "common/container.js",
@@ -677,6 +630,53 @@ System.config({
       "npm:ramda@0.23.0/src/zip.js",
       "npm:ramda@0.23.0/src/zipObj.js",
       "npm:ramda@0.23.0/src/zipWith.js"
+    ]
+  },
+  depCache: {
+    "common/container.js": [
+      "ramda"
+    ],
+    "common/i2b2.service.js": [
+      "ramda",
+      "./container"
+    ],
+    "repository/qep.repository.js": [
+      "aurelia-framework",
+      "aurelia-fetch-client",
+      "fetch"
+    ],
+    "views/mailto/mailto.js": [
+      "aurelia-framework",
+      "views/mailto/mailto.service",
+      "views/mailto/mailto.config"
+    ],
+    "views/mailto/mailto.service.js": [
+      "aurelia-framework",
+      "repository/qep.repository"
+    ],
+    "views/query-viewer/context-menu/context-menu.js": [
+      "aurelia-framework",
+      "common/i2b2.service.js"
+    ],
+    "views/query-viewer/loading-bar/loading-bar.js": [
+      "aurelia-framework"
+    ],
+    "views/query-viewer/query-viewer.js": [
+      "aurelia-framework",
+      "views/query-viewer/query-viewer.service",
+      "common/i2b2.service.js",
+      "./query-viewer.model",
+      "./scroll.service",
+      "./query-viewer.config"
+    ],
+    "views/query-viewer/query-viewer.service.js": [
+      "aurelia-framework",
+      "repository/qep.repository",
+      "./query-viewer.config"
+    ],
+    "views/query-viewer/scroll.service.js": [
+      "ramda",
+      "common/container"
     ]
   }
 });

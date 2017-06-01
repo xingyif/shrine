@@ -15,7 +15,7 @@ export class QueryViewer {
         this.showLoader = true;
         this.runningQuery = null;
         this.service = service;
-        this.vertStyle = 'v-min';
+        this.vertStyle = 'v-full';
         this.scrollRatio = 0;
 
         // -- fetch queries -- //

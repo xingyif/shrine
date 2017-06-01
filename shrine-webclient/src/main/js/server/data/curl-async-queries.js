@@ -5,7 +5,19 @@ module.exports = {
     "SHRINE QA Node 3",
     "shrine-qa1",
     "shrine-qa2",
+    "shrine-qa3",
+    "shrine-qa3",
+    "shrine-qa3",
+    "shrine-qa3",
+    "shrine-qa3",
+    "shrine-qa3",
+    "shrine-qa3",
+    "shrine-qa3",
+    "shrine-qa3",
+    "shrine-qa3",
+    "shrine-qa3",
     "shrine-qa3"
+
   ],
   "queryResults": [
     {

@@ -27,9 +27,7 @@ System.register(['aurelia-framework', 'repository/qep.repository', './query-view
                 }
 
                 QueryViewerService.prototype.fetchPreviousQueries = function fetchPreviousQueries() {
-                    var limit = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.config.maxQueriesPerScroll;
-
-                    return this.repository.fetchPreviousQueries(limit);
+                    return this.repository.fetchPreviousQueries();
                 };
 
                 QueryViewerService.prototype.getScreens = function getScreens(nodes, queries) {

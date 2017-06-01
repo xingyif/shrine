@@ -36,7 +36,7 @@ System.register(['aurelia-framework', 'views/query-viewer/query-viewer.service',
                     this.showLoader = true;
                     this.runningQuery = null;
                     this.service = service;
-                    this.vertStyle = 'v-min';
+                    this.vertStyle = 'v-full';
                     this.scrollRatio = 0;
 
                     var parseResultToScreens = function parseResultToScreens(result) {
