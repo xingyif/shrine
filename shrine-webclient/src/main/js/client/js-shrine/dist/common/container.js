@@ -61,6 +61,10 @@ System.register(['ramda'], function (_export, _context) {
                     return this.value === null || this.value === undefined;
                 };
 
+                Container.prototype.ap = function ap(otherContainer) {
+                    otherContainer.map(this.value);
+                };
+
                 _createClass(Container, [{
                     key: 'value',
                     get: function get() {

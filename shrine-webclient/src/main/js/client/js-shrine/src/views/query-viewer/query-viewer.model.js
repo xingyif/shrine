@@ -1,4 +1,3 @@
-//https://www.w3schools.com/js/js_function_closures.asp
 export class QueryViewerModel{
     constructor() {
         this.processing = false;

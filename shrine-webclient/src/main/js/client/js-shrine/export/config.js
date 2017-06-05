@@ -205,7 +205,9 @@ System.config({
   bundles: {
     "app-build.js": [
       "common/container.js",
+      "common/i2b2.pub-sub.js",
       "common/i2b2.service.js",
+      "common/tabs.model.js",
       "main.js",
       "repository/qep.repository.js",
       "shell.html!github:systemjs/plugin-text@0.0.8.js",
@@ -636,6 +638,11 @@ System.config({
     "common/container.js": [
       "ramda"
     ],
+    "common/i2b2.pub-sub.js": [
+      "aurelia-framework",
+      "./i2b2.service",
+      "./tabs.model"
+    ],
     "common/i2b2.service.js": [
       "ramda",
       "./container"
@@ -644,6 +651,10 @@ System.config({
       "aurelia-framework",
       "aurelia-fetch-client",
       "fetch"
+    ],
+    "shell.js": [
+      "aurelia-framework",
+      "common/i2b2.pub-sub"
     ],
     "views/mailto/mailto.js": [
       "aurelia-framework",
@@ -665,6 +676,7 @@ System.config({
       "aurelia-framework",
       "views/query-viewer/query-viewer.service",
       "common/i2b2.service.js",
+      "common/tabs.model",
       "./query-viewer.model",
       "./scroll.service",
       "./query-viewer.config"

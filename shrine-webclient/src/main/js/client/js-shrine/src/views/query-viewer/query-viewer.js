@@ -1,13 +1,14 @@
 import { inject, computedFrom } from 'aurelia-framework';
 import { QueryViewerService } from 'views/query-viewer/query-viewer.service';
 import { I2B2Service } from 'common/i2b2.service.js';
-import { QueryViewerModel } from './query-viewer.model';
+import {TabsModel} from 'common/tabs.model';
+import {QueryViewerModel } from './query-viewer.model';
 import {ScrollService} from './scroll.service';
 import {QueryViewerConfig} from './query-viewer.config';
 
-@inject(QueryViewerService, I2B2Service, QueryViewerModel)
+@inject(QueryViewerService, I2B2Service, QueryViewerModel, TabsModel)
 export class QueryViewer {
-    constructor(service, i2b2Svc, model) {
+    constructor(service, i2b2Svc, model, tabs) {
 
         // -- init -- //
         this.screenIndex = 0;
@@ -15,7 +16,7 @@ export class QueryViewer {
         this.showLoader = true;
         this.runningQuery = null;
         this.service = service;
-        this.vertStyle = 'v-min';
+        this.vertStyle = tabs.mode();
         this.scrollRatio = 0;
 
         // -- fetch queries -- //

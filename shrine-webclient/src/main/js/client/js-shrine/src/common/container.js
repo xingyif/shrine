@@ -29,4 +29,8 @@ export class Container {
     hasNothing() {
         return this.value === null || this.value === undefined;
     }
+
+    ap(otherContainer) {
+        otherContainer.map(this.value);
+    }
 }
