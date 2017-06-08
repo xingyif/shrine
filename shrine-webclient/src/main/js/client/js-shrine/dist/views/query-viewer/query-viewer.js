@@ -40,10 +40,13 @@ System.register(['aurelia-framework', 'views/query-viewer/query-viewer.service',
                     this.service = service;
                     this.vertStyle = tabs.mode();
                     this.scrollRatio = 0;
+                    this.queriesToLoad = model.moreToLoad;
+                    this.loadingInfiniteScroll = false;
 
                     var parseResultToScreens = function parseResultToScreens(result) {
                         model.totalQueries = result.rowCount;
                         model.loadedCount = result.queryResults.length;
+                        _this.queriesToLoad = model.moreToLoad;
                         return _this.service.getScreens(result.adapters, result.queryResults);
                     };
                     var setVM = function setVM(screens) {
@@ -53,6 +56,7 @@ System.register(['aurelia-framework', 'views/query-viewer/query-viewer.service',
                         _this.showCircles = _this.screens.length > 1;
                         model.screens = screens;
                         model.processing = false;
+                        _this.loadingInfiniteScroll = model.processing;
                     };
 
                     var refresh = function refresh() {
@@ -62,11 +66,12 @@ System.register(['aurelia-framework', 'views/query-viewer/query-viewer.service',
                     };
 
                     var addQuery = function addQuery(event, data) {
-                        return _this.runningQuery = data[0].name;
+                        _this.runningQuery = data[0].name;
                     };
                     var init = function init() {
                         return model.hasData ? setVM(model.screens) : refresh();
                     };
+
                     var loadMoreQueries = function loadMoreQueries(e) {
                         return ScrollService.scrollRatio(e).value === 1 && model.moreToLoad && !model.processing;
                     };
@@ -75,6 +80,7 @@ System.register(['aurelia-framework', 'views/query-viewer/query-viewer.service',
                         if (loadMoreQueries(e)) {
                             refresh();
                             model.processing = true;
+                            _this.loadingInfiniteScroll = model.processing;
                         }
                     };
 

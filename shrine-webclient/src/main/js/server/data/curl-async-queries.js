@@ -27,15 +27,6 @@ module.exports = {
           "instanceId": 1899,
           "resultId": 2181,
           "status": "ERROR",
-          "resultType": {
-            "isBreakdown": false,
-            "name": "PATIENT_COUNT_XML",
-            "id": 4,
-            "i2b2Options": {
-              "description": "Number of patients",
-              "displayType": "CATNUM"
-            }
-          },
           "endDate": 1490984964917,
           "adapterNode": "shrine-qa3"
         },

@@ -18,11 +18,14 @@ export class QueryViewer {
         this.service = service;
         this.vertStyle = tabs.mode();
         this.scrollRatio = 0;
+        this.queriesToLoad = model.moreToLoad;
+        this.loadingInfiniteScroll = false;
 
         // -- fetch queries -- //
         const parseResultToScreens = result => {
             model.totalQueries = result.rowCount;
             model.loadedCount = result.queryResults.length;
+            this.queriesToLoad = model.moreToLoad;
             return this.service.getScreens(result.adapters, result.queryResults);
         }
         const setVM = screens => {
@@ -32,6 +35,7 @@ export class QueryViewer {
             this.showCircles = this.screens.length > 1;
             model.screens = screens;
             model.processing = false;
+            this.loadingInfiniteScroll = model.processing;
         };
 
         const refresh = () => this.service
@@ -40,15 +44,19 @@ export class QueryViewer {
             .then(setVM)
             .catch(error => console.log(error));
 
-        const addQuery = (event, data) => this.runningQuery = data[0].name;
+        const addQuery = (event, data) => {
+            this.runningQuery = data[0].name;
+        }
         const init = () => (model.hasData) ? setVM(model.screens) : refresh();
-        const loadMoreQueries = e => ScrollService.scrollRatio(e).value === 1 && model.moreToLoad && !model.processing;
 
+        
+        const loadMoreQueries = e => ScrollService.scrollRatio(e).value === 1 && model.moreToLoad && !model.processing;
        // -- scroll event -- //
        this.onScroll = e => {
             if(loadMoreQueries(e)){
                 refresh();
                 model.processing = true;
+                this.loadingInfiniteScroll = model.processing;
             }
        }
 
