@@ -80,7 +80,7 @@ body,
     .box-wrapper > .box section .v-min > table {
       padding-bottom: 1%; }
     .box-wrapper > .box section .tbl-content {
-      /*overflow: auto;*/
+      overflow: auto;
       margin-top: 0px;
       border: 1px solid rgba(98, 108, 146, 0.3); }
   .box-wrapper > .box table {

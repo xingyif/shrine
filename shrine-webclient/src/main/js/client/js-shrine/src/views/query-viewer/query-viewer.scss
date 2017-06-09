@@ -4,6 +4,8 @@ body{
   background: rgba(255, 255, 255, 0.9);
   font-family: 'Roboto', sans-serif;
 }
+
+
 html,
 body,
 .box-wrapper{
@@ -46,7 +48,7 @@ body,
        padding-bottom: 1%;
      }
      .tbl-content{
-        /*overflow: auto;*/
+        overflow: auto;
         margin-top: 0px;
         border: 1px solid rgba(98,108,146,0.3);
      }
