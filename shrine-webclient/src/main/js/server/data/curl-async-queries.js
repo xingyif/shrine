@@ -3,6 +3,14 @@ module.exports = {
     "SHRINE QA Hub",
     "SHRINE QA Node 2",
     "SHRINE QA Node 3",
+    "SHRINE QA Node 4",
+    "SHRINE QA Node 5",
+    "SHRINE QA Node 6",
+    "SHRINE QA Node 7",
+    "SHRINE QA Node 8",
+    "SHRINE QA Node 9",
+    "SHRINE QA Node 10",
+    "SHRINE QA Node 11",
     "shrine-qa1",
     "shrine-qa2",
     "shrine-qa3",
@@ -31,15 +39,6 @@ module.exports = {
           "instanceId": 1899,
           "resultId": 2181,
           "status": "ERROR",
-          "resultType": {
-            "isBreakdown": false,
-            "name": "PATIENT_COUNT_XML",
-            "id": 4,
-            "i2b2Options": {
-              "description": "Number of patients",
-              "displayType": "CATNUM"
-            }
-          },
           "endDate": 1490984964917,
           "adapterNode": "shrine-qa3"
         },

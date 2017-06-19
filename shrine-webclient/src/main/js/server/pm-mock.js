@@ -46,7 +46,12 @@ function start(dir) {
   });
 
   router.get('/shrine-metadata/qep/queryResults', (req, res) => {
-    const result = require('./data/curl-async-queries');
+    //todo: cleanup.
+    const service = require('./data/async-queries');
+    const url = require('url');
+    const query = url.parse(req.url, true).query;
+    console.log(query);
+    const result = service.getQueryResults(query.skip, query.limit);
     res.json(result);
   })
 }
