@@ -9,6 +9,7 @@ System.config({
   map: {
     "aurelia-animator-css": "npm:aurelia-animator-css@1.0.1",
     "aurelia-bootstrapper": "npm:aurelia-bootstrapper@1.0.0",
+    "aurelia-event-aggregator": "npm:aurelia-event-aggregator@1.0.1",
     "aurelia-fetch-client": "npm:aurelia-fetch-client@1.0.1",
     "aurelia-framework": "npm:aurelia-framework@1.0.6",
     "aurelia-history-browser": "npm:aurelia-history-browser@1.0.0",
@@ -208,12 +209,19 @@ System.config({
     ],
     "common/i2b2.pub-sub.js": [
       "aurelia-framework",
+      "aurelia-event-aggregator",
       "./i2b2.service",
-      "./tabs.model"
+      "./shrine.messages"
     ],
     "common/i2b2.service.js": [
       "ramda",
       "./container"
+    ],
+    "common/queries.model.js": [
+      "aurelia-framework",
+      "aurelia-event-aggregator",
+      "repository/qep.repository",
+      "./shrine.messages"
     ],
     "repository/qep.repository.js": [
       "aurelia-framework",
@@ -222,7 +230,10 @@ System.config({
     ],
     "shell.js": [
       "aurelia-framework",
-      "common/i2b2.pub-sub"
+      "aurelia-event-aggregator",
+      "common/i2b2.pub-sub",
+      "common/queries.model",
+      "common/shrine.messages"
     ],
     "views/mailto/mailto.js": [
       "aurelia-framework",
@@ -235,19 +246,23 @@ System.config({
     ],
     "views/query-viewer/context-menu/context-menu.js": [
       "aurelia-framework",
-      "common/i2b2.service.js"
+      "aurelia-event-aggregator",
+      "common/shrine.messages"
     ],
     "views/query-viewer/loading-bar/loading-bar.js": [
       "aurelia-framework"
     ],
     "views/query-viewer/query-viewer.js": [
       "aurelia-framework",
+      "aurelia-event-aggregator",
       "views/query-viewer/query-viewer.service",
       "common/i2b2.service.js",
-      "common/tabs.model",
       "./query-viewer.model",
+      "common/tabs.model",
+      "common/queries.model",
       "./scroll.service",
-      "./query-viewer.config"
+      "./query-viewer.config",
+      "common/shrine.messages"
     ],
     "views/query-viewer/query-viewer.service.js": [
       "aurelia-framework",
@@ -264,6 +279,8 @@ System.config({
       "common/container.js",
       "common/i2b2.pub-sub.js",
       "common/i2b2.service.js",
+      "common/queries.model.js",
+      "common/shrine.messages.js",
       "common/tabs.model.js",
       "main.js",
       "repository/qep.repository.js",

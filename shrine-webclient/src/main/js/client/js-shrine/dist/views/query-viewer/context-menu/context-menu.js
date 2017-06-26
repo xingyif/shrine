@@ -1,7 +1,7 @@
-System.register(['aurelia-framework', 'common/i2b2.service.js'], function (_export, _context) {
+System.register(['aurelia-framework', 'aurelia-event-aggregator', 'common/shrine.messages'], function (_export, _context) {
     "use strict";
 
-    var inject, bindable, I2B2Service, _dec, _class, _desc, _value, _class2, _descriptor, ContextMenu;
+    var inject, bindable, EventAggregator, commands, _dec, _class, _desc, _value, _class2, _descriptor, ContextMenu;
 
     function _initDefineProp(target, property, descriptor, context) {
         if (!descriptor) return;
@@ -56,24 +56,26 @@ System.register(['aurelia-framework', 'common/i2b2.service.js'], function (_expo
         setters: [function (_aureliaFramework) {
             inject = _aureliaFramework.inject;
             bindable = _aureliaFramework.bindable;
-        }, function (_commonI2b2ServiceJs) {
-            I2B2Service = _commonI2b2ServiceJs.I2B2Service;
+        }, function (_aureliaEventAggregator) {
+            EventAggregator = _aureliaEventAggregator.EventAggregator;
+        }, function (_commonShrineMessages) {
+            commands = _commonShrineMessages.commands;
         }],
         execute: function () {
-            _export('ContextMenu', ContextMenu = (_dec = inject(I2B2Service), _dec(_class = (_class2 = function ContextMenu(i2b2Svc) {
+            _export('ContextMenu', ContextMenu = (_dec = inject(EventAggregator, commands), _dec(_class = (_class2 = function ContextMenu(evtAgg, commands) {
                 var _this = this;
 
                 _classCallCheck(this, ContextMenu);
 
                 _initDefineProp(this, 'context', _descriptor, this);
 
-                this.loadQuery = function (id) {
-                    i2b2Svc.loadQuery(id);
+                ContextMenu.prototype.cloneQuery = function (id) {
+                    evtAgg.publish(commands.i2b2.cloneQuery, id);
                     _this.context.class = 'hide';
                 };
 
-                this.loadHistory = function () {
-                    i2b2Svc.loadHistory();
+                ContextMenu.prototype.refreshHistory = function () {
+                    evtAgg.publish(commands.i2b2.refreshHistory);
                     _this.context.class = 'hide';
                 };
             }, (_descriptor = _applyDecoratedDescriptor(_class2.prototype, 'context', [bindable], {

@@ -8,11 +8,69 @@
     <loading-bar status.bind="'Loading...'" if.bind="showLoader"></loading-bar>
     <div style="width: 100%; text-align: center">
         <ul class="circle-pagination" if.bind="showCircles">
-            <li repeat.for="screen of screens" class="${screenIndex === $index? 'active' : ''}" click.delegate="screenIndex = $index">
-                <div>${screen.id}</div>
+            <li repeat.for="page of pages" class="${pageIndex === $index? 'active' : ''}" click.delegate="setToPage($index)">
+                <div>${$index + 1}</div>
             </li>
         </ul>
     </div>
+    <div class="box-wrapper">
+        <div class="box">
+            <section>
+                <table cellpadding="0" cellspacing="0" border="0">
+                    <thead>
+                        <tr>
+                            <th class="tbl-header">
+                            </th>
+                            <th repeat.for="node of page.nodes" class="tbl-header">
+                                <div class="hideextra">${node}</div>
+                            </th>
+                        </tr>
+                    </thead>
+                </table>
+
+                <!-- context menu -->
+                <context-menu context.bind="context"></context-menu>
+
+                <!-- main table -->
+                <div class="tbl-content ${vertStyle}" scroll.trigger="onScroll($event)">
+                    <table cellpadding="0" cellspacing="0" border="0">
+                        <tbody>
+                            <!-- @todo: create running query component -->
+                            <tr if.bind="runningQueryName">
+                                <th>
+                                    <div class="hideextra">${runningQueryName}</div>
+                                </th>
+                                <td repeat.for="node of page.nodes" style="color: #00FF00">
+                                    RUNNING
+                                </td>
+                            </tr>
+                            <tr repeat.for="result of page.results" contextmenu.trigger="context = getContext($event, result)">
+                                <th>
+                                    <div class="hideextra">${result.name}</div>
+                                </th>
+                                <td repeat.for="nodeResult of result.nodeResults" css="${nodeResult | resultStyle}">
+                                    <a if.bind="nodeResult.status === 'ERROR'" 
+                                    style="text-decoration: underline" click.delegate="publishError(nodeResult)">
+                                    ${nodeResult.status}
+                                  </a> ${nodeResult | result}
+                                </td>
+                            </tr>
+                             <tr if.bind="loadingInfiniteScroll">
+                                <td colspan="${page.nodes.length + 1}" style="background:rgba(217, 236, 240, .05); text-align:center; color: rgba(0, 0, 0, .20);">
+                                    <div style="font-size: 1.5rem; width: 100%">
+                                        <i class="fa fa-spinner fa-spin" style="color: inherit;"></i>
+                                        Loading... 
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!--
     <div class="box-wrapper">
         <div class="box" repeat.for="screen of screens" css.bind="screenIndex | boxStyle">
             <section>
@@ -65,5 +123,5 @@
                 </div>
             </section>
         </div>
-    </div>
+    </div-->
 </template>

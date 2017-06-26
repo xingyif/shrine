@@ -1,83 +1,60 @@
-import { inject, computedFrom } from 'aurelia-framework';
-import { QueryViewerService } from 'views/query-viewer/query-viewer.service';
-import { I2B2Service } from 'common/i2b2.service.js';
-import {TabsModel} from 'common/tabs.model';
-import {QueryViewerModel } from './query-viewer.model';
+import {inject} from 'aurelia-framework';
+import {EventAggregator} from 'aurelia-event-aggregator'
+import {QueriesModel} from 'common/queries.model'
 import {ScrollService} from './scroll.service';
-import {QueryViewerConfig} from './query-viewer.config';
+import {notifications, commands} from 'common/shrine.messages';
 
-@inject(QueryViewerService, I2B2Service, QueryViewerModel, TabsModel)
+@inject(EventAggregator, QueriesModel, notifications, commands)
 export class QueryViewer {
-    constructor(service, i2b2Svc, model, tabs) {
+    constructor(evtAgg, queries, notifications, commands) {
 
         // -- init -- //
-        this.screenIndex = 0;
-        this.showCircles = false;
+        this.pageIndex = 0;
+        this.showCircles = true;
         this.showLoader = true;
-        this.runningQuery = null;
-        this.service = service;
-        this.vertStyle = tabs.mode();
-        this.scrollRatio = 0;
-        this.queriesToLoad = model.moreToLoad;
-        this.loadingInfiniteScroll = false;
-
-        // -- fetch queries -- //
-        const parseResultToScreens = result => {
-            model.totalQueries = result.rowCount;
-            model.loadedCount = result.queryResults.length;
-            this.queriesToLoad = model.moreToLoad;
-            return this.service.getScreens(result.adapters, result.queryResults);
-        }
-        const setVM = screens => {
-            this.showLoader = false;
-            this.runningQuery = null;
-            this.screens = screens;
-            this.showCircles = this.screens.length > 1;
-            model.screens = screens;
-            model.processing = false;
-            this.loadingInfiniteScroll = model.processing;
-        };
-
-        const refresh = () => this.service
-            .fetchPreviousQueries(model.loadedCount + QueryViewerConfig.maxQueriesPerScroll)
-            .then(parseResultToScreens)
-            .then(setVM)
-            .catch(error => console.log(error));
-
-        const addQuery = (event, data) => {
-            this.runningQuery = data[0].name;
-        }
-        const init = () => (model.hasData) ? setVM(model.screens) : refresh();
-
+        this.vertStyle = 'v-min';
+        this.runningQueryName = null;
         
-        const loadMoreQueries = e => ScrollService.scrollRatio(e).value === 1 && model.moreToLoad && !model.processing;
-       // -- scroll event -- //
-       this.onScroll = e => {
-            if(loadMoreQueries(e)){
-                refresh();
-                model.processing = true;
-                this.loadingInfiniteScroll = model.processing;
+        QueryViewer.prototype.setToPage = i => {
+            this.pageIndex = i;
+            this.page = this.pages[this.pageIndex];
+        }
+        const scrolledToBottom = 
+            e => ScrollService.scrollRatio(e).value === 1;
+        QueryViewer.prototype.onScroll = e => {
+            if(scrolledToBottom(e) && !this.loadingInfiniteScroll && queries.moreToLoad()) {
+                this.loadingInfiniteScroll = true;
+                queries.load();
             }
-       }
-
-        // -- add i2b2 event listener -- //
-        const isMinimized = e => e.action !== 'ADD';
-        const setVertStyle = (a, b) => this.vertStyle = b.find(isMinimized) ? 'v-min' : 'v-full';
-        this.errorDetail = i2b2Svc.errorDetail;
-        i2b2Svc.onResize(setVertStyle);
-        i2b2Svc.onHistory(refresh);
-        i2b2Svc.onQuery(addQuery);
-
-        init();
+        }
+        
+        QueryViewer.prototype.publishError = e => evtAgg.publish(commands.i2b2.showError, e);
+        QueryViewer.prototype.getContext = (e, r) => ({ x: e.pageX, y: e.pageY, id: r.id, class: 'show'});
+        
+        //notifications
+        evtAgg.subscribe(notifications.i2b2.historyRefreshed, () => queries.load());
+        evtAgg.subscribe(notifications.i2b2.tabMax, () => this.vertStyle = 'v-full');
+        evtAgg.subscribe(notifications.i2b2.tabMin, () => this.vertStyle = 'v-min');
+        evtAgg.subscribe(notifications.i2b2.queryStarted, n => this.runningQueryName = n);
+        evtAgg.subscribe(notifications.shrine.queriesReceived, d => {
+            this.pages = d;
+            this.page = this.pages[0];
+            this.runningQueryName = null;
+            this.loadingInfiniteScroll = false;
+        });
+        
+        //@todo: move to shell.js
+        evtAgg.subscribe(notifications.i2b2.viewSelected, v => {
+            console.log(`${notifications.i2b2.viewSelected} ${v}`);
+        }); 
     }
-    
-    getContext(event, result) {
-        return {
-            x: event.pageX,
-            y: event.pageY,
-            id: result.id,
-            class: 'show'
-        };
+
+    attached() {
+        this.showLoader = false;
+    }
+
+    detatched() {
+        this.showLoader = true;
     }
 }
 

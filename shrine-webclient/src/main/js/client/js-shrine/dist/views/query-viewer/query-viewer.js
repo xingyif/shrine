@@ -1,7 +1,7 @@
-System.register(['aurelia-framework', 'views/query-viewer/query-viewer.service', 'common/i2b2.service.js', 'common/tabs.model', './query-viewer.model', './scroll.service', './query-viewer.config'], function (_export, _context) {
+System.register(['aurelia-framework', 'aurelia-event-aggregator', 'common/queries.model', './scroll.service', 'common/shrine.messages'], function (_export, _context) {
     "use strict";
 
-    var inject, computedFrom, QueryViewerService, I2B2Service, TabsModel, QueryViewerModel, ScrollService, QueryViewerConfig, _dec, _class, QueryViewer;
+    var inject, EventAggregator, QueriesModel, ScrollService, notifications, commands, _dec, _class, QueryViewer;
 
     function _classCallCheck(instance, Constructor) {
         if (!(instance instanceof Constructor)) {
@@ -12,99 +12,80 @@ System.register(['aurelia-framework', 'views/query-viewer/query-viewer.service',
     return {
         setters: [function (_aureliaFramework) {
             inject = _aureliaFramework.inject;
-            computedFrom = _aureliaFramework.computedFrom;
-        }, function (_viewsQueryViewerQueryViewerService) {
-            QueryViewerService = _viewsQueryViewerQueryViewerService.QueryViewerService;
-        }, function (_commonI2b2ServiceJs) {
-            I2B2Service = _commonI2b2ServiceJs.I2B2Service;
-        }, function (_commonTabsModel) {
-            TabsModel = _commonTabsModel.TabsModel;
-        }, function (_queryViewerModel) {
-            QueryViewerModel = _queryViewerModel.QueryViewerModel;
+        }, function (_aureliaEventAggregator) {
+            EventAggregator = _aureliaEventAggregator.EventAggregator;
+        }, function (_commonQueriesModel) {
+            QueriesModel = _commonQueriesModel.QueriesModel;
         }, function (_scrollService) {
             ScrollService = _scrollService.ScrollService;
-        }, function (_queryViewerConfig) {
-            QueryViewerConfig = _queryViewerConfig.QueryViewerConfig;
+        }, function (_commonShrineMessages) {
+            notifications = _commonShrineMessages.notifications;
+            commands = _commonShrineMessages.commands;
         }],
         execute: function () {
-            _export('QueryViewer', QueryViewer = (_dec = inject(QueryViewerService, I2B2Service, QueryViewerModel, TabsModel), _dec(_class = function () {
-                function QueryViewer(service, i2b2Svc, model, tabs) {
+            _export('QueryViewer', QueryViewer = (_dec = inject(EventAggregator, QueriesModel, notifications, commands), _dec(_class = function () {
+                function QueryViewer(evtAgg, queries, notifications, commands) {
                     var _this = this;
 
                     _classCallCheck(this, QueryViewer);
 
-                    this.screenIndex = 0;
-                    this.showCircles = false;
+                    this.pageIndex = 0;
+                    this.showCircles = true;
                     this.showLoader = true;
-                    this.runningQuery = null;
-                    this.service = service;
-                    this.vertStyle = tabs.mode();
-                    this.scrollRatio = 0;
-                    this.queriesToLoad = model.moreToLoad;
-                    this.loadingInfiniteScroll = false;
+                    this.vertStyle = 'v-min';
+                    this.runningQueryName = null;
 
-                    var parseResultToScreens = function parseResultToScreens(result) {
-                        model.totalQueries = result.rowCount;
-                        model.loadedCount = result.queryResults.length;
-                        _this.queriesToLoad = model.moreToLoad;
-                        return _this.service.getScreens(result.adapters, result.queryResults);
+                    QueryViewer.prototype.setToPage = function (i) {
+                        _this.pageIndex = i;
+                        _this.page = _this.pages[_this.pageIndex];
                     };
-                    var setVM = function setVM(screens) {
-                        _this.showLoader = false;
-                        _this.runningQuery = null;
-                        _this.screens = screens;
-                        _this.showCircles = _this.screens.length > 1;
-                        model.screens = screens;
-                        model.processing = false;
-                        _this.loadingInfiniteScroll = model.processing;
+                    var scrolledToBottom = function scrolledToBottom(e) {
+                        return ScrollService.scrollRatio(e).value === 1;
                     };
-
-                    var refresh = function refresh() {
-                        return _this.service.fetchPreviousQueries(model.loadedCount + QueryViewerConfig.maxQueriesPerScroll).then(parseResultToScreens).then(setVM).catch(function (error) {
-                            return console.log(error);
-                        });
-                    };
-
-                    var addQuery = function addQuery(event, data) {
-                        _this.runningQuery = data[0].name;
-                    };
-                    var init = function init() {
-                        return model.hasData ? setVM(model.screens) : refresh();
-                    };
-
-                    var loadMoreQueries = function loadMoreQueries(e) {
-                        return ScrollService.scrollRatio(e).value === 1 && model.moreToLoad && !model.processing;
-                    };
-
-                    this.onScroll = function (e) {
-                        if (loadMoreQueries(e)) {
-                            refresh();
-                            model.processing = true;
-                            _this.loadingInfiniteScroll = model.processing;
+                    QueryViewer.prototype.onScroll = function (e) {
+                        if (scrolledToBottom(e) && !_this.loadingInfiniteScroll && queries.moreToLoad()) {
+                            _this.loadingInfiniteScroll = true;
+                            queries.load();
                         }
                     };
 
-                    var isMinimized = function isMinimized(e) {
-                        return e.action !== 'ADD';
+                    QueryViewer.prototype.publishError = function (e) {
+                        return evtAgg.publish(commands.i2b2.showError, e);
                     };
-                    var setVertStyle = function setVertStyle(a, b) {
-                        return _this.vertStyle = b.find(isMinimized) ? 'v-min' : 'v-full';
+                    QueryViewer.prototype.getContext = function (e, r) {
+                        return { x: e.pageX, y: e.pageY, id: r.id, class: 'show' };
                     };
-                    this.errorDetail = i2b2Svc.errorDetail;
-                    i2b2Svc.onResize(setVertStyle);
-                    i2b2Svc.onHistory(refresh);
-                    i2b2Svc.onQuery(addQuery);
 
-                    init();
+                    evtAgg.subscribe(notifications.i2b2.historyRefreshed, function () {
+                        return queries.load();
+                    });
+                    evtAgg.subscribe(notifications.i2b2.tabMax, function () {
+                        return _this.vertStyle = 'v-full';
+                    });
+                    evtAgg.subscribe(notifications.i2b2.tabMin, function () {
+                        return _this.vertStyle = 'v-min';
+                    });
+                    evtAgg.subscribe(notifications.i2b2.queryStarted, function (n) {
+                        return _this.runningQueryName = n;
+                    });
+                    evtAgg.subscribe(notifications.shrine.queriesReceived, function (d) {
+                        _this.pages = d;
+                        _this.page = _this.pages[0];
+                        _this.runningQueryName = null;
+                        _this.loadingInfiniteScroll = false;
+                    });
+
+                    evtAgg.subscribe(notifications.i2b2.viewSelected, function (v) {
+                        console.log(notifications.i2b2.viewSelected + ' ' + v);
+                    });
                 }
 
-                QueryViewer.prototype.getContext = function getContext(event, result) {
-                    return {
-                        x: event.pageX,
-                        y: event.pageY,
-                        id: result.id,
-                        class: 'show'
-                    };
+                QueryViewer.prototype.attached = function attached() {
+                    this.showLoader = false;
+                };
+
+                QueryViewer.prototype.detatched = function detatched() {
+                    this.showLoader = true;
                 };
 
                 return QueryViewer;

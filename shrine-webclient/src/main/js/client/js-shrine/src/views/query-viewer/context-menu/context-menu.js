@@ -1,19 +1,21 @@
 import {inject, bindable} from 'aurelia-framework';
-import { I2B2Service } from 'common/i2b2.service.js';
+import {EventAggregator} from 'aurelia-event-aggregator';
+import {commands} from 'common/shrine.messages'
+//import { I2B2Service } from 'common/i2b2.service.js';
 
-@inject(I2B2Service)
+@inject(EventAggregator, commands)
 export class ContextMenu {
     @bindable context;
 
-    constructor(i2b2Svc) {
-        this.loadQuery = id => {
-            i2b2Svc.loadQuery(id);
+    constructor(evtAgg, commands) {
+        ContextMenu.prototype.cloneQuery = id => {
+            evtAgg.publish(commands.i2b2.cloneQuery, id);
             this.context.class = 'hide';
         }
 
-      this.loadHistory = () => {
-        i2b2Svc.loadHistory();
-        this.context.class = 'hide';
-      };
+        ContextMenu.prototype.refreshHistory = () => {
+            evtAgg.publish(commands.i2b2.refreshHistory);
+            this.context.class = 'hide';
+        }      
     }
 }
