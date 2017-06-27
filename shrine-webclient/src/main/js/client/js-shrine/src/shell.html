@@ -3,9 +3,9 @@
 		
 	</router-view-->
 
-	<!--compose view-model="views/mailto/mailto">
-	</compose-->
-	<compose view-model="views/query-viewer/query-viewer">
+	<compose view-model="views/mailto/mailto" show.bind="view === 'mailto'">
+	</compose>
+	<compose view-model="views/query-viewer/query-viewer" show.bind="view === 'query-viewer'">
 	</compose>
 
 

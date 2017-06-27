@@ -7,7 +7,16 @@ import {notifications} from 'common/shrine.messages';
 export class Shell {
 
   constructor(evtAgg, i2b2PubSub, queries, notifications) {
+
+    Shell.prototype.init = () => {
+      this.view = 'query-viewer';
+    }
+    this.init();
+
     i2b2PubSub.listen();
     queries.load();
+    evtAgg.subscribe(notifications.i2b2.viewSelected, v => {
+        this.view = v;
+    });
   }
 }

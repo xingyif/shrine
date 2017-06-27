@@ -255,13 +255,8 @@ System.config({
     "views/query-viewer/query-viewer.js": [
       "aurelia-framework",
       "aurelia-event-aggregator",
-      "views/query-viewer/query-viewer.service",
-      "common/i2b2.service.js",
-      "./query-viewer.model",
-      "common/tabs.model",
       "common/queries.model",
       "./scroll.service",
-      "./query-viewer.config",
       "common/shrine.messages"
     ],
     "views/query-viewer/query-viewer.service.js": [
