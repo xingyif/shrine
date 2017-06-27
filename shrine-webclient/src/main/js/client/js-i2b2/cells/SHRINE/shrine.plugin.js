@@ -65,11 +65,23 @@
         $(pluginId).hide(e);
     }
 
+
+    function mailTo() {
+        i2b2.CRC.view.status.selectTab('shrine');
+    }
+
+    function queryViewer() {
+        i2b2.CRC.view.status.selectTab('shrine');
+    }
+
+    
+    
     function navigateTo(route) {
         i2b2.CRC.view.status.selectTab('shrine');
         showDisplay(route);
-        var pluginLocation = window.frames['shrine-plugin'].window.location;
-        pluginLocation.href = pluginLocation.origin + pluginLocation.pathname + '#' + route;
+        window.frames['shrine-plugin'].window.postMessage(route, '*');
+        //var pluginLocation = window.frames['shrine-plugin'].window.location;
+        //pluginLocation.href = pluginLocation.origin + pluginLocation.pathname + '#' + route;
     }
 
 

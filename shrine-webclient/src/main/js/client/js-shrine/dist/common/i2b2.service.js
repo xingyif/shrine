@@ -21,41 +21,45 @@ System.register(['ramda', './container'], function (_export, _context) {
 
                 _classCallCheck(this, I2B2Service);
 
-                var ctx = Container.of(context);
-                var prop = _.curry(function (el, c) {
-                    return c.value ? Container.of(_.prop(el, c.value)) : Container.of(null);
+                var ctx = context ? Container.of(context) : Container.of(null);
+                var prop = _.curry(function (m, c) {
+                    return c.value ? Container.of(_.prop(m, c.value)) : Container.of(null);
                 });
                 var i2b2 = _.compose(prop('i2b2'), prop('window'), prop('parent'));
                 var crc = _.compose(prop('CRC'), i2b2);
                 var events = _.compose(prop('events'), i2b2);
                 var shrine = _.compose(prop('SHRINE'), i2b2);
 
-                this.onResize = function (f) {
+                I2B2Service.prototype.onResize = function (f) {
                     return events(ctx).map(function (v) {
                         return v.changedZoomWindows.subscribe(f);
                     });
                 };
-                this.onHistory = function (f) {
+                I2B2Service.prototype.onHistory = function (f) {
                     return crc(ctx).map(function (v) {
                         return v.ctrlr.history.events.onDataUpdate.subscribe(f);
                     });
                 };
-                this.onQuery = function (f) {
+                I2B2Service.prototype.onQuery = function (f) {
                     return events(ctx).map(function (v) {
                         return v.afterQueryInit.subscribe(f);
                     });
                 };
-                this.loadHistory = function () {
+                I2B2Service.prototype.onViewSelected = function (f) {
+                    return prop('addEventListener', ctx).value ? Container.of(ctx.value.addEventListener('message', f, false)) : Container.of(null);
+                };
+
+                I2B2Service.prototype.loadHistory = function () {
                     return crc(ctx).map(function (v) {
                         return v.view.history.doRefreshAll();
                     });
                 };
-                this.loadQuery = function (id) {
+                I2B2Service.prototype.loadQuery = function (id) {
                     return crc(ctx).map(function (v) {
                         return v.ctrlr.QT.doQueryLoad(id);
                     });
                 };
-                this.errorDetail = function (d) {
+                I2B2Service.prototype.errorDetail = function (d) {
                     return shrine(ctx).map(function (v) {
                         return v.plugin.errorDetail(d);
                     });
