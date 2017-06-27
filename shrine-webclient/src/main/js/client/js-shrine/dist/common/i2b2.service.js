@@ -22,37 +22,43 @@ System.register(['ramda', './container'], function (_export, _context) {
                 _classCallCheck(this, I2B2Service);
 
                 var ctx = Container.of(context);
-                var nullOrSomething = _.curry(function (d, f, c) {
-                    return c.hasNothing() ? d : f(c);
-                })(Container.of(null));
                 var prop = _.curry(function (el, c) {
-                    return nullOrSomething(function (v) {
-                        return v.map(_.prop(el));
-                    }, c);
+                    return c.value ? Container.of(_.prop(el, c.value)) : Container.of(null);
                 });
                 var i2b2 = _.compose(prop('i2b2'), prop('window'), prop('parent'));
                 var crc = _.compose(prop('CRC'), i2b2);
                 var events = _.compose(prop('events'), i2b2);
+                var shrine = _.compose(prop('SHRINE'), i2b2);
 
                 this.onResize = function (f) {
-                    return nullOrSomething(function (c) {
-                        return c.value.changedZoomWindows.subscribe(f);
-                    }, events(ctx));
+                    return events(ctx).map(function (v) {
+                        return v.changedZoomWindows.subscribe(f);
+                    });
                 };
                 this.onHistory = function (f) {
-                    return nullOrSomething(function (c) {
-                        return c.value.ctrlr.history.events.onDataUpdate.subscribe(f);
-                    }, crc(ctx));
+                    return crc(ctx).map(function (v) {
+                        return v.ctrlr.history.events.onDataUpdate.subscribe(f);
+                    });
+                };
+                this.onQuery = function (f) {
+                    return events(ctx).map(function (v) {
+                        return v.afterQueryInit.subscribe(f);
+                    });
                 };
                 this.loadHistory = function () {
-                    return nullOrSomething(function (c) {
-                        return c.value.view.history.doRefreshAll();
-                    }, crc(ctx));
+                    return crc(ctx).map(function (v) {
+                        return v.view.history.doRefreshAll();
+                    });
                 };
                 this.loadQuery = function (id) {
-                    return nullOrSomething(function (c) {
-                        return c.value.ctrlr.QT.doQueryLoad(id);
-                    }, crc(ctx));
+                    return crc(ctx).map(function (v) {
+                        return v.ctrlr.QT.doQueryLoad(id);
+                    });
+                };
+                this.errorDetail = function (d) {
+                    return shrine(ctx).map(function (v) {
+                        return v.plugin.errorDetail(d);
+                    });
                 };
             });
 

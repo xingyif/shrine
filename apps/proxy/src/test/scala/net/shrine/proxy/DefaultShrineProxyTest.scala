@@ -99,7 +99,7 @@ object DefaultShrineProxyTest {
           <security>
             <domain>Harvard Demo</domain>
             <username>demo</username>
-            <password>demouser</password>
+            <password>examplePassword</password>
           </security>
           <message_type>
             <message_code>Q04</message_code>

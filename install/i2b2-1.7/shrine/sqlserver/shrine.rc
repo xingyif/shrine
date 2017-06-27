@@ -101,7 +101,7 @@ export SHRINE_STEWARD_DB_NAME=stewardDB
 export SHRINE_DB_USER=shrine
 
 #The password for the user that Shrine should log in as to access the shrine database.
-export SHRINE_DB_PASSWORD=demouser
+export SHRINE_DB_PASSWORD=examplePassword
 
 
 
@@ -109,7 +109,7 @@ export SHRINE_DB_PASSWORD=demouser
 export SHRINE_ADAPTER_I2B2_USER=demo
 
 #The password for the i2b2 user Shrine should use when making queries to an i2b2 hive.
-export SHRINE_ADAPTER_I2B2_PASSWORD=demouser
+export SHRINE_ADAPTER_I2B2_PASSWORD=examplePassword
 
 #The i2b2 project Shrine should use when making queries to an i2b2 hive.
 export SHRINE_ADAPTER_I2B2_PROJECT=Demo

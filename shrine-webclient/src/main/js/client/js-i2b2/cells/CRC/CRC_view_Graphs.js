@@ -67,6 +67,8 @@ i2b2.CRC.view.graphs.showDisplay = function() {
 	// set us as active
 	$('infoQueryStatusChart').parentNode.parentNode.select('DIV.tabBox.tabQueryGraphs')[0].addClassName('active');
 	$('infoQueryStatusChart').show();
+
+	$('shrinePlugin').hide();
 }
 
 i2b2.CRC.view.graphs.hideDisplay = function() {

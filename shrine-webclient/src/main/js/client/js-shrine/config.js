@@ -203,6 +203,14 @@ System.config({
     }
   },
   depCache: {
+    "common/container.js": [
+      "ramda"
+    ],
+    "common/i2b2.pub-sub.js": [
+      "aurelia-framework",
+      "./i2b2.service",
+      "./tabs.model"
+    ],
     "common/i2b2.service.js": [
       "ramda",
       "./container"
@@ -211,6 +219,10 @@ System.config({
       "aurelia-framework",
       "aurelia-fetch-client",
       "fetch"
+    ],
+    "shell.js": [
+      "aurelia-framework",
+      "common/i2b2.pub-sub"
     ],
     "views/mailto/mailto.js": [
       "aurelia-framework",
@@ -232,18 +244,27 @@ System.config({
       "aurelia-framework",
       "views/query-viewer/query-viewer.service",
       "common/i2b2.service.js",
-      "./query-viewer.model"
+      "common/tabs.model",
+      "./query-viewer.model",
+      "./scroll.service",
+      "./query-viewer.config"
     ],
     "views/query-viewer/query-viewer.service.js": [
       "aurelia-framework",
       "repository/qep.repository",
       "./query-viewer.config"
+    ],
+    "views/query-viewer/scroll.service.js": [
+      "ramda",
+      "common/container"
     ]
   },
   bundles: {
     "app-build.js": [
       "common/container.js",
+      "common/i2b2.pub-sub.js",
       "common/i2b2.service.js",
+      "common/tabs.model.js",
       "main.js",
       "repository/qep.repository.js",
       "shell.html!github:systemjs/plugin-text@0.0.8.js",
@@ -257,13 +278,15 @@ System.config({
       "views/query-viewer/context-menu/context-menu.js",
       "views/query-viewer/loading-bar/loading-bar.html!github:systemjs/plugin-text@0.0.8.js",
       "views/query-viewer/loading-bar/loading-bar.js",
+      "views/query-viewer/loading-bar/row-loader.html!github:systemjs/plugin-text@0.0.8.js",
       "views/query-viewer/query-viewer.config.js",
       "views/query-viewer/query-viewer.html!github:systemjs/plugin-text@0.0.8.js",
       "views/query-viewer/query-viewer.js",
       "views/query-viewer/query-viewer.model.js",
       "views/query-viewer/query-viewer.service.js",
       "views/query-viewer/result-style.converter.js",
-      "views/query-viewer/result-value.converter.js"
+      "views/query-viewer/result-value.converter.js",
+      "views/query-viewer/scroll.service.js"
     ],
     "aurelia.js": [
       "github:github/fetch@1.0.0.js",

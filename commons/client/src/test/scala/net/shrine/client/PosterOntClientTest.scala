@@ -116,7 +116,7 @@ final class PosterOntClientTest extends ShouldMatchersForJUnit {
           <security>
             <domain>i2b2demo</domain>
             <username>demo</username>
-            <password is_token="false" token_ms_timeout="1800000">demouser</password>
+            <password is_token="false" token_ms_timeout="1800000">examplePassword</password>
           </security>
           <message_control_id>
             <message_num>EQ7Szep1Md11K4E7zEc99</message_num>

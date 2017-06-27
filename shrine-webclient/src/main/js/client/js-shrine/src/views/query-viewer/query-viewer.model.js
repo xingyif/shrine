@@ -1,6 +1,15 @@
 export class QueryViewerModel{
     constructor() {
-        this.isLoaded = false;
+        this.processing = false;
+        this.loadedCount = 0;
+        this.totalQueries = 0;
         this.screens = [];
+    }
+    get moreToLoad() {
+        return this.loadedCount < this.totalQueries;
+    }
+
+    get hasData() {
+        return this.screens.length > 0;
     }
 }

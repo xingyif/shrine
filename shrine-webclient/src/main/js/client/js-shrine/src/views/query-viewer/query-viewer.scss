@@ -4,6 +4,8 @@ body{
   background: rgba(255, 255, 255, 0.9);
   font-family: 'Roboto', sans-serif;
 }
+
+
 html,
 body,
 .box-wrapper{
@@ -38,9 +40,6 @@ body,
     margin: 20 0 6 0;
      .v-full {
        height: 90vh;
-     }
-     .v-full > table{
-       padding-bottom: 10%;
      }
      .v-min{
        height: 100px;

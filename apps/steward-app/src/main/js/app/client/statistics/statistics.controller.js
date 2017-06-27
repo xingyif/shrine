@@ -110,8 +110,8 @@
         }
 
         function viewDigest(data) {
-            var startUtc = stats.timestampToUtc(stats.startDate);
-            var endUtc = stats.timestampToUtc(stats.endDate);
+            var startUtc = stats.validStart;
+            var endUtc = stats.validEnd;
 
             model.getUserQueryHistory(data.userName.toLowerCase(), startUtc, endUtc)
                 .then(function (result) {
@@ -126,6 +126,8 @@
         }
 
         function getResults(startUtc, endUtc) {
+            stats.validStart = startUtc;
+            stats.validEnd = endUtc;
 
             model.getQueriesPerUser(startUtc, endUtc)
                 .then(function (result) {
