@@ -4,14 +4,11 @@
     <require from="views/query-viewer/box-style.converter"></require>
     <require from="views/query-viewer/context-menu/context-menu"></require>
     <require from="views/query-viewer/loading-bar/loading-bar"></require>
+    <require from="views/query-viewer/paginator/paginator"></require>
 
     <loading-bar status.bind="'Loading...'" if.bind="showLoader"></loading-bar>
     <div style="width: 100%; text-align: center">
-        <ul class="circle-pagination" if.bind="showCircles">
-            <li repeat.for="page of pages" class="${pageIndex === $index? 'active' : ''}" click.delegate="setToPage($index)">
-                <div>${$index + 1}</div>
-            </li>
-        </ul>
+        <paginator pages.bind="pages" paginator-click.delegate="updatePage($event)" if.bind="pages.length > 1"></paginator>
     </div>
     <div class="box-wrapper">
         <div class="box">

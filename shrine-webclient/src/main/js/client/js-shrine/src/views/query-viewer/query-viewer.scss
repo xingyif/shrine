@@ -28,7 +28,7 @@ body,
 }
 
 .box-wrapper > .box {
-  margin-top: 1%;
+  margin-top: -3%;
   width: 100%;
   transition: all .2s ease;
   .hideextra { 
@@ -42,7 +42,7 @@ body,
        height: 90vh;
      }
      .v-min{
-       height: 100px;
+       height: 90px;
      }
      .v-min > table {
        padding-bottom: 1%;

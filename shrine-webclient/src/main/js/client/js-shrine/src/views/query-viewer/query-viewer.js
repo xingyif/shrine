@@ -10,7 +10,6 @@ export class QueryViewer {
 
         QueryViewer.prototype.init = () => {
             this.pageIndex = 0;
-            this.showCircles = false;
             this.showLoader = true;
             this.vertStyle = 'v-min';
             this.runningQueryName = null;
@@ -40,12 +39,16 @@ export class QueryViewer {
         evtAgg.subscribe(notifications.i2b2.queryStarted, n => this.runningQueryName = n);
         evtAgg.subscribe(notifications.shrine.queriesReceived, d => {
             this.pages = d;
-            this.showCircles = this.pages.length > 1;
             this.page = this.pages[0];
             this.runningQueryName = null;
             this.loadingInfiniteScroll = false;
             this.showLoader = false;
         });
+    }
+    updatePage($event) {
+        $event.stopPropagation();
+        const index = event.detail.index;
+        this.page = this.pages[index];
     }
 }
 
