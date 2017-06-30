@@ -5,7 +5,7 @@ import java.util.concurrent.TimeoutException
 import javax.sql.DataSource
 
 import com.typesafe.config.Config
-import net.shrine.slick.{CouldNotRunDbIoActionException, NeedsWarmUp, TestableDataSourceCreator, TimeoutInDbIoActionException}
+import net.shrine.slick.{CouldNotRunDbIoActionException, DbIoActionException, NeedsWarmUp, TestableDataSourceCreator, TimeoutInDbIoActionException}
 import net.shrine.source.ConfigSource
 import net.shrine.util.Versions
 import slick.dbio.SuccessAction
@@ -156,8 +156,7 @@ object JsonStoreDatabase extends NeedsWarmUp {
         //check the version number vs the one you have
 
         storedRecordOption.fold(){row =>
-          if (row.version != shrineResultDbEnvelope.version) throw new IllegalStateException("Stale data in optimistic transaction")}
-        //todo better exception
+          if (row.version != shrineResultDbEnvelope.version) throw StaleDataNotWrittenException(shrineResultDbEnvelope.version,row.version,JsonStoreDatabase.dataSource)}
 
         // get the last table change number
         selectLastTableChange.head.flatMap { (lastTableChangeOption: Option[Int]) =>
@@ -218,4 +217,4 @@ object JsonStoreDatabase extends NeedsWarmUp {
   }
 }
 
-//case class StaleDataNotWrittenException(expectedVersion:Int,foundVersion,dataSource: DataSource)
+case class StaleDataNotWrittenException(expectedVersion:Int, foundVersion:Int ,dataSource: DataSource) extends DbIoActionException(dataSource,s"Stale record not written. Expected version $expectedVersion, database has version $foundVersion")
