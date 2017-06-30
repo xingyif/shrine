@@ -5,7 +5,7 @@ import java.util.concurrent.TimeoutException
 import javax.sql.DataSource
 
 import com.typesafe.config.Config
-import net.shrine.slick.{CouldNotRunDbIoActionException, NeedsWarmUp, TestableDataSourceCreator}
+import net.shrine.slick.{CouldNotRunDbIoActionException, NeedsWarmUp, TestableDataSourceCreator, TimeoutInDbIoActionException}
 import net.shrine.source.ConfigSource
 import net.shrine.util.Versions
 import slick.dbio.SuccessAction
@@ -192,8 +192,7 @@ object JsonStoreDatabase extends NeedsWarmUp {
       try {
         Await.result(this.run(dbio), timeout)
       } catch {
-        case tx:TimeoutException => throw CouldNotRunDbIoActionException(JsonStoreDatabase.dataSource, tx)
-          //todo catch better exception here, and rethrow
+        case tx:TimeoutException => throw TimeoutInDbIoActionException(JsonStoreDatabase.dataSource, timeout, tx)
         case NonFatal(x) => throw CouldNotRunDbIoActionException(JsonStoreDatabase.dataSource, x)
       }
     }
@@ -212,10 +211,11 @@ object JsonStoreDatabase extends NeedsWarmUp {
       try {
         Await.result(this.run(dbio.transactionally), timeout)
       } catch {
-        case tx:TimeoutException => throw CouldNotRunDbIoActionException(JsonStoreDatabase.dataSource, tx)
-        //todo catch better exception here, and rethrow
+        case tx:TimeoutException => throw TimeoutInDbIoActionException(JsonStoreDatabase.dataSource, timeout, tx)
         case NonFatal(x) => throw CouldNotRunDbIoActionException(JsonStoreDatabase.dataSource, x)
       }
     }
   }
 }
+
+//case class StaleDataNotWrittenException(expectedVersion:Int,foundVersion,dataSource: DataSource)

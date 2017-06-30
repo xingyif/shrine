@@ -11,7 +11,7 @@ import net.shrine.problem.{AbstractProblem, ProblemNotYetEncoded, ProblemSources
 import net.shrine.protocol.{ErrorResponse, HandleableI2b2Request, I2B2MessageFormatException, I2b2RequestHandler, ResultOutputType, ShrineRequest}
 import net.shrine.qep.querydb.QepDatabaseProblem
 import net.shrine.serialization.I2b2Marshaller
-import net.shrine.slick.CouldNotRunDbIoActionException
+import net.shrine.slick.{CouldNotRunDbIoActionException, DbIoActionException}
 import net.shrine.util.XmlUtil
 import org.xml.sax.SAXParseException
 
@@ -50,7 +50,7 @@ final case class I2b2BroadcastResource(i2b2RequestHandler: I2b2RequestHandler, b
 
     def errorResponse(e: Throwable): ErrorResponse = e match {
       case nax:NotAuthenticatedException => ErrorResponse(nax.problem)
-      case cnrdax:CouldNotRunDbIoActionException => ErrorResponse(QepDatabaseProblem(cnrdax))
+      case dbioax:DbIoActionException => ErrorResponse(QepDatabaseProblem(dbioax))
       case sqlx:SQLException => ErrorResponse(QepDatabaseProblem(sqlx))
       case imfx:I2B2MessageFormatException => ErrorResponse(QepCouldNotInterpretRequest(i2b2Request,imfx))
       case saxx:SAXParseException => ErrorResponse(QepCouldNotInterpretRequest(i2b2Request,saxx))
