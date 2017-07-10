@@ -4,10 +4,10 @@ import net.shrine.audit.{NetworkQueryId, QueryName, Time}
 import net.shrine.authorization.steward.UserName
 import net.shrine.i2b2.protocol.pm.User
 import net.shrine.log.Loggable
+import net.shrine.problem.ProblemDigest
 import net.shrine.protocol.ResultOutputType
 import net.shrine.qep.querydb.{FullQueryResult, QepQuery, QepQueryDb, QepQueryFlag}
 import spray.routing._
-
 import rapture.json._
 import rapture.json.jsonBackends.jawn._
 import rapture.json.formatters.humanReadable
@@ -19,7 +19,7 @@ import rapture.json.formatters.humanReadable
   * information about queries running now and the ability to submit queries.
   */
 
-//todo  maybe move this to the qep/service module
+//todo move this to the qep/service module
 trait QepService extends HttpService with Loggable {
   val qepInfo =
     """
@@ -94,7 +94,7 @@ trait QepService extends HttpService with Loggable {
   }
 }
 
-//todo move to QepQueryDb class
+//todo maybe move to QepQueryDb class
 case class QueryParameters(
                             researcherIdOption:Option[UserName] = None,
                             skipOption:Option[Int] =  None,
@@ -152,9 +152,9 @@ case class Result (
   count:Long,
   status:String, //todo QueryResult.StatusType,
   statusMessage:Option[String],
-  changeDate:Long
+  changeDate:Long,
 // todo   breakdowns:Option[Map[ResultOutputType,I2b2ResultEnvelope]]
-// todo  problemDigest:Option[ProblemDigest]
+  problemDigest:Option[ProblemDigestForJson]
 )
 
 object Result {
@@ -167,8 +167,26 @@ object Result {
     count = fullQueryResult.count,
     status = fullQueryResult.status.toString,
     statusMessage = fullQueryResult.statusMessage,
-    changeDate = fullQueryResult.changeDate
+    changeDate = fullQueryResult.changeDate,
 //    breakdowns = fullQueryResult.breakdowns
-//    problemDigest = fullQueryResult.problemDigest
+    problemDigest = fullQueryResult.problemDigest.map(ProblemDigestForJson(_))
   )
+}
+
+//todo replace when you figure out how to json-ize xml in rapture
+case class ProblemDigestForJson(codec: String,
+                                stampText: String,
+                                summary: String,
+                                description: String,
+                                detailsString: String,
+                                epoch: Long)
+
+object ProblemDigestForJson {
+  def apply(problemDigest: ProblemDigest): ProblemDigestForJson = ProblemDigestForJson(
+    problemDigest.codec,
+    problemDigest.stampText,
+    problemDigest.summary,
+    problemDigest.description,
+    problemDigest.detailsXml.text,
+    problemDigest.epoch)
 }
