@@ -48,15 +48,16 @@
   flex: .5
 }
 
-.flex-table-item:hover{
+.flex-table.query-viewer .flex-table-item:hover{
   background: rgba(98,108,146, .3) !important;
   cursor: pointer;
 }
 
 .node-header,
-.node-header > div{
+.node-header > .flex-table-item{
   border: none !important;
   text-align: center;
+  padding-right: 8px;
   text-transform: uppercase;
 }
 
