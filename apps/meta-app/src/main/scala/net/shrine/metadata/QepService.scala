@@ -64,13 +64,14 @@ trait QepService extends HttpService with Loggable {
       //todo revisit json structure to remove things the front-end doesn't use
       val adapters: Seq[String] = QepQueryDb.db.selectDistinctAdaptersWithResults
 
+      val flags: Map[NetworkQueryId, QueryFlag] = QepQueryDb.db.selectMostRecentQepQueryFlagsFor(queries.map(q => q.networkId).to[Set])
+        .map(q => q._1 -> QueryFlag(q._2))
+
       val queryResults: Seq[ResultsRow] = queries.map(q => ResultsRow(
-        query = QueryCell(q),
+        query = QueryCell(q,flags.get(q.networkId)),
         adaptersToResults = QepQueryDb.db.selectMostRecentFullQueryResultsFor(q.networkId).map(Result(_))))
 
-      val flags: Map[NetworkQueryId, QepQueryFlag] = QepQueryDb.db.selectMostRecentQepQueryFlagsFor(queries.map(q => q.networkId).to[Set])
-
-      val table: ResultsTable = ResultsTable(queryRowCount,queryParameters.skipOption.getOrElse(0),adapters,queryResults,flags)
+      val table: ResultsTable = ResultsTable(queryRowCount,queryParameters.skipOption.getOrElse(0),adapters,queryResults)
 
       val jsonTable: Json = Json(table)
       val formattedTable: String = Json.format(jsonTable)(humanReadable())
@@ -104,8 +105,7 @@ case class ResultsTable(
   rowCount:Int,
   rowOffset:Int,
   adapters:Seq[String], //todo type for adapter name
-  queryResults:Seq[ResultsRow],
-  flags:Map[NetworkQueryId,QepQueryFlag]
+  queryResults:Seq[ResultsRow]
 )
 
 case class ResultsRow(
@@ -118,17 +118,29 @@ case class QueryCell(
                       queryName: QueryName,
                       dateCreated: Time,
                       queryXml: String,
-                      changeDate: Time
+                      changeDate: Time,
+                      flag:Option[QueryFlag]
                     )
 
 object QueryCell {
-  def apply(qepQuery: QepQuery): QueryCell = QueryCell(
+  def apply(qepQuery: QepQuery,flag: Option[QueryFlag]): QueryCell = QueryCell(
     networkId = qepQuery.networkId.toString,
     queryName = qepQuery.queryName,
     dateCreated = qepQuery.dateCreated,
     queryXml = qepQuery.queryXml,
-    changeDate = qepQuery.changeDate
+    changeDate = qepQuery.changeDate,
+    flag
   )
+}
+
+case class QueryFlag(
+                      flagged:Boolean,
+                      flagMessage:String,
+                      changeDate:Long
+                    )
+
+object QueryFlag{
+  def apply(qepQueryFlag: QepQueryFlag): QueryFlag = QueryFlag(qepQueryFlag.flagged, qepQueryFlag.flagMessage, qepQueryFlag.changeDate)
 }
 
 case class Result (
