@@ -14,7 +14,6 @@ import net.shrine.protocol.Credential
 import net.shrine.source.ConfigSource
 import net.shrine.spray.ShaResponse
 import net.shrine.util.Versions
-import org.json4s.DefaultFormats
 import org.json4s.native.JsonMethods.parse
 import org.junit.runner.RunWith
 import org.scalatest.FlatSpec
