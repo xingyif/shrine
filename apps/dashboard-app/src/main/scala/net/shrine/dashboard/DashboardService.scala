@@ -15,11 +15,11 @@ import net.shrine.serialization.NodeSeqSerializer
 import net.shrine.source.ConfigSource
 import net.shrine.spray._
 import net.shrine.status.protocol.{Config => StatusProtocolConfig}
-import net.shrine.util.SingleHubModel
+import net.shrine.util.{SingleHubModel, Versions}
 import org.json4s.native.JsonMethods.{parse => json4sParse}
 import org.json4s.{DefaultFormats, Formats}
 import shapeless.HNil
-import spray.http.{HttpRequest, HttpResponse, StatusCodes, Uri}
+import spray.http._
 import spray.httpx.Json4sSupport
 import spray.routing._
 import spray.routing.directives.LogEntry
@@ -53,7 +53,7 @@ trait DashboardService extends HttpService with Loggable {
 
   //don't need to do anything special for unauthorized users, but they do need access to a static form.
   lazy val route:Route = gruntWatchCorsSupport {
-    redirectToIndex ~ staticResources ~ makeTrouble ~ about ~ authenticatedInBrowser ~ authenticatedDashboard ~ post {
+    redirectToIndex ~ staticResources ~ versionCheck ~ makeTrouble ~ about ~ authenticatedInBrowser ~ authenticatedDashboard ~ post {
       // Chicken and egg problem; Can't check status of certs validation between sites if you need valid certs to exchange messages
       pathPrefix("status")
       pathPrefix("verifySignature")
@@ -72,6 +72,26 @@ trait DashboardService extends HttpService with Loggable {
     case res: HttpResponse => Some(LogEntry(s"\n  Request: $req\n  Response status: ${res.status}", Logging.InfoLevel))
     case _ => None // other kind of responses
   }
+
+  lazy val versionCheck = pathPrefix("version"){
+
+    val currentVersion = Versions.version
+    val buildDate = Versions.buildDate
+
+    val response: AppVersion = AppVersion(currentVersion, buildDate)
+    implicit val formats = response.json4sMarshaller
+    complete(response)
+  }
+
+  case class AppVersion(currentVersion:String, buildDate:String) extends DefaultJsonSupport {
+    // {"currentVersion":"1.23.4.1-SNAPSHOT","buildDate":"2017-07-07 15:52:40"}
+
+    override def toString: String = {
+      "{\"currentVersion\":" + "\"" + currentVersion + "\"" + "," + "\"buildDate\":\"" + buildDate + "\"}"
+    }
+  }
+//    override implicit def json4sFormats: Formats = DefaultFormats
+//  }
 
   def authenticatedInBrowser: Route = pathPrefixTest("user"|"admin"|"toDashboard") {
     logRequestResponse(logEntryForRequestResponse _) { //logging is controlled by Akka's config, slf4j, and log4j config
@@ -130,7 +150,7 @@ trait DashboardService extends HttpService with Loggable {
   }
 
   lazy val about = pathPrefix("about") {
-    complete("Nothing here yet") //todo
+    complete("Something is here already") //todo
   }
 
   def userRoute(user:User):Route = get {

@@ -13,6 +13,8 @@ import net.shrine.i2b2.protocol.pm.User
 import net.shrine.protocol.Credential
 import net.shrine.source.ConfigSource
 import net.shrine.spray.ShaResponse
+import net.shrine.util.Versions
+import org.json4s.DefaultFormats
 import org.json4s.native.JsonMethods.parse
 import org.junit.runner.RunWith
 import org.scalatest.FlatSpec
@@ -427,6 +429,22 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
       val string = new String(body.data.toByteArray)
 
       assertResult(StatusCodes.Forbidden)(status)
+    }
+  }
+
+
+  "DashboardService" should "be able to return a JSON object contains current app version and build date" in {
+
+    Get(s"/version") ~>
+      route ~> check {
+
+      val currentVersion = Versions.version
+      val buildDate = Versions.buildDate
+
+      assertResult(OK)(status)
+
+      val response = new AppVersion(currentVersion, buildDate)
+      assertResult(response.toString)(new String(body.data.toByteArray))
     }
   }
 
