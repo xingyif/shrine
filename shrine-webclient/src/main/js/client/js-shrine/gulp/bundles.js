@@ -30,7 +30,8 @@ module.exports = {
         "fetch",
         "jquery",
         "ramda",
-        "font-awesome"
+        "font-awesome",
+        "moment"
       ],
       "options": {
         "inject": true,

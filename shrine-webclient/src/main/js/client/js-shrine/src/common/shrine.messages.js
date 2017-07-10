@@ -15,8 +15,10 @@ export const notifications = {
 
 export const commands = {
     i2b2: {
-        refreshHistory: 'command.to.i2b2.refresh.history',
         cloneQuery: 'command.to.i2b2.clone.query',
-        showError: 'command.to.i2b2.show.error'
+        showError: 'command.to.i2b2.show.error',
+        flagQuery: 'command.to.i2b2.flag.query',
+        unflagQuery: 'command.to.i2b2.unflag.query',
+        renameQuery: 'command.to.i2b2.rename.query',
     }
 }

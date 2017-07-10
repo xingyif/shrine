@@ -64,6 +64,21 @@ System.register(['ramda', './container'], function (_export, _context) {
                         return v.plugin.errorDetail(d);
                     });
                 };
+                I2B2Service.prototype.renameQuery = function (id) {
+                    return crc(ctx).map(function (v) {
+                        return v.ctrlr.history.queryRename(id, false);
+                    });
+                };
+                I2B2Service.prototype.flagQuery = function (id) {
+                    return crc(ctx).map(function (v) {
+                        return v.ctrlr.history.Flag({ queryId: id, message: '' });
+                    });
+                };
+                I2B2Service.prototype.unflagQuery = function (id) {
+                    return crc(ctx).map(function (v) {
+                        return v.ctrlr.history.Unflag({ queryId: id });
+                    });
+                };
             });
 
             _export('I2B2Service', I2B2Service);

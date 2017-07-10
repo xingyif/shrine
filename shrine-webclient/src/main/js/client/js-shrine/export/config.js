@@ -26,6 +26,7 @@ System.config({
     "fetch": "github:github/fetch@1.0.0",
     "font-awesome": "npm:font-awesome@4.7.0",
     "jquery": "npm:jquery@2.2.4",
+    "moment": "npm:moment@2.18.1",
     "ramda": "npm:ramda@0.23.0",
     "text": "github:systemjs/plugin-text@0.0.8",
     "github:jspm/nodelibs-assert@0.1.0": {
@@ -249,6 +250,9 @@ System.config({
       "aurelia-event-aggregator",
       "common/shrine.messages"
     ],
+    "views/query-viewer/date.converter.js": [
+      "moment"
+    ],
     "views/query-viewer/loading-bar/loading-bar.js": [
       "aurelia-framework"
     ],
@@ -285,6 +289,7 @@ System.config({
       "views/query-viewer/box-style.converter.js",
       "views/query-viewer/context-menu/context-menu.html!github:systemjs/plugin-text@0.0.8.js",
       "views/query-viewer/context-menu/context-menu.js",
+      "views/query-viewer/date.converter.js",
       "views/query-viewer/loading-bar/loading-bar.html!github:systemjs/plugin-text@0.0.8.js",
       "views/query-viewer/loading-bar/loading-bar.js",
       "views/query-viewer/loading-bar/row-loader.html!github:systemjs/plugin-text@0.0.8.js",
@@ -387,6 +392,8 @@ System.config({
       "npm:font-awesome@4.7.0/css/font-awesome.css!github:systemjs/plugin-css@0.1.33.js",
       "npm:jquery@2.2.4.js",
       "npm:jquery@2.2.4/dist/jquery.js",
+      "npm:moment@2.18.1.js",
+      "npm:moment@2.18.1/moment.js",
       "npm:process@0.11.10.js",
       "npm:process@0.11.10/browser.js",
       "npm:ramda@0.23.0.js",

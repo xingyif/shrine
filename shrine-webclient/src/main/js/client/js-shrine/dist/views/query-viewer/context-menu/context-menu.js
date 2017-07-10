@@ -73,9 +73,17 @@ System.register(['aurelia-framework', 'aurelia-event-aggregator', 'common/shrine
                     evtAgg.publish(commands.i2b2.cloneQuery, id);
                     _this.context.class = 'hide';
                 };
+                ContextMenu.prototype.renameQuery = function (id) {
+                    evtAgg.publish(commands.i2b2.renameQuery, id);
+                    _this.context.class = 'hide';
+                };
+                ContextMenu.prototype.flagQuery = function (id) {
+                    evtAgg.publish(commands.i2b2.flagQuery, id);
+                    _this.context.class = 'hide';
+                };
 
-                ContextMenu.prototype.refreshHistory = function () {
-                    evtAgg.publish(commands.i2b2.refreshHistory);
+                ContextMenu.prototype.unflagQuery = function (id) {
+                    evtAgg.publish(commands.i2b2.unflagQuery, id);
                     _this.context.class = 'hide';
                 };
             }, (_descriptor = _applyDecoratedDescriptor(_class2.prototype, 'context', [bindable], {

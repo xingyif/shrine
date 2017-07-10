@@ -24,7 +24,9 @@ export class I2B2Service {
         I2B2Service.prototype.loadHistory = () => crc(ctx).map((v) => v.view.history.doRefreshAll());
         I2B2Service.prototype.loadQuery = id => crc(ctx).map((v) => v.ctrlr.QT.doQueryLoad(id));
         I2B2Service.prototype.errorDetail = d => shrine(ctx).map((v) => v.plugin.errorDetail(d));
-        
+        I2B2Service.prototype.renameQuery = id => crc(ctx).map(v => v.ctrlr.history.queryRename(id, false));
+        I2B2Service.prototype.flagQuery = id => crc(ctx).map(v => v.ctrlr.history.Flag({ queryId: id, message: ''}));
+        I2B2Service.prototype.unflagQuery = id => crc(ctx).map(v => v.ctrlr.history.Unflag({ queryId: id}));
     }
 }
 

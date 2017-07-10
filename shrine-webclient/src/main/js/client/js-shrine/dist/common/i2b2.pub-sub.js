@@ -40,9 +40,11 @@ System.register(['aurelia-framework', 'aurelia-event-aggregator', './i2b2.servic
                         return notifyViewSelected(e.data);
                     });
 
-                    evtAgg.subscribe(commands.i2b2.refreshHistory, commandRefreshHistory);
                     evtAgg.subscribe(commands.i2b2.cloneQuery, commandCloneQuery);
                     evtAgg.subscribe(commands.i2b2.showError, commandShowError);
+                    evtAgg.subscribe(commands.i2b2.renameQuery, commandRenameQuery);
+                    evtAgg.subscribe(commands.i2b2.flagQuery, commandFlagQuery);
+                    evtAgg.subscribe(commands.i2b2.unflagQuery, commandUnflagQuery);
                 };
 
                 var notifyTabMax = function notifyTabMax() {
@@ -61,14 +63,20 @@ System.register(['aurelia-framework', 'aurelia-event-aggregator', './i2b2.servic
                     return evtAgg.publish(notifications.i2b2.viewSelected, v);
                 };
 
-                var commandRefreshHistory = function commandRefreshHistory() {
-                    return i2b2Svc.loadHistory();
-                };
                 var commandCloneQuery = function commandCloneQuery(d) {
                     return i2b2Svc.loadQuery(d);
                 };
                 var commandShowError = function commandShowError(d) {
                     return i2b2Svc.errorDetail(d);
+                };
+                var commandRenameQuery = function commandRenameQuery(d) {
+                    return i2b2Svc.renameQuery(d);
+                };
+                var commandFlagQuery = function commandFlagQuery(d) {
+                    return i2b2Svc.flagQuery(d);
+                };
+                var commandUnflagQuery = function commandUnflagQuery(d) {
+                    return i2b2Svc.unflagQuery(d);
                 };
             }) || _class));
 

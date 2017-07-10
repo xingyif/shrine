@@ -96,6 +96,7 @@ System.register(['aurelia-framework', 'aurelia-event-aggregator', 'repository/qe
                         var result = {
                             name: q.query.queryName,
                             id: q.query.networkId,
+                            date: q.query.dateCreated,
                             nodeResults: []
                         };
                         nodes.forEach(function (n) {
