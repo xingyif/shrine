@@ -9,7 +9,7 @@ import net.shrine.audit.{NetworkQueryId, QueryName, Time, UserName}
 import net.shrine.log.Loggable
 import net.shrine.problem.{AbstractProblem, ProblemDigest, ProblemSources}
 import net.shrine.protocol.{DefaultBreakdownResultOutputTypes, DeleteQueryRequest, FlagQueryRequest, I2b2ResultEnvelope, QueryMaster, QueryResult, ReadPreviousQueriesRequest, ReadPreviousQueriesResponse, RenameQueryRequest, ResultOutputType, ResultOutputTypes, RunQueryRequest, UnFlagQueryRequest}
-import net.shrine.slick.{CouldNotRunDbIoActionException, TestableDataSourceCreator}
+import net.shrine.slick.{CouldNotRunDbIoActionException, TestableDataSourceCreator, TimeoutInDbIoActionException}
 import net.shrine.source.ConfigSource
 import net.shrine.util.XmlDateHelper
 import slick.driver.JdbcProfile
@@ -46,7 +46,7 @@ case class QepQueryDb(schemaDef:QepQuerySchema,dataSource: DataSource,timeout:Du
       }
     }
     catch {
-      case tx:TimeoutException => throw CouldNotRunDbIoActionException(dataSource,tx)
+      case tx:TimeoutException => throw TimeoutInDbIoActionException(dataSource, timeout, tx)
       case NonFatal(x) => throw CouldNotRunDbIoActionException(dataSource,x)
     }
   }

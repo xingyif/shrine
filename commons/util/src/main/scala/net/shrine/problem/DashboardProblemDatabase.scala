@@ -4,7 +4,7 @@ import java.util.concurrent.TimeoutException
 import javax.sql.DataSource
 
 import com.typesafe.config.Config
-import net.shrine.slick.{CouldNotRunDbIoActionException, NeedsWarmUp, TestableDataSourceCreator}
+import net.shrine.slick.{CouldNotRunDbIoActionException, NeedsWarmUp, TestableDataSourceCreator, TimeoutInDbIoActionException}
 import net.shrine.source.ConfigSource
 import slick.dbio.SuccessAction
 import slick.driver.JdbcProfile
@@ -159,8 +159,7 @@ object Problems extends NeedsWarmUp {
       try {
         Await.ready(this.executeTransaction(actions: _*), timeout)
       } catch {
-        // TODO: Handle this better
-        case tx:TimeoutException => throw CouldNotRunDbIoActionException(Problems.dataSource, tx)
+        case tx:TimeoutException => throw TimeoutInDbIoActionException(Problems.dataSource, timeout, tx)
         case NonFatal(x) => throw CouldNotRunDbIoActionException(Problems.dataSource, x)
       }
     }
@@ -179,7 +178,7 @@ object Problems extends NeedsWarmUp {
       try {
         Await.result(this.run(dbio), timeout)
       } catch {
-        case tx:TimeoutException => throw CouldNotRunDbIoActionException(Problems.dataSource, tx)
+        case tx:TimeoutException => throw TimeoutInDbIoActionException(Problems.dataSource, timeout, tx)
         case NonFatal(x) => throw CouldNotRunDbIoActionException(Problems.dataSource, x)
       }
     }

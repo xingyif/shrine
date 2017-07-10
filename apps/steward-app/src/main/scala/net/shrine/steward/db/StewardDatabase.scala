@@ -10,7 +10,7 @@ import net.shrine.authorization.steward.{Date, ExternalQueryId, InboundShrineQue
 import net.shrine.i2b2.protocol.pm.User
 import net.shrine.log.Loggable
 import net.shrine.problem.{AbstractProblem, ProblemSources}
-import net.shrine.slick.{CouldNotRunDbIoActionException, NeedsWarmUp, TestableDataSourceCreator}
+import net.shrine.slick.{CouldNotRunDbIoActionException, DbIoActionException, NeedsWarmUp, TestableDataSourceCreator, TimeoutInDbIoActionException}
 import net.shrine.source.ConfigSource
 import net.shrine.steward.CreateTopicsMode
 import slick.dbio.Effect.Read
@@ -42,15 +42,16 @@ case class StewardDatabase(schemaDef:StewardSchema,dataSource: DataSource) exten
 
   //todo share code from DashboardProblemDatabase.scala . It's a lot richer. See SHRINE-1835
   def dbRun[R](action: DBIOAction[R, NoStream, Nothing]):R = {
+    val timeout = 10 seconds ;
     try {
       val future: Future[R] = database.run(action)
       blocking {
-        Await.result(future, 10 seconds)
+        Await.result(future, timeout)
       }
     } catch {
       case tax:TopicAcessException => throw tax
       case tx:TimeoutException =>
-        val x = CouldNotRunDbIoActionException(dataSource, tx)
+        val x = TimeoutInDbIoActionException(dataSource, timeout, tx)
         StewardDatabaseProblem(x)
         throw x
       case NonFatal(nfx) =>
@@ -757,10 +758,10 @@ case class ApprovedTopicCanNotBeChanged(topicId:TopicId) extends TopicAcessExcep
 
 case class DetectedAttemptByWrongUserToChangeTopic(topicId:TopicId,userId:UserName,ownerId:UserName) extends TopicAcessException(topicId,s"$userId does not own $topicId; $ownerId owns it.")
 
-case class StewardDatabaseProblem(cnrdiax:CouldNotRunDbIoActionException) extends AbstractProblem(ProblemSources.Dsa) {
+case class StewardDatabaseProblem(dbioax:DbIoActionException) extends AbstractProblem(ProblemSources.Dsa) {
   override def summary: String = "The DSA's database failed due to an exception."
 
-  override def description: String = s"TThe DSAs database failed due to $cnrdiax"
+  override def description: String = s"TThe DSAs database failed due to $dbioax"
 
-  override def throwable = Some(cnrdiax)
+  override def throwable = Some(dbioax)
 }

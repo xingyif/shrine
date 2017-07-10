@@ -1,6 +1,8 @@
 package net.shrine.crypto
 
 import java.net.URL
+import java.util
+import java.util.Map.Entry
 
 import com.typesafe.config.{Config, ConfigValue, ConfigValueType}
 import net.shrine.config.ConfigExtensions
@@ -75,7 +77,7 @@ object KeyStoreDescriptorParser extends Loggable {
     }
 
     def parseRemoteSitesForHub: Seq[RemoteSiteDescriptor] = {
-      val downStreamAliases = hubConfig.getConfig(downStreamNodes).entrySet
+      val downStreamAliases: util.Set[Entry[String, ConfigValue]] = hubConfig.getConfigOrEmpty(downStreamNodes).entrySet
       downStreamAliases.map(entry => {
         val url = cvToString(entry.getValue)
         RemoteSiteDescriptor(entry.getKey, None, parseUrl(url), parsePort(url))}).toList
