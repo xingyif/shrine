@@ -31,7 +31,6 @@ System.register(['aurelia-framework', 'aurelia-event-aggregator', 'common/querie
 
                     QueryViewer.prototype.init = function () {
                         _this.pageIndex = 0;
-                        _this.showCircles = false;
                         _this.showLoader = true;
                         _this.vertStyle = 'v-min';
                         _this.runningQueryName = null;
@@ -52,11 +51,12 @@ System.register(['aurelia-framework', 'aurelia-event-aggregator', 'common/querie
                         }
                     };
 
-                    QueryViewer.prototype.publishError = function (e) {
-                        return evtAgg.publish(commands.i2b2.showError, e);
+                    QueryViewer.prototype.publishError = function (e, r) {
+                        e.stopPropagation();
+                        return evtAgg.publish(commands.i2b2.showError, r);
                     };
-                    QueryViewer.prototype.getContext = function (e, r) {
-                        return { x: e.pageX, y: e.pageY, id: r.id, class: 'show' };
+                    QueryViewer.prototype.getContext = function (e, r, c) {
+                        return { x: e.pageX, y: e.pageY, class: 'show', query: r, isCount: c !== undefined, count: c };
                     };
 
                     evtAgg.subscribe(notifications.i2b2.historyRefreshed, function () {
@@ -73,7 +73,6 @@ System.register(['aurelia-framework', 'aurelia-event-aggregator', 'common/querie
                     });
                     evtAgg.subscribe(notifications.shrine.queriesReceived, function (d) {
                         _this.pages = d;
-                        _this.showCircles = _this.pages.length > 1;
                         _this.page = _this.pages[0];
                         _this.runningQueryName = null;
                         _this.loadingInfiniteScroll = false;
@@ -81,7 +80,7 @@ System.register(['aurelia-framework', 'aurelia-event-aggregator', 'common/querie
                     });
                 }
 
-                QueryViewer.prototype.testCall = function testCall($event) {
+                QueryViewer.prototype.updatePage = function updatePage($event) {
                     $event.stopPropagation();
                     var index = event.detail.index;
                     this.page = this.pages[index];

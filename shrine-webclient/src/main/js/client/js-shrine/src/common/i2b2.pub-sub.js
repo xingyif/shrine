@@ -13,9 +13,11 @@ export class I2B2PubSub {
             i2b2Svc.onQuery((e, d) => notifyQueryStarted(d[0].name));
             i2b2Svc.onViewSelected(e => notifyViewSelected(e.data));
             
-            evtAgg.subscribe(commands.i2b2.refreshHistory, commandRefreshHistory)
             evtAgg.subscribe(commands.i2b2.cloneQuery, commandCloneQuery);
             evtAgg.subscribe(commands.i2b2.showError, commandShowError);
+            evtAgg.subscribe(commands.i2b2.renameQuery, commandRenameQuery);
+            evtAgg.subscribe(commands.i2b2.flagQuery, commandFlagQuery);
+            evtAgg.subscribe(commands.i2b2.unflagQuery, commandUnflagQuery);
         }
 
         // -- notifications-- //
@@ -27,9 +29,11 @@ export class I2B2PubSub {
         
 
         // -- commands --//
-        const commandRefreshHistory= () => i2b2Svc.loadHistory();
         const commandCloneQuery = d => i2b2Svc.loadQuery(d);
         const commandShowError = d => i2b2Svc.errorDetail(d);
+        const commandRenameQuery = d => i2b2Svc.renameQuery(d);
+        const commandFlagQuery = d => i2b2Svc.flagQuery(d);
+        const commandUnflagQuery = d => i2b2Svc.unflagQuery(d);
     }
 }
 

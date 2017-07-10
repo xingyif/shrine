@@ -66,6 +66,7 @@ export class QueriesModel {
                 const result = {
                     name: q.query.queryName,
                     id: q.query.networkId,
+                    date: q.query.dateCreated,
                     nodeResults: []
                 };
                 nodes.forEach(n => {

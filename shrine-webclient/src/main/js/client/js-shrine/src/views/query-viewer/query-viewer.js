@@ -29,8 +29,13 @@ export class QueryViewer {
             }
         }
 
-        QueryViewer.prototype.publishError = e => evtAgg.publish(commands.i2b2.showError, e);
-        QueryViewer.prototype.getContext = (e, r) => ({ x: e.pageX, y: e.pageY, id: r.id, class: 'show' });
+        QueryViewer.prototype.publishError = (e, r) => { 
+            e.stopPropagation();
+            return evtAgg.publish(commands.i2b2.showError, r);
+        }
+        QueryViewer.prototype.getContext = (e, r, c) => 
+            ({ x: e.pageX, y: e.pageY, class: 'show', query: r, isCount: c !== undefined, count: c});
+     
 
         //notifications @todo:  remove subscriptions on detach?
         evtAgg.subscribe(notifications.i2b2.historyRefreshed, () => queries.load());
