@@ -52,7 +52,7 @@ trait DashboardService extends HttpService with Loggable {
   val userAuthenticator = UserAuthenticator(ConfigSource.config)
 
   //don't need to do anything special for unauthorized users, but they do need access to a static form.
-  lazy val route: Route = gruntWatchCorsSupport {
+  lazy val route:Route = gruntWatchCorsSupport {
     redirectToIndex ~ staticResources ~ versionCheck ~ makeTrouble ~ about ~ authenticatedInBrowser ~ authenticatedDashboard ~ post {
       // Chicken and egg problem; Can't check status of certs validation between sites if you need valid certs to exchange messages
       pathPrefix("status")
@@ -73,7 +73,7 @@ trait DashboardService extends HttpService with Loggable {
     case _ => None // other kind of responses
   }
 
-  lazy val versionCheck = pathPrefix("version") {
+  lazy val versionCheck = pathPrefix("version"){
 
     val currentVersion = Versions.version
     val buildDate = Versions.buildDate
@@ -83,7 +83,7 @@ trait DashboardService extends HttpService with Loggable {
     complete(response)
   }
 
-  case class AppVersion(currentVersion: String, buildDate: String) extends DefaultJsonSupport {
+  case class AppVersion(currentVersion:String, buildDate:String) extends DefaultJsonSupport {
 
     override def toString: String = {
       "{\"currentVersion\":" + "\"" + currentVersion + "\"" + "," + "\"buildDate\":\"" + buildDate + "\"}"
@@ -91,7 +91,7 @@ trait DashboardService extends HttpService with Loggable {
 
   }
 
-  def authenticatedInBrowser: Route = pathPrefixTest("user" | "admin" | "toDashboard") {
+  def authenticatedInBrowser: Route = pathPrefixTest("user"|"admin"|"toDashboard") {
     logRequestResponse(logEntryForRequestResponse _) { //logging is controlled by Akka's config, slf4j, and log4j config
       reportIfFailedToAuthenticate {
         authenticate(userAuthenticator.basicUserAuthenticator) { user =>
@@ -110,11 +110,11 @@ trait DashboardService extends HttpService with Loggable {
   }
 
   val reportIfFailedToAuthenticate = routeRouteResponse {
-    case Rejected(List(AuthenticationFailedRejection(_, _))) =>
+    case Rejected(List(AuthenticationFailedRejection(_,_))) =>
       complete("AuthenticationFailed")
   }
 
-  def authenticatedDashboard: Route = pathPrefix("fromDashboard") {
+  def authenticatedDashboard:Route = pathPrefix("fromDashboard") {
     logRequestResponse(logEntryForRequestResponse _) { //logging is controlled by Akka's config, slf4j, and log4j config
       get { //all remote dashboard calls are gets.
         authenticate(ShrineJwtAuthenticator.authenticate) { user =>
@@ -132,7 +132,7 @@ trait DashboardService extends HttpService with Loggable {
   lazy val redirectToIndex = pathEnd {
     redirect("shrine-dashboard/client/index.html", StatusCodes.PermanentRedirect) //todo pick up "shrine-dashboard" programatically
   } ~
-    (path("index.html") | pathSingleSlash) {
+    ( path("index.html") | pathSingleSlash) {
       redirect("client/index.html", StatusCodes.PermanentRedirect)
     }
 
@@ -151,14 +151,14 @@ trait DashboardService extends HttpService with Loggable {
     complete("Something is here already") //todo
   }
 
-  def userRoute(user: User): Route = get {
+  def userRoute(user:User):Route = get {
     pathPrefix("whoami") {
       complete(OutboundUser.createFromUser(user))
     }
   }
 
   //todo check that this an admin.
-  def adminRoute(user: User): Route = get {
+  def adminRoute(user:User):Route = get {
 
     pathPrefix("happy") {
       val happyBaseUrl: String = ConfigSource.config.getString("shrine.dashboard.happyBaseUrl")
@@ -166,23 +166,19 @@ trait DashboardService extends HttpService with Loggable {
       forwardUnmatchedPath(happyBaseUrl)
     } ~
       pathPrefix("messWithHappyVersion") { //todo is this used?
-        val happyBaseUrl: String = ConfigSource.config.getString("shrine.dashboard.happyBaseUrl")
+      val happyBaseUrl: String = ConfigSource.config.getString("shrine.dashboard.happyBaseUrl")
 
-        def pullClasspathFromConfig(httpResponse: HttpResponse, uri: Uri): Route = {
+        def pullClasspathFromConfig(httpResponse:HttpResponse,uri:Uri):Route = {
           ctx => {
             val result = httpResponse.entity.asString
             ctx.complete(s"Got '$result' from $uri")
           }
         }
 
-        requestUriThenRoute(happyBaseUrl + "/version", pullClasspathFromConfig)
+        requestUriThenRoute(happyBaseUrl+"/version",pullClasspathFromConfig)
       } ~
-      pathPrefix("ping") {
-        complete("pong")
-      } ~
-      pathPrefix("status") {
-        statusRoute(user)
-      }
+    pathPrefix("ping")   { complete("pong") }~
+    pathPrefix("status") { statusRoute(user) }
   }
 
   //Manually test this by running a curl command
@@ -190,7 +186,7 @@ trait DashboardService extends HttpService with Loggable {
   /**
     * Forward a request from this dashboard to a remote dashboard
     */
-  def toDashboardRoute(user: User): Route = get {
+  def toDashboardRoute(user:User):Route = get {
 
     pathPrefix(Segment) { dnsName =>
       import scala.collection.JavaConversions._
@@ -210,22 +206,22 @@ trait DashboardService extends HttpService with Loggable {
               case Success(goodUrl) => goodUrl
             })
             .find(_.getHost == dnsName) match {
-            case None =>
-              warn(s"Could not find a downstream node matching the requested host `$dnsName`, returning NotFound")
-              complete(StatusCodes.NotFound)
-            case Some(downstreamUrl) =>
-              val remoteDashboardPathPrefix = downstreamUrl.getPath
-                .replaceFirst("shrine/rest/adapter/requests", "shrine-dashboard/fromDashboard") // I don't think this needs to be configurable
-            val port = if (downstreamUrl.getPort == -1)
-              downstreamUrl.getDefaultPort
-            else
-              downstreamUrl.getPort
+              case None =>
+                warn(s"Could not find a downstream node matching the requested host `$dnsName`, returning NotFound")
+                complete(StatusCodes.NotFound)
+              case Some(downstreamUrl) =>
+                val remoteDashboardPathPrefix = downstreamUrl.getPath
+                  .replaceFirst("shrine/rest/adapter/requests", "shrine-dashboard/fromDashboard") // I don't think this needs to be configurable
+                val port = if (downstreamUrl.getPort == -1)
+                  downstreamUrl.getDefaultPort
+                else
+                  downstreamUrl.getPort
 
-              val baseUrl = s"${downstreamUrl.getProtocol}://$dnsName:$port$remoteDashboardPathPrefix"
+                val baseUrl = s"${downstreamUrl.getProtocol}://$dnsName:$port$remoteDashboardPathPrefix"
 
-              info(s"toDashboardRoute: BaseURL: $baseUrl")
-              forwardUnmatchedPath(baseUrl, Some(ShrineJwtAuthenticator.createOAuthCredentials(user, dnsName)))
-          }
+                info(s"toDashboardRoute: BaseURL: $baseUrl")
+                forwardUnmatchedPath(baseUrl,Some(ShrineJwtAuthenticator.createOAuthCredentials(user, dnsName)))
+            }
       }
     }
   }
@@ -238,62 +234,42 @@ trait DashboardService extends HttpService with Loggable {
     override def description: String = description
   }
 
-  def statusRoute(user: User): Route = get {
-    val (adapter, hub, i2b2, keystore, optionalParts, qep, summary) =
-      ("adapter", "hub", "i2b2", "keystore", "optionalParts", "qep", "summary")
-    pathPrefix("classpath") {
-      getClasspath
-    } ~
-      pathPrefix("config") {
-        getConfig
-      } ~
-      pathPrefix("problems") {
-        getProblems
-      } ~
-      pathPrefix(adapter) {
-        getFromSubService(adapter)
-      } ~
-      pathPrefix(hub) {
-        getFromSubService(hub)
-      } ~
-      pathPrefix(i2b2) {
-        getFromSubService(i2b2)
-      } ~
-      pathPrefix(keystore) {
-        getFromSubService(keystore)
-      } ~
-      pathPrefix(optionalParts) {
-        getFromSubService(optionalParts)
-      } ~
-      pathPrefix(qep) {
-        getFromSubService(qep)
-      } ~
-      pathPrefix(summary) {
-        getFromSubService(summary)
-      }
+  def statusRoute(user:User):Route = get {
+    val( adapter ,  hub ,  i2b2 ,  keystore ,  optionalParts ,  qep ,  summary ) =
+       ("adapter", "hub", "i2b2", "keystore", "optionalParts", "qep", "summary")
+    pathPrefix("classpath")   { getClasspath }~
+    pathPrefix("config")      { getConfig }~
+    pathPrefix("problems")    { getProblems }~
+    pathPrefix(adapter)       { getFromSubService(adapter) }~
+    pathPrefix(hub)           { getFromSubService(hub) }~
+    pathPrefix(i2b2)          { getFromSubService(i2b2) }~
+    pathPrefix(keystore)      { getFromSubService(keystore) }~
+    pathPrefix(optionalParts) { getFromSubService(optionalParts) }~
+    pathPrefix(qep)           { getFromSubService(qep) }~
+    pathPrefix(summary)       { getFromSubService(summary) }
   }
 
   val statusBaseUrl = ConfigSource.config.getString("shrine.dashboard.statusBaseUrl")
 
   // TODO: Move this over to Status API?
-  lazy val verifySignature: Route = {
+  lazy val verifySignature:Route = {
 
     formField("sha256".as[String].?) { sha256: Option[String] =>
       val response = sha256.map(s => KeyStoreInfo.hasher.handleSig(s))
       implicit val format = ShaResponse.json4sFormats
       response match {
-        case None => complete(StatusCodes.BadRequest)
+        case None                                           => complete(StatusCodes.BadRequest)
         case Some(sh@ShaResponse(ShaResponse.badFormat, _)) => complete(StatusCodes.BadRequest -> sh)
-        case Some(sh@ShaResponse(_, false)) => complete(StatusCodes.NotFound -> sh)
-        case Some(sh@ShaResponse(_, true)) => complete(StatusCodes.OK -> sh)
+        case Some(sh@ShaResponse(_, false))                 => complete(StatusCodes.NotFound -> sh)
+        case Some(sh@ShaResponse(_, true))                  => complete(StatusCodes.OK -> sh)
       }
     }
   }
 
 
-  lazy val getConfig: Route = {
+  lazy val getConfig:Route = {
 
-    def completeConfigRoute(httpResponse: HttpResponse, uri: Uri): Route = {
+    def completeConfigRoute(httpResponse:HttpResponse,uri:Uri):Route = {
       ctx => {
         val config = ParsedConfig(httpResponse.entity.asString)
         ctx.complete(
@@ -305,27 +281,27 @@ trait DashboardService extends HttpService with Loggable {
     requestUriThenRoute(statusBaseUrl + "/config", completeConfigRoute)
   }
 
-  lazy val getClasspath: Route = {
+  lazy val getClasspath:Route = {
 
-    def pullClasspathFromConfig(httpResponse: HttpResponse, uri: Uri): Route = {
+    def pullClasspathFromConfig(httpResponse:HttpResponse,uri:Uri):Route = {
       ctx => {
-        val result = httpResponse.entity.asString
-        val shrineConfig = ShrineConfig(ParsedConfig(result))
+        val result        = httpResponse.entity.asString
+        val shrineConfig  = ShrineConfig(ParsedConfig(result))
 
         ctx.complete(shrineConfig)
       }
     }
 
-    requestUriThenRoute(statusBaseUrl + "/config", pullClasspathFromConfig)
+    requestUriThenRoute(statusBaseUrl + "/config",pullClasspathFromConfig)
   }
 
-  def getFromSubService(key: String): Route = {
+  def getFromSubService(key: String):Route = {
     requestUriThenRoute(s"$statusBaseUrl/$key")
   }
 
   // table based view, can see N problems at a time. Front end sends how many problems that they want
   // to skip, and it will take N the 'nearest N' ie with n = 20, 0-19 -> 20, 20-39 -> 20-40
-  lazy val getProblems: Route = {
+  lazy val getProblems:Route = {
 
     def floorMod(x: Int, y: Int) = {
       x - (x % y)
@@ -335,9 +311,9 @@ trait DashboardService extends HttpService with Loggable {
 
     // Intellij loudly complains if you use parameters instead of chained parameter calls.
     // ¯\_(ツ)_/¯
-    parameter("offset".as[Int].?(0)) { (offsetPreMod: Int) =>
-      parameter("n".as[Int].?(20)) { (nPreMax: Int) =>
-        parameter("epoch".as[Long].?) { (epoch: Option[Long]) =>
+    parameter("offset".as[Int].?(0)) {(offsetPreMod:Int) =>
+      parameter("n".as[Int].?(20)) {(nPreMax:Int) =>
+        parameter("epoch".as[Long].?) {(epoch:Option[Long]) =>
           val n = Math.max(0, nPreMax)
           val moddedOffset = floorMod(Math.max(0, offsetPreMod), n)
 
@@ -356,9 +332,7 @@ trait DashboardService extends HttpService with Loggable {
           val response: ProblemResponse = ProblemResponse(tupled._1, tupled._2, tupled._3, tupled._4)
           implicit val formats = response.json4sMarshaller
           complete(response)
-        }
-      }
-    }
+    }}}
   }
 }
 
@@ -367,13 +341,13 @@ case class ProblemResponse(size: Int, offset: Int, n: Int, problems: Seq[Problem
 }
 
 object KeyStoreInfo {
-  val config = ConfigSource.config
+  val config             = ConfigSource.config
   val keyStoreDescriptor = KeyStoreDescriptorParser(
     config.getConfig("shrine.keystore"),
     config.getConfigOrEmpty("shrine.hub"),
     config.getConfigOrEmpty("shrine.queryEntryPoint"))
-  val certCollection = BouncyKeyStoreCollection.fromFileRecoverWithClassPath(keyStoreDescriptor)
-  val hasher = UtilHasher(certCollection)
+  val certCollection     = BouncyKeyStoreCollection.fromFileRecoverWithClassPath(keyStoreDescriptor)
+  val hasher             = UtilHasher(certCollection)
 
 }
 
@@ -382,7 +356,7 @@ object KeyStoreInfo {
   * the class literal `T.class` in Java.
   */
 //todo most of this info should come directly from the status service in Shrine, not from reading the config
-case class ParsedConfig(configMap: Map[String, String]) {
+case class ParsedConfig(configMap:Map[String, String]){
 
   private val trueVal = "true"
   private val rootKey = "shrine"
@@ -399,181 +373,171 @@ case class ParsedConfig(configMap: Map[String, String]) {
     getOrElse(rootKey + ".hub.shouldQuerySelf", "")
       .toLowerCase == trueVal
 
-  def fromJsonString(jsonString: String): String = jsonString.split("\"").mkString("")
+  def fromJsonString(jsonString:String): String = jsonString.split("\"").mkString("")
 
-  def get(key: String): Option[String] = configMap.get(key).map(fromJsonString)
+  def get(key:String): Option[String] = configMap.get(key).map(fromJsonString)
 
-  def getOrElse(key: String, elseVal: String = ""): String = get(key).getOrElse(elseVal)
+  def getOrElse(key:String, elseVal:String = ""): String = get(key).getOrElse(elseVal)
 }
 
 object ParsedConfig {
-  def apply(jsonString: String): ParsedConfig = {
+  def apply(jsonString:String):ParsedConfig = {
 
     implicit def json4sFormats: Formats = DefaultFormats
-
-    ParsedConfig(json4sParse(jsonString).extract[StatusProtocolConfig].keyValues) //.filterKeys(_.toLowerCase.startsWith("shrine")))
+    ParsedConfig(json4sParse(jsonString).extract[StatusProtocolConfig].keyValues)//.filterKeys(_.toLowerCase.startsWith("shrine")))
   }
 
 }
 
-case class DownstreamNode(name: String, url: String)
+case class DownstreamNode(name:String, url:String)
 
 object DownstreamNode {
-  def create(configMap: Map[String, String]): Iterable[DownstreamNode] = {
+  def create(configMap:Map[String,String]):Iterable[DownstreamNode] = {
     for ((k, v) <- configMap.filterKeys(_.toLowerCase.startsWith
     ("shrine.hub.downstreamnodes")))
-      yield DownstreamNode(k.split('.').last, v.split("\"").mkString(""))
+      yield DownstreamNode(k.split('.').last,v.split("\"").mkString(""))
   }
 }
 
 //todo replace with the actual config, scrubbed of passwords
-case class ShrineConfig(isHub: Boolean,
-                        hub: Hub,
-                        pmEndpoint: Endpoint,
-                        ontEndpoint: Endpoint,
+case class ShrineConfig(isHub:Boolean,
+                        hub:Hub,
+                        pmEndpoint:Endpoint,
+                        ontEndpoint:Endpoint,
                         hiveCredentials: HiveCredentials,
                         adapter: Adapter,
-                        queryEntryPoint: QEP,
-                        networkStatusQuery: String,
-                        configMap: Map[String, String]
+                        queryEntryPoint:QEP,
+                        networkStatusQuery:String,
+                        configMap:Map[String, String]
                        ) extends DefaultJsonSupport
 
 object ShrineConfig extends DefaultJsonSupport {
-  def apply(config: ParsedConfig): ShrineConfig = {
-    val hub = Hub(config)
-    val isHub = config.isHub
-    val pmEndpoint = Endpoint("pm", config)
-    val ontEndpoint = Endpoint("ont", config)
-    val hiveCredentials = HiveCredentials(config)
-    val adapter = Adapter(config)
-    val queryEntryPoint = QEP(config)
+  def apply(config:ParsedConfig):ShrineConfig = {
+    val hub               = Hub(config)
+    val isHub             = config.isHub
+    val pmEndpoint        = Endpoint("pm",config)
+    val ontEndpoint       = Endpoint("ont",config)
+    val hiveCredentials   = HiveCredentials(config)
+    val adapter           = Adapter(config)
+    val queryEntryPoint   = QEP(config)
     val networkStatusQuery = config.configMap("shrine.networkStatusQuery")
 
     ShrineConfig(isHub, hub, pmEndpoint, ontEndpoint, hiveCredentials, adapter, queryEntryPoint, networkStatusQuery, config.configMap)
   }
 }
 
-case class Endpoint(acceptAllCerts: Boolean, url: String, timeoutSeconds: Int)
-
-object Endpoint {
-  def apply(endpointType: String, parsedConfig: ParsedConfig): Endpoint = {
+case class Endpoint(acceptAllCerts:Boolean, url:String, timeoutSeconds:Int)
+object Endpoint{
+  def apply(endpointType:String,parsedConfig:ParsedConfig):Endpoint = {
     val prefix = "shrine." + endpointType.toLowerCase + "Endpoint."
 
-    val acceptAllCerts = parsedConfig.configMap.getOrElse(prefix + "acceptAllCerts", "") == "true"
-    val url = parsedConfig.configMap.getOrElse(prefix + "url", "")
-    val timeoutSeconds = parsedConfig.configMap.getOrElse(prefix + "timeout.seconds", "0").toInt
+    val acceptAllCerts  = parsedConfig.configMap.getOrElse(prefix + "acceptAllCerts", "") == "true"
+    val url             = parsedConfig.configMap.getOrElse(prefix + "url","")
+    val timeoutSeconds  = parsedConfig.configMap.getOrElse(prefix + "timeout.seconds", "0").toInt
     Endpoint(acceptAllCerts, url, timeoutSeconds)
   }
 }
 
-case class HiveCredentials(domain: String,
-                           username: String,
-                           password: String,
-                           crcProjectId: String,
-                           ontProjectId: String)
-
-object HiveCredentials {
-  def apply(parsedConfig: ParsedConfig): HiveCredentials = {
-    val key = "shrine.hiveCredentials."
-    val domain = parsedConfig.configMap.getOrElse(key + "domain", "")
-    val username = parsedConfig.configMap.getOrElse(key + "username", "")
-    val password = "REDACTED"
-    val crcProjectId = parsedConfig.configMap.getOrElse(key + "crcProjectId", "")
-    val ontProjectId = parsedConfig.configMap.getOrElse(key + "ontProjectId", "")
+case class HiveCredentials(domain:String,
+                           username:String,
+                           password:String,
+                           crcProjectId:String,
+                           ontProjectId:String)
+object HiveCredentials{
+  def apply(parsedConfig:ParsedConfig):HiveCredentials = {
+    val key           = "shrine.hiveCredentials."
+    val domain        = parsedConfig.configMap.getOrElse(key + "domain","")
+    val username      = parsedConfig.configMap.getOrElse(key + "username","")
+    val password      = "REDACTED"
+    val crcProjectId  = parsedConfig.configMap.getOrElse(key + "crcProjectId","")
+    val ontProjectId  = parsedConfig.configMap.getOrElse(key + "ontProjectId","")
     HiveCredentials(domain, username, password, crcProjectId, ontProjectId)
   }
 }
 
 // -- hub only -- //
 //todo delete when the Dashboard front end can use the status service's hub method
-case class Hub(shouldQuerySelf: Boolean,
-               create: Boolean,
-               downstreamNodes: Iterable[DownstreamNode])
-
-object Hub {
-  def apply(parsedConfig: ParsedConfig): Hub = {
+case class Hub(shouldQuerySelf:Boolean,
+               create:Boolean,
+               downstreamNodes:Iterable[DownstreamNode])
+object Hub{
+  def apply(parsedConfig:ParsedConfig):Hub = {
     val shouldQuerySelf = parsedConfig.shouldQuerySelf
-    val create = parsedConfig.isHub
+    val create          = parsedConfig.isHub
     val downstreamNodes = DownstreamNode.create(parsedConfig.configMap)
     Hub(shouldQuerySelf, create, downstreamNodes)
   }
 }
 
 // -- adapter info -- //
-case class Adapter(crcEndpointUrl: String, setSizeObfuscation: Boolean, adapterLockoutAttemptsThreshold: Int,
-                   adapterMappingsFilename: String)
-
-object Adapter {
-  def apply(parsedConfig: ParsedConfig): Adapter = {
-    val key = "shrine.adapter."
-    val crcEndpointUrl = parsedConfig.configMap.getOrElse(key + "crcEndpoint.url", "")
-    val setSizeObfuscation = parsedConfig.configMap.getOrElse(key + "setSizeObfuscation", "").toLowerCase == "true"
+case class Adapter(crcEndpointUrl:String, setSizeObfuscation:Boolean, adapterLockoutAttemptsThreshold:Int,
+                   adapterMappingsFilename:String)
+object Adapter{
+  def apply(parsedConfig:ParsedConfig):Adapter = {
+    val key                             = "shrine.adapter."
+    val crcEndpointUrl                  = parsedConfig.configMap.getOrElse(key + "crcEndpoint.url","")
+    val setSizeObfuscation              = parsedConfig.configMap.getOrElse(key + "setSizeObfuscation","").toLowerCase == "true"
     val adapterLockoutAttemptsThreshold = parsedConfig.configMap.getOrElse(key + "adapterLockoutAttemptsThreshold", "0").toInt
-    val adapterMappingsFileName = parsedConfig.configMap.getOrElse(key + "adapterMappingsFileName", "")
+    val adapterMappingsFileName         = parsedConfig.configMap.getOrElse(key + "adapterMappingsFileName","")
 
     Adapter(crcEndpointUrl, setSizeObfuscation, adapterLockoutAttemptsThreshold, adapterMappingsFileName)
   }
 }
 
 
-case class Steward(qepUserName: String, stewardBaseUrl: String)
-
+case class Steward(qepUserName:String, stewardBaseUrl:String)
 object Steward {
-  def apply(parsedConfig: ParsedConfig): Steward = {
+  def apply (parsedConfig:ParsedConfig):Steward = {
     val key = "shrine.queryEntryPoint.shrineSteward."
-    val qepUserName = parsedConfig.configMap.getOrElse(key + "qepUserName", "")
-    val stewardBaseUrl = parsedConfig.configMap.getOrElse(key + "stewardBaseUrl", "")
+    val qepUserName     = parsedConfig.configMap.getOrElse(key + "qepUserName","")
+    val stewardBaseUrl  = parsedConfig.configMap.getOrElse(key + "stewardBaseUrl","")
     Steward(qepUserName, stewardBaseUrl)
   }
 }
 
 
 // -- if needed -- //
-case class TimeoutInfo(timeUnit: String, description: String)
+case class TimeoutInfo (timeUnit:String, description:String)
 
 
-case class DatabaseInfo(createTablesOnStart: Boolean, dataSourceFrom: String,
-                        jndiDataSourceName: String, slickProfileClassName: String)
-
-case class Audit(database: DatabaseInfo, collectQepAudit: Boolean)
-
-object Audit {
-  def apply(parsedConfig: ParsedConfig): Audit = {
+case class DatabaseInfo(createTablesOnStart:Boolean, dataSourceFrom:String,
+                        jndiDataSourceName:String, slickProfileClassName:String)
+case class Audit(database:DatabaseInfo, collectQepAudit:Boolean)
+object Audit{
+  def apply(parsedConfig:ParsedConfig):Audit = {
     val key = "shrine.queryEntryPoint.audit."
-    val createTablesOnStart = parsedConfig.configMap.getOrElse(key + "database.createTablesOnStart", "") == "true"
-    val dataSourceFrom = parsedConfig.configMap.getOrElse(key + "database.dataSourceFrom", "")
-    val jndiDataSourceName = parsedConfig.configMap.getOrElse(key + "database.jndiDataSourceName", "")
-    val slickProfileClassName = parsedConfig.configMap.getOrElse(key + "database.slickProfileClassName", "")
-    val collectQepAudit = parsedConfig.configMap.getOrElse(key + "collectQepAudit", "") == "true"
+    val createTablesOnStart     = parsedConfig.configMap.getOrElse(key + "database.createTablesOnStart","") == "true"
+    val dataSourceFrom          = parsedConfig.configMap.getOrElse(key + "database.dataSourceFrom","")
+    val jndiDataSourceName      = parsedConfig.configMap.getOrElse(key + "database.jndiDataSourceName","")
+    val slickProfileClassName   = parsedConfig.configMap.getOrElse(key + "database.slickProfileClassName","")
+    val collectQepAudit         = parsedConfig.configMap.getOrElse(key + "collectQepAudit","") == "true"
     val database = DatabaseInfo(createTablesOnStart, dataSourceFrom, jndiDataSourceName, slickProfileClassName)
     Audit(database, collectQepAudit)
   }
 }
-
 case class QEP(
-                maxQueryWaitTimeMinutes: Int,
-                create: Boolean,
-                attachSigningCert: Boolean,
-                authorizationType: String,
-                includeAggregateResults: Boolean,
-                authenticationType: String,
-                audit: Audit,
-                shrineSteward: Steward,
-                broadcasterServiceEndpointUrl: Option[String]
+                maxQueryWaitTimeMinutes:Int,
+                create:Boolean,
+                attachSigningCert:Boolean,
+                authorizationType:String,
+                includeAggregateResults:Boolean,
+                authenticationType:String,
+                audit:Audit,
+                shrineSteward:Steward,
+                broadcasterServiceEndpointUrl:Option[String]
               )
 
-object QEP {
+object QEP{
   val key = "shrine.queryEntryPoint."
-
-  def apply(parsedConfig: ParsedConfig): QEP = QEP(
+  def apply(parsedConfig:ParsedConfig):QEP = QEP(
     maxQueryWaitTimeMinutes = parsedConfig.configMap.getOrElse(key + "maxQueryWaitTime.minutes", "0").toInt,
-    create = parsedConfig.configMap.getOrElse(key + "create", "") == "true",
-    attachSigningCert = parsedConfig.configMap.getOrElse(key + "attachSigningCert", "") == "true",
-    authorizationType = parsedConfig.configMap.getOrElse(key + "authorizationType", ""),
-    includeAggregateResults = parsedConfig.configMap.getOrElse(key + "includeAggregateResults", "") == "true",
-    authenticationType = parsedConfig.configMap.getOrElse(key + "authenticationType", ""),
-    audit = Audit(parsedConfig),
-    shrineSteward = Steward(parsedConfig),
+    create                  = parsedConfig.configMap.getOrElse(key + "create","") == "true",
+    attachSigningCert       = parsedConfig.configMap.getOrElse(key + "attachSigningCert","") == "true",
+    authorizationType       = parsedConfig.configMap.getOrElse(key + "authorizationType",""),
+    includeAggregateResults = parsedConfig.configMap.getOrElse(key + "includeAggregateResults","") == "true",
+    authenticationType      = parsedConfig.configMap.getOrElse(key + "authenticationType", ""),
+    audit                   = Audit(parsedConfig),
+    shrineSteward           = Steward(parsedConfig),
     broadcasterServiceEndpointUrl = parsedConfig.configMap.get(key + "broadcasterServiceEndpoint.url")
   )
 }
@@ -593,12 +557,12 @@ object gruntWatchCorsSupport extends Directive0 with RouteConcatenation {
     `Access-Control-Allow-Headers`("Origin, X-Requested-With, Content-Type, Accept, Accept-Encoding, Accept-Language, Host, Referer, User-Agent, Authorization"),
     `Access-Control-Max-Age`(1728000)) //20 days
 
-  val gruntWatch: Boolean = ConfigSource.config.getBoolean("shrine.dashboard.gruntWatch")
+  val gruntWatch:Boolean = ConfigSource.config.getBoolean("shrine.dashboard.gruntWatch")
 
   override def happly(f: (HNil) => Route): Route = {
-    if (gruntWatch) {
+    if(gruntWatch) {
       options {
-        respondWithHeaders(`Access-Control-Allow-Methods`(OPTIONS, GET, POST) :: allowOriginHeader :: optionsCorsHeaders) {
+        respondWithHeaders(`Access-Control-Allow-Methods`(OPTIONS, GET, POST) ::  allowOriginHeader :: optionsCorsHeaders){
           complete(StatusCodes.OK)
         }
       } ~ f(HNil)
