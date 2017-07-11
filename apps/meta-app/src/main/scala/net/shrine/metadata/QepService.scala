@@ -50,14 +50,10 @@ trait QepService extends HttpService with Loggable {
 
     matchQueryParameters(Some(user.username)){ queryParameters:QueryParameters =>
 
-      debug("queryResults started")
-
       val queryRowCount: Int = QepQueryDb.db.countPreviousQueriesByUserAndDomain(
         userName = user.username,
         domain = user.domain
       )
-
-      debug(s"queryResults found $queryRowCount queries")
 
       val queries: Seq[QepQuery] = QepQueryDb.db.selectPreviousQueriesByUserAndDomain(
         userName = user.username,
@@ -65,27 +61,16 @@ trait QepService extends HttpService with Loggable {
         skip = queryParameters.skipOption,
         limit = queryParameters.limitOption
       )
-
-      debug(s"queryResults got ${queries.length} queries")
-
       //todo revisit json structure to remove things the front-end doesn't use
       val adapters: Seq[String] = QepQueryDb.db.selectDistinctAdaptersWithResults
-
-      debug(s"queryResults got ${adapters.length} adapters")
 
       val queryResults: Seq[ResultsRow] = queries.map(q => ResultsRow(
         query = QueryCell(q),
         adaptersToResults = QepQueryDb.db.selectMostRecentFullQueryResultsFor(q.networkId).map(Result(_))))
 
-      debug(s"queryResults got ${queryResults.length} queryResults")
-
       val flags: Map[NetworkQueryId, QepQueryFlag] = QepQueryDb.db.selectMostRecentQepQueryFlagsFor(queries.map(q => q.networkId).to[Set])
 
-      debug(s"queryResults got ${flags.size} flags")
-
       val table: ResultsTable = ResultsTable(queryRowCount,queryParameters.skipOption.getOrElse(0),adapters,queryResults,flags)
-
-      debug(s"queryResults made the table")
 
       val jsonTable: Json = Json(table)
       val formattedTable: String = Json.format(jsonTable)(humanReadable())
