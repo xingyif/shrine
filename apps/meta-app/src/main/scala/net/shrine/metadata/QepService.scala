@@ -4,10 +4,10 @@ import net.shrine.audit.{NetworkQueryId, QueryName, Time}
 import net.shrine.authorization.steward.UserName
 import net.shrine.i2b2.protocol.pm.User
 import net.shrine.log.Loggable
+import net.shrine.problem.ProblemDigest
 import net.shrine.protocol.ResultOutputType
 import net.shrine.qep.querydb.{FullQueryResult, QepQuery, QepQueryDb, QepQueryFlag}
 import spray.routing._
-
 import rapture.json._
 import rapture.json.jsonBackends.jawn._
 import rapture.json.formatters.humanReadable
@@ -19,7 +19,7 @@ import rapture.json.formatters.humanReadable
   * information about queries running now and the ability to submit queries.
   */
 
-//todo  maybe move this to the qep/service module
+//todo move this to the qep/service module
 trait QepService extends HttpService with Loggable {
   val qepInfo =
     """
@@ -64,13 +64,14 @@ trait QepService extends HttpService with Loggable {
       //todo revisit json structure to remove things the front-end doesn't use
       val adapters: Seq[String] = QepQueryDb.db.selectDistinctAdaptersWithResults
 
+      val flags: Map[NetworkQueryId, QueryFlag] = QepQueryDb.db.selectMostRecentQepQueryFlagsFor(queries.map(q => q.networkId).to[Set])
+        .map(q => q._1 -> QueryFlag(q._2))
+
       val queryResults: Seq[ResultsRow] = queries.map(q => ResultsRow(
-        query = QueryCell(q),
+        query = QueryCell(q,flags.get(q.networkId)),
         adaptersToResults = QepQueryDb.db.selectMostRecentFullQueryResultsFor(q.networkId).map(Result(_))))
 
-      val flags: Map[NetworkQueryId, QepQueryFlag] = QepQueryDb.db.selectMostRecentQepQueryFlagsFor(queries.map(q => q.networkId).to[Set])
-
-      val table: ResultsTable = ResultsTable(queryRowCount,queryParameters.skipOption.getOrElse(0),adapters,queryResults,flags)
+      val table: ResultsTable = ResultsTable(queryRowCount,queryParameters.skipOption.getOrElse(0),adapters,queryResults)
 
       val jsonTable: Json = Json(table)
       val formattedTable: String = Json.format(jsonTable)(humanReadable())
@@ -93,7 +94,7 @@ trait QepService extends HttpService with Loggable {
   }
 }
 
-//todo move to QepQueryDb class
+//todo maybe move to QepQueryDb class
 case class QueryParameters(
                             researcherIdOption:Option[UserName] = None,
                             skipOption:Option[Int] =  None,
@@ -104,8 +105,7 @@ case class ResultsTable(
   rowCount:Int,
   rowOffset:Int,
   adapters:Seq[String], //todo type for adapter name
-  queryResults:Seq[ResultsRow],
-  flags:Map[NetworkQueryId,QepQueryFlag]
+  queryResults:Seq[ResultsRow]
 )
 
 case class ResultsRow(
@@ -118,17 +118,29 @@ case class QueryCell(
                       queryName: QueryName,
                       dateCreated: Time,
                       queryXml: String,
-                      changeDate: Time
+                      changeDate: Time,
+                      flag:Option[QueryFlag]
                     )
 
 object QueryCell {
-  def apply(qepQuery: QepQuery): QueryCell = QueryCell(
+  def apply(qepQuery: QepQuery,flag: Option[QueryFlag]): QueryCell = QueryCell(
     networkId = qepQuery.networkId.toString,
     queryName = qepQuery.queryName,
     dateCreated = qepQuery.dateCreated,
     queryXml = qepQuery.queryXml,
-    changeDate = qepQuery.changeDate
+    changeDate = qepQuery.changeDate,
+    flag
   )
+}
+
+case class QueryFlag(
+                      flagged:Boolean,
+                      flagMessage:String,
+                      changeDate:Long
+                    )
+
+object QueryFlag{
+  def apply(qepQueryFlag: QepQueryFlag): QueryFlag = QueryFlag(qepQueryFlag.flagged, qepQueryFlag.flagMessage, qepQueryFlag.changeDate)
 }
 
 case class Result (
@@ -140,9 +152,9 @@ case class Result (
   count:Long,
   status:String, //todo QueryResult.StatusType,
   statusMessage:Option[String],
-  changeDate:Long
+  changeDate:Long,
 // todo   breakdowns:Option[Map[ResultOutputType,I2b2ResultEnvelope]]
-// todo  problemDigest:Option[ProblemDigest]
+  problemDigest:Option[ProblemDigestForJson]
 )
 
 object Result {
@@ -155,8 +167,26 @@ object Result {
     count = fullQueryResult.count,
     status = fullQueryResult.status.toString,
     statusMessage = fullQueryResult.statusMessage,
-    changeDate = fullQueryResult.changeDate
+    changeDate = fullQueryResult.changeDate,
 //    breakdowns = fullQueryResult.breakdowns
-//    problemDigest = fullQueryResult.problemDigest
+    problemDigest = fullQueryResult.problemDigest.map(ProblemDigestForJson(_))
   )
+}
+
+//todo replace when you figure out how to json-ize xml in rapture
+case class ProblemDigestForJson(codec: String,
+                                stampText: String,
+                                summary: String,
+                                description: String,
+                                detailsString: String,
+                                epoch: Long)
+
+object ProblemDigestForJson {
+  def apply(problemDigest: ProblemDigest): ProblemDigestForJson = ProblemDigestForJson(
+    problemDigest.codec,
+    problemDigest.stampText,
+    problemDigest.summary,
+    problemDigest.description,
+    problemDigest.detailsXml.text,
+    problemDigest.epoch)
 }
