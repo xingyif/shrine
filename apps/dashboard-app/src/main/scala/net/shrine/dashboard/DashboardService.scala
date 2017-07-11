@@ -19,7 +19,7 @@ import net.shrine.util.{SingleHubModel, Versions}
 import org.json4s.native.JsonMethods.{parse => json4sParse}
 import org.json4s.{DefaultFormats, Formats}
 import shapeless.HNil
-import spray.http._
+import spray.http.{HttpRequest, HttpResponse, StatusCodes, Uri}
 import spray.httpx.Json4sSupport
 import spray.routing._
 import spray.routing.directives.LogEntry
@@ -74,21 +74,24 @@ trait DashboardService extends HttpService with Loggable {
   }
 
   lazy val versionCheck = pathPrefix("version"){
-
-    val currentVersion = Versions.version
-    val buildDate = Versions.buildDate
-
-    val response: AppVersion = AppVersion(currentVersion, buildDate)
+    val response: AppVersion = AppVersion()
     implicit val formats = response.json4sMarshaller
     complete(response)
   }
 
-  case class AppVersion(currentVersion:String, buildDate:String) extends DefaultJsonSupport {
+  case class AppVersion(
+                         currentVersion:String,
+                         buildDate:String
+                       ) extends DefaultJsonSupport {
 
     override def toString: String = {
-      "{\"currentVersion\":" + "\"" + currentVersion + "\"" + "," + "\"buildDate\":\"" + buildDate + "\"}"
+        s"""{"currentVersion":"$currentVersion","buildDate":"$buildDate"}"""
     }
 
+  }
+
+  object AppVersion {
+    def apply(): AppVersion = AppVersion(Versions.version, Versions.buildDate)
   }
 
   def authenticatedInBrowser: Route = pathPrefixTest("user"|"admin"|"toDashboard") {

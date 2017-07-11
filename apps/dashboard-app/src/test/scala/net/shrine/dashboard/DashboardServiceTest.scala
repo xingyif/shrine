@@ -432,17 +432,13 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
   }
 
 
-  "DashboardService" should "be able to return a JSON object contains current app version and build date" in {
+  "DashboardService" should "be able to return a JSON object that contains the current app version and build date" in {
 
     Get(s"/version") ~>
       route ~> check {
-
-      val currentVersion = Versions.version
-      val buildDate = Versions.buildDate
-
       assertResult(OK)(status)
 
-      val response = new AppVersion(currentVersion, buildDate)
+      val response = AppVersion()
       assertResult(response.toString)(new String(body.data.toByteArray))
     }
   }
