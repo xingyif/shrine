@@ -97,7 +97,12 @@ System.register(['aurelia-framework', 'aurelia-event-aggregator', 'repository/qe
                             name: q.query.queryName,
                             id: q.query.networkId,
                             date: q.query.dateCreated,
-                            nodeResults: []
+                            nodeResults: [],
+                            status: q.adaptersToResults.reduce(function (s, r) {
+                                var finished = r.status === "FINISHED" ? s.finished + 1 : s.finished;
+                                var error = r.status === "ERROR" ? s.error + 1 : s.error;
+                                return { error: error, finished: finished, total: q.adaptersToResults.length };
+                            }, { error: 0, finished: 0, total: q.adaptersToResults.length })
                         };
                         nodes.forEach(function (n) {
                             result.nodeResults.push(q.adaptersToResults.find(function (a) {

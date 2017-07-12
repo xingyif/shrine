@@ -6,6 +6,7 @@
     <require from="views/query-viewer/loading-bar/loading-bar"></require>
     <require from="views/query-viewer/paginator/paginator"></require>
     <require from="views/query-viewer/date.converter"></require>
+    <require from="views/query-viewer/query-status/query-status"></require>
 
     <span class="query-viewer">
     <loading-bar status.bind="'Loading...'" if.bind="showLoader"></loading-bar>
@@ -44,7 +45,7 @@
                     ${result.date | date}
                 </div>
                 <div class="flex-table-item" click.delegate="context = getContext($event, result)">
-                    row status here.
+                    <query-status status.bind="result.status"></query-status>
                 </div>
                 <div repeat.for="nodeResult of result.nodeResults" class="flex-table-item" click.delegate="context = getContext($event, result)">
                     <a if.bind="nodeResult.status === 'ERROR'" style="text-decoration: underline; color:red" click.delegate="publishError($event, nodeResult)">
