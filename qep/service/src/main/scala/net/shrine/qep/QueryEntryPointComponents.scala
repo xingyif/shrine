@@ -109,8 +109,7 @@ object AuthStrategy {
 
   def determineQueryAuthorizationService(qepConfig:Config, authenticator: Authenticator): QueryAuthorizationService = {
 
-    val defaultAuthorizationType: AuthorizationType = AuthorizationType.NoAuthorization //todo should default to DSA in the reference.conf instead of being optional
-    val authorizationType = qepConfig.getOption("authorizationType",_.getString).flatMap(AuthorizationType.valueOf).getOrElse(defaultAuthorizationType)
+    val authorizationType = AuthorizationType.valueOf(qepConfig.getString("authorizationType")).get
 
     authorizationType match {
       case ShrineSteward => StewardQueryAuthorizationService(qepConfig.getConfig("shrineSteward"))
