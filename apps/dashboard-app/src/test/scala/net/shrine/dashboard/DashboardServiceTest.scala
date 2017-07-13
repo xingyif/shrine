@@ -13,8 +13,10 @@ import net.shrine.i2b2.protocol.pm.User
 import net.shrine.protocol.Credential
 import net.shrine.source.ConfigSource
 import net.shrine.spray.ShaResponse
-import net.shrine.util.Versions
+import org.json4s.NoTypeHints
 import org.json4s.native.JsonMethods.parse
+import org.json4s.native.Serialization
+import org.json4s.native.Serialization.{write}
 import org.junit.runner.RunWith
 import org.scalatest.FlatSpec
 import org.scalatest.junit.JUnitRunner
@@ -439,7 +441,9 @@ class DashboardServiceTest extends FlatSpec with ScalatestRouteTest with Dashboa
       assertResult(OK)(status)
 
       val response = AppVersion()
-      assertResult(response.toString)(new String(body.data.toByteArray))
+      implicit val formats = Serialization.formats(NoTypeHints)
+      val jsonString = write(response)
+      assertResult(jsonString)(new String(body.data.toByteArray))
     }
   }
 

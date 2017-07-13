@@ -82,13 +82,7 @@ trait DashboardService extends HttpService with Loggable {
   case class AppVersion(
                          currentVersion:String,
                          buildDate:String
-                       ) extends DefaultJsonSupport {
-
-    override def toString: String = {
-        s"""{"currentVersion":"$currentVersion","buildDate":"$buildDate"}"""
-    }
-
-  }
+                       ) extends DefaultJsonSupport
 
   object AppVersion {
     def apply(): AppVersion = AppVersion(Versions.version, Versions.buildDate)
