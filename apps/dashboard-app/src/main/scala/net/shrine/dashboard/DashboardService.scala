@@ -129,10 +129,6 @@ trait DashboardService extends HttpService with Loggable {
     }
   }
 
-  lazy val about = pathPrefix("about") {
-    complete("Nothing here yet") //todo
-  }
-
   def userRoute(user:User):Route = get {
     pathPrefix("whoami") {
       complete(OutboundUser.createFromUser(user))
