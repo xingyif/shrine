@@ -15,7 +15,7 @@ import net.shrine.serialization.NodeSeqSerializer
 import net.shrine.source.ConfigSource
 import net.shrine.spray._
 import net.shrine.status.protocol.{Config => StatusProtocolConfig}
-import net.shrine.util.SingleHubModel
+import net.shrine.util.{SingleHubModel, Versions}
 import org.json4s.native.JsonMethods.{parse => json4sParse}
 import org.json4s.{DefaultFormats, Formats}
 import shapeless.HNil
@@ -53,7 +53,7 @@ trait DashboardService extends HttpService with Loggable {
 
   //don't need to do anything special for unauthorized users, but they do need access to a static form.
   lazy val route:Route = gruntWatchCorsSupport {
-    redirectToIndex ~ staticResources ~ makeTrouble ~ about ~ authenticatedInBrowser ~ authenticatedDashboard ~ post {
+    redirectToIndex ~ staticResources ~ versionCheck ~ makeTrouble ~ about ~ authenticatedInBrowser ~ authenticatedDashboard ~ post {
       // Chicken and egg problem; Can't check status of certs validation between sites if you need valid certs to exchange messages
       pathPrefix("status")
       pathPrefix("verifySignature")
@@ -71,6 +71,21 @@ trait DashboardService extends HttpService with Loggable {
   def logEntryForRequest(req: HttpRequest): Any => Option[LogEntry] = {
     case res: HttpResponse => Some(LogEntry(s"\n  Request: $req\n  Response status: ${res.status}", Logging.InfoLevel))
     case _ => None // other kind of responses
+  }
+
+  lazy val versionCheck = pathPrefix("version"){
+    val response: AppVersion = AppVersion()
+    implicit val formats = response.json4sMarshaller
+    complete(response)
+  }
+
+  case class AppVersion(
+                         currentVersion:String,
+                         buildDate:String
+                       ) extends DefaultJsonSupport
+
+  object AppVersion {
+    def apply(): AppVersion = AppVersion(Versions.version, Versions.buildDate)
   }
 
   def authenticatedInBrowser: Route = pathPrefixTest("user"|"admin"|"toDashboard") {
@@ -130,7 +145,7 @@ trait DashboardService extends HttpService with Loggable {
   }
 
   lazy val about = pathPrefix("about") {
-    complete("Nothing here yet") //todo
+    complete("Something is here already") //todo
   }
 
   def userRoute(user:User):Route = get {
