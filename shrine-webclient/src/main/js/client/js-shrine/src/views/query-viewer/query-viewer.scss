@@ -16,14 +16,19 @@
   margin: 0;
 }
 
+
+div.ellipses{
+  overflow: hidden; 
+  text-overflow:ellipsis; 
+  max-width: 100%;
+}
+
 .flex-table-item {
 	flex: 1 1 0;
 	white-space: nowrap;
-  overflow: hidden; 
-  text-overflow:ellipsis;
-	word-wrap: normal;
+  max-width: 15%;
   border-left: 1px solid rgba(98,108,146,0.3);
-  flex-flow: column no-wrap;
+  flex-flow: column;
   transition: all .5s ease;
   padding: 2px;
   text-align: right;

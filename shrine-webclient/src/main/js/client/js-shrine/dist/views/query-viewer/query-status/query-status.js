@@ -1,7 +1,7 @@
 System.register(['aurelia-framework'], function (_export, _context) {
     "use strict";
 
-    var bindable, _desc, _value, _class, _descriptor, QueryStatus;
+    var bindable, inject, _desc, _value, _class, _descriptor, QueryStatus;
 
     function _initDefineProp(target, property, descriptor, context) {
         if (!descriptor) return;
@@ -55,6 +55,7 @@ System.register(['aurelia-framework'], function (_export, _context) {
     return {
         setters: [function (_aureliaFramework) {
             bindable = _aureliaFramework.bindable;
+            inject = _aureliaFramework.inject;
         }],
         execute: function () {
             _export('QueryStatus', QueryStatus = (_class = function () {
@@ -73,6 +74,10 @@ System.register(['aurelia-framework'], function (_export, _context) {
                     var errorPct = scaleToSVG(status.error, status.total);
                     this.readyOffset = 100 - finishedPct;
                     this.errorOffset = this.readyOffset - errorPct;
+                    this.finished = status.finished;
+                    this.error = status.error;
+                    this.pending = status.total - (status.finished + status.error);
+                    this.total = status.total;
                 };
 
                 return QueryStatus;

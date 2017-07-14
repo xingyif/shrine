@@ -1,4 +1,5 @@
-import { bindable } from 'aurelia-framework';
+import { bindable, inject } from 'aurelia-framework';
+
 
 export class QueryStatus {
     @bindable status;
@@ -8,6 +9,10 @@ export class QueryStatus {
         const finishedPct = scaleToSVG(status.finished, status.total);
         const errorPct = scaleToSVG(status.error, status.total);
         this.readyOffset = (100 - finishedPct);
-        this.errorOffset = (this.readyOffset - errorPct);  
+        this.errorOffset = (this.readyOffset - errorPct); 
+        this.finished = status.finished;
+        this.error = status.error;
+        this.pending = status.total - (status.finished + status.error);
+        this.total = status.total; 
     }
 }

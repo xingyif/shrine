@@ -38,13 +38,15 @@
             </div>
 
             <div repeat.for="result of page.results" class="flex-table-row">
-                <div class="flex-table-item">
-                    ${result.name}
+                <div class="flex-table-item" click.delegate="context = getContext($event, result)">
+                    <div class="ellipses">
+                        ${result.name}
+                    </div>
                 </div>
                 <div class="flex-table-item" click.delegate="context = getContext($event, result)">
                     ${result.date | date}
                 </div>
-                <div class="flex-table-item" click.delegate="context = getContext($event, result)">
+                <div class="flex-table-item">
                     <query-status status.bind="result.status"></query-status>
                 </div>
                 <div repeat.for="nodeResult of result.nodeResults" class="flex-table-item" click.delegate="context = getContext($event, result)">
