@@ -53,7 +53,7 @@ trait DashboardService extends HttpService with Loggable {
 
   //don't need to do anything special for unauthorized users, but they do need access to a static form.
   lazy val route:Route = gruntWatchCorsSupport {
-    redirectToIndex ~ staticResources ~ versionCheck ~ makeTrouble ~ about ~ authenticatedInBrowser ~ authenticatedDashboard ~ post {
+    redirectToIndex ~ staticResources ~ versionCheck ~ makeTrouble ~ authenticatedInBrowser ~ authenticatedDashboard ~ post {
       // Chicken and egg problem; Can't check status of certs validation between sites if you need valid certs to exchange messages
       pathPrefix("status")
       pathPrefix("verifySignature")
