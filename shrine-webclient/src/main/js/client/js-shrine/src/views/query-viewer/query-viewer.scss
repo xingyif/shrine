@@ -43,10 +43,13 @@ div.ellipses{
 }
 
 .flex-table-item:first-child{
+  flex: .25;
+}
+.flex-table-item:nth-child(2){
   flex: 2
 }
 
-.flex-table-item:nth-child(2){
+.flex-table-item:nth-child(3){
   flex: .8
 }
 .flex-table-item:nth-child(3){

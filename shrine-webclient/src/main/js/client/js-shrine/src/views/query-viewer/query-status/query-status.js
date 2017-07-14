@@ -1,13 +1,20 @@
 import { bindable, inject } from 'aurelia-framework';
-
-
+import * as _ from 'ramda'
+@inject(Math)
 export class QueryStatus {
     @bindable status;
+    constructor(Math) {
+        this.floor = Math.floor;
+    }
     attached() {
+        const svgScaleMultiplier = 75;
+        const scaleToSVG = _.curry((f, m, t, n) => f((n / t) * m))
+            (this.floor, svgScaleMultiplier, this.status.total);
+
+        //@todo: use composition instead of variables below.
         const status = this.status;
-        const scaleToSVG = (n, t) => Math.floor((n / t) * 75);
-        const finishedPct = scaleToSVG(status.finished, status.total);
-        const errorPct = scaleToSVG(status.error, status.total);
+        const finishedPct = scaleToSVG(status.finished);
+        const errorPct = scaleToSVG(status.error);
         this.readyOffset = (100 - finishedPct);
         this.errorOffset = (this.readyOffset - errorPct); 
         this.finished = status.finished;

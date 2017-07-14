@@ -36,7 +36,6 @@ export class QueryViewer {
         QueryViewer.prototype.getContext = (e, r, c) => 
             ({ x: e.pageX, y: e.pageY, class: 'show', query: r, isCount: c !== undefined, count: c});
      
-
         //notifications @todo:  remove subscriptions on detach?
         evtAgg.subscribe(notifications.i2b2.historyRefreshed, () => queries.load());
         evtAgg.subscribe(notifications.i2b2.tabMax, () => this.vertStyle = 'v-full');

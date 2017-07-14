@@ -1,7 +1,7 @@
-System.register(['aurelia-framework'], function (_export, _context) {
+System.register(['aurelia-framework', 'ramda'], function (_export, _context) {
     "use strict";
 
-    var bindable, inject, _desc, _value, _class, _descriptor, QueryStatus;
+    var bindable, inject, _, _dec, _class, _desc, _value, _class2, _descriptor, QueryStatus;
 
     function _initDefineProp(target, property, descriptor, context) {
         if (!descriptor) return;
@@ -56,22 +56,28 @@ System.register(['aurelia-framework'], function (_export, _context) {
         setters: [function (_aureliaFramework) {
             bindable = _aureliaFramework.bindable;
             inject = _aureliaFramework.inject;
+        }, function (_ramda) {
+            _ = _ramda;
         }],
         execute: function () {
-            _export('QueryStatus', QueryStatus = (_class = function () {
-                function QueryStatus() {
+            _export('QueryStatus', QueryStatus = (_dec = inject(Math), _dec(_class = (_class2 = function () {
+                function QueryStatus(Math) {
                     _classCallCheck(this, QueryStatus);
 
                     _initDefineProp(this, 'status', _descriptor, this);
+
+                    this.floor = Math.floor;
                 }
 
                 QueryStatus.prototype.attached = function attached() {
+                    var svgScaleMultiplier = 75;
+                    var scaleToSVG = _.curry(function (f, m, t, n) {
+                        return f(n / t * m);
+                    })(this.floor, svgScaleMultiplier, this.status.total);
+
                     var status = this.status;
-                    var scaleToSVG = function scaleToSVG(n, t) {
-                        return Math.floor(n / t * 75);
-                    };
-                    var finishedPct = scaleToSVG(status.finished, status.total);
-                    var errorPct = scaleToSVG(status.error, status.total);
+                    var finishedPct = scaleToSVG(status.finished);
+                    var errorPct = scaleToSVG(status.error);
                     this.readyOffset = 100 - finishedPct;
                     this.errorOffset = this.readyOffset - errorPct;
                     this.finished = status.finished;
@@ -81,10 +87,10 @@ System.register(['aurelia-framework'], function (_export, _context) {
                 };
 
                 return QueryStatus;
-            }(), (_descriptor = _applyDecoratedDescriptor(_class.prototype, 'status', [bindable], {
+            }(), (_descriptor = _applyDecoratedDescriptor(_class2.prototype, 'status', [bindable], {
                 enumerable: true,
                 initializer: null
-            })), _class));
+            })), _class2)) || _class));
 
             _export('QueryStatus', QueryStatus);
         }

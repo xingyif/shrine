@@ -24,7 +24,7 @@
   content: '';
   border: 5px solid transparent;
   z-index: 10001; 
-    bottom: 100%;
+  bottom: 100%;
   border-bottom-width: 0;
   border-top-color: #333;
 }
@@ -67,18 +67,22 @@
   }
 }
 
-/* FX All The Things */ 
+
+.flex-table.query-viewer .flex-table-item:hover .tooltip [data-line1]::before,
+.flex-table.query-viewer .flex-table-item:hover .tooltip [data-line1]::after, 
 .tooltip [data-line1]:hover::before,
 .tooltip [data-line2]:hover::after{
   animation: tooltips-vert 300ms ease-out forwards;
 }
 
-/* UNRELATED to tooltips */
-body {
-  margin: 0;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  font-family: sans-serif;
-  background: #ededed;
+
+.flex-table.query-viewer .flex-table-row:first-child .flex-table-item .tooltip [data-line1]::before{
+  top: 7px;
+  border-top-width: 0;
+  border: 5px solid transparent;
+  border-bottom-color: #333;
+} 
+
+.flex-table.query-viewer .flex-table-row:first-child .flex-table-item .tooltip [data-line1]::after{
+  bottom: calc(-100% - 20px);
 }

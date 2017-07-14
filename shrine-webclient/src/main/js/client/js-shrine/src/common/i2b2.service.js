@@ -1,9 +1,11 @@
 
+import {inject} from 'aurelia-framework';
 import * as _ from 'ramda';
 import {Container} from './container';
 
+@inject(window)
 export class I2B2Service {
-    constructor(context = window) {
+    constructor(context) {
 
         //private
         const ctx = context? Container.of(context) : Container.of(null);

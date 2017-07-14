@@ -97,6 +97,8 @@ System.register(['aurelia-framework', 'aurelia-event-aggregator', 'repository/qe
                             name: q.query.queryName,
                             id: q.query.networkId,
                             date: q.query.dateCreated,
+                            flagged: q.query.flagged === true,
+                            flagMessage: q.query.flagMessage || null,
                             nodeResults: [],
                             status: q.adaptersToResults.reduce(function (s, r) {
                                 var finished = r.status === "FINISHED" ? s.finished + 1 : s.finished;

@@ -67,6 +67,8 @@ export class QueriesModel {
                     name: q.query.queryName,
                     id: q.query.networkId,
                     date: q.query.dateCreated,
+                    flagged: q.query.flagged === true,
+                    flagMessage: q.query.flagMessage || null,
                     nodeResults: [],
                     status: q.adaptersToResults.reduce((s, r) => {
                         const finished = r.status === "FINISHED"? s.finished + 1 : s.finished;

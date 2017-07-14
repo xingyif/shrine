@@ -19,6 +19,7 @@
             <div class="flex-table-item"></div>
             <div class="flex-table-item"></div>
             <div class="flex-table-item"></div>
+            <div class="flex-table-item"></div>
             <div repeat.for="node of page.nodes" class="flex-table-item">
                 ${node}
             </div>
@@ -29,6 +30,7 @@
         <div>
             <!-- @todo: create running query component -->
             <div class="flex-table-row" if.bind="runningQueryName">
+                <div class="flex-table-item"></div>
                 <div class="flex-table-item">${runningQueryName}</div>
                 <div class="flex-table-item"></div>
                 <div class="flex-table-item"></div>
@@ -38,6 +40,10 @@
             </div>
 
             <div repeat.for="result of page.results" class="flex-table-row">
+                <div class="flex-table-item">
+                    <i if.bind="result.flagged"  class="fa fa-flag"></i>
+                    <i if.bind="!result.flagged" class="fa fa-flag-o"></i>
+                </div>
                 <div class="flex-table-item" click.delegate="context = getContext($event, result)">
                     <div class="ellipses">
                         ${result.name}
