@@ -1,5 +1,12 @@
 package net.shrine.mom
 
+import java.util.Date
+
+import org.hornetq.api.core.TransportConfiguration
+import org.hornetq.api.core.client.HornetQClient
+import org.hornetq.core.config.impl.ConfigurationImpl
+import org.hornetq.core.remoting.impl.invm.{InVMAcceptorFactory, InVMConnectorFactory}
+import org.hornetq.core.server.HornetQServers
 import org.junit.runner.RunWith
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.junit.JUnitRunner
@@ -11,7 +18,68 @@ import org.scalatest.{BeforeAndAfter, FlatSpec, Matchers}
   * case class into a database.
   */
 @RunWith(classOf[JUnitRunner])
-class JsonStoreDatabaseTest extends FlatSpec with BeforeAndAfter with ScalaFutures with Matchers {
+class MomFacadeTest extends FlatSpec with BeforeAndAfter with ScalaFutures with Matchers {
+
+  "HornetQ" should "be able to send and receive a messages" in {
+    // Step 1. Create the Configuration, and set the properties accordingly
+    val hornetQConfiguration = new ConfigurationImpl()
+    hornetQConfiguration.setJournalDirectory("target/data/journal")
+    hornetQConfiguration.setPersistenceEnabled(false)
+    hornetQConfiguration.setSecurityEnabled(false)
+    hornetQConfiguration.getAcceptorConfigurations.add(new TransportConfiguration(classOf[InVMAcceptorFactory].getName))
+
+    // Step 2. Create and start the server
+    val hornetQServer = HornetQServers.newHornetQServer(hornetQConfiguration)
+    hornetQServer.start()
+
+    // Step 3. As we are not using a JNDI environment we instantiate the objects directly
+    val serverLocator = HornetQClient.createServerLocatorWithoutHA(new TransportConfiguration(classOf[InVMConnectorFactory].getName))
+    val sf = serverLocator.createSessionFactory()
+
+    // Step 4. Create a core queue
+    val coreSession = sf.createSession(false, false, false)
+
+    val queueName = "queue.exampleQueue"
+
+    coreSession.createQueue(queueName, queueName, true)
+
+    coreSession.close()
+
+    // Step 5. Create the session, and producer
+    val session = sf.createSession()
+
+    val producer = session.createProducer(queueName)
+
+    // Step 6. Create and send a message
+    val message = session.createMessage(false)
+
+    val propName = "myprop"
+
+    message.putStringProperty(propName, "Hello sent at " + new Date())
+
+    System.out.println("Sending the message.")
+
+    producer.send(message)
+
+    // Step 7. Create the message consumer and start the connection
+    val messageConsumer = session.createConsumer(queueName)
+    session.start()
+
+    // Step 8. Receive the message.
+    val  messageReceived = messageConsumer.receive(1000)
+    System.out.println("Received TextMessage:" + messageReceived.getStringProperty(propName))
+
+    // Step 9. Be sure to close our resources!
+    if (sf != null)
+    {
+      sf.close()
+    }
+
+    // Step 10. Stop the server
+    hornetQServer.stop()
+
+  }
+
   /*
   implicit val timeout = 10.seconds
   val connector = JsonStoreDatabase.DatabaseConnector
