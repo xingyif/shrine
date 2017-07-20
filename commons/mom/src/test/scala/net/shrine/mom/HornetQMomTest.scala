@@ -36,14 +36,9 @@ class HornetQMomTest extends FlatSpec with BeforeAndAfter with ScalaFutures with
     assert(message.isDefined)
     assert(message.get.contents == testContents)
 
-    // Step 9. Be sure to close our resources!
-    if (sf != null)
-    {
-      sf.close()
-    }
 
-//todo why doesn't this work?   HornetQMom.deleteQueue(queueName)
-    //todo HornetQMomStopper.stop()
+//todo why doesn't deleteQueue work?   HornetQMom.deleteQueue(queueName)
+    HornetQMomStopper.stop()
   }
 
 /*

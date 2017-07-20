@@ -40,20 +40,21 @@ object HornetQMom {
 
   // Step 3. As we are not using a JNDI environment we instantiate the objects directly
   val serverLocator = HornetQClient.createServerLocatorWithoutHA(new TransportConfiguration(classOf[InVMConnectorFactory].getName))
-  val sessionFactory = serverLocator.createSessionFactory() //todo rename
+  val sessionFactory = serverLocator.createSessionFactory()
 
-  val propName = "contents" //todo rename
+  val propName = "contents"
 
   /**
     * Use HornetQMomStopper to stop the hornetQServer without unintentially starting it
     */
-  private[mom] def stop() = hornetQServer.stop()
+  private[mom] def stop() = {
+    sessionFactory.close()
+    hornetQServer.stop()
+  }
 
-  def withSession[T](block: ClientSession => T):T = {
-//todo    private def withSession[T](block: ClientSession => T):T = {
+  private def withSession[T](block: ClientSession => T):T = {
     //arguments are boolean xa, boolean autoCommitSends, boolean autoCommitAcks .
-    //todo do we want any of these to be true? definitely want autoCommitSends
-//val session: ClientSession = sessionFactory.createSession(false, false, false)
+    //todo do we want any of these to be true? definitely want autoCommitSends val session: ClientSession = sessionFactory.createSession(false, false, false)
     val session: ClientSession = sessionFactory.createSession()
     try {
 
@@ -81,12 +82,8 @@ object HornetQMom {
 
   //send a message
   def send(contents:String,to:Queue):Unit =  withSession{ session =>
-
     val producer = session.createProducer(to.name)
-
-    // Step 6. Create and send a message
     val message = session.createMessage(false)
-
     message.putStringProperty(propName, contents)
 
     producer.send(message)
@@ -100,13 +97,9 @@ object HornetQMom {
     * @return Some message before the timeout, or None
     */
   def receive(from:Queue,timeout:Duration):Option[Message] = withSession{ session =>
+    val messageConsumer = session.createConsumer(from.name)
+    session.start()
     blocking {
-
-      // Step 7. Create the message consumer and start the connection
-      val messageConsumer = session.createConsumer(from.name)
-      session.start()
-
-      // Step 8. Receive the message.
       val messageReceived: Option[ClientMessage] = Option(messageConsumer.receive(timeout.toMillis))
       messageReceived.map(m => Message(m.getStringProperty(propName)))
     }
