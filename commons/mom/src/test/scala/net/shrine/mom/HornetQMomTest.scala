@@ -2,11 +2,14 @@ package net.shrine.mom
 
 import java.util.Date
 
+import net.shrine.mom.HornetQMom.Message
 import org.hornetq.api.core.client.{ClientSession, ClientSessionFactory}
 import org.junit.runner.RunWith
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.{BeforeAndAfter, FlatSpec, Ignore, Matchers}
+
+import scala.concurrent.duration._
 
 /**
   * Test creation, insertion, querying, and deletion of ProblemDigest values into an
@@ -25,21 +28,14 @@ class HornetQMomTest extends FlatSpec with BeforeAndAfter with ScalaFutures with
 
     val propName = "contents"
 
-    HornetQMom.send("Test",queue)
+    val testContents = "Test message"
+    HornetQMom.send(testContents,queue)
 
-    HornetQMom.withSession { session =>
+    val message: Option[Message] = HornetQMom.receive(queue,1 second)
 
-      // Step 7. Create the message consumer and start the connection
-      val messageConsumer = session.createConsumer(queueName)
-      session.start()
+    assert(message.isDefined)
+    assert(message.get.contents == testContents)
 
-      // Step 8. Receive the message.
-      val messageReceived = messageConsumer.receive(1000)
-
-      assert(null != messageReceived)
-
-      System.out.println("Received TextMessage:" + messageReceived.getStringProperty(propName))
-    }
     // Step 9. Be sure to close our resources!
     if (sf != null)
     {

@@ -1,11 +1,9 @@
 package net.shrine.mom
 
-import java.util.Date
-
 import com.typesafe.config.Config
 import net.shrine.source.ConfigSource
 import org.hornetq.api.core.TransportConfiguration
-import org.hornetq.api.core.client.{ClientSession, HornetQClient}
+import org.hornetq.api.core.client.{ClientMessage, ClientSession, HornetQClient}
 import org.hornetq.core.config.impl.ConfigurationImpl
 import org.hornetq.core.remoting.impl.invm.{InVMAcceptorFactory, InVMConnectorFactory}
 import org.hornetq.core.server.HornetQServers
@@ -43,6 +41,8 @@ object HornetQMom {
   // Step 3. As we are not using a JNDI environment we instantiate the objects directly
   val serverLocator = HornetQClient.createServerLocatorWithoutHA(new TransportConfiguration(classOf[InVMConnectorFactory].getName))
   val sessionFactory = serverLocator.createSessionFactory() //todo rename
+
+  val propName = "contents" //todo rename
 
   /**
     * Use HornetQMomStopper to stop the hornetQServer without unintentially starting it
@@ -87,8 +87,6 @@ object HornetQMom {
     // Step 6. Create and send a message
     val message = session.createMessage(false)
 
-    val propName = "contents"
-
     message.putStringProperty(propName, contents)
 
     producer.send(message)
@@ -101,8 +99,17 @@ object HornetQMom {
     *
     * @return Some message before the timeout, or None
     */
-  def receive(from:Queue,timeout:Duration):Option[Message] = blocking {
-    ???
+  def receive(from:Queue,timeout:Duration):Option[Message] = withSession{ session =>
+    blocking {
+
+      // Step 7. Create the message consumer and start the connection
+      val messageConsumer = session.createConsumer(from.name)
+      session.start()
+
+      // Step 8. Receive the message.
+      val messageReceived: Option[ClientMessage] = Option(messageConsumer.receive(timeout.toMillis))
+      messageReceived.map(m => Message(m.getStringProperty(propName)))
+    }
   }
 
   //todo dead letter queue for all messages. See http://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/examples-sqs-dead-letter-queues.html
