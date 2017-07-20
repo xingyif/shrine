@@ -37,7 +37,7 @@ object HornetQMom {
   val hornetQServer = HornetQServers.newHornetQServer(hornetQConfiguration)
   hornetQServer.start()
 
-  //todo stop the server gently when tomcat exits
+  //todo stop the server gently when tomcat exits, but only if hornetq is being used. What's a good way to do that? (Should this be a case class yet?)
   def stop() = hornetQServer.stop()
 
   //queue lifecycle
@@ -71,5 +71,20 @@ object HornetQMom {
   case class Queue(name:String)
 
   case class Message(contents:String)
+
+}
+
+/**
+  * If the configuration is such that HornetQ should have been started use this object to stop it
+  */
+//todo is this a good way to write this code?
+object HornetQMomStopper {
+
+  def stop() = {
+    //todo fill in as part of SHIRINE-2128
+    val config: Config = ConfigSource.config.getConfig("shrine.hub.mom.hornetq")
+
+    HornetQMom.stop()
+  }
 
 }

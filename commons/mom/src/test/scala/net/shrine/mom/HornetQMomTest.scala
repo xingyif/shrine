@@ -20,7 +20,7 @@ class HornetQMomTest extends FlatSpec with BeforeAndAfter with ScalaFutures with
 
   "HornetQ" should "be able to send and receive a messages" in {
 
-    //todo hack to bring HornetQMom into the VM. Remove it when you can
+    //todo hack to bring HornetQMom into the VM. Remove it with SRHINE-2118 tests (that will actualy use HornetQMom)
     HornetQMom.toString
 
     // Step 3. As we are not using a JNDI environment we instantiate the objects directly
@@ -66,7 +66,7 @@ class HornetQMomTest extends FlatSpec with BeforeAndAfter with ScalaFutures with
       sf.close()
     }
 
-    HornetQMom.stop()
+    HornetQMomStopper.stop()
   }
 
 }
