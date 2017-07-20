@@ -2,7 +2,7 @@ package net.shrine.mom
 
 import java.util.Date
 
-import org.hornetq.api.core.client.ClientSessionFactory
+import org.hornetq.api.core.client.{ClientSession, ClientSessionFactory}
 import org.junit.runner.RunWith
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.junit.JUnitRunner
@@ -16,40 +16,30 @@ import org.scalatest.{BeforeAndAfter, FlatSpec, Ignore, Matchers}
 @RunWith(classOf[JUnitRunner])
 class HornetQMomTest extends FlatSpec with BeforeAndAfter with ScalaFutures with Matchers {
 
-  "HornetQ" should "be able to send and receive a messages" in {
+  "HornetQ" should "be able to send and receive a message" in {
 
     val queueName = "testQueue"
     val queue = HornetQMom.createQueueIfAbsent(queueName)
 
     val sf: ClientSessionFactory = HornetQMom.sessionFactory
-    // Step 5. Create the session, and producer
-    val session = sf.createSession()
 
-    val producer = session.createProducer(queueName)
-
-    // Step 6. Create and send a message
-    val message = session.createMessage(false)
-
-    val propName = "myprop"
+    val propName = "contents"
 
     HornetQMom.send("Test",queue)
 
+    HornetQMom.withSession { session =>
 
-    System.out.println("Sending the message.")
+      // Step 7. Create the message consumer and start the connection
+      val messageConsumer = session.createConsumer(queueName)
+      session.start()
 
-    producer.send(message)
+      // Step 8. Receive the message.
+      val messageReceived = messageConsumer.receive(1000)
 
-    // Step 7. Create the message consumer and start the connection
-    val messageConsumer = session.createConsumer(queueName)
-    session.start()
+      assert(null != messageReceived)
 
-    // Step 8. Receive the message.
-    val  messageReceived = messageConsumer.receive(1000)
-
-    assert(null != messageReceived)
-
-    System.out.println("Received TextMessage:" + messageReceived.getStringProperty(propName))
-
+      System.out.println("Received TextMessage:" + messageReceived.getStringProperty(propName))
+    }
     // Step 9. Be sure to close our resources!
     if (sf != null)
     {

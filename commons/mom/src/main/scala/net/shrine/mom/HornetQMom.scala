@@ -44,16 +44,17 @@ object HornetQMom {
   val serverLocator = HornetQClient.createServerLocatorWithoutHA(new TransportConfiguration(classOf[InVMConnectorFactory].getName))
   val sessionFactory = serverLocator.createSessionFactory() //todo rename
 
-
   /**
     * Use HornetQMomStopper to stop the hornetQServer without unintentially starting it
     */
   private[mom] def stop() = hornetQServer.stop()
 
-  private def withSession[T](block: ClientSession => T):T = {
+  def withSession[T](block: ClientSession => T):T = {
+//todo    private def withSession[T](block: ClientSession => T):T = {
     //arguments are boolean xa, boolean autoCommitSends, boolean autoCommitAcks .
-    //todo do we want any of these to be true?
-    val session: ClientSession = sessionFactory.createSession(false, false, false)
+    //todo do we want any of these to be true? definitely want autoCommitSends
+//val session: ClientSession = sessionFactory.createSession(false, false, false)
+    val session: ClientSession = sessionFactory.createSession()
     try {
 
       block(session)
@@ -79,16 +80,16 @@ object HornetQMom {
   }
 
   //send a message
-  def send(messageBody:String,to:Queue):Unit =  withSession{ session =>
+  def send(contents:String,to:Queue):Unit =  withSession{ session =>
 
     val producer = session.createProducer(to.name)
 
     // Step 6. Create and send a message
     val message = session.createMessage(false)
 
-    val propName = "myprop"
+    val propName = "contents"
 
-    message.putStringProperty(propName, "Hello sent at " + new Date())
+    message.putStringProperty(propName, contents)
 
     producer.send(message)
   }
