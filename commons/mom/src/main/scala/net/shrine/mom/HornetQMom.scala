@@ -1,10 +1,13 @@
 package net.shrine.mom
 
+import java.util.Date
+
 import com.typesafe.config.Config
 import net.shrine.source.ConfigSource
 import org.hornetq.api.core.TransportConfiguration
+import org.hornetq.api.core.client.{ClientSession, HornetQClient}
 import org.hornetq.core.config.impl.ConfigurationImpl
-import org.hornetq.core.remoting.impl.invm.InVMAcceptorFactory
+import org.hornetq.core.remoting.impl.invm.{InVMAcceptorFactory, InVMConnectorFactory}
 import org.hornetq.core.server.HornetQServers
 
 import scala.concurrent.blocking
@@ -37,20 +40,58 @@ object HornetQMom {
   val hornetQServer = HornetQServers.newHornetQServer(hornetQConfiguration)
   hornetQServer.start()
 
-  //todo stop the server gently when tomcat exits, but only if hornetq is being used. What's a good way to do that? (Should this be a case class yet?)
-  def stop() = hornetQServer.stop()
+  // Step 3. As we are not using a JNDI environment we instantiate the objects directly
+  val serverLocator = HornetQClient.createServerLocatorWithoutHA(new TransportConfiguration(classOf[InVMConnectorFactory].getName))
+  val sessionFactory = serverLocator.createSessionFactory() //todo rename
 
-  //queue lifecycle
-  def createQueueIfAbsent(queueName:String):Queue = {
-???
+
+  /**
+    * Use HornetQMomStopper to stop the hornetQServer without unintentially starting it
+    */
+  private[mom] def stop() = hornetQServer.stop()
+
+  private def withSession[T](block: ClientSession => T):T = {
+    //arguments are boolean xa, boolean autoCommitSends, boolean autoCommitAcks .
+    //todo do we want any of these to be true?
+    val session: ClientSession = sessionFactory.createSession(false, false, false)
+    try {
+
+      block(session)
+    }
+    finally {
+      session.close()
+    }
   }
 
-  def deleteQueue(queueName:String) = ???
+  //queue lifecycle
+  //todo if absent ?
+  def createQueueIfAbsent(queueName:String):Queue = withSession{ session =>
+    session.createQueue(queueName, queueName, true)
+    Queue(queueName)
+  }
 
-  def queues:Seq[Queue] = ???
+  def deleteQueue(queueName:String) = withSession { session =>
+    session.deleteQueue(queueName)
+  }
+
+  def queues:Seq[Queue] = withSession { session =>
+    ??? //todo how to do this?
+  }
 
   //send a message
-  def send(messageBody:String,to:Queue):Unit = ???
+  def send(messageBody:String,to:Queue):Unit =  withSession{ session =>
+
+    val producer = session.createProducer(to.name)
+
+    // Step 6. Create and send a message
+    val message = session.createMessage(false)
+
+    val propName = "myprop"
+
+    message.putStringProperty(propName, "Hello sent at " + new Date())
+
+    producer.send(message)
+  }
 
   //receive a message
   /**

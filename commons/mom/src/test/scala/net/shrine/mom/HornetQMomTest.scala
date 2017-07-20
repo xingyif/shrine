@@ -2,13 +2,11 @@ package net.shrine.mom
 
 import java.util.Date
 
-import org.hornetq.api.core.TransportConfiguration
-import org.hornetq.api.core.client.HornetQClient
-import org.hornetq.core.remoting.impl.invm.InVMConnectorFactory
+import org.hornetq.api.core.client.ClientSessionFactory
 import org.junit.runner.RunWith
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.junit.JUnitRunner
-import org.scalatest.{BeforeAndAfter, FlatSpec, Matchers}
+import org.scalatest.{BeforeAndAfter, FlatSpec, Ignore, Matchers}
 
 /**
   * Test creation, insertion, querying, and deletion of ProblemDigest values into an
@@ -20,22 +18,10 @@ class HornetQMomTest extends FlatSpec with BeforeAndAfter with ScalaFutures with
 
   "HornetQ" should "be able to send and receive a messages" in {
 
-    //todo hack to bring HornetQMom into the VM. Remove it with SRHINE-2118 tests (that will actualy use HornetQMom)
-    HornetQMom.toString
+    val queueName = "testQueue"
+    val queue = HornetQMom.createQueueIfAbsent(queueName)
 
-    // Step 3. As we are not using a JNDI environment we instantiate the objects directly
-    val serverLocator = HornetQClient.createServerLocatorWithoutHA(new TransportConfiguration(classOf[InVMConnectorFactory].getName))
-    val sf = serverLocator.createSessionFactory()
-
-    // Step 4. Create a core queue
-    val coreSession = sf.createSession(false, false, false)
-
-    val queueName = "queue.exampleQueue"
-
-    coreSession.createQueue(queueName, queueName, true)
-
-    coreSession.close()
-
+    val sf: ClientSessionFactory = HornetQMom.sessionFactory
     // Step 5. Create the session, and producer
     val session = sf.createSession()
 
@@ -46,7 +32,8 @@ class HornetQMomTest extends FlatSpec with BeforeAndAfter with ScalaFutures with
 
     val propName = "myprop"
 
-    message.putStringProperty(propName, "Hello sent at " + new Date())
+    HornetQMom.send("Test",queue)
+
 
     System.out.println("Sending the message.")
 
@@ -58,6 +45,9 @@ class HornetQMomTest extends FlatSpec with BeforeAndAfter with ScalaFutures with
 
     // Step 8. Receive the message.
     val  messageReceived = messageConsumer.receive(1000)
+
+    assert(null != messageReceived)
+
     System.out.println("Received TextMessage:" + messageReceived.getStringProperty(propName))
 
     // Step 9. Be sure to close our resources!
@@ -66,7 +56,19 @@ class HornetQMomTest extends FlatSpec with BeforeAndAfter with ScalaFutures with
       sf.close()
     }
 
-    HornetQMomStopper.stop()
+//todo why doesn't this work?   HornetQMom.deleteQueue(queueName)
+    //todo HornetQMomStopper.stop()
   }
 
+/*
+  "HornetQ" should "be OK if asked to create the same queue twice " in {
+
+    val queueName = "testQueue"
+    HornetQMom.createQueueIfAbsent(queueName)
+    HornetQMom.createQueueIfAbsent(queueName)
+
+    //todo why doesn't this work?    HornetQMom.deleteQueue(queueName)
+    //todo HornetQMomStopper.stop()
+  }
+*/
 }
