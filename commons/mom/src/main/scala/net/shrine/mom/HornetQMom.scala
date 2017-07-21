@@ -75,8 +75,9 @@ object HornetQMom {
     Queue(queueName)
   }
 
-  def deleteQueue(queueName:String) = withSession { session =>
-    session.deleteQueue(queueName)
+  def deleteQueue(queueName:String) = {
+    val serverControl: HornetQServerControl = hornetQServer.getHornetQServerControl
+    serverControl.destroyQueue(queueName)
   }
 
   def queues:Seq[Queue] = {

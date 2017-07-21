@@ -43,7 +43,9 @@ class HornetQMomTest extends FlatSpec with BeforeAndAfter with ScalaFutures with
 
     message.fold()(HornetQMom.complete)
 
-//todo why doesn't deleteQueue work?   HornetQMom.deleteQueue(queueName)
+    HornetQMom.deleteQueue(queueName)
+    assert(HornetQMom.queues.isEmpty)
+
     HornetQMomStopper.stop()
   }
 
