@@ -20,7 +20,8 @@ import scala.collection.immutable.Seq
   * @since 7/18/17
   */
 //todo a better name
-//todo split into a trait, LocalHornetQ, and RemoteHornetQ versions
+//todo split into a trait, this LocalHornetQ, and RemoteHornetQ versions. The server side of RemoteHornetQ will call this local version.
+// todo in 1.23 all but the server side will use the client RemoteHornetQ implementation (which will call to the server at the hub)
 //todo in 1.24, create an AwsSqs implementation of the trait
 object HornetQMom {
 
@@ -71,7 +72,7 @@ object HornetQMom {
   def createQueueIfAbsent(queueName:String):Queue = {
     val serverControl: HornetQServerControl = hornetQServer.getHornetQServerControl
     if(!queues.map(_.name).contains(queueName)) {
-      try serverControl.createQueue(queueName, queueName)
+      try serverControl.createQueue(queueName, queueName) //todo how is the address (first argument) used? I'm just throwing in the queue name. Seems to work but why?
       catch {
         case alreadyExists: HornetQQueueExistsException => //already has what we want
       }
@@ -119,6 +120,7 @@ object HornetQMom {
 
   //complete a message
   //todo better here or on the message itself??
+  //todo if we can find API that takes a message ID instead of the message. Otherwise its a state puzzle for the web server implementation
   def complete(message:Message):Unit = message.complete()
 
   case class Queue(name:String)

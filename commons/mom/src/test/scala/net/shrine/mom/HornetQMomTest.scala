@@ -4,7 +4,7 @@ import net.shrine.mom.HornetQMom.Message
 import org.junit.runner.RunWith
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.junit.JUnitRunner
-import org.scalatest.{BeforeAndAfter, FlatSpec, Matchers}
+import org.scalatest.{BeforeAndAfter, BeforeAndAfterAll, FlatSpec, Matchers}
 
 import scala.concurrent.duration._
 import scala.language.postfixOps
@@ -15,7 +15,7 @@ import scala.language.postfixOps
   * case class into a database.
   */
 @RunWith(classOf[JUnitRunner])
-class HornetQMomTest extends FlatSpec with BeforeAndAfter with ScalaFutures with Matchers {
+class HornetQMomTest extends FlatSpec with BeforeAndAfterAll with ScalaFutures with Matchers {
 
   "HornetQ" should "be able to send and receive a message" in {
 
@@ -41,7 +41,6 @@ class HornetQMomTest extends FlatSpec with BeforeAndAfter with ScalaFutures with
     HornetQMom.deleteQueue(queueName)
     assert(HornetQMom.queues.isEmpty)
 
-//    HornetQMomStopper.stop()
   }
 
 
@@ -51,8 +50,8 @@ class HornetQMomTest extends FlatSpec with BeforeAndAfter with ScalaFutures with
     HornetQMom.createQueueIfAbsent(queueName)
     HornetQMom.createQueueIfAbsent(queueName)
 
-    //todo why doesn't this work?    HornetQMom.deleteQueue(queueName)
-    //todo HornetQMomStopper.stop()
+    HornetQMom.deleteQueue(queueName)
   }
 
+  override def afterAll() = HornetQMomStopper.stop()
 }
