@@ -2,8 +2,8 @@ package net.shrine.mom
 
 import com.typesafe.config.Config
 import net.shrine.source.ConfigSource
-import org.hornetq.api.core.TransportConfiguration
-import org.hornetq.api.core.client.{ClientMessage, ClientSession, HornetQClient}
+import org.hornetq.api.core.{HornetQQueueExistsException, TransportConfiguration}
+import org.hornetq.api.core.client.{ClientMessage, ClientSession, ClientSessionFactory, HornetQClient, ServerLocator}
 import org.hornetq.api.core.management.HornetQServerControl
 import org.hornetq.core.config.impl.ConfigurationImpl
 import org.hornetq.core.remoting.impl.invm.{InVMAcceptorFactory, InVMConnectorFactory}
@@ -11,7 +11,6 @@ import org.hornetq.core.server.{HornetQServer, HornetQServers}
 
 import scala.concurrent.blocking
 import scala.concurrent.duration.Duration
-
 import scala.collection.immutable.Seq
 
 /**
@@ -42,9 +41,9 @@ object HornetQMom {
   val hornetQServer: HornetQServer = HornetQServers.newHornetQServer(hornetQConfiguration)
   hornetQServer.start()
 
-  // Step 3. As we are not using a JNDI environment we instantiate the objects directly
-  val serverLocator = HornetQClient.createServerLocatorWithoutHA(new TransportConfiguration(classOf[InVMConnectorFactory].getName))
-  val sessionFactory = serverLocator.createSessionFactory()
+  val serverLocator: ServerLocator = HornetQClient.createServerLocatorWithoutHA(new TransportConfiguration(classOf[InVMConnectorFactory].getName))
+
+  val sessionFactory: ClientSessionFactory = serverLocator.createSessionFactory()
 
   val propName = "contents"
 
@@ -69,9 +68,14 @@ object HornetQMom {
   }
 
   //queue lifecycle
-  //todo if absent ?
-  def createQueueIfAbsent(queueName:String):Queue = withSession{ session =>
-    session.createQueue(queueName, queueName, true)
+  def createQueueIfAbsent(queueName:String):Queue = {
+    val serverControl: HornetQServerControl = hornetQServer.getHornetQServerControl
+    if(!queues.map(_.name).contains(queueName)) {
+      try serverControl.createQueue(queueName, queueName)
+      catch {
+        case alreadyExists: HornetQQueueExistsException => //already has what we want
+      }
+    }
     Queue(queueName)
   }
 

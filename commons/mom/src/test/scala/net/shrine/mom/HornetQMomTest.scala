@@ -1,15 +1,13 @@
 package net.shrine.mom
 
-import java.util.Date
-
 import net.shrine.mom.HornetQMom.Message
-import org.hornetq.api.core.client.{ClientSession, ClientSessionFactory}
 import org.junit.runner.RunWith
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.junit.JUnitRunner
-import org.scalatest.{BeforeAndAfter, FlatSpec, Ignore, Matchers}
+import org.scalatest.{BeforeAndAfter, FlatSpec, Matchers}
 
 import scala.concurrent.duration._
+import scala.language.postfixOps
 
 /**
   * Test creation, insertion, querying, and deletion of ProblemDigest values into an
@@ -29,9 +27,6 @@ class HornetQMomTest extends FlatSpec with BeforeAndAfter with ScalaFutures with
 
     assert(HornetQMom.queues == Seq(queue))
 
-    val sf: ClientSessionFactory = HornetQMom.sessionFactory
-
-    val propName = "contents"
 
     val testContents = "Test message"
     HornetQMom.send(testContents,queue)
@@ -46,10 +41,10 @@ class HornetQMomTest extends FlatSpec with BeforeAndAfter with ScalaFutures with
     HornetQMom.deleteQueue(queueName)
     assert(HornetQMom.queues.isEmpty)
 
-    HornetQMomStopper.stop()
+//    HornetQMomStopper.stop()
   }
 
-/*
+
   "HornetQ" should "be OK if asked to create the same queue twice " in {
 
     val queueName = "testQueue"
@@ -59,5 +54,5 @@ class HornetQMomTest extends FlatSpec with BeforeAndAfter with ScalaFutures with
     //todo why doesn't this work?    HornetQMom.deleteQueue(queueName)
     //todo HornetQMomStopper.stop()
   }
-*/
+
 }
