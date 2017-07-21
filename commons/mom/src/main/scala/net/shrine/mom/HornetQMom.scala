@@ -21,7 +21,7 @@ import scala.collection.immutable.Seq
   */
 //todo a better name
 //todo split into a trait, this LocalHornetQ, and RemoteHornetQ versions. The server side of RemoteHornetQ will call this local version.
-// todo in 1.23 all but the server side will use the client RemoteHornetQ implementation (which will call to the server at the hub)
+//todo in 1.23 all but the server side will use the client RemoteHornetQ implementation (which will call to the server at the hub)
 //todo in 1.24, create an AwsSqs implementation of the trait
 object HornetQMom {
 
