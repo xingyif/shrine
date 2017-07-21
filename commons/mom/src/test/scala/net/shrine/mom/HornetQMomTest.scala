@@ -22,7 +22,12 @@ class HornetQMomTest extends FlatSpec with BeforeAndAfter with ScalaFutures with
   "HornetQ" should "be able to send and receive a message" in {
 
     val queueName = "testQueue"
+
+    assert(HornetQMom.queues.isEmpty)
+
     val queue = HornetQMom.createQueueIfAbsent(queueName)
+
+    assert(HornetQMom.queues == Seq(queue))
 
     val sf: ClientSessionFactory = HornetQMom.sessionFactory
 

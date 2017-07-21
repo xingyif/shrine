@@ -4,12 +4,16 @@ import com.typesafe.config.Config
 import net.shrine.source.ConfigSource
 import org.hornetq.api.core.TransportConfiguration
 import org.hornetq.api.core.client.{ClientMessage, ClientSession, HornetQClient}
+import org.hornetq.api.core.management.HornetQServerControl
 import org.hornetq.core.config.impl.ConfigurationImpl
 import org.hornetq.core.remoting.impl.invm.{InVMAcceptorFactory, InVMConnectorFactory}
-import org.hornetq.core.server.HornetQServers
+import org.hornetq.core.server.{HornetQServer, HornetQServers}
 
 import scala.concurrent.blocking
 import scala.concurrent.duration.Duration
+
+import scala.collection.immutable.Seq
+
 /**
   * This object mostly imitates AWS SQS' API via an embedded HornetQ. See http://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/examples-sqs.html
   *
@@ -25,7 +29,7 @@ object HornetQMom {
 
   // todo use the config to set everything needed here that isn't hard-coded.
   val hornetQConfiguration = new ConfigurationImpl()
-  // todo from config?
+  // todo from config? What is the journal file about? If temporary, use a Java temp file.
   hornetQConfiguration.setJournalDirectory("target/data/journal")
   // todo want this. There are likely many other config bits
   hornetQConfiguration.setPersistenceEnabled(false)
@@ -35,7 +39,7 @@ object HornetQMom {
   hornetQConfiguration.getAcceptorConfigurations.add(new TransportConfiguration(classOf[InVMAcceptorFactory].getName))
 
   // Create and start the server
-  val hornetQServer = HornetQServers.newHornetQServer(hornetQConfiguration)
+  val hornetQServer: HornetQServer = HornetQServers.newHornetQServer(hornetQConfiguration)
   hornetQServer.start()
 
   // Step 3. As we are not using a JNDI environment we instantiate the objects directly
@@ -54,10 +58,9 @@ object HornetQMom {
 
   private def withSession[T](block: ClientSession => T):T = {
     //arguments are boolean xa, boolean autoCommitSends, boolean autoCommitAcks .
-    //todo do we want any of these to be true? definitely want autoCommitSends val session: ClientSession = sessionFactory.createSession(false, false, false)
+    //todo do we want to use any of the createSession parameters?
     val session: ClientSession = sessionFactory.createSession()
     try {
-
       block(session)
     }
     finally {
@@ -76,8 +79,10 @@ object HornetQMom {
     session.deleteQueue(queueName)
   }
 
-  def queues:Seq[Queue] = withSession { session =>
-    ??? //todo how to do this?
+  def queues:Seq[Queue] = {
+    val serverControl: HornetQServerControl = hornetQServer.getHornetQServerControl
+    val queueNames: Array[String] = serverControl.getQueueNames
+    queueNames.map(Queue(_)).to[Seq]
   }
 
   //send a message
