@@ -101,18 +101,23 @@ object HornetQMom {
     session.start()
     blocking {
       val messageReceived: Option[ClientMessage] = Option(messageConsumer.receive(timeout.toMillis))
-      messageReceived.map(m => Message(m.getStringProperty(propName)))
+      messageReceived.map(Message(_))
     }
   }
 
   //todo dead letter queue for all messages. See http://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/examples-sqs-dead-letter-queues.html
 
   //complete a message
-  def complete(message:Message):Unit = ???
+  //todo better here or on the message itself??
+  def complete(message:Message):Unit = message.complete()
 
   case class Queue(name:String)
 
-  case class Message(contents:String)
+  case class Message(hornetQMessage:ClientMessage) {
+    def contents = hornetQMessage.getStringProperty(propName)
+
+    def complete() = hornetQMessage.acknowledge()
+  }
 
 }
 
