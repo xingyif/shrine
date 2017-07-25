@@ -129,4 +129,5 @@ trait RemoteHornetQMom extends HornetQMom  // todo RemoteHornetQMom needs to be 
   }
 
   override def queues: Seq[Queue] = LocalHornetQMom.queues
+
 }

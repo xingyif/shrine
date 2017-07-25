@@ -88,6 +88,7 @@ object LocalHornetQMom extends HornetQMom {
 
   //send a message
   override def send(contents:String,to:Queue):Unit =  withSession{ session =>
+
     val producer = session.createProducer(to.name)
     val message = session.createMessage(false)
     message.putStringProperty(propName, contents)
