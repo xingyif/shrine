@@ -34,13 +34,8 @@ i2b2.CRC.view.status.showDisplay = function() {
 	// set us as active
 	$('infoQueryStatusText').parentNode.parentNode.select('DIV.tabBox.tabQueryStatus')[0].addClassName('active');
 	$('infoQueryStatusText').show();
-	//BG
-	
-	; 
 	$('infoQueryStatusReport').hide();
 	$('infoDownloadStatusData').hide();
-	$('shrinePlugin').hide();
-	//BG
 }
 
 // ================================================================================================== //
@@ -83,13 +78,6 @@ i2b2.CRC.view.status.selectTab = function(tabCode) {
 					i2b2.CRC.view.downloadData.createCSV();
 			}
 			break;
-		default :
-		    this.currentTab = 'shrine';
-			this.cellRoot.view['status'].hideDisplay();
-			this.cellRoot.view['graphs'].hideDisplay();
-			this.cellRoot.view['queryReport'].hideDisplay();  
-			this.cellRoot.view['downloadData'].hideDisplay();
-		break;
 	}
 }
 //BG

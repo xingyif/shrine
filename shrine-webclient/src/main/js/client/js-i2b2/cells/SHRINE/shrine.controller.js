@@ -115,13 +115,20 @@
 		};
 	}
 
-	//@todo: cleanup
 	function bootstrap() {
-		var config = i2b2.SHRINE.cfg.config;
-		jQuery('#' + i2b2.SHRINE.plugin.viewName).load(config.wrapperHtmlFile, function (response, status, xhr) { });
+		overrideQueryPanelHTML(jQuery);
+		loadShrineWrapper(jQuery, i2b2.SHRINE.cfg.config);
+		overrideI2B2(jQuery, i2b2, YAHOO);
 
-		//i2b2 overrides
+	}
+
+	function loadShrineWrapper($, config) {
+		return $('#' + i2b2.SHRINE.plugin.viewName).load(config.wrapperHtmlFile, function (response, status, xhr) { });
+	}
+
+	function overrideI2B2($, i2b2, YAHOO) {
 		i2b2.events.afterQueryInit = new YAHOO.util.CustomEvent("afterQueryInit", i2b2);
+
 		var _queryRun = i2b2.CRC.ctrlr.QT._queryRun;
 		i2b2.CRC.ctrlr.QT._queryRun = function (name, options) {
 			i2b2.events.afterQueryInit.fire({ name: name, data: options });
@@ -130,10 +137,43 @@
 
 		var statusDisplay = i2b2.CRC.view.status.showDisplay;
 		i2b2.CRC.view.status.showDisplay = function () {
-			if (i2b2.CRC.view.status.currentTab === 'status' || !jQuery('.query-viewer.active').length) {
+			if (i2b2.CRC.view.status.currentTab === 'status' || !$('.query-viewer.active').length) {
 				return statusDisplay.apply(i2b2.CRC.view.status.showDisplay, []);
 			}
 		}
+	}
+
+	function overrideQueryPanelHTML($) {
+		removeI2B2Tabs($);
+		removeI2B2Panels($);
+		removeI2B2PrintIcon($);
+		addShrineTab($);
+		addShrinePanel($);
+		//will need to override: i2b2.CRC.view.status.ZoomView();
+	}
+
+	function removeI2B2Tabs($) {
+		$('#crcStatusBox .TopTabs').find('.tabBox').hide();
+	}
+
+	function removeI2B2Panels($) {
+		$('#crcStatusBox .StatusBox').children().hide();
+	}
+
+	function removeI2B2PrintIcon($) {
+		$('#crcStatusBox .TopTabs .opXML')
+			.children().first().remove();
+	}
+
+	function addShrineTab($) {
+		$('#crcStatusBox .TopTabs').append(
+			'<div class="tabBox query-viewer active" onClick="i2b2.SHRINE.plugin.navigateTo(\'query-viewer\')">' +
+			'<div>Query Viewer</div>' +
+			'</div>');
+	}
+
+	function addShrinePanel($) {
+		$('#crcStatusBox .StatusBox').append('<div id="shrinePlugin" class="shrinePluginContent" oncontextmenu="return false"></div>');
 	}
 })();
 

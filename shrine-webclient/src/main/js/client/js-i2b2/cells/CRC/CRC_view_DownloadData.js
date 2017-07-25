@@ -38,7 +38,6 @@ i2b2.CRC.view.downloadData.showDisplay = function() {
 	$('infoQueryStatusText').hide();
 	$('infoQueryStatusChart').hide();
 	$('infoQueryStatusReport').hide();
-	$('shrinePlugin').hide();
 	$('infoDownloadStatusData').show();
 	
 	

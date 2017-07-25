@@ -80,8 +80,6 @@
         i2b2.CRC.view.status.selectTab('shrine');
         showDisplay(route);
         window.frames['shrine-plugin'].window.postMessage(route, '*');
-        //var pluginLocation = window.frames['shrine-plugin'].window.location;
-        //pluginLocation.href = pluginLocation.origin + pluginLocation.pathname + '#' + route;
     }
 
 
