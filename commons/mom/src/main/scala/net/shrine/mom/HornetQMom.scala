@@ -1,5 +1,12 @@
+package net.shrine.mom
+import net.shrine.dashboard.ParsedConfig
+import net.shrine.spray.DefaultJsonSupport
+import org.hornetq.api.core.client.ClientMessage
+import org.json4s.{DefaultFormats, Formats}
+import spray.httpx.Json4sSupport
 
-
+import scala.collection.immutable.Seq
+import scala.concurrent.duration.Duration
 /**
   * This object mostly imitates AWS SQS' API via an embedded HornetQ. See http://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/examples-sqs.html
   *
@@ -19,6 +26,28 @@ trait HornetQMom {
   def queues:Seq[Queue]
   def send(contents:String,to:Queue):Unit
   def receive(from:Queue,timeout:Duration):Option[Message]
-  def complete(message:Message):Unit
+  def completeMessage(message:Message):Unit
 
+}
+case class Queue(name:String) extends DefaultJsonSupport
+
+
+case class Message(hornetQMessage:ClientMessage) extends DefaultJsonSupport { //  extends Json4sSupport {
+  //    override implicit def json4sFormats: Formats = DefaultFormats
+  val propName = "contents"
+
+  def contents = hornetQMessage.getStringProperty(propName)
+
+  def complete() = hornetQMessage.acknowledge()
+}
+object Queue extends DefaultJsonSupport {
+  def apply(name: String): Queue = new Queue(name)
+}
+
+object Message {
+  def apply(name: String): Message = {
+    val clientMessage: ClientMessage = name.asInstanceOf[ClientMessage]
+    val currentMessage: Message = new Message(clientMessage)
+    currentMessage
+  }
 }

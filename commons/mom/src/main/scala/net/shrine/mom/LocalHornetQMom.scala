@@ -6,18 +6,20 @@ package net.shrine.mom
 
 import com.typesafe.config.Config
 import net.shrine.source.ConfigSource
-import org.hornetq.api.core.{HornetQQueueExistsException, TransportConfiguration}
+import net.shrine.spray.DefaultJsonSupport
 import org.hornetq.api.core.client.{ClientMessage, ClientSession, ClientSessionFactory, HornetQClient, ServerLocator}
 import org.hornetq.api.core.management.HornetQServerControl
+import org.hornetq.api.core.{HornetQQueueExistsException, TransportConfiguration}
 import org.hornetq.core.config.impl.ConfigurationImpl
 import org.hornetq.core.remoting.impl.invm.{InVMAcceptorFactory, InVMConnectorFactory}
 import org.hornetq.core.server.{HornetQServer, HornetQServers}
+import org.json4s.{DefaultFormats, Formats}
 
+import scala.collection.immutable.Seq
 import scala.concurrent.blocking
 import scala.concurrent.duration.Duration
-import scala.collection.immutable.Seq
 
-class LocalHornetQMom extends HornetQMom {
+object LocalHornetQMom extends HornetQMom {
 
   val config:Config = ConfigSource.config.getConfig("shrine.hub.mom.hornetq")
 
@@ -63,7 +65,7 @@ class LocalHornetQMom extends HornetQMom {
   }
 
   //queue lifecycle
-  def createQueueIfAbsent(queueName:String):Queue = {
+  override def createQueueIfAbsent(queueName:String):Queue = {
     val serverControl: HornetQServerControl = hornetQServer.getHornetQServerControl
     if(!queues.map(_.name).contains(queueName)) {
       try serverControl.createQueue(queueName, queueName) //todo how is the address (first argument) used? I'm just throwing in the queue name. Seems to work but why?
@@ -71,22 +73,22 @@ class LocalHornetQMom extends HornetQMom {
         case alreadyExists: HornetQQueueExistsException => //already has what we want
       }
     }
-    Queue(queueName)
+    new Queue(queueName)
   }
 
-  def deleteQueue(queueName:String) = {
+  override def deleteQueue(queueName:String) = {
     val serverControl: HornetQServerControl = hornetQServer.getHornetQServerControl
     serverControl.destroyQueue(queueName)
   }
 
-  def queues:Seq[Queue] = {
+  override def queues:Seq[Queue] = {
     val serverControl: HornetQServerControl = hornetQServer.getHornetQServerControl
     val queueNames: Array[String] = serverControl.getQueueNames
-    queueNames.map(Queue(_)).to[Seq]
+    queueNames.map(new Queue(_)).to[Seq] // todo Queue(_)
   }
 
   //send a message
-  def send(contents:String,to:Queue):Unit =  withSession{ session =>
+  override def send(contents:String,to:Queue):Unit =  withSession{ session =>
     val producer = session.createProducer(to.name)
     val message = session.createMessage(false)
     message.putStringProperty(propName, contents)
@@ -101,12 +103,12 @@ class LocalHornetQMom extends HornetQMom {
     *
     * @return Some message before the timeout, or None
     */
-  def receive(from:Queue,timeout:Duration):Option[Message] = withSession{ session =>
+  override def receive(from:Queue,timeout:Duration):Option[Message] = withSession{ session =>
     val messageConsumer = session.createConsumer(from.name)
     session.start()
     blocking {
       val messageReceived: Option[ClientMessage] = Option(messageConsumer.receive(timeout.toMillis))
-      messageReceived.map(Message(_))
+      messageReceived.map(new Message(_))  // todo Message(_)
     }
   }
 
@@ -115,15 +117,15 @@ class LocalHornetQMom extends HornetQMom {
   //complete a message
   //todo better here or on the message itself??
   //todo if we can find API that takes a message ID instead of the message. Otherwise its a state puzzle for the web server implementation
-  def complete(message:Message):Unit = message.complete()
-
-  case class Queue(name:String)
-
-  case class Message(hornetQMessage:ClientMessage) {
-    def contents = hornetQMessage.getStringProperty(propName)
-
-    def complete() = hornetQMessage.acknowledge()
-  }
+  override def completeMessage(message:Message):Unit = message.complete()
+//
+//  case class Queue(name:String)
+//
+//  case class Message(hornetQMessage:ClientMessage) {
+//    def contents = hornetQMessage.getStringProperty(propName)
+//
+//    def complete() = hornetQMessage.acknowledge()
+//  }
 
 }
 
@@ -137,7 +139,7 @@ object HornetQMomStopper {
     //todo fill in as part of SHIRINE-2128
     val config: Config = ConfigSource.config.getConfig("shrine.hub.mom.hornetq")
 
-    HornetQMom.stop()
+    LocalHornetQMom.stop()
   }
 
 }
