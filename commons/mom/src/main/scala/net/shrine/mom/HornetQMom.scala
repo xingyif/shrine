@@ -1,9 +1,6 @@
 package net.shrine.mom
-import net.shrine.dashboard.ParsedConfig
 import net.shrine.spray.DefaultJsonSupport
 import org.hornetq.api.core.client.ClientMessage
-import org.json4s.{DefaultFormats, Formats}
-import spray.httpx.Json4sSupport
 
 import scala.collection.immutable.Seq
 import scala.concurrent.duration.Duration

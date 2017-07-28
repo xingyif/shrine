@@ -1,25 +1,23 @@
+package net.shrine.metadata
+
 import akka.actor.{Actor, ActorRefFactory}
+import akka.event.Logging
 import net.shrine.log.Loggable
 import net.shrine.mom.{HornetQMom, LocalHornetQMom, Message, Queue}
-import spray.http.{StatusCode, StatusCodes}
+import spray.http.{HttpRequest, HttpResponse, StatusCode, StatusCodes}
+import spray.routing.directives.LogEntry
 import spray.routing.{HttpService, Route}
 
+import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.Duration
 import scala.util.Try
 /**
   * Created by yifan on 7/24/17.
   */
 
-class RemoteHornetQMom extends HornetQMom
+trait RemoteHornetQMom extends HornetQMom  // todo RemoteHornetQMom needs to be a trait to be mix in
   with HttpService
-  with Actor
   with Loggable {
-
-  override implicit def actorRefFactory: ActorRefFactory = context
-
-  override def receive: Receive = runRoute(route)
-
-
   //  private implicit def ec = actorRefFactory.dispatcher
   //  lazy val staticDataRoute: Route = get {
   //    (pathPrefix("staticData") | pathPrefix("data")) {
@@ -38,7 +36,6 @@ class RemoteHornetQMom extends HornetQMom
   //      .getOrElse(StatusCodes.NotFound ->
   //        s"Could not find a value for the specified path `$key`")
   //  }
-
   lazy val createQueue: Route = get {
     pathPrefix("createQueue") {
       parameter('queueName) { (queueName: String) =>
@@ -50,7 +47,7 @@ class RemoteHornetQMom extends HornetQMom
   // todo SQS returns CreateQueueResult, which contains queueUrl: String
   override def createQueueIfAbsent(queueName: String): (StatusCode, Queue) = {
 
-    val response = LocalHornetQMom.createQueueIfAbsent(queueName)
+    val response: Queue = LocalHornetQMom.createQueueIfAbsent(queueName)
     response.json4sMarshaller // return as JSON
     // throw alreadyExists SQS QueueAlreadyExists
     StatusCodes.OK -> response
@@ -126,10 +123,10 @@ class RemoteHornetQMom extends HornetQMom
 
   override def queues: Seq[Queue] = LocalHornetQMom.queues
 
-  val route =
-    parameters('color, 'backgroundColor) { (color, backgroundColor) =>
-      complete(s"The color is '$color' and the background is '$backgroundColor'")
-    }
+//  val route =
+//    parameters('color, 'backgroundColor) { (color, backgroundColor) =>
+//      complete(s"The color is '$color' and the background is '$backgroundColor'")
+//    }
 
 
   //  // creates a new Queue (sqs: standard/FIFO)
