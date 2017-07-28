@@ -7,7 +7,6 @@ import org.scalatest.junit.JUnitRunner
 import spray.http.StatusCodes._
 import spray.testkit.ScalatestRouteTest
 
-import scala.concurrent.duration._
 /**
   * Created by yifan on 7/27/17.
   */
@@ -80,6 +79,7 @@ class RemoteHornetQMomTest extends FlatSpec with ScalatestRouteTest with RemoteH
     Get(s"/getQueues") ~> routes ~> check {
       assertResult(OK)(status)
     }
+
   }
 
 }

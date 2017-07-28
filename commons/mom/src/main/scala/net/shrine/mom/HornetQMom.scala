@@ -23,9 +23,11 @@ trait HornetQMom {
   def completeMessage(message:Message):Unit
 
 }
+case class Queue(name:String) extends DefaultJsonSupport
 
-case class Message(hornetQMessage:ClientMessage) extends DefaultJsonSupport {
-  override implicit def json4sFormats: Formats = DefaultFormats
+
+case class Message(hornetQMessage:ClientMessage) extends DefaultJsonSupport { //  extends Json4sSupport {
+  //    override implicit def json4sFormats: Formats = DefaultFormats
   val propName = "contents"
 
   def contents = hornetQMessage.getStringProperty(propName)

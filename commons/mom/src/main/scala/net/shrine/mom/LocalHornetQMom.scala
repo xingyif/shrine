@@ -6,6 +6,7 @@ package net.shrine.mom
 
 import com.typesafe.config.Config
 import net.shrine.source.ConfigSource
+
 import org.hornetq.api.core.client.{ClientMessage, ClientSession, ClientSessionFactory, HornetQClient, ServerLocator}
 import org.hornetq.api.core.management.HornetQServerControl
 import org.hornetq.api.core.{HornetQQueueExistsException, TransportConfiguration}
@@ -14,6 +15,7 @@ import org.hornetq.core.remoting.impl.invm.{InVMAcceptorFactory, InVMConnectorFa
 import org.hornetq.core.server.{HornetQServer, HornetQServers}
 import scala.concurrent.duration._
 import org.hornetq.api.core.client.SendAcknowledgementHandler
+
 import scala.collection.immutable.Seq
 import scala.concurrent.blocking
 import scala.concurrent.duration.Duration
@@ -103,12 +105,13 @@ object LocalHornetQMom extends HornetQMom {
     *
     * @return Some message before the timeout, or None
     */
-  override def receive(from:Queue,timeout:Duration=10 second):Option[Message] = withSession{ session =>
+
+  override def receive(from:Queue,timeout:Duration):Option[Message] = withSession{ session =>
     val messageConsumer = session.createConsumer(from.name)
     session.start()
     blocking {
       val messageReceived: Option[ClientMessage] = Option(messageConsumer.receive(timeout.toMillis))
-      messageReceived.map(Message(_))
+      messageReceived.map(new Message(_))  // todo Message(_)
     }
   }
 
@@ -118,6 +121,7 @@ object LocalHornetQMom extends HornetQMom {
   //todo better here or on the message itself??
   //todo if we can find API that takes a message ID instead of the message. Otherwise its a state puzzle for the web server implementation
   override def completeMessage(message:Message):Unit = message.complete()
+
 }
 
 /**
