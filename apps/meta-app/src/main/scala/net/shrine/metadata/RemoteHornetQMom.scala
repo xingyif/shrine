@@ -1,4 +1,5 @@
 
+
 package net.shrine.metadata
 
 import akka.event.Logging
@@ -57,6 +58,7 @@ trait RemoteHornetQMom extends HornetQMom  // todo RemoteHornetQMom needs to be 
   // SQS returns CreateQueueResult, which contains queueUrl: String
   override def createQueueIfAbsent(queueName: String): Queue = {
     LocalHornetQMom.createQueueIfAbsent(queueName)
+
   }
 
   lazy val deleteQueue: Route = pathPrefix("deleteQueue") {

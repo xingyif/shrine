@@ -76,10 +76,28 @@ class RemoteHornetQMomTest extends FlatSpec with ScalatestRouteTest with RemoteH
 
   "RemoteHornetQMom" should "get all queues and return an OK" in {
 
+
     Get(s"/getQueues") ~> routes ~> check {
       assertResult(OK)(status)
     }
-
   }
+
+//  lazy val deleteQueue: Route = pathPrefix("deleteQueue") {
+//    parameter('queueName) { (queueName: String) =>
+//      deleteQueue(queueName)
+//      complete(s"Queue '$queueName' deleted!") // todo
+//    }
+//  }
+//
+//  override def deleteQueue(queueName: String): (StatusCode, Unit) = {
+//    // todo SQS takes in DeleteMessageRequest, which contains a queueUrl: String and a ReceiptHandle: String
+//    // returns a DeleteMessageResult, toString for debugging
+//    Try(StatusCodes.OK -> LocalHornetQMom.deleteQueue(queueName))
+//      .getOrElse(StatusCodes.BadRequest
+//        -> s"Given QueueName doesn't exist! Failed to delete!")
+//  }
+
+
+
 
 }
