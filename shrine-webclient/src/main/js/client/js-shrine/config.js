@@ -204,6 +204,87 @@ System.config({
       "indexof": "npm:indexof@0.0.1"
     }
   },
+  depCache: {
+    "common/container.js": [
+      "ramda"
+    ],
+    "common/i2b2.pub-sub.js": [
+      "aurelia-framework",
+      "aurelia-event-aggregator",
+      "./i2b2.service",
+      "./shrine.messages"
+    ],
+    "common/i2b2.service.js": [
+      "aurelia-framework",
+      "ramda",
+      "./container"
+    ],
+    "common/queries.model.js": [
+      "aurelia-framework",
+      "aurelia-event-aggregator",
+      "repository/qep.repository",
+      "./shrine.messages"
+    ],
+    "repository/qep.repository.js": [
+      "aurelia-framework",
+      "aurelia-fetch-client",
+      "fetch"
+    ],
+    "shell.js": [
+      "aurelia-framework",
+      "aurelia-event-aggregator",
+      "common/i2b2.pub-sub",
+      "common/queries.model",
+      "common/shrine.messages"
+    ],
+    "views/mailto/mailto.js": [
+      "aurelia-framework",
+      "views/mailto/mailto.service",
+      "views/mailto/mailto.config"
+    ],
+    "views/mailto/mailto.service.js": [
+      "aurelia-framework",
+      "repository/qep.repository"
+    ],
+    "views/query-status/node-result/node-result.js": [
+      "aurelia-framework"
+    ],
+    "views/query-status/node-result/result-types/error/error.js": [
+      "aurelia-framework"
+    ],
+    "views/query-status/node-result/result-types/patient-count/patient-count.js": [
+      "aurelia-framework"
+    ],
+    "views/query-viewer/context-menu/context-menu.js": [
+      "aurelia-framework",
+      "aurelia-event-aggregator",
+      "common/shrine.messages"
+    ],
+    "views/query-viewer/date.converter.js": [
+      "moment"
+    ],
+    "views/query-viewer/loading-bar/loading-bar.js": [
+      "aurelia-framework"
+    ],
+    "views/query-viewer/paginator/paginator.js": [
+      "aurelia-framework"
+    ],
+    "views/query-viewer/query-status/query-status.js": [
+      "aurelia-framework",
+      "ramda"
+    ],
+    "views/query-viewer/query-viewer.js": [
+      "aurelia-framework",
+      "aurelia-event-aggregator",
+      "common/queries.model",
+      "./scroll.service",
+      "common/shrine.messages"
+    ],
+    "views/query-viewer/scroll.service.js": [
+      "ramda",
+      "common/container"
+    ]
+  },
   bundles: {
     "app-build.js": [
       "common/container.js",
@@ -219,6 +300,22 @@ System.config({
       "views/mailto/mailto.html!github:systemjs/plugin-text@0.0.8.js",
       "views/mailto/mailto.js",
       "views/mailto/mailto.service.js",
+      "views/query-status/error-example.html!github:systemjs/plugin-text@0.0.8.js",
+      "views/query-status/example.html!github:systemjs/plugin-text@0.0.8.js",
+      "views/query-status/node-result/node-result.html!github:systemjs/plugin-text@0.0.8.js",
+      "views/query-status/node-result/node-result.js",
+      "views/query-status/node-result/result-types/error/error.html!github:systemjs/plugin-text@0.0.8.js",
+      "views/query-status/node-result/result-types/error/error.js",
+      "views/query-status/node-result/result-types/not-available.html!github:systemjs/plugin-text@0.0.8.js",
+      "views/query-status/node-result/result-types/patient-count/breakdown.html!github:systemjs/plugin-text@0.0.8.js",
+      "views/query-status/node-result/result-types/patient-count/count-value-converter.js",
+      "views/query-status/node-result/result-types/patient-count/patient-count.html!github:systemjs/plugin-text@0.0.8.js",
+      "views/query-status/node-result/result-types/patient-count/patient-count.js",
+      "views/query-status/node-result/result-types/processing.html!github:systemjs/plugin-text@0.0.8.js",
+      "views/query-status/query-status.html!github:systemjs/plugin-text@0.0.8.js",
+      "views/query-status/query-status.js",
+      "views/query-status/query-timing/query-timing.html!github:systemjs/plugin-text@0.0.8.js",
+      "views/query-status/query-timing/query-timing.js",
       "views/query-viewer/box-style.converter.js",
       "views/query-viewer/context-menu/context-menu.html!github:systemjs/plugin-text@0.0.8.js",
       "views/query-viewer/context-menu/context-menu.js",
@@ -641,78 +738,6 @@ System.config({
       "npm:ramda@0.23.0/src/zip.js",
       "npm:ramda@0.23.0/src/zipObj.js",
       "npm:ramda@0.23.0/src/zipWith.js"
-    ]
-  },
-  depCache: {
-    "common/container.js": [
-      "ramda"
-    ],
-    "common/i2b2.pub-sub.js": [
-      "aurelia-framework",
-      "aurelia-event-aggregator",
-      "./i2b2.service",
-      "./shrine.messages"
-    ],
-    "common/i2b2.service.js": [
-      "aurelia-framework",
-      "ramda",
-      "./container"
-    ],
-    "common/queries.model.js": [
-      "aurelia-framework",
-      "aurelia-event-aggregator",
-      "repository/qep.repository",
-      "./shrine.messages"
-    ],
-    "repository/qep.repository.js": [
-      "aurelia-framework",
-      "aurelia-fetch-client",
-      "fetch"
-    ],
-    "shell.js": [
-      "aurelia-framework",
-      "aurelia-event-aggregator",
-      "common/i2b2.pub-sub",
-      "common/queries.model",
-      "common/shrine.messages"
-    ],
-    "views/mailto/mailto.js": [
-      "aurelia-framework",
-      "views/mailto/mailto.service",
-      "views/mailto/mailto.config"
-    ],
-    "views/mailto/mailto.service.js": [
-      "aurelia-framework",
-      "repository/qep.repository"
-    ],
-    "views/query-viewer/context-menu/context-menu.js": [
-      "aurelia-framework",
-      "aurelia-event-aggregator",
-      "common/shrine.messages"
-    ],
-    "views/query-viewer/date.converter.js": [
-      "moment"
-    ],
-    "views/query-viewer/loading-bar/loading-bar.js": [
-      "aurelia-framework"
-    ],
-    "views/query-viewer/paginator/paginator.js": [
-      "aurelia-framework"
-    ],
-    "views/query-viewer/query-status/query-status.js": [
-      "aurelia-framework",
-      "ramda"
-    ],
-    "views/query-viewer/query-viewer.js": [
-      "aurelia-framework",
-      "aurelia-event-aggregator",
-      "common/queries.model",
-      "./scroll.service",
-      "common/shrine.messages"
-    ],
-    "views/query-viewer/scroll.service.js": [
-      "ramda",
-      "common/container"
     ]
   }
 });

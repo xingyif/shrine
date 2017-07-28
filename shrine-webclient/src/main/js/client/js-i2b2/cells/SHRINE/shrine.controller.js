@@ -117,9 +117,8 @@
 
 	function bootstrap() {
 		overrideQueryPanelHTML(jQuery);
-		loadShrineWrapper(jQuery, i2b2.SHRINE.cfg.config);
 		overrideI2B2(jQuery, i2b2, YAHOO);
-
+		loadShrineWrapper(jQuery, i2b2.SHRINE.cfg.config);
 	}
 
 	function loadShrineWrapper($, config) {
@@ -149,7 +148,6 @@
 		removeI2B2PrintIcon($);
 		addShrineTab($);
 		addShrinePanel($);
-		//will need to override: i2b2.CRC.view.status.ZoomView();
 	}
 
 	function removeI2B2Tabs($) {

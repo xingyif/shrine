@@ -1,0 +1,18 @@
+<template>
+    <require from="./node-result/node-result"></require>
+    <div style="clear:both;">
+        <!-- other option is Running -->
+        <div style="float:left; font-weight:bold">Finished Query: ${query.name}</div>
+    </div>
+    <div style="float:right">[5.3 secs]</div><br> <!-- counter component-->
+    <div style="margin-left:20px; clear:both; line-height:16px; " if.bind="query.completed"><!-- display only if completed -->
+        Compute Time: 5.3 secs <!-- computed value -->
+    </div>
+
+    <node-result repeat.for="result of query.nodeResults" result.bind="result" query-name.bind="query.name">
+    </node-result>
+
+    <!-- 
+        <node-result repeat.for="nodeResult in nodeResults"></node-result>
+    -->
+</template> 
