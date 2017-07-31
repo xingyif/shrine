@@ -11,6 +11,7 @@ import spray.routing._
 import rapture.json._
 import rapture.json.jsonBackends.jawn._
 import rapture.json.formatters.humanReadable
+import spray.http.StatusCodes
 
 /**
   * An API to support the web client's work with queries.
@@ -27,26 +28,18 @@ trait QepService extends HttpService with Loggable {
       |
       |This API gives a researcher access to queries, and (eventually) the ability to run queries.
       |
-      |
-      |
-      |This is a simple API that gives you
-      |read access to the metaData section within SHRINE's configuration.
-      |You can access this data by key, or by accessing the entire metaData
-      |config section at once. To access everything at once, make a GET
-      |to shrine-metadata/data (if on a browser, just add /data to the
-      |end of the current url). To access values by key, make a GET to
-      |shrine-metadata/data?key={{your key here without braces}} (again,
-      |if on a browser just add /data?key={{your key}} to the end of the url).
     """.stripMargin
 
 
   def qepRoute(user: User): Route = pathPrefix("qep") {
     get {
-      queryResults(user)
-    }
-  } ~ complete(qepInfo)
+      queryResultsTable(user)
+    } ~
+      pathEndOrSingleSlash{complete(qepInfo)} ~
+      respondWithStatus(StatusCodes.NotFound){complete(qepInfo)}
+  }
 
-  def queryResults(user: User): Route = pathPrefix("queryResults") {
+  def queryResultsTable(user: User): Route = pathPrefix("queryResultsTable") {
 
     matchQueryParameters(Some(user.username)){ queryParameters:QueryParameters =>
 

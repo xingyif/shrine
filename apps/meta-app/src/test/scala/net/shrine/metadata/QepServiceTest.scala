@@ -33,6 +33,16 @@ class QepServiceTest extends FlatSpec with ScalatestRouteTest with QepService {
     }
   }
 
+  "QepService" should "return a NotFound and qepInfo for a non-existant route" in {
+    Get(s"/qep/flarg") ~> qepRoute(researcherUser) ~> check {
+      implicit val formats = DefaultFormats
+      val result = body.data.asString
+
+      assertResult(NotFound)(status)
+      assertResult(qepInfo)(result)
+    }
+  }
+
   val qepQuery = QepQuery(
     networkId = 1L,
     userName = "ben",
@@ -101,7 +111,7 @@ class QepServiceTest extends FlatSpec with ScalatestRouteTest with QepService {
     changeDate = System.currentTimeMillis() - 30
   )
 
-  "QepService" should "return an OK and a table of data for a queryResults request" in {
+  "QepService" should "return an OK and a table of data for a queryResultsTable request" in {
 
     QepQueryDb.db.insertQepQuery(qepQuery)
     QepQueryDb.db.insertQepResultRow(qepResultRowFromBch)
@@ -109,7 +119,7 @@ class QepServiceTest extends FlatSpec with ScalatestRouteTest with QepService {
     QepQueryDb.db.insertQepResultRow(qepResultRowFromDfci)
     QepQueryDb.db.insertQepResultRow(qepResultRowFromPartners)
 
-    Get(s"/qep/queryResults") ~> qepRoute(researcherUser) ~> check {
+    Get(s"/qep/queryResultsTable") ~> qepRoute(researcherUser) ~> check {
       implicit val formats = DefaultFormats
       val result = body.data.asString
 
@@ -124,8 +134,8 @@ class QepServiceTest extends FlatSpec with ScalatestRouteTest with QepService {
     }
   }
 /* todo
-  "QepService" should "return an OK and a table of data for a queryResults request with different skip and limit values" in {
-    Get(s"/qep/queryResults?skip=2&limit=2") ~> qepRoute(researcherUser) ~> check {
+  "QepService" should "return an OK and a table of data for a queryResultsTable request with different skip and limit values" in {
+    Get(s"/qep/queryResultsTable?skip=2&limit=2") ~> qepRoute(researcherUser) ~> check {
       implicit val formats = DefaultFormats
       val result = body.data.asString
 
