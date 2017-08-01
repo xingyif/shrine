@@ -1,160 +1,132 @@
 package net.shrine.metadata
 
-import akka.actor.{Actor, ActorRefFactory}
 import akka.event.Logging
 import net.shrine.log.Loggable
+import net.shrine.mom.LocalHornetQMom.sessionFactory
 import net.shrine.mom.{HornetQMom, LocalHornetQMom, Message, Queue}
-import spray.http.{HttpRequest, HttpResponse, StatusCode, StatusCodes}
+import org.hornetq.api.core.client.ClientSession
+import spray.http.{HttpRequest, HttpResponse, StatusCodes}
 import spray.routing.directives.LogEntry
 import spray.routing.{HttpService, Route}
 
-import scala.concurrent.ExecutionContext
-import scala.concurrent.duration.Duration
-import scala.util.Try
+import scala.collection.immutable.Seq
+import scala.concurrent.duration.{Duration, _}
 /**
   * Created by yifan on 7/24/17.
   */
 
+// todo see SQS StatusCode
 trait RemoteHornetQMom extends HornetQMom  // todo RemoteHornetQMom needs to be a trait to be mix in
   with HttpService
   with Loggable {
-  //  private implicit def ec = actorRefFactory.dispatcher
-  //  lazy val staticDataRoute: Route = get {
-  //    (pathPrefix("staticData") | pathPrefix("data")) {
-  //      parameter("key") { (key: String) =>
-  //        complete(handleKey(key))
-  //      } ~ complete(handleAll) ~
-  //        pathEnd ( complete(staticInfo) )
-  //    }}
-  //
-  //  def handleAll:(StatusCode, String) = {
-  //    StatusCodes.OK -> staticDataConfig.root.render(ConfigRenderOptions.concise()) // returns it as JSON.
-  //  }
-  //
-  //  def handleKey(key: String): (StatusCode, String) = {
-  //    Try(StatusCodes.OK -> staticDataConfig.getValue(key).render(ConfigRenderOptions.concise()))
-  //      .getOrElse(StatusCodes.NotFound ->
-  //        s"Could not find a value for the specified path `$key`")
-  //  }
+
+  lazy val routes: Route = logRequestResponse(logEntryForRequestResponse _) {
+    //logging is controlled by Akka's config, slf4j, and log4j config
+    createQueue ~
+      deleteQueue ~
+      sendMessage ~
+      receiveMessage ~
+      getQueues ~
+      acknowledge
+  }
+
+  /** logs the request method, uri and response at info level */
+  def logEntryForRequestResponse(req: HttpRequest): Any => Option[LogEntry] = {
+    case res: HttpResponse => Some(LogEntry(s"\n  Request: $req\n  Response: $res", Logging.InfoLevel))
+    case _ => None // other kind of responses
+  }
+
+  /** logs just the request method, uri and response status at info level */
+  def logEntryForRequest(req: HttpRequest): Any => Option[LogEntry] = {
+    case res: HttpResponse => Some(LogEntry(s"\n  Request: $req\n  Response status: ${res.status}", Logging.InfoLevel))
+    case _ => None // other kind of responses
+  }
+
   lazy val createQueue: Route = get {
     pathPrefix("createQueue") {
       parameter('queueName) { (queueName: String) =>
-        complete(createQueueIfAbsent(queueName))
+
+        val response: Queue = LocalHornetQMom.createQueueIfAbsent(queueName)
+        implicit val formates = response.json4sMarshaller
+          complete(StatusCodes.Created)
       }
     }
   }
 
-  // todo SQS returns CreateQueueResult, which contains queueUrl: String
-  override def createQueueIfAbsent(queueName: String): (StatusCode, Queue) = {
-
-    val response: Queue = LocalHornetQMom.createQueueIfAbsent(queueName)
-    response.json4sMarshaller // return as JSON
-    // throw alreadyExists SQS QueueAlreadyExists
-    StatusCodes.OK -> response
-    //          .getOrElse(StatusCodes.NotFound ->
-    //            s"Could not find a value for the specified path ``")
+  // SQS returns CreateQueueResult, which contains queueUrl: String
+  override def createQueueIfAbsent(queueName: String): Queue = {
+    LocalHornetQMom.createQueueIfAbsent(queueName)
   }
 
   lazy val deleteQueue: Route = pathPrefix("deleteQueue") {
     parameter('queueName) { (queueName: String) =>
       deleteQueue(queueName)
-      complete(s"Queue '$queueName' deleted!") // todo
+      complete(StatusCodes.OK)
     }
   }
 
-  override def deleteQueue(queueName: String): (StatusCode, Unit) = {
-    // todo SQS takes in DeleteMessageRequest, which contains a queueUrl: String and a ReceiptHandle: String
-    // returns a DeleteMessageResult, toString for debugging
-    Try(StatusCodes.OK -> LocalHornetQMom.deleteQueue(queueName))
-      .getOrElse(StatusCodes.BadRequest
-        -> s"Given QueueName doesn't exist! Failed to delete!")
+  // SQS takes in DeleteMessageRequest, which contains a queueUrl: String and a ReceiptHandle: String
+  // returns a DeleteMessageResult, toString for debugging
+  override def deleteQueue(queueName: String): Unit = {
+      LocalHornetQMom.deleteQueue(queueName)
   }
 
   lazy val sendMessage: Route = pathPrefix("sendMessage") {
     parameters('messageContent, 'toQueue) { (messageContent: String, toQueue: String) => {
-      send(messageContent, Queue.apply(toQueue)) // todo what is a better way to complete
-      complete(s"Message sent to $toQueue!")
+      send(messageContent, Queue.apply(toQueue))
+      complete(StatusCodes.Accepted)
     }
     }
   }
 
-  // todo SQS sendMessage(String queueUrl, String messageBody) => SendMessageResult
-  override def send(contents: String, to: Queue): (StatusCode, Unit) = {
-    Try(StatusCodes.OK -> LocalHornetQMom.send(contents, to))
-      .getOrElse(StatusCodes.BadRequest ->
-        s"HornetQException occurred sending the message $contents to queue $to !")
+  // SQS sendMessage(String queueUrl, String messageBody) => SendMessageResult
+  override def send(contents: String, to: Queue): Unit = {
+    LocalHornetQMom.send(contents, to)
   }
 
   lazy val receiveMessage: Route = pathPrefix("receiveMessage") {
     parameters('fromQueue, 'timeOutDuration) { (fromQueue, timeOutDuration) => {
-      val timeout: Duration = Duration.apply(timeOutDuration)
-      receive(Queue.apply(fromQueue), timeout)
-      complete(s"Message received from $fromQueue!")
-    }
+      val timeout: Duration = Duration.create(timeOutDuration)
+      val response: Message = receive(Queue.apply(fromQueue), timeout).get
+      implicit val formats = response.json4sMarshaller
+      respondWithStatus(StatusCodes.OK){complete(response)}
+      }
     }
   }
 
-  // todo SQS ReceiveMessageResult receiveMessage(String queueUrl)
-  override def receive(from: Queue, timeout: Duration): (StatusCode, Option[Message]) = {
-    StatusCodes.OK -> LocalHornetQMom.receive(from, timeout)
-    //        .getOrElse(StatusCodes.BadRequest ->
-    //        s"Not able to get")
+  // SQS ReceiveMessageResult receiveMessage(String queueUrl)
+  override def receive(from: Queue, timeout: Duration=10 second): Option[Message] = {
+      LocalHornetQMom.receive(from, timeout)
   }
 
   lazy val acknowledge = pathPrefix("acknowledge") {
     parameter('message) { (message: String) =>
-      completeMessage(Message.apply(message))
-      complete(s"$message acknowledged!")
+      val session: ClientSession = sessionFactory.createSession()
+      val message = session.createMessage(false)
+      val currentMessage: Message = Message(message)
+      completeMessage(currentMessage)
+      complete(StatusCodes.NoContent)
     }
   }
 
-  // todo SQS has DeleteMessageResult deleteMessage(String queueUrl, String receiptHandle)
-  override def completeMessage(message: Message): (StatusCode, Unit) = {
-    Try(StatusCodes.OK -> LocalHornetQMom.completeMessage(message))
-      .getOrElse(StatusCodes.BadGateway ->
-        s"HornetQException occurred while acknowledging the message!")
+  // SQS has DeleteMessageResult deleteMessage(String queueUrl, String receiptHandle)
+  override def completeMessage(message: Message): Unit = {
+//    Try(StatusCodes.OK -> LocalHornetQMom.completeMessage(message))
+//      .getOrElse(StatusCodes.BadGateway ->
+//        s"HornetQException occurred while acknowledging the message!")
+    LocalHornetQMom.completeMessage(message)
   }
 
 
   // Returns the names of the queues created on this server. Seq[Any]
-  lazy val status: Route = pathPrefix("status") {
-    complete(queues)
+  lazy val getQueues: Route = pathPrefix("getQueues") {
+    val response: Seq[Queue] = this.queues
+//    implicit val formats = response.asInstanceOf[ToResponseMarshallable]
+//    val json: Json = Json(response)
+//    val format: String = Json.format(json)(humanReadable())
+//    complete(format) // todo turn queues into JSON
+    complete(StatusCodes.OK)
   }
 
   override def queues: Seq[Queue] = LocalHornetQMom.queues
-
-//  val route =
-//    parameters('color, 'backgroundColor) { (color, backgroundColor) =>
-//      complete(s"The color is '$color' and the background is '$backgroundColor'")
-//    }
-
-
-  //  // creates a new Queue (sqs: standard/FIFO)
-  //  def createQueue(createQueueRequest: CreateQueueRequest): CreateQueueResult = ???
-  //  // Simplified method form for invoking the CreateQueue operation.
-  //  def createQueue(queueName: String): CreateQueueResult = ???
-  //
-  //  class CreateQueueRequest(private var queueName: String) {
-  //    // todo search scala nested class for syntax
-  //    def addAttributesEntry(key: String, value: String): CreateQueueRequest = ???
-  //    // Removes all the entries added into Attributes.
-  //    def clearAttributesEntries(): CreateQueueRequest = ??? // todo shouldn't this be Unit
-  //    // A map of attributes with their corresponding values.
-  //    def getAttributes(): Map<String, String> = ???
-  //
-  //    // A map of attributes with their corresponding values.
-  //    def setAttributes(attributes: Map<String, String>): Unit = ???
-  //
-  //
-  //    // The name of the new queue.
-  //    def getQueueName(): String = {this.queueName} // todo this syntax
-  //    // Changes the name of the queue
-  //    def setQueueName(queueName: String): Unit = {this.queueName = queueName}
-
-
-  // Deletes the queue specified by the QueueUrl, even if the queue is empty.
-  //  def deleteQueue(deleteQueueRequest: DeleteQueueRequest): DeleteQueueResult = ???
-  //   Simplified method form for invoking the DeleteQueue operation.
-  //  def deleteQueue(queueUrl: String): DeleteQueueResult = ???
-
 }
