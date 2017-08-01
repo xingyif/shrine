@@ -60,7 +60,7 @@ trait QepService extends HttpService with Loggable {
     }
   }
 
-  def queryResultsTable(user: User): Route = pathPrefix("queryResultsTable") {
+  def queryResultsTable(user: User): Route = path("queryResultsTable") {
 
     matchQueryParameters(Some(user.username)){ queryParameters:QueryParameters =>
 
