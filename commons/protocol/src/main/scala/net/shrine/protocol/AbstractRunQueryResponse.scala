@@ -15,19 +15,21 @@ import net.shrine.util.XmlDateHelper
  */
 abstract class AbstractRunQueryResponse(
   rootTagName: String,
-  val queryId: Long,
+  val queryId: Long, //this is the network query id !
   val createDate: XMLGregorianCalendar,
   val userId: String,
   val groupId: String,
   val requestXml: QueryDefinition,
-  val queryInstanceId: Long) extends ShrineResponse with HasQueryResults {
+  val queryInstanceId: Long,
+  val statusTypeName:String = "DONE"
+                                       ) extends ShrineResponse with HasQueryResults {
 
   final def queryName = requestXml.name
 
   override protected final def i2b2MessageBody = XmlUtil.stripWhitespace {
     <ns5:response xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="ns5:master_instance_result_responseType">
       <status>
-        <condition type="DONE">DONE</condition>
+        <condition type={ statusTypeName }>{ statusTypeName }</condition>
       </status>
       <query_master>
         <query_master_id>{ queryId }</query_master_id>

@@ -180,15 +180,20 @@ trait AbstractQepService[BaseResp <: BaseShrineResponse] extends Loggable {
           if (collectQepAudit) QepAuditDb.db.insertQepQuery(authorizedRequest,commonName)
           QepQueryDb.db.insertQepQuery(authorizedRequest)
 
+          //todo here's the part that sends the request to the hub - tracking SHRINE-2140
           val response: BaseResp = doSynchronousQuery(networkAuthn,authorizedRequest,aggregator,shouldBroadcast)
 
           response match {
               //todo do in one transaction
-            case aggregated:AggregatedRunQueryResponse => aggregated.results.foreach(QepQueryDb.db.insertQueryResult(runQueryRequest.networkQueryId,_))
-            case _ => debug(s"Unanticipated response type $response")
+              //todo here's the part that puts results in the QEP cache database - tracking SHRINE-2140
+            case aggregated:AggregatedRunQueryResponse =>
+              aggregated.results.foreach(QepQueryDb.db.insertQueryResult(runQueryRequest.networkQueryId,_))
+              //todo here's the AggregatedRunQueryResponse returning - tracking SHRINE-2140
+              aggregated.copy(statusTypeName = "TOHUB").asInstanceOf[BaseResp]
+            case _ =>
+              debug(s"Unanticipated response type $response")
+              response
           }
-
-          response
         }
       case _ => doSynchronousQuery(networkAuthn,request,aggregator,shouldBroadcast)
     }
@@ -238,8 +243,6 @@ trait AbstractQepService[BaseResp <: BaseShrineResponse] extends Loggable {
   import AuthenticationResult._
   
   private[qep] def authenticateAndThen[T](request: BaseShrineRequest)(f: Authenticated => T): T = {
-    val AuthenticationInfo(domain, username, _) = request.authn
-
     val authResult = authenticator.authenticate(request.authn)
 
     authResult match {
