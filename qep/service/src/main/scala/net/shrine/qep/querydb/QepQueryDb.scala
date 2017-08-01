@@ -83,6 +83,9 @@ case class QepQueryDb(schemaDef:QepQuerySchema,dataSource: DataSource,timeout:Du
     dbRun(q.size.result)
   }
 
+  def selectQueryById(networkQueryId: NetworkQueryId): Option[QepQuery] =
+    dbRun(mostRecentVisibleQepQueries.filter(_.networkId === networkQueryId).result).lastOption
+
   def selectPreviousQueriesByUserAndDomain(userName: UserName, domain: String, skip:Option[Int] = None, limit:Option[Int] = None):Seq[QepQuery] = {
 
     debug(s"start selectPreviousQueriesByUserAndDomain $userName $domain")
@@ -137,6 +140,9 @@ case class QepQueryDb(schemaDef:QepQuerySchema,dataSource: DataSource,timeout:Du
 
     flags.map(x => x.networkQueryId -> x).toMap
   }
+
+  def selectMostRecentQepQueryFlagFor(networkQueryId: NetworkQueryId): Option[QepQueryFlag] =
+    dbRun(mostRecentQueryFlags.filter(_.networkId === networkQueryId).result).lastOption
 
   def insertQepResultRow(qepQueryRow:QueryResultRow) = {
     dbRun(allQueryResultRows += qepQueryRow)

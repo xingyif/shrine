@@ -111,6 +111,56 @@ class QepServiceTest extends FlatSpec with ScalatestRouteTest with QepService {
     changeDate = System.currentTimeMillis() - 30
   )
 
+  "QepService" should "return an OK and a row of data for a queryResult request" in {
+
+    QepQueryDb.db.insertQepQuery(qepQuery)
+    QepQueryDb.db.insertQepResultRow(qepResultRowFromBch)
+    QepQueryDb.db.insertQepResultRow(qepResultRowFromMgh)
+    QepQueryDb.db.insertQepResultRow(qepResultRowFromDfci)
+    QepQueryDb.db.insertQepResultRow(qepResultRowFromPartners)
+
+    Get(s"/qep/queryResult/${qepQuery.networkId}") ~> qepRoute(researcherUser) ~> check {
+      implicit val formats = DefaultFormats
+      val result = body.data.asString
+
+      assertResult(OK)(status)
+
+      //todo check json result after format is pinned down assertResult(qepInfo)(result)
+    }
+  }
+
+  "QepService" should "return a NotFound with a bad query id for a queryResult request" in {
+
+    QepQueryDb.db.insertQepQuery(qepQuery)
+    QepQueryDb.db.insertQepResultRow(qepResultRowFromBch)
+    QepQueryDb.db.insertQepResultRow(qepResultRowFromMgh)
+    QepQueryDb.db.insertQepResultRow(qepResultRowFromDfci)
+    QepQueryDb.db.insertQepResultRow(qepResultRowFromPartners)
+
+    Get(s"/qep/queryResult/${20L}") ~> qepRoute(researcherUser) ~> check {
+      implicit val formats = DefaultFormats
+      val result = body.data.asString
+
+      assertResult(NotFound)(status)
+    }
+  }
+
+  "QepService" should "return a Forbidden if the user is the wrong user for the query for a queryResult request" in {
+
+    QepQueryDb.db.insertQepQuery(qepQuery)
+    QepQueryDb.db.insertQepResultRow(qepResultRowFromBch)
+    QepQueryDb.db.insertQepResultRow(qepResultRowFromMgh)
+    QepQueryDb.db.insertQepResultRow(qepResultRowFromDfci)
+    QepQueryDb.db.insertQepResultRow(qepResultRowFromPartners)
+
+    Get(s"/qep/queryResult/${qepQuery.networkId}") ~> qepRoute(wrongUser) ~> check {
+      implicit val formats = DefaultFormats
+      val result = body.data.asString
+
+      assertResult(Forbidden)(status)
+    }
+  }
+
   "QepService" should "return an OK and a table of data for a queryResultsTable request" in {
 
     QepQueryDb.db.insertQepQuery(qepQuery)
@@ -155,4 +205,14 @@ class QepServiceTest extends FlatSpec with ScalatestRouteTest with QepService {
     params = Map(),
     rolesByProject = Map()
   )
+
+  val wrongUser = User(
+    fullName = "Wrong User",
+    username = "wrong",
+    domain = "testDomain",
+    credential = new Credential("researcher's password",false),
+    params = Map(),
+    rolesByProject = Map()
+  )
+
 }

@@ -27,6 +27,8 @@ final case class User(fullName: String,
   def toAuthInfo = AuthenticationInfo(domain, username, credential)
 
   def ecommonsUsername: Option[String] = params.get("ecommons_username")
+
+  def sameUserAs(username:String,domain:String): Boolean = username == this.username && domain == this.domain
 }
 
 object User extends I2b2Unmarshaller[Try[User]] {

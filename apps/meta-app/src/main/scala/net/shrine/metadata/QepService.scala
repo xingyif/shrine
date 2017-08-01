@@ -30,13 +30,34 @@ trait QepService extends HttpService with Loggable {
       |
     """.stripMargin
 
-
   def qepRoute(user: User): Route = pathPrefix("qep") {
     get {
-      queryResultsTable(user)
+      queryResult(user) ~ queryResultsTable(user)
     } ~
       pathEndOrSingleSlash{complete(qepInfo)} ~
       respondWithStatus(StatusCodes.NotFound){complete(qepInfo)}
+  }
+
+  def queryResult(user:User):Route = path("queryResult" / LongNumber){ queryId:NetworkQueryId =>
+
+    val queryOption: Option[QepQuery] = QepQueryDb.db.selectQueryById(queryId)
+    queryOption.fold{
+      respondWithStatus(StatusCodes.NotFound){complete(s"No query with id $queryId found")}
+    }{query:QepQuery =>
+      if(user.sameUserAs(query.userName,query.userDomain)) {
+        val mostRecentQueryResults: Seq[Result] = QepQueryDb.db.selectMostRecentFullQueryResultsFor(queryId).map(Result(_))
+        val flag = QepQueryDb.db.selectMostRecentQepQueryFlagFor(queryId).map(QueryFlag(_))
+        val queryCell = QueryCell(query,flag)
+        val queryAndResults = ResultsRow(queryCell,mostRecentQueryResults)
+
+        val json: Json = Json(queryAndResults)
+        val formattedJson: String = Json.format(json)(humanReadable())
+
+        complete(formattedJson)
+      } else {
+        respondWithStatus(StatusCodes.Forbidden){complete(s"Query $queryId belongs to a different user")}
+      }
+    }
   }
 
   def queryResultsTable(user: User): Route = pathPrefix("queryResultsTable") {
@@ -62,7 +83,7 @@ trait QepService extends HttpService with Loggable {
 
       val queryResults: Seq[ResultsRow] = queries.map(q => ResultsRow(
         query = QueryCell(q,flags.get(q.networkId)),
-        adaptersToResults = QepQueryDb.db.selectMostRecentFullQueryResultsFor(q.networkId).map(Result(_))))
+        results = QepQueryDb.db.selectMostRecentFullQueryResultsFor(q.networkId).map(Result(_))))
 
       val table: ResultsTable = ResultsTable(queryRowCount,queryParameters.skipOption.getOrElse(0),adapters,queryResults)
 
@@ -102,9 +123,9 @@ case class ResultsTable(
 )
 
 case class ResultsRow(
-  query:QueryCell,
-  adaptersToResults: Seq[Result]
-)
+                       query:QueryCell,
+                       results: Seq[Result]
+                      )
 
 case class QueryCell(
                       networkId:String, //easier to support in json, lessens the impact of using a GUID iff we can get there

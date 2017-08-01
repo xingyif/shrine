@@ -67,6 +67,22 @@ class QepQueryDbTest extends ShouldMatchersForJUnit {
   }
 
   @Test
+  def testSelectQueryById() {
+
+    QepQueryDb.db.insertQepQuery(qepQuery)
+    QepQueryDb.db.insertQepQuery(secondQepQuery)
+
+    val result1: Option[QepQuery] = QepQueryDb.db.selectQueryById(qepQuery.networkId)
+    result1 should equal(Some(qepQuery))
+
+    val result2: Option[QepQuery] = QepQueryDb.db.selectQueryById(secondQepQuery.networkId)
+    result2 should equal(Some(secondQepQuery))
+
+    val result3: Option[QepQuery] = QepQueryDb.db.selectQueryById(-1L)
+    result3 should equal(None)
+  }
+
+  @Test
   def testSelectQepQueriesForUser() {
 
     QepQueryDb.db.insertQepQuery(qepQuery)
@@ -100,6 +116,18 @@ class QepQueryDbTest extends ShouldMatchersForJUnit {
   }
 
   @Test
+  def testSelectQueryFlag() {
+
+    val results1 = QepQueryDb.db.selectMostRecentQepQueryFlagFor(1L)
+    results1 should equal(None)
+
+    QepQueryDb.db.insertQepQueryFlag(flag)
+
+    val results2 = QepQueryDb.db.selectMostRecentQepQueryFlagFor(1L)
+    results2 should equal(Some(flag))
+  }
+
+  @Test
   def testSelectQueryFlags() {
 
     val results1 = QepQueryDb.db.selectMostRecentQepQueryFlagsFor(Set(1L,2L))
@@ -109,7 +137,6 @@ class QepQueryDbTest extends ShouldMatchersForJUnit {
 
     val results2 = QepQueryDb.db.selectMostRecentQepQueryFlagsFor(Set(1L,2L))
     results2 should equal(Map(1L -> flag))
-
   }
 
   val qepResultRowFromExampleCom = QueryResultRow(
