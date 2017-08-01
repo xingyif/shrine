@@ -58,7 +58,6 @@ trait RemoteHornetQMom extends HornetQMom  // todo RemoteHornetQMom needs to be 
   // SQS returns CreateQueueResult, which contains queueUrl: String
   override def createQueueIfAbsent(queueName: String): Queue = {
     LocalHornetQMom.createQueueIfAbsent(queueName)
-
   }
 
   lazy val deleteQueue: Route = pathPrefix("deleteQueue") {
@@ -132,6 +131,4 @@ trait RemoteHornetQMom extends HornetQMom  // todo RemoteHornetQMom needs to be 
   }
 
   override def queues: Seq[Queue] = LocalHornetQMom.queues
-
-
 }

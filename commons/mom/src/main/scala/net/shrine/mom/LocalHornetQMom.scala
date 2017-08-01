@@ -111,7 +111,7 @@ object LocalHornetQMom extends HornetQMom {
     session.start()
     blocking {
       val messageReceived: Option[ClientMessage] = Option(messageConsumer.receive(timeout.toMillis))
-      messageReceived.map(new Message(_))  // todo Message(_)
+      messageReceived.map(Message(_))
     }
   }
 
@@ -121,7 +121,6 @@ object LocalHornetQMom extends HornetQMom {
   //todo better here or on the message itself??
   //todo if we can find API that takes a message ID instead of the message. Otherwise its a state puzzle for the web server implementation
   override def completeMessage(message:Message):Unit = message.complete()
-
 }
 
 /**

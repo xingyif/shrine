@@ -7,6 +7,7 @@ import org.scalatest.junit.JUnitRunner
 import spray.http.StatusCodes._
 import spray.testkit.ScalatestRouteTest
 
+import scala.concurrent.duration._
 /**
   * Created by yifan on 7/27/17.
   */
@@ -18,6 +19,7 @@ class RemoteHornetQMomTest extends FlatSpec with ScalatestRouteTest with RemoteH
 
 
   "RemoteHornetQ" should "be able to send and receive a message" in {
+
 
     val queueName = "testQueue"
 
@@ -76,28 +78,9 @@ class RemoteHornetQMomTest extends FlatSpec with ScalatestRouteTest with RemoteH
 
   "RemoteHornetQMom" should "get all queues and return an OK" in {
 
-
     Get(s"/getQueues") ~> routes ~> check {
       assertResult(OK)(status)
     }
   }
-
-//  lazy val deleteQueue: Route = pathPrefix("deleteQueue") {
-//    parameter('queueName) { (queueName: String) =>
-//      deleteQueue(queueName)
-//      complete(s"Queue '$queueName' deleted!") // todo
-//    }
-//  }
-//
-//  override def deleteQueue(queueName: String): (StatusCode, Unit) = {
-//    // todo SQS takes in DeleteMessageRequest, which contains a queueUrl: String and a ReceiptHandle: String
-//    // returns a DeleteMessageResult, toString for debugging
-//    Try(StatusCodes.OK -> LocalHornetQMom.deleteQueue(queueName))
-//      .getOrElse(StatusCodes.BadRequest
-//        -> s"Given QueueName doesn't exist! Failed to delete!")
-//  }
-
-
-
 
 }
