@@ -180,20 +180,31 @@ trait AbstractQepService[BaseResp <: BaseShrineResponse] extends Loggable {
           if (collectQepAudit) QepAuditDb.db.insertQepQuery(authorizedRequest,commonName)
           QepQueryDb.db.insertQepQuery(authorizedRequest)
 
-          //todo here's the part that sends the request to the hub - tracking SHRINE-2140
-          val response: BaseResp = doSynchronousQuery(networkAuthn,authorizedRequest,aggregator,shouldBroadcast)
+                    //todo here's the part that sends the request to the hub - tracking SHRINE-2140
+          val hubResponse: BaseResp = doSynchronousQuery(networkAuthn,authorizedRequest,aggregator,shouldBroadcast)
 
-          response match {
-              //todo do in one transaction
+          hubResponse match {
               //todo here's the part that puts results in the QEP cache database - tracking SHRINE-2140
             case aggregated:AggregatedRunQueryResponse =>
               aggregated.results.foreach(QepQueryDb.db.insertQueryResult(runQueryRequest.networkQueryId,_))
               //todo here's the AggregatedRunQueryResponse returning - tracking SHRINE-2140
               aggregated.copy(statusTypeName = "TOHUB").asInstanceOf[BaseResp]
             case _ =>
-              debug(s"Unanticipated response type $response")
-              response
+              debug(s"Unanticipated response type $hubResponse")
           }
+
+          val response = AggregatedRunQueryResponse(
+            queryId = runQueryRequest.networkQueryId,
+            createDate = XmlDateHelper.now,
+            userId = networkAuthn.username,
+            groupId = networkAuthn.domain,
+            requestXml = runQueryRequest.queryDefinition,
+            queryInstanceId = runQueryRequest.networkQueryId,
+            results = Seq.empty,
+            statusTypeName = "RECEIVED_BY_QEP" //todo figure out the right statuses for 1.23. See SHRINE-2148
+          )
+
+          response.asInstanceOf[BaseResp]
         }
       case _ => doSynchronousQuery(networkAuthn,request,aggregator,shouldBroadcast)
     }

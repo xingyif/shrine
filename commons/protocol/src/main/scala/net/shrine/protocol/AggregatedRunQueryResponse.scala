@@ -9,7 +9,7 @@ import net.shrine.protocol.query.QueryDefinition
  */
 //todo find where the QEP creates one of these and replace it with a different status type? - tracking SHRINE-2140
 final case class AggregatedRunQueryResponse(
-    override val queryId: Long, //todo not the network query id , which doesn't actually come back anywhere! - tracking SHRINE-2140
+    override val queryId: Long, //this is the network id! - tracking SHRINE-2140
     override val createDate: XMLGregorianCalendar,
     override val userId: String,
     override val groupId: String,

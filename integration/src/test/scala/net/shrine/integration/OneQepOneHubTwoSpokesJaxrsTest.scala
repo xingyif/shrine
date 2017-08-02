@@ -90,9 +90,11 @@ final class OneQepOneHubTwoSpokesJaxrsTest extends AbstractHubAndSpokesTest with
     
     //Broadcast a message
     val resp = client.runQuery("some-topic-id", Set(ResultOutputType.PATIENT_COUNT_XML), queryDefinition, true)
-    
-    resp.results.size should equal(spokes.size)
-    
+
+    //todo fix for SHRINE-2140 . Now expect zero results here, but get them from the QEP service (not tested here)
+//    resp.results.size should equal(spokes.size)
+    resp.results.size should equal(0)
+
     //Make sure all the spokes received the right message
     spokes.foreach { spoke =>
       val lastMessage = spoke.mockHandler.lastMessage.get
