@@ -1,7 +1,7 @@
 System.register(['aurelia-framework', 'ramda'], function (_export, _context) {
     "use strict";
 
-    var bindable, inject, _, _dec, _class, _desc, _value, _class2, _descriptor, QueryStatus;
+    var bindable, _, _desc, _value, _class, _descriptor, _class2, _temp, _initialiseProps, QueryStatus;
 
     function _initDefineProp(target, property, descriptor, context) {
         if (!descriptor) return;
@@ -55,16 +55,15 @@ System.register(['aurelia-framework', 'ramda'], function (_export, _context) {
     return {
         setters: [function (_aureliaFramework) {
             bindable = _aureliaFramework.bindable;
-            inject = _aureliaFramework.inject;
         }, function (_ramda) {
             _ = _ramda;
         }],
         execute: function () {
-            _export('QueryStatus', QueryStatus = (_dec = inject(Math), _dec(_class = (_class2 = function () {
+            _export('QueryStatus', QueryStatus = (_class = (_temp = _class2 = function () {
                 function QueryStatus(Math) {
                     _classCallCheck(this, QueryStatus);
 
-                    _initDefineProp(this, 'status', _descriptor, this);
+                    _initialiseProps.call(this);
 
                     this.floor = Math.floor;
                 }
@@ -87,10 +86,12 @@ System.register(['aurelia-framework', 'ramda'], function (_export, _context) {
                 };
 
                 return QueryStatus;
-            }(), (_descriptor = _applyDecoratedDescriptor(_class2.prototype, 'status', [bindable], {
+            }(), _class2.inject = [Math], _initialiseProps = function _initialiseProps() {
+                _initDefineProp(this, 'status', _descriptor, this);
+            }, _temp), (_descriptor = _applyDecoratedDescriptor(_class.prototype, 'status', [bindable], {
                 enumerable: true,
                 initializer: null
-            })), _class2)) || _class));
+            })), _class));
 
             _export('QueryStatus', QueryStatus);
         }

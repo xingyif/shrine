@@ -1,7 +1,7 @@
-System.register(['aurelia-framework', 'aurelia-event-aggregator', 'common/queries.model', './scroll.service', 'common/shrine.messages'], function (_export, _context) {
+System.register(['aurelia-event-aggregator', 'common/queries.model', './scroll.service', 'common/shrine.messages'], function (_export, _context) {
     "use strict";
 
-    var inject, EventAggregator, QueriesModel, ScrollService, notifications, commands, _dec, _class, QueryViewer;
+    var EventAggregator, QueriesModel, ScrollService, notifications, commands, _class, _temp, QueryViewer;
 
     function _classCallCheck(instance, Constructor) {
         if (!(instance instanceof Constructor)) {
@@ -10,9 +10,7 @@ System.register(['aurelia-framework', 'aurelia-event-aggregator', 'common/querie
     }
 
     return {
-        setters: [function (_aureliaFramework) {
-            inject = _aureliaFramework.inject;
-        }, function (_aureliaEventAggregator) {
+        setters: [function (_aureliaEventAggregator) {
             EventAggregator = _aureliaEventAggregator.EventAggregator;
         }, function (_commonQueriesModel) {
             QueriesModel = _commonQueriesModel.QueriesModel;
@@ -23,7 +21,7 @@ System.register(['aurelia-framework', 'aurelia-event-aggregator', 'common/querie
             commands = _commonShrineMessages.commands;
         }],
         execute: function () {
-            _export('QueryViewer', QueryViewer = (_dec = inject(EventAggregator, QueriesModel, notifications, commands), _dec(_class = function () {
+            _export('QueryViewer', QueryViewer = (_temp = _class = function () {
                 function QueryViewer(evtAgg, queries, notifications, commands) {
                     var _this = this;
 
@@ -87,7 +85,7 @@ System.register(['aurelia-framework', 'aurelia-event-aggregator', 'common/querie
                 };
 
                 return QueryViewer;
-            }()) || _class));
+            }(), _class.inject = [EventAggregator, QueriesModel, notifications, commands], _temp));
 
             _export('QueryViewer', QueryViewer);
         }

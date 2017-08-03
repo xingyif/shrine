@@ -1,7 +1,7 @@
-System.register(['aurelia-framework', 'aurelia-fetch-client', 'fetch'], function (_export, _context) {
+System.register(['aurelia-fetch-client', 'fetch'], function (_export, _context) {
     "use strict";
 
-    var inject, HttpClient, _createClass, _dec, _class, QEPRepository;
+    var HttpClient, _createClass, _class, _temp, QEPRepository;
 
     function _classCallCheck(instance, Constructor) {
         if (!(instance instanceof Constructor)) {
@@ -10,9 +10,7 @@ System.register(['aurelia-framework', 'aurelia-fetch-client', 'fetch'], function
     }
 
     return {
-        setters: [function (_aureliaFramework) {
-            inject = _aureliaFramework.inject;
-        }, function (_aureliaFetchClient) {
+        setters: [function (_aureliaFetchClient) {
             HttpClient = _aureliaFetchClient.HttpClient;
         }, function (_fetch) {}],
         execute: function () {
@@ -34,7 +32,7 @@ System.register(['aurelia-framework', 'aurelia-fetch-client', 'fetch'], function
                 };
             }();
 
-            _export('QEPRepository', QEPRepository = (_dec = inject(HttpClient), _dec(_class = function () {
+            _export('QEPRepository', QEPRepository = (_temp = _class = function () {
                 function QEPRepository(http) {
                     var _this = this;
 
@@ -47,7 +45,6 @@ System.register(['aurelia-framework', 'aurelia-fetch-client', 'fetch'], function
                             }
                         });
                     });
-
                     this.http = http;
                 }
 
@@ -104,7 +101,7 @@ System.register(['aurelia-framework', 'aurelia-fetch-client', 'fetch'], function
                 }]);
 
                 return QEPRepository;
-            }()) || _class));
+            }(), _class.inject = [HttpClient], _temp));
 
             _export('QEPRepository', QEPRepository);
         }

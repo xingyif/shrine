@@ -1,7 +1,7 @@
-System.register(['aurelia-framework', 'aurelia-event-aggregator', 'common/shrine.messages', 'common/query-status.model'], function (_export, _context) {
+System.register(['aurelia-event-aggregator', 'common/shrine.messages', 'common/query-status.model'], function (_export, _context) {
     "use strict";
 
-    var inject, EventAggregator, notifications, commands, QueryStatusModel, _extends, _dec, _class, QueryStatus;
+    var EventAggregator, notifications, commands, QueryStatusModel, _extends, _class, _temp, QueryStatus;
 
     function _classCallCheck(instance, Constructor) {
         if (!(instance instanceof Constructor)) {
@@ -10,9 +10,7 @@ System.register(['aurelia-framework', 'aurelia-event-aggregator', 'common/shrine
     }
 
     return {
-        setters: [function (_aureliaFramework) {
-            inject = _aureliaFramework.inject;
-        }, function (_aureliaEventAggregator) {
+        setters: [function (_aureliaEventAggregator) {
             EventAggregator = _aureliaEventAggregator.EventAggregator;
         }, function (_commonShrineMessages) {
             notifications = _commonShrineMessages.notifications;
@@ -35,7 +33,7 @@ System.register(['aurelia-framework', 'aurelia-event-aggregator', 'common/shrine
                 return target;
             };
 
-            _export('QueryStatus', QueryStatus = (_dec = inject(EventAggregator, notifications, commands, QueryStatusModel), _dec(_class = function QueryStatus(evtAgg, notifications, commands, queryStatus) {
+            _export('QueryStatus', QueryStatus = (_temp = _class = function QueryStatus(evtAgg, notifications, commands, queryStatus) {
                 var _this = this;
 
                 _classCallCheck(this, QueryStatus);
@@ -71,7 +69,7 @@ System.register(['aurelia-framework', 'aurelia-event-aggregator', 'common/shrine
                 });
 
                 evtAgg.publish(notifications.i2b2.queryStarted, '@queryqueryName');
-            }) || _class));
+            }, _class.inject = [EventAggregator, notifications, commands, QueryStatusModel], _temp));
 
             _export('QueryStatus', QueryStatus);
         }

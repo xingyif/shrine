@@ -1,10 +1,8 @@
-import { inject } from 'aurelia-framework';
 import {EventAggregator} from 'aurelia-event-aggregator';
 import { QEPRepository } from 'repository/qep.repository'
 import {notifications} from './shrine.messages';
-@inject(EventAggregator, QEPRepository,  notifications)
 export class QueriesModel {
-
+    static inject = [EventAggregator, QEPRepository,  notifications];
     constructor(evtAgg, QEPRepository, notifications) {
         const qep = QEPRepository;
         const maxQueriesPerFetch = 40;

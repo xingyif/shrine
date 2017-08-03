@@ -1,10 +1,8 @@
 
-import {inject} from 'aurelia-framework';
 import * as _ from 'ramda';
 import {Container} from './container';
-
-@inject(window)
 export class I2B2Service {
+    static inject = [window];
     constructor(context) {
 
         //private

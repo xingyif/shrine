@@ -1,9 +1,8 @@
-import {inject} from 'aurelia-framework';
 import {EventAggregator} from 'aurelia-event-aggregator';
 import {notifications, commands} from 'common/shrine.messages';
 import {QueryStatusModel} from 'common/query-status.model'
-@inject(EventAggregator, notifications, commands, QueryStatusModel)
 export class QueryStatus {
+    static inject = [EventAggregator, notifications, commands, QueryStatusModel];
     constructor(evtAgg, notifications, commands, queryStatus) {
         const initialState = () => ({query: {queryName: null, updated: null, complete: false}, nodes: null});
         this.status = initialState();

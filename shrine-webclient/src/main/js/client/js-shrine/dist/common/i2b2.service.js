@@ -1,7 +1,7 @@
-System.register(['aurelia-framework', 'ramda', './container'], function (_export, _context) {
+System.register(['ramda', './container'], function (_export, _context) {
     "use strict";
 
-    var inject, _, Container, _dec, _class, I2B2Service;
+    var _, Container, _class, _temp, I2B2Service;
 
     function _classCallCheck(instance, Constructor) {
         if (!(instance instanceof Constructor)) {
@@ -10,15 +10,13 @@ System.register(['aurelia-framework', 'ramda', './container'], function (_export
     }
 
     return {
-        setters: [function (_aureliaFramework) {
-            inject = _aureliaFramework.inject;
-        }, function (_ramda) {
+        setters: [function (_ramda) {
             _ = _ramda;
         }, function (_container) {
             Container = _container.Container;
         }],
         execute: function () {
-            _export('I2B2Service', I2B2Service = (_dec = inject(window), _dec(_class = function I2B2Service(context) {
+            _export('I2B2Service', I2B2Service = (_temp = _class = function I2B2Service(context) {
                 _classCallCheck(this, I2B2Service);
 
                 var ctx = context ? Container.of(context) : Container.of(null);
@@ -79,7 +77,7 @@ System.register(['aurelia-framework', 'ramda', './container'], function (_export
                         return v.ctrlr.history.Unflag({ queryId: id });
                     });
                 };
-            }) || _class));
+            }, _class.inject = [window], _temp));
 
             _export('I2B2Service', I2B2Service);
         }

@@ -668,49 +668,40 @@ System.config({
       "moment"
     ],
     "common/i2b2.pub-sub.js": [
-      "aurelia-framework",
       "aurelia-event-aggregator",
       "./i2b2.service",
       "./shrine.messages"
     ],
     "common/i2b2.service.js": [
-      "aurelia-framework",
       "ramda",
       "./container"
     ],
     "common/publisher.js": [
-      "aurelia-framework",
       "aurelia-event-aggregator",
       "common/shrine.messages"
     ],
     "common/queries.model.js": [
-      "aurelia-framework",
       "aurelia-event-aggregator",
       "repository/qep.repository",
       "./shrine.messages"
     ],
     "common/query-status.model.js": [
-      "aurelia-framework",
       "aurelia-event-aggregator",
       "repository/qep.repository",
       "./shrine.messages"
     ],
     "repository/qep.repository.js": [
-      "aurelia-framework",
       "aurelia-fetch-client",
       "fetch"
     ],
     "shell.js": [
-      "aurelia-framework",
       "common/i2b2.pub-sub"
     ],
     "views/mailto/mailto.js": [
-      "aurelia-framework",
       "views/mailto/mailto.service",
       "views/mailto/mailto.config"
     ],
     "views/mailto/mailto.service.js": [
-      "aurelia-framework",
       "repository/qep.repository"
     ],
     "views/query-status/node-result/node-result.js": [
@@ -728,7 +719,6 @@ System.config({
       "common/publisher"
     ],
     "views/query-status/query-status.js": [
-      "aurelia-framework",
       "aurelia-event-aggregator",
       "common/shrine.messages",
       "common/query-status.model"
@@ -752,7 +742,6 @@ System.config({
       "ramda"
     ],
     "views/query-viewer/query-viewer.js": [
-      "aurelia-framework",
       "aurelia-event-aggregator",
       "common/queries.model",
       "./scroll.service",

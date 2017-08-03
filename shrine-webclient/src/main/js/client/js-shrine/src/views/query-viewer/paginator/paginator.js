@@ -1,7 +1,6 @@
-import { bindable, inject } from 'aurelia-framework';
-
-@inject(Element)
+import {bindable} from 'aurelia-framework';
 export class Paginator {
+    static inject = [Element];
     @bindable pages;
     constructor(element) {
         Paginator.prototype.init = () => {

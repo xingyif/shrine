@@ -1,7 +1,7 @@
-import { bindable, inject } from 'aurelia-framework';
+import {bindable} from 'aurelia-framework';
 import * as _ from 'ramda'
-@inject(Math)
 export class QueryStatus {
+    static inject = [Math];
     @bindable status;
     constructor(Math) {
         this.floor = Math.floor;

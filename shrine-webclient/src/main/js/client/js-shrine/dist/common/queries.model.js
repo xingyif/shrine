@@ -1,7 +1,7 @@
-System.register(['aurelia-framework', 'aurelia-event-aggregator', 'repository/qep.repository', './shrine.messages'], function (_export, _context) {
+System.register(['aurelia-event-aggregator', 'repository/qep.repository', './shrine.messages'], function (_export, _context) {
     "use strict";
 
-    var inject, EventAggregator, QEPRepository, notifications, _dec, _class, QueriesModel;
+    var EventAggregator, QEPRepository, notifications, _class, _temp, QueriesModel;
 
     function _classCallCheck(instance, Constructor) {
         if (!(instance instanceof Constructor)) {
@@ -10,9 +10,7 @@ System.register(['aurelia-framework', 'aurelia-event-aggregator', 'repository/qe
     }
 
     return {
-        setters: [function (_aureliaFramework) {
-            inject = _aureliaFramework.inject;
-        }, function (_aureliaEventAggregator) {
+        setters: [function (_aureliaEventAggregator) {
             EventAggregator = _aureliaEventAggregator.EventAggregator;
         }, function (_repositoryQepRepository) {
             QEPRepository = _repositoryQepRepository.QEPRepository;
@@ -20,7 +18,7 @@ System.register(['aurelia-framework', 'aurelia-event-aggregator', 'repository/qe
             notifications = _shrineMessages.notifications;
         }],
         execute: function () {
-            _export('QueriesModel', QueriesModel = (_dec = inject(EventAggregator, QEPRepository, notifications), _dec(_class = function QueriesModel(evtAgg, QEPRepository, notifications) {
+            _export('QueriesModel', QueriesModel = (_temp = _class = function QueriesModel(evtAgg, QEPRepository, notifications) {
                 var _this = this;
 
                 _classCallCheck(this, QueriesModel);
@@ -116,7 +114,7 @@ System.register(['aurelia-framework', 'aurelia-event-aggregator', 'repository/qe
 
                     return results;
                 };
-            }) || _class));
+            }, _class.inject = [EventAggregator, QEPRepository, notifications], _temp));
 
             _export('QueriesModel', QueriesModel);
         }

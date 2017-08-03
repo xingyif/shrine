@@ -1,1 +1,1 @@
-{"version":3,"sources":["shell.js"],"names":["inject","I2B2PubSub","Shell","i2b2PubSub","listen"],"mappings":";;;;;;;;;;;;;AAAQA,Y,qBAAAA,M;;AACAC,gB,qBAAAA,U;;;uBAGKC,K,WADZF,OAAOC,UAAP,C,gBAEC,eAAYE,UAAZ,EAAwB;AAAA;;AACtBA,mBAAWC,MAAX;AACD,O","file":"shell.js","sourceRoot":"/src"}
+{"version":3,"sources":["shell.js"],"names":["I2B2PubSub","Shell","i2b2PubSub","listen","inject"],"mappings":";;;;;;;;;;;;;AAAQA,gB,qBAAAA,U;;;uBACKC,K,qBAEX,eAAYC,UAAZ,EAAwB;AAAA;;AACtBA,mBAAWC,MAAX;AACD,O,SAHMC,M,GAAS,CAACJ,UAAD,C","file":"shell.js","sourceRoot":"/src"}

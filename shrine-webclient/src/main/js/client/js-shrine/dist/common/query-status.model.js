@@ -1,7 +1,7 @@
-System.register(['aurelia-framework', 'aurelia-event-aggregator', 'repository/qep.repository', './shrine.messages'], function (_export, _context) {
+System.register(['aurelia-event-aggregator', 'repository/qep.repository', './shrine.messages'], function (_export, _context) {
     "use strict";
 
-    var inject, EventAggregator, QEPRepository, commands, notifications, _extends, _dec, _class, QueryStatusModel;
+    var EventAggregator, QEPRepository, commands, notifications, _extends, _class, _temp, QueryStatusModel;
 
     function _classCallCheck(instance, Constructor) {
         if (!(instance instanceof Constructor)) {
@@ -10,9 +10,7 @@ System.register(['aurelia-framework', 'aurelia-event-aggregator', 'repository/qe
     }
 
     return {
-        setters: [function (_aureliaFramework) {
-            inject = _aureliaFramework.inject;
-        }, function (_aureliaEventAggregator) {
+        setters: [function (_aureliaEventAggregator) {
             EventAggregator = _aureliaEventAggregator.EventAggregator;
         }, function (_repositoryQepRepository) {
             QEPRepository = _repositoryQepRepository.QEPRepository;
@@ -35,7 +33,7 @@ System.register(['aurelia-framework', 'aurelia-event-aggregator', 'repository/qe
                 return target;
             };
 
-            _export('QueryStatusModel', QueryStatusModel = (_dec = inject(EventAggregator, QEPRepository, notifications), _dec(_class = function QueryStatusModel(evtAgg, qep, notifications) {
+            _export('QueryStatusModel', QueryStatusModel = (_temp = _class = function QueryStatusModel(evtAgg, qep, notifications) {
                 _classCallCheck(this, QueryStatusModel);
 
                 var publishNetworkId = function publishNetworkId(id) {
@@ -49,7 +47,6 @@ System.register(['aurelia-framework', 'aurelia-event-aggregator', 'repository/qe
                 };
                 var toModel = function toModel(data) {
                     return new Promise(function (resolve, reject) {
-
                         var nodes = [].concat(data.queryResults[0].adaptersToResults);
                         var finishedCount = nodes.reduce(function (s, r) {
                             return ['FINISHED', 'ERROR'].indexOf(r.status) != -1 ? s + 1 : s;
@@ -90,7 +87,7 @@ System.register(['aurelia-framework', 'aurelia-event-aggregator', 'repository/qe
                     });
                 };
                 init();
-            }) || _class));
+            }, _class.inject = [EventAggregator, QEPRepository, notifications], _temp));
 
             _export('QueryStatusModel', QueryStatusModel);
         }

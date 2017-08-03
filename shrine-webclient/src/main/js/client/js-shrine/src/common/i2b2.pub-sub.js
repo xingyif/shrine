@@ -1,10 +1,9 @@
-import { inject} from 'aurelia-framework';
+
 import {EventAggregator} from 'aurelia-event-aggregator'
 import {I2B2Service } from './i2b2.service';
 import {notifications, commands} from './shrine.messages';
-
-@inject(EventAggregator, I2B2Service, notifications, commands)
 export class I2B2PubSub {
+    static inject = [EventAggregator, I2B2Service, notifications, commands];
     constructor(evtAgg, i2b2Svc, notifications, commands) {
         this.listen = () => {
             i2b2Svc.onResize((a, b) => b.find(e => e.action === 'ADD') ?

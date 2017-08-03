@@ -1,7 +1,7 @@
-System.register(['aurelia-framework', 'views/mailto/mailto.service', 'views/mailto/mailto.config'], function (_export, _context) {
+System.register(['views/mailto/mailto.service', 'views/mailto/mailto.config'], function (_export, _context) {
     "use strict";
 
-    var inject, MailToService, MailConfig, _dec, _class, MailTo;
+    var MailToService, MailConfig, _class, _temp, MailTo;
 
     function _classCallCheck(instance, Constructor) {
         if (!(instance instanceof Constructor)) {
@@ -10,15 +10,13 @@ System.register(['aurelia-framework', 'views/mailto/mailto.service', 'views/mail
     }
 
     return {
-        setters: [function (_aureliaFramework) {
-            inject = _aureliaFramework.inject;
-        }, function (_viewsMailtoMailtoService) {
+        setters: [function (_viewsMailtoMailtoService) {
             MailToService = _viewsMailtoMailtoService.MailToService;
         }, function (_viewsMailtoMailtoConfig) {
             MailConfig = _viewsMailtoMailtoConfig.MailConfig;
         }],
         execute: function () {
-            _export('MailTo', MailTo = (_dec = inject(MailToService, MailConfig), _dec(_class = function () {
+            _export('MailTo', MailTo = (_temp = _class = function () {
                 function MailTo(service, config) {
                     _classCallCheck(this, MailTo);
 
@@ -35,7 +33,7 @@ System.register(['aurelia-framework', 'views/mailto/mailto.service', 'views/mail
                 };
 
                 return MailTo;
-            }()) || _class));
+            }(), _class.inject = [MailToService, MailConfig], _temp));
 
             _export('MailTo', MailTo);
         }

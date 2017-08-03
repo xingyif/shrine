@@ -1,9 +1,7 @@
-import {inject} from 'aurelia-framework';
 import {MailToService} from 'views/mailto/mailto.service';
 import {MailConfig} from 'views/mailto/mailto.config';
-
-@inject(MailToService, MailConfig)
 export class MailTo {
+    static inject = [MailToService, MailConfig];
     constructor(service, config) {
         this.service = service;
         this.config = config;

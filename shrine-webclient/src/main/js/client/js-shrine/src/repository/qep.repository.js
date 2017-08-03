@@ -1,10 +1,7 @@
-import { inject } from 'aurelia-framework';
 import { HttpClient } from 'aurelia-fetch-client';
 import 'fetch';
-
-@inject(HttpClient)
 export class QEPRepository {
-
+    static inject = [HttpClient]
     constructor(http) {
         http.configure(config => {
             config
@@ -16,7 +13,6 @@ export class QEPRepository {
                     }
                 });
         });
-
         this.http = http;
     }
 

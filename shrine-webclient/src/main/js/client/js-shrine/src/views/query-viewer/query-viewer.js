@@ -1,13 +1,10 @@
-import { inject } from 'aurelia-framework';
-import { EventAggregator } from 'aurelia-event-aggregator'
-import { QueriesModel } from 'common/queries.model'
-import { ScrollService } from './scroll.service';
-import { notifications, commands } from 'common/shrine.messages';
-
-@inject(EventAggregator, QueriesModel, notifications, commands)
+import {EventAggregator} from 'aurelia-event-aggregator'
+import {QueriesModel} from 'common/queries.model'
+import {ScrollService} from './scroll.service';
+import {notifications, commands} from 'common/shrine.messages';
 export class QueryViewer {
+    static inject = [EventAggregator, QueriesModel, notifications, commands];
     constructor(evtAgg, queries, notifications, commands) {
-
         QueryViewer.prototype.init = () => {
             this.pageIndex = 0;
             this.showLoader = true;

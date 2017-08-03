@@ -1,9 +1,6 @@
-import {inject} from 'aurelia-framework';
 import {QEPRepository} from 'repository/qep.repository';
-
-@inject(QEPRepository)
 export class MailToService {
-
+    static inject = [QEPRepository];
     constructor(repository) {
         this.repository = repository;
     }

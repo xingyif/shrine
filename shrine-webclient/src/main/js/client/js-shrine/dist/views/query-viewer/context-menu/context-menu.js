@@ -1,7 +1,7 @@
 System.register(['aurelia-framework', 'aurelia-event-aggregator', 'common/shrine.messages'], function (_export, _context) {
     "use strict";
 
-    var inject, bindable, EventAggregator, commands, _dec, _class, _desc, _value, _class2, _descriptor, ContextMenu;
+    var bindable, EventAggregator, commands, _desc, _value, _class, _descriptor, _class2, _temp, _initialiseProps, ContextMenu;
 
     function _initDefineProp(target, property, descriptor, context) {
         if (!descriptor) return;
@@ -54,7 +54,6 @@ System.register(['aurelia-framework', 'aurelia-event-aggregator', 'common/shrine
 
     return {
         setters: [function (_aureliaFramework) {
-            inject = _aureliaFramework.inject;
             bindable = _aureliaFramework.bindable;
         }, function (_aureliaEventAggregator) {
             EventAggregator = _aureliaEventAggregator.EventAggregator;
@@ -62,12 +61,12 @@ System.register(['aurelia-framework', 'aurelia-event-aggregator', 'common/shrine
             commands = _commonShrineMessages.commands;
         }],
         execute: function () {
-            _export('ContextMenu', ContextMenu = (_dec = inject(EventAggregator, commands), _dec(_class = (_class2 = function ContextMenu(evtAgg, commands) {
+            _export('ContextMenu', ContextMenu = (_class = (_temp = _class2 = function ContextMenu(evtAgg, commands) {
                 var _this = this;
 
                 _classCallCheck(this, ContextMenu);
 
-                _initDefineProp(this, 'context', _descriptor, this);
+                _initialiseProps.call(this);
 
                 ContextMenu.prototype.cloneQuery = function (id) {
                     evtAgg.publish(commands.i2b2.cloneQuery, id);
@@ -86,10 +85,12 @@ System.register(['aurelia-framework', 'aurelia-event-aggregator', 'common/shrine
                     evtAgg.publish(commands.i2b2.unflagQuery, id);
                     _this.context.class = 'hide';
                 };
-            }, (_descriptor = _applyDecoratedDescriptor(_class2.prototype, 'context', [bindable], {
+            }, _class2.inject = [EventAggregator, commands], _initialiseProps = function _initialiseProps() {
+                _initDefineProp(this, 'context', _descriptor, this);
+            }, _temp), (_descriptor = _applyDecoratedDescriptor(_class.prototype, 'context', [bindable], {
                 enumerable: true,
                 initializer: null
-            })), _class2)) || _class));
+            })), _class));
 
             _export('ContextMenu', ContextMenu);
         }

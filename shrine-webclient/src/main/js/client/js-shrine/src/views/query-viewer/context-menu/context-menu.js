@@ -1,12 +1,10 @@
-import {inject, bindable} from 'aurelia-framework';
+import {bindable} from 'aurelia-framework';
 import {EventAggregator} from 'aurelia-event-aggregator';
 import {commands} from 'common/shrine.messages'
-//import { I2B2Service } from 'common/i2b2.service.js';
 
-@inject(EventAggregator, commands)
 export class ContextMenu {
     @bindable context;
-
+    static inject = [EventAggregator, commands];
     constructor(evtAgg, commands) {
         ContextMenu.prototype.cloneQuery = id => {
             evtAgg.publish(commands.i2b2.cloneQuery, id);

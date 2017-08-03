@@ -1,7 +1,7 @@
-System.register(['aurelia-framework', 'aurelia-event-aggregator', 'common/shrine.messages'], function (_export, _context) {
+System.register(['aurelia-event-aggregator', 'common/shrine.messages'], function (_export, _context) {
     "use strict";
 
-    var inject, EventAggregator, commands, _dec, _class, Publisher;
+    var EventAggregator, commands, _class, _temp, Publisher;
 
     function _classCallCheck(instance, Constructor) {
         if (!(instance instanceof Constructor)) {
@@ -10,22 +10,20 @@ System.register(['aurelia-framework', 'aurelia-event-aggregator', 'common/shrine
     }
 
     return {
-        setters: [function (_aureliaFramework) {
-            inject = _aureliaFramework.inject;
-        }, function (_aureliaEventAggregator) {
+        setters: [function (_aureliaEventAggregator) {
             EventAggregator = _aureliaEventAggregator.EventAggregator;
         }, function (_commonShrineMessages) {
             commands = _commonShrineMessages.commands;
         }],
         execute: function () {
-            _export('Publisher', Publisher = (_dec = inject(EventAggregator, commands), _dec(_class = function Publisher(evtAgg, commands) {
+            _export('Publisher', Publisher = (_temp = _class = function Publisher(evtAgg, commands) {
                 _classCallCheck(this, Publisher);
 
                 this.commands = commands;
                 this.publish = function (c, d) {
                     return evtAgg.publish(c, d);
                 };
-            }) || _class));
+            }, _class.inject = [EventAggregator, commands], _temp));
 
             _export('Publisher', Publisher);
         }

@@ -1,7 +1,7 @@
-System.register(['aurelia-framework', 'aurelia-event-aggregator', './i2b2.service', './shrine.messages'], function (_export, _context) {
+System.register(['aurelia-event-aggregator', './i2b2.service', './shrine.messages'], function (_export, _context) {
     "use strict";
 
-    var inject, EventAggregator, I2B2Service, notifications, commands, _dec, _class, I2B2PubSub;
+    var EventAggregator, I2B2Service, notifications, commands, _class, _temp, I2B2PubSub;
 
     function _classCallCheck(instance, Constructor) {
         if (!(instance instanceof Constructor)) {
@@ -10,9 +10,7 @@ System.register(['aurelia-framework', 'aurelia-event-aggregator', './i2b2.servic
     }
 
     return {
-        setters: [function (_aureliaFramework) {
-            inject = _aureliaFramework.inject;
-        }, function (_aureliaEventAggregator) {
+        setters: [function (_aureliaEventAggregator) {
             EventAggregator = _aureliaEventAggregator.EventAggregator;
         }, function (_i2b2Service) {
             I2B2Service = _i2b2Service.I2B2Service;
@@ -21,7 +19,7 @@ System.register(['aurelia-framework', 'aurelia-event-aggregator', './i2b2.servic
             commands = _shrineMessages.commands;
         }],
         execute: function () {
-            _export('I2B2PubSub', I2B2PubSub = (_dec = inject(EventAggregator, I2B2Service, notifications, commands), _dec(_class = function I2B2PubSub(evtAgg, i2b2Svc, notifications, commands) {
+            _export('I2B2PubSub', I2B2PubSub = (_temp = _class = function I2B2PubSub(evtAgg, i2b2Svc, notifications, commands) {
                 _classCallCheck(this, I2B2PubSub);
 
                 this.listen = function () {
@@ -79,7 +77,7 @@ System.register(['aurelia-framework', 'aurelia-event-aggregator', './i2b2.servic
                 var commandUnflagQuery = function commandUnflagQuery(d) {
                     return i2b2Svc.unflagQuery(d);
                 };
-            }) || _class));
+            }, _class.inject = [EventAggregator, I2B2Service, notifications, commands], _temp));
 
             _export('I2B2PubSub', I2B2PubSub);
         }

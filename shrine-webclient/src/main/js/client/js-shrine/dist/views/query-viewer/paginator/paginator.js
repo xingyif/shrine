@@ -1,7 +1,7 @@
 System.register(['aurelia-framework'], function (_export, _context) {
     "use strict";
 
-    var bindable, inject, _createClass, _dec, _class, _desc, _value, _class2, _descriptor, Paginator;
+    var bindable, _createClass, _desc, _value, _class, _descriptor, _class2, _temp, Paginator;
 
     function _initDefineProp(target, property, descriptor, context) {
         if (!descriptor) return;
@@ -55,7 +55,6 @@ System.register(['aurelia-framework'], function (_export, _context) {
     return {
         setters: [function (_aureliaFramework) {
             bindable = _aureliaFramework.bindable;
-            inject = _aureliaFramework.inject;
         }],
         execute: function () {
             _createClass = function () {
@@ -76,7 +75,7 @@ System.register(['aurelia-framework'], function (_export, _context) {
                 };
             }();
 
-            _export('Paginator', Paginator = (_dec = inject(Element), _dec(_class = (_class2 = function () {
+            _export('Paginator', Paginator = (_class = (_temp = _class2 = function () {
                 function Paginator(element) {
                     var _this = this;
 
@@ -105,10 +104,10 @@ System.register(['aurelia-framework'], function (_export, _context) {
                 }]);
 
                 return Paginator;
-            }(), (_descriptor = _applyDecoratedDescriptor(_class2.prototype, 'pages', [bindable], {
+            }(), _class2.inject = [Element], _temp), (_descriptor = _applyDecoratedDescriptor(_class.prototype, 'pages', [bindable], {
                 enumerable: true,
                 initializer: null
-            })), _class2)) || _class));
+            })), _class));
 
             _export('Paginator', Paginator);
         }
