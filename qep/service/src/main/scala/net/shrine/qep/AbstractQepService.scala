@@ -7,7 +7,7 @@ import net.shrine.authorization.AuthorizationResult.{Authorized, NotAuthorized}
 import net.shrine.authorization.QueryAuthorizationService
 import net.shrine.broadcaster.BroadcastAndAggregationService
 import net.shrine.log.Loggable
-import net.shrine.protocol.{QueryResult, AggregatedReadInstanceResultsResponse, AggregatedRunQueryResponse, AuthenticationInfo, BaseShrineRequest, BaseShrineResponse, Credential, DeleteQueryRequest, FlagQueryRequest, QueryInstance, ReadApprovedQueryTopicsRequest, ReadInstanceResultsRequest, ReadPreviousQueriesRequest, ReadPreviousQueriesResponse, ReadQueryDefinitionRequest, ReadQueryInstancesRequest, ReadQueryInstancesResponse, ReadResultOutputTypesRequest, ReadResultOutputTypesResponse, RenameQueryRequest, ResultOutputType, RunQueryRequest, UnFlagQueryRequest}
+import net.shrine.protocol.{AggregatedReadInstanceResultsResponse, AggregatedRunQueryResponse, AuthenticationInfo, BaseShrineRequest, BaseShrineResponse, Credential, DeleteQueryRequest, FlagQueryRequest, QueryInstance, QueryResult, ReadApprovedQueryTopicsRequest, ReadInstanceResultsRequest, ReadPreviousQueriesRequest, ReadPreviousQueriesResponse, ReadQueryDefinitionRequest, ReadQueryInstancesRequest, ReadQueryInstancesResponse, ReadResultOutputTypesRequest, ReadResultOutputTypesResponse, RenameQueryRequest, ResultOutputType, RunQueryRequest, UnFlagQueryRequest}
 import net.shrine.qep.audit.QepAuditDb
 import net.shrine.qep.dao.AuditDao
 import net.shrine.qep.querydb.QepQueryDb
@@ -165,10 +165,38 @@ trait AbstractQepService[BaseResp <: BaseShrineResponse] extends Loggable {
 
     debug(s"doBroadcastQuery($request) authResult is $authResult")
     //NB: Use credentials obtained from Authenticator (oddly, we authenticate with one set of credentials and are "logged in" under (possibly!) another
+    //NB: Only audit RunQueryRequests
+
     //When making BroadcastMessages
     val networkAuthn = AuthenticationInfo(authResult.domain, authResult.username, Credential("", isToken = false))
 
-    //NB: Only audit RunQueryRequests
+    def queryHub( authorizedRequest: RunQueryRequest): Unit = {
+      //todo here's the part that sends the request to the hub - tracking SHRINE-2140
+      import scala.concurrent.ExecutionContext.Implicits.global
+      import scala.concurrent.blocking
+
+      //todo update comment with SHRINE-2149
+      //Future[BaseShrineResponse] that this code fires off to the hub, then records the response in the database
+      sendAndAggregate(networkAuthn,authorizedRequest,aggregator,shouldBroadcast).transform (
+        { hubResponse => hubResponse match {
+          //todo here's the part that puts results in the QEP cache database - tracking SHRINE-2140
+          //todo once queries arrive at the QEP via a queue, no need to put them into the database. They can just fall on the floor
+          case aggregated: AggregatedRunQueryResponse =>
+            blocking {
+              aggregated.results.foreach(QepQueryDb.db.insertQueryResult(authorizedRequest.networkQueryId, _))
+            }
+          //todo here's the AggregatedRunQueryResponse returning - tracking SHRINE-2140
+          //todo record the query's state in a way that will stop polling in 1.23. See SHRINE-2148
+          case _ =>
+            debug(s"Unanticipated response type $hubResponse")
+          }
+          hubResponse
+        }
+      , throwable => //todo log the throwable
+          throwable
+      )
+    }
+
     request match {
       case runQueryRequest: RunQueryRequest =>
         // inject modified, authorized runQueryRequest
@@ -180,18 +208,7 @@ trait AbstractQepService[BaseResp <: BaseShrineResponse] extends Loggable {
           if (collectQepAudit) QepAuditDb.db.insertQepQuery(authorizedRequest,commonName)
           QepQueryDb.db.insertQepQuery(authorizedRequest)
 
-                    //todo here's the part that sends the request to the hub - tracking SHRINE-2140
-          val hubResponse: BaseResp = doSynchronousQuery(networkAuthn,authorizedRequest,aggregator,shouldBroadcast)
-
-          hubResponse match {
-              //todo here's the part that puts results in the QEP cache database - tracking SHRINE-2140
-            case aggregated:AggregatedRunQueryResponse =>
-              aggregated.results.foreach(QepQueryDb.db.insertQueryResult(runQueryRequest.networkQueryId,_))
-              //todo here's the AggregatedRunQueryResponse returning - tracking SHRINE-2140
-              aggregated.copy(statusTypeName = "TOHUB").asInstanceOf[BaseResp]
-            case _ =>
-              debug(s"Unanticipated response type $hubResponse")
-          }
+          queryHub(authorizedRequest)
 
           val response = AggregatedRunQueryResponse(
             queryId = runQueryRequest.networkQueryId,
