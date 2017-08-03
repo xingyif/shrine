@@ -3,7 +3,7 @@
 
 #--------------MODIFIABLE------------------------
 # Change this to be: a list of destination vagrant machine names
-declare -a MACHINES=( shrine-hub )
+declare -a MACHINES=( shrine-hub shrine-node1 )
 # Change this to be: the .war file directory in vagrant box
 VAGRANT_WAR_CONTEXT=/opt/shrine/tomcat/webapps
 # Change this to be: local vagrant directory
@@ -93,7 +93,7 @@ scp_war()
 
   for machine in ${MACHINES[@]}; do
     # copy local .war file into vagrant box buffer directory
-    echo "Local app .war file location: $app_dir/$local_war_context/$local_war_file"
+    echo "Deploying app .war file: $app_dir/$local_war_context/$local_war_file to machine: $machine"
     cd $vagrant_context
     scp -F ssh.cfg $app_dir/$local_war_context/$local_war_file $machine:$BUFFER
 
