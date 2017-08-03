@@ -1,20 +1,24 @@
 package net.shrine.qep
 
 import net.shrine.aggregation.{Aggregator, Aggregators, DeleteQueryAggregator, FlagQueryAggregator, ReadInstanceResultsAggregator, ReadQueryDefinitionAggregator, RenameQueryAggregator, RunQueryAggregator, UnFlagQueryAggregator}
+import net.shrine.audit.NetworkQueryId
 import net.shrine.authentication.AuthenticationResult.Authenticated
 import net.shrine.authentication.{AuthenticationResult, Authenticator, NotAuthenticatedException}
 import net.shrine.authorization.AuthorizationResult.{Authorized, NotAuthorized}
 import net.shrine.authorization.QueryAuthorizationService
 import net.shrine.broadcaster.BroadcastAndAggregationService
 import net.shrine.log.Loggable
+import net.shrine.problem.{AbstractProblem, ProblemSources}
 import net.shrine.protocol.{AggregatedReadInstanceResultsResponse, AggregatedRunQueryResponse, AuthenticationInfo, BaseShrineRequest, BaseShrineResponse, Credential, DeleteQueryRequest, FlagQueryRequest, QueryInstance, QueryResult, ReadApprovedQueryTopicsRequest, ReadInstanceResultsRequest, ReadPreviousQueriesRequest, ReadPreviousQueriesResponse, ReadQueryDefinitionRequest, ReadQueryInstancesRequest, ReadQueryInstancesResponse, ReadResultOutputTypesRequest, ReadResultOutputTypesResponse, RenameQueryRequest, ResultOutputType, RunQueryRequest, UnFlagQueryRequest}
 import net.shrine.qep.audit.QepAuditDb
 import net.shrine.qep.dao.AuditDao
 import net.shrine.qep.querydb.QepQueryDb
 import net.shrine.util.XmlDateHelper
 
-import scala.concurrent.{Await, Future}
 import scala.concurrent.duration.Duration
+import scala.concurrent.{Await, Future}
+import scala.util.control.NonFatal
+import scala.xml.NodeSeq
 
 /**
  * @author clint
@@ -128,7 +132,7 @@ trait AbstractQepService[BaseResp <: BaseShrineResponse] extends Loggable {
     authenticateAndThen(request){ authResult =>
       info(s"doReadPreviousQueries($request,$shouldBroadcast)")
 
-      //todo if any results are in one of the pending states go ahead and request them async (has to wait for async Shrine)
+      //todo if any results are in one of the pending states go ahead and request them async (has to wait for async Shrine 1.24)
       //pull queries from the local database.
       QepQueryDb.db.selectPreviousQueries(request)
     }
@@ -171,29 +175,34 @@ trait AbstractQepService[BaseResp <: BaseShrineResponse] extends Loggable {
     val networkAuthn = AuthenticationInfo(authResult.domain, authResult.username, Credential("", isToken = false))
 
     def queryHub( authorizedRequest: RunQueryRequest): Unit = {
-      //todo here's the part that sends the request to the hub - tracking SHRINE-2140
       import scala.concurrent.ExecutionContext.Implicits.global
       import scala.concurrent.blocking
 
-      //todo update comment with SHRINE-2149
-      //Future[BaseShrineResponse] that this code fires off to the hub, then records the response in the database
-      sendAndAggregate(networkAuthn,authorizedRequest,aggregator,shouldBroadcast).transform (
-        { hubResponse => hubResponse match {
-          //todo here's the part that puts results in the QEP cache database - tracking SHRINE-2140
-          //todo once queries arrive at the QEP via a queue, no need to put them into the database. They can just fall on the floor
+      info(s"Sending RunQueryRequest ${authorizedRequest.networkQueryId} to the Hub")
+      //Future[Unit] that this code fires off to the hub, then handles the BaseShrineResponse
+      sendAndAggregate(networkAuthn,authorizedRequest,aggregator,shouldBroadcast).transform ( { hubResponse:BaseShrineResponse =>
+        debug(s"Received $hubResponse for ${authorizedRequest.networkQueryId}")
+          hubResponse match {
           case aggregated: AggregatedRunQueryResponse =>
+            info(s"Received ${aggregated.statusTypeName} for ${authorizedRequest.networkQueryId}")
             blocking {
+              //here's the part that puts results in the QEP cache database
+              //todo once queries arrive at the QEP via a queue, no need to put them into the database. They can just fall on the floor
+              //todo remove with SHRINE-2149
+              //todo record the query's state in a way that will stop polling in 1.23. See SHRINE-2148
               aggregated.results.foreach(QepQueryDb.db.insertQueryResult(authorizedRequest.networkQueryId, _))
+              debug(s"Recorded ${authorizedRequest.networkQueryId} aggregated response in the QEP database")
             }
-          //todo here's the AggregatedRunQueryResponse returning - tracking SHRINE-2140
-          //todo record the query's state in a way that will stop polling in 1.23. See SHRINE-2148
-          case _ =>
-            debug(s"Unanticipated response type $hubResponse")
+          case _ => IncorrectResponseFromHub(hubResponse,authorizedRequest.networkQueryId)
           }
-          hubResponse
         }
-      , throwable => //todo log the throwable
+      , throwable => {
+          throwable match {
+            case NonFatal(t) => ExceptionWhileHubRanQuery(t, authorizedRequest.networkQueryId)
+            case _ => //Let the infrastructure handle fatal exceptions
+          }
           throwable
+        }
       )
     }
 
@@ -278,4 +287,32 @@ trait AbstractQepService[BaseResp <: BaseShrineResponse] extends Loggable {
       case na:NotAuthenticated => throw NotAuthenticatedException(na)
     }
   }
+}
+
+case class ExceptionWhileHubRanQuery(t: Throwable,networkQueryId: NetworkQueryId) extends AbstractProblem(ProblemSources.Qep) {
+
+  override val throwable = Some(t)
+
+  override def summary: String = s"${t.getClass.getSimpleName} encountered in an http call to run $networkQueryId query at the hub."
+
+  override def description: String = "The QEP generated an exception while making an http call to run a query at the hub."
+
+  override def detailsXml: NodeSeq = NodeSeq.fromSeq(<details>
+    networkQueryId is {networkQueryId}
+    {throwableDetail.getOrElse("")}
+  </details>)
+
+}
+
+case class IncorrectResponseFromHub(hubResponse:BaseShrineResponse,networkQueryId: NetworkQueryId) extends AbstractProblem(ProblemSources.Qep) {
+
+  override def summary: String = s"The hub responded to query $networkQueryId with a ${hubResponse.getClass.getSimpleName}, not a ${classOf[AggregatedRunQueryResponse].getSimpleName}"
+
+  override def description: String = s"The hub responded with something other than a ${classOf[AggregatedRunQueryResponse].getSimpleName} to the QEP's run query request."
+
+  override def detailsXml: NodeSeq = NodeSeq.fromSeq(
+    <details>
+      networkQueryId is {networkQueryId}
+      hubResponse is {hubResponse}
+    </details>)
 }
