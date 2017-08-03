@@ -9,7 +9,9 @@ export const notifications = {
     },
 
     shrine: {
-        queriesReceived: 'notification.from.shrine.queries.received'
+        queriesReceived: 'notification.from.shrine.queries.received',
+        networkIdReceived: 'notification.from.shrine.networkId.receieved',
+        queryReceived: 'notification.from.shrine.query.recieved'
     }
 }
 
@@ -20,5 +22,10 @@ export const commands = {
         flagQuery: 'command.to.i2b2.flag.query',
         unflagQuery: 'command.to.i2b2.unflag.query',
         renameQuery: 'command.to.i2b2.rename.query',
+    },
+
+    shrine: {
+        fetchNetworkId: 'command.to.shrine.fetch.networkId',
+        fetchQuery: 'command.to.shrine.fetch.query'
     }
 }

@@ -1,9 +1,21 @@
 const institutions = require('./institutions').sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
 
 module.exports = {
-    getQueryResults: getQueryResults
+    getQueryResults: getQueryResults,
+    getQueryStatus: getQueryStatus,
+    getNetworkId: getNetworkId
 };
 
+function getNetworkId () {
+    return 2226563841174084000;
+}
+
+function getQueryStatus (networkId) {
+    let result = getQueryResults(0, 1);
+    result.networkId = networkId;
+    return result;
+};
+    
 function getQueryResults (skip=0, numberOfQueries = 100, numberOfNodes = 100, rowCount = 500){
     const length = numberOfNodes < institutions.length ? numberOfNodes: institutions.length;
     const queryResults = [];
@@ -36,7 +48,8 @@ function getQueryResults (skip=0, numberOfQueries = 100, numberOfNodes = 100, ro
 
 const getInstutionResults = (adapters) => {
     const adaptersToResults = [];
-    const status = i => i % 7 === 0? 'ERROR' : 'FINISHED';
+    const status = i => i % 7 === 0? 
+        i % 17 === 0? 'PENDING' :'ERROR' : 'FINISHED';
     adapters.forEach((e, i) => {
         adaptersToResults.push({
             "startDate": 1490984964085,

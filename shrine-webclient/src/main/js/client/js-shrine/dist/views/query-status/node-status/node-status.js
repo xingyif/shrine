@@ -1,7 +1,7 @@
 System.register(['aurelia-framework', 'common/publisher'], function (_export, _context) {
     "use strict";
 
-    var inject, bindable, Publisher, _desc, _value, _class, _descriptor, Error;
+    var bindable, Publisher, _desc, _value, _class, _descriptor, NodeStatus;
 
     function _initDefineProp(target, property, descriptor, context) {
         if (!descriptor) return;
@@ -78,17 +78,16 @@ System.register(['aurelia-framework', 'common/publisher'], function (_export, _c
 
     return {
         setters: [function (_aureliaFramework) {
-            inject = _aureliaFramework.inject;
             bindable = _aureliaFramework.bindable;
         }, function (_commonPublisher) {
             Publisher = _commonPublisher.Publisher;
         }],
         execute: function () {
-            _export('Error', Error = (_class = function (_Publisher) {
-                _inherits(Error, _Publisher);
+            _export('NodeStatus', NodeStatus = (_class = function (_Publisher) {
+                _inherits(NodeStatus, _Publisher);
 
-                function Error() {
-                    _classCallCheck(this, Error);
+                function NodeStatus() {
+                    _classCallCheck(this, NodeStatus);
 
                     for (var _len = arguments.length, rest = Array(_len), _key = 0; _key < _len; _key++) {
                         rest[_key] = arguments[_key];
@@ -101,14 +100,14 @@ System.register(['aurelia-framework', 'common/publisher'], function (_export, _c
                     return _this;
                 }
 
-                return Error;
+                return NodeStatus;
             }(Publisher), (_descriptor = _applyDecoratedDescriptor(_class.prototype, 'result', [bindable], {
                 enumerable: true,
                 initializer: null
             })), _class));
 
-            _export('Error', Error);
+            _export('NodeStatus', NodeStatus);
         }
     };
 });
-//# sourceMappingURL=error.js.map
+//# sourceMappingURL=node-status.js.map

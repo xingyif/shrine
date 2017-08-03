@@ -1,63 +1,34 @@
-//see CRC_ctrlr_QryStatus.js line 480ish.
-
+import {inject} from 'aurelia-framework';
+import {EventAggregator} from 'aurelia-event-aggregator';
+import {notifications, commands} from 'common/shrine.messages';
+import {QueryStatusModel} from 'common/query-status.model'
+@inject(EventAggregator, notifications, commands, QueryStatusModel)
 export class QueryStatus {
-    constructor() {
-
-        const query = {
-            nodeResults: [
-                {
-                    timestamp: 1490571987946,
-                    adapterNode: 'shrine-qa1',
-                    statusMessage: 'FINISHED',
-                    count: 1810,
-                    breakdowns: []
-                }, 
-                {
-                    timestamp: 1490571987946,
-                    adapterNode: 'shrine-qa2',
-                    statusMessage: 'ERROR',
-                    statusDescription: 'Error status 1: Could not map query term(s).',
-                    count: 10,
-                    breakdowns: []
-                },
-                {
-                    timestamp: 1490571987946,
-                    adapterNode: 'shrine-qa3',
-                    statusMessage: 'PROCESSING',
-                    count: 10,
-                    breakdowns: []
-                },
-                {
-                    timestamp: 1490571987946,
-                    adapterNode: 'shrine-qa4',
-                    statusMessage: 'UNAVAILABLE',
-                    count: 10,
-                    breakdowns: []
-                },
-                {
-                    timestamp: 1490571987946,
-                    adapterNode: 'shrine-qa5',
-                    statusMessage: 'FINISHED',
-                    count: -1,
-                    breakdowns: []
-                },
-                {
-                    timestamp: 1490571987946,
-                    adapterNode: 'shrine-qa6',
-                    statusMessage: 'ERROR',
-                    statusDescription: 'Error status 2: Could not map query term(s).',
-                    count: 10,
-                    breakdowns: []
-                }],
-            name: 'Female@12:00:35',
-            networkQueryId: 6386518509045377000,
-            completed: false
-        }
-
-        this.query = query;
+    constructor(evtAgg, notifications, commands, queryStatus) {
+        const initialState = () => ({query: {queryName: null, updated: null, complete: false}, nodes: null});
+        this.status = initialState();
+        // -- publishers --
+        const publishFetchNetworkId = n => evtAgg.publish(commands.shrine.fetchNetworkId, n);
+        const publishFetchQuery = id => evtAgg.publish(commands.shrine.fetchQuery, id);
+        // -- subscribers -- //
+        evtAgg.subscribe(notifications.i2b2.queryStarted, (n) => {
+            // -- @todo: centralize the logic, investigate adding a new "status" every time -- //
+            this.status.query.queryName = n;
+            publishFetchNetworkId(n)
+        });
+        evtAgg.subscribe(notifications.shrine.networkIdReceived, id => publishFetchQuery(id));
+        evtAgg.subscribe(notifications.shrine.queryReceived, data => {
+            // -- @todo: centralize the logic, investigate adding a new "status" every time -- //
+            this.status.query = {...this.status.query, ...data.query};
+            this.status.nodes = data.nodes;
+            this.status.updated = Number(new Date());
+            const complete = data.query.complete;
+            const networkId = data.query.networkId;
+            if(!complete) {
+                publishFetchQuery(networkId)
+            }
+        });
+        // -- testing only -- //
+        evtAgg.publish(notifications.i2b2.queryStarted, '@queryqueryName');
     }
-    //ERROR,"UNAVAILABLE" - both are error
-    //"PROCESSING" - 
-    //"COMPLETED", "FINISHED"
-
 }

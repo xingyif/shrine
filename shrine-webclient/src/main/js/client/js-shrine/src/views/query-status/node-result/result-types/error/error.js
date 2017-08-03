@@ -1,12 +1,8 @@
-import {bindable} from 'aurelia-framework'
-export class Error{
+import {inject, bindable} from 'aurelia-framework';
+import {Publisher} from 'common/publisher';
+export class Error extends Publisher{
     @bindable result;
-    
-    constructor() {
-        Error.prototype.publishError = data => console.log(data);
-    }
-    
-    attached() {
-        
+    constructor(...rest) {
+        super(...rest);
     }
 }

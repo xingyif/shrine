@@ -7,11 +7,10 @@
             ${result.adapterNode} ${queryName}
         </div>
     </div>
-    <patient-count if.bind="result.statusMessage === 'COMPLETED' || result.statusMessage === 'FINISHED'" result.bind="result">
-    </patient-count>
-    <error if.bind="result.statusMessage === 'ERROR'" result.bind="result"></error>
-    <compose if.bind="result.statusMessage === 'PROCESSING'" view="./result-types/processing.html">
-    </compose>
-    <compose if.bind="result.statusMessage === 'UNAVAILABLE'" view="./result-types/not-available.html">
-    </compose>
+    <patient-count if.one-way="result.statusMessage === 'COMPLETED' || result.statusMessage === 'FINISHED'" 
+    result.one-way="result"></patient-count>
+    <error if.one-way="result.statusMessage === 'ERROR'" result.one-way="result"></error>
+    <span if.one-way="['ERROR','COMPLETED','FINISHED'].indexOf(result.statusMessage) === -1">
+        &nbsp;- <span style="color: #00dd00">${result.statusMessage}</span>
+    </span>
 </template>

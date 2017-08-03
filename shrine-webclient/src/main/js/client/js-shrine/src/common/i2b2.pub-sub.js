@@ -5,7 +5,7 @@ import {notifications, commands} from './shrine.messages';
 
 @inject(EventAggregator, I2B2Service, notifications, commands)
 export class I2B2PubSub {
-    constructor(evtAgg, i2b2Svc, notifications) {
+    constructor(evtAgg, i2b2Svc, notifications, commands) {
         this.listen = () => {
             i2b2Svc.onResize((a, b) => b.find(e => e.action === 'ADD') ?
                 notifyTabMax() : notifyTabMin());
@@ -30,7 +30,10 @@ export class I2B2PubSub {
 
         // -- commands --//
         const commandCloneQuery = d => i2b2Svc.loadQuery(d);
-        const commandShowError = d => i2b2Svc.errorDetail(d);
+        const commandShowError = d => {
+            console.log(`${commands.i2b2.showError}:  ${d}`);
+            i2b2Svc.errorDetail(d);
+        }
         const commandRenameQuery = d => i2b2Svc.renameQuery(d);
         const commandFlagQuery = d => i2b2Svc.flagQuery(d);
         const commandUnflagQuery = d => i2b2Svc.unflagQuery(d);

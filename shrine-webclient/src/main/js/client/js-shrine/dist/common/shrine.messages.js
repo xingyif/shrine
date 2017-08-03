@@ -16,7 +16,9 @@ System.register([], function (_export, _context) {
                 },
 
                 shrine: {
-                    queriesReceived: 'notification.from.shrine.queries.received'
+                    queriesReceived: 'notification.from.shrine.queries.received',
+                    networkIdReceived: 'notification.from.shrine.networkId.receieved',
+                    queryReceived: 'notification.from.shrine.query.recieved'
                 }
             });
 
@@ -29,6 +31,11 @@ System.register([], function (_export, _context) {
                     flagQuery: 'command.to.i2b2.flag.query',
                     unflagQuery: 'command.to.i2b2.unflag.query',
                     renameQuery: 'command.to.i2b2.rename.query'
+                },
+
+                shrine: {
+                    fetchNetworkId: 'command.to.shrine.fetch.networkId',
+                    fetchQuery: 'command.to.shrine.fetch.query'
                 }
             });
 

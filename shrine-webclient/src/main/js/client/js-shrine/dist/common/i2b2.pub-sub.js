@@ -21,7 +21,7 @@ System.register(['aurelia-framework', 'aurelia-event-aggregator', './i2b2.servic
             commands = _shrineMessages.commands;
         }],
         execute: function () {
-            _export('I2B2PubSub', I2B2PubSub = (_dec = inject(EventAggregator, I2B2Service, notifications, commands), _dec(_class = function I2B2PubSub(evtAgg, i2b2Svc, notifications) {
+            _export('I2B2PubSub', I2B2PubSub = (_dec = inject(EventAggregator, I2B2Service, notifications, commands), _dec(_class = function I2B2PubSub(evtAgg, i2b2Svc, notifications, commands) {
                 _classCallCheck(this, I2B2PubSub);
 
                 this.listen = function () {
@@ -67,7 +67,8 @@ System.register(['aurelia-framework', 'aurelia-event-aggregator', './i2b2.servic
                     return i2b2Svc.loadQuery(d);
                 };
                 var commandShowError = function commandShowError(d) {
-                    return i2b2Svc.errorDetail(d);
+                    console.log(commands.i2b2.showError + ':  ' + d);
+                    i2b2Svc.errorDetail(d);
                 };
                 var commandRenameQuery = function commandRenameQuery(d) {
                     return i2b2Svc.renameQuery(d);

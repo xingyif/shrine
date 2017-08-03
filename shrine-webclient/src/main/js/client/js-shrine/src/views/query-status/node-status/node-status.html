@@ -1,0 +1,22 @@
+<template>
+    <require from="common/converters/count-value-converter"></require>
+    <div style="display: flex">
+        <div style="flex:1">
+            ${result.adapterNode}
+        </div>
+        <div style="flex:1">
+            <span if.one-way="result.statusMessage === 'COMPLETED' || result.statusMessage === 'FINISHED'" style="display: inline-block; color: #0000dd">
+                &nbsp;- ${result.count | count}
+            </span>
+            <span>
+                &nbsp;- 
+                <a if.one-way="result.statusMessage === 'ERROR'" class="query-error-anchor" 
+                href="#" style="color:#ff0000" click.delegate="publish(commands.i2b2.showError, result)">      
+                    ERROR: ${result.statusDescription}
+                </a>
+            </span>
+            <span if.one-way="['ERROR','COMPLETED','FINISHED'].indexOf(result.statusMessage) === -1">
+                &nbsp;- <span style="color: #00dd00">${result.statusMessage}</span>
+            </span>
+    </div>
+</template>

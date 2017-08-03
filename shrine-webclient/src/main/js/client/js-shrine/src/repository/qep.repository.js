@@ -39,6 +39,18 @@ export class QEPRepository {
             .catch(error => error);
     }
 
+    fetchNetworkId(queryName) {
+        return this.http.fetch(`qep/networkId?queryName='${queryName}'`)
+            .then(response => response.json())
+            .catch(error => error);
+    }
+
+    fetchQuery(networkId) {
+        return this.http.fetch(`qep/queryResults?networkId=${networkId}`)
+            .then(response => response.json())
+            .catch(error => error);
+    }
+
     fetchStewardEmail() {
         return this.http.fetch('data?key=stewardEmail')
             .then(response => response.json())

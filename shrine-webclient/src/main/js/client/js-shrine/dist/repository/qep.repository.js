@@ -61,6 +61,22 @@ System.register(['aurelia-framework', 'aurelia-fetch-client', 'fetch'], function
                     });
                 };
 
+                QEPRepository.prototype.fetchNetworkId = function fetchNetworkId(queryName) {
+                    return this.http.fetch('qep/networkId?queryName=\'' + queryName + '\'').then(function (response) {
+                        return response.json();
+                    }).catch(function (error) {
+                        return error;
+                    });
+                };
+
+                QEPRepository.prototype.fetchQuery = function fetchQuery(networkId) {
+                    return this.http.fetch('qep/queryResults?networkId=' + networkId).then(function (response) {
+                        return response.json();
+                    }).catch(function (error) {
+                        return error;
+                    });
+                };
+
                 QEPRepository.prototype.fetchStewardEmail = function fetchStewardEmail() {
                     return this.http.fetch('data?key=stewardEmail').then(function (response) {
                         return response.json();

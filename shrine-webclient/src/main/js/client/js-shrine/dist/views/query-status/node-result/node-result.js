@@ -57,19 +57,13 @@ System.register(['aurelia-framework'], function (_export, _context) {
             bindable = _aureliaFramework.bindable;
         }],
         execute: function () {
-            _export('NodeResult', NodeResult = (_class = function () {
-                function NodeResult() {
-                    _classCallCheck(this, NodeResult);
+            _export('NodeResult', NodeResult = (_class = function NodeResult() {
+                _classCallCheck(this, NodeResult);
 
-                    _initDefineProp(this, 'result', _descriptor, this);
+                _initDefineProp(this, 'result', _descriptor, this);
 
-                    _initDefineProp(this, 'queryName', _descriptor2, this);
-                }
-
-                NodeResult.prototype.attached = function attached() {};
-
-                return NodeResult;
-            }(), (_descriptor = _applyDecoratedDescriptor(_class.prototype, 'result', [bindable], {
+                _initDefineProp(this, 'queryName', _descriptor2, this);
+            }, (_descriptor = _applyDecoratedDescriptor(_class.prototype, 'result', [bindable], {
                 enumerable: true,
                 initializer: null
             }), _descriptor2 = _applyDecoratedDescriptor(_class.prototype, 'queryName', [bindable], {

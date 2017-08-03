@@ -45,16 +45,33 @@ function start(dir) {
     res.json('steward@steward.com');
   });
 
-  router.get('/shrine-metadata/qep/queryResults', (req, res) => {
+  router.get('/shrine-metadata/qep/queryResultsTable', (req, res) => {
     //todo: cleanup.
     const service = require('./data/async-queries');
     const url = require('url');
     const query = url.parse(req.url, true).query;
-    console.log(query);
     const result = service.getQueryResults(query.skip, query.limit);
     res.json(result);
   })
 }
+
+router.get('/shrine-metadata/qep/queryResults', (req, res) => {
+  const service = require('./data/async-queries');
+  const url = require('url');
+  const data =  url.parse(req.url, true).query;
+  const result = service.getQueryStatus(data.networkId);
+  setTimeout(() => res.json(result), 5000);
+});
+
+router.get('/shrine-metadata/qep/networkId', (req, res) => {
+  const service = require('./data/async-queries');
+  const url = require('url');
+  const data =  url.parse(req.url, true).query;
+  const result = service.getNetworkId(data.queryName);
+  res.json(result);
+});
+
+
 
 /*
  Any request with an XML payload will be parsed and a JavaScript requestect produced on req.body 

@@ -1,7 +1,7 @@
 System.register(['aurelia-framework'], function (_export, _context) {
     "use strict";
 
-    var bindable, _desc, _value, _class, _descriptor, PatientCount;
+    var bindable, _desc, _value, _class, _descriptor, _descriptor2, PatientCount;
 
     function _initDefineProp(target, property, descriptor, context) {
         if (!descriptor) return;
@@ -61,7 +61,12 @@ System.register(['aurelia-framework'], function (_export, _context) {
                 _classCallCheck(this, PatientCount);
 
                 _initDefineProp(this, 'result', _descriptor, this);
+
+                _initDefineProp(this, 'showBreakdown', _descriptor2, this);
             }, (_descriptor = _applyDecoratedDescriptor(_class.prototype, 'result', [bindable], {
+                enumerable: true,
+                initializer: null
+            }), _descriptor2 = _applyDecoratedDescriptor(_class.prototype, 'showBreakdown', [bindable], {
                 enumerable: true,
                 initializer: null
             })), _class));

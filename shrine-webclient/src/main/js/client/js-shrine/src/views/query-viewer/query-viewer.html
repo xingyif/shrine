@@ -59,7 +59,7 @@
                     <a if.bind="nodeResult.status === 'ERROR'" style="text-decoration: underline; color:red" click.delegate="publishError($event, nodeResult)">
                         ${nodeResult.status}
                     </a> 
-                    ${nodeResult | result}
+                    ${nodeResult}
                 </div>
             </div>
             <div class="flex-table-row" if.bind="loadingInfiniteScroll">
