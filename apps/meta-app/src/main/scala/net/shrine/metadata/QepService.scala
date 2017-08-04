@@ -6,7 +6,7 @@ import net.shrine.i2b2.protocol.pm.User
 import net.shrine.log.Loggable
 import net.shrine.problem.ProblemDigest
 import net.shrine.protocol.ResultOutputType
-import net.shrine.qep.querydb.{FullQueryResult, QepQuery, QepQueryDb, QepQueryFlag}
+import net.shrine.qep.querydb.{FullQueryResult, QepQuery, QepQueryBreakdownResultsRow, QepQueryDb, QepQueryFlag}
 import spray.routing._
 import rapture.json._
 import rapture.json.jsonBackends.jawn._
@@ -167,12 +167,12 @@ case class Result (
   status:String, //todo QueryResult.StatusType,
   statusMessage:Option[String],
   changeDate:Long,
-// todo   breakdowns:Option[Map[ResultOutputType,I2b2ResultEnvelope]]
+  breakdowns: Seq[BreakdownResultsForType],
   problemDigest:Option[ProblemDigestForJson]
 )
 
 object Result {
-  def apply(fullQueryResult: FullQueryResult): Result = Result(
+  def apply(fullQueryResult: FullQueryResult): Result = new Result(
     resultId = fullQueryResult.resultId,
     networkQueryId = fullQueryResult.networkQueryId,
     instanceId  = fullQueryResult.instanceId,
@@ -182,7 +182,7 @@ object Result {
     status = fullQueryResult.status.toString,
     statusMessage = fullQueryResult.statusMessage,
     changeDate = fullQueryResult.changeDate,
-//    breakdowns = fullQueryResult.breakdowns
+    breakdowns = fullQueryResult.breakdownTypeToResults.map(tToR => BreakdownResultsForType(fullQueryResult.adapterNode,tToR._1,tToR._2)).to[Seq],
     problemDigest = fullQueryResult.problemDigest.map(ProblemDigestForJson(_))
   )
 }
@@ -204,3 +204,15 @@ object ProblemDigestForJson {
     problemDigest.detailsXml.text,
     problemDigest.epoch)
 }
+
+case class BreakdownResultsForType(name:String,displayName:String,description:String,results:Seq[BreakdownResult])
+
+object BreakdownResultsForType {
+  def apply(adapterName: String, breakdownType: ResultOutputType, breakdowns: Seq[QepQueryBreakdownResultsRow]): BreakdownResultsForType = {
+    val breakdownResults = breakdowns.filter(_.adapterNode == adapterName).map(row => BreakdownResult(row.dataKey,row.value,row.changeDate))
+
+    BreakdownResultsForType(breakdownType.name,breakdownType.i2b2Options.displayType,breakdownType.i2b2Options.description,breakdownResults)
+  }
+}
+
+case class BreakdownResult(dataKey:String,value:Long,changeDate:Long)
