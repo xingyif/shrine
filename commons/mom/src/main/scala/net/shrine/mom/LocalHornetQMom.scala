@@ -20,6 +20,11 @@ import scala.collection.immutable.Seq
 import scala.concurrent.blocking
 import scala.concurrent.duration.Duration
 
+/**
+  * This object is the local version of the Message-Oriented Middleware API, which uses HornetQ service
+  * @author david
+  * @since 7/18/17
+  */
 object LocalHornetQMom extends HornetQMom {
 
   val config:Config = ConfigSource.config.getConfig("shrine.hub.mom.hornetq")
@@ -74,7 +79,7 @@ object LocalHornetQMom extends HornetQMom {
         case alreadyExists: HornetQQueueExistsException => //already has what we want
       }
     }
-    new Queue(queueName)
+    Queue(queueName)
   }
 
   override def deleteQueue(queueName:String) = {
@@ -85,7 +90,7 @@ object LocalHornetQMom extends HornetQMom {
   override def queues:Seq[Queue] = {
     val serverControl: HornetQServerControl = hornetQServer.getHornetQServerControl
     val queueNames: Array[String] = serverControl.getQueueNames
-    queueNames.map(new Queue(_)).to[Seq] // todo Queue(_)
+    queueNames.map(Queue(_)).to[Seq]
   }
 
   //send a message
@@ -105,7 +110,6 @@ object LocalHornetQMom extends HornetQMom {
     *
     * @return Some message before the timeout, or None
     */
-
   override def receive(from:Queue,timeout:Duration):Option[Message] = withSession{ session =>
     val messageConsumer = session.createConsumer(from.name)
     session.start()
@@ -127,7 +131,7 @@ object LocalHornetQMom extends HornetQMom {
   * If the configuration is such that HornetQ should have been started use this object to stop it
   */
 //todo is this a good way to write this code?
-object HornetQMomStopper {
+object LocalHornetQMomStopper {
 
   def stop() = {
     //todo fill in as part of SHIRINE-2128

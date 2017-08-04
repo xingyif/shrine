@@ -52,5 +52,5 @@ class LocalHornetQMomTest extends FlatSpec with BeforeAndAfterAll with ScalaFutu
     LocalHornetQMom.deleteQueue(queueName)
   }
 
-  override def afterAll() = HornetQMomStopper.stop()
+  override def afterAll() = LocalHornetQMomStopper.stop()
 }
