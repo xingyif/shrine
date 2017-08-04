@@ -98,12 +98,12 @@ scp_war()
     scp -F ssh.cfg $app_dir/$local_war_context/$local_war_file $machine:$BUFFER
 
     vagrant ssh $machine -c "sudo -u shrine cp --no-preserve=mode $BUFFER/$local_war_file $vagrant_war_context"
-    vagrant ssh $machine -c "sudo -c shrine rm $BUFFER/$local_war_file"
+    vagrant ssh $machine -c "sudo rm $BUFFER/$local_war_file"
   done
 }
 
 # Main
-echo "Starting the process..."
+echo "Starting deployment process to vagrant..."
 echo "Current app dir: $APP_DIR"
 echo "Local Vagrant dir: $VAGRANT_CONTEXT"
 echo "Deploying app to ${#MACHINES[@]} machines"
