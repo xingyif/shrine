@@ -4,7 +4,7 @@ import org.junit.runner.RunWith
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers}
-
+import scala.collection.immutable.Seq
 import scala.concurrent.duration._
 import scala.language.postfixOps
 
@@ -24,7 +24,7 @@ class LocalHornetQMomTest extends FlatSpec with BeforeAndAfterAll with ScalaFutu
 
     val queue = LocalHornetQMom.createQueueIfAbsent(queueName)
 
-    assert(LocalHornetQMom.queues == Seq(queue))
+    assert(LocalHornetQMom.queues.map(Queue(_)).to[Seq] == Seq(queue))
 
 
     val testContents = "Test message"

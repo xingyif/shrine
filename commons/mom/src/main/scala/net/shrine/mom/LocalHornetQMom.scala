@@ -13,10 +13,12 @@ import org.hornetq.api.core.{HornetQQueueExistsException, TransportConfiguration
 import org.hornetq.core.config.impl.ConfigurationImpl
 import org.hornetq.core.remoting.impl.invm.{InVMAcceptorFactory, InVMConnectorFactory}
 import org.hornetq.core.server.{HornetQServer, HornetQServers}
+
 import scala.concurrent.duration._
 import org.hornetq.api.core.client.SendAcknowledgementHandler
 
 import scala.collection.immutable.Seq
+import scala.collection.mutable
 import scala.concurrent.blocking
 import scala.concurrent.duration.Duration
 
@@ -50,6 +52,8 @@ object LocalHornetQMom extends HornetQMom {
 
   val propName = "contents"
 
+  private val allMessages = new mutable.HashMap[Long, Message]()
+
   /**
     * Use HornetQMomStopper to stop the hornetQServer without unintentially starting it
     */
@@ -73,7 +77,8 @@ object LocalHornetQMom extends HornetQMom {
   //queue lifecycle
   override def createQueueIfAbsent(queueName:String):Queue = {
     val serverControl: HornetQServerControl = hornetQServer.getHornetQServerControl
-    if(!queues.map(_.name).contains(queueName)) {
+    val queueSeq = queues.map(Queue(_)).to[Seq]
+    if(!queueSeq.map(_.name).contains(queueName)) {
       try serverControl.createQueue(queueName, queueName) //todo how is the address (first argument) used? I'm just throwing in the queue name. Seems to work but why?
       catch {
         case alreadyExists: HornetQQueueExistsException => //already has what we want
@@ -87,10 +92,11 @@ object LocalHornetQMom extends HornetQMom {
     serverControl.destroyQueue(queueName)
   }
 
-  override def queues:Seq[Queue] = {
+  override def queues:Array[String] = {
     val serverControl: HornetQServerControl = hornetQServer.getHornetQServerControl
     val queueNames: Array[String] = serverControl.getQueueNames
-    queueNames.map(Queue(_)).to[Seq]
+//    queueNames.map(Queue(_)).to[Seq]
+    queueNames
   }
 
   //send a message
@@ -99,6 +105,10 @@ object LocalHornetQMom extends HornetQMom {
     val producer = session.createProducer(to.name)
     val message = session.createMessage(false)
     message.putStringProperty(propName, contents)
+
+    // collects the message to allMessages
+    val msg: Message = Message(message)
+    this.allMessages += (message.getMessageID() -> msg)
 
     producer.send(message)
   }
@@ -115,6 +125,9 @@ object LocalHornetQMom extends HornetQMom {
     session.start()
     blocking {
       val messageReceived: Option[ClientMessage] = Option(messageConsumer.receive(timeout.toMillis))
+      // collects the message to allMessages
+      val msg: Message = Message(messageReceived.get)
+      this.allMessages += (messageReceived.get.getMessageID() -> msg)
       messageReceived.map(Message(_))
     }
   }
@@ -124,7 +137,12 @@ object LocalHornetQMom extends HornetQMom {
   //complete a message
   //todo better here or on the message itself??
   //todo if we can find API that takes a message ID instead of the message. Otherwise its a state puzzle for the web server implementation
-  override def completeMessage(message:Message):Unit = message.complete()
+  override def completeMessage(messageID:Long):Unit = withSession { session =>
+    val msg = this.allMessages.get(messageID)
+    if ( ! msg.isEmpty ) {
+      msg.get.complete()
+    }
+  }
 }
 
 /**

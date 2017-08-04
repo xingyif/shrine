@@ -17,10 +17,10 @@ import scala.concurrent.duration.Duration
 trait HornetQMom {
   def createQueueIfAbsent(queueName:String):Queue
   def deleteQueue(queueName:String)
-  def queues:Seq[Queue]
+  def queues:Array[String]
   def send(contents:String,to:Queue):Unit
   def receive(from:Queue,timeout:Duration):Option[Message]
-  def completeMessage(message:Message):Unit
+  def completeMessage(messageID:Long):Unit
 
 }
 
@@ -29,6 +29,8 @@ case class Message(hornetQMessage:ClientMessage) extends DefaultJsonSupport {
   val propName = "contents"
 
   def contents = hornetQMessage.getStringProperty(propName)
+
+  def getMessageID = hornetQMessage.getMessageID
 
   def complete() = hornetQMessage.acknowledge()
 }

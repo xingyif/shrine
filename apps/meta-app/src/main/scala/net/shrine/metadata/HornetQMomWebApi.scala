@@ -2,14 +2,15 @@ package net.shrine.metadata
 
 import akka.event.Logging
 import net.shrine.log.Loggable
-import net.shrine.mom.{HornetQMom, LocalHornetQMom, Message, Queue}
-import org.hornetq.api.core.client.ClientSession
+import net.shrine.mom.{LocalHornetQMom, Message, Queue}
+import org.json4s.NoTypeHints
+import org.json4s.native.Serialization
+import org.json4s.native.Serialization.write
 import spray.http.{HttpRequest, HttpResponse, StatusCodes}
 import spray.routing.directives.LogEntry
 import spray.routing.{HttpService, Route}
 
-import scala.collection.immutable.Seq
-import scala.concurrent.duration.{Duration, _}
+import scala.concurrent.duration.Duration
 /**
   * A web API that provides access to the internal HornetQMom library.
   * Allows client to createQueue, deleteQueue, sendMessage, receiveMessage, getQueues, and sendReceipt
@@ -17,7 +18,7 @@ import scala.concurrent.duration.{Duration, _}
   * Created by yifan on 7/24/17.
   */
 
-trait HornetQMomWebService extends HttpService
+trait HornetQMomWebApi extends HttpService
   with Loggable {
 
   lazy val routes: Route = logRequestResponse(logEntryForRequestResponse _) {
@@ -26,8 +27,8 @@ trait HornetQMomWebService extends HttpService
       deleteQueue ~
       sendMessage ~
       receiveMessage ~
-      getQueues
-//      acknowledge
+      getQueues ~
+      acknowledge
   }
 
   /** logs the request method, uri and response at info level */
@@ -64,7 +65,7 @@ trait HornetQMomWebService extends HttpService
   // SQS sendMessage(String queueUrl, String messageBody) => SendMessageResult
   lazy val sendMessage: Route = path("sendMessage" / Segment / Segment) { (messageContent, toQueue) =>
     put {
-      // todo       entity(as[Message]) { msg =>
+//      entity(as[Message]) { msg =>
       // https://stackoverflow.com/questions/27707731/how-to-unmarshal-post-params-and-json-body-in-a-single-route
       LocalHornetQMom.send(messageContent, Queue.apply(toQueue))
       complete(StatusCodes.Accepted)
@@ -74,10 +75,8 @@ trait HornetQMomWebService extends HttpService
   // SQS ReceiveMessageResult receiveMessage(String queueUrl)
   lazy val receiveMessage: Route =
     get {
-      path("receiveMessage" / Segment / IntNumber) { (fromQueue,timeOutDuration)  =>
-//        parameter('timeOutDuration) {  => //  ? "20sec"
-          // zero second for an immediate return
-
+      path("receiveMessage" / Segment) { fromQueue =>
+        parameter('timeOutDuration ? 20) { timeOutDuration =>
           val timeout: Duration = Duration.create(timeOutDuration, "seconds")
           val response: Message = LocalHornetQMom.receive(Queue.apply(fromQueue), timeout).get
           implicit val formats = response.json4sMarshaller
@@ -85,38 +84,36 @@ trait HornetQMomWebService extends HttpService
             complete(response)
           }
         }
-
+      }
     }
 
+
   // SQS has DeleteMessageResult deleteMessage(String queueUrl, String receiptHandle)
-//  lazy val acknowledge = path("acknowledge" / Segment) { message =>
-//    put {
-//      val session: ClientSession = sessionFactory.createSession()
-//      val message = session.createMessage(false)
-//      val currentMessage: Message = Message(message)
-//      // todo pass in a message id
-//      LocalHornetQMom.completeMessage(currentMessage)
-//      complete(StatusCodes.NoContent)
-//    }
-//  }
-
-//  override def completeMessage(message: Message): Unit = {
-////    Try(StatusCodes.OK -> LocalHornetQMom.completeMessage(message))
-////      .getOrElse(StatusCodes.BadGateway ->
-////        s"HornetQException occurred while acknowledging the message!")
-//    LocalHornetQMom.completeMessage(message)
-//  }
-
+  lazy val acknowledge: Route = path("acknowledge" / LongNumber) { messageId =>
+    put {
+      LocalHornetQMom.completeMessage(messageId)
+      complete(StatusCodes.NoContent)
+    }
+  }
 
   // Returns the names of the queues created on this server. Seq[Any]
   lazy val getQueues: Route = path("getQueues") {
     get {
-      val response: Seq[Queue] = LocalHornetQMom.queues
+//      val queues = LocalHornetQMom.queues
       //    implicit val formats = response.asInstanceOf[ToResponseMarshallable]
       //    val json: Json = Json(response)
       //    val format: String = Json.format(json)(humanReadable())
       //    complete(format)
-      complete(StatusCodes.OK)
+      //  val response = queues.foldLeft("")(a => a.toString)
+//      val start = """"{"queueNames":{"""
+//      val end = """}}"""
+//      var response:String = queues.mkString(start, " ,", end)
+
+      val queues = LocalHornetQMom.queues
+
+      implicit val formats = Serialization.formats(NoTypeHints)
+      val response = write(queues)
+      respondWithStatus(StatusCodes.OK) {complete(response)}
     }
   }
 
