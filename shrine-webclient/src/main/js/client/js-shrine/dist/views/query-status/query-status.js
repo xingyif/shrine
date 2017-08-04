@@ -67,8 +67,6 @@ System.register(['aurelia-event-aggregator', 'common/shrine.messages', 'common/q
                         publishFetchQuery(networkId);
                     }
                 });
-
-                evtAgg.publish(notifications.i2b2.queryStarted, '@queryqueryName');
             }, _class.inject = [EventAggregator, notifications, commands, QueryStatusModel], _temp));
 
             _export('QueryStatus', QueryStatus);

@@ -639,8 +639,6 @@ System.config({
       "views/query-status/node-status/node-status.js",
       "views/query-status/query-status.html!github:systemjs/plugin-text@0.0.8.js",
       "views/query-status/query-status.js",
-      "views/query-status/query-timing/query-timing.html!github:systemjs/plugin-text@0.0.8.js",
-      "views/query-status/query-timing/query-timing.js",
       "views/query-viewer/box-style.converter.js",
       "views/query-viewer/context-menu/context-menu.html!github:systemjs/plugin-text@0.0.8.js",
       "views/query-viewer/context-menu/context-menu.js",

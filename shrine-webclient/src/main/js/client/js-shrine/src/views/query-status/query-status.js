@@ -1,6 +1,6 @@
 import {EventAggregator} from 'aurelia-event-aggregator';
 import {notifications, commands} from 'common/shrine.messages';
-import {QueryStatusModel} from 'common/query-status.model'
+import {QueryStatusModel} from 'common/query-status.model';
 export class QueryStatus {
     static inject = [EventAggregator, notifications, commands, QueryStatusModel];
     constructor(evtAgg, notifications, commands, queryStatus) {
@@ -27,7 +27,5 @@ export class QueryStatus {
                 publishFetchQuery(networkId)
             }
         });
-        // -- testing only -- //
-        evtAgg.publish(notifications.i2b2.queryStarted, '@queryqueryName');
     }
 }
