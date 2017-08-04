@@ -205,13 +205,13 @@ object ProblemDigestForJson {
     problemDigest.epoch)
 }
 
-case class BreakdownResultsForType(name:String,displayName:String,description:String,results:Seq[BreakdownResult])
+case class BreakdownResultsForType(resultType:ResultOutputType,results:Seq[BreakdownResult])
 
 object BreakdownResultsForType {
   def apply(adapterName: String, breakdownType: ResultOutputType, breakdowns: Seq[QepQueryBreakdownResultsRow]): BreakdownResultsForType = {
     val breakdownResults = breakdowns.filter(_.adapterNode == adapterName).map(row => BreakdownResult(row.dataKey,row.value,row.changeDate))
 
-    BreakdownResultsForType(breakdownType.name,breakdownType.i2b2Options.displayType,breakdownType.i2b2Options.description,breakdownResults)
+    BreakdownResultsForType(breakdownType,breakdownResults)
   }
 }
 
