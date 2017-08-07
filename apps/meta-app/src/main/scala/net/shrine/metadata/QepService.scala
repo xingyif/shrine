@@ -40,6 +40,9 @@ trait QepService extends HttpService with Loggable {
 
   def queryResult(user:User):Route = path("queryResult" / LongNumber){ queryId:NetworkQueryId =>
 
+    //todo take optional parameters for version and an awaitTime
+    //todo if there is a version and a timeout
+
     val queryOption: Option[QepQuery] = QepQueryDb.db.selectQueryById(queryId)
     queryOption.fold{
       respondWithStatus(StatusCodes.NotFound){complete(s"No query with id $queryId found")}
