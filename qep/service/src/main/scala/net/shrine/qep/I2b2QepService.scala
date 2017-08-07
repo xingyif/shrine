@@ -7,7 +7,6 @@ import net.shrine.broadcaster.BroadcastAndAggregationService
 import net.shrine.config.DurationConfigParser
 import net.shrine.protocol.{DeleteQueryRequest, FlagQueryRequest, I2b2RequestHandler, ReadApprovedQueryTopicsRequest, ReadInstanceResultsRequest, ReadPreviousQueriesRequest, ReadQueryDefinitionRequest, ReadQueryInstancesRequest, ReadResultOutputTypesRequest, RenameQueryRequest, ResultOutputType, RunQueryRequest, ShrineResponse, UnFlagQueryRequest}
 import net.shrine.qep.dao.AuditDao
-import net.shrine.broadcaster.HubBroadcastAndAggregationService
 
 import scala.concurrent.duration.Duration
 

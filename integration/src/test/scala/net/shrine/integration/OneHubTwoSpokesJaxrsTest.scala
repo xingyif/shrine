@@ -4,6 +4,8 @@ import net.shrine.protocol.{DeleteQueryRequest, DeleteQueryResponse, RequestType
 import net.shrine.util.ShouldMatchersForJUnit
 import org.junit.{After, Before, Test}
 
+import scala.concurrent.duration.DurationInt
+
 /**
  * @author clint
  * @since Jan 8, 2014
@@ -50,7 +52,7 @@ final class OneHubTwoSpokesJaxrsTest extends AbstractHubAndSpokesTest with Shoul
 
     //Make sure all the spokes received the right message
     spokes.foreach { spoke =>
-      val lastMessage = spoke.mockHandler.lastMessage.get
+      val lastMessage = spoke.mockHandler.pollMessageLifo(10 seconds).get
 
       lastMessage.networkAuthn.domain should equal(networkAuthn.domain)
       lastMessage.networkAuthn.username should equal(networkAuthn.username)
@@ -64,8 +66,7 @@ final class OneHubTwoSpokesJaxrsTest extends AbstractHubAndSpokesTest with Shoul
     }
 
     //Make sure we got the right responses at the hub
-
-    val multiplexer = hubComponent.broadcaster.lastMultiplexer.get
+    val multiplexer = hubComponent.broadcaster.pollMultiplexerLifo(10 seconds).get
 
     val expectedResponses = spokes.map { spoke =>
       Result(spoke.nodeId, spoke.mockHandler.elapsed, DeleteQueryResponse(masterId))
