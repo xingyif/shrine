@@ -174,6 +174,7 @@ trait AbstractQepService[BaseResp <: BaseShrineResponse] extends Loggable {
     //When making BroadcastMessages
     val networkAuthn = AuthenticationInfo(authResult.domain, authResult.username, Credential("", isToken = false))
 
+    /** Sends the query to the hub and starts a Future to watch for the results. Returns (almost) immediately. */
     def queryHub( authorizedRequest: RunQueryRequest): Unit = {
       import scala.concurrent.ExecutionContext.Implicits.global
       import scala.concurrent.blocking
