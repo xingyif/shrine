@@ -1,25 +1,12 @@
 package net.shrine.protocol
 
-import scala.xml.NodeSeq
-import I2b2ResultEnvelope.Column
-import com.sun.org.apache.xalan.internal.xsltc.compiler.ValueOf
-import scala.xml.XML
-import net.shrine.serialization.XmlMarshaller
-import net.shrine.serialization.XmlMarshaller
-import net.shrine.serialization.I2b2Unmarshaller
-import net.shrine.serialization.I2b2Unmarshaller
-import net.shrine.util.XmlUtil
-import net.shrine.serialization.I2b2Marshaller
-import net.shrine.serialization.XmlUnmarshaller
-import net.shrine.serialization.XmlMarshaller
-import net.shrine.serialization.JsonMarshaller
 import net.liftweb.json.JsonDSL._
 import net.liftweb.json._
-import net.shrine.serialization.JsonUnmarshaller
-import scala.util.Try
-import net.shrine.util.XmlDateHelper
-import net.shrine.util.NodeSeqEnrichments
-import scala.util.Success
+import net.shrine.serialization.{I2b2Marshaller, JsonMarshaller, XmlMarshaller}
+import net.shrine.util.{NodeSeqEnrichments, XmlUtil}
+
+import scala.util.{Success, Try}
+import scala.xml.NodeSeq
 
 
 /**
@@ -76,7 +63,7 @@ final case class I2b2ResultEnvelope(resultType: ResultOutputType, data: Map[Stri
     </resultEnvelope>
   }
     
-  override def toJson: JValue = (resultType.name -> data)
+  override def toJson: JValue = resultType.name -> data
 }
 
 object I2b2ResultEnvelope extends I2b2XmlUnmarshaller[I2b2ResultEnvelope] with ShrineXmlUnmarshaller[I2b2ResultEnvelope] {
@@ -98,7 +85,7 @@ object I2b2ResultEnvelope extends I2b2XmlUnmarshaller[I2b2ResultEnvelope] with S
     def fromXml(breakdownTypes: Set[ResultOutputType])(xml: NodeSeq): Try[ColumnTuple] = unmarshal(xml, from("name"), from("value") andThen (_.toLong))
     
     def fromJson(json: JValue): Option[ColumnTuple] = json match {
-      case JObject(List(JField(name, JInt(value)))) => Some((name, value.toInt))
+      case JObject(List(JField(name, JInt(value)))) => Some((name, value.toLong))
       case _ => None
     }
   }
