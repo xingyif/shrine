@@ -27,5 +27,7 @@ export class QueryStatus {
                 publishFetchQuery(networkId)
             }
         });
+        // -- testing only -- //
+        evtAgg.publish(notifications.i2b2.queryStarted, '@queryqueryName');
     }
 }

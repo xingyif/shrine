@@ -9,6 +9,8 @@ import net.shrine.protocol.{DefaultBreakdownResultOutputTypes, DeleteQueryReques
 import net.shrine.util.ShouldMatchersForJUnit
 import org.junit.{After, Before, Test}
 
+import scala.concurrent.duration.DurationInt
+
 /**
  * @author clint
  * @since Mar 6, 2014
@@ -54,7 +56,7 @@ final class OneQepOneHubTwoSpokesJaxrsTest extends AbstractHubAndSpokesTest with
     
     //Make sure all the spokes received the right message
     spokes.foreach { spoke =>
-      val lastMessage = spoke.mockHandler.lastMessage.get
+      val lastMessage = spoke.mockHandler.pollMessageLifo(10 seconds).get
       
       lastMessage.networkAuthn.domain should equal(networkAuthn.domain)
       lastMessage.networkAuthn.username should equal(networkAuthn.username)
@@ -68,8 +70,7 @@ final class OneQepOneHubTwoSpokesJaxrsTest extends AbstractHubAndSpokesTest with
     }
     
     //Make sure we got the right responses at the hub
-    
-    val multiplexer = HubComponent.broadcaster.lastMultiplexer.get
+    val multiplexer = HubComponent.broadcaster.pollMultiplexerLifo(10 seconds).get
     
     val expectedResponses = spokes.map { spoke =>
       Result(spoke.nodeId, spoke.mockHandler.elapsed, DeleteQueryResponse(masterId))
@@ -90,12 +91,16 @@ final class OneQepOneHubTwoSpokesJaxrsTest extends AbstractHubAndSpokesTest with
     
     //Broadcast a message
     val resp = client.runQuery("some-topic-id", Set(ResultOutputType.PATIENT_COUNT_XML), queryDefinition, true)
-    
-    resp.results.size should equal(spokes.size)
-    
+
+    //changed for SHRINE-2140 . Now expect zero results here, but todo get them from the QEP service (not tested here)
+//    resp.results.size should equal(spokes.size)
+    resp.results.size should equal(0)
+
+    //todo SHRINE-2140 does not allow a great way to tell if a message has arrived
+
     //Make sure all the spokes received the right message
     spokes.foreach { spoke =>
-      val lastMessage = spoke.mockHandler.lastMessage.get
+      val lastMessage = spoke.mockHandler.pollMessageLifo(10 seconds).get
       
       lastMessage.networkAuthn.domain should equal(networkAuthn.domain)
       lastMessage.networkAuthn.username should equal(networkAuthn.username)
@@ -107,10 +112,12 @@ final class OneQepOneHubTwoSpokesJaxrsTest extends AbstractHubAndSpokesTest with
       req.authn should equal(networkAuthn)
       req.queryDefinition should equal(queryDefinition)
     }
-    
+
+    //I don't see a great way to get a signal out of the AbstractQepService that it is done waiting, so Thread.sleep()
+    Thread.sleep(10000)
+
     //Make sure we got the right responses at the hub
-    
-    val multiplexer = HubComponent.broadcaster.lastMultiplexer.get
+    val multiplexer = HubComponent.broadcaster.pollMultiplexerLifo(10 seconds).get
     
     multiplexer.resultsSoFar.collect { case Result(_, _, payload) => payload.getClass } should equal((1 to spokes.size).map(_ => classOf[RunQueryResponse]))
     
@@ -136,7 +143,7 @@ final class OneQepOneHubTwoSpokesJaxrsTest extends AbstractHubAndSpokesTest with
     
     //Make sure all the spokes received the right message
     spokes.foreach { spoke =>
-      val lastMessage = spoke.mockHandler.lastMessage.get
+      val lastMessage = spoke.mockHandler.pollMessageLifo(10 seconds).get
       
       lastMessage.networkAuthn.domain should equal(networkAuthn.domain)
       lastMessage.networkAuthn.username should equal(networkAuthn.username)
@@ -151,8 +158,8 @@ final class OneQepOneHubTwoSpokesJaxrsTest extends AbstractHubAndSpokesTest with
     }
     
     //Make sure we got the right responses at the hub
-    
-    val multiplexer = HubComponent.broadcaster.lastMultiplexer.get
+
+    val multiplexer = HubComponent.broadcaster.pollMultiplexerLifo(10 seconds).get
     
     val expectedResponses = spokes.map { spoke =>
       Result(spoke.nodeId, spoke.mockHandler.elapsed, FlagQueryResponse)
@@ -176,7 +183,7 @@ final class OneQepOneHubTwoSpokesJaxrsTest extends AbstractHubAndSpokesTest with
     
     //Make sure all the spokes received the right message
     spokes.foreach { spoke =>
-      val lastMessage = spoke.mockHandler.lastMessage.get
+      val lastMessage = spoke.mockHandler.pollMessageLifo(10 seconds).get
       
       lastMessage.networkAuthn.domain should equal(networkAuthn.domain)
       lastMessage.networkAuthn.username should equal(networkAuthn.username)
@@ -190,8 +197,8 @@ final class OneQepOneHubTwoSpokesJaxrsTest extends AbstractHubAndSpokesTest with
     }
     
     //Make sure we got the right responses at the hub
-    
-    val multiplexer = HubComponent.broadcaster.lastMultiplexer.get
+
+    val multiplexer = HubComponent.broadcaster.pollMultiplexerLifo(10 seconds).get
     
     val expectedResponses = spokes.map { spoke =>
       Result(spoke.nodeId, spoke.mockHandler.elapsed, UnFlagQueryResponse)

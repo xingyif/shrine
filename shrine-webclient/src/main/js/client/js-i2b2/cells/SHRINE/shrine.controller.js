@@ -126,6 +126,8 @@
 	}
 
 	function overrideI2B2($, i2b2, YAHOO) {
+		
+		i2b2.events.networkIdReceived = new YAHOO.util.CustomEvent("networkIdReceived", I2B2);
 		i2b2.events.afterQueryInit = new YAHOO.util.CustomEvent("afterQueryInit", i2b2);
 
 		var _queryRun = i2b2.CRC.ctrlr.QT._queryRun;

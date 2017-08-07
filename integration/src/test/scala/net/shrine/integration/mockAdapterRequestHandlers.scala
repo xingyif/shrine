@@ -1,5 +1,7 @@
 package net.shrine.integration
 
+import java.util.concurrent.LinkedBlockingDeque
+
 import net.shrine.adapter.service.AdapterRequestHandler
 import net.shrine.log.Loggable
 import net.shrine.protocol.NodeId
@@ -7,6 +9,7 @@ import net.shrine.protocol.BroadcastMessage
 import net.shrine.protocol.Result
 import net.shrine.protocol.DeleteQueryRequest
 import net.shrine.protocol.DeleteQueryResponse
+
 import scala.concurrent.duration._
 import scala.util.control.NoStackTrace
 import net.shrine.protocol.FlagQueryRequest
@@ -20,21 +23,18 @@ import net.shrine.protocol.QueryResult
 
 /**
  * @author clint
- * @date Dec 17, 2013
+ * @since Dec 17, 2013
  */
 class MockAdapterRequestHandler(val nodeId: NodeId) extends AdapterRequestHandler with Loggable {
   val elapsed = 1.second
 
-  private[this] val lock = new AnyRef
-  
-  @volatile private[this] var lastMessageOption: Option[BroadcastMessage] = None
+  /*used to provide a LIFO queue to examine messages*/
+  private val messagesReceived = new LinkedBlockingDeque[BroadcastMessage]()
 
-  def lastMessage: Option[BroadcastMessage] = lock.synchronized(lastMessageOption)
+  def pollMessageLifo(timeout:FiniteDuration): Option[BroadcastMessage] = Option(messagesReceived.pollFirst(timeout.length,timeout.unit))
   
   override def handleRequest(message: BroadcastMessage): Result = {
-    lock.synchronized {
-      lastMessageOption = Option(message)
-    }
+    messagesReceived.put(message)
 
     message.request match {
       case req: DeleteQueryRequest => Result(nodeId, elapsed, DeleteQueryResponse(req.networkQueryId))
