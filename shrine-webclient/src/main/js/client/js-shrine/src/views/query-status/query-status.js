@@ -22,7 +22,7 @@ export class QueryStatus {
             const complete = data.query.complete;
             const networkId = data.query.networkId;
             if(!complete) {
-                publishFetchQuery(networkId)
+                window.setTimeout(() => publishFetchQuery(networkId), 10000);
             }
         });
     }

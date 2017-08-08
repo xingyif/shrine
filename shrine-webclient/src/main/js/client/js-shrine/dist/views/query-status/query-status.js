@@ -60,7 +60,9 @@ System.register(['aurelia-event-aggregator', 'common/shrine.messages', 'common/q
                     var complete = data.query.complete;
                     var networkId = data.query.networkId;
                     if (!complete) {
-                        publishFetchQuery(networkId);
+                        window.setTimeout(function () {
+                            return publishFetchQuery(networkId);
+                        }, 10000);
                     }
                 });
             }, _class.inject = [EventAggregator, notifications, commands, QueryStatusModel], _temp));

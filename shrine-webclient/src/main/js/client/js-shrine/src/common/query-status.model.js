@@ -11,7 +11,7 @@ export class QueryStatusModel {
             return new Promise((resolve, reject) => {                
                 const nodes = [...data.results];
                 const finishedCount = nodes.reduce((s, r) => ['FINISHED', 'ERROR'].indexOf(r.status) != -1? s + 1 : s, 0);
-                const query = {...data.query, ...{complete: nodes.length === finishedCount}};
+                const query = {...data.query, ...{complete: nodes.length && nodes.length === finishedCount}};
                 resolve({
                    query,
                    nodes,
