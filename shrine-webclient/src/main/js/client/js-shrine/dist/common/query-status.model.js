@@ -47,11 +47,11 @@ System.register(['aurelia-event-aggregator', 'repository/qep.repository', './shr
                 };
                 var toModel = function toModel(data) {
                     return new Promise(function (resolve, reject) {
-                        var nodes = [].concat(data.queryResults[0].adaptersToResults);
+                        var nodes = [].concat(data.results);
                         var finishedCount = nodes.reduce(function (s, r) {
                             return ['FINISHED', 'ERROR'].indexOf(r.status) != -1 ? s + 1 : s;
                         }, 0);
-                        var query = _extends({}, data.queryResults[0].query, { complete: nodes.length === finishedCount });
+                        var query = _extends({}, data.query, { complete: nodes.length === finishedCount });
                         resolve({
                             query: query,
                             nodes: nodes,

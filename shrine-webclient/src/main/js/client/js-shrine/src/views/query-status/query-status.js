@@ -6,15 +6,13 @@ export class QueryStatus {
     constructor(evtAgg, notifications, commands, queryStatus) {
         const initialState = () => ({query: {queryName: null, updated: null, complete: false}, nodes: null});
         this.status = initialState();
-        // -- publishers --
-        //const publishFetchNetworkId = n => evtAgg.publish(commands.shrine.fetchNetworkId, n);
+        // -- publishers -- //
         const publishFetchQuery = id => evtAgg.publish(commands.shrine.fetchQuery, id);
         // -- subscribers -- //
-        /*evtAgg.subscribe(notifications.i2b2.queryStarted, (n) => {
+        evtAgg.subscribe(notifications.i2b2.queryStarted, (n) => {
             // -- @todo: centralize the logic, investigate adding a new "status" every time -- //
             this.status.query.queryName = n;
-            publishFetchNetworkId(n)
-        });*/
+        });
         evtAgg.subscribe(notifications.i2b2.networkIdReceived, id => publishFetchQuery(id));
         evtAgg.subscribe(notifications.shrine.queryReceived, data => {
             // -- @todo: centralize the logic, investigate adding a new "status" every time -- //
@@ -27,7 +25,5 @@ export class QueryStatus {
                 publishFetchQuery(networkId)
             }
         });
-        // -- testing only -- //
-       // evtAgg.publish(notifications.i2b2.queryStarted, '@queryqueryName');
     }
 }

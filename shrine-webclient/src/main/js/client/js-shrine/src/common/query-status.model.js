@@ -9,9 +9,9 @@ export class QueryStatusModel {
         const logError = error => console.log(`ERROR: ${error}`);
         const toModel = data => {
             return new Promise((resolve, reject) => {                
-                const nodes = [...data.queryResults[0].adaptersToResults];
+                const nodes = [...data.results];
                 const finishedCount = nodes.reduce((s, r) => ['FINISHED', 'ERROR'].indexOf(r.status) != -1? s + 1 : s, 0);
-                const query = {...data.queryResults[0].query, ...{complete: nodes.length === finishedCount}};
+                const query = {...data.query, ...{complete: nodes.length === finishedCount}};
                 resolve({
                    query,
                    nodes,

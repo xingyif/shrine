@@ -67,7 +67,7 @@ System.register(['aurelia-fetch-client', 'fetch'], function (_export, _context) 
                 };
 
                 QEPRepository.prototype.fetchQuery = function fetchQuery(networkId) {
-                    return this.http.fetch('qep/queryResults?networkId=' + networkId).then(function (response) {
+                    return this.http.fetch('qep/queryResult/' + networkId).then(function (response) {
                         return response.json();
                     }).catch(function (error) {
                         return error;

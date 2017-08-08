@@ -47,6 +47,9 @@ System.register(['aurelia-event-aggregator', 'common/shrine.messages', 'common/q
                     return evtAgg.publish(commands.shrine.fetchQuery, id);
                 };
 
+                evtAgg.subscribe(notifications.i2b2.queryStarted, function (n) {
+                    _this.status.query.queryName = n;
+                });
                 evtAgg.subscribe(notifications.i2b2.networkIdReceived, function (id) {
                     return publishFetchQuery(id);
                 });

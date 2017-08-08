@@ -3,9 +3,10 @@
     <require from="common/converters/datetime.value.converter"></require>
     <require from="./node-status/node-status"></require>
     <div style="height: 100%; overflow: auto">
-        <div style="display: flex">
+        <div style="display: flex" if.one-way="status.query.queryName">
             <div style="flex:1">Status of Query: ${status.query.queryName}</div>
-            <div style="flex:1">Last Updated: ${status.updated | dateTime}</div>
+            <div style="flex:1" if.one-way="status.nodes.length">Last Updated: ${status.updated | dateTime}</div>
+            <div style="flex:1" if.one-way="!status.nodes.length">Waiting on response from network...</div>
         </div>
         <br/>
 
