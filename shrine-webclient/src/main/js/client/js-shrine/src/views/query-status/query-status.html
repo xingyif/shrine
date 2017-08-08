@@ -13,7 +13,7 @@
         <node-status repeat.for="node of status.nodes" result.one-way="node">
         </node-status>
         
-        <span if.one-way="status.nodes">
+        <span if.one-way="status.nodes.length">
             <br/>
             <div>Query results are shown below</div>
             <span>**************************************************************************</span>

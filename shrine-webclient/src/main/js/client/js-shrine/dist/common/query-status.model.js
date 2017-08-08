@@ -51,7 +51,7 @@ System.register(['aurelia-event-aggregator', 'repository/qep.repository', './shr
                         var finishedCount = nodes.reduce(function (s, r) {
                             return ['FINISHED', 'ERROR'].indexOf(r.status) != -1 ? s + 1 : s;
                         }, 0);
-                        var query = _extends({}, data.query, { complete: nodes.length && nodes.length === finishedCount });
+                        var query = _extends({}, data.query, { complete: nodes.length > 0 && nodes.length === finishedCount });
                         resolve({
                             query: query,
                             nodes: nodes,
