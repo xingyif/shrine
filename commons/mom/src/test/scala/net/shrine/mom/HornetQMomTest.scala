@@ -17,7 +17,7 @@ import scala.language.postfixOps
 @RunWith(classOf[JUnitRunner])
 class HornetQMomTest extends FlatSpec with BeforeAndAfterAll with ScalaFutures with Matchers {
 
-  "HornetQ" should "be able to send and receive a message" in {
+  "HornetQ" should "be able to send and receive just one message" in {
 
     val queueName = "testQueue"
 
@@ -26,7 +26,6 @@ class HornetQMomTest extends FlatSpec with BeforeAndAfterAll with ScalaFutures w
     val queue = HornetQMom.createQueueIfAbsent(queueName)
 
     assert(HornetQMom.queues == Seq(queue))
-
 
     val testContents = "Test message"
     HornetQMom.send(testContents,queue)
@@ -38,11 +37,67 @@ class HornetQMomTest extends FlatSpec with BeforeAndAfterAll with ScalaFutures w
 
     message.fold()(HornetQMom.complete)
 
+    val shouldBeNoMessage: Option[Message] = HornetQMom.receive(queue,1 second)
+
+    assert(shouldBeNoMessage.isEmpty)
+
     HornetQMom.deleteQueue(queueName)
     assert(HornetQMom.queues.isEmpty)
 
   }
 
+  "HornetQ" should "be able to send and receive a few messages" in {
+
+    val queueName = "testQueue"
+
+    assert(HornetQMom.queues.isEmpty)
+
+    val queue = HornetQMom.createQueueIfAbsent(queueName)
+
+    assert(HornetQMom.queues == Seq(queue))
+
+    val testContents1 = "Test message1"
+    HornetQMom.send(testContents1,queue)
+
+    val message1: Option[Message] = HornetQMom.receive(queue,1 second)
+
+    assert(message1.isDefined)
+    assert(message1.get.contents == testContents1)
+
+    message1.fold()(HornetQMom.complete)
+
+    val shouldBeNoMessage1: Option[Message] = HornetQMom.receive(queue,1 second)
+
+    assert(shouldBeNoMessage1.isEmpty)
+
+    val testContents2 = "Test message2"
+    HornetQMom.send(testContents2,queue)
+
+    val testContents3 = "Test message3"
+    HornetQMom.send(testContents3,queue)
+
+    val message2: Option[Message] = HornetQMom.receive(queue,1 second)
+
+    assert(message2.isDefined)
+    assert(message2.get.contents == testContents2)
+
+    message2.fold()(HornetQMom.complete)
+
+    val message3: Option[Message] = HornetQMom.receive(queue,1 second)
+
+    assert(message3.isDefined)
+    assert(message3.get.contents == testContents3)
+
+    message3.fold()(HornetQMom.complete)
+
+    val shouldBeNoMessage4: Option[Message] = HornetQMom.receive(queue,1 second)
+
+    assert(shouldBeNoMessage4.isEmpty)
+
+    HornetQMom.deleteQueue(queueName)
+    assert(HornetQMom.queues.isEmpty)
+
+  }
 
   "HornetQ" should "be OK if asked to create the same queue twice " in {
 
