@@ -13,6 +13,8 @@ import rapture.json.jsonBackends.jawn._
 import rapture.json.formatters.humanReadable
 import spray.http.StatusCodes
 
+import scala.concurrent.duration._
+
 /**
   * An API to support the web client's work with queries.
   *
@@ -38,27 +40,46 @@ trait QepService extends HttpService with Loggable {
       respondWithStatus(StatusCodes.NotFound){complete(qepInfo)}
   }
 
-  def queryResult(user:User):Route = path("queryResult" / LongNumber){ queryId:NetworkQueryId =>
+  def queryResult(user:User):Route = path("queryResult" / LongNumber) { queryId: NetworkQueryId =>
 
-    //todo take optional parameters for version and an awaitTime
-    //todo if there is a version and a timeout
+    //take optional parameters for version and an awaitTime
+    parameters('afterVersion.as[Long] ? 0L, 'timeout.as[Long] ? 0L) { (afterVersion: Long, timeout: Long) =>
 
-    val queryOption: Option[QepQuery] = QepQueryDb.db.selectQueryById(queryId)
-    queryOption.fold{
-      respondWithStatus(StatusCodes.NotFound){complete(s"No query with id $queryId found")}
-    }{query:QepQuery =>
-      if(user.sameUserAs(query.userName,query.userDomain)) {
-        val mostRecentQueryResults: Seq[Result] = QepQueryDb.db.selectMostRecentFullQueryResultsFor(queryId).map(Result(_))
-        val flag = QepQueryDb.db.selectMostRecentQepQueryFlagFor(queryId).map(QueryFlag(_))
-        val queryCell = QueryCell(query,flag)
-        val queryAndResults = ResultsRow(queryCell,mostRecentQueryResults)
+      val requestStartTime = System.currentTimeMillis()
+      val deadline = requestStartTime + timeout
 
-        val json: Json = Json(queryAndResults)
-        val formattedJson: String = Json.format(json)(humanReadable())
+      //query once and determine if the latest change > afterVersion
 
-        complete(formattedJson)
-      } else {
-        respondWithStatus(StatusCodes.Forbidden){complete(s"Query $queryId belongs to a different user")}
+      val queryOption: Option[QepQuery] = QepQueryDb.db.selectQueryById(queryId)
+      queryOption.fold {
+        respondWithStatus(StatusCodes.NotFound) {
+          //todo only complete if deadline is past. Otherwise reschedule
+          complete(s"No query with id $queryId found")
+        }
+      } { query: QepQuery =>
+        if (user.sameUserAs(query.userName, query.userDomain)) {
+          val mostRecentQueryResults: Seq[Result] = QepQueryDb.db.selectMostRecentFullQueryResultsFor(queryId).map(Result(_))
+          val flag = QepQueryDb.db.selectMostRecentQepQueryFlagFor(queryId).map(QueryFlag(_))
+          val queryCell = QueryCell(query, flag)
+          val queryAndResults = ResultsRow(queryCell, mostRecentQueryResults)
+
+          //only complete if deadline is past or latest change > afterVersion
+          val currentTime = System.currentTimeMillis()
+          if((queryAndResults.latestChange > afterVersion) || (currentTime > deadline)) {
+            val json: Json = Json(queryAndResults)
+            val formattedJson: String = Json.format(json)(humanReadable())
+            complete(formattedJson)
+          }
+          else {
+            //todo reschedule at deadline
+             ??? //             complete("Delay doing this for a bit")
+          }
+        } else {
+          //fine to do this as soon as it is discovered
+          respondWithStatus(StatusCodes.Forbidden) {
+            complete(s"Query $queryId belongs to a different user")
+          }
+        }
       }
     }
   }
@@ -128,7 +149,9 @@ case class ResultsTable(
 case class ResultsRow(
                        query:QueryCell,
                        results: Seq[Result]
-                      )
+                      ) {
+  def latestChange:Long = (Seq(query.changeDate) ++ results.map(_.changeDate)).max
+}
 
 case class QueryCell(
                       networkId:String, //easier to support in json, lessens the impact of using a GUID iff we can get there
