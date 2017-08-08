@@ -620,6 +620,7 @@ System.config({
       "common/queries.model.js",
       "common/query-status.model.js",
       "common/shrine.messages.js",
+      "common/subscriber.js",
       "main.js",
       "repository/qep.repository.js",
       "shell.html!github:systemjs/plugin-text@0.0.8.js",

@@ -1,7 +1,7 @@
 System.register(['aurelia-framework', 'common/publisher'], function (_export, _context) {
     "use strict";
 
-    var inject, bindable, Publisher, _desc, _value, _class, _descriptor, Error;
+    var inject, bindable, customElement, Publisher, _dec, _class, _desc, _value, _class2, _descriptor, Error;
 
     function _initDefineProp(target, property, descriptor, context) {
         if (!descriptor) return;
@@ -80,11 +80,12 @@ System.register(['aurelia-framework', 'common/publisher'], function (_export, _c
         setters: [function (_aureliaFramework) {
             inject = _aureliaFramework.inject;
             bindable = _aureliaFramework.bindable;
+            customElement = _aureliaFramework.customElement;
         }, function (_commonPublisher) {
             Publisher = _commonPublisher.Publisher;
         }],
         execute: function () {
-            _export('Error', Error = (_class = function (_Publisher) {
+            _export('Error', Error = (_dec = customElement('error'), _dec(_class = (_class2 = function (_Publisher) {
                 _inherits(Error, _Publisher);
 
                 function Error() {
@@ -102,10 +103,10 @@ System.register(['aurelia-framework', 'common/publisher'], function (_export, _c
                 }
 
                 return Error;
-            }(Publisher), (_descriptor = _applyDecoratedDescriptor(_class.prototype, 'result', [bindable], {
+            }(Publisher), (_descriptor = _applyDecoratedDescriptor(_class2.prototype, 'result', [bindable], {
                 enumerable: true,
                 initializer: null
-            })), _class));
+            })), _class2)) || _class));
 
             _export('Error', Error);
         }

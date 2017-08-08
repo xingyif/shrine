@@ -1,7 +1,7 @@
 System.register(['aurelia-framework', 'common/publisher'], function (_export, _context) {
     "use strict";
 
-    var bindable, Publisher, _desc, _value, _class, _descriptor, NodeStatus;
+    var customElement, bindable, Publisher, _dec, _class, _desc, _value, _class2, _descriptor, NodeStatus;
 
     function _initDefineProp(target, property, descriptor, context) {
         if (!descriptor) return;
@@ -78,12 +78,13 @@ System.register(['aurelia-framework', 'common/publisher'], function (_export, _c
 
     return {
         setters: [function (_aureliaFramework) {
+            customElement = _aureliaFramework.customElement;
             bindable = _aureliaFramework.bindable;
         }, function (_commonPublisher) {
             Publisher = _commonPublisher.Publisher;
         }],
         execute: function () {
-            _export('NodeStatus', NodeStatus = (_class = function (_Publisher) {
+            _export('NodeStatus', NodeStatus = (_dec = customElement('node-status'), _dec(_class = (_class2 = function (_Publisher) {
                 _inherits(NodeStatus, _Publisher);
 
                 function NodeStatus() {
@@ -101,10 +102,10 @@ System.register(['aurelia-framework', 'common/publisher'], function (_export, _c
                 }
 
                 return NodeStatus;
-            }(Publisher), (_descriptor = _applyDecoratedDescriptor(_class.prototype, 'result', [bindable], {
+            }(Publisher), (_descriptor = _applyDecoratedDescriptor(_class2.prototype, 'result', [bindable], {
                 enumerable: true,
                 initializer: null
-            })), _class));
+            })), _class2)) || _class));
 
             _export('NodeStatus', NodeStatus);
         }

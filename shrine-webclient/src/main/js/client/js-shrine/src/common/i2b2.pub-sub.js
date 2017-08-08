@@ -10,8 +10,8 @@ export class I2B2PubSub {
                 notifyTabMax() : notifyTabMin());
             i2b2Svc.onHistory(() => notifyHistoryRefreshed());
             i2b2Svc.onQuery((e, d) => notifyQueryStarted(d[0].name));
+            i2b2Svc.onNetworkId((e, d) => notifyNetworkIdReceived(d[0].networkId));
             i2b2Svc.onViewSelected(e => notifyViewSelected(e.data));
-            
             evtAgg.subscribe(commands.i2b2.cloneQuery, commandCloneQuery);
             evtAgg.subscribe(commands.i2b2.showError, commandShowError);
             evtAgg.subscribe(commands.i2b2.renameQuery, commandRenameQuery);
@@ -25,7 +25,7 @@ export class I2B2PubSub {
         const notifyHistoryRefreshed = () => evtAgg.publish(notifications.i2b2.historyRefreshed);
         const notifyQueryStarted = n => evtAgg.publish(notifications.i2b2.queryStarted, n);
         const notifyViewSelected = v => evtAgg.publish(notifications.i2b2.viewSelected, v);
-        
+        const notifyNetworkIdReceived = v => evtAgg.publish(notifications.i2b2.networkIdReceived, v);
 
         // -- commands --//
         const commandCloneQuery = d => i2b2Svc.loadQuery(d);

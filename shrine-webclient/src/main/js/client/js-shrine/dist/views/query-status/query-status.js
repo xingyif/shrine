@@ -43,18 +43,11 @@ System.register(['aurelia-event-aggregator', 'common/shrine.messages', 'common/q
                 };
                 this.status = initialState();
 
-                var publishFetchNetworkId = function publishFetchNetworkId(n) {
-                    return evtAgg.publish(commands.shrine.fetchNetworkId, n);
-                };
                 var publishFetchQuery = function publishFetchQuery(id) {
                     return evtAgg.publish(commands.shrine.fetchQuery, id);
                 };
 
-                evtAgg.subscribe(notifications.i2b2.queryStarted, function (n) {
-                    _this.status.query.queryName = n;
-                    publishFetchNetworkId(n);
-                });
-                evtAgg.subscribe(notifications.shrine.networkIdReceived, function (id) {
+                evtAgg.subscribe(notifications.i2b2.networkIdReceived, function (id) {
                     return publishFetchQuery(id);
                 });
                 evtAgg.subscribe(notifications.shrine.queryReceived, function (data) {
@@ -67,8 +60,6 @@ System.register(['aurelia-event-aggregator', 'common/shrine.messages', 'common/q
                         publishFetchQuery(networkId);
                     }
                 });
-
-                evtAgg.publish(notifications.i2b2.queryStarted, '@queryqueryName');
             }, _class.inject = [EventAggregator, notifications, commands, QueryStatusModel], _temp));
 
             _export('QueryStatus', QueryStatus);

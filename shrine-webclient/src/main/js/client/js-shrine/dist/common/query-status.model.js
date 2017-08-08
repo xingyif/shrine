@@ -37,7 +37,7 @@ System.register(['aurelia-event-aggregator', 'repository/qep.repository', './shr
                 _classCallCheck(this, QueryStatusModel);
 
                 var publishNetworkId = function publishNetworkId(id) {
-                    return evtAgg.publish(notifications.shrine.networkIdReceived, id);
+                    return evtAgg.publish(notifications.i2b2.networkIdReceived, id);
                 };
                 var publishQuery = function publishQuery(model) {
                     return evtAgg.publish(notifications.shrine.queryReceived, model);
@@ -79,9 +79,6 @@ System.register(['aurelia-event-aggregator', 'repository/qep.repository', './shr
                 };
 
                 var init = function init() {
-                    evtAgg.subscribe(commands.shrine.fetchNetworkId, function (n) {
-                        return loadNetworkId(n);
-                    });
                     evtAgg.subscribe(commands.shrine.fetchQuery, function (id) {
                         return loadQuery(id);
                     });

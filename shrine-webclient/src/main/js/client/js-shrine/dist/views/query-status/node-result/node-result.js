@@ -1,7 +1,7 @@
 System.register(['aurelia-framework'], function (_export, _context) {
     "use strict";
 
-    var bindable, _desc, _value, _class, _descriptor, _descriptor2, NodeResult;
+    var customElement, bindable, _dec, _class, _desc, _value, _class2, _descriptor, _descriptor2, NodeResult;
 
     function _initDefineProp(target, property, descriptor, context) {
         if (!descriptor) return;
@@ -54,22 +54,23 @@ System.register(['aurelia-framework'], function (_export, _context) {
 
     return {
         setters: [function (_aureliaFramework) {
+            customElement = _aureliaFramework.customElement;
             bindable = _aureliaFramework.bindable;
         }],
         execute: function () {
-            _export('NodeResult', NodeResult = (_class = function NodeResult() {
+            _export('NodeResult', NodeResult = (_dec = customElement('node-result'), _dec(_class = (_class2 = function NodeResult() {
                 _classCallCheck(this, NodeResult);
 
                 _initDefineProp(this, 'result', _descriptor, this);
 
                 _initDefineProp(this, 'queryName', _descriptor2, this);
-            }, (_descriptor = _applyDecoratedDescriptor(_class.prototype, 'result', [bindable], {
+            }, (_descriptor = _applyDecoratedDescriptor(_class2.prototype, 'result', [bindable], {
                 enumerable: true,
                 initializer: null
-            }), _descriptor2 = _applyDecoratedDescriptor(_class.prototype, 'queryName', [bindable], {
+            }), _descriptor2 = _applyDecoratedDescriptor(_class2.prototype, 'queryName', [bindable], {
                 enumerable: true,
                 initializer: null
-            })), _class));
+            })), _class2)) || _class));
 
             _export('NodeResult', NodeResult);
         }

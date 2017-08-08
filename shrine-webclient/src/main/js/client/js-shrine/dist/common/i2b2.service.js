@@ -43,6 +43,11 @@ System.register(['ramda', './container'], function (_export, _context) {
                         return v.afterQueryInit.subscribe(f);
                     });
                 };
+                I2B2Service.prototype.onNetworkId = function (f) {
+                    return events(ctx).map(function (v) {
+                        return v.networkIdReceived.subscribe(f);
+                    });
+                };
                 I2B2Service.prototype.onViewSelected = function (f) {
                     return prop('addEventListener', ctx).value ? Container.of(ctx.value.addEventListener('message', f, false)) : Container.of(null);
                 };

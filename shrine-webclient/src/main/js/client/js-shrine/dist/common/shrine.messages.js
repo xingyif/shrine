@@ -12,12 +12,12 @@ System.register([], function (_export, _context) {
                     viewSelected: 'notification.from.i2b2.tab.selected',
                     historyRefreshed: 'notification.from.i2b2.history.refreshed',
                     queryStarted: 'notification.from.i2b2.query.started',
-                    messageReceived: 'notification.from.i2b2.message.received'
+                    messageReceived: 'notification.from.i2b2.message.received',
+                    networkIdReceived: 'notification.from.i2b2.networkId.receieved'
                 },
 
                 shrine: {
                     queriesReceived: 'notification.from.shrine.queries.received',
-                    networkIdReceived: 'notification.from.shrine.networkId.receieved',
                     queryReceived: 'notification.from.shrine.query.recieved'
                 }
             });
@@ -34,7 +34,6 @@ System.register([], function (_export, _context) {
                 },
 
                 shrine: {
-                    fetchNetworkId: 'command.to.shrine.fetch.networkId',
                     fetchQuery: 'command.to.shrine.fetch.query'
                 }
             });

@@ -1,10 +1,10 @@
-import { EventAggregator } from 'aurelia-event-aggregator';
-import { QEPRepository } from 'repository/qep.repository';
-import { commands, notifications } from './shrine.messages';
+import {EventAggregator} from 'aurelia-event-aggregator';
+import {QEPRepository} from 'repository/qep.repository';
+import {commands, notifications} from './shrine.messages';
 export class QueryStatusModel {
     static inject = [EventAggregator, QEPRepository, notifications];
     constructor(evtAgg, qep, notifications) {
-        const publishNetworkId = id => evtAgg.publish(notifications.shrine.networkIdReceived, id);
+        const publishNetworkId = id => evtAgg.publish(notifications.i2b2.networkIdReceived, id);
         const publishQuery = model => evtAgg.publish(notifications.shrine.queryReceived, model);
         const logError = error => console.log(`ERROR: ${error}`);
         const toModel = data => {
@@ -31,7 +31,6 @@ export class QueryStatusModel {
             .then(model => publishQuery(model));
             
         const init = () => {
-            evtAgg.subscribe(commands.shrine.fetchNetworkId, (n) => loadNetworkId(n));
             evtAgg.subscribe(commands.shrine.fetchQuery, (id) => loadQuery(id));
         }
         init();

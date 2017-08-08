@@ -7,15 +7,15 @@ export class QueryStatus {
         const initialState = () => ({query: {queryName: null, updated: null, complete: false}, nodes: null});
         this.status = initialState();
         // -- publishers --
-        const publishFetchNetworkId = n => evtAgg.publish(commands.shrine.fetchNetworkId, n);
+        //const publishFetchNetworkId = n => evtAgg.publish(commands.shrine.fetchNetworkId, n);
         const publishFetchQuery = id => evtAgg.publish(commands.shrine.fetchQuery, id);
         // -- subscribers -- //
-        evtAgg.subscribe(notifications.i2b2.queryStarted, (n) => {
+        /*evtAgg.subscribe(notifications.i2b2.queryStarted, (n) => {
             // -- @todo: centralize the logic, investigate adding a new "status" every time -- //
             this.status.query.queryName = n;
             publishFetchNetworkId(n)
-        });
-        evtAgg.subscribe(notifications.shrine.networkIdReceived, id => publishFetchQuery(id));
+        });*/
+        evtAgg.subscribe(notifications.i2b2.networkIdReceived, id => publishFetchQuery(id));
         evtAgg.subscribe(notifications.shrine.queryReceived, data => {
             // -- @todo: centralize the logic, investigate adding a new "status" every time -- //
             this.status.query = {...this.status.query, ...data.query};
@@ -28,6 +28,6 @@ export class QueryStatus {
             }
         });
         // -- testing only -- //
-        evtAgg.publish(notifications.i2b2.queryStarted, '@queryqueryName');
+       // evtAgg.publish(notifications.i2b2.queryStarted, '@queryqueryName');
     }
 }

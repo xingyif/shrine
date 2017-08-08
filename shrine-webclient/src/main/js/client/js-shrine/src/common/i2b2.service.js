@@ -16,7 +16,8 @@ export class I2B2Service {
         // -- @todo: makes assumption that i2b2 object conforms to predictable structure?  -- //
         I2B2Service.prototype.onResize =  f => events(ctx).map((v) => v.changedZoomWindows.subscribe(f));
         I2B2Service.prototype.onHistory = f => crc(ctx).map((v) => v.ctrlr.history.events.onDataUpdate.subscribe(f)); 
-        I2B2Service.prototype.onQuery = f => events(ctx).map((v) => v.afterQueryInit.subscribe(f)); 
+        I2B2Service.prototype.onQuery = f => events(ctx).map((v) => v.afterQueryInit.subscribe(f));
+        I2B2Service.prototype.onNetworkId = f => events(ctx).map(v => v.networkIdReceived.subscribe(f)); 
         I2B2Service.prototype.onViewSelected = f => prop('addEventListener', ctx).value? 
             Container.of(ctx.value.addEventListener('message', f, false)) : Container.of(null); 
 

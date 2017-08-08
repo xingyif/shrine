@@ -34,10 +34,12 @@ System.register(['aurelia-event-aggregator', './i2b2.service', './shrine.message
                     i2b2Svc.onQuery(function (e, d) {
                         return notifyQueryStarted(d[0].name);
                     });
+                    i2b2Svc.onNetworkId(function (e, d) {
+                        return notifyNetworkIdReceived(d[0].networkId);
+                    });
                     i2b2Svc.onViewSelected(function (e) {
                         return notifyViewSelected(e.data);
                     });
-
                     evtAgg.subscribe(commands.i2b2.cloneQuery, commandCloneQuery);
                     evtAgg.subscribe(commands.i2b2.showError, commandShowError);
                     evtAgg.subscribe(commands.i2b2.renameQuery, commandRenameQuery);
@@ -59,6 +61,9 @@ System.register(['aurelia-event-aggregator', './i2b2.service', './shrine.message
                 };
                 var notifyViewSelected = function notifyViewSelected(v) {
                     return evtAgg.publish(notifications.i2b2.viewSelected, v);
+                };
+                var notifyNetworkIdReceived = function notifyNetworkIdReceived(v) {
+                    return evtAgg.publish(notifications.i2b2.networkIdReceived, v);
                 };
 
                 var commandCloneQuery = function commandCloneQuery(d) {
