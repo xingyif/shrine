@@ -3,7 +3,7 @@ package net.shrine.mom
 import com.typesafe.config.Config
 import net.shrine.source.ConfigSource
 import org.hornetq.api.core.{HornetQQueueExistsException, TransportConfiguration}
-import org.hornetq.api.core.client.{ClientMessage, ClientSession, ClientSessionFactory, HornetQClient, ServerLocator}
+import org.hornetq.api.core.client.{ClientConsumer, ClientMessage, ClientSession, ClientSessionFactory, HornetQClient, ServerLocator}
 import org.hornetq.api.core.management.HornetQServerControl
 import org.hornetq.core.config.impl.ConfigurationImpl
 import org.hornetq.core.remoting.impl.invm.{InVMAcceptorFactory, InVMConnectorFactory}
@@ -12,6 +12,7 @@ import org.hornetq.core.server.{HornetQServer, HornetQServers}
 import scala.concurrent.blocking
 import scala.concurrent.duration.Duration
 import scala.collection.immutable.Seq
+import scala.collection.concurrent.{TrieMap, Map => ConcurrentMap}
 
 /**
   * This object mostly imitates AWS SQS' API via an embedded HornetQ. See http://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/examples-sqs.html
@@ -46,41 +47,43 @@ object HornetQMom {
 
   val sessionFactory: ClientSessionFactory = serverLocator.createSessionFactory()
 
+  //arguments are boolean xa, boolean autoCommitSends, boolean autoCommitAcks .
+  val session: ClientSession = sessionFactory.createSession(false,true,true)
+  session.start()
+
+  //keep a map of live queues to ClientConsumers to provide a path for completing messages
+  val queuesToConsumers:ConcurrentMap[Queue,ClientConsumer] = TrieMap.empty
+
   val propName = "contents"
 
   /**
     * Use HornetQMomStopper to stop the hornetQServer without unintentially starting it
     */
   private[mom] def stop() = {
+    queuesToConsumers.values.foreach(_.close())
+
+    session.close()
     sessionFactory.close()
     hornetQServer.stop()
-  }
-
-  private def withSession[T](block: ClientSession => T):T = {
-    //arguments are boolean xa, boolean autoCommitSends, boolean autoCommitAcks .
-    //todo do we want to use any of the createSession parameters?
-    val session: ClientSession = sessionFactory.createSession()
-    try {
-      block(session)
-    }
-    finally {
-      session.close()
-    }
   }
 
   //queue lifecycle
   def createQueueIfAbsent(queueName:String):Queue = {
     val serverControl: HornetQServerControl = hornetQServer.getHornetQServerControl
     if(!queues.map(_.name).contains(queueName)) {
-      try serverControl.createQueue(queueName, queueName) //todo how is the address (first argument) used? I'm just throwing in the queue name. Seems to work but why?
+      try serverControl.createQueue(queueName, queueName, true) //todo how is the address (first argument) used? I'm just throwing in the queue name. Seems to work but why?
       catch {
-        case alreadyExists: HornetQQueueExistsException => //already has what we want
+        case alreadyExists: HornetQQueueExistsException => //Already have what we want. Something slipped in between checking queues for this queue and creating it.
       }
     }
-    Queue(queueName)
+    val queue = Queue(queueName)
+    queuesToConsumers.getOrElseUpdate(queue,{session.createConsumer(queue.name)})
+    queue
   }
 
   def deleteQueue(queueName:String) = {
+    queuesToConsumers.remove(Queue(queueName)).foreach(_.close())
+
     val serverControl: HornetQServerControl = hornetQServer.getHornetQServerControl
     serverControl.destroyQueue(queueName)
   }
@@ -92,12 +95,16 @@ object HornetQMom {
   }
 
   //send a message
-  def send(contents:String,to:Queue):Unit =  withSession{ session =>
+  def send(contents:String,to:Queue):Unit = {
     val producer = session.createProducer(to.name)
-    val message = session.createMessage(false)
-    message.putStringProperty(propName, contents)
+    try {
+      val message = session.createMessage(true) //todo should be durable
+      message.putStringProperty(propName, contents)
 
-    producer.send(message)
+      producer.send(message)
+    } finally {
+      producer.close()
+    }
   }
 
   //receive a message
@@ -107,12 +114,13 @@ object HornetQMom {
     *
     * @return Some message before the timeout, or None
     */
-  def receive(from:Queue,timeout:Duration):Option[Message] = withSession{ session =>
-    val messageConsumer = session.createConsumer(from.name)
-    session.start()
+  def receive(from:Queue,timeout:Duration):Option[Message] = {
+    val messageConsumer: ClientConsumer = queuesToConsumers(from) //todo handle the case where either stop or close has been called on something gracefully
     blocking {
       val messageReceived: Option[ClientMessage] = Option(messageConsumer.receive(timeout.toMillis))
-      messageReceived.map(Message(_))
+      val message = messageReceived.map(Message(_))
+
+      message
     }
   }
 
