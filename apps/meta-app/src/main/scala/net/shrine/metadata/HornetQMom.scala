@@ -1,3 +1,7 @@
+/**
+  * Created by yifan on 7/24/17.
+  */
+
 
 
 /**
@@ -12,8 +16,8 @@
 //todo in 1.24, create an AwsSqs implementation of the trait
 
 trait HornetQMom {
-//  private[mom] def stop()
-//  private def withSession[T](block: ClientSession => T):T // TODO: prob don't need this
+  //  private[mom] def stop()
+  //  private def withSession[T](block: ClientSession => T):T // TODO: prob don't need this
   def createQueueIfAbsent(queueName:String):Queue
   def deleteQueue(queueName:String)
   def queues:Seq[Queue]
