@@ -43,14 +43,14 @@ trait HornetQMomWebApi extends HttpService
   // SQS takes in DeleteMessageRequest, which contains a queueUrl: String and a ReceiptHandle: String
   // returns a DeleteMessageResult, toString for debugging
   def deleteQueue: Route = path("deleteQueue" / Segment) { queueName =>
-      LocalHornetQMom.deleteQueue(queueName)
-      complete(StatusCodes.OK)
+    LocalHornetQMom.deleteQueue(queueName)
+    complete(StatusCodes.OK)
   }
 
   // SQS sendMessage(String queueUrl, String messageBody) => SendMessageResult
   def sendMessage: Route = path("sendMessage" / Segment / Segment) { (messageContent, toQueue) =>
-      LocalHornetQMom.send(messageContent, Queue.apply(toQueue))
-      complete(StatusCodes.Accepted)
+    LocalHornetQMom.send(messageContent, Queue.apply(toQueue))
+    complete(StatusCodes.Accepted)
   }
 
   // SQS ReceiveMessageResult receiveMessage(String queueUrl)
@@ -71,18 +71,18 @@ trait HornetQMomWebApi extends HttpService
   // SQS has DeleteMessageResult deleteMessage(String queueUrl, String receiptHandle)
   def acknowledge: Route = path("acknowledge") {
     entity(as[String]) { messageJSON =>
-        implicit val formats: Formats = Serialization.formats(NoTypeHints) + new MessageSerializer
-        val messageJValue: JValue = parse(messageJSON)
-        try {
-          val msg: Message = messageJValue.extract[Message](formats, manifest[Message])
-          LocalHornetQMom.completeMessage(msg)
-          complete(StatusCodes.NoContent)
-        } catch {
-          case x => {
-              LogEntry(s"\n  Request: acknowledge/$messageJSON\n  Response: $x", Logging.DebugLevel)
-              throw x}
-        }
+      implicit val formats: Formats = Serialization.formats(NoTypeHints) + new MessageSerializer
+      val messageJValue: JValue = parse(messageJSON)
+      try {
+        val msg: Message = messageJValue.extract[Message](formats, manifest[Message])
+        LocalHornetQMom.completeMessage(msg)
+        complete(StatusCodes.NoContent)
+      } catch {
+        case x => {
+          LogEntry(s"\n  Request: acknowledge/$messageJSON\n  Response: $x", Logging.DebugLevel)
+          throw x}
       }
+    }
   }
 
   // Returns the names of the queues created on this server. Seq[Any]

@@ -39,7 +39,6 @@ case class Message(hornetQMessage:ClientMessage) extends DefaultJsonSupport {
   def complete() = hornetQMessage.acknowledge()
 }
 
-
 case class Queue(name:String) extends DefaultJsonSupport
 
 class MessageSerializer extends CustomSerializer[Message](format => (

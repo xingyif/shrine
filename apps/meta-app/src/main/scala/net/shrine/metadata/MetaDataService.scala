@@ -54,11 +54,11 @@ trait MetaDataService extends HttpService
   /****/
   lazy val metaDataRoute: Route = get {
     pathPrefix("ping") { complete("pong")} ~
-    pathEnd {complete(shrineInfo)}
+      pathEnd {complete(shrineInfo)}
   }
 
   lazy val authenticatedRoute: Route = authenticate(userAuthenticator.basicUserAuthenticator) { user:User =>
-      qepRoute(user)
+    qepRoute(user)
   }
 
   lazy val hornetQMomRoute: Route = momRoute
