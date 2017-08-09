@@ -1,5 +1,6 @@
 package net.shrine.metadata
 
+import akka.actor.{ActorSystem, Cancellable}
 import net.shrine.audit.{NetworkQueryId, QueryName, Time}
 import net.shrine.authorization.steward.UserName
 import net.shrine.i2b2.protocol.pm.User
@@ -11,9 +12,11 @@ import spray.routing._
 import rapture.json._
 import rapture.json.jsonBackends.jawn._
 import rapture.json.formatters.humanReadable
-import spray.http.StatusCodes
+import spray.http.{StatusCode, StatusCodes}
 
 import scala.concurrent.duration._
+import scala.collection.concurrent.{TrieMap, Map => ConcurrentMap}
+
 
 /**
   * An API to support the web client's work with queries.
@@ -24,6 +27,9 @@ import scala.concurrent.duration._
 
 //todo move this to the qep/service module
 trait QepService extends HttpService with Loggable {
+
+//  def system: ActorSystem
+
   val qepInfo =
     """
       |The SHRINE query entry point service.
@@ -40,9 +46,44 @@ trait QepService extends HttpService with Loggable {
       respondWithStatus(StatusCodes.NotFound){complete(qepInfo)}
   }
 
+
+  val longPollRequestsToComplete:ConcurrentMap[NetworkQueryId,(Runnable,Cancellable)] = TrieMap.empty
+
+  case class SelectsResults(queryId:NetworkQueryId,afterVersion:Long,deadline:Long) extends Runnable {
+    override def run(): Unit = {
+      //cancel this runnable
+
+
+
+    }
+  }
+
+  def selectResultsRow(queryId:NetworkQueryId,user:User):Either[(StatusCode,String),ResultsRow] = {
+    //query once and determine if the latest change > afterVersion
+
+    val queryOption: Option[QepQuery] = QepQueryDb.db.selectQueryById(queryId)
+    queryOption.fold {
+        //todo only complete if deadline is past. Otherwise reschedule
+        val left:Either[(StatusCode,String),ResultsRow] = Left[(StatusCode,String),ResultsRow]((StatusCodes.NotFound,s"No query with id $queryId found"))
+        left
+      }
+      { query: QepQuery =>
+      if (user.sameUserAs(query.userName, query.userDomain)) {
+        val mostRecentQueryResults: Seq[Result] = QepQueryDb.db.selectMostRecentFullQueryResultsFor(queryId).map(Result(_))
+        val flag = QepQueryDb.db.selectMostRecentQepQueryFlagFor(queryId).map(QueryFlag(_))
+        val queryCell = QueryCell(query, flag)
+        val queryAndResults = ResultsRow(queryCell, mostRecentQueryResults)
+
+        Right(queryAndResults)
+      }
+      else Left((StatusCodes.Forbidden,s"Query $queryId belongs to a different user"))
+    }
+  }
+
   def queryResult(user:User):Route = path("queryResult" / LongNumber) { queryId: NetworkQueryId =>
 
     //take optional parameters for version and an awaitTime
+    //todo use a Duration
     parameters('afterVersion.as[Long] ? 0L, 'timeout.as[Long] ? 0L) { (afterVersion: Long, timeout: Long) =>
 
       val requestStartTime = System.currentTimeMillis()
@@ -50,19 +91,10 @@ trait QepService extends HttpService with Loggable {
 
       //query once and determine if the latest change > afterVersion
 
-      val queryOption: Option[QepQuery] = QepQueryDb.db.selectQueryById(queryId)
-      queryOption.fold {
-        respondWithStatus(StatusCodes.NotFound) {
-          //todo only complete if deadline is past. Otherwise reschedule
-          complete(s"No query with id $queryId found")
-        }
-      } { query: QepQuery =>
-        if (user.sameUserAs(query.userName, query.userDomain)) {
-          val mostRecentQueryResults: Seq[Result] = QepQueryDb.db.selectMostRecentFullQueryResultsFor(queryId).map(Result(_))
-          val flag = QepQueryDb.db.selectMostRecentQepQueryFlagFor(queryId).map(QueryFlag(_))
-          val queryCell = QueryCell(query, flag)
-          val queryAndResults = ResultsRow(queryCell, mostRecentQueryResults)
+      val troubleOrResultsRow = selectResultsRow(queryId,user)
 
+      troubleOrResultsRow match {
+        case Right(queryAndResults) =>
           //only complete if deadline is past or latest change > afterVersion
           val currentTime = System.currentTimeMillis()
           if((queryAndResults.latestChange > afterVersion) || (currentTime > deadline)) {
@@ -72,14 +104,17 @@ trait QepService extends HttpService with Loggable {
           }
           else {
             //todo reschedule at deadline
-             ??? //             complete("Delay doing this for a bit")
+            ??? //             complete("Delay doing this for a bit")
           }
-        } else {
-          //fine to do this as soon as it is discovered
-          respondWithStatus(StatusCodes.Forbidden) {
-            complete(s"Query $queryId belongs to a different user")
+
+        case Left((statusCode,message)) =>
+          if(statusCode == StatusCodes.NotFound) {
+            //todo only complete if deadline is past. Otherwise reschedule
+            respondWithStatus(statusCode){complete(message)}
+          } else {
+            //Any other problems, go ahead and complete
+            respondWithStatus(statusCode){complete(message)}
           }
-        }
       }
     }
   }
