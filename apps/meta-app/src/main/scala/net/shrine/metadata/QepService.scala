@@ -80,11 +80,30 @@ trait QepService extends HttpService with Loggable {
     }
   }
 
+  /**
+    * @param deadline time when a response must go
+    * @param afterVersion last timestamp the requester knows about
+    * @param resultsRow either the result row or something is not right
+    * @return true to respond now, false to dither
+    */
+  //todo use Deadline instead of Long?
+  def respondNow(deadline: Long,
+                 afterVersion: Long,
+                 resultsRow:Either[(StatusCode,String),ResultsRow]
+                ):Boolean = {
+    val currentTime = System.currentTimeMillis()
+    if (currentTime > deadline) true
+    else resultsRow.fold(
+      {_._1 != StatusCodes.NotFound},
+      {_.latestChange > afterVersion}
+    )
+  }
+
   def queryResult(user:User):Route = path("queryResult" / LongNumber) { queryId: NetworkQueryId =>
 
     //take optional parameters for version and an awaitTime
-    //todo use a Duration
-    parameters('afterVersion.as[Long] ? 0L, 'timeout.as[Long] ? 0L) { (afterVersion: Long, timeout: Long) =>
+    //todo use a Duration ?
+    parameters('afterVersion.as[Long] ? 0L, 'timeout.as[Long] ? -1L) { (afterVersion: Long, timeout: Long) =>
 
       val requestStartTime = System.currentTimeMillis()
       val deadline = requestStartTime + timeout
@@ -93,28 +112,17 @@ trait QepService extends HttpService with Loggable {
 
       val troubleOrResultsRow = selectResultsRow(queryId,user)
 
-      troubleOrResultsRow match {
-        case Right(queryAndResults) =>
-          //only complete if deadline is past or latest change > afterVersion
-          val currentTime = System.currentTimeMillis()
-          if((queryAndResults.latestChange > afterVersion) || (currentTime > deadline)) {
-            val json: Json = Json(queryAndResults)
-            val formattedJson: String = Json.format(json)(humanReadable())
-            complete(formattedJson)
-          }
-          else {
-            //todo reschedule at deadline
-            ??? //             complete("Delay doing this for a bit")
-          }
-
-        case Left((statusCode,message)) =>
-          if(statusCode == StatusCodes.NotFound) {
-            //todo only complete if deadline is past. Otherwise reschedule
-            respondWithStatus(statusCode){complete(message)}
-          } else {
-            //Any other problems, go ahead and complete
-            respondWithStatus(statusCode){complete(message)}
-          }
+      if(respondNow(deadline,afterVersion,troubleOrResultsRow)) {
+        troubleOrResultsRow.fold({ trouble =>
+          respondWithStatus(trouble._1){complete(trouble._2)}
+        },{ queryAndResults =>
+          val json: Json = Json(queryAndResults)
+          val formattedJson: String = Json.format(json)(humanReadable())
+          complete(formattedJson)
+        })
+      } else {
+        //todo reschedule at deadline
+        ???
       }
     }
   }
