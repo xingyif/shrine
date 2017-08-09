@@ -1,9 +1,9 @@
 import akka.actor.ActorRefFactory
 import net.shrine.metadata.HornetQMomWebApi
-import net.shrine.mom.{LocalHornetQMom, Message, MessageSerializer, Queue}
+import net.shrine.mom.{Message, MessageSerializer, Queue}
 import org.json4s.NoTypeHints
 import org.json4s.native.Serialization
-import org.json4s.native.Serialization.{read, write}
+import org.json4s.native.Serialization.read
 import org.junit.runner.RunWith
 import org.scalatest.FlatSpec
 import org.scalatest.junit.JUnitRunner
@@ -41,15 +41,12 @@ class HornetQMomWebApiTest extends FlatSpec with ScalatestRouteTest with HornetQ
 
     Get(s"/mom/getQueues") ~> momRoute ~> check {
 
-      val allQueues = LocalHornetQMom.queues
-
       implicit val formats = Serialization.formats(NoTypeHints)
-      //      val queues: String = write(allQueues)(formats)
       val response: String = new String(body.data.toByteArray)
       val jsonToSeq: Seq[Queue] = read[Seq[Queue]](response, false)(formats, manifest[Seq[Queue]])
 
       assertResult(OK)(status)
-      assertResult(queueName)(jsonToSeq.apply(0).name)
+      assertResult(queueName)(jsonToSeq.head.name)
     }
 
     // given timeout is 2 seconds
