@@ -27,16 +27,34 @@ class HornetQMomWebApiTest extends FlatSpec with ScalatestRouteTest with HornetQ
 
   "RemoteHornetQMom" should "create/delete the given queue, send/receive message, get queues" in {
 
-    Put(s"/createQueue/$queueName") ~> routes ~> check {
+    Put(s"/mom/createQueue/$queueName") ~> momRoute ~> check {
+      val response = new String(body.data.toByteArray)
+      implicit val formats = Serialization.formats(NoTypeHints)
+      val jsonToQueue = read[Queue](response)(formats, manifest[Queue])
+      val responseQueueName = jsonToQueue.name
       assertResult(Created)(status)
+      assertResult(queueName)(responseQueueName)
     }
 
-    Put(s"/sendMessage/$messageContent/$queueName") ~> routes ~> check {
+    Put(s"/mom/sendMessage/$messageContent/$queueName") ~> momRoute ~> check {
       assertResult(Accepted)(status)
     }
 
+    Get(s"/mom/getQueues") ~> momRoute ~> check {
+
+      val allQueues = LocalHornetQMom.queues
+
+      implicit val formats = Serialization.formats(NoTypeHints)
+      //      val queues: String = write(allQueues)(formats)
+      val response: String = new String(body.data.toByteArray)
+      val jsonToSeq: Seq[Queue] = read[Seq[Queue]](response, false)(formats, manifest[Seq[Queue]])
+
+      assertResult(OK)(status)
+      assertResult(queueName)(jsonToSeq.apply(0).name)
+    }
+
     // given timeout is 2 seconds
-    Get(s"/receiveMessage/$queueName?timeOutDuration=2") ~> routes ~> check {
+    Get(s"/mom/receiveMessage/$queueName?timeOutDuration=2") ~> momRoute ~> check {
       val response = new String(body.data.toByteArray)
 
       val timeout: Duration = Duration.create(2, "seconds")
@@ -48,9 +66,8 @@ class HornetQMomWebApiTest extends FlatSpec with ScalatestRouteTest with HornetQ
       assertResult(response)(msgJSON)
     }
 
-
     // default timeout is 20 seconds
-    Get(s"/receiveMessage/$queueName") ~> routes ~> check {
+    Get(s"/mom/receiveMessage/$queueName") ~> momRoute ~> check {
       val response = new String(body.data.toByteArray)
 
       val timeout: Duration = Duration.create(20, "seconds")
@@ -63,7 +80,7 @@ class HornetQMomWebApiTest extends FlatSpec with ScalatestRouteTest with HornetQ
     }
 
     // 0sec for an immediate return
-    Get(s"/receiveMessage/$queueName?timeOutDuration=0") ~> routes ~> check {
+    Get(s"/mom/receiveMessage/$queueName?timeOutDuration=0") ~> momRoute ~> check {
       val response = new String(body.data.toByteArray)
 
       val timeout: Duration = Duration.create(0, "seconds")
@@ -78,27 +95,13 @@ class HornetQMomWebApiTest extends FlatSpec with ScalatestRouteTest with HornetQ
       assertResult(response)(msgJSON)
     }
 
-    Get(s"/getQueues") ~> routes ~> check {
-
-      val allQueues = LocalHornetQMom.queues
-      val size = allQueues.size
-      println(s"queues in test: $size")
-
-      implicit val formats = Serialization.formats(NoTypeHints) + new MessageSerializer
-//      val queues: String = write(allQueues)(formats)
-      val response = new String(body.data.toByteArray)
-//      println("response: " + response)
-      assertResult(OK)(status)
-      println(s"getQueues: $response")
-    }
-
-    Put("/acknowledge", HttpEntity(s"""$receivedMessage""")) ~>
-      routes ~> check {
+    Put("/mom/acknowledge", HttpEntity(s"""$receivedMessage""")) ~>
+      momRoute ~> check {
       implicit val formats = Serialization.formats(NoTypeHints) + new MessageSerializer
       assertResult(NoContent)(status)
     }
 
-    Put(s"/deleteQueue/$queueName") ~> routes ~> check {
+    Put(s"/mom/deleteQueue/$queueName") ~> momRoute ~> check {
       assertResult(OK)(status)
     }
   }

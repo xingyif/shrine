@@ -24,8 +24,7 @@ class LocalHornetQMomTest extends FlatSpec with BeforeAndAfterAll with ScalaFutu
 
     val queue = LocalHornetQMom.createQueueIfAbsent(queueName)
 
-    assert(LocalHornetQMom.queues.map(Queue(_)).to[Seq] == Seq(queue))
-
+    assert(LocalHornetQMom.queues == Seq(queue))
 
     val testContents = "Test message"
     LocalHornetQMom.send(testContents,queue)
@@ -35,7 +34,13 @@ class LocalHornetQMomTest extends FlatSpec with BeforeAndAfterAll with ScalaFutu
     assert(message.isDefined)
     assert(message.get.contents == testContents)
 
-//    message.fold()(LocalHornetQMom.completeMessage(message.get)) // todo type mismatch: B/Unit
+    LocalHornetQMom.completeMessage(message.get)
+
+    // todo merge localHornetQMom with Dave's pr-2155, this will be fixed
+    //  val nonMessage: Option[Message] = LocalHornetQMom.receive(queue,1 second)
+
+    //  assert(nonMessage.isEmpty)
+
 
     LocalHornetQMom.deleteQueue(queueName)
     assert(LocalHornetQMom.queues.isEmpty)

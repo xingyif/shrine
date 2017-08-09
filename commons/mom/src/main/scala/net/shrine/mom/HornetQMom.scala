@@ -1,7 +1,9 @@
 package net.shrine.mom
 import net.shrine.spray.DefaultJsonSupport
 import org.hornetq.api.core.client.ClientMessage
-import org.json4s.{DefaultFormats, Formats}
+import org.hornetq.core.client.impl.ClientMessageImpl
+import org.json4s.JsonAST.{JField, JObject}
+import org.json4s.{CustomSerializer, DefaultFormats, Formats, _}
 
 import scala.collection.immutable.Seq
 import scala.concurrent.duration.Duration
@@ -17,16 +19,18 @@ import scala.concurrent.duration.Duration
 trait HornetQMom {
   def createQueueIfAbsent(queueName:String):Queue
   def deleteQueue(queueName:String)
-  def queues:Array[String]
+  def queues:Seq[Queue]
   def send(contents:String,to:Queue):Unit
   def receive(from:Queue,timeout:Duration):Option[Message]
-  def completeMessage(messageID:Long):Unit
+  def completeMessage(message:Message):Unit
 
 }
 
 case class Message(hornetQMessage:ClientMessage) extends DefaultJsonSupport {
   override implicit def json4sFormats: Formats = DefaultFormats
   val propName = "contents"
+
+  def getClientMessage = hornetQMessage
 
   def contents = hornetQMessage.getStringProperty(propName)
 
@@ -37,3 +41,22 @@ case class Message(hornetQMessage:ClientMessage) extends DefaultJsonSupport {
 
 
 case class Queue(name:String) extends DefaultJsonSupport
+
+class MessageSerializer extends CustomSerializer[Message](format => (
+  {
+    //JObject(List((hornetQMessage,JObject(List((type,JInt(0)), (durable,JBool(false)), (expiration,JInt(0)), (timestamp,JInt(1502218873012)), (priority,JInt(4)))))))
+    // type, durable, expiration, timestamp, priority, initialMessageBufferSize
+    case JObject(JField("hornetQMessage", JObject(JField("type", JInt(s)) :: JField("durable", JBool(d)) :: JField("expiration", JInt(e))
+      :: JField("timestamp", JInt(t)) :: JField("priority", JInt(p)) :: Nil)) :: Nil) =>
+      new Message(new ClientMessageImpl(s.toByte, d, e.toLong, t.toLong, p.toByte, 0))
+  },
+  {
+    case msg: Message =>
+      JObject(JField("hornetQMessage",
+        JObject(JField("type", JLong(msg.getClientMessage.getType)) ::
+          JField("durable", JBool(msg.getClientMessage.isDurable)) ::
+          JField("expiration", JLong(msg.getClientMessage.getExpiration)) ::
+          JField("timestamp", JLong(msg.getClientMessage.getTimestamp)) ::
+          JField("priority", JLong(msg.getClientMessage.getPriority)) :: Nil)) :: Nil)
+  }
+))

@@ -7,7 +7,7 @@ import org.json4s.native.JsonMethods._
 import org.json4s.native.Serialization
 import org.json4s.native.Serialization.write
 import org.json4s.{JValue, NoTypeHints, _}
-import spray.http.{HttpRequest, HttpResponse, StatusCodes}
+import spray.http.StatusCodes
 import spray.routing.directives.LogEntry
 import spray.routing.{HttpService, Route}
 
@@ -22,57 +22,39 @@ import scala.concurrent.duration.Duration
 trait HornetQMomWebApi extends HttpService
   with Loggable {
 
-  lazy val routes: Route = logRequestResponse(logEntryForRequestResponse _) {
-    //logging is controlled by Akka's config, slf4j, and log4j config
-    createQueue ~
-      deleteQueue ~
-      sendMessage ~
-      receiveMessage ~
-      getQueues ~
-      acknowledge
-  }
-
-  /** logs the request method, uri and response at info level */
-  def logEntryForRequestResponse(req: HttpRequest): Any => Option[LogEntry] = {
-    case res: HttpResponse => Some(LogEntry(s"\n  Request: $req\n  Response: $res", Logging.InfoLevel))
-    case _ => None // other kind of responses
-  }
-
-  /** logs just the request method, uri and response status at info level */
-  def logEntryForRequest(req: HttpRequest): Any => Option[LogEntry] = {
-    case res: HttpResponse => Some(LogEntry(s"\n  Request: $req\n  Response status: ${res.status}", Logging.InfoLevel))
-    case _ => None // other kind of responses
+  def momRoute: Route = pathPrefix("mom") {
+    put {
+      createQueue ~
+        deleteQueue ~
+        sendMessage ~
+        acknowledge
+    } ~ receiveMessage ~ getQueues
   }
 
   // SQS returns CreateQueueResult, which contains queueUrl: String
-  lazy val createQueue: Route = path("createQueue" / Segment) { queueName =>
-    put {
-        val response: Queue = LocalHornetQMom.createQueueIfAbsent(queueName)
-        implicit val formates = response.json4sMarshaller
-        complete(StatusCodes.Created)
-      }
+  def createQueue: Route = path("createQueue" / Segment) { queueName =>
+    val createdQueue: Queue = LocalHornetQMom.createQueueIfAbsent(queueName)
+    implicit val formats = Serialization.formats(NoTypeHints)
+    val response: String = write[Queue](createdQueue)(formats)
+    respondWithStatus(StatusCodes.Created) { complete(response) }
   }
 
 
   // SQS takes in DeleteMessageRequest, which contains a queueUrl: String and a ReceiptHandle: String
   // returns a DeleteMessageResult, toString for debugging
-  lazy val deleteQueue: Route = path("deleteQueue" / Segment) { queueName =>
-   put {
+  def deleteQueue: Route = path("deleteQueue" / Segment) { queueName =>
       LocalHornetQMom.deleteQueue(queueName)
       complete(StatusCodes.OK)
-    }
   }
 
   // SQS sendMessage(String queueUrl, String messageBody) => SendMessageResult
-  lazy val sendMessage: Route = path("sendMessage" / Segment / Segment) { (messageContent, toQueue) =>
-    put {
+  def sendMessage: Route = path("sendMessage" / Segment / Segment) { (messageContent, toQueue) =>
       LocalHornetQMom.send(messageContent, Queue.apply(toQueue))
       complete(StatusCodes.Accepted)
-    }
   }
 
   // SQS ReceiveMessageResult receiveMessage(String queueUrl)
-  lazy val receiveMessage: Route =
+  def receiveMessage: Route =
     get {
       path("receiveMessage" / Segment) { fromQueue =>
         parameter('timeOutDuration ? 20) { timeOutDuration =>
@@ -86,11 +68,9 @@ trait HornetQMomWebApi extends HttpService
       }
     }
 
-
   // SQS has DeleteMessageResult deleteMessage(String queueUrl, String receiptHandle)
-  lazy val acknowledge: Route = path("acknowledge") {
+  def acknowledge: Route = path("acknowledge") {
     entity(as[String]) { messageJSON =>
-      put {
         implicit val formats: Formats = Serialization.formats(NoTypeHints) + new MessageSerializer
         val messageJValue: JValue = parse(messageJSON)
         try {
@@ -99,21 +79,20 @@ trait HornetQMomWebApi extends HttpService
           complete(StatusCodes.NoContent)
         } catch {
           case x => {
-              x.printStackTrace()
+              LogEntry(s"\n  Request: acknowledge/$messageJSON\n  Response: $x", Logging.DebugLevel)
               throw x}
         }
       }
-    }
   }
 
   // Returns the names of the queues created on this server. Seq[Any]
-  lazy val getQueues: Route = path("getQueues") {
+  def getQueues: Route = path("getQueues") {
     get {
       val queues = LocalHornetQMom.queues
-      println(s"queues in api: $queues")
 
       implicit val formats = Serialization.formats(NoTypeHints)
       val response = write(queues)
+
       respondWithStatus(StatusCodes.OK) {complete(response)}
     }
   }
