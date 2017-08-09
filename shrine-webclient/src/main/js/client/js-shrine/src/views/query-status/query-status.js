@@ -25,5 +25,9 @@ export class QueryStatus {
                 window.setTimeout(() => publishFetchQuery(networkId), 10000);
             }
         });
+        
+        // -- for testing only -- //
+        evtAgg.publish(notifications.i2b2.queryStarted, "started query");
+        evtAgg.publish(notifications.i2b2.networkIdReceived, 1);
     }
 }

@@ -1,7 +1,7 @@
 System.register(['aurelia-framework'], function (_export, _context) {
     "use strict";
 
-    var bindable, customElement, _dec, _class, _desc, _value, _class2, _descriptor, _descriptor2, PatientCount;
+    var bindable, customElement, _dec, _class, _desc, _value, _class2, _descriptor, Breakdown;
 
     function _initDefineProp(target, property, descriptor, context) {
         if (!descriptor) return;
@@ -58,30 +58,17 @@ System.register(['aurelia-framework'], function (_export, _context) {
             customElement = _aureliaFramework.customElement;
         }],
         execute: function () {
-            _export('PatientCount', PatientCount = (_dec = customElement('patient-count'), _dec(_class = (_class2 = function () {
-                function PatientCount() {
-                    _classCallCheck(this, PatientCount);
+            _export('Breakdown', Breakdown = (_dec = customElement('breakdown'), _dec(_class = (_class2 = function Breakdown() {
+                _classCallCheck(this, Breakdown);
 
-                    _initDefineProp(this, 'result', _descriptor, this);
-
-                    _initDefineProp(this, 'showBreakdown', _descriptor2, this);
-                }
-
-                PatientCount.prototype.attached = function attached() {
-                    console.log(this.result);
-                };
-
-                return PatientCount;
-            }(), (_descriptor = _applyDecoratedDescriptor(_class2.prototype, 'result', [bindable], {
-                enumerable: true,
-                initializer: null
-            }), _descriptor2 = _applyDecoratedDescriptor(_class2.prototype, 'showBreakdown', [bindable], {
+                _initDefineProp(this, 'data', _descriptor, this);
+            }, (_descriptor = _applyDecoratedDescriptor(_class2.prototype, 'data', [bindable], {
                 enumerable: true,
                 initializer: null
             })), _class2)) || _class));
 
-            _export('PatientCount', PatientCount);
+            _export('Breakdown', Breakdown);
         }
     };
 });
-//# sourceMappingURL=patient-count.js.map
+//# sourceMappingURL=breakdown.js.map

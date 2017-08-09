@@ -3,4 +3,7 @@ import {bindable, customElement} from 'aurelia-framework';
 export class PatientCount{
     @bindable result;
     @bindable showBreakdown;
+    attached() {
+        console.log(this.result);
+    }
 }
