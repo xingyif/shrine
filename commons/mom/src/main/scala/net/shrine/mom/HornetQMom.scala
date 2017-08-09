@@ -48,7 +48,6 @@ object HornetQMom {
   val sessionFactory: ClientSessionFactory = serverLocator.createSessionFactory()
 
   //arguments are boolean xa, boolean autoCommitSends, boolean autoCommitAcks .
-  //todo do we want to use any of the createSession parameters?
   val session: ClientSession = sessionFactory.createSession(false,true,true)
   session.start()
 
