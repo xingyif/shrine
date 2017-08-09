@@ -17,13 +17,15 @@ import scala.concurrent.ExecutionContext
 trait MetaDataService extends HttpService
   with StaticDataService
   with QepService
+  with HornetQMomWebApi
   with Loggable {
 
   lazy val route: Route = logRequestResponse(logEntryForRequestResponse _) {
     //logging is controlled by Akka's config, slf4j, and log4j config
     metaDataRoute ~
       staticDataRoute ~
-      authenticatedRoute
+      authenticatedRoute ~
+      hornetQMomRoute
   }
 
   //todo use this
@@ -51,13 +53,15 @@ trait MetaDataService extends HttpService
 
   /****/
   lazy val metaDataRoute: Route = get {
-    pathPrefix("ping") { complete("pong")} ~
-    pathEnd {complete(shrineInfo)}
+    path("ping") { complete("pong")} ~
+      pathEnd {complete(shrineInfo)}
   }
 
   lazy val authenticatedRoute: Route = authenticate(userAuthenticator.basicUserAuthenticator) { user:User =>
-      qepRoute(user)
+    qepRoute(user)
   }
+
+  lazy val hornetQMomRoute: Route = momRoute
 
   lazy val userAuthenticator = UserAuthenticator(ConfigSource.config)
 
