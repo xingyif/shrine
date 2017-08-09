@@ -57,8 +57,8 @@ trait HornetQMomWebApi extends HttpService
   def receiveMessage: Route =
     get {
       path("receiveMessage" / Segment) { fromQueue =>
-        parameter('timeOutDuration ? 20) { timeOutDuration =>
-          val timeout: Duration = Duration.create(timeOutDuration, "seconds")
+        parameter('timeOutSeconds ? 20) { timeOutSeconds =>
+          val timeout: Duration = Duration.create(timeOutSeconds, "seconds")
           val response: Message = LocalHornetQMom.receive(Queue.apply(fromQueue), timeout).get
           implicit val formats = Serialization.formats(NoTypeHints) + new MessageSerializer
           respondWithStatus(StatusCodes.OK) {

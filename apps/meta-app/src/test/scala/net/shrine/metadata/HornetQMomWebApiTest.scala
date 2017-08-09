@@ -50,7 +50,7 @@ class HornetQMomWebApiTest extends FlatSpec with ScalatestRouteTest with HornetQ
     }
 
     // given timeout is 2 seconds
-    Get(s"/mom/receiveMessage/$queueName?timeOutDuration=2") ~> momRoute ~> check {
+    Get(s"/mom/receiveMessage/$queueName?timeOutSeconds=2") ~> momRoute ~> check {
       val response = new String(body.data.toByteArray)
       receivedMessage = response
 

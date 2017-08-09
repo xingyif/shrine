@@ -53,7 +53,7 @@ trait MetaDataService extends HttpService
 
   /****/
   lazy val metaDataRoute: Route = get {
-    pathPrefix("ping") { complete("pong")} ~
+    path("ping") { complete("pong")} ~
       pathEnd {complete(shrineInfo)}
   }
 

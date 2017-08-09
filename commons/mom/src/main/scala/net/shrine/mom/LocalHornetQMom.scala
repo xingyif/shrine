@@ -22,7 +22,7 @@ import scala.collection.concurrent.{TrieMap, Map => ConcurrentMap}
 import scala.collection.immutable.Seq
 import scala.concurrent.blocking
 import scala.concurrent.duration.Duration
-object LocalHornetQMom extends HornetQMom {
+object LocalHornetQMom extends MessageQueueService {
 
   val config:Config = ConfigSource.config.getConfig("shrine.hub.mom.hornetq")
 

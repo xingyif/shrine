@@ -16,7 +16,7 @@ import scala.concurrent.duration.Duration
 //todo in 1.23 all but the server side will use the client RemoteHornetQ implementation (which will call to the server at the hub)
 //todo in 1.24, create an AwsSqs implementation of the trait
 
-trait HornetQMom {
+trait MessageQueueService {
   def createQueueIfAbsent(queueName:String):Queue
   def deleteQueue(queueName:String)
   def queues:Seq[Queue]
