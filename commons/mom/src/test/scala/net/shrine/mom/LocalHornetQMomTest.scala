@@ -41,7 +41,6 @@ class LocalHornetQMomTest extends FlatSpec with BeforeAndAfterAll with ScalaFutu
     assert(LocalHornetQMom.queues.isEmpty)
   }
 
-
   "HornetQ" should "be able to send and receive a few messages" in {
 
     val queueName = "testQueue"
@@ -92,7 +91,6 @@ class LocalHornetQMomTest extends FlatSpec with BeforeAndAfterAll with ScalaFutu
 
     LocalHornetQMom.deleteQueue(queueName)
     assert(LocalHornetQMom.queues.isEmpty)
-
   }
 
   "HornetQ" should "be OK if asked to create the same queue twice " in {

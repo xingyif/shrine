@@ -11,7 +11,6 @@ import spray.http.HttpEntity
 import spray.http.StatusCodes._
 import spray.testkit.ScalatestRouteTest
 
-import scala.concurrent.duration._
 /**
   * Created by yifan on 7/27/17.
   */
@@ -56,43 +55,13 @@ class HornetQMomWebApiTest extends FlatSpec with ScalatestRouteTest with HornetQ
     // given timeout is 2 seconds
     Get(s"/mom/receiveMessage/$queueName?timeOutDuration=2") ~> momRoute ~> check {
       val response = new String(body.data.toByteArray)
-
-      val timeout: Duration = Duration.create(2, "seconds")
-      val msg: Message = LocalHornetQMom.receive(Queue.apply(queueName), timeout).get
-      implicit val formats = Serialization.formats(NoTypeHints) + new MessageSerializer
-      val msgJSON = write[Message](msg)(formats)
-
-      assertResult(OK)(status)
-      assertResult(response)(msgJSON)
-    }
-
-    // default timeout is 20 seconds
-    Get(s"/mom/receiveMessage/$queueName") ~> momRoute ~> check {
-      val response = new String(body.data.toByteArray)
-
-      val timeout: Duration = Duration.create(20, "seconds")
-      val msg: Message = LocalHornetQMom.receive(Queue.apply(queueName), timeout).get
-      implicit val formats = Serialization.formats(NoTypeHints) + new MessageSerializer
-      val msgJSON = write[Message](msg)(formats)
-
-      assertResult(OK)(status)
-      assertResult(response)(msgJSON)
-    }
-
-    // 0sec for an immediate return
-    Get(s"/mom/receiveMessage/$queueName?timeOutDuration=0") ~> momRoute ~> check {
-      val response = new String(body.data.toByteArray)
-
-      val timeout: Duration = Duration.create(0, "seconds")
-      val msg: Message = LocalHornetQMom.receive(Queue.apply(queueName), timeout).get
-      implicit val formats = Serialization.formats(NoTypeHints) + new MessageSerializer
-
-      val msgJSON: String = write[Message](msg)(formats)
-
       receivedMessage = response
 
+      implicit val formats = Serialization.formats(NoTypeHints) + new MessageSerializer
+      val responseToMessage: Message = read[Message](response)(formats, manifest[Message])
+
       assertResult(OK)(status)
-      assertResult(response)(msgJSON)
+      assert(responseToMessage.isInstanceOf[Message])
     }
 
     Put("/mom/acknowledge", HttpEntity(s"""$receivedMessage""")) ~>
