@@ -27,7 +27,7 @@ export class QueryStatus {
         });
         
         // -- for testing only -- //
-        /*evtAgg.publish(notifications.i2b2.queryStarted, "started query");
-        evtAgg.publish(notifications.i2b2.networkIdReceived, 1);*/
+        evtAgg.publish(notifications.i2b2.queryStarted, "started query");
+        evtAgg.publish(notifications.i2b2.networkIdReceived, 1);
     }
 }
