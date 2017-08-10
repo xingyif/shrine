@@ -16,6 +16,7 @@ import spray.http.{StatusCode, StatusCodes}
 
 import scala.concurrent.duration._
 import scala.collection.concurrent.{TrieMap, Map => ConcurrentMap}
+import scala.concurrent.Promise
 
 
 /**
@@ -91,7 +92,7 @@ trait QepService extends HttpService with Loggable {
   }
 
   //todo what happens if multiple threads try to complete the same request? spray already has them racing a timeout so it should be OK
-  val longPollRequestsToComplete:ConcurrentMap[NetworkQueryId,(Runnable,Cancellable)] = TrieMap.empty
+  val longPollRequestsToComplete:ConcurrentMap[NetworkQueryId,(Promise[Unit],Cancellable)] = TrieMap.empty
 
   case class SelectsResults(user: User, queryId: NetworkQueryId, afterVersion: Long, deadline: Long) extends Runnable {
     override def run(): Unit = {
@@ -100,6 +101,24 @@ trait QepService extends HttpService with Loggable {
     }
   }
 
+  /*
+When a request comes in
+
+if the request can be fulfilled immediately then do that
+if not
+  create a promise who's future's success has an on-success to call respondOrWait
+  schedule a task to fulfil that promise in Akka's scheduler (and produce a cancellable)
+  put queryId -> (promise, cancelable) into the concurrent map
+
+when new information comes in
+  grab the right promise from the map
+  promise.trySuccess (triggering onSuccess)
+  maybe cancel the cancellable (may not need to)
+
+if the scheduler runs the runnable
+  promise.trySuccess (triggering onSuccess)
+  OK to cancel the cancellable (because it is already running)
+ */
   def respondOrWait(user: User, queryId: NetworkQueryId, afterVersion: Long, deadline: Long): Route = {
     val troubleOrResultsRow = selectResultsRow(queryId, user)
 
