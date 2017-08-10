@@ -18,6 +18,7 @@ import scala.concurrent.duration._
 import scala.collection.concurrent.{TrieMap, Map => ConcurrentMap}
 import scala.concurrent.Promise
 
+import scala.concurrent.ExecutionContext.Implicits.global
 
 /**
   * An API to support the web client's work with queries.
@@ -29,7 +30,7 @@ import scala.concurrent.Promise
 //todo move this to the qep/service module
 trait QepService extends HttpService with Loggable {
 
-//  def system: ActorSystem
+  def system: ActorSystem
 
   val qepInfo =
     """
@@ -94,35 +95,18 @@ trait QepService extends HttpService with Loggable {
   //todo what happens if multiple threads try to complete the same request? spray already has them racing a timeout so it should be OK
   val longPollRequestsToComplete:ConcurrentMap[NetworkQueryId,(Promise[Unit],Cancellable)] = TrieMap.empty
 
-  case class SelectsResults(user: User, queryId: NetworkQueryId, afterVersion: Long, deadline: Long) extends Runnable {
-    override def run(): Unit = {
-      //todo cancel this runnable
-      respondOrWait(user,queryId,afterVersion,deadline)
-    }
+  case class TriggerRunnable(promise: Promise[Unit]) extends Runnable {
+    override def run(): Unit = promise.trySuccess(())
   }
 
-  /*
-When a request comes in
+  val noOpRoute:Route = {ctx => }
 
-if the request can be fulfilled immediately then do that
-if not
-  create a promise who's future's success has an on-success to call respondOrWait
-  schedule a task to fulfil that promise in Akka's scheduler (and produce a cancellable)
-  put queryId -> (promise, cancelable) into the concurrent map
-
-when new information comes in
-  grab the right promise from the map
-  promise.trySuccess (triggering onSuccess)
-  maybe cancel the cancellable (may not need to)
-
-if the scheduler runs the runnable
-  promise.trySuccess (triggering onSuccess)
-  OK to cancel the cancellable (because it is already running)
- */
   def respondOrWait(user: User, queryId: NetworkQueryId, afterVersion: Long, deadline: Long): Route = {
     val troubleOrResultsRow = selectResultsRow(queryId, user)
 
     if (shouldRespondNow(deadline, afterVersion, troubleOrResultsRow)) {
+      //todo maybe cancel. shouldn't matter with trySuccess or tryComplete but will save a database call
+      longPollRequestsToComplete.get(queryId).map(_._2.cancel())
       //something is wrong. Respond now.
       troubleOrResultsRow.fold({ trouble =>
         respondWithStatus(trouble._1) {
@@ -135,12 +119,39 @@ if the scheduler runs the runnable
         complete(formattedJson)
       })
     } else {
-      //respond later
-      //todo reschedule at deadline
-      ???
+      //todo check that the Cancelable is not already cancelled ... logic getting complex
+      //if the id is not already in the concurrent map build the parts and put it in there to respond later
+      longPollRequestsToComplete.getOrElseUpdate(queryId,{
+        val trigger = Promise[Unit]()
+        trigger.future.onSuccess{ case _ => respondOrWait(user,queryId,afterVersion,deadline) }
+
+        val timeLeft = (deadline - System.currentTimeMillis()) milliseconds
+        val cancellable:Cancellable = system.scheduler.scheduleOnce(timeLeft,TriggerRunnable(trigger))
+        (trigger,cancellable)
+      })
+      //todo maybe some logging
+      noOpRoute
     }
   }
 
+  /*
+When a request comes in
+
+if the request can be fulfilled immediately then do that
+if not
+create a promise who's future's success has an on-success to call respondOrWait
+schedule a task to fulfil that promise in Akka's scheduler (and produce a cancellable)
+put queryId -> (promise, cancelable) into the concurrent map
+
+when new information comes in
+grab the right promise from the map
+promise.trySuccess (triggering onSuccess)
+maybe cancel the cancellable (may not need to)
+
+if the scheduler runs the runnable
+promise.trySuccess (triggering onSuccess)
+OK to cancel the cancellable (because it is already running)
+*/
 //todo maybe do something interesting with http://spray.io/documentation/1.2.4/spray-routing/key-concepts/timeout-handling/ . Doesn't look like the right fit. Maybe revisit with akka-http
   def queryResult(user:User):Route = path("queryResult" / LongNumber) { queryId: NetworkQueryId =>
 
