@@ -181,6 +181,26 @@ class QepServiceTest extends FlatSpec with ScalatestRouteTest with QepService {
     }
   }
 
+  "QepService" should "return an OK and a row of data for a queryResult request with the version and timeout parameters if the version hasn't changed, but not until after timeout" in {
+
+    QepQueryDb.db.insertQepQuery(qepQuery)
+    QepQueryDb.db.insertQepResultRow(qepResultRowFromBch)
+    QepQueryDb.db.insertQepResultRow(qepResultRowFromMgh)
+    QepQueryDb.db.insertQepResultRow(qepResultRowFromDfci)
+    QepQueryDb.db.insertQepResultRow(qepResultRowFromPartners)
+
+    Get(s"/qep/queryResult/${qepQuery.networkId}?timeout=10000&afterVersion=${queryReceiveTime}") ~> qepRoute(researcherUser) ~> check {
+      implicit val formats = DefaultFormats
+      val result = body.data.asString
+
+      assertResult(OK)(status)
+
+      //todo check json result after format is pinned down assertResult(qepInfo)(result)
+    }
+  }
+
+
+
   "QepService" should "return an OK and a table of data for a queryResultsTable request" in {
 
     QepQueryDb.db.insertQepQuery(qepQuery)
