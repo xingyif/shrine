@@ -639,6 +639,7 @@ System.config({
       "views/query-status/node-result/result-types/patient-count/patient-count.js",
       "views/query-status/node-status/node-status.html!github:systemjs/plugin-text@0.0.8.js",
       "views/query-status/node-status/node-status.js",
+      "views/query-status/node-status/temp.html!github:systemjs/plugin-text@0.0.8.js",
       "views/query-status/query-status.html!github:systemjs/plugin-text@0.0.8.js",
       "views/query-status/query-status.js",
       "views/query-viewer/box-style.converter.js",

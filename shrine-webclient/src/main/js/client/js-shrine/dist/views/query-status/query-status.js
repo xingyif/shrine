@@ -65,9 +65,6 @@ System.register(['aurelia-event-aggregator', 'common/shrine.messages', 'common/q
                         }, 10000);
                     }
                 });
-
-                evtAgg.publish(notifications.i2b2.queryStarted, "started query");
-                evtAgg.publish(notifications.i2b2.networkIdReceived, 1);
             }, _class.inject = [EventAggregator, notifications, commands, QueryStatusModel], _temp));
 
             _export('QueryStatus', QueryStatus);
