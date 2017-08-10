@@ -1,5 +1,6 @@
+package net.shrine.metadata
+
 import akka.actor.ActorRefFactory
-import net.shrine.metadata.HornetQMomWebApi
 import net.shrine.mom.{Message, MessageSerializer, Queue}
 import org.json4s.NoTypeHints
 import org.json4s.native.Serialization

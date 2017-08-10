@@ -59,10 +59,16 @@ trait HornetQMomWebApi extends HttpService
       path("receiveMessage" / Segment) { fromQueue =>
         parameter('timeOutSeconds ? 20) { timeOutSeconds =>
           val timeout: Duration = Duration.create(timeOutSeconds, "seconds")
-          val response: Message = LocalHornetQMom.receive(Queue.apply(fromQueue), timeout).get
-          implicit val formats = Serialization.formats(NoTypeHints) + new MessageSerializer
-          respondWithStatus(StatusCodes.OK) {
-            complete(write[Message](response)(formats))
+          val response: Option[Message] = LocalHornetQMom.receive(Queue.apply(fromQueue), timeout)
+
+          response match {
+            case Some(response) =>
+              implicit val formats = Serialization.formats(NoTypeHints) + new MessageSerializer
+              respondWithStatus(StatusCodes.OK) {
+                complete(write[Message](response)(formats))
+              }
+            case None =>
+              complete(StatusCodes.NotFound)
           }
         }
       }
