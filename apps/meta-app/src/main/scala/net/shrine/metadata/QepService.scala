@@ -40,7 +40,9 @@ trait QepService extends HttpService with Loggable {
 
   def qepRoute(user: User): Route = pathPrefix("qep") {
     get {
-      queryResult(user) ~ queryResultsTable(user)
+      detach(){
+        queryResult(user) ~ queryResultsTable(user)
+      }
     } ~
       pathEndOrSingleSlash{complete(qepInfo)} ~
       respondWithStatus(StatusCodes.NotFound){complete(qepInfo)}
@@ -88,6 +90,7 @@ trait QepService extends HttpService with Loggable {
     )
   }
 
+  //todo what happens if multiple threads try to complete the same request? spray already has them racing a timeout so it should be OK
   val longPollRequestsToComplete:ConcurrentMap[NetworkQueryId,(Runnable,Cancellable)] = TrieMap.empty
 
   case class SelectsResults(user: User, queryId: NetworkQueryId, afterVersion: Long, deadline: Long) extends Runnable {
