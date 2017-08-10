@@ -47,17 +47,6 @@ trait QepService extends HttpService with Loggable {
   }
 
 
-  val longPollRequestsToComplete:ConcurrentMap[NetworkQueryId,(Runnable,Cancellable)] = TrieMap.empty
-
-  case class SelectsResults(queryId:NetworkQueryId,afterVersion:Long,deadline:Long) extends Runnable {
-    override def run(): Unit = {
-      //cancel this runnable
-
-
-
-    }
-  }
-
   def selectResultsRow(queryId:NetworkQueryId,user:User):Either[(StatusCode,String),ResultsRow] = {
     //query once and determine if the latest change > afterVersion
 
@@ -87,9 +76,9 @@ trait QepService extends HttpService with Loggable {
     * @return true to respond now, false to dither
     */
   //todo use Deadline instead of Long?
-  def respondNow(deadline: Long,
-                 afterVersion: Long,
-                 resultsRow:Either[(StatusCode,String),ResultsRow]
+  def shouldRespondNow(deadline: Long,
+                       afterVersion: Long,
+                       resultsRow:Either[(StatusCode,String),ResultsRow]
                 ):Boolean = {
     val currentTime = System.currentTimeMillis()
     if (currentTime > deadline) true
@@ -99,6 +88,38 @@ trait QepService extends HttpService with Loggable {
     )
   }
 
+  val longPollRequestsToComplete:ConcurrentMap[NetworkQueryId,(Runnable,Cancellable)] = TrieMap.empty
+
+  case class SelectsResults(user: User, queryId: NetworkQueryId, afterVersion: Long, deadline: Long) extends Runnable {
+    override def run(): Unit = {
+      //todo cancel this runnable
+      respondOrWait(user,queryId,afterVersion,deadline)
+    }
+  }
+
+  def respondOrWait(user: User, queryId: NetworkQueryId, afterVersion: Long, deadline: Long): Route = {
+    val troubleOrResultsRow = selectResultsRow(queryId, user)
+
+    if (shouldRespondNow(deadline, afterVersion, troubleOrResultsRow)) {
+      //something is wrong. Respond now.
+      troubleOrResultsRow.fold({ trouble =>
+        respondWithStatus(trouble._1) {
+          complete(trouble._2)
+        }
+      }, { queryAndResults =>
+        //everything is fine. Respond now.
+        val json: Json = Json(queryAndResults)
+        val formattedJson: String = Json.format(json)(humanReadable())
+        complete(formattedJson)
+      })
+    } else {
+      //respond later
+      //todo reschedule at deadline
+      ???
+    }
+  }
+
+//todo maybe do something interesting with http://spray.io/documentation/1.2.4/spray-routing/key-concepts/timeout-handling/ . Doesn't look like the right fit. Maybe revisit with akka-http
   def queryResult(user:User):Route = path("queryResult" / LongNumber) { queryId: NetworkQueryId =>
 
     //take optional parameters for version and an awaitTime
@@ -109,21 +130,7 @@ trait QepService extends HttpService with Loggable {
       val deadline = requestStartTime + timeout
 
       //query once and determine if the latest change > afterVersion
-
-      val troubleOrResultsRow = selectResultsRow(queryId,user)
-
-      if(respondNow(deadline,afterVersion,troubleOrResultsRow)) {
-        troubleOrResultsRow.fold({ trouble =>
-          respondWithStatus(trouble._1){complete(trouble._2)}
-        },{ queryAndResults =>
-          val json: Json = Json(queryAndResults)
-          val formattedJson: String = Json.format(json)(humanReadable())
-          complete(formattedJson)
-        })
-      } else {
-        //todo reschedule at deadline
-        ???
-      }
+      respondOrWait(user, queryId, afterVersion, deadline)
     }
   }
 
