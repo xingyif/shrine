@@ -16,9 +16,10 @@ import spray.http.{StatusCode, StatusCodes}
 
 import scala.concurrent.duration._
 import scala.collection.concurrent.{TrieMap, Map => ConcurrentMap}
-import scala.concurrent.Promise
+import scala.concurrent.{Future, Promise}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.language.postfixOps
+import scala.util.Try
 
 /**
   * An API to support the web client's work with queries.
@@ -59,20 +60,6 @@ trait QepService extends HttpService with Loggable {
     override def run(): Unit = promise.trySuccess(networkQueryId)
   }
 
-  def respondWithQueryResult(troubleOrResultsRow:Either[(StatusCode,String),ResultsRow]): Route = {
-    troubleOrResultsRow.fold({ trouble =>
-      //something is wrong. Respond now.
-      respondWithStatus(trouble._1) {
-        complete(trouble._2)
-      }
-    }, { queryAndResults =>
-      //everything is fine. Respond now.
-      val json: Json = Json(queryAndResults)
-      val formattedJson: String = Json.format(json)(humanReadable())
-      complete(formattedJson)
-    })
-  }
-
 //todo update long poll description
   /*
 When a request comes in
@@ -109,20 +96,31 @@ OK to cancel the cancellable (because it is already running)
           respondWithQueryResult(troubleOrResultsRow)
         }
         else {
+          val okToRespond = Promise[Either[(StatusCode,String),ResultsRow]]()
 
-          val triggerAndCancel = longPollRequestsToComplete.getOrElseUpdate(queryId,{
-            val trigger = Promise[NetworkQueryId]()
-            val timeLeft = (deadline - System.currentTimeMillis()) milliseconds
-            val cancellable:Cancellable = system.scheduler.scheduleOnce(timeLeft,TriggerRunnable(queryId,trigger))
-            (trigger,cancellable)
-          })
+          //Schedule the timeout
+          val okToRespondTimeout = Promise[NetworkQueryId]()
+          okToRespondTimeout.future.transform({id =>
+            okToRespond.tryComplete(Try(selectResultsRow(queryId, user))) //todo have selectResultsRow return the Try?
+          },{x => x})//todo some logging
+          val timeLeft = (deadline - System.currentTimeMillis()) milliseconds
+          val cancellable:Cancellable = system.scheduler.scheduleOnce(timeLeft,TriggerRunnable(queryId,okToRespondTimeout))
+
+          //Set up for an interrupt from new data
+          val okToRespondIfNewData = Promise[NetworkQueryId]()
+          okToRespondIfNewData.future.transform({id =>
+            val latestResultsRow = selectResultsRow(queryId, user)
+            if(shouldRespondNow(deadline,afterVersion,latestResultsRow)) {
+              okToRespond.tryComplete(Try(selectResultsRow(queryId, user))) //todo have selectResultsRow return the Try?
+            }
+          },{x => x})//todo some logging
+
+          //todo put id -> okToRespondIfNewData in a map so that outsie processes can grab it
 
           //todo be sure it is to respond - Add another future to see if it will be ok to respond.
-          onSuccess(triggerAndCancel._1.future){ betterMatchQueryId =>
+          onSuccess(okToRespond.future){ latestResultsRow:Either[(StatusCode,String),ResultsRow] =>
 
-            //todo check if shouldRespondNow. Otherwise keep waiting
-            val latestResultsRow = selectResultsRow(queryId, user)
-            triggerAndCancel._2.cancel()
+            cancellable.cancel()
             respondWithQueryResult(latestResultsRow)
           }
         }
@@ -147,6 +145,20 @@ OK to cancel the cancellable (because it is already running)
       {_._1 != StatusCodes.NotFound},
       {_.latestChange > afterVersion}
     )
+  }
+
+  def respondWithQueryResult(troubleOrResultsRow:Either[(StatusCode,String),ResultsRow]): Route = {
+    troubleOrResultsRow.fold({ trouble =>
+      //something is wrong. Respond now.
+      respondWithStatus(trouble._1) {
+        complete(trouble._2)
+      }
+    }, { queryAndResults =>
+      //everything is fine. Respond now.
+      val json: Json = Json(queryAndResults)
+      val formattedJson: String = Json.format(json)(humanReadable())
+      complete(formattedJson)
+    })
   }
 
   def selectResultsRow(queryId:NetworkQueryId,user:User):Either[(StatusCode,String),ResultsRow] = {
