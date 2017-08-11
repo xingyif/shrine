@@ -50,49 +50,6 @@ trait QepService extends HttpService with Loggable {
       respondWithStatus(StatusCodes.NotFound){complete(qepInfo)}
   }
 
-
-  def selectResultsRow(queryId:NetworkQueryId,user:User):Either[(StatusCode,String),ResultsRow] = {
-    //query once and determine if the latest change > afterVersion
-
-    val queryOption: Option[QepQuery] = QepQueryDb.db.selectQueryById(queryId)
-    queryOption.fold {
-        //todo only complete if deadline is past. Otherwise reschedule
-        val left:Either[(StatusCode,String),ResultsRow] = Left[(StatusCode,String),ResultsRow]((StatusCodes.NotFound,s"No query with id $queryId found"))
-        left
-      }
-      { query: QepQuery =>
-      if (user.sameUserAs(query.userName, query.userDomain)) {
-        val mostRecentQueryResults: Seq[Result] = QepQueryDb.db.selectMostRecentFullQueryResultsFor(queryId).map(Result(_))
-        val flag = QepQueryDb.db.selectMostRecentQepQueryFlagFor(queryId).map(QueryFlag(_))
-        val queryCell = QueryCell(query, flag)
-        val queryAndResults = ResultsRow(queryCell, mostRecentQueryResults)
-
-        Right(queryAndResults)
-      }
-      else Left((StatusCodes.Forbidden,s"Query $queryId belongs to a different user"))
-    }
-  }
-
-  /**
-    * @param deadline time when a response must go
-    * @param afterVersion last timestamp the requester knows about
-    * @param resultsRow either the result row or something is not right
-    * @return true to respond now, false to dither
-    */
-  //todo use Deadline instead of Long?
-  def shouldRespondNow(deadline: Long,
-                       afterVersion: Long,
-                       resultsRow:Either[(StatusCode,String),ResultsRow]
-                ):Boolean = {
-    val currentTime = System.currentTimeMillis()
-    //todo uses > instead of >= to better support versioning with the existing table in 1.23. Change to >= when you have actual incremental versioning instead of timestamp-based in 1.24
-    if (currentTime > deadline) true
-    else resultsRow.fold(
-      {_._1 != StatusCodes.NotFound},
-      {_.latestChange > afterVersion}
-    )
-  }
-
 //todo key should also have something to do with the request. Maybe everything. Triggerer will need to scan the whole set of keys to decide what to trigger, or maybe try triggering everything
 
   //todo can this promise be Promise[Unit] ?
@@ -139,8 +96,8 @@ OK to cancel the cancellable (because it is already running)
 
     //take optional parameters for version and an awaitTime
     //todo use a Duration ? or timeoutSeconds ?
-    //timeout by defautl is -1. If the parameter isn't supplied then the deadline is in the past so it replies immediately
-    parameters('afterVersion.as[Long] ? 0L, 'timeout.as[Long] ? -1L) { (afterVersion: Long, timeout: Long) =>
+    //If the timeout parameter isn't supplied then the deadline is now so it replies immediately
+    parameters('afterVersion.as[Long] ? 0L, 'timeout.as[Long] ? 0L) { (afterVersion: Long, timeout: Long) =>
 
       val requestStartTime = System.currentTimeMillis()
       val deadline = requestStartTime + timeout
@@ -170,6 +127,47 @@ OK to cancel the cancellable (because it is already running)
           }
         }
       }
+    }
+  }
+
+  /**
+    * @param deadline time when a response must go
+    * @param afterVersion last timestamp the requester knows about
+    * @param resultsRow either the result row or something is not right
+    * @return true to respond now, false to dither
+    */
+  //todo use Deadline instead of Long?
+  def shouldRespondNow(deadline: Long,
+                       afterVersion: Long,
+                       resultsRow:Either[(StatusCode,String),ResultsRow]
+                      ):Boolean = {
+    val currentTime = System.currentTimeMillis()
+    if (currentTime >= deadline) true
+    else resultsRow.fold(
+      {_._1 != StatusCodes.NotFound},
+      {_.latestChange > afterVersion}
+    )
+  }
+
+  def selectResultsRow(queryId:NetworkQueryId,user:User):Either[(StatusCode,String),ResultsRow] = {
+    //query once and determine if the latest change > afterVersion
+
+    val queryOption: Option[QepQuery] = QepQueryDb.db.selectQueryById(queryId)
+    queryOption.fold {
+      //todo only complete if deadline is past. Otherwise reschedule
+      val left:Either[(StatusCode,String),ResultsRow] = Left[(StatusCode,String),ResultsRow]((StatusCodes.NotFound,s"No query with id $queryId found"))
+      left
+    }
+    { query: QepQuery =>
+      if (user.sameUserAs(query.userName, query.userDomain)) {
+        val mostRecentQueryResults: Seq[Result] = QepQueryDb.db.selectMostRecentFullQueryResultsFor(queryId).map(Result(_))
+        val flag = QepQueryDb.db.selectMostRecentQepQueryFlagFor(queryId).map(QueryFlag(_))
+        val queryCell = QueryCell(query, flag)
+        val queryAndResults = ResultsRow(queryCell, mostRecentQueryResults)
+
+        Right(queryAndResults)
+      }
+      else Left((StatusCodes.Forbidden,s"Query $queryId belongs to a different user"))
     }
   }
 
