@@ -1,7 +1,4 @@
 <template>
-    <require from="./node-result/node-result"></require>
-    <require from="common/converters/datetime.value.converter"></require>
-    <require from="./node-status/node-status"></require>
     <div style="height: 100%; overflow: auto">
         <div style="display: flex" if.one-way="status.query.queryName">
             <div style="flex:1">Status of Query: ${status.query.queryName}</div>
