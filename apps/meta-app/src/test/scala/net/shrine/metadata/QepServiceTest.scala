@@ -5,7 +5,7 @@ import net.shrine.i2b2.protocol.pm.User
 import net.shrine.protocol.{Credential, QueryResult, ResultOutputType}
 import net.shrine.qep.querydb.{QepQuery, QepQueryDb, QueryResultRow}
 import org.json4s.DefaultFormats
-import org.json4s.native.JsonMethods.parse
+//import org.json4s.native.JsonMethods.parse
 import org.junit.runner.RunWith
 import org.scalatest.FlatSpec
 import org.scalatest.junit.JUnitRunner
@@ -189,17 +189,22 @@ class QepServiceTest extends FlatSpec with ScalatestRouteTest with QepService {
     QepQueryDb.db.insertQepResultRow(qepResultRowFromDfci)
     QepQueryDb.db.insertQepResultRow(qepResultRowFromPartners)
 
-    Get(s"/qep/queryResult/${qepQuery.networkId}?timeout=10000&afterVersion=${queryReceiveTime}") ~> qepRoute(researcherUser) ~> check {
+    val start = System.currentTimeMillis()
+    val timeout = 5000
+
+    Get(s"/qep/queryResult/${qepQuery.networkId}?timeout=$timeout&afterVersion=${queryReceiveTime+50}") ~> qepRoute(researcherUser) ~> check {
       implicit val formats = DefaultFormats
       val result = body.data.asString
 
       assertResult(OK)(status)
 
+      val end = System.currentTimeMillis()
+
+      assert(end - start >= timeout,s"The call took ${end - start} but should have taken at least $timeout")
+
       //todo check json result after format is pinned down assertResult(qepInfo)(result)
     }
   }
-
-
 
   "QepService" should "return an OK and a table of data for a queryResultsTable request" in {
 

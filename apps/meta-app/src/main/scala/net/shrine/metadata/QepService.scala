@@ -17,8 +17,8 @@ import spray.http.{StatusCode, StatusCodes}
 import scala.concurrent.duration._
 import scala.collection.concurrent.{TrieMap, Map => ConcurrentMap}
 import scala.concurrent.Promise
-
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.language.postfixOps
 
 /**
   * An API to support the web client's work with queries.
@@ -85,6 +85,7 @@ trait QepService extends HttpService with Loggable {
                        resultsRow:Either[(StatusCode,String),ResultsRow]
                 ):Boolean = {
     val currentTime = System.currentTimeMillis()
+    //todo uses > instead of >= to better support versioning with the existing table in 1.23. Change to >= when you have actual incremental versioning instead of timestamp-based in 1.24
     if (currentTime > deadline) true
     else resultsRow.fold(
       {_._1 != StatusCodes.NotFound},
@@ -92,48 +93,30 @@ trait QepService extends HttpService with Loggable {
     )
   }
 
-  //todo what happens if multiple threads try to complete the same request? spray already has them racing a timeout so it should be OK
-  val longPollRequestsToComplete:ConcurrentMap[NetworkQueryId,(Promise[Unit],Cancellable)] = TrieMap.empty
+//todo key should also have something to do with the request. Maybe everything. Triggerer will need to scan the whole set of keys to decide what to trigger, or maybe try triggering everything
 
-  case class TriggerRunnable(promise: Promise[Unit]) extends Runnable {
-    override def run(): Unit = promise.trySuccess(())
+  //todo can this promise be Promise[Unit] ?
+  val longPollRequestsToComplete:ConcurrentMap[NetworkQueryId,(Promise[NetworkQueryId],Cancellable)] = TrieMap.empty
+
+  case class TriggerRunnable(networkQueryId: NetworkQueryId,promise: Promise[NetworkQueryId]) extends Runnable {
+    override def run(): Unit = promise.trySuccess(networkQueryId)
   }
 
-  val noOpRoute:Route = {ctx => }
-
-  def respondOrWait(user: User, queryId: NetworkQueryId, afterVersion: Long, deadline: Long): Route = {
-    val troubleOrResultsRow = selectResultsRow(queryId, user)
-
-    if (shouldRespondNow(deadline, afterVersion, troubleOrResultsRow)) {
-      //todo maybe cancel. shouldn't matter with trySuccess or tryComplete but will save a database call
-      longPollRequestsToComplete.get(queryId).map(_._2.cancel())
+  def respondWithQueryResult(troubleOrResultsRow:Either[(StatusCode,String),ResultsRow]): Route = {
+    troubleOrResultsRow.fold({ trouble =>
       //something is wrong. Respond now.
-      troubleOrResultsRow.fold({ trouble =>
-        respondWithStatus(trouble._1) {
-          complete(trouble._2)
-        }
-      }, { queryAndResults =>
-        //everything is fine. Respond now.
-        val json: Json = Json(queryAndResults)
-        val formattedJson: String = Json.format(json)(humanReadable())
-        complete(formattedJson)
-      })
-    } else {
-      //todo check that the Cancelable is not already cancelled ... logic getting complex
-      //if the id is not already in the concurrent map build the parts and put it in there to respond later
-      longPollRequestsToComplete.getOrElseUpdate(queryId,{
-        val trigger = Promise[Unit]()
-        trigger.future.onSuccess{ case _ => respondOrWait(user,queryId,afterVersion,deadline) }
-
-        val timeLeft = (deadline - System.currentTimeMillis()) milliseconds
-        val cancellable:Cancellable = system.scheduler.scheduleOnce(timeLeft,TriggerRunnable(trigger))
-        (trigger,cancellable)
-      })
-      //todo maybe some logging
-      noOpRoute
-    }
+      respondWithStatus(trouble._1) {
+        complete(trouble._2)
+      }
+    }, { queryAndResults =>
+      //everything is fine. Respond now.
+      val json: Json = Json(queryAndResults)
+      val formattedJson: String = Json.format(json)(humanReadable())
+      complete(formattedJson)
+    })
   }
 
+//todo update long poll description
   /*
 When a request comes in
 
@@ -152,18 +135,41 @@ if the scheduler runs the runnable
 promise.trySuccess (triggering onSuccess)
 OK to cancel the cancellable (because it is already running)
 */
-//todo maybe do something interesting with http://spray.io/documentation/1.2.4/spray-routing/key-concepts/timeout-handling/ . Doesn't look like the right fit. Maybe revisit with akka-http
   def queryResult(user:User):Route = path("queryResult" / LongNumber) { queryId: NetworkQueryId =>
 
     //take optional parameters for version and an awaitTime
-    //todo use a Duration ?
+    //todo use a Duration ? or timeoutSeconds ?
+    //timeout by defautl is -1. If the parameter isn't supplied then the deadline is in the past so it replies immediately
     parameters('afterVersion.as[Long] ? 0L, 'timeout.as[Long] ? -1L) { (afterVersion: Long, timeout: Long) =>
 
       val requestStartTime = System.currentTimeMillis()
       val deadline = requestStartTime + timeout
 
-      //query once and determine if the latest change > afterVersion
-      respondOrWait(user, queryId, afterVersion, deadline)
+      detach(){
+        val troubleOrResultsRow = selectResultsRow(queryId, user)
+        if (shouldRespondNow(deadline, afterVersion, troubleOrResultsRow)) {
+          //bypass all the concurrent/interrupt business. Just reply.
+          respondWithQueryResult(troubleOrResultsRow)
+        }
+        else {
+
+          val triggerAndCancel = longPollRequestsToComplete.getOrElseUpdate(queryId,{
+            val trigger = Promise[NetworkQueryId]()
+            val timeLeft = (deadline - System.currentTimeMillis()) milliseconds
+            val cancellable:Cancellable = system.scheduler.scheduleOnce(timeLeft,TriggerRunnable(queryId,trigger))
+            (trigger,cancellable)
+          })
+
+          //todo be sure it is to respond - Add another future to see if it will be ok to respond.
+          onSuccess(triggerAndCancel._1.future){ betterMatchQueryId =>
+
+            //todo check if shouldRespondNow. Otherwise keep waiting
+            val latestResultsRow = selectResultsRow(queryId, user)
+            triggerAndCancel._2.cancel()
+            respondWithQueryResult(latestResultsRow)
+          }
+        }
+      }
     }
   }
 
