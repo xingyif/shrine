@@ -1,5 +1,7 @@
 package net.shrine.metadata
 
+import java.util.UUID
+
 import akka.actor.ActorSystem
 import net.shrine.audit.{NetworkQueryId, QueryName, Time}
 import net.shrine.authorization.steward.UserName
@@ -51,14 +53,12 @@ trait QepService extends HttpService with Loggable {
       respondWithStatus(StatusCodes.NotFound){complete(qepInfo)}
   }
 
-//todo key should also have something to do with the request. Maybe everything. Triggerer will need to scan the whole set of keys to decide what to trigger, or maybe try triggering everything
+//todo for when you handle general json data, expand NetworkQueryId into a thing to be evaulated as part of the scan, and pass in the filter function
 
   //todo can this promise be Promise[Unit] ?
-  val longPollRequestsToComplete:ConcurrentMap[NetworkQueryId,Promise[NetworkQueryId]] = TrieMap.empty
+  val longPollRequestsToComplete:ConcurrentMap[UUID,(NetworkQueryId,Promise[NetworkQueryId])] = TrieMap.empty
 
-  //todo start here. Test this.
-  //todo use a generated uuid for the request instead of the queryid
-  def triggerDataChangeFor(id:NetworkQueryId) = longPollRequestsToComplete.get(id).map(_.trySuccess(id))
+  def triggerDataChangeFor(id:NetworkQueryId) = longPollRequestsToComplete.values.filter(_._1 == id).map(_._2.trySuccess(id))
 
   /*
 Races to complete are OK in spray. They're already happening, in fact.
@@ -118,12 +118,14 @@ if not
             }
           },{x => x})//todo some logging
 
+          val requestId = UUID.randomUUID()
+
           //todo put id -> okToRespondIfNewData in a map so that outsie processes can grab it
-          longPollRequestsToComplete.put(queryId,okToRespondIfNewData)
+          longPollRequestsToComplete.put(requestId,(queryId,okToRespondIfNewData))
 
           onSuccess(okToRespond.future){ latestResultsRow:Either[(StatusCode,String),ResultsRow] =>
             //clean up concurrent bits before responding
-            longPollRequestsToComplete.remove(queryId)
+            longPollRequestsToComplete.remove(requestId)
             timeoutCanceller.cancel()
             completeWithQueryResult(latestResultsRow)
           }
