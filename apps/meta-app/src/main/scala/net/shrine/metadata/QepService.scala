@@ -53,10 +53,11 @@ trait QepService extends HttpService with Loggable {
       respondWithStatus(StatusCodes.NotFound){complete(qepInfo)}
   }
 
+  val unit:Unit = ()
   //todo for when you handle general json data, expand NetworkQueryId into a thing to be evaulated as part of the scan, and pass in the filter function
   val longPollRequestsToComplete:ConcurrentMap[UUID,(NetworkQueryId,Promise[Unit])] = TrieMap.empty
 
-  def triggerDataChangeFor(id:NetworkQueryId) = longPollRequestsToComplete.values.filter(_._1 == id).map(_._2.trySuccess(id))
+  def triggerDataChangeFor(id:NetworkQueryId) = longPollRequestsToComplete.values.filter(_._1 == id).map(_._2.trySuccess(unit))
 
   /*
 Races to complete are OK in spray. They're already happening, in fact.
@@ -102,7 +103,7 @@ if not
           },{x => x})//todo some logging
           val timeLeft = (deadline - System.currentTimeMillis()) milliseconds
           case class TriggerRunnable(networkQueryId: NetworkQueryId,promise: Promise[Unit]) extends Runnable {
-            override def run(): Unit = promise.trySuccess()
+            override def run(): Unit = promise.trySuccess(unit)
           }
           val timeoutCanceller = system.scheduler.scheduleOnce(timeLeft,TriggerRunnable(queryId,okToRespondTimeout))
 
