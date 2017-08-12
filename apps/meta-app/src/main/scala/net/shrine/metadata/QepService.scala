@@ -53,10 +53,8 @@ trait QepService extends HttpService with Loggable {
       respondWithStatus(StatusCodes.NotFound){complete(qepInfo)}
   }
 
-//todo for when you handle general json data, expand NetworkQueryId into a thing to be evaulated as part of the scan, and pass in the filter function
-
-  //todo can this promise be Promise[Unit] ?
-  val longPollRequestsToComplete:ConcurrentMap[UUID,(NetworkQueryId,Promise[NetworkQueryId])] = TrieMap.empty
+  //todo for when you handle general json data, expand NetworkQueryId into a thing to be evaulated as part of the scan, and pass in the filter function
+  val longPollRequestsToComplete:ConcurrentMap[UUID,(NetworkQueryId,Promise[Unit])] = TrieMap.empty
 
   def triggerDataChangeFor(id:NetworkQueryId) = longPollRequestsToComplete.values.filter(_._1 == id).map(_._2.trySuccess(id))
 
@@ -99,19 +97,19 @@ if not
           val okToRespond = Promise[Either[(StatusCode,String),ResultsRow]]()
 
           //Schedule the timeout
-          val okToRespondTimeout = Promise[NetworkQueryId]()
-          okToRespondTimeout.future.transform({id =>
+          val okToRespondTimeout = Promise[Unit]()
+          okToRespondTimeout.future.transform({unit =>
             okToRespond.tryComplete(Try(selectResultsRow(queryId, user))) //todo have selectResultsRow return the Try?
           },{x => x})//todo some logging
           val timeLeft = (deadline - System.currentTimeMillis()) milliseconds
-          case class TriggerRunnable(networkQueryId: NetworkQueryId,promise: Promise[NetworkQueryId]) extends Runnable {
-            override def run(): Unit = promise.trySuccess(networkQueryId)
+          case class TriggerRunnable(networkQueryId: NetworkQueryId,promise: Promise[Unit]) extends Runnable {
+            override def run(): Unit = promise.trySuccess()
           }
           val timeoutCanceller = system.scheduler.scheduleOnce(timeLeft,TriggerRunnable(queryId,okToRespondTimeout))
 
           //Set up for an interrupt from new data
-          val okToRespondIfNewData = Promise[NetworkQueryId]()
-          okToRespondIfNewData.future.transform({id =>
+          val okToRespondIfNewData = Promise[Unit]()
+          okToRespondIfNewData.future.transform({unit =>
             val latestResultsRow = selectResultsRow(queryId, user)
             if(shouldRespondNow(deadline,afterVersion,latestResultsRow)) {
               okToRespond.tryComplete(Try(selectResultsRow(queryId, user))) //todo have selectResultsRow return the Try?
