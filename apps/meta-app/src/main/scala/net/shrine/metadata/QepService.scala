@@ -54,30 +54,26 @@ trait QepService extends HttpService with Loggable {
 //todo key should also have something to do with the request. Maybe everything. Triggerer will need to scan the whole set of keys to decide what to trigger, or maybe try triggering everything
 
   //todo can this promise be Promise[Unit] ?
-  val longPollRequestsToComplete:ConcurrentMap[NetworkQueryId,(Promise[NetworkQueryId],Cancellable)] = TrieMap.empty
+  val longPollRequestsToComplete:ConcurrentMap[NetworkQueryId,Promise[NetworkQueryId]] = TrieMap.empty
 
-  case class TriggerRunnable(networkQueryId: NetworkQueryId,promise: Promise[NetworkQueryId]) extends Runnable {
-    override def run(): Unit = promise.trySuccess(networkQueryId)
-  }
+  //todo start here. Test this.
+  def triggerDataChangeFor(id:NetworkQueryId) = longPollRequestsToComplete.get(id).map(_.trySuccess(id))
 
-//todo update long poll description
   /*
+Races to complete are OK in spray. They're already happening, in fact.
+
 When a request comes in
 
 if the request can be fulfilled immediately then do that
 if not
-create a promise who's future's success has an on-success to call respondOrWait
-schedule a task to fulfil that promise in Akka's scheduler (and produce a cancellable)
-put queryId -> (promise, cancelable) into the concurrent map
+  create a promise to fulfil to trigger the complete
+  create a promise to bump that first one on timeout
+  schedule a runnable to bump the timeout promise
 
-when new information comes in
-grab the right promise from the map
-promise.trySuccess (triggering onSuccess)
-maybe cancel the cancellable (may not need to)
+  create a promise to bump that first one if the conditions are right
+  create a promise to bump the conditional one and stuff it in a concurrent map for other parts of the system to find
 
-if the scheduler runs the runnable
-promise.trySuccess (triggering onSuccess)
-OK to cancel the cancellable (because it is already running)
+  onSuccess remove the conditional promise and cancel the scheduled timeout.
 */
   def queryResult(user:User):Route = path("queryResult" / LongNumber) { queryId: NetworkQueryId =>
 
@@ -86,6 +82,8 @@ OK to cancel the cancellable (because it is already running)
     //If the timeout parameter isn't supplied then the deadline is now so it replies immediately
     parameters('afterVersion.as[Long] ? 0L, 'timeout.as[Long] ? 0L) { (afterVersion: Long, timeout: Long) =>
 
+      //todo check that the timeout is less than the spray "give up" timeout
+
       val requestStartTime = System.currentTimeMillis()
       val deadline = requestStartTime + timeout
 
@@ -93,9 +91,10 @@ OK to cancel the cancellable (because it is already running)
         val troubleOrResultsRow = selectResultsRow(queryId, user)
         if (shouldRespondNow(deadline, afterVersion, troubleOrResultsRow)) {
           //bypass all the concurrent/interrupt business. Just reply.
-          respondWithQueryResult(troubleOrResultsRow)
+          completeWithQueryResult(troubleOrResultsRow)
         }
         else {
+          // promise used to respond
           val okToRespond = Promise[Either[(StatusCode,String),ResultsRow]]()
 
           //Schedule the timeout
@@ -104,6 +103,9 @@ OK to cancel the cancellable (because it is already running)
             okToRespond.tryComplete(Try(selectResultsRow(queryId, user))) //todo have selectResultsRow return the Try?
           },{x => x})//todo some logging
           val timeLeft = (deadline - System.currentTimeMillis()) milliseconds
+          case class TriggerRunnable(networkQueryId: NetworkQueryId,promise: Promise[NetworkQueryId]) extends Runnable {
+            override def run(): Unit = promise.trySuccess(networkQueryId)
+          }
           val cancellable:Cancellable = system.scheduler.scheduleOnce(timeLeft,TriggerRunnable(queryId,okToRespondTimeout))
 
           //Set up for an interrupt from new data
@@ -116,12 +118,13 @@ OK to cancel the cancellable (because it is already running)
           },{x => x})//todo some logging
 
           //todo put id -> okToRespondIfNewData in a map so that outsie processes can grab it
+          longPollRequestsToComplete.put(queryId,okToRespondIfNewData)
 
-          //todo be sure it is to respond - Add another future to see if it will be ok to respond.
           onSuccess(okToRespond.future){ latestResultsRow:Either[(StatusCode,String),ResultsRow] =>
-
+            //clean up concurrent bits before responding
+            longPollRequestsToComplete.remove(queryId)
             cancellable.cancel()
-            respondWithQueryResult(latestResultsRow)
+            completeWithQueryResult(latestResultsRow)
           }
         }
       }
@@ -147,7 +150,7 @@ OK to cancel the cancellable (because it is already running)
     )
   }
 
-  def respondWithQueryResult(troubleOrResultsRow:Either[(StatusCode,String),ResultsRow]): Route = {
+  def completeWithQueryResult(troubleOrResultsRow:Either[(StatusCode,String),ResultsRow]): Route = {
     troubleOrResultsRow.fold({ trouble =>
       //something is wrong. Respond now.
       respondWithStatus(trouble._1) {
