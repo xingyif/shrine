@@ -117,7 +117,6 @@ if not
           },{x => x})//todo some logging
 
           val requestId = UUID.randomUUID()
-
           //put id -> okToRespondIfNewData in a map so that outside processes can trigger it
           longPollRequestsToComplete.put(requestId,(queryId,okToRespondIfNewData))
 
@@ -168,12 +167,7 @@ if not
     //query once and determine if the latest change > afterVersion
 
     val queryOption: Option[QepQuery] = QepQueryDb.db.selectQueryById(queryId)
-    queryOption.fold {
-      //todo only complete if deadline is past. Otherwise reschedule
-      val left:Either[(StatusCode,String),ResultsRow] = Left[(StatusCode,String),ResultsRow]((StatusCodes.NotFound,s"No query with id $queryId found"))
-      left
-    }
-    { query: QepQuery =>
+    queryOption.map{query: QepQuery =>
       if (user.sameUserAs(query.userName, query.userDomain)) {
         val mostRecentQueryResults: Seq[Result] = QepQueryDb.db.selectMostRecentFullQueryResultsFor(queryId).map(Result(_))
         val flag = QepQueryDb.db.selectMostRecentQepQueryFlagFor(queryId).map(QueryFlag(_))
@@ -183,7 +177,7 @@ if not
         Right(queryAndResults)
       }
       else Left((StatusCodes.Forbidden,s"Query $queryId belongs to a different user"))
-    }
+    }.getOrElse(Left[(StatusCode,String),ResultsRow]((StatusCodes.NotFound,s"No query with id $queryId found")))
   }
 
   def queryResultsTable(user: User): Route = path("queryResultsTable") {
