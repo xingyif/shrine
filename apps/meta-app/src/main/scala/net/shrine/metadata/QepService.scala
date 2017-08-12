@@ -76,15 +76,14 @@ if not
 */
   def queryResult(user:User):Route = path("queryResult" / LongNumber) { queryId: NetworkQueryId =>
 
-    //take optional parameters for version and an awaitTime
-    //todo use a Duration ? or timeoutSeconds ?
-    //If the timeout parameter isn't supplied then the deadline is now so it replies immediately
-    parameters('afterVersion.as[Long] ? 0L, 'timeout.as[Long] ? 0L) { (afterVersion: Long, timeout: Long) =>
+    //take optional parameters for version and an awaitTime, but insist on both
+    //If the timeout parameter isn't supplied then the deadline is now so it will reply immediately
+    parameters('afterVersion.as[Long] ? 0L, 'timeoutSeconds.as[Long] ? 0L) { (afterVersion: Long, timeout: Long) =>
 
       //todo check that the timeout is less than the spray "give up" timeout
 
       val requestStartTime = System.currentTimeMillis()
-      val deadline = requestStartTime + timeout
+      val deadline = requestStartTime + (timeout * 1000)
 
       detach(){
         val troubleOrResultsRow = selectResultsRow(queryId, user)
@@ -99,7 +98,7 @@ if not
           //Schedule the timeout
           val okToRespondTimeout = Promise[Unit]()
           okToRespondTimeout.future.transform({unit =>
-            okToRespond.tryComplete(Try(selectResultsRow(queryId, user))) //todo have selectResultsRow return the Try?
+            okToRespond.tryComplete(Try(selectResultsRow(queryId, user)))
           },{x => x})//todo some logging
           val timeLeft = (deadline - System.currentTimeMillis()) milliseconds
           case class TriggerRunnable(networkQueryId: NetworkQueryId,promise: Promise[Unit]) extends Runnable {
@@ -112,13 +111,13 @@ if not
           okToRespondIfNewData.future.transform({unit =>
             val latestResultsRow = selectResultsRow(queryId, user)
             if(shouldRespondNow(deadline,afterVersion,latestResultsRow)) {
-              okToRespond.tryComplete(Try(selectResultsRow(queryId, user))) //todo have selectResultsRow return the Try?
+              okToRespond.tryComplete(Try(selectResultsRow(queryId, user)))
             }
           },{x => x})//todo some logging
 
           val requestId = UUID.randomUUID()
 
-          //todo put id -> okToRespondIfNewData in a map so that outsie processes can grab it
+          //put id -> okToRespondIfNewData in a map so that outside processes can trigger it
           longPollRequestsToComplete.put(requestId,(queryId,okToRespondIfNewData))
 
           onSuccess(okToRespond.future){ latestResultsRow:Either[(StatusCode,String),ResultsRow] =>
@@ -138,7 +137,6 @@ if not
     * @param resultsRow either the result row or something is not right
     * @return true to respond now, false to dither
     */
-  //todo use Deadline instead of Long?
   def shouldRespondNow(deadline: Long,
                        afterVersion: Long,
                        resultsRow:Either[(StatusCode,String),ResultsRow]

@@ -134,7 +134,7 @@ class QepServiceTest extends FlatSpec with ScalatestRouteTest with QepService wi
     }
   }
 
-  "QepService" should "return an OK and a row of data for a queryResult request with the version and timeout parameters" in {
+  "QepService" should "return an OK and a row of data for a queryResult request with the version and timeoutSeconds parameters" in {
 
     QepQueryDb.db.insertQepQuery(qepQuery)
     QepQueryDb.db.insertQepResultRow(qepResultRowFromBch)
@@ -142,7 +142,7 @@ class QepServiceTest extends FlatSpec with ScalatestRouteTest with QepService wi
     QepQueryDb.db.insertQepResultRow(qepResultRowFromDfci)
     QepQueryDb.db.insertQepResultRow(qepResultRowFromPartners)
 
-    Get(s"/qep/queryResult/${qepQuery.networkId}?timeout=10000&afterVersion=${queryReceiveTime - 60}") ~> qepRoute(researcherUser) ~> check {
+    Get(s"/qep/queryResult/${qepQuery.networkId}?timeoutSeconds=10&afterVersion=${queryReceiveTime - 60}") ~> qepRoute(researcherUser) ~> check {
       implicit val formats = DefaultFormats
       val result = body.data.asString
 
@@ -184,7 +184,7 @@ class QepServiceTest extends FlatSpec with ScalatestRouteTest with QepService wi
     }
   }
 
-  "QepService" should "return an OK and a row of data for a queryResult request with the version and timeout parameters if the version hasn't changed, but not until after timeout" in {
+  "QepService" should "return an OK and a row of data for a queryResult request with the version and timeoutSeconds parameters if the version hasn't changed, but not until after timeout" in {
 
     QepQueryDb.db.insertQepQuery(qepQuery)
     QepQueryDb.db.insertQepResultRow(qepResultRowFromBch)
@@ -193,9 +193,9 @@ class QepServiceTest extends FlatSpec with ScalatestRouteTest with QepService wi
     QepQueryDb.db.insertQepResultRow(qepResultRowFromPartners)
 
     val start = System.currentTimeMillis()
-    val timeout = 5000
+    val timeout = 5
 
-    Get(s"/qep/queryResult/${qepQuery.networkId}?timeout=$timeout&afterVersion=${queryReceiveTime+50}") ~> qepRoute(researcherUser) ~> check {
+    Get(s"/qep/queryResult/${qepQuery.networkId}?timeoutSeconds=$timeout&afterVersion=${queryReceiveTime+50}") ~> qepRoute(researcherUser) ~> check {
       implicit val formats = DefaultFormats
       val result = body.data.asString
 
@@ -203,13 +203,13 @@ class QepServiceTest extends FlatSpec with ScalatestRouteTest with QepService wi
 
       val end = System.currentTimeMillis()
 
-      assert(end - start >= timeout,s"The call took ${end - start} but should have taken at least $timeout")
+      assert(end - start >= timeout * 1000,s"The call took ${end - start} but should have taken at least ${timeout*1000}")
 
       //todo check json result after format is pinned down assertResult(qepInfo)(result)
     }
   }
 
-  "QepService" should "return an OK and a row of data for a queryResult request with the version and timeout parameters before the timeout if the version changes while waiting" in {
+  "QepService" should "return an OK and a row of data for a queryResult request with the version and timeoutSeconds parameters before the timeoutSeconds if the version changes while waiting" in {
 
     QepQueryDb.db.insertQepQuery(qepQuery)
     QepQueryDb.db.insertQepResultRow(qepResultRowFromMgh)
@@ -228,9 +228,9 @@ class QepServiceTest extends FlatSpec with ScalatestRouteTest with QepService wi
 
     system.scheduler.scheduleOnce(delay milliseconds,Inserter)
 
-    val timeout = 5000
+    val timeout = 5
 
-    Get(s"/qep/queryResult/${qepQuery.networkId}?timeout=$timeout&afterVersion=${queryReceiveTime+35}") ~> qepRoute(researcherUser) ~> check {
+    Get(s"/qep/queryResult/${qepQuery.networkId}?timeoutSeconds=$timeout&afterVersion=${queryReceiveTime+35}") ~> qepRoute(researcherUser) ~> check {
       implicit val formats = DefaultFormats
       val result = body.data.asString
 
@@ -239,7 +239,7 @@ class QepServiceTest extends FlatSpec with ScalatestRouteTest with QepService wi
       val end = System.currentTimeMillis()
 
       assert(end - start >= delay,s"The call took ${end - start} but should have taken at least $delay")
-      assert(end - start < timeout,s"The call took ${end - start} but should have taken less than $timeout")
+      assert(end - start < timeout * 1000,s"The call took ${end - start} but should have taken less than $timeout")
 
       //todo check json result after format is pinned down assertResult(qepInfo)(result)
     }
