@@ -1,6 +1,6 @@
 package net.shrine.metadata
 
-import akka.actor.{ActorSystem, Cancellable}
+import akka.actor.ActorSystem
 import net.shrine.audit.{NetworkQueryId, QueryName, Time}
 import net.shrine.authorization.steward.UserName
 import net.shrine.i2b2.protocol.pm.User
@@ -8,16 +8,16 @@ import net.shrine.log.Loggable
 import net.shrine.problem.ProblemDigest
 import net.shrine.protocol.ResultOutputType
 import net.shrine.qep.querydb.{FullQueryResult, QepQuery, QepQueryBreakdownResultsRow, QepQueryDb, QepQueryFlag}
-import spray.routing._
 import rapture.json._
-import rapture.json.jsonBackends.jawn._
 import rapture.json.formatters.humanReadable
+import rapture.json.jsonBackends.jawn._
 import spray.http.{StatusCode, StatusCodes}
+import spray.routing._
 
-import scala.concurrent.duration._
 import scala.collection.concurrent.{TrieMap, Map => ConcurrentMap}
-import scala.concurrent.{Future, Promise}
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Promise
+import scala.concurrent.duration._
 import scala.language.postfixOps
 import scala.util.Try
 
@@ -57,6 +57,7 @@ trait QepService extends HttpService with Loggable {
   val longPollRequestsToComplete:ConcurrentMap[NetworkQueryId,Promise[NetworkQueryId]] = TrieMap.empty
 
   //todo start here. Test this.
+  //todo use a generated uuid for the request instead of the queryid
   def triggerDataChangeFor(id:NetworkQueryId) = longPollRequestsToComplete.get(id).map(_.trySuccess(id))
 
   /*
@@ -106,7 +107,7 @@ if not
           case class TriggerRunnable(networkQueryId: NetworkQueryId,promise: Promise[NetworkQueryId]) extends Runnable {
             override def run(): Unit = promise.trySuccess(networkQueryId)
           }
-          val cancellable:Cancellable = system.scheduler.scheduleOnce(timeLeft,TriggerRunnable(queryId,okToRespondTimeout))
+          val timeoutCanceller = system.scheduler.scheduleOnce(timeLeft,TriggerRunnable(queryId,okToRespondTimeout))
 
           //Set up for an interrupt from new data
           val okToRespondIfNewData = Promise[NetworkQueryId]()
@@ -123,7 +124,7 @@ if not
           onSuccess(okToRespond.future){ latestResultsRow:Either[(StatusCode,String),ResultsRow] =>
             //clean up concurrent bits before responding
             longPollRequestsToComplete.remove(queryId)
-            cancellable.cancel()
+            timeoutCanceller.cancel()
             completeWithQueryResult(latestResultsRow)
           }
         }

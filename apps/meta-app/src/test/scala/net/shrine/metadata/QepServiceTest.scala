@@ -5,6 +5,9 @@ import net.shrine.i2b2.protocol.pm.User
 import net.shrine.protocol.{Credential, QueryResult, ResultOutputType}
 import net.shrine.qep.querydb.{QepQuery, QepQueryDb, QueryResultRow}
 import org.json4s.DefaultFormats
+import org.scalatest.{BeforeAndAfterEach, Suite}
+
+import scala.language.postfixOps
 //import org.json4s.native.JsonMethods.parse
 import org.junit.runner.RunWith
 import org.scalatest.FlatSpec
@@ -16,7 +19,7 @@ import spray.testkit.ScalatestRouteTest
   * @since 3/30/17
   */
 @RunWith(classOf[JUnitRunner])
-class QepServiceTest extends FlatSpec with ScalatestRouteTest with QepService {
+class QepServiceTest extends FlatSpec with ScalatestRouteTest with QepService with TestWithDatabase {
   override def actorRefFactory: ActorRefFactory = system
 
   import scala.concurrent.duration._
@@ -68,7 +71,7 @@ class QepServiceTest extends FlatSpec with ScalatestRouteTest with QepService {
     endDate = Some(queryReceiveTime + 20),
     status = QueryResult.StatusType.Finished,
     statusMessage = None,
-    changeDate = queryReceiveTime + 40
+    changeDate = queryReceiveTime + 20
   )
 
   val qepResultRowFromPartners = QueryResultRow(
@@ -82,7 +85,7 @@ class QepServiceTest extends FlatSpec with ScalatestRouteTest with QepService {
     endDate = Some(queryReceiveTime + 20),
     status = QueryResult.StatusType.Finished,
     statusMessage = None,
-    changeDate = queryReceiveTime + 40
+    changeDate = queryReceiveTime + 30
   )
 
   val qepResultRowFromBch = QueryResultRow(
@@ -110,7 +113,7 @@ class QepServiceTest extends FlatSpec with ScalatestRouteTest with QepService {
     endDate = Some(queryReceiveTime + 20),
     status = QueryResult.StatusType.Finished,
     statusMessage = None,
-    changeDate = queryReceiveTime + 40
+    changeDate = queryReceiveTime + 50
   )
 
   "QepService" should "return an OK and a row of data for a queryResult request" in {
@@ -206,6 +209,42 @@ class QepServiceTest extends FlatSpec with ScalatestRouteTest with QepService {
     }
   }
 
+  "QepService" should "return an OK and a row of data for a queryResult request with the version and timeout parameters before the timeout if the version changes while waiting" in {
+
+    QepQueryDb.db.insertQepQuery(qepQuery)
+    QepQueryDb.db.insertQepResultRow(qepResultRowFromMgh)
+    QepQueryDb.db.insertQepResultRow(qepResultRowFromPartners)
+//    QepQueryDb.db.insertQepResultRow(qepResultRowFromDfci)
+
+    val start = System.currentTimeMillis()
+
+    val delay = 2000
+    object Inserter extends Runnable {
+      override def run(): Unit = {
+        QepQueryDb.db.insertQepResultRow(qepResultRowFromBch)
+        triggerDataChangeFor(qepResultRowFromBch.networkQueryId)
+      }
+    }
+
+    system.scheduler.scheduleOnce(delay milliseconds,Inserter)
+
+    val timeout = 5000
+
+    Get(s"/qep/queryResult/${qepQuery.networkId}?timeout=$timeout&afterVersion=${queryReceiveTime+35}") ~> qepRoute(researcherUser) ~> check {
+      implicit val formats = DefaultFormats
+      val result = body.data.asString
+
+      assertResult(OK)(status)
+
+      val end = System.currentTimeMillis()
+
+      assert(end - start >= delay,s"The call took ${end - start} but should have taken at least $delay")
+      assert(end - start < timeout,s"The call took ${end - start} but should have taken less than $timeout")
+
+      //todo check json result after format is pinned down assertResult(qepInfo)(result)
+    }
+  }
+
   "QepService" should "return an OK and a table of data for a queryResultsTable request" in {
 
     QepQueryDb.db.insertQepQuery(qepQuery)
@@ -261,4 +300,16 @@ class QepServiceTest extends FlatSpec with ScalatestRouteTest with QepService {
     rolesByProject = Map()
   )
 
+}
+
+trait TestWithDatabase extends BeforeAndAfterEach {
+  this: Suite =>
+
+  override def beforeEach() = {
+    QepQueryDb.db.createTables()
+  }
+
+  override def afterEach() = {
+    QepQueryDb.db.dropTables()
+  }
 }
