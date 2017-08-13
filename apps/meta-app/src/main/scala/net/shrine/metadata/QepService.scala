@@ -53,6 +53,8 @@ trait QepService extends HttpService with Loggable {
       respondWithStatus(StatusCodes.NotFound){complete(qepInfo)}
   }
 
+
+  //todo extract this bit to a different place - where the QEP messages come back
   val unit:Unit = ()
   //todo for when you handle general json data, expand NetworkQueryId into a thing to be evaulated as part of the scan, and pass in the filter function
   val longPollRequestsToComplete:ConcurrentMap[UUID,(NetworkQueryId,Promise[Unit])] = TrieMap.empty
@@ -145,7 +147,7 @@ if not
     if (currentTime >= deadline) true
     else resultsRow.fold(
       {_._1 != StatusCodes.NotFound},
-      {_.latestChange > afterVersion}
+      {_.version > afterVersion}
     )
   }
 
@@ -232,7 +234,7 @@ if not
 case class QueryParameters(
                             researcherIdOption:Option[UserName] = None,
                             skipOption:Option[Int] =  None,
-                            limitOption:Option[Int] = None //todo deadline, maybe version, someday
+                            limitOption:Option[Int] = None
                           )
 
 case class ResultsTable(
@@ -244,9 +246,23 @@ case class ResultsTable(
 
 case class ResultsRow(
                        query:QueryCell,
-                       results: Seq[Result]
-                      ) {
-  def latestChange:Long = (Seq(query.changeDate) ++ results.map(_.changeDate)).max
+                       results: Seq[Result],
+                       isComplete: Boolean, //a member variable to appear in json
+                       version:Long //a time stamp in 1.23, a counting integer in a future release
+                      )
+
+object ResultsRow {
+  def apply(
+             query: QueryCell,
+             results: Seq[Result]
+           ): ResultsRow = {
+
+    val isComplete = if (results.isEmpty) false
+                      else results.forall(_.isComplete)
+    val version = (Seq(query.changeDate) ++ results.map(_.changeDate)).max //the latest change date
+
+    ResultsRow(query, results, isComplete, version)
+  }
 }
 
 case class QueryCell(
@@ -291,7 +307,9 @@ case class Result (
   changeDate:Long,
   breakdowns: Seq[BreakdownResultsForType],
   problemDigest:Option[ProblemDigestForJson]
-)
+) {
+  def isComplete = true //todo until I get to SHRINE-2148
+}
 
 object Result {
   def apply(fullQueryResult: FullQueryResult): Result = new Result(

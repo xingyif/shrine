@@ -148,6 +148,8 @@ class QepServiceTest extends FlatSpec with ScalatestRouteTest with QepService wi
 
       assertResult(OK)(status)
 
+      println(result)
+
       //todo check json result after format is pinned down assertResult(qepInfo)(result)
     }
   }
