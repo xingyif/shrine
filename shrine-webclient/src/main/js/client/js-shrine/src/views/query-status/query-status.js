@@ -25,9 +25,9 @@ export class QueryStatus extends PubSub{
         });
         
         // -- for testing only -- //
-        /*
+        
         this.publish(this.notifications.i2b2.queryStarted, "started query");
         this.publish(this.notifications.i2b2.networkIdReceived, 1);
-        */
+        
     }
 }
