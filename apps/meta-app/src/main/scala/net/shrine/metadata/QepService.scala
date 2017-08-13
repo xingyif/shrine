@@ -9,14 +9,13 @@ import net.shrine.i2b2.protocol.pm.User
 import net.shrine.log.Loggable
 import net.shrine.problem.ProblemDigest
 import net.shrine.protocol.ResultOutputType
-import net.shrine.qep.querydb.{FullQueryResult, QepQuery, QepQueryBreakdownResultsRow, QepQueryDb, QepQueryFlag}
+import net.shrine.qep.querydb.{FullQueryResult, QepQuery, QepQueryBreakdownResultsRow, QepQueryDb, QepQueryDbChangeNotifier, QepQueryFlag}
 import rapture.json._
 import rapture.json.formatters.humanReadable
 import rapture.json.jsonBackends.jawn._
 import spray.http.{StatusCode, StatusCodes}
 import spray.routing._
 
-import scala.collection.concurrent.{TrieMap, Map => ConcurrentMap}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Promise
 import scala.concurrent.duration._
@@ -52,14 +51,6 @@ trait QepService extends HttpService with Loggable {
       pathEndOrSingleSlash{complete(qepInfo)} ~
       respondWithStatus(StatusCodes.NotFound){complete(qepInfo)}
   }
-
-
-  //todo extract this bit to a different place - where the QEP messages come back
-  val unit:Unit = ()
-  //todo for when you handle general json data, expand NetworkQueryId into a thing to be evaulated as part of the scan, and pass in the filter function
-  val longPollRequestsToComplete:ConcurrentMap[UUID,(NetworkQueryId,Promise[Unit])] = TrieMap.empty
-
-  def triggerDataChangeFor(id:NetworkQueryId) = longPollRequestsToComplete.values.filter(_._1 == id).map(_._2.trySuccess(unit))
 
   /*
 Races to complete are OK in spray. They're already happening, in fact.
@@ -105,6 +96,7 @@ if not
           },{x => x})//todo some logging
           val timeLeft = (deadline - System.currentTimeMillis()) milliseconds
           case class TriggerRunnable(networkQueryId: NetworkQueryId,promise: Promise[Unit]) extends Runnable {
+            val unit:Unit = ()
             override def run(): Unit = promise.trySuccess(unit)
           }
           val timeoutCanceller = system.scheduler.scheduleOnce(timeLeft,TriggerRunnable(queryId,okToRespondTimeout))
@@ -120,11 +112,11 @@ if not
 
           val requestId = UUID.randomUUID()
           //put id -> okToRespondIfNewData in a map so that outside processes can trigger it
-          longPollRequestsToComplete.put(requestId,(queryId,okToRespondIfNewData))
+          QepQueryDbChangeNotifier.putLongPollRequest(requestId,queryId,okToRespondIfNewData)
 
           onSuccess(okToRespond.future){ latestResultsRow:Either[(StatusCode,String),ResultsRow] =>
             //clean up concurrent bits before responding
-            longPollRequestsToComplete.remove(requestId)
+            QepQueryDbChangeNotifier.removeLongPollRequest(requestId)
             timeoutCanceller.cancel()
             completeWithQueryResult(latestResultsRow)
           }
