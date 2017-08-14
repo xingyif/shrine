@@ -1,33 +1,33 @@
-import {EventAggregator} from 'aurelia-event-aggregator';
-import {notifications, commands} from 'common/shrine.messages';
-import {QueryStatusModel} from 'common/query-status.model';
-export class QueryStatus {
-    static inject = [EventAggregator, notifications, commands, QueryStatusModel];
-    constructor(evtAgg, notifications, commands, queryStatus) {
-        const initialState = () => ({query: {queryName: null, updated: null, complete: false}, nodes: null});
+import { QueryStatusModel } from 'services/query-status.model';
+import { PubSub } from 'services/pub-sub'
+export class QueryStatus extends PubSub {
+    static inject = [QueryStatusModel];
+    constructor(queryStatus, ...rest) {
+        super(...rest);
+        const initialState = () => ({ query: { queryName: null, updated: null, complete: false }, nodes: null });
         this.status = initialState();
-        // -- publishers --
-        const publishFetchNetworkId = n => evtAgg.publish(commands.shrine.fetchNetworkId, n);
-        const publishFetchQuery = id => evtAgg.publish(commands.shrine.fetchQuery, id);
         // -- subscribers -- //
-        evtAgg.subscribe(notifications.i2b2.queryStarted, (n) => {
+        this.subscribe(this.notifications.i2b2.queryStarted, (n) => {
             // -- @todo: centralize the logic, investigate adding a new "status" every time -- //
             this.status.query.queryName = n;
-            publishFetchNetworkId(n)
         });
-        evtAgg.subscribe(notifications.shrine.networkIdReceived, id => publishFetchQuery(id));
-        evtAgg.subscribe(notifications.shrine.queryReceived, data => {
+        this.subscribe(this.notifications.i2b2.networkIdReceived, id => this.publish(this.commands.shrine.fetchQuery, id));
+        this.subscribe(this.notifications.shrine.queryReceived, data => {
             // -- @todo: centralize the logic, investigate adding a new "status" every time -- //
-            this.status.query = {...this.status.query, ...data.query};
+            this.status.query = { ...this.status.query, ...data.query };
             this.status.nodes = data.nodes;
             this.status.updated = Number(new Date());
             const complete = data.query.complete;
             const networkId = data.query.networkId;
-            if(!complete) {
-                publishFetchQuery(networkId)
+            if (!complete) {
+                window.setTimeout(() => publishFetchQuery(networkId), 10000);
             }
         });
-        // -- testing only -- //
-        evtAgg.publish(notifications.i2b2.queryStarted, '@queryqueryName');
+
+        const isDevEnv = document.location.href.includes('http://localhost:8000/');
+        if (isDevEnv) {
+            this.publish(this.notifications.i2b2.queryStarted, "started query");
+            this.publish(this.notifications.i2b2.networkIdReceived, 1);
+        }
     }
 }

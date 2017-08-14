@@ -55,12 +55,10 @@ function start(dir) {
   })
 }
 
-router.get('/shrine-metadata/qep/queryResults', (req, res) => {
-  const service = require('./data/async-queries');
-  const url = require('url');
-  const data =  url.parse(req.url, true).query;
-  const result = service.getQueryStatus(data.networkId);
-  setTimeout(() => res.json(result), 5000);
+router.get('/shrine-metadata/qep/queryResult/:id', (req, res) => {
+  const result= require('./data/query-result');
+  const TIMEOUT = 5000;
+  setTimeout(() => res.json(result), TIMEOUT);
 });
 
 router.get('/shrine-metadata/qep/networkId', (req, res) => {

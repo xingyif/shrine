@@ -127,7 +127,7 @@
 
 	function overrideI2B2($, i2b2, YAHOO) {
 		
-		i2b2.events.networkIdReceived = new YAHOO.util.CustomEvent("networkIdReceived", I2B2);
+		i2b2.events.networkIdReceived = new YAHOO.util.CustomEvent("networkIdReceived", i2b2);
 		i2b2.events.afterQueryInit = new YAHOO.util.CustomEvent("afterQueryInit", i2b2);
 
 		var _queryRun = i2b2.CRC.ctrlr.QT._queryRun;
@@ -135,12 +135,7 @@
 			i2b2.events.afterQueryInit.fire({ name: name, data: options });
 			return _queryRun.apply(i2b2.CRC.ctrlr.QT, [name, options]);
 		}
-
-		var statusDisplay = i2b2.CRC.view.status.showDisplay;
 		i2b2.CRC.view.status.showDisplay = function () {
-			if (i2b2.CRC.view.status.currentTab === 'status' || !$('.query-viewer.active').length) {
-				return statusDisplay.apply(i2b2.CRC.view.status.showDisplay, []);
-			}
 		}
 	}
 

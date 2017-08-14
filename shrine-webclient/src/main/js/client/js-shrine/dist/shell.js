@@ -1,4 +1,4 @@
-System.register(['common/i2b2.pub-sub'], function (_export, _context) {
+System.register(['services/i2b2.pub-sub'], function (_export, _context) {
   "use strict";
 
   var I2B2PubSub, _class, _temp, Shell;
@@ -10,8 +10,8 @@ System.register(['common/i2b2.pub-sub'], function (_export, _context) {
   }
 
   return {
-    setters: [function (_commonI2b2PubSub) {
-      I2B2PubSub = _commonI2b2PubSub.I2B2PubSub;
+    setters: [function (_servicesI2b2PubSub) {
+      I2B2PubSub = _servicesI2b2PubSub.I2B2PubSub;
     }],
     execute: function () {
       _export('Shell', Shell = (_temp = _class = function Shell(i2b2PubSub) {
