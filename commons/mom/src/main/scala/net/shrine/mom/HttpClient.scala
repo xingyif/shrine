@@ -37,15 +37,18 @@ object HttpClient extends Loggable {
         Await.result(future, 10 seconds)  //todo make this timeout configurable
       }
       catch {
-        case x:TimeoutException => HttpResponse(status = StatusCodes.RequestTimeout,entity = HttpEntity(s"${request.uri} timed out after 10 seconds. ${x.getMessage}"))
+        case x:TimeoutException => {
+          debug(s"${request.uri} failed with ${x.getMessage}", x)
+          HttpResponse(status = StatusCodes.RequestTimeout,entity = HttpEntity(s"${request.uri} timed out after 10 seconds. ${x.getMessage}"))
+        }
         //todo is there a better message? What comes up in real life?
         case x:ConnectionAttemptFailedException => {
           //no web service is there to respond
-          info(s"${request.uri} failed with ${x.getMessage}",x)
+          debug(s"${request.uri} failed with ${x.getMessage}", x)
           HttpResponse(status = StatusCodes.NotFound,entity = HttpEntity(s"${request.uri} failed with ${x.getMessage}"))
         }
         case NonFatal(x) => {
-          info(s"${request.uri} failed with ${x.getMessage}",x)
+          debug(s"${request.uri} failed with ${x.getMessage}",x)
           HttpResponse(status = StatusCodes.InternalServerError,entity = HttpEntity(s"${request.uri} failed with ${x.getMessage}"))
         }
       }

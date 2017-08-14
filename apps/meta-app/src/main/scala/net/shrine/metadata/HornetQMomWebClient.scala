@@ -1,7 +1,6 @@
 package net.shrine.metadata
 
-import akka.actor.{ActorRef, ActorSystem}
-import akka.event.Logging
+import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import akka.io.IO
 import net.shrine.log.Loggable
 import net.shrine.mom.{HttpClient, Message, MessageQueueService, MessageSerializer, Queue}
@@ -12,13 +11,14 @@ import net.shrine.source.ConfigSource
 import org.json4s.{Formats, NoTypeHints}
 import org.json4s.native.Serialization
 import org.json4s.native.Serialization.{read, write}
-import spray.routing.directives.LogEntry
 
 import scala.collection.immutable.Seq
 import scala.concurrent.duration.DurationInt
 import scala.collection.immutable
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext}
 import scala.concurrent.duration.Duration
+import scala.util.Try
+import scala.util.control.NonFatal
 
 /**
   * A simple HornetQMomWebClient that uses HornetQMomWebApi to createQueue,
@@ -28,74 +28,119 @@ import scala.concurrent.duration.Duration
   * @since 8/10/17
   */
 object HornetQMomWebClient extends MessageQueueService with Loggable {
-  implicit val system = ActorSystem()
-  //   implicit val system = ActorSystem("dashboardServer",ConfigSource.config)
-  import system.dispatcher
 
-  val momUrl: String = ConfigSource.config.getString("shrine.metaData.hornetQMomUrl")
+  // we need an ActorSystem to host our application in
+  implicit val system: ActorSystem = startActorSystem()
 
+  // the service actor replies to incoming HttpRequests
+  implicit val serviceActor: ActorRef = startServiceActor()
+
+  def startActorSystem(): ActorSystem = try {
+    val actorSystem: ActorSystem = ActorSystem("momServer",ConfigSource.config)
+    info(s"Starting ActorSystem: ${actorSystem.name} for HornetQMomWebClient at time: ${actorSystem.startTime}")
+    actorSystem
+  } catch {
+    case NonFatal(x) => {
+      debug(s"NonFatalException thrown while starting ActorSystem for HornetQMomWebClient: ${x.getMessage}")
+      throw x
+    }
+    case x: ExceptionInInitializerError => {
+      debug(s"ExceptionInInitializerError thrown while starting ActorSystem for HornetQMomWebClient: ${x.getMessage}")
+      throw x
+    }
+  }
+
+  def startServiceActor(): ActorRef = try {
+    // the service actor replies to incoming HttpRequests
+    val actor: ActorRef = system.actorOf(Props[HornetQMomWebClientServiceActor])
+    info(s"Starting ServiceActor: ${actor.toString()} for HornetQMomWebClient")
+    actor
+  }
+  catch {
+    case NonFatal(x) => {
+      debug(s"NonFatalException thrown while starting ServiceActor for HornetQMomWebClient: ${x.getMessage}")
+      throw x
+    }
+    case x: ExceptionInInitializerError => {
+      debug(s"ExceptionInInitializerError thrown while starting ServiceActor for HornetQMomWebClient: ${x.getMessage}")
+      throw x
+    }
+  }
+
+  val momUrl: String = ConfigSource.config.getString("shrine.mom.hornetq.serverUrl")
 
   override def createQueueIfAbsent(queueName: String): Queue = {
     val createQueueUrl = momUrl + s"/createQueue/$queueName"
     val request: HttpRequest = HttpRequest(HttpMethods.PUT, createQueueUrl)
-      val response: HttpResponse = HttpClient.webApiCall(request)
-      if (response.status == StatusCodes.Created) {
+    lazy val response: HttpResponse = HttpClient.webApiCall(request)
+    Try ({
+      response        // StatusCodes.Created
+      info(s"\n Request: ${request.uri} succeeded with status: ${response.status}")
       val queueString = response.entity.asString
       implicit val formats = Serialization.formats(NoTypeHints)
       val queue: Queue = read[Queue](queueString)(formats, manifest[Queue])
       queue
-    } else {
-        handleUnsuccessfulRequest(request, response)
-      }
+    }).getOrElse({
+      throw ReplyHasUnexpectedStatusCode(request, response)
+    })
   }
 
   override def deleteQueue(queueName: String): Unit = {
     val deleteQueueUrl = momUrl + s"/deleteQueue/$queueName"
     val request: HttpRequest = HttpRequest(HttpMethods.PUT, deleteQueueUrl)
-    val response: HttpResponse = HttpClient.webApiCall(request) // StatusCodes.OK
-    if (response.status != StatusCodes.OK) {
-      handleUnsuccessfulRequest(request, response)
-    }
+    lazy val response: HttpResponse = HttpClient.webApiCall(request) // StatusCodes.OK
+    Try ({
+      response
+      info(s"\n Request: ${request.uri} succeeded with status: ${response.status}")
+    }).getOrElse({
+      throw ReplyHasUnexpectedStatusCode(request, response)
+    })
   }
 
   override def queues: Seq[Queue] = {
     val getQueuesUrl = momUrl + s"/getQueues"
     val request: HttpRequest = HttpRequest(HttpMethods.GET, getQueuesUrl)
 
-    val response: HttpResponse = HttpClient.webApiCall(request)
-    if (response.status == StatusCodes.OK) {
+    lazy val response: HttpResponse = HttpClient.webApiCall(request)
+    Try ({  // StatusCodes.OK
+      response
+      info(s"\n Request: ${request.uri} succeeded with status: ${response.status}")
       val allQueues: String = response.entity.asString
       implicit val formats = Serialization.formats(NoTypeHints)
-      val queues: Seq[Queue] = read[Seq[Queue]](allQueues)(formats, manifest[Seq[Queue]])
-      queues
-    } else {
-      handleUnsuccessfulRequest(request, response)
-    }
+      read[Seq[Queue]](allQueues)(formats, manifest[Seq[Queue]])
+    }).getOrElse({
+      throw ReplyHasUnexpectedStatusCode(request, response)
+    })
   }
 
   override def send(contents: String, to: Queue): Unit = {
     val sendMessageUrl = momUrl + s"/sendMessage/$contents/$to"
     val request: HttpRequest = HttpRequest(HttpMethods.PUT, sendMessageUrl)
-    val response: HttpResponse = HttpClient.webApiCall(request)
-    if (response.status != StatusCodes.Accepted) {
-      handleUnsuccessfulRequest(request, response)
-    }
+    lazy val response: HttpResponse = HttpClient.webApiCall(request)
+    Try({
+      response     // StatusCodes.Accepted
+      info(s"\n Request: ${request.uri} succeeded with status: ${response.status}")
+    }).getOrElse({
+      throw ReplyHasUnexpectedStatusCode(request, response)
+    })
   }
 
   override def receive(from: Queue, timeout: Duration): Option[Message] = {
     val seconds = timeout.toSeconds
     val receiveMessageUrl = momUrl + s"/receiveMessage/$from?timeOutSeconds=$seconds"
     val request: HttpRequest = HttpRequest(HttpMethods.GET, receiveMessageUrl)
-    val response: HttpResponse = HttpClient.webApiCall(request)
-    if (response.status == StatusCodes.OK) {
+    lazy val response: HttpResponse = HttpClient.webApiCall(request)
+    Try({
+      response // StatusCodes.OK
+      info(s"\n Request: ${request.uri} succeeded with status: ${response.status}")
       val responseString: String = response.entity.asString
       implicit val formats = Serialization.formats(NoTypeHints) + new MessageSerializer
       val messageResponse: Message = read[Message](responseString)(formats, manifest[Message])
       val result: Option[Message] = Option(messageResponse)
       result
-    } else {
-      handleUnsuccessfulRequest(request, response)
-    }
+    }).getOrElse({
+      throw ReplyHasUnexpectedStatusCode(request, response)
+    })
   }
 
   override def completeMessage(message: Message): Unit = {
@@ -103,18 +148,50 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
     val messageString: String = write[Message](message)(formats)
 
     val entity: HttpEntity = HttpEntity(messageString)
-    val completeMessageUrl: String = momUrl + s"/acknowledge/$entity" // HttpEntity
+    val completeMessageUrl: String = momUrl + s"/acknowledge" // HttpEntity
     val request: HttpRequest = HttpRequest(HttpMethods.PUT, completeMessageUrl)
-    val response: HttpResponse = HttpClient.webApiCall(request)
-    if (response.status != StatusCodes.NoContent) {
-      handleUnsuccessfulRequest(request, response)
-    }
+    request.withEntity(entity)
+    lazy val response: HttpResponse = HttpClient.webApiCall(request)
+    Try({
+      response    // StatusCodes.NoContent
+      if (response.status == StatusCodes.InternalServerError) {
+        throw CouldNotDecipherGivenJsonAsSpecifiedException(request)
+      }
+      info(s"\n Request: ${request.uri} succeeded with status: ${response.status}")
+    }).getOrElse({
+      throw ReplyHasUnexpectedStatusCode(request, response)
+    })
+  }
+}
+
+class HornetQMomWebClientServiceActor extends Actor with MetaDataService {
+
+  // the HttpService trait defines only one abstract member, which
+  // connects the services environment to the enclosing actor or test
+  def actorRefFactory = context
+
+  // this actor only runs our route, but you could add
+  // other things here, like request stream processing
+  // or timeout handling
+  def receive = runRoute(route)
+
+  override implicit val ec: ExecutionContext = ExecutionContext.Implicits.global
+}
+
+case class ReplyHasUnexpectedStatusCode(request: HttpRequest, response: HttpResponse) extends Exception {
+  override def getMessage: String = {
+    s"\n Request: ${request.uri} failed with response status: ${response.status}" +
+      s"\n Response entity: ${response.entity.asString}"
   }
 
-  private def handleUnsuccessfulRequest(request: HttpRequest, response: HttpResponse) = {
-    LogEntry(s"\n  Request: ${request.uri} failed with response status: ${response.status}" +
-      s"\n response entity: ${response.entity.asString}", Logging.DebugLevel)
-    throw new Exception(s"\n  Request: ${request.uri} failed with response status: ${response.status}" +
-      s"\n response entity: ${response.entity.asString}")
+  def getFailureCause: String = s"The given request: $request has an unexpected response statusCode: ${response.status}"
+}
+
+case class CouldNotDecipherGivenJsonAsSpecifiedException(request: HttpRequest) extends Exception {
+  override def getMessage: String = {
+    s"\n Failed to decipher the given request: ${request.uri} given entity: ${request.entity}"
   }
+
+  def getFailureCause: String = s"The given JSON entity should be a serialized JSON String of Message."
+
 }
