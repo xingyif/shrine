@@ -87,7 +87,8 @@ object AdapterComponents {
       breakdownTypes = breakdownTypes,
       collectAdapterAudit = collectAdapterAudit,
       botCountTimeThresholds = botCountTimeThresholds,
-      obfuscator = obfuscator
+      obfuscator = obfuscator,
+      adapterConfig.get("delayResponse",Duration(_))
     )
 
     val readInstanceResultsAdapter: Adapter = new ReadInstanceResultsAdapter(
