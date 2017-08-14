@@ -94,9 +94,10 @@ if not
         val troubleOrResultsRow = selectResultsRow(queryId, user)
         if (shouldRespondNow(deadline, afterVersion, troubleOrResultsRow)) {
           //bypass all the concurrent/interrupt business. Just reply.
-          completeWithQueryResult(troubleOrResultsRow)
+          completeWithQueryResult(queryId,troubleOrResultsRow)
         }
         else {
+          debug(s"Creating promises to respond about $queryId with a version later than $afterVersion by $deadline ")
           // the Promise used to respond
           val okToRespond = Promise[Either[(StatusCode,String),ResultsRow]]()
 
@@ -133,7 +134,7 @@ if not
             //clean up concurrent bits before responding
             qepQueryDbChangeNotifier.removeLongPollRequest(requestId)
             timeoutCanceller.cancel()
-            completeWithQueryResult(latestResultsRow)
+            completeWithQueryResult(queryId,latestResultsRow)
           }
         }
       }
@@ -158,7 +159,8 @@ if not
     )
   }
 
-  def completeWithQueryResult(troubleOrResultsRow:Either[(StatusCode,String),ResultsRow]): Route = {
+  def completeWithQueryResult(networkQueryId: NetworkQueryId,troubleOrResultsRow:Either[(StatusCode,String),ResultsRow]): Route = {
+    debug(s"Responding to a request for $networkQueryId with $troubleOrResultsRow")
     troubleOrResultsRow.fold({ trouble =>
       //something is wrong. Respond now.
       respondWithStatus(trouble._1) {
