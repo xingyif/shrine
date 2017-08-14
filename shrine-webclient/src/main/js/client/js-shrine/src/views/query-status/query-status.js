@@ -1,10 +1,10 @@
-import {QueryStatusModel} from 'services/query-status.model';
-import {PubSub} from 'services/pub-sub'
-export class QueryStatus extends PubSub{
+import { QueryStatusModel } from 'services/query-status.model';
+import { PubSub } from 'services/pub-sub'
+export class QueryStatus extends PubSub {
     static inject = [QueryStatusModel];
     constructor(queryStatus, ...rest) {
         super(...rest);
-        const initialState = () => ({query: {queryName: null, updated: null, complete: false}, nodes: null});
+        const initialState = () => ({ query: { queryName: null, updated: null, complete: false }, nodes: null });
         this.status = initialState();
         // -- subscribers -- //
         this.subscribe(this.notifications.i2b2.queryStarted, (n) => {
@@ -14,20 +14,20 @@ export class QueryStatus extends PubSub{
         this.subscribe(this.notifications.i2b2.networkIdReceived, id => this.publish(this.commands.shrine.fetchQuery, id));
         this.subscribe(this.notifications.shrine.queryReceived, data => {
             // -- @todo: centralize the logic, investigate adding a new "status" every time -- //
-            this.status.query = {...this.status.query, ...data.query};
+            this.status.query = { ...this.status.query, ...data.query };
             this.status.nodes = data.nodes;
             this.status.updated = Number(new Date());
             const complete = data.query.complete;
             const networkId = data.query.networkId;
-            if(!complete) {
+            if (!complete) {
                 window.setTimeout(() => publishFetchQuery(networkId), 10000);
             }
         });
-        
-        // -- for testing only -- //
-        
-        this.publish(this.notifications.i2b2.queryStarted, "started query");
-        this.publish(this.notifications.i2b2.networkIdReceived, 1);
-        
+
+        const isDevEnv = document.location.href.includes('http://localhost:8000/');
+        if (isDevEnv) {
+            this.publish(this.notifications.i2b2.queryStarted, "started query");
+            this.publish(this.notifications.i2b2.networkIdReceived, 1);
+        }
     }
 }

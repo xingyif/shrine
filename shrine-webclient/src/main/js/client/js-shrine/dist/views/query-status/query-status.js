@@ -90,9 +90,11 @@ System.register(['services/query-status.model', 'services/pub-sub'], function (_
                         }
                     });
 
-                    _this.publish(_this.notifications.i2b2.queryStarted, "started query");
-                    _this.publish(_this.notifications.i2b2.networkIdReceived, 1);
-
+                    var isDevEnv = document.location.href.includes('http://localhost:8000/');
+                    if (isDevEnv) {
+                        _this.publish(_this.notifications.i2b2.queryStarted, "started query");
+                        _this.publish(_this.notifications.i2b2.networkIdReceived, 1);
+                    }
                     return _this;
                 }
 
