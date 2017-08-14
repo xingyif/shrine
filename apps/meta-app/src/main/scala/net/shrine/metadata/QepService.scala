@@ -10,6 +10,7 @@ import net.shrine.log.Loggable
 import net.shrine.problem.ProblemDigest
 import net.shrine.protocol.ResultOutputType
 import net.shrine.qep.querydb.{FullQueryResult, QepQuery, QepQueryBreakdownResultsRow, QepQueryDb, QepQueryDbChangeNotifier, QepQueryFlag}
+import net.shrine.source.ConfigSource
 import rapture.json._
 import rapture.json.formatters.humanReadable
 import rapture.json.jsonBackends.jawn._
@@ -73,10 +74,18 @@ if not
 
     //take optional parameters for version and an awaitTime, but insist on both
     //If the timeout parameter isn't supplied then the deadline is now so it will reply immediately
-    parameters('afterVersion.as[Long] ? 0L, 'timeoutSeconds.as[Long] ? 0L) { (afterVersion: Long, timeout: Long) =>
+    parameters('afterVersion.as[Long] ? 0L, 'timeoutSeconds.as[Long] ? 0L) { (afterVersion: Long, timeoutSeconds: Long) =>
 
-      //todo check that the timeout is less than the spray "give up" timeout
+      //check that the timeout is less than the spray "give up" timeout
+      val sprayRequestTimeout = ConfigSource.config.getLong("spray.can.server.request-timeout")
+      val maximumTimeout = sprayRequestTimeout - 1
 
+      if (maximumTimeout <= timeoutSeconds) warn(s"""spray.can.server.request-timeout $sprayRequestTimeout is too short
+           |relative to timeoutSeconds $timeoutSeconds . The server may produce a timeout-related error. Using
+           |$maximumTimeout instead of $timeoutSeconds to try to prevent that.""".stripMargin)
+      val timeout = Seq(maximumTimeout,timeoutSeconds).min
+
+      //times for local races.
       val requestStartTime = System.currentTimeMillis()
       val deadline = requestStartTime + (timeout * 1000)
 
