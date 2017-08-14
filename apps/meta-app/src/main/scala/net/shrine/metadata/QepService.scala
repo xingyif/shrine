@@ -29,10 +29,11 @@ import scala.util.Try
   * information about queries running now and the ability to submit queries.
   */
 
-//todo move this to the qep/service module
+//todo move this to the qep/service module, or somewhere in the qep subproject
 trait QepService extends HttpService with Loggable {
 
   def system: ActorSystem
+  val qepQueryDbChangeNotifier = QepQueryDbChangeNotifier(system)
 
   val qepInfo =
     """
@@ -86,7 +87,7 @@ if not
           completeWithQueryResult(troubleOrResultsRow)
         }
         else {
-          // promise used to respond
+          // the Promise used to respond
           val okToRespond = Promise[Either[(StatusCode,String),ResultsRow]]()
 
           //Schedule the timeout
@@ -112,11 +113,11 @@ if not
 
           val requestId = UUID.randomUUID()
           //put id -> okToRespondIfNewData in a map so that outside processes can trigger it
-          QepQueryDbChangeNotifier.putLongPollRequest(requestId,queryId,okToRespondIfNewData)
+          qepQueryDbChangeNotifier.putLongPollRequest(requestId,queryId,okToRespondIfNewData)
 
           onSuccess(okToRespond.future){ latestResultsRow:Either[(StatusCode,String),ResultsRow] =>
             //clean up concurrent bits before responding
-            QepQueryDbChangeNotifier.removeLongPollRequest(requestId)
+            qepQueryDbChangeNotifier.removeLongPollRequest(requestId)
             timeoutCanceller.cancel()
             completeWithQueryResult(latestResultsRow)
           }
