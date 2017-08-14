@@ -7,7 +7,7 @@ import net.shrine.audit.{NetworkQueryId, QueryName, Time}
 import net.shrine.authorization.steward.UserName
 import net.shrine.i2b2.protocol.pm.User
 import net.shrine.log.Loggable
-import net.shrine.problem.ProblemDigest
+import net.shrine.problem.{AbstractProblem, ProblemDigest, ProblemSources}
 import net.shrine.protocol.ResultOutputType
 import net.shrine.qep.querydb.{FullQueryResult, QepQuery, QepQueryBreakdownResultsRow, QepQueryDb, QepQueryDbChangeNotifier, QepQueryFlag}
 import net.shrine.source.ConfigSource
@@ -22,6 +22,7 @@ import scala.concurrent.Promise
 import scala.concurrent.duration._
 import scala.language.postfixOps
 import scala.util.Try
+import scala.util.control.NonFatal
 
 /**
   * An API to support the web client's work with queries.
@@ -103,7 +104,9 @@ if not
           val okToRespondTimeout = Promise[Unit]()
           okToRespondTimeout.future.transform({unit =>
             okToRespond.tryComplete(Try(selectResultsRow(queryId, user)))
-          },{x => x})//todo some logging
+          },{x:Throwable =>  x match {case NonFatal(t) => ExceptionWhilePreparingTimeoutResponse(queryId,t)}
+            x
+          })
           val timeLeft = (deadline - System.currentTimeMillis()) milliseconds
           case class TriggerRunnable(networkQueryId: NetworkQueryId,promise: Promise[Unit]) extends Runnable {
             val unit:Unit = ()
@@ -118,7 +121,9 @@ if not
             if(shouldRespondNow(deadline,afterVersion,latestResultsRow)) {
               okToRespond.tryComplete(Try(selectResultsRow(queryId, user)))
             }
-          },{x => x})//todo some logging
+          },{x:Throwable =>  x match {case NonFatal(t) => ExceptionWhilePreparingTriggeredResponse(queryId,t)}
+            x
+          })
 
           val requestId = UUID.randomUUID()
           //put id -> okToRespondIfNewData in a map so that outside processes can trigger it
@@ -358,3 +363,21 @@ object BreakdownResultsForType {
 }
 
 case class BreakdownResult(dataKey:String,value:Long,changeDate:Long)
+
+case class ExceptionWhilePreparingTriggeredResponse(networkQueryId: NetworkQueryId,x:Throwable) extends AbstractProblem(ProblemSources.Qep) {
+
+  override def throwable = Some(x)
+
+  override def summary: String = "Unable to prepare a triggered response due to an exception."
+
+  override def description: String = s"Unable to prepare a promised response for query $networkQueryId due to a ${x.getClass.getSimpleName}"
+}
+
+case class ExceptionWhilePreparingTimeoutResponse(networkQueryId: NetworkQueryId,x:Throwable) extends AbstractProblem(ProblemSources.Qep) {
+
+  override def throwable = Some(x)
+
+  override def summary: String = "Unable to prepare a triggered response due to an exception."
+
+  override def description: String = s"Unable to prepare a promised response for $networkQueryId due to a ${x.getClass.getSimpleName}"
+}
