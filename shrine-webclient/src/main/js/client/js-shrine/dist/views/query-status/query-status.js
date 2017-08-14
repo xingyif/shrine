@@ -78,11 +78,12 @@ System.register(['services/query-status.model', 'services/pub-sub'], function (_
                         return _this.publish(_this.commands.shrine.fetchQuery, id);
                     });
                     _this.subscribe(_this.notifications.shrine.queryReceived, function (data) {
-                        _this.status.query = _extends({}, _this.status.query, data.query);
-                        _this.status.nodes = data.nodes;
-                        _this.status.updated = Number(new Date());
+                        var query = data.query;
+                        var nodes = data.nodes;
+                        var updated = Number(new Date());
                         var complete = data.query.complete;
                         var networkId = data.query.networkId;
+                        _this.status = _extends({}, _this.status, { query: query, nodes: nodes, updated: updated });
                         if (!complete) {
                             window.setTimeout(function () {
                                 return publishFetchQuery(networkId);

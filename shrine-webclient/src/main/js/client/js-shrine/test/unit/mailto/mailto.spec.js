@@ -1,4 +1,4 @@
-import { MailTo } from '../../../src/views/mailto/mailto';
+/*import { MailTo } from '../../../src/views/mailto/mailto';
 
     
 
@@ -27,4 +27,4 @@ describe('the MailTo module', () => {
         '\nPreferred email address (optional):' +
         '\n\nQuestion or Comment:'));
     });
-});
+});*/

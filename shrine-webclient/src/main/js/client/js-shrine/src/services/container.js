@@ -5,9 +5,7 @@ export class Container {
     }
 
     static of(value) {
-        return new Container(function() {
-            return value;
-        });
+        return new Container(() => value);
     }
 
     get value() {

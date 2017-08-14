@@ -10,7 +10,7 @@ System.register([], function (_export, _context) {
         }));
 
         var customPrefix = 'custom';
-        var custom = ['error/error', 'breakdown/breakdown', 'node-result/node-result', 'node-status/node-status'];
+        var custom = ['error/error', 'breakdown/breakdown', 'node-result/node-result', 'node-status/node-status', 'patient-count/patient-count'];
         aurelia.globalResources.apply(aurelia, custom.map(function (c) {
             return './' + customPrefix + '/' + c;
         }));

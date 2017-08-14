@@ -15,7 +15,8 @@ export function configure(aurelia) {
         'error/error',
         'breakdown/breakdown',
         'node-result/node-result',
-        'node-status/node-status'
+        'node-status/node-status',
+        'patient-count/patient-count'
     ];
     aurelia.globalResources(...custom.map(c => `./${customPrefix}/${c}`));
 }

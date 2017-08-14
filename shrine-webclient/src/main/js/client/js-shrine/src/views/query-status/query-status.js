@@ -12,13 +12,13 @@ export class QueryStatus extends PubSub {
             this.status.query.queryName = n;
         });
         this.subscribe(this.notifications.i2b2.networkIdReceived, id => this.publish(this.commands.shrine.fetchQuery, id));
-        this.subscribe(this.notifications.shrine.queryReceived, data => {
-            // -- @todo: centralize the logic, investigate adding a new "status" every time -- //
-            this.status.query = { ...this.status.query, ...data.query };
-            this.status.nodes = data.nodes;
-            this.status.updated = Number(new Date());
+        this.subscribe(this.notifications.shrine.queryReceived, data => {    
+            const query = data.query;
+            const nodes = data.nodes;
+            const updated = Number(new Date());
             const complete = data.query.complete;
             const networkId = data.query.networkId;
+            this.status = {...this.status, ...{query, nodes, updated}}
             if (!complete) {
                 window.setTimeout(() => publishFetchQuery(networkId), 10000);
             }
