@@ -40,7 +40,8 @@ final case class RunQueryAdapter(
   breakdownTypes: Set[ResultOutputType],
   collectAdapterAudit:Boolean,
   botCountTimeThresholds:Seq[(Long,Duration)],
-  obfuscator: Obfuscator
+  obfuscator: Obfuscator,
+  delayResponse: Duration = Duration.Zero
 ) extends CrcAdapter[RunQueryRequest, RunQueryResponse](poster, hiveCredentials) {
 
   logStartup()
@@ -68,6 +69,7 @@ final case class RunQueryAdapter(
 
     val runQueryReq = message.request.asInstanceOf[RunQueryRequest]
 
+    //todo remove this behavior with the special HMS-only identity code
     //We need to use the network identity from the BroadcastMessage, since that will have the network username 
     //(ie, ecommons) of the querying user. Using the AuthenticationInfo from the incoming request breaks the fetching
     //of previous queries on deployed systems where the credentials in the identity param to this method and the authn
@@ -81,7 +83,9 @@ final case class RunQueryAdapter(
       storeQuery(authnToUse, message, runQueryReq)
 
     } else {
-      debug(s"Performing query from user ${message.networkAuthn.domain}:${message.networkAuthn.username}")
+      debug(s"Performing query from user ${message.networkAuthn.domain}:${message.networkAuthn.username} (delayResponse $delayResponse)")
+
+      if(delayResponse.toMillis > 0) Thread.sleep(delayResponse.toMillis)
 
       val result: ShrineResponse = runQuery(authnToUse, message.copy(request = runQueryReq.withAuthn(authnToUse)), runQueryReq.withAuthn(authnToUse))
       if (collectAdapterAudit) AdapterAuditDb.db.insertResultSent(runQueryReq.networkQueryId,result)
