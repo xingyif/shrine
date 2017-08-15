@@ -1,5 +1,7 @@
-#!/bin/bash
+#!/bin/bash -x
 # Deploys SHRINE local builds into vagrant box after maven build
+# For subprojects that can produce a .war file, install the .war file in a SHRINE vagrant with
+# > mvn exec:exec
 
 #--------------MODIFIABLE------------------------
 # Change this to be: a list of destination vagrant machine names

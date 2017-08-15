@@ -83,7 +83,7 @@ final case class RunQueryAdapter(
       storeQuery(authnToUse, message, runQueryReq)
 
     } else {
-      debug(s"Performing query from user ${message.networkAuthn.domain}:${message.networkAuthn.username}")
+      debug(s"Performing query from user ${message.networkAuthn.domain}:${message.networkAuthn.username} (delayResponse $delayResponse)")
 
       if(delayResponse.toMillis > 0) Thread.sleep(delayResponse.toMillis)
 
