@@ -86,7 +86,7 @@ System.register(['services/query-status.model', 'services/pub-sub'], function (_
                         _this.status = _extends({}, _this.status, { query: query, nodes: nodes, updated: updated });
                         if (!complete) {
                             window.setTimeout(function () {
-                                return publishFetchQuery(networkId);
+                                return _this.publish(_this.commands.shrine.fetchQuery, networkId);
                             }, 10000);
                         }
                     });
