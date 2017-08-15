@@ -3,15 +3,14 @@ package net.shrine.metadata
 import akka.event.Logging
 import net.shrine.log.Loggable
 import net.shrine.mom.{LocalHornetQMom, Message, MessageSerializer, Queue}
-import org.json4s.native.JsonMethods._
 import org.json4s.native.Serialization
-import org.json4s.native.Serialization.write
-import org.json4s.{JValue, NoTypeHints, _}
+import org.json4s.native.Serialization.{read, write}
+import org.json4s.{NoTypeHints, _}
 import spray.http.StatusCodes
 import spray.routing.directives.LogEntry
 import spray.routing.{HttpService, Route}
-import scala.collection.immutable.Seq
 
+import scala.collection.immutable.Seq
 import scala.concurrent.duration.Duration
 /**
   * A web API that provides access to the internal HornetQMom library.
@@ -73,9 +72,8 @@ trait HornetQMomWebApi extends HttpService
   def acknowledge: Route = path("acknowledge") {
     entity(as[String]) { messageJSON =>
       implicit val formats: Formats = Serialization.formats(NoTypeHints) + new MessageSerializer
-      val messageJValue: JValue = parse(messageJSON)
       try {
-        val msg: Message = messageJValue.extract[Message](formats, manifest[Message])
+        val msg: Message = read[Message](messageJSON)(formats, manifest[Message])
         LocalHornetQMom.completeMessage(msg)
         complete(StatusCodes.ResetContent)
       } catch {
@@ -89,12 +87,8 @@ trait HornetQMomWebApi extends HttpService
   // Returns the names of the queues created on this server. Seq[Any]
   def getQueues: Route = path("getQueues") {
     get {
-      val queues = LocalHornetQMom.queues
-
       implicit val formats = Serialization.formats(NoTypeHints)
-      val response = write[Seq[Queue]](queues)(formats)
-
-      respondWithStatus(StatusCodes.OK) {complete(response)}
+      respondWithStatus(StatusCodes.OK) {complete(write[Seq[Queue]](LocalHornetQMom.queues)(formats))}
     }
   }
 
