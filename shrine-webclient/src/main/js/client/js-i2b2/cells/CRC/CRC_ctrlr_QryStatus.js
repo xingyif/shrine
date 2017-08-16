@@ -336,7 +336,15 @@ i2b2.CRC.ctrlr.QueryStatus.prototype = function () {
 			var networkId = results.refXML.getElementsByTagName('query_master_id')[0].firstChild.nodeValue;
 			i2b2.events.networkIdReceived.fire({networkId: networkId});
 			i2b2.CRC.ctrlr.history.Refresh();
+			clearQuery();
+		}
+
+		function clearQuery() {
+			clearInterval(private_refreshInterrupt);
+			private_refreshInterrupt = false;
+			private_singleton_isRunning = false;
 			$('runBoxText').innerHTML = "Run Query";
+			i2b2.CRC.ctrlr.currentQueryStatus = false;
 		}
 
         /**

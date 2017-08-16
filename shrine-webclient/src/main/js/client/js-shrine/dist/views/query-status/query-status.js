@@ -1,7 +1,7 @@
-System.register(['services/query-status.model', 'services/pub-sub'], function (_export, _context) {
+System.register(['aurelia-framework', 'services/query-status.model', 'services/pub-sub'], function (_export, _context) {
     "use strict";
 
-    var QueryStatusModel, PubSub, _extends, _class, _temp, QueryStatus;
+    var customElement, QueryStatusModel, PubSub, _extends, _dec, _class, _class2, _temp, QueryStatus, privateProps, initialState;
 
     function _classCallCheck(instance, Constructor) {
         if (!(instance instanceof Constructor)) {
@@ -34,7 +34,9 @@ System.register(['services/query-status.model', 'services/pub-sub'], function (_
     }
 
     return {
-        setters: [function (_servicesQueryStatusModel) {
+        setters: [function (_aureliaFramework) {
+            customElement = _aureliaFramework.customElement;
+        }, function (_servicesQueryStatusModel) {
             QueryStatusModel = _servicesQueryStatusModel.QueryStatusModel;
         }, function (_servicesPubSub) {
             PubSub = _servicesPubSub.PubSub;
@@ -54,7 +56,7 @@ System.register(['services/query-status.model', 'services/pub-sub'], function (_
                 return target;
             };
 
-            _export('QueryStatus', QueryStatus = (_temp = _class = function (_PubSub) {
+            _export('QueryStatus', QueryStatus = (_dec = customElement('query-status'), _dec(_class = (_temp = _class2 = function (_PubSub) {
                 _inherits(QueryStatus, _PubSub);
 
                 function QueryStatus(queryStatus) {
@@ -66,45 +68,54 @@ System.register(['services/query-status.model', 'services/pub-sub'], function (_
 
                     var _this = _possibleConstructorReturn(this, _PubSub.call.apply(_PubSub, [this].concat(rest)));
 
-                    var initialState = function initialState() {
-                        return { query: { queryName: null, updated: null, complete: false }, nodes: null };
-                    };
-                    _this.status = initialState();
+                    privateProps.set(_this, {
+                        isDevEnv: document.location.href.includes('http://localhost:8000/')
+                    });
+                    return _this;
+                }
 
-                    _this.subscribe(_this.notifications.i2b2.queryStarted, function (n) {
-                        _this.status.query.queryName = n;
+                QueryStatus.prototype.attached = function attached() {
+                    var _this2 = this;
+
+                    this.subscribe(this.notifications.i2b2.queryStarted, function (n) {
+                        _this2.status = initialState();
+                        _this2.status.query.queryName = n;
                     });
-                    _this.subscribe(_this.notifications.i2b2.networkIdReceived, function (id) {
-                        return _this.publish(_this.commands.shrine.fetchQuery, id);
+                    this.subscribe(this.notifications.i2b2.networkIdReceived, function (id) {
+                        return _this2.publish(_this2.commands.shrine.fetchQuery, id);
                     });
-                    _this.subscribe(_this.notifications.shrine.queryReceived, function (data) {
+                    this.subscribe(this.notifications.shrine.queryReceived, function (data) {
                         var query = data.query;
                         var nodes = data.nodes;
                         var updated = Number(new Date());
                         var complete = data.query.complete;
                         var networkId = data.query.networkId;
-                        _this.status = _extends({}, _this.status, { query: query, nodes: nodes, updated: updated });
+                        _this2.status = _extends({}, _this2.status, { query: query, nodes: nodes, updated: updated });
                         if (!complete) {
                             window.setTimeout(function () {
-                                return _this.publish(_this.commands.shrine.fetchQuery, networkId);
+                                return _this2.publish(_this2.commands.shrine.fetchQuery, networkId);
                             }, 10000);
                         } else {
-                            _this.publish(_this.commands.shrine.exportResult, _extends({}, _this.status));
+                            _this2.publish(_this2.commands.shrine.exportResult, _extends({}, _this2.status));
                         }
                     });
 
-                    var isDevEnv = document.location.href.includes('http://localhost:8000/');
-                    if (isDevEnv) {
-                        _this.publish(_this.notifications.i2b2.queryStarted, "started query");
-                        _this.publish(_this.notifications.i2b2.networkIdReceived, 1);
+                    if (privateProps.get(this).isDevEnv) {
+                        this.publish(this.notifications.i2b2.queryStarted, "started query");
+                        this.publish(this.notifications.i2b2.networkIdReceived, 1);
                     }
-                    return _this;
-                }
+                };
 
                 return QueryStatus;
-            }(PubSub), _class.inject = [QueryStatusModel], _temp));
+            }(PubSub), _class2.inject = [QueryStatusModel], _temp)) || _class));
 
             _export('QueryStatus', QueryStatus);
+
+            privateProps = new WeakMap();
+
+            initialState = function initialState() {
+                return { query: { queryName: null, updated: null, complete: false }, nodes: null };
+            };
         }
     };
 });
