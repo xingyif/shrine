@@ -5,7 +5,7 @@ import net.shrine.log.Loggable
 import net.shrine.mom.{LocalHornetQMom, Message, MessageSerializer, Queue}
 import org.json4s.native.Serialization
 import org.json4s.native.Serialization.{read, write}
-import org.json4s.{NoTypeHints, _}
+import org.json4s.{Formats, NoTypeHints}
 import spray.http.StatusCodes
 import spray.routing.directives.LogEntry
 import spray.routing.{HttpService, Route}
@@ -23,13 +23,14 @@ trait HornetQMomWebApi extends HttpService
   with Loggable {
 
   def momRoute: Route = pathPrefix("mom") {
-    put {
-      createQueue ~
-        deleteQueue ~
-        sendMessage ~
-        acknowledge
-    } ~ receiveMessage ~ getQueues
+    detach() {
+      put {
+        createQueue ~
+          sendMessage ~
+          acknowledge
+      } ~ receiveMessage ~ getQueues ~ deleteQueue
     }
+  }
 
   // SQS returns CreateQueueResult, which contains queueUrl: String
   def createQueue: Route =
@@ -45,8 +46,10 @@ trait HornetQMomWebApi extends HttpService
   // SQS takes in DeleteMessageRequest, which contains a queueUrl: String and a ReceiptHandle: String
   // returns a DeleteMessageResult, toString for debugging
   def deleteQueue: Route = path("deleteQueue" / Segment) { queueName =>
-    LocalHornetQMom.deleteQueue(queueName)
-    complete(StatusCodes.OK)
+    delete {
+      LocalHornetQMom.deleteQueue(queueName)
+      complete(StatusCodes.OK)
+    }
   }
 
   // SQS sendMessage(String queueUrl, String messageBody) => SendMessageResult

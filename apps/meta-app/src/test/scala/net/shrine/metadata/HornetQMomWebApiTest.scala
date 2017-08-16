@@ -68,7 +68,7 @@ class HornetQMomWebApiTest extends FlatSpec with ScalatestRouteTest with HornetQ
       assertResult(ResetContent)(status)
     }
 
-    Put(s"/mom/deleteQueue/$queueName") ~> momRoute ~> check {
+    Delete(s"/mom/deleteQueue/$queueName") ~> momRoute ~> check {
       assertResult(OK)(status)
     }
   }

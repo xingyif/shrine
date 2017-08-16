@@ -82,7 +82,7 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
 
   override def deleteQueue(queueName: String): Unit = {
     val deleteQueueUrl = momUrl + s"/deleteQueue/$queueName"
-    val request: HttpRequest = HttpRequest(HttpMethods.PUT, deleteQueueUrl)
+    val request: HttpRequest = HttpRequest(HttpMethods.DELETE, deleteQueueUrl)
     lazy val response: HttpResponse = HttpClient.webApiCall(request) // StatusCodes.OK
     Try ({
       response
@@ -178,7 +178,7 @@ case class ReplyHasUnexpectedStatusCode(request: HttpRequest, response: HttpResp
       s"\n Response entity: ${response.entity.asString}"
   }
 
-  def getFailureCause: String = s"The given request: $request has an unexpected response statusCode: ${response.status}"
+  def getDetails: String = s"The given request: $request has an unexpected response statusCode: ${response.status}"
 }
 
 case class CouldNotDecipherGivenJsonAsSpecifiedException(request: HttpRequest) extends Exception {
@@ -186,6 +186,6 @@ case class CouldNotDecipherGivenJsonAsSpecifiedException(request: HttpRequest) e
     s"\n Failed to decipher the given request: ${request.uri} given entity: ${request.entity}"
   }
 
-  def getFailureCause: String = s"The given JSON entity should be a serialized JSON String of Message."
+  def getDetails: String = s"The given JSON entity should be a serialized JSON String of Message."
 
 }
