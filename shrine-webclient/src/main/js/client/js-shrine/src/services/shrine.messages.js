@@ -25,6 +25,7 @@ export const commands = {
     },
 
     shrine: {
-        fetchQuery: 'command.to.shrine.fetch.query'
+        fetchQuery: 'command.to.shrine.fetch.query',
+        exportResult: 'command.to.shrine.export.result'
     }
 }

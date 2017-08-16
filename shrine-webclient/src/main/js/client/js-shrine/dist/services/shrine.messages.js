@@ -34,7 +34,8 @@ System.register([], function (_export, _context) {
                 },
 
                 shrine: {
-                    fetchQuery: 'command.to.shrine.fetch.query'
+                    fetchQuery: 'command.to.shrine.fetch.query',
+                    exportResult: 'command.to.shrine.export.result'
                 }
             });
 

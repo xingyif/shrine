@@ -1,5 +1,5 @@
-import { QueryStatusModel } from 'services/query-status.model';
-import { PubSub } from 'services/pub-sub'
+import {QueryStatusModel} from 'services/query-status.model';
+import {PubSub} from 'services/pub-sub';
 export class QueryStatus extends PubSub {
     static inject = [QueryStatusModel];
     constructor(queryStatus, ...rest) {
@@ -21,6 +21,9 @@ export class QueryStatus extends PubSub {
             this.status = {...this.status, ...{query, nodes, updated}}
             if (!complete) {
                 window.setTimeout(() => this.publish(this.commands.shrine.fetchQuery, networkId), 10000);
+            }
+            else {
+                this.publish(this.commands.shrine.exportResult, {...{}, ...this.status});
             }
         });
 

@@ -88,6 +88,8 @@ System.register(['services/query-status.model', 'services/pub-sub'], function (_
                             window.setTimeout(function () {
                                 return _this.publish(_this.commands.shrine.fetchQuery, networkId);
                             }, 10000);
+                        } else {
+                            _this.publish(_this.commands.shrine.exportResult, _extends({}, _this.status));
                         }
                     });
 
