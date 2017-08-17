@@ -113,6 +113,7 @@ object LocalHornetQMom extends MessageQueueService {
     * @return Some message before the timeout, or None
     */
   def receive(from:Queue,timeout:Duration):Option[Message] = {
+    // todo check if queue exists, if not throw exception
     val messageConsumer: ClientConsumer = queuesToConsumers(from) //todo handle the case where either stop or close has been called on something gracefully
     blocking {
       val messageReceived: Option[ClientMessage] = Option(messageConsumer.receive(timeout.toMillis))

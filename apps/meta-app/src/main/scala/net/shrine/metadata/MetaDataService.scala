@@ -23,9 +23,9 @@ trait MetaDataService extends HttpService
   lazy val route: Route = logRequestResponse(logEntryForRequestResponse _) {
     //logging is controlled by Akka's config, slf4j, and log4j config
     metaDataRoute ~
+      hornetQMomRoute ~
       staticDataRoute ~
-      authenticatedRoute ~
-      hornetQMomRoute
+      authenticatedRoute
   }
 
   //todo use this

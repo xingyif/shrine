@@ -1,5 +1,6 @@
+package net.shrine.metadata
+
 import akka.actor.ActorRefFactory
-import net.shrine.metadata.HornetQMomWebApi
 import net.shrine.mom.{Message, MessageSerializer, Queue}
 import org.json4s.NoTypeHints
 import org.json4s.native.Serialization
@@ -10,7 +11,7 @@ import org.scalatest.junit.JUnitRunner
 import spray.http.HttpEntity
 import spray.http.StatusCodes._
 import spray.testkit.ScalatestRouteTest
-
+import scala.collection.immutable.Seq
 /**
   * Created by yifan on 7/27/17.
   */
@@ -24,7 +25,7 @@ class HornetQMomWebApiTest extends FlatSpec with ScalatestRouteTest with HornetQ
   private val messageContent = "testContent"
   private var receivedMessage: String = ""
 
-  "RemoteHornetQMom" should "create/delete the given queue, send/receive message, get queues" in {
+  "HornetQMomWebApi" should "create/delete the given queue, send/receive message, get queues" in {
 
     Put(s"/mom/createQueue/$queueName") ~> momRoute ~> check {
       val response = new String(body.data.toByteArray)
@@ -64,10 +65,10 @@ class HornetQMomWebApiTest extends FlatSpec with ScalatestRouteTest with HornetQ
     Put("/mom/acknowledge", HttpEntity(s"""$receivedMessage""")) ~>
       momRoute ~> check {
       implicit val formats = Serialization.formats(NoTypeHints) + new MessageSerializer
-      assertResult(NoContent)(status)
+      assertResult(ResetContent)(status)
     }
 
-    Put(s"/mom/deleteQueue/$queueName") ~> momRoute ~> check {
+    Delete(s"/mom/deleteQueue/$queueName") ~> momRoute ~> check {
       assertResult(OK)(status)
     }
   }
