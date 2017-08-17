@@ -28,7 +28,7 @@ class MetaDataServiceTest extends FlatSpec with ScalatestRouteTest with MetaData
       val result = new String(body.data.toByteArray)
 
       assertResult(OK)(status)
-      assertResult("pongpongpong...!")(result)
+      assertResult("pong")(result)
     }
   }
 
