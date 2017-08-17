@@ -1,8 +1,8 @@
-package net.shrine.metadata
+package net.shrine.messagequeue.hornetqmom
 
 import akka.event.Logging
 import net.shrine.log.Loggable
-import net.shrine.mom.{LocalHornetQMom, Message, MessageSerializer, Queue}
+import net.shrine.messagequeue.messagequeueservice.{Message, MessageSerializer, Queue}
 import org.json4s.native.Serialization
 import org.json4s.native.Serialization.{read, write}
 import org.json4s.{Formats, NoTypeHints}

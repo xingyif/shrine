@@ -1,9 +1,11 @@
-package net.shrine.mom
+package net.shrine.messagequeue.hornetqmom
 
+import net.shrine.messagequeue.messagequeueservice.Message
 import org.junit.runner.RunWith
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers}
+
 import scala.collection.immutable.Seq
 import scala.concurrent.duration._
 import scala.language.postfixOps

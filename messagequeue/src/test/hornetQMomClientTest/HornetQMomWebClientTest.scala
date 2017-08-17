@@ -14,7 +14,7 @@
 // #2. Load file in REPL:
 // :load <path-to-file>
 
-import net.shrine.metadata.HornetQMomWebClient
+import net.shrine.messagequeue.hornetqclient.HornetQMomWebClient
 val firstQueue = HornetQMomWebClient.createQueueIfAbsent("q1")
 HornetQMomWebClient.send("firstMessage", firstQueue)
 import scala.concurrent.duration.Duration

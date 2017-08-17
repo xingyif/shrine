@@ -1,7 +1,7 @@
-package net.shrine.metadata
+package net.shrine.messagequeue.hornetqmom
 
 import akka.actor.ActorRefFactory
-import net.shrine.mom.{Message, MessageSerializer, Queue}
+import net.shrine.messagequeue.messagequeueservice.{Message, MessageSerializer, Queue}
 import org.json4s.NoTypeHints
 import org.json4s.native.Serialization
 import org.json4s.native.Serialization.read
@@ -11,6 +11,7 @@ import org.scalatest.junit.JUnitRunner
 import spray.http.HttpEntity
 import spray.http.StatusCodes._
 import spray.testkit.ScalatestRouteTest
+
 import scala.collection.immutable.Seq
 /**
   * Created by yifan on 7/27/17.

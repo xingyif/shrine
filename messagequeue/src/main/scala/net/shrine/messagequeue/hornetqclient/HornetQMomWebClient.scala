@@ -1,8 +1,9 @@
-package net.shrine.metadata
+package net.shrine.messagequeue.hornetqclient
 
 import akka.actor.{Actor, ActorRef, ActorRefFactory, ActorSystem, Props}
 import net.shrine.log.Loggable
-import net.shrine.mom.{HttpClient, Message, MessageQueueService, MessageSerializer, Queue}
+import net.shrine.messagequeue.messagequeueservice.HttpClient
+import net.shrine.messagequeue.messagequeueservice.{Message, MessageQueueService, MessageSerializer, Queue}
 import net.shrine.source.ConfigSource
 import org.json4s.native.Serialization
 import org.json4s.native.Serialization.{read, write}
@@ -25,42 +26,42 @@ import scala.util.control.NonFatal
 object HornetQMomWebClient extends MessageQueueService with Loggable {
 
   // we need an ActorSystem to host our application in
-  implicit val system: ActorSystem = startActorSystem()
+  implicit val system: ActorSystem = ActorSystem("momServer", ConfigSource.config)
 
   // the service actor replies to incoming HttpRequests
-  implicit val serviceActor: ActorRef = startServiceActor()
+//  implicit val serviceActor: ActorRef = startServiceActor()
 
-  def startActorSystem(): ActorSystem = try {
-    val actorSystem: ActorSystem = ActorSystem("momServer", ConfigSource.config)
-    info(s"Starting ActorSystem: ${actorSystem.name} for HornetQMomWebClient at time: ${actorSystem.startTime}")
-    actorSystem
-  } catch {
-    case NonFatal(x) => {
-      debug(s"NonFatalException thrown while starting ActorSystem for HornetQMomWebClient: ${x.getMessage}")
-      throw x
-    }
-    case x: ExceptionInInitializerError => {
-      debug(s"ExceptionInInitializerError thrown while starting ActorSystem for HornetQMomWebClient: ${x.getMessage}")
-      throw x
-    }
-  }
-
-  def startServiceActor(): ActorRef = try {
-    // the service actor replies to incoming HttpRequests
-    val actor: ActorRef = system.actorOf(Props[HornetQMomWebClientServiceActor])
-    info(s"Starting ServiceActor: ${actor.toString()} for HornetQMomWebClient")
-    actor
-  }
-  catch {
-    case NonFatal(x) => {
-      debug(s"NonFatalException thrown while starting ServiceActor for HornetQMomWebClient: ${x.getMessage}")
-      throw x
-    }
-    case x: ExceptionInInitializerError => {
-      debug(s"ExceptionInInitializerError thrown while starting ServiceActor for HornetQMomWebClient: ${x.getMessage}")
-      throw x
-    }
-  }
+//  def startActorSystem(): ActorSystem = try {
+//    val actorSystem: ActorSystem = ActorSystem("momServer", ConfigSource.config)
+//    info(s"Starting ActorSystem: ${actorSystem.name} for HornetQMomWebClient at time: ${actorSystem.startTime}")
+//    actorSystem
+//  } catch {
+//    case NonFatal(x) => {
+//      debug(s"NonFatalException thrown while starting ActorSystem for HornetQMomWebClient: ${x.getMessage}")
+//      throw x
+//    }
+//    case x: ExceptionInInitializerError => {
+//      debug(s"ExceptionInInitializerError thrown while starting ActorSystem for HornetQMomWebClient: ${x.getMessage}")
+//      throw x
+//    }
+//  }
+//
+//  def startServiceActor(): ActorRef = try {
+//    // the service actor replies to incoming HttpRequests
+//    val actor: ActorRef = system.actorOf(Props[HornetQMomWebClientServiceActor])
+//    info(s"Starting ServiceActor: ${actor.toString()} for HornetQMomWebClient")
+//    actor
+//  }
+//  catch {
+//    case NonFatal(x) => {
+//      debug(s"NonFatalException thrown while starting ServiceActor for HornetQMomWebClient: ${x.getMessage}")
+//      throw x
+//    }
+//    case x: ExceptionInInitializerError => {
+//      debug(s"ExceptionInInitializerError thrown while starting ServiceActor for HornetQMomWebClient: ${x.getMessage}")
+//      throw x
+//    }
+//  }
 
   val momUrl: String = ConfigSource.config.getString("shrine.mom.hornetq.serverUrl")
 
@@ -137,18 +138,18 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
   }
 }
 
-class HornetQMomWebClientServiceActor extends Actor with MetaDataService {
-
-  // the HttpService trait defines only one abstract member, which
-  // connects the services environment to the enclosing actor or test
-  def actorRefFactory: ActorRefFactory = context
-
-  // this actor only runs our route, but you could add
-  // other things here, like request stream processing
-  // or timeout handling
-  def receive: Receive = runRoute(route)
-
-  override implicit val ec: ExecutionContext = ExecutionContext.Implicits.global
-
-  override def system: ActorSystem = context.system
-}
+//class HornetQMomWebClientServiceActor extends Actor with MetaDataService {
+//
+//  // the HttpService trait defines only one abstract member, which
+//  // connects the services environment to the enclosing actor or test
+//  def actorRefFactory: ActorRefFactory = context
+//
+//  // this actor only runs our route, but you could add
+//  // other things here, like request stream processing
+//  // or timeout handling
+//  def receive: Receive = runRoute(route)
+//
+//  override implicit val ec: ExecutionContext = ExecutionContext.Implicits.global
+//
+//  override def system: ActorSystem = context.system
+//}

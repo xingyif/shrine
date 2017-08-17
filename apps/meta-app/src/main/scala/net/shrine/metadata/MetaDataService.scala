@@ -4,6 +4,7 @@ import akka.event.Logging
 import net.shrine.authentication.UserAuthenticator
 import net.shrine.i2b2.protocol.pm.User
 import net.shrine.log.Loggable
+import net.shrine.messagequeue.hornetqmom.HornetQMomWebApi
 import net.shrine.source.ConfigSource
 import spray.http.{HttpRequest, HttpResponse}
 import spray.routing.directives.LogEntry

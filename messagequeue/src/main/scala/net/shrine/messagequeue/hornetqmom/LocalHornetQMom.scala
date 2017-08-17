@@ -1,10 +1,7 @@
-/**
-  * Created by yifan on 7/24/17.
-  */
-
-package net.shrine.mom
+package net.shrine.messagequeue.hornetqmom
 
 import com.typesafe.config.Config
+import net.shrine.messagequeue.messagequeueservice.{Message, MessageQueueService, Queue}
 import net.shrine.source.ConfigSource
 import org.hornetq.api.core.client.{ClientConsumer, ClientMessage, ClientSession, ClientSessionFactory, HornetQClient, ServerLocator}
 import org.hornetq.api.core.management.HornetQServerControl
@@ -13,18 +10,19 @@ import org.hornetq.core.config.impl.ConfigurationImpl
 import org.hornetq.core.remoting.impl.invm.{InVMAcceptorFactory, InVMConnectorFactory}
 import org.hornetq.core.server.{HornetQServer, HornetQServers}
 
+import scala.collection.immutable.Seq
+import scala.concurrent.blocking
+import scala.concurrent.duration.Duration
 import scala.collection.concurrent.{TrieMap, Map => ConcurrentMap}
 /**
   * This object is the local version of the Message-Oriented Middleware API, which uses HornetQ service
   * @author david
   * @since 7/18/17
   */
-import scala.collection.immutable.Seq
-import scala.concurrent.blocking
-import scala.concurrent.duration.Duration
+
 object LocalHornetQMom extends MessageQueueService {
 
-  val config:Config = ConfigSource.config.getConfig("shrine.hub.mom.hornetq")
+  val config:Config = ConfigSource.config.getConfig("shrine.messagequeue.hornetq")
 
   // todo use the config to set everything needed here that isn't hard-coded.
   val hornetQConfiguration = new ConfigurationImpl()
@@ -57,7 +55,7 @@ object LocalHornetQMom extends MessageQueueService {
   /**
     * Use HornetQMomStopper to stop the hornetQServer without unintentially starting it
     */
-  private[mom] def stop() = {
+  private[hornetqmom] def stop() = {
     queuesToConsumers.values.foreach(_.close())
 
     session.close()
@@ -138,7 +136,7 @@ object LocalHornetQMomStopper {
 
   def stop() = {
     //todo fill in as part of SHIRINE-2128
-    val config: Config = ConfigSource.config.getConfig("shrine.hub.mom.hornetq")
+    val config: Config = ConfigSource.config.getConfig("shrine.messagequeue.hornetq")
 
     LocalHornetQMom.stop()
   }

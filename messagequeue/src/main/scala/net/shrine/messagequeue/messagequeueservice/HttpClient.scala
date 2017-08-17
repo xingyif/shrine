@@ -1,4 +1,4 @@
-package net.shrine.mom
+package net.shrine.messagequeue.messagequeueservice
 
 import java.security.cert.X509Certificate
 import javax.net.ssl.{SSLContext, X509TrustManager}

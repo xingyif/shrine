@@ -1,4 +1,5 @@
-package net.shrine.mom
+package net.shrine.messagequeue.messagequeueservice
+
 import net.shrine.spray.DefaultJsonSupport
 import org.hornetq.api.core.client.ClientMessage
 import org.hornetq.core.client.impl.ClientMessageImpl
