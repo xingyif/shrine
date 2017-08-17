@@ -7,12 +7,12 @@ import net.shrine.source.ConfigSource
 import org.json4s.native.Serialization
 import org.json4s.native.Serialization.{read, write}
 import org.json4s.{Formats, NoTypeHints}
-import spray.http.{HttpEntity, HttpMethods, HttpRequest, HttpResponse, StatusCodes}
+import spray.http.{HttpEntity, HttpMethods, HttpRequest, HttpResponse}
 
 import scala.collection.immutable.Seq
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.Duration
-import scala.util.{Failure, Success, Try}
+import scala.util.Try
 import scala.util.control.NonFatal
 
 /**
