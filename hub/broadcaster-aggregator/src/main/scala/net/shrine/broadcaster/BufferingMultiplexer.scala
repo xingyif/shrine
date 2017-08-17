@@ -19,7 +19,9 @@ import net.shrine.protocol.SingleNodeResult
  * @date Nov 15, 2013
  */
 final class BufferingMultiplexer(broadcastTo: Set[NodeId]) extends Multiplexer with Loggable {
-  
+
+  //todo rename for SHRINE-2120
+  //todo if this code survives, change to a BlockingQueue and get rid of this lock
   private[this] val queue: Buffer[SingleNodeResult] = new ArrayBuffer
 
   private[this] val heardFrom = new AtomicInteger
@@ -37,7 +39,8 @@ final class BufferingMultiplexer(broadcastTo: Set[NodeId]) extends Multiplexer w
   override def responses: Future[Iterable[SingleNodeResult]] = promise.future
   
   override def processResponse(response: SingleNodeResult): Unit = {
-    val latestCount = locked { 
+
+    val latestCount = locked {
       queue += response 
     
       heardFrom.incrementAndGet
@@ -46,6 +49,7 @@ final class BufferingMultiplexer(broadcastTo: Set[NodeId]) extends Multiplexer w
     debug(s"Latest result count: $latestCount")//todo ; handled response" $response")
     
     if(latestCount == broadcastTo.size) {
+      //todo change to trySuccess or tryComplete
       promise.complete(Try(resultsSoFar))
     }
   }

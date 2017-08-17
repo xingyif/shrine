@@ -45,6 +45,7 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
   //Load config from file on the classpath called "shrine.conf"
   lazy val config: Config = ConfigSource.config
 
+  //todo for SHRINE-2120 , can access the QEP's node name from config!
   val shrineConfig = config.getConfig("shrine")
 
   protected lazy val nodeId: NodeId = NodeId(shrineConfig.getString("humanReadableNodeName"))

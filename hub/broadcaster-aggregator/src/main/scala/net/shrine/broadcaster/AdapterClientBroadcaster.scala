@@ -4,7 +4,7 @@ import net.shrine.adapter.client.{AdapterClient, RemoteAdapterClient}
 import net.shrine.broadcaster.dao.HubDao
 import net.shrine.client.TimeoutException
 import net.shrine.log.Loggable
-import net.shrine.protocol.{BroadcastMessage, FailureResult, FailureResult$, RunQueryRequest, SingleNodeResult, Timeout}
+import net.shrine.protocol.{BroadcastMessage, FailureResult, RunQueryRequest, SingleNodeResult, Timeout}
 
 import scala.concurrent.Future
 import scala.util.control.NonFatal
@@ -26,9 +26,14 @@ final case class AdapterClientBroadcaster(destinations: Set[NodeHandle], dao: Hu
 
     for {
       nodeHandle <- destinations
+//todo for SHRINE-2120      shrineResponse: SingleNodeResult <- callAdapter(message, nodeHandle)
       shrineResponse <- callAdapter(message, nodeHandle)
     } {
-      try { multiplexer.processResponse(shrineResponse) }
+      try {
+        //todo SHRINE-2120 send to the QEP queue here ... but how to tunnel in the additional piece ... where did the query come from ?
+        //message.request.
+        //todo send a shrineResponse.toXml .
+        multiplexer.processResponse(shrineResponse) }
       finally { logResultsIfNecessary(message, shrineResponse) }
     }
 

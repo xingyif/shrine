@@ -12,6 +12,7 @@ trait BaseShrineRequest extends ShrineMessage {
   def waitTime: Duration
   
   def requestType: RequestType
+  //todo maybe add a request-originated-from optional field here?
 }
 
 object BaseShrineRequest extends XmlUnmarshallers.Chained(ShrineRequest.fromXml, NonI2b2ShrineRequest.fromXml)

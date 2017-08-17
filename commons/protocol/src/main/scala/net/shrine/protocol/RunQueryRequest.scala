@@ -29,6 +29,7 @@ final case class RunQueryRequest(
   topicName: Option[String], //data steward when required only
   outputTypes: Set[ResultOutputType],
   queryDefinition: QueryDefinition
+  //todo pick up SHRINE-2174 here nodeId: Option[NodeId] = None
   ) extends ShrineRequest(projectId, waitTime, authn) with CrcRequest with TranslatableRequest[RunQueryRequest] with HandleableShrineRequest with HandleableI2b2Request {
 
   override val requestType = RequestType.QueryDefinitionRequest
@@ -55,7 +56,7 @@ final case class RunQueryRequest(
       </outputTypes>
       { queryDefinition.toXml }
     </runQuery>
-  }
+  } //todo put       { nodeId.map(_.toXml) } at the end for SHRINE-2174
 
   protected override def i2b2MessageBody: NodeSeq = XmlUtil.stripWhitespace {
     import OptionEnrichments._
@@ -139,7 +140,9 @@ object RunQueryRequest extends I2b2XmlUnmarshaller[RunQueryRequest] with ShrineX
         topicId,
         topicName,
         outputTypes,
-        queryDef)
+        queryDef
+        //None //todo inject the QEP's nodeId here for SHRINE-2120
+      )
     }
     
     attempt.map(addPatientCountXmlIfNecessary)
@@ -180,8 +183,9 @@ object RunQueryRequest extends I2b2XmlUnmarshaller[RunQueryRequest] with ShrineX
       topicName = (xml \ "topicName").headOption.map(XmlUtil.trim)
       outputTypes <- xml.withChild("outputTypes").map(determineShrineOutputTypes)
       queryDef <- xml.withChild(QueryDefinition.rootTagName).flatMap(QueryDefinition.fromXml)
+//      nodeId <- NodeId.fromXml(xml \ "nodeId")
     } yield {
-      RunQueryRequest(projectId, waitTime, authn, queryId, topicId, topicName, outputTypes, queryDef)
+      RunQueryRequest(projectId, waitTime, authn, queryId, topicId, topicName, outputTypes, queryDef)//, Some(nodeId))
     }
 
     attempt.map(addPatientCountXmlIfNecessary)

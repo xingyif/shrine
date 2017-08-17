@@ -14,7 +14,8 @@ import scala.concurrent.Await
 final case class BroadcasterMultiplexerService(broadcaster: Broadcaster, maxQueryWaitTime: Duration) extends BroadcasterMultiplexerRequestHandler {
   override def broadcastAndMultiplex(message: BroadcastMessage): Iterable[SingleNodeResult] = {
     val multiplexer = broadcaster.broadcast(message)
-    
+
+    //todo here's one end of a race condition waiting on a response from the Adapter.
     Await.result(multiplexer.responses, maxQueryWaitTime)
   }
 }
