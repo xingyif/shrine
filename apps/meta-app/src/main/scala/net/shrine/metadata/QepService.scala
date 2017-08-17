@@ -1,17 +1,28 @@
 package net.shrine.metadata
 
+import java.util.UUID
+
+import akka.actor.ActorSystem
 import net.shrine.audit.{NetworkQueryId, QueryName, Time}
 import net.shrine.authorization.steward.UserName
 import net.shrine.i2b2.protocol.pm.User
 import net.shrine.log.Loggable
-import net.shrine.problem.ProblemDigest
+import net.shrine.problem.{AbstractProblem, ProblemDigest, ProblemSources}
 import net.shrine.protocol.ResultOutputType
-import net.shrine.qep.querydb.{FullQueryResult, QepQuery, QepQueryBreakdownResultsRow, QepQueryDb, QepQueryFlag}
-import spray.routing._
+import net.shrine.qep.querydb.{FullQueryResult, QepQuery, QepQueryBreakdownResultsRow, QepQueryDb, QepQueryDbChangeNotifier, QepQueryFlag}
+import net.shrine.source.ConfigSource
 import rapture.json._
-import rapture.json.jsonBackends.jawn._
 import rapture.json.formatters.humanReadable
-import spray.http.StatusCodes
+import rapture.json.jsonBackends.jawn._
+import spray.http.{StatusCode, StatusCodes}
+import spray.routing._
+
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Promise
+import scala.concurrent.duration._
+import scala.language.postfixOps
+import scala.util.Try
+import scala.util.control.NonFatal
 
 /**
   * An API to support the web client's work with queries.
@@ -20,8 +31,12 @@ import spray.http.StatusCodes
   * information about queries running now and the ability to submit queries.
   */
 
-//todo move this to the qep/service module
+//todo move this to the qep/service module, or somewhere in the qep subproject
 trait QepService extends HttpService with Loggable {
+
+  def system: ActorSystem
+  val qepQueryDbChangeNotifier = QepQueryDbChangeNotifier(system)
+
   val qepInfo =
     """
       |The SHRINE query entry point service.
@@ -32,32 +47,148 @@ trait QepService extends HttpService with Loggable {
 
   def qepRoute(user: User): Route = pathPrefix("qep") {
     get {
-      queryResult(user) ~ queryResultsTable(user)
+      detach(){
+        queryResult(user) ~ queryResultsTable(user)
+      }
     } ~
       pathEndOrSingleSlash{complete(qepInfo)} ~
       respondWithStatus(StatusCodes.NotFound){complete(qepInfo)}
   }
 
-  def queryResult(user:User):Route = path("queryResult" / LongNumber){ queryId:NetworkQueryId =>
+  /*
+Races to complete are OK in spray. They're already happening, in fact.
 
-    val queryOption: Option[QepQuery] = QepQueryDb.db.selectQueryById(queryId)
-    queryOption.fold{
-      respondWithStatus(StatusCodes.NotFound){complete(s"No query with id $queryId found")}
-    }{query:QepQuery =>
-      if(user.sameUserAs(query.userName,query.userDomain)) {
-        val mostRecentQueryResults: Seq[Result] = QepQueryDb.db.selectMostRecentFullQueryResultsFor(queryId).map(Result(_))
-        val flag = QepQueryDb.db.selectMostRecentQepQueryFlagFor(queryId).map(QueryFlag(_))
-        val queryCell = QueryCell(query,flag)
-        val queryAndResults = ResultsRow(queryCell,mostRecentQueryResults)
+When a request comes in
 
-        val json: Json = Json(queryAndResults)
-        val formattedJson: String = Json.format(json)(humanReadable())
+if the request can be fulfilled immediately then do that
+if not
+  create a promise to fulfil to trigger the complete
+  create a promise to bump that first one on timeout
+  schedule a runnable to bump the timeout promise
 
-        complete(formattedJson)
-      } else {
-        respondWithStatus(StatusCodes.Forbidden){complete(s"Query $queryId belongs to a different user")}
+  create a promise to bump that first one if the conditions are right
+  create a promise to bump the conditional one and stuff it in a concurrent map for other parts of the system to find
+
+  onSuccess remove the conditional promise and cancel the scheduled timeout.
+*/
+  def queryResult(user:User):Route = path("queryResult" / LongNumber) { queryId: NetworkQueryId =>
+
+    //take optional parameters for version and an awaitTime, but insist on both
+    //If the timeout parameter isn't supplied then the deadline is now so it will reply immediately
+    parameters('afterVersion.as[Long] ? 0L, 'timeoutSeconds.as[Long] ? 0L) { (afterVersion: Long, timeoutSeconds: Long) =>
+
+      //check that the timeout is less than the spray "give up" timeout
+      val sprayRequestTimeout = ConfigSource.config.getLong("spray.can.server.request-timeout")
+      val maximumTimeout = sprayRequestTimeout - 1
+
+      if (maximumTimeout <= timeoutSeconds) warn(s"""spray.can.server.request-timeout $sprayRequestTimeout is too short
+           |relative to timeoutSeconds $timeoutSeconds . The server may produce a timeout-related error. Using
+           |$maximumTimeout instead of $timeoutSeconds to try to prevent that.""".stripMargin)
+      val timeout = Seq(maximumTimeout,timeoutSeconds).min
+
+      //times for local races.
+      val requestStartTime = System.currentTimeMillis()
+      val deadline = requestStartTime + (timeout * 1000)
+
+      detach(){
+        val troubleOrResultsRow = selectResultsRow(queryId, user)
+        if (shouldRespondNow(deadline, afterVersion, troubleOrResultsRow)) {
+          //bypass all the concurrent/interrupt business. Just reply.
+          completeWithQueryResult(queryId,troubleOrResultsRow)
+        }
+        else {
+          debug(s"Creating promises to respond about $queryId with a version later than $afterVersion by $deadline ")
+          // the Promise used to respond
+          val okToRespond = Promise[Either[(StatusCode,String),ResultsRow]]()
+
+          //Schedule the timeout
+          val okToRespondTimeout = Promise[Unit]()
+          okToRespondTimeout.future.transform({unit =>
+            okToRespond.tryComplete(Try(selectResultsRow(queryId, user)))
+          },{x:Throwable =>  x match {case NonFatal(t) => ExceptionWhilePreparingTimeoutResponse(queryId,t)}
+            x
+          })
+          val timeLeft = (deadline - System.currentTimeMillis()) milliseconds
+          case class TriggerRunnable(networkQueryId: NetworkQueryId,promise: Promise[Unit]) extends Runnable {
+            val unit:Unit = ()
+            override def run(): Unit = promise.trySuccess(unit)
+          }
+          val timeoutCanceller = system.scheduler.scheduleOnce(timeLeft,TriggerRunnable(queryId,okToRespondTimeout))
+
+          //Set up for an interrupt from new data
+          val okToRespondIfNewData = Promise[Unit]()
+          okToRespondIfNewData.future.transform({unit =>
+            val latestResultsRow = selectResultsRow(queryId, user)
+            if(shouldRespondNow(deadline,afterVersion,latestResultsRow)) {
+              okToRespond.tryComplete(Try(selectResultsRow(queryId, user)))
+            }
+          },{x:Throwable =>  x match {case NonFatal(t) => ExceptionWhilePreparingTriggeredResponse(queryId,t)}
+            x
+          })
+
+          val requestId = UUID.randomUUID()
+          //put id -> okToRespondIfNewData in a map so that outside processes can trigger it
+          qepQueryDbChangeNotifier.putLongPollRequest(requestId,queryId,okToRespondIfNewData)
+
+          onSuccess(okToRespond.future){ latestResultsRow:Either[(StatusCode,String),ResultsRow] =>
+            //clean up concurrent bits before responding
+            qepQueryDbChangeNotifier.removeLongPollRequest(requestId)
+            timeoutCanceller.cancel()
+            completeWithQueryResult(queryId,latestResultsRow)
+          }
+        }
       }
     }
+  }
+
+  /**
+    * @param deadline time when a response must go
+    * @param afterVersion last timestamp the requester knows about
+    * @param resultsRow either the result row or something is not right
+    * @return true to respond now, false to dither
+    */
+  def shouldRespondNow(deadline: Long,
+                       afterVersion: Long,
+                       resultsRow:Either[(StatusCode,String),ResultsRow]
+                      ):Boolean = {
+    val currentTime = System.currentTimeMillis()
+    if (currentTime >= deadline) true
+    else resultsRow.fold(
+      {_._1 != StatusCodes.NotFound},
+      {_.version > afterVersion}
+    )
+  }
+
+  def completeWithQueryResult(networkQueryId: NetworkQueryId,troubleOrResultsRow:Either[(StatusCode,String),ResultsRow]): Route = {
+    debug(s"Responding to a request for $networkQueryId with $troubleOrResultsRow")
+    troubleOrResultsRow.fold({ trouble =>
+      //something is wrong. Respond now.
+      respondWithStatus(trouble._1) {
+        complete(trouble._2)
+      }
+    }, { queryAndResults =>
+      //everything is fine. Respond now.
+      val json: Json = Json(queryAndResults)
+      val formattedJson: String = Json.format(json)(humanReadable())
+      complete(formattedJson)
+    })
+  }
+
+  def selectResultsRow(queryId:NetworkQueryId,user:User):Either[(StatusCode,String),ResultsRow] = {
+    //query once and determine if the latest change > afterVersion
+
+    val queryOption: Option[QepQuery] = QepQueryDb.db.selectQueryById(queryId)
+    queryOption.map{query: QepQuery =>
+      if (user.sameUserAs(query.userName, query.userDomain)) {
+        val mostRecentQueryResults: Seq[Result] = QepQueryDb.db.selectMostRecentFullQueryResultsFor(queryId).map(Result(_))
+        val flag = QepQueryDb.db.selectMostRecentQepQueryFlagFor(queryId).map(QueryFlag(_))
+        val queryCell = QueryCell(query, flag)
+        val queryAndResults = ResultsRow(queryCell, mostRecentQueryResults)
+
+        Right(queryAndResults)
+      }
+      else Left((StatusCodes.Forbidden,s"Query $queryId belongs to a different user"))
+    }.getOrElse(Left[(StatusCode,String),ResultsRow]((StatusCodes.NotFound,s"No query with id $queryId found")))
   }
 
   def queryResultsTable(user: User): Route = path("queryResultsTable") {
@@ -112,7 +243,7 @@ trait QepService extends HttpService with Loggable {
 case class QueryParameters(
                             researcherIdOption:Option[UserName] = None,
                             skipOption:Option[Int] =  None,
-                            limitOption:Option[Int] = None //todo deadline, maybe version, someday
+                            limitOption:Option[Int] = None
                           )
 
 case class ResultsTable(
@@ -124,8 +255,24 @@ case class ResultsTable(
 
 case class ResultsRow(
                        query:QueryCell,
-                       results: Seq[Result]
+                       results: Seq[Result],
+                       isComplete: Boolean, //a member variable to appear in json
+                       version:Long //a time stamp in 1.23, a counting integer in a future release
                       )
+
+object ResultsRow {
+  def apply(
+             query: QueryCell,
+             results: Seq[Result]
+           ): ResultsRow = {
+
+    val isComplete = if (results.isEmpty) false
+                      else results.forall(_.isComplete)
+    val version = (Seq(query.changeDate) ++ results.map(_.changeDate)).max //the latest change date
+
+    ResultsRow(query, results, isComplete, version)
+  }
+}
 
 case class QueryCell(
                       networkId:String, //easier to support in json, lessens the impact of using a GUID iff we can get there
@@ -169,7 +316,9 @@ case class Result (
   changeDate:Long,
   breakdowns: Seq[BreakdownResultsForType],
   problemDigest:Option[ProblemDigestForJson]
-)
+) {
+  def isComplete = true //todo until I get to SHRINE-2148
+}
 
 object Result {
   def apply(fullQueryResult: FullQueryResult): Result = new Result(
@@ -216,3 +365,21 @@ object BreakdownResultsForType {
 }
 
 case class BreakdownResult(dataKey:String,value:Long,changeDate:Long)
+
+case class ExceptionWhilePreparingTriggeredResponse(networkQueryId: NetworkQueryId,x:Throwable) extends AbstractProblem(ProblemSources.Qep) {
+
+  override def throwable = Some(x)
+
+  override def summary: String = "Unable to prepare a triggered response due to an exception."
+
+  override def description: String = s"Unable to prepare a promised response for query $networkQueryId due to a ${x.getClass.getSimpleName}"
+}
+
+case class ExceptionWhilePreparingTimeoutResponse(networkQueryId: NetworkQueryId,x:Throwable) extends AbstractProblem(ProblemSources.Qep) {
+
+  override def throwable = Some(x)
+
+  override def summary: String = "Unable to prepare a triggered response due to an exception."
+
+  override def description: String = s"Unable to prepare a promised response for $networkQueryId due to a ${x.getClass.getSimpleName}"
+}

@@ -5,7 +5,10 @@ import net.shrine.i2b2.protocol.pm.User
 import net.shrine.protocol.{Credential, QueryResult, ResultOutputType}
 import net.shrine.qep.querydb.{QepQuery, QepQueryDb, QueryResultRow}
 import org.json4s.DefaultFormats
-import org.json4s.native.JsonMethods.parse
+import org.scalatest.{BeforeAndAfterEach, Suite}
+
+import scala.language.postfixOps
+//import org.json4s.native.JsonMethods.parse
 import org.junit.runner.RunWith
 import org.scalatest.FlatSpec
 import org.scalatest.junit.JUnitRunner
@@ -16,11 +19,11 @@ import spray.testkit.ScalatestRouteTest
   * @since 3/30/17
   */
 @RunWith(classOf[JUnitRunner])
-class QepServiceTest extends FlatSpec with ScalatestRouteTest with QepService {
+class QepServiceTest extends FlatSpec with ScalatestRouteTest with QepService with TestWithDatabase {
   override def actorRefFactory: ActorRefFactory = system
 
   import scala.concurrent.duration._
-  implicit val routeTestTimeout = RouteTestTimeout(10.seconds)
+  implicit val routeTestTimeout = RouteTestTimeout(30.seconds)
   import spray.http.StatusCodes._
 
   "QepService" should "return an OK and qepInfo for a dead-end route" in {
@@ -43,16 +46,18 @@ class QepServiceTest extends FlatSpec with ScalatestRouteTest with QepService {
     }
   }
 
+  val queryReceiveTime = System.currentTimeMillis()
+
   val qepQuery = QepQuery(
     networkId = 1L,
     userName = "ben",
     userDomain = "testDomain",
     queryName = "testQuery",
     expression = Some("testExpression"),
-    dateCreated = System.currentTimeMillis(),
+    dateCreated = queryReceiveTime,
     deleted = false,
     queryXml = "testXML",
-    changeDate = System.currentTimeMillis()
+    changeDate = queryReceiveTime
   )
 
   val qepResultRowFromMgh = QueryResultRow(
@@ -62,11 +67,11 @@ class QepServiceTest extends FlatSpec with ScalatestRouteTest with QepService {
     adapterNode = "MGH",
     resultType = Some(ResultOutputType.PATIENT_COUNT_XML),
     size = 30L,
-    startDate = Some(System.currentTimeMillis() - 60),
-    endDate = Some(System.currentTimeMillis() - 30),
+    startDate = Some(queryReceiveTime + 10),
+    endDate = Some(queryReceiveTime + 20),
     status = QueryResult.StatusType.Finished,
     statusMessage = None,
-    changeDate = System.currentTimeMillis() - 30
+    changeDate = queryReceiveTime + 20
   )
 
   val qepResultRowFromPartners = QueryResultRow(
@@ -76,11 +81,11 @@ class QepServiceTest extends FlatSpec with ScalatestRouteTest with QepService {
     adapterNode = "Partners",
     resultType = Some(ResultOutputType.PATIENT_COUNT_XML),
     size = 300L,
-    startDate = Some(System.currentTimeMillis() - 60),
-    endDate = Some(System.currentTimeMillis() - 30),
+    startDate = Some(queryReceiveTime + 10),
+    endDate = Some(queryReceiveTime + 20),
     status = QueryResult.StatusType.Finished,
     statusMessage = None,
-    changeDate = System.currentTimeMillis() - 30
+    changeDate = queryReceiveTime + 30
   )
 
   val qepResultRowFromBch = QueryResultRow(
@@ -90,11 +95,11 @@ class QepServiceTest extends FlatSpec with ScalatestRouteTest with QepService {
     adapterNode = "BCH",
     resultType = Some(ResultOutputType.PATIENT_COUNT_XML),
     size = 3000L,
-    startDate = Some(System.currentTimeMillis() - 60),
-    endDate = Some(System.currentTimeMillis() - 30),
+    startDate = Some(queryReceiveTime + 10),
+    endDate = Some(queryReceiveTime + 20),
     status = QueryResult.StatusType.Finished,
     statusMessage = None,
-    changeDate = System.currentTimeMillis() - 30
+    changeDate = queryReceiveTime + 40
   )
 
   val qepResultRowFromDfci = QueryResultRow(
@@ -104,11 +109,11 @@ class QepServiceTest extends FlatSpec with ScalatestRouteTest with QepService {
     adapterNode = "DFCI",
     resultType = Some(ResultOutputType.PATIENT_COUNT_XML),
     size = 30000L,
-    startDate = Some(System.currentTimeMillis() - 60),
-    endDate = Some(System.currentTimeMillis() - 30),
+    startDate = Some(queryReceiveTime + 10),
+    endDate = Some(queryReceiveTime + 20),
     status = QueryResult.StatusType.Finished,
     statusMessage = None,
-    changeDate = System.currentTimeMillis() - 30
+    changeDate = queryReceiveTime + 50
   )
 
   "QepService" should "return an OK and a row of data for a queryResult request" in {
@@ -120,6 +125,24 @@ class QepServiceTest extends FlatSpec with ScalatestRouteTest with QepService {
     QepQueryDb.db.insertQepResultRow(qepResultRowFromPartners)
 
     Get(s"/qep/queryResult/${qepQuery.networkId}") ~> qepRoute(researcherUser) ~> check {
+      implicit val formats = DefaultFormats
+      val result = body.data.asString
+
+      assertResult(OK)(status)
+
+      //todo check json result after format is pinned down assertResult(qepInfo)(result)
+    }
+  }
+
+  "QepService" should "return an OK and a row of data for a queryResult request with the version and timeoutSeconds parameters" in {
+
+    QepQueryDb.db.insertQepQuery(qepQuery)
+    QepQueryDb.db.insertQepResultRow(qepResultRowFromBch)
+    QepQueryDb.db.insertQepResultRow(qepResultRowFromMgh)
+    QepQueryDb.db.insertQepResultRow(qepResultRowFromDfci)
+    QepQueryDb.db.insertQepResultRow(qepResultRowFromPartners)
+
+    Get(s"/qep/queryResult/${qepQuery.networkId}?timeoutSeconds=10&afterVersion=${queryReceiveTime - 60}") ~> qepRoute(researcherUser) ~> check {
       implicit val formats = DefaultFormats
       val result = body.data.asString
 
@@ -161,6 +184,67 @@ class QepServiceTest extends FlatSpec with ScalatestRouteTest with QepService {
     }
   }
 
+  "QepService" should "return an OK and a row of data for a queryResult request with the version and timeoutSeconds parameters if the version hasn't changed, but not until after timeout" in {
+
+    QepQueryDb.db.insertQepQuery(qepQuery)
+    QepQueryDb.db.insertQepResultRow(qepResultRowFromBch)
+    QepQueryDb.db.insertQepResultRow(qepResultRowFromMgh)
+    QepQueryDb.db.insertQepResultRow(qepResultRowFromDfci)
+    QepQueryDb.db.insertQepResultRow(qepResultRowFromPartners)
+
+    val start = System.currentTimeMillis()
+    val timeout = 5
+
+    Get(s"/qep/queryResult/${qepQuery.networkId}?timeoutSeconds=$timeout&afterVersion=${queryReceiveTime+50}") ~> qepRoute(researcherUser) ~> check {
+      implicit val formats = DefaultFormats
+      val result = body.data.asString
+
+      assertResult(OK)(status)
+
+      val end = System.currentTimeMillis()
+
+      assert(end - start >= timeout * 1000,s"The call took ${end - start} but should have taken at least ${timeout*1000}")
+
+      //todo check json result after format is pinned down assertResult(qepInfo)(result)
+    }
+  }
+
+  "QepService" should "return an OK and a row of data for a queryResult request with the version and timeoutSeconds parameters before the timeoutSeconds if the version changes while waiting" in {
+
+    QepQueryDb.db.insertQepQuery(qepQuery)
+    QepQueryDb.db.insertQepResultRow(qepResultRowFromMgh)
+    QepQueryDb.db.insertQepResultRow(qepResultRowFromPartners)
+//    QepQueryDb.db.insertQepResultRow(qepResultRowFromDfci)
+
+    val start = System.currentTimeMillis()
+
+    val delay = 2000
+    object Inserter extends Runnable {
+      override def run(): Unit = {
+        QepQueryDb.db.insertQepResultRow(qepResultRowFromBch)
+        qepQueryDbChangeNotifier.triggerDataChangeFor(qepResultRowFromBch.networkQueryId)
+      }
+    }
+
+    system.scheduler.scheduleOnce(delay milliseconds,Inserter)
+
+    val timeout = 5
+
+    Get(s"/qep/queryResult/${qepQuery.networkId}?timeoutSeconds=$timeout&afterVersion=${queryReceiveTime+35}") ~> qepRoute(researcherUser) ~> check {
+      implicit val formats = DefaultFormats
+      val result = body.data.asString
+
+      assertResult(OK)(status)
+
+      val end = System.currentTimeMillis()
+
+      assert(end - start >= delay,s"The call took ${end - start} but should have taken at least $delay")
+      assert(end - start < timeout * 1000,s"The call took ${end - start} but should have taken less than $timeout")
+
+      //todo check json result after format is pinned down assertResult(qepInfo)(result)
+    }
+  }
+
   "QepService" should "return an OK and a table of data for a queryResultsTable request" in {
 
     QepQueryDb.db.insertQepQuery(qepQuery)
@@ -194,6 +278,7 @@ class QepServiceTest extends FlatSpec with ScalatestRouteTest with QepService {
     }
   }
 */
+
   val researcherUserName = "ben"
   val researcherFullName = researcherUserName
 
@@ -215,4 +300,16 @@ class QepServiceTest extends FlatSpec with ScalatestRouteTest with QepService {
     rolesByProject = Map()
   )
 
+}
+
+trait TestWithDatabase extends BeforeAndAfterEach {
+  this: Suite =>
+
+  override def beforeEach() = {
+    QepQueryDb.db.createTables()
+  }
+
+  override def afterEach() = {
+    QepQueryDb.db.dropTables()
+  }
 }

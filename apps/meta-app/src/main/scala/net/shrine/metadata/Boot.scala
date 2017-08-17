@@ -21,7 +21,7 @@ class Boot extends WebBoot {
   // the service actor replies to incoming HttpRequests
   override val serviceActor: ActorRef = startServiceActor()
 
-  def startActorSystem() = try ActorSystem("MetaDataActors",ConfigSource.config)
+  def startActorSystem() = try ActorSystem("ShrineActors",ConfigSource.config)
   catch {
     case NonFatal(x) => CannotStartMetaData(x); throw x
     case x: ExceptionInInitializerError => CannotStartMetaData(x); throw x
