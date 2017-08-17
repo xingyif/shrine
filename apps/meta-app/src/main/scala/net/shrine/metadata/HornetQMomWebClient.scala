@@ -1,6 +1,6 @@
 package net.shrine.metadata
 
-import akka.actor.{Actor, ActorRef, ActorSystem, Props}
+import akka.actor.{Actor, ActorRef, ActorRefFactory, ActorSystem, Props}
 import net.shrine.log.Loggable
 import net.shrine.mom.{HttpClient, Message, MessageQueueService, MessageSerializer, Queue}
 import net.shrine.source.ConfigSource
@@ -141,12 +141,14 @@ class HornetQMomWebClientServiceActor extends Actor with MetaDataService {
 
   // the HttpService trait defines only one abstract member, which
   // connects the services environment to the enclosing actor or test
-  def actorRefFactory = context
+  def actorRefFactory: ActorRefFactory = context
 
   // this actor only runs our route, but you could add
   // other things here, like request stream processing
   // or timeout handling
-  def receive = runRoute(route)
+  def receive: Receive = runRoute(route)
 
   override implicit val ec: ExecutionContext = ExecutionContext.Implicits.global
+
+  override def system: ActorSystem = context.system
 }
