@@ -6,7 +6,7 @@ import net.shrine.authentication.Authenticator
 import net.shrine.authorization.QueryAuthorizationService
 import net.shrine.broadcaster.BroadcastAndAggregationService
 import net.shrine.config.DurationConfigParser
-import net.shrine.protocol.{BaseShrineResponse, DeleteQueryRequest, FlagQueryRequest, ReadApprovedQueryTopicsRequest, ReadInstanceResultsRequest, ReadPreviousQueriesRequest, ReadQueryDefinitionRequest, ReadQueryInstancesRequest, ReadQueryResultRequest, ReadTranslatedQueryDefinitionRequest, RenameQueryRequest, ResultOutputType, RunQueryRequest, ShrineRequestHandler, UnFlagQueryRequest}
+import net.shrine.protocol.{BaseShrineResponse, DeleteQueryRequest, FlagQueryRequest, NodeId, ReadApprovedQueryTopicsRequest, ReadInstanceResultsRequest, ReadPreviousQueriesRequest, ReadQueryDefinitionRequest, ReadQueryInstancesRequest, ReadQueryResultRequest, ReadTranslatedQueryDefinitionRequest, RenameQueryRequest, ResultOutputType, RunQueryRequest, ShrineRequestHandler, UnFlagQueryRequest}
 import net.shrine.qep.dao.AuditDao
 
 import scala.concurrent.duration.Duration
@@ -30,7 +30,9 @@ final case class QepService(
     broadcastAndAggregationService: BroadcastAndAggregationService,
     queryTimeout: Duration,
     breakdownTypes: Set[ResultOutputType],
-    collectQepAudit:Boolean) extends AbstractQepService[BaseShrineResponse] with ShrineRequestHandler {
+    collectQepAudit:Boolean,
+    nodeId:NodeId
+  ) extends AbstractQepService[BaseShrineResponse] with ShrineRequestHandler {
 
   debug(s"ShrineService collectQepAudit is $collectQepAudit")
 
@@ -73,7 +75,9 @@ object QepService {
             authenticator: Authenticator,
             authorizationService: QueryAuthorizationService,
             broadcastService: BroadcastAndAggregationService,
-            breakdownTypes: Set[ResultOutputType]):QepService = {
+            breakdownTypes: Set[ResultOutputType],
+            nodeId:NodeId
+           ):QepService = {
     QepService(
       commonName,
       auditDao,
@@ -83,7 +87,8 @@ object QepService {
       broadcastService,
       DurationConfigParser(qepConfig.getConfig("maxQueryWaitTime")),
       breakdownTypes,
-      qepConfig.getBoolean("audit.collectQepAudit")
+      qepConfig.getBoolean("audit.collectQepAudit"),
+      nodeId
     )
   }
 

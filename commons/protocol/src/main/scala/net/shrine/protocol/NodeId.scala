@@ -3,15 +3,16 @@ package net.shrine.protocol
 import net.shrine.serialization.XmlMarshaller
 import net.shrine.util.XmlUtil
 import net.shrine.serialization.XmlUnmarshaller
+
 import scala.util.Try
-import scala.xml.NodeSeq
+import scala.xml.{Node, NodeSeq}
 
 /**
  * @author clint
  * @since Nov 1, 2013
  */
 final case class NodeId(name: String) extends XmlMarshaller {
-  override def toXml = XmlUtil.stripWhitespace {
+  override def toXml: Node = XmlUtil.stripWhitespace {
     import NodeId._
 
     XmlUtil.renameRootTag(rootTagName) {
@@ -32,6 +33,13 @@ object NodeId extends XmlUnmarshaller[Try[NodeId]] {
     for {
       name <- Try((xml \ "name").text.trim).filter(!_.isEmpty)
     } yield NodeId(name)
+  }
+
+  def fromXmlOption(xml:NodeSeq):Try[Option[NodeId]] = Try {
+    val nameElement: NodeSeq = (xml \ "name")
+    val contents = nameElement.text
+    if (contents.isEmpty) None
+    else Some(NodeId(contents))
   }
 }
  

@@ -1,19 +1,16 @@
 package net.shrine.integration
 
 import net.shrine.qep.ShrineResource
-import net.shrine.protocol.ShrineRequestHandler
+import net.shrine.protocol.{AuthenticationInfo, DefaultBreakdownResultOutputTypes, I2b2RequestHandler, NodeId, ShrineRequestHandler}
 import net.shrine.qep.I2b2BroadcastResource
-import net.shrine.protocol.I2b2RequestHandler
 import net.shrine.qep.QepService
 import net.shrine.qep.I2b2QepService
 import net.shrine.client.ShrineClient
 import net.shrine.client.JerseyShrineClient
-import net.shrine.protocol.AuthenticationInfo
 import net.shrine.client.Poster
 import net.shrine.client.JerseyHttpClient
 import net.shrine.broadcaster.BroadcasterClient
 import net.shrine.crypto.TrustParam
-import net.shrine.protocol.DefaultBreakdownResultOutputTypes
 
 object Hubs {
   val defaultShrineBasePath = ""
@@ -40,7 +37,8 @@ object Hubs {
           signingBroadcastService(broadcasterClient.getOrElse(inJvmBroadcasterClient)),
           1.hour,
           Set.empty,
-          false)
+          false,
+          NodeId("testNode"))
     }
     
     override def clientFor(projectId: String, networkAuthn: AuthenticationInfo): ShrineClient = new JerseyShrineClient(resourceUrl, projectId, networkAuthn, DefaultBreakdownResultOutputTypes.toSet, TrustParam.AcceptAllCerts)
@@ -66,7 +64,8 @@ object Hubs {
           signingBroadcastService(broadcasterClient.getOrElse(inJvmBroadcasterClient)),
           1.hour,
           Set.empty,
-          false
+          false,
+          NodeId("testNode")
       )
     }
     

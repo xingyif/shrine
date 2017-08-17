@@ -3,13 +3,8 @@ package net.shrine.qep
 import net.shrine.util.ShouldMatchersForJUnit
 import org.junit.Test
 import net.shrine.authentication.Authenticator
-import net.shrine.protocol.AuthenticationInfo
+import net.shrine.protocol.{AuthenticationInfo, Credential, DefaultBreakdownResultOutputTypes, NodeId, ReadResultOutputTypesRequest, ReadResultOutputTypesResponse, ResultOutputType}
 import net.shrine.authentication.AuthenticationResult
-import net.shrine.protocol.ReadResultOutputTypesRequest
-import net.shrine.protocol.Credential
-import net.shrine.protocol.ReadResultOutputTypesResponse
-import net.shrine.protocol.ResultOutputType
-import net.shrine.protocol.DefaultBreakdownResultOutputTypes
 
 /**
  * @author clint
@@ -36,7 +31,17 @@ final class I2B2QepServiceTest extends ShouldMatchersForJUnit {
     
     val breakdownResultOutputTypes = DefaultBreakdownResultOutputTypes.toSet
 
-    val service = I2b2QepService("example.com",null, authenticator, null, includeAggregateResult = true, null, 1.day, breakdownResultOutputTypes,false)
+    val service = I2b2QepService(
+      commonName = "example.com",
+      auditDao = null,
+      authenticator = authenticator,
+      authorizationService = null,
+      includeAggregateResult = true,
+      broadcastAndAggregationService = null,
+      queryTimeout = 1.day,
+      breakdownTypes = breakdownResultOutputTypes,
+      collectQepAudit = false,
+      nodeId = NodeId("testNode"))
 
     {
       val req = ReadResultOutputTypesRequest("project-id", 1.minute, AuthenticationInfo("d", knownUsername, Credential("foo", isToken = false)))

@@ -12,13 +12,10 @@ import net.shrine.dao.squeryl.SquerylInitializer
 import net.shrine.hms.authentication.EcommonsPmAuthenticator
 import net.shrine.hms.authorization.HmsDataStewardAuthorizationService
 import net.shrine.log.Loggable
-import net.shrine.protocol.ResultOutputType
+import net.shrine.protocol.{NodeId, ResultOutputType}
 import net.shrine.qep.dao.AuditDao
 import net.shrine.qep.dao.squeryl.SquerylAuditDao
 import net.shrine.qep.dao.squeryl.tables.Tables
-import net.shrine.util.{PeerToPeerModel, SingleHubModel, TrustModel}
-
-import scala.util.Try
 
 /**
   * @author david 
@@ -37,7 +34,8 @@ object QueryEntryPointComponents extends Loggable {
              broadcastDestinations: Option[Set[NodeHandle]],
              hubDao: HubDao, //todo the QEP should not need the hub dao
              squerylInitializer: SquerylInitializer, //todo could really have its own
-             pmPoster: Poster //todo could really have its own
+             pmPoster: Poster, //todo could really have its own
+             nodeId:NodeId
            ):QueryEntryPointComponents = {
 
     val commonName: String = certCollection.myEntry.commonName.getOrElse {
@@ -68,7 +66,8 @@ object QueryEntryPointComponents extends Loggable {
         authenticator,
         authorizationService,
         broadcastService,
-        breakdownTypes
+        breakdownTypes,
+        nodeId
       ),
       I2b2QepService(
         qepConfig,
@@ -77,7 +76,8 @@ object QueryEntryPointComponents extends Loggable {
         authenticator,
         authorizationService,
         broadcastService,
-        breakdownTypes
+        breakdownTypes,
+        nodeId
       ),
       auditDao
     )

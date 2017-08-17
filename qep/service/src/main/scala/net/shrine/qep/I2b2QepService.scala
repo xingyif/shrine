@@ -5,7 +5,7 @@ import net.shrine.authentication.Authenticator
 import net.shrine.authorization.QueryAuthorizationService
 import net.shrine.broadcaster.BroadcastAndAggregationService
 import net.shrine.config.DurationConfigParser
-import net.shrine.protocol.{DeleteQueryRequest, FlagQueryRequest, I2b2RequestHandler, ReadApprovedQueryTopicsRequest, ReadInstanceResultsRequest, ReadPreviousQueriesRequest, ReadQueryDefinitionRequest, ReadQueryInstancesRequest, ReadResultOutputTypesRequest, RenameQueryRequest, ResultOutputType, RunQueryRequest, ShrineResponse, UnFlagQueryRequest}
+import net.shrine.protocol.{DeleteQueryRequest, FlagQueryRequest, I2b2RequestHandler, NodeId, ReadApprovedQueryTopicsRequest, ReadInstanceResultsRequest, ReadPreviousQueriesRequest, ReadQueryDefinitionRequest, ReadQueryInstancesRequest, ReadResultOutputTypesRequest, RenameQueryRequest, ResultOutputType, RunQueryRequest, ShrineResponse, UnFlagQueryRequest}
 import net.shrine.qep.dao.AuditDao
 
 import scala.concurrent.duration.Duration
@@ -23,7 +23,9 @@ final case class I2b2QepService(
     broadcastAndAggregationService: BroadcastAndAggregationService,
     queryTimeout: Duration,
     breakdownTypes: Set[ResultOutputType],
-    collectQepAudit:Boolean) extends AbstractQepService[ShrineResponse] with I2b2RequestHandler {
+    collectQepAudit:Boolean,
+    nodeId: NodeId
+  ) extends AbstractQepService[ShrineResponse] with I2b2RequestHandler {
 
   override def readResultOutputTypes(request: ReadResultOutputTypesRequest): ShrineResponse = doReadResultOutputTypes(request)
   
@@ -56,7 +58,9 @@ object I2b2QepService {
             authenticator: Authenticator,
             authorizationService: QueryAuthorizationService,
             broadcastService: BroadcastAndAggregationService,
-            breakdownTypes: Set[ResultOutputType]): I2b2QepService = {
+            breakdownTypes: Set[ResultOutputType],
+            nodeId: NodeId
+           ): I2b2QepService = {
     I2b2QepService(
       commonName,
       auditDao,
@@ -66,7 +70,8 @@ object I2b2QepService {
       broadcastService,
       DurationConfigParser(qepConfig.getConfig("maxQueryWaitTime")),
       breakdownTypes,
-      qepConfig.getBoolean("audit.collectQepAudit")
+      qepConfig.getBoolean("audit.collectQepAudit"),
+      nodeId
     )
   }
 }

@@ -45,7 +45,6 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
   //Load config from file on the classpath called "shrine.conf"
   lazy val config: Config = ConfigSource.config
 
-  //todo for SHRINE-2120 , can access the QEP's node name from config!
   val shrineConfig = config.getConfig("shrine")
 
   protected lazy val nodeId: NodeId = NodeId(shrineConfig.getString("humanReadableNodeName"))
@@ -118,7 +117,8 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
     hubComponents.map(_.broadcastDestinations),
     hubDao, //todo the QEP should not need the hub dao
     squerylInitializer, //todo could really have its own
-    pmPoster //todo could really have its own
+    pmPoster, //todo could really have its own
+    nodeId
   ))
 
   protected lazy val pmUrlString: String = pmEndpoint.url.toString

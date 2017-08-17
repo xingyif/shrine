@@ -21,15 +21,15 @@ import net.shrine.serialization.I2b2UnmarshallingHelpers
  * NB: this is a case class to get a structural equality contract in hashCode and equals, mostly for testing
  */
 final case class RunQueryRequest(
-  override val projectId: String,
-  override val waitTime: Duration,
-  override val authn: AuthenticationInfo,
-  networkQueryId: Long,
-  topicId: Option[String], //data steward when required only, must be separate from topicName because HMS DSA does not supply topic names.
-  topicName: Option[String], //data steward when required only
-  outputTypes: Set[ResultOutputType],
-  queryDefinition: QueryDefinition
-  //todo pick up SHRINE-2174 here nodeId: Option[NodeId] = None
+    override val projectId: String,
+    override val waitTime: Duration,
+    override val authn: AuthenticationInfo,
+    networkQueryId: Long,
+    topicId: Option[String], //data steward when required only, must be separate from topicName because HMS DSA does not supply topic names.
+    topicName: Option[String], //data steward when required only
+    outputTypes: Set[ResultOutputType],
+    queryDefinition: QueryDefinition,
+    nodeId: Option[NodeId] = None
   ) extends ShrineRequest(projectId, waitTime, authn) with CrcRequest with TranslatableRequest[RunQueryRequest] with HandleableShrineRequest with HandleableI2b2Request {
 
   override val requestType = RequestType.QueryDefinitionRequest
@@ -55,6 +55,7 @@ final case class RunQueryRequest(
         { sortedOutputTypes.map(_.toXml) }
       </outputTypes>
       { queryDefinition.toXml }
+      { nodeId.fold(NodeSeq.Empty)(_.toXml) }
     </runQuery>
   } //todo put       { nodeId.map(_.toXml) } at the end for SHRINE-2174
 
@@ -183,9 +184,9 @@ object RunQueryRequest extends I2b2XmlUnmarshaller[RunQueryRequest] with ShrineX
       topicName = (xml \ "topicName").headOption.map(XmlUtil.trim)
       outputTypes <- xml.withChild("outputTypes").map(determineShrineOutputTypes)
       queryDef <- xml.withChild(QueryDefinition.rootTagName).flatMap(QueryDefinition.fromXml)
-//      nodeId <- NodeId.fromXml(xml \ "nodeId")
+      nodeId <- NodeId.fromXmlOption(xml \ "nodeId")
     } yield {
-      RunQueryRequest(projectId, waitTime, authn, queryId, topicId, topicName, outputTypes, queryDef)//, Some(nodeId))
+      RunQueryRequest(projectId, waitTime, authn, queryId, topicId, topicName, outputTypes, queryDef, nodeId)
     }
 
     attempt.map(addPatientCountXmlIfNecessary)

@@ -165,7 +165,9 @@ final class NetworkSimulationTest extends AbstractSquerylAdapterTest with Should
       SigningBroadcastAndAggregationService(InJvmBroadcasterClient(AdapterClientBroadcaster(destinations, MockHubDao)), signerVerifier, SigningCertStrategy.Attach),
       1.hour,
       DefaultBreakdownResultOutputTypes.toSet,
-      false)
+      false,
+      NodeId("testNode")
+    )
   }
 
   @Test

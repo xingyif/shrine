@@ -4,20 +4,13 @@ import org.junit.Test
 import org.scalatest.mock.EasyMockSugar
 import net.shrine.authorization.QueryAuthorizationService
 import net.shrine.qep.dao.AbstractAuditDaoTest
-import net.shrine.protocol.AuthenticationInfo
-import net.shrine.protocol.Credential
-import net.shrine.protocol.ReadApprovedQueryTopicsRequest
-import net.shrine.protocol.ReadApprovedQueryTopicsResponse
-import net.shrine.protocol.ReadQueryInstancesRequest
-import net.shrine.protocol.ReadQueryInstancesResponse
-import net.shrine.protocol.RunQueryRequest
+import net.shrine.protocol.{AuthenticationInfo, Credential, ErrorResponse, NodeId, ReadApprovedQueryTopicsRequest, ReadApprovedQueryTopicsResponse, ReadQueryInstancesRequest, ReadQueryInstancesResponse, RunQueryRequest}
 import net.shrine.protocol.query.QueryDefinition
 import net.shrine.protocol.query.Term
 import net.shrine.authorization.AuthorizationResult
 import net.shrine.authentication.Authenticator
 import net.shrine.authentication.AuthenticationResult
 import net.shrine.authentication.NotAuthenticatedException
-import net.shrine.protocol.ErrorResponse
 
 /**
  * @author Bill Simons
@@ -42,7 +35,18 @@ final class QepServiceTest extends AbstractAuditDaoTest with EasyMockSugar {
     
     val req = ReadQueryInstancesRequest(projectId, 1.millisecond, authn, queryId)
 
-    val service = QepService("example.com",null, AllowsAllAuthenticator, null, includeAggregateResult = true, null, null, Set.empty,collectQepAudit = false)
+    val service = QepService(
+      commonName = "example.com",
+      auditDao = null,
+      authenticator = AllowsAllAuthenticator,
+      authorizationService = null,
+      includeAggregateResult = true,
+      broadcastAndAggregationService = null,
+      queryTimeout = null,
+      breakdownTypes = Set.empty,
+      collectQepAudit = false,
+      nodeId = NodeId("testNode")
+    )
 
     val response = service.readQueryInstances(req).asInstanceOf[ReadQueryInstancesResponse]
 
@@ -71,7 +75,7 @@ final class QepServiceTest extends AbstractAuditDaoTest with EasyMockSugar {
   def testRunQueryAggregatorFor() {
 
     def doTestRunQueryAggregatorFor(addAggregatedResult: Boolean) {
-      val service = QepService("example.com",null, null, null, addAggregatedResult, null, null, Set.empty,collectQepAudit = false)
+      val service = QepService("example.com",null, null, null, addAggregatedResult, null, null, Set.empty,collectQepAudit = false,NodeId("testNode"))
 
       val aggregator = service.runQueryAggregatorFor(request)
 
@@ -91,7 +95,7 @@ final class QepServiceTest extends AbstractAuditDaoTest with EasyMockSugar {
   @Test
   def testAuditTransactionally() = afterMakingTables {
     def doTestAuditTransactionally(shouldThrow: Boolean) {
-      val service = QepService("example.com",auditDao, null, null, includeAggregateResult = true, null, null, Set.empty,collectQepAudit = false)
+      val service = QepService("example.com",auditDao, null, null, includeAggregateResult = true, null, null, Set.empty,collectQepAudit = false,NodeId("testNode"))
 
       if (shouldThrow) {
         intercept[Exception] {
@@ -125,7 +129,7 @@ final class QepServiceTest extends AbstractAuditDaoTest with EasyMockSugar {
   @Test
   def testAfterAuthenticating() {
     def doTestAfterAuthenticating(shouldAuthenticate: Boolean) {
-      val service = QepService("example.com",auditDao, new MockAuthenticator(shouldAuthenticate), new MockAuthService(true), includeAggregateResult = true, null, null, Set.empty,collectQepAudit = false)
+      val service = QepService("example.com",auditDao, new MockAuthenticator(shouldAuthenticate), new MockAuthService(true), includeAggregateResult = true, null, null, Set.empty,collectQepAudit = false,NodeId("testNode"))
 
       if (shouldAuthenticate) {
         var foo = false
@@ -150,7 +154,7 @@ final class QepServiceTest extends AbstractAuditDaoTest with EasyMockSugar {
   def testAfterAuditingAndAuthorizing() = afterMakingTables {
 
     def doAfterAuditingAndAuthorizing(shouldBeAuthorized: Boolean, shouldThrow: Boolean) {
-      val service = QepService("example.com",auditDao, AllowsAllAuthenticator, new MockAuthService(shouldBeAuthorized), includeAggregateResult = true, null, null, Set.empty,collectQepAudit = false)
+      val service = QepService("example.com",auditDao, AllowsAllAuthenticator, new MockAuthService(shouldBeAuthorized), includeAggregateResult = true, null, null, Set.empty,collectQepAudit = false,NodeId("testNode"))
 
       if (shouldThrow || !shouldBeAuthorized) {
         intercept[Exception] {

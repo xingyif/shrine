@@ -329,6 +329,32 @@ final class RunQueryRequestTest extends ShrineRequestValidator {
   }
 
   @Test
+  def testShrineXmlRoundTripWithNodeId: Unit = {
+    def doTest(outputTypes: Set[ResultOutputType]) {
+      val req = RunQueryRequest(
+        projectId,
+        waitTime,
+        authn,
+        queryId,
+        Option(topicId),
+        Option(topicName),
+        outputTypes,
+        queryDefinition,
+        Some(NodeId("testNode"))
+      )
+
+      val roundTripped = RunQueryRequest.fromXml(Set.empty)(req.toXml).get
+
+      roundTripped should equal(req)
+    }
+
+    doTest(ResultOutputType.nonErrorTypes.toSet)
+
+    doTest(ResultOutputType.nonErrorTypes.toSet ++ DefaultBreakdownResultOutputTypes.toSet)
+  }
+
+
+  @Test
   override def testToXml {
     import scala.concurrent.duration._
 
