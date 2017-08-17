@@ -134,7 +134,9 @@ class QepServiceTest extends FlatSpec with ScalatestRouteTest with QepService wi
     }
   }
 
-  "QepService" should "return an OK and a row of data for a queryResult request with the version and timeoutSeconds parameters" in {
+  "QepService" should
+    """return an OK and a row of data for a queryResult request with the version and timeoutSeconds
+      |parameters""".stripMargin in {
 
     QepQueryDb.db.insertQepQuery(qepQuery)
     QepQueryDb.db.insertQepResultRow(qepResultRowFromBch)
@@ -168,7 +170,7 @@ class QepServiceTest extends FlatSpec with ScalatestRouteTest with QepService wi
     }
   }
 
-  "QepService" should "return a Forbidden if the user is the wrong user for the query for a queryResult request" in {
+  "QepService" should """return a Forbidden if the user is the wrong user for the query for a queryResult request""" in {
 
     QepQueryDb.db.insertQepQuery(qepQuery)
     QepQueryDb.db.insertQepResultRow(qepResultRowFromBch)
@@ -184,7 +186,9 @@ class QepServiceTest extends FlatSpec with ScalatestRouteTest with QepService wi
     }
   }
 
-  "QepService" should "return an OK and a row of data for a queryResult request with the version and timeoutSeconds parameters if the version hasn't changed, but not until after timeout" in {
+  "QepService" should
+    """return an OK and a row of data for a queryResult request with the version and timeoutSeconds
+      |parameters if the version hasn't changed, but not until after timeout""".stripMargin in {
 
     QepQueryDb.db.insertQepQuery(qepQuery)
     QepQueryDb.db.insertQepResultRow(qepResultRowFromBch)
@@ -209,12 +213,13 @@ class QepServiceTest extends FlatSpec with ScalatestRouteTest with QepService wi
     }
   }
 
-  "QepService" should "return an OK and a row of data for a queryResult request with the version and timeoutSeconds parameters before the timeoutSeconds if the version changes while waiting" in {
+  "QepService" should
+    """return an OK and a row of data for a queryResult request with the version and timeoutSeconds
+      |parameters before the timeoutSeconds if the version changes while waiting""".stripMargin in {
 
     QepQueryDb.db.insertQepQuery(qepQuery)
     QepQueryDb.db.insertQepResultRow(qepResultRowFromMgh)
     QepQueryDb.db.insertQepResultRow(qepResultRowFromPartners)
-//    QepQueryDb.db.insertQepResultRow(qepResultRowFromDfci)
 
     val start = System.currentTimeMillis()
 

@@ -155,7 +155,7 @@ if not
     if (currentTime >= deadline) true
     else resultsRow.fold(
       {_._1 != StatusCodes.NotFound},
-      {_.version > afterVersion}
+      {_.dataVersion > afterVersion}
     )
   }
 
@@ -257,7 +257,7 @@ case class ResultsRow(
                        query:QueryCell,
                        results: Seq[Result],
                        isComplete: Boolean, //a member variable to appear in json
-                       version:Long //a time stamp in 1.23, a counting integer in a future release
+                       dataVersion:Long //a time stamp in 1.23, a counting integer in a future release
                       )
 
 object ResultsRow {
@@ -268,9 +268,9 @@ object ResultsRow {
 
     val isComplete = if (results.isEmpty) false
                       else results.forall(_.isComplete)
-    val version = (Seq(query.changeDate) ++ results.map(_.changeDate)).max //the latest change date
+    val dataVersion = (Seq(query.changeDate) ++ results.map(_.changeDate)).max //the latest change date
 
-    ResultsRow(query, results, isComplete, version)
+    ResultsRow(query, results, isComplete, dataVersion)
   }
 }
 
