@@ -30,9 +30,16 @@ final case class AdapterClientBroadcaster(destinations: Set[NodeHandle], dao: Hu
       shrineResponse <- callAdapter(message, nodeHandle)
     } {
       try {
-        //todo SHRINE-2120 send to the QEP queue here ... but how to tunnel in the additional piece ... where did the query come from ?
-        //message.request.
-        //todo send a shrineResponse.toXml .
+        message.request match {
+          case rqr:RunQueryRequest => {
+            debug(s"RunQueryRequest's nodeId is ${rqr.nodeId}")
+            //todo SHRINE-2120 send to the QEP queue named nodeId
+            //todo send a shrineResponse.toXml .
+            //todo use the json envelope when you get to SHRINE-2177
+          }
+          case _ => debug(s"Not a RunQueryRequest but a ${message.request.getClass.getSimpleName}.")
+        }
+
         multiplexer.processResponse(shrineResponse) }
       finally { logResultsIfNecessary(message, shrineResponse) }
     }

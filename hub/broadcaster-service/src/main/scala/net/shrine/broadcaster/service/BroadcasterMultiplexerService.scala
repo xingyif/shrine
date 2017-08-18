@@ -2,7 +2,7 @@ package net.shrine.broadcaster.service
 
 import net.shrine.protocol.BroadcastMessage
 import scala.concurrent.duration.Duration
-import net.shrine.broadcaster.{Broadcaster}
+import net.shrine.broadcaster.Broadcaster
 import net.shrine.protocol.SingleNodeResult
 import scala.concurrent.Await
 

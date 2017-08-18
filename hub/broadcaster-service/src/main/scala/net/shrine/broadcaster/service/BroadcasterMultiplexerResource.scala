@@ -1,22 +1,14 @@
 package net.shrine.broadcaster.service
 
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.core.MediaType
-import javax.ws.rs.POST
-import javax.ws.rs.Consumes
-import net.shrine.protocol.{SingleNodeResult, BroadcastMessage, MultiplexedResults, ResultOutputType}
-import javax.ws.rs.core.Response
-import scala.util.control.NonFatal
-import scala.util.Failure
-import scala.util.Success
-import scala.util.Try
-import scala.xml.XML
+import javax.ws.rs.{POST, Path, Produces}
+import javax.ws.rs.core.{MediaType, Response}
+
+import net.shrine.protocol.{BroadcastMessage, MultiplexedResults, SingleNodeResult}
 import net.shrine.util.StringEnrichments
 
 /**
  * @author clint
- * @date Feb 28, 2014
+ * @since Feb 28, 2014
  */
 @Path("broadcaster")
 @Produces(Array(MediaType.APPLICATION_XML))

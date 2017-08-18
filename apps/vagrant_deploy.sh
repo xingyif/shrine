@@ -1,4 +1,4 @@
-#!/bin/bash -x
+#!/bin/bash
 # Deploys SHRINE local builds into vagrant box after maven build
 # For subprojects that can produce a .war file, install the .war file in a SHRINE vagrant with
 # > mvn exec:exec
@@ -10,6 +10,7 @@ declare -a MACHINES=( shrine-hub shrine-node1 )
 VAGRANT_WAR_CONTEXT=/opt/shrine/tomcat/webapps
 # Change this to be: local vagrant directory
 VAGRANT_CONTEXT=~/vagrant-shrine-network
+#VAGRANT_CONTEXT=~/projects/vagrantShrine/vagrant-shrine-network
 
 #------------DO NOT MODIFY-----------------------
 BUFFER=/home/vagrant/m3shrine

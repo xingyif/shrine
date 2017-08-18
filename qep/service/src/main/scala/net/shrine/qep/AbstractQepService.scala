@@ -9,7 +9,7 @@ import net.shrine.authorization.QueryAuthorizationService
 import net.shrine.broadcaster.BroadcastAndAggregationService
 import net.shrine.log.Loggable
 import net.shrine.problem.{AbstractProblem, ProblemSources}
-import net.shrine.protocol.{AggregatedReadInstanceResultsResponse, AggregatedRunQueryResponse, AuthenticationInfo, BaseShrineRequest, BaseShrineResponse, Credential, DeleteQueryRequest, FlagQueryRequest, QueryInstance, QueryResult, ReadApprovedQueryTopicsRequest, ReadInstanceResultsRequest, ReadPreviousQueriesRequest, ReadPreviousQueriesResponse, ReadQueryDefinitionRequest, ReadQueryInstancesRequest, ReadQueryInstancesResponse, ReadResultOutputTypesRequest, ReadResultOutputTypesResponse, RenameQueryRequest, ResultOutputType, RunQueryRequest, UnFlagQueryRequest}
+import net.shrine.protocol.{AggregatedReadInstanceResultsResponse, AggregatedRunQueryResponse, AuthenticationInfo, BaseShrineRequest, BaseShrineResponse, Credential, DeleteQueryRequest, FlagQueryRequest, NodeId, QueryInstance, QueryResult, ReadApprovedQueryTopicsRequest, ReadInstanceResultsRequest, ReadPreviousQueriesRequest, ReadPreviousQueriesResponse, ReadQueryDefinitionRequest, ReadQueryInstancesRequest, ReadQueryInstancesResponse, ReadResultOutputTypesRequest, ReadResultOutputTypesResponse, RenameQueryRequest, ResultOutputType, RunQueryRequest, UnFlagQueryRequest}
 import net.shrine.qep.audit.QepAuditDb
 import net.shrine.qep.dao.AuditDao
 import net.shrine.qep.querydb.QepQueryDb
@@ -35,6 +35,7 @@ trait AbstractQepService[BaseResp <: BaseShrineResponse] extends Loggable {
   val queryTimeout: Duration
   val breakdownTypes: Set[ResultOutputType]
   val collectQepAudit:Boolean
+  val nodeId:NodeId
 
   protected def doReadResultOutputTypes(request: ReadResultOutputTypesRequest): BaseResp = {
     info(s"doReadResultOutputTypes($request)")
@@ -211,7 +212,8 @@ trait AbstractQepService[BaseResp <: BaseShrineResponse] extends Loggable {
       case runQueryRequest: RunQueryRequest =>
         // inject modified, authorized runQueryRequest
 //although it might make more sense to put this whole if block in the aggregator, the RunQueryAggregator lives in the hub, far from this DB code
-        auditAuthorizeAndThen(runQueryRequest) { authorizedRequest =>
+        //inject QEP NodeId
+        auditAuthorizeAndThen(runQueryRequest.copy(nodeId = Some(nodeId))) { authorizedRequest =>
           debug(s"doBroadcastQuery authorizedRequest is $authorizedRequest")
 
           // tuck the ACT audit metrics data into a database here
@@ -221,12 +223,12 @@ trait AbstractQepService[BaseResp <: BaseShrineResponse] extends Loggable {
           queryHub(authorizedRequest)
 
           val response = AggregatedRunQueryResponse(
-            queryId = runQueryRequest.networkQueryId,
+            queryId = authorizedRequest.networkQueryId,
             createDate = XmlDateHelper.now,
             userId = networkAuthn.username,
             groupId = networkAuthn.domain,
-            requestXml = runQueryRequest.queryDefinition,
-            queryInstanceId = runQueryRequest.networkQueryId,
+            requestXml = authorizedRequest.queryDefinition,
+            queryInstanceId = authorizedRequest.networkQueryId,
             results = Seq.empty,
             statusTypeName = "RECEIVED_BY_QEP" //todo figure out the right statuses for 1.23. See SHRINE-2148
           )
