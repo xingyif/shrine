@@ -24,6 +24,9 @@ import scala.util.{Failure, Success, Try}
 trait HornetQMomWebApi extends HttpService
   with Loggable {
 
+  // todo have something here that wraps around momRoute, complete 404 with a message if config is false
+  
+
   def momRoute: Route = pathPrefix("mom") {
     put {
       createQueue ~
