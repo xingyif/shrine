@@ -16,13 +16,12 @@ import net.shrine.protocol.SingleNodeResult
 
 /**
  * @author clint
- * @date Nov 15, 2013
+ * @since Nov 15, 2013
  */
 final class BufferingMultiplexer(broadcastTo: Set[NodeId]) extends Multiplexer with Loggable {
 
-  //todo rename for SHRINE-2120
-  //todo if this code survives, change to a BlockingQueue and get rid of this lock
-  private[this] val queue: Buffer[SingleNodeResult] = new ArrayBuffer
+  //todo if this code survives, change to a BlockingQueue, use its size method, and get rid of this lock in 1.24
+  private[this] val singleNodeResults: Buffer[SingleNodeResult] = new ArrayBuffer
 
   private[this] val heardFrom = new AtomicInteger
   
@@ -32,7 +31,7 @@ final class BufferingMultiplexer(broadcastTo: Set[NodeId]) extends Multiplexer w
   
   private[this] def locked[T](f: => T): T = lock.synchronized { f }
   
-  def resultsSoFar: Iterable[SingleNodeResult] = locked { queue.toIndexedSeq }
+  def resultsSoFar: Iterable[SingleNodeResult] = locked { singleNodeResults.toIndexedSeq }
   
   def numHeardFrom: Int = heardFrom.get
 
@@ -41,7 +40,7 @@ final class BufferingMultiplexer(broadcastTo: Set[NodeId]) extends Multiplexer w
   override def processResponse(response: SingleNodeResult): Unit = {
 
     val latestCount = locked {
-      queue += response 
+      singleNodeResults += response
     
       heardFrom.incrementAndGet
     }
