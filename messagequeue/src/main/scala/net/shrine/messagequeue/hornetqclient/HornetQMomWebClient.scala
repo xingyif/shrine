@@ -63,7 +63,7 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
 //    }
 //  }
 
-  val momUrl: String = ConfigSource.config.getString("shrine.mom.hornetq.serverUrl")
+  val momUrl: String = ConfigSource.config.getString("shrine.messagequeue.hornetq.serverUrl")
 
   override def createQueueIfAbsent(queueName: String): Queue = {
     val createQueueUrl = momUrl + s"/createQueue/$queueName"
