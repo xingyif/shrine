@@ -1,7 +1,7 @@
-package net.shrine.messagequeue.hornetqmom
+package net.shrine.hornetqmom
 
 import akka.actor.ActorRefFactory
-import net.shrine.messagequeue.messagequeueservice.{Message, MessageSerializer, Queue}
+import net.shrine.messagequeueservice.{Message, MessageSerializer, Queue}
 import org.json4s.NoTypeHints
 import org.json4s.native.Serialization
 import org.json4s.native.Serialization.read

@@ -1,6 +1,6 @@
-package net.shrine.messagequeue.hornetqmom
+package net.shrine.hornetqmom
 
-import net.shrine.messagequeue.messagequeueservice.Message
+import net.shrine.messagequeueservice.Message
 import org.junit.runner.RunWith
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.junit.JUnitRunner

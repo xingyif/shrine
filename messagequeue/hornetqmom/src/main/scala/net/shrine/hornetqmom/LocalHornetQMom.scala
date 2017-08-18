@@ -1,7 +1,7 @@
-package net.shrine.messagequeue.hornetqmom
+package net.shrine.hornetqmom
 
 import com.typesafe.config.Config
-import net.shrine.messagequeue.messagequeueservice.{Message, MessageQueueService, Queue}
+import net.shrine.messagequeueservice.{Message, MessageQueueService, Queue}
 import net.shrine.source.ConfigSource
 import org.hornetq.api.core.client.{ClientConsumer, ClientMessage, ClientSession, ClientSessionFactory, HornetQClient, ServerLocator}
 import org.hornetq.api.core.management.HornetQServerControl
