@@ -48,14 +48,12 @@ System.register(['aurelia-event-aggregator', 'repository/qep.repository', './shr
                 var toModel = function toModel(data) {
                     return new Promise(function (resolve, reject) {
                         var nodes = [].concat(data.results);
-                        var finishedCount = nodes.reduce(function (s, r) {
-                            return ['FINISHED', 'ERROR'].indexOf(r.status) != -1 ? s + 1 : s;
-                        }, 0);
-                        var query = _extends({}, data.query, { complete: nodes.length > 0 && nodes.length === finishedCount });
+                        var dataVersion = data.dataVersion;
+                        var query = _extends({}, data.query, { complete: data.isComplete });
                         resolve({
                             query: query,
                             nodes: nodes,
-                            finishedCount: finishedCount
+                            dataVersion: dataVersion
                         });
                     });
                 };
@@ -69,7 +67,7 @@ System.register(['aurelia-event-aggregator', 'repository/qep.repository', './shr
                 };
 
                 var loadQuery = function loadQuery(d) {
-                    return qep.fetchQuery(d.id, d.timeoutSeconds, d.afterVersion).then(function (result) {
+                    return qep.fetchQuery(d.id, d.timeoutSeconds, d.dataVersion).then(function (result) {
                         return toModel(result);
                     }).catch(function (error) {
                         return logError(error);

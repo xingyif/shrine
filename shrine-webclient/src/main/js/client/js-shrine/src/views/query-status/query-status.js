@@ -17,17 +17,18 @@ export class QueryStatus extends PubSub {
             this.status.query.queryName = n;
         });
         this.subscribe(this.notifications.i2b2.networkIdReceived, id => {
-            this.publish(this.commands.shrine.fetchQuery, {id, timeoutSeconds, afterVersion: defaultVersion})
+            this.publish(this.commands.shrine.fetchQuery, {id, timeoutSeconds, dataVersion: defaultVersion})
         });
         this.subscribe(this.notifications.shrine.queryReceived, data => {
             const query = data.query;
             const nodes = data.nodes;
+            const dataVersion= data.dataVersion;
             const updated = Number(new Date());
             const complete = data.query.complete;
-            const networkId = data.query.networkId;
+            const id = data.query.networkId;
             this.status = { ...this.status, ...{ query, nodes, updated } }
             if (!complete) {
-                window.setTimeout(() => this.publish(this.commands.shrine.fetchQuery, networkId), 10000);
+                window.setTimeout(() => this.publish(this.commands.shrine.fetchQuery, {id, dataVersion, timeoutSeconds}), 5000);
             }
             else {
                 ///this.publish(this.commands.shrine.exportResult, { ...{}, ...this.status });

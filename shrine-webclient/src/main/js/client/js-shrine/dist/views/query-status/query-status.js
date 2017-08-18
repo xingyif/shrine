@@ -82,19 +82,20 @@ System.register(['aurelia-framework', 'services/query-status.model', 'services/p
                         _this2.status.query.queryName = n;
                     });
                     this.subscribe(this.notifications.i2b2.networkIdReceived, function (id) {
-                        _this2.publish(_this2.commands.shrine.fetchQuery, { id: id, timeoutSeconds: timeoutSeconds, afterVersion: defaultVersion });
+                        _this2.publish(_this2.commands.shrine.fetchQuery, { id: id, timeoutSeconds: timeoutSeconds, dataVersion: defaultVersion });
                     });
                     this.subscribe(this.notifications.shrine.queryReceived, function (data) {
                         var query = data.query;
                         var nodes = data.nodes;
+                        var dataVersion = data.dataVersion;
                         var updated = Number(new Date());
                         var complete = data.query.complete;
-                        var networkId = data.query.networkId;
+                        var id = data.query.networkId;
                         _this2.status = _extends({}, _this2.status, { query: query, nodes: nodes, updated: updated });
                         if (!complete) {
                             window.setTimeout(function () {
-                                return _this2.publish(_this2.commands.shrine.fetchQuery, networkId);
-                            }, 10000);
+                                return _this2.publish(_this2.commands.shrine.fetchQuery, { id: id, dataVersion: dataVersion, timeoutSeconds: timeoutSeconds });
+                            }, 5000);
                         } else {}
                     });
 

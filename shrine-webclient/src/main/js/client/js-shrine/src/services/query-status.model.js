@@ -10,12 +10,12 @@ export class QueryStatusModel {
         const toModel = data => {
             return new Promise((resolve, reject) => {                
                 const nodes = [...data.results];
-                const finishedCount = nodes.reduce((s, r) => ['FINISHED', 'ERROR'].indexOf(r.status) != -1? s + 1 : s, 0);
-                const query = {...data.query, ...{complete: nodes.length > 0 && nodes.length === finishedCount}};
+                const dataVersion = data.dataVersion;
+                const query = {...data.query, ...{complete: data.isComplete}};
                 resolve({
                    query,
                    nodes,
-                   finishedCount
+                   dataVersion
                 });
             });
         };
@@ -26,7 +26,7 @@ export class QueryStatusModel {
             .catch(error => logError(error));
 
         const loadQuery = (d) => {
-            return qep.fetchQuery(d.id, d.timeoutSeconds, d.afterVersion)
+            return qep.fetchQuery(d.id, d.timeoutSeconds, d.dataVersion)
             .then(result => toModel(result))
             .catch(error => logError(error))
             .then(model => publishQuery(model));
