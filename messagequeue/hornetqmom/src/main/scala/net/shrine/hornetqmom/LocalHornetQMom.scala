@@ -55,6 +55,7 @@ object LocalHornetQMom extends MessageQueueService {
   /**
     * Use HornetQMomStopper to stop the hornetQServer without unintentially starting it
     */
+  // todo drop this into a try
   private[hornetqmom] def stop() = {
     queuesToConsumers.values.foreach(_.close())
 

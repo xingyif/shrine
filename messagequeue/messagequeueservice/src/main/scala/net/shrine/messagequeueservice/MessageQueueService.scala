@@ -60,3 +60,4 @@ class MessageSerializer extends CustomSerializer[Message](format => (
           JField("priority", JLong(msg.getClientMessage.getPriority)) :: Nil)) :: Nil)
   }
 ))
+// todo test MessageSerializer
