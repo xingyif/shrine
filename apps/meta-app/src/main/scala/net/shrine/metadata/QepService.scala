@@ -11,6 +11,7 @@ import net.shrine.problem.{AbstractProblem, ProblemDigest, ProblemSources}
 import net.shrine.protocol.ResultOutputType
 import net.shrine.qep.querydb.{FullQueryResult, QepQuery, QepQueryBreakdownResultsRow, QepQueryDb, QepQueryDbChangeNotifier, QepQueryFlag}
 import net.shrine.source.ConfigSource
+import net.shrine.config.ConfigExtensions
 import rapture.json._
 import rapture.json.formatters.humanReadable
 import rapture.json.jsonBackends.jawn._
@@ -78,7 +79,8 @@ if not
     parameters('afterVersion.as[Long] ? 0L, 'timeoutSeconds.as[Long] ? 0L) { (afterVersion: Long, timeoutSeconds: Long) =>
 
       //check that the timeout is less than the spray "give up" timeout
-      val sprayRequestTimeout = ConfigSource.config.getLong("spray.can.server.request-timeout")
+      val sprayRequestTimeout = ConfigSource.config.get("spray.can.server.request-timeout",Duration(_)).toSeconds
+
       val maximumTimeout = sprayRequestTimeout - 1
 
       if (maximumTimeout <= timeoutSeconds) warn(s"""spray.can.server.request-timeout $sprayRequestTimeout is too short
