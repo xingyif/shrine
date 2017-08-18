@@ -57,7 +57,7 @@ final case class RunQueryRequest(
       { queryDefinition.toXml }
       { nodeId.fold(NodeSeq.Empty)(_.toXml) }
     </runQuery>
-  } //todo put       { nodeId.map(_.toXml) } at the end for SHRINE-2174
+  }
 
   protected override def i2b2MessageBody: NodeSeq = XmlUtil.stripWhitespace {
     import OptionEnrichments._
