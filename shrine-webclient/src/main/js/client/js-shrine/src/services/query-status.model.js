@@ -25,13 +25,16 @@ export class QueryStatusModel {
             .then(result => publishNetworkId(result))
             .catch(error => logError(error));
 
-        const loadQuery = (id) => qep.fetchQuery(id)
+        const loadQuery = (d) => {
+            return qep.fetchQuery(d.id, d.timeoutSeconds, d.afterVersion)
             .then(result => toModel(result))
             .catch(error => logError(error))
             .then(model => publishQuery(model));
+        }
+           
             
         const init = () => {
-            evtAgg.subscribe(commands.shrine.fetchQuery, (id) => loadQuery(id));
+            evtAgg.subscribe(commands.shrine.fetchQuery, loadQuery);
         }
         init();
     }

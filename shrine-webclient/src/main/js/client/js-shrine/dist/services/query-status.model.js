@@ -68,8 +68,8 @@ System.register(['aurelia-event-aggregator', 'repository/qep.repository', './shr
                     });
                 };
 
-                var loadQuery = function loadQuery(id) {
-                    return qep.fetchQuery(id).then(function (result) {
+                var loadQuery = function loadQuery(d) {
+                    return qep.fetchQuery(d.id, d.timeoutSeconds, d.afterVersion).then(function (result) {
                         return toModel(result);
                     }).catch(function (error) {
                         return logError(error);
@@ -79,9 +79,7 @@ System.register(['aurelia-event-aggregator', 'repository/qep.repository', './shr
                 };
 
                 var init = function init() {
-                    evtAgg.subscribe(commands.shrine.fetchQuery, function (id) {
-                        return loadQuery(id);
-                    });
+                    evtAgg.subscribe(commands.shrine.fetchQuery, loadQuery);
                 };
                 init();
             }, _class.inject = [EventAggregator, QEPRepository, notifications], _temp));

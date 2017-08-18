@@ -1,7 +1,7 @@
 System.register(['aurelia-framework', 'services/query-status.model', 'services/pub-sub'], function (_export, _context) {
     "use strict";
 
-    var customElement, QueryStatusModel, PubSub, _extends, _dec, _class, _class2, _temp, QueryStatus, privateProps, initialState;
+    var customElement, QueryStatusModel, PubSub, _extends, _dec, _class, _class2, _temp, QueryStatus, timeoutSeconds, defaultVersion, privateProps, initialState;
 
     function _classCallCheck(instance, Constructor) {
         if (!(instance instanceof Constructor)) {
@@ -82,7 +82,7 @@ System.register(['aurelia-framework', 'services/query-status.model', 'services/p
                         _this2.status.query.queryName = n;
                     });
                     this.subscribe(this.notifications.i2b2.networkIdReceived, function (id) {
-                        return _this2.publish(_this2.commands.shrine.fetchQuery, id);
+                        _this2.publish(_this2.commands.shrine.fetchQuery, { id: id, timeoutSeconds: timeoutSeconds, afterVersion: defaultVersion });
                     });
                     this.subscribe(this.notifications.shrine.queryReceived, function (data) {
                         var query = data.query;
@@ -95,9 +95,7 @@ System.register(['aurelia-framework', 'services/query-status.model', 'services/p
                             window.setTimeout(function () {
                                 return _this2.publish(_this2.commands.shrine.fetchQuery, networkId);
                             }, 10000);
-                        } else {
-                            _this2.publish(_this2.commands.shrine.exportResult, _extends({}, _this2.status));
-                        }
+                        } else {}
                     });
 
                     if (privateProps.get(this).isDevEnv) {
@@ -111,6 +109,8 @@ System.register(['aurelia-framework', 'services/query-status.model', 'services/p
 
             _export('QueryStatus', QueryStatus);
 
+            timeoutSeconds = 15;
+            defaultVersion = -1;
             privateProps = new WeakMap();
 
             initialState = function initialState() {

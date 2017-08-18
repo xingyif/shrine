@@ -41,8 +41,8 @@ export class QEPRepository {
             .catch(error => error);
     }
 
-    fetchQuery(networkId) {//
-        return this.http.fetch(`qep/queryResult/${networkId}`)
+    fetchQuery(networkId, timeoutSeconds, afterVersion) {//
+        return this.http.fetch(`qep/queryResult/${networkId}?timeoutSeconds=${timeoutSeconds}&afterVersion=${afterVersion}`)
             .then(response => response.json())
             .catch(error => error);
     }

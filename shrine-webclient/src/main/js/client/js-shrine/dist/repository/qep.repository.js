@@ -66,8 +66,8 @@ System.register(['aurelia-fetch-client', 'fetch'], function (_export, _context) 
                     });
                 };
 
-                QEPRepository.prototype.fetchQuery = function fetchQuery(networkId) {
-                    return this.http.fetch('qep/queryResult/' + networkId).then(function (response) {
+                QEPRepository.prototype.fetchQuery = function fetchQuery(networkId, timeoutSeconds, afterVersion) {
+                    return this.http.fetch('qep/queryResult/' + networkId + '?timeoutSeconds=' + timeoutSeconds + '&afterVersion=' + afterVersion).then(function (response) {
                         return response.json();
                     }).catch(function (error) {
                         return error;

@@ -16,7 +16,9 @@ export class QueryStatus extends PubSub {
             this.status = initialState();
             this.status.query.queryName = n;
         });
-        this.subscribe(this.notifications.i2b2.networkIdReceived, id => this.publish(this.commands.shrine.fetchQuery, id));
+        this.subscribe(this.notifications.i2b2.networkIdReceived, id => {
+            this.publish(this.commands.shrine.fetchQuery, {id, timeoutSeconds, afterVersion: defaultVersion})
+        });
         this.subscribe(this.notifications.shrine.queryReceived, data => {
             const query = data.query;
             const nodes = data.nodes;
@@ -28,7 +30,7 @@ export class QueryStatus extends PubSub {
                 window.setTimeout(() => this.publish(this.commands.shrine.fetchQuery, networkId), 10000);
             }
             else {
-                this.publish(this.commands.shrine.exportResult, { ...{}, ...this.status });
+                ///this.publish(this.commands.shrine.exportResult, { ...{}, ...this.status });
             }
         });
 
@@ -38,5 +40,7 @@ export class QueryStatus extends PubSub {
         }
     }
 }
+const timeoutSeconds = 15;
+const defaultVersion = -1;
 const privateProps = new WeakMap();
 const initialState = () => ({ query: { queryName: null, updated: null, complete: false }, nodes: null });
