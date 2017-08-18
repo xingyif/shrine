@@ -13,7 +13,7 @@ import spray.http.{HttpCredentials, HttpEntity, HttpHeader, HttpHeaders, HttpReq
 import spray.io.ClientSSLEngineProvider
 import spray.routing.{RequestContext, Route}
 import akka.pattern.ask
-import net.shrine.messagequeue.messagequeueservice.HttpClient
+import net.shrine.hornetqclient.HttpClient
 import net.shrine.source.ConfigSource
 
 import scala.concurrent.{Await, Future, TimeoutException, blocking}
