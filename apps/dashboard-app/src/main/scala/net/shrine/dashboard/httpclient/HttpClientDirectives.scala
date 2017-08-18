@@ -3,7 +3,7 @@ package net.shrine.dashboard.httpclient
 import java.io.InputStream
 import java.security.cert.X509Certificate
 import javax.net.ssl.{SSLContext, X509TrustManager}
-import net.shrine.mom.HttpClient
+
 import net.shrine.log.Loggable
 import spray.can.Http
 import akka.io.IO
@@ -13,6 +13,7 @@ import spray.http.{HttpCredentials, HttpEntity, HttpHeader, HttpHeaders, HttpReq
 import spray.io.ClientSSLEngineProvider
 import spray.routing.{RequestContext, Route}
 import akka.pattern.ask
+import net.shrine.messagequeue.messagequeueservice.HttpClient
 import net.shrine.source.ConfigSource
 
 import scala.concurrent.{Await, Future, TimeoutException, blocking}
