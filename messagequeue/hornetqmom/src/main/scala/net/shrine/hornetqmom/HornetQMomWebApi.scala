@@ -1,14 +1,13 @@
 package net.shrine.hornetqmom
 
-import akka.event.Logging
 import net.shrine.log.Loggable
 import net.shrine.messagequeueservice.{Message, MessageSerializer, Queue, QueueSerializer}
 import net.shrine.problem.{AbstractProblem, ProblemSources}
+import net.shrine.source.ConfigSource
 import org.json4s.native.Serialization
 import org.json4s.native.Serialization.{read, write}
 import org.json4s.{Formats, NoTypeHints}
 import spray.http.StatusCodes
-import spray.routing.directives.LogEntry
 import spray.routing.{HttpService, Route}
 
 import scala.collection.immutable.Seq
@@ -25,14 +24,18 @@ trait HornetQMomWebApi extends HttpService
   with Loggable {
 
   // todo have something here that wraps around momRoute, complete 404 with a message if config is false
-
+  val enabled: Boolean = ConfigSource.config.getString("shrine.messagequeue.hornetQWebApi.enable").toBoolean
 
   def momRoute: Route = pathPrefix("mom") {
-    put {
-      createQueue ~
-        sendMessage ~
-        acknowledge
-    } ~ receiveMessage ~ getQueues ~ deleteQueue
+
+//    if (!enabled) {respondWithStatus(StatusCodes.NotFound){complete{"HornetQWebApi needs to be enabled before use!"}}}
+//    else {
+      put {
+        createQueue ~
+          sendMessage ~
+          acknowledge
+      } ~ receiveMessage ~ getQueues ~ deleteQueue
+//    }
   }
 
   // SQS returns CreateQueueResult, which contains queueUrl: String
