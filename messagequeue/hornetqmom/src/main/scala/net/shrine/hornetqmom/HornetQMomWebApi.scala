@@ -7,7 +7,7 @@ import net.shrine.source.ConfigSource
 import org.json4s.native.Serialization
 import org.json4s.native.Serialization.{read, write}
 import org.json4s.{Formats, NoTypeHints}
-import spray.http.StatusCodes
+import spray.http.{HttpEntity, HttpResponse, StatusCodes}
 import spray.routing.{HttpService, Route}
 
 import scala.collection.immutable.Seq
@@ -23,8 +23,7 @@ import scala.util.{Failure, Success, Try}
 trait HornetQMomWebApi extends HttpService
   with Loggable {
 
-  // todo have something here that wraps around momRoute, complete 404 with a message if config is false
-  val enabled: Boolean = ConfigSource.config.getString("shrine.messagequeue.hornetQWebApi.enable").toBoolean
+  val enabled: Boolean = ConfigSource.config.getString("shrine.messagequeue.hornetQWebApi.enabled").toBoolean
 
   def momRoute: Route = pathPrefix("mom") {
 
@@ -35,7 +34,6 @@ trait HornetQMomWebApi extends HttpService
           sendMessage ~
           acknowledge
       } ~ receiveMessage ~ getQueues ~ deleteQueue
-//    }
   }
 
   // SQS returns CreateQueueResult, which contains queueUrl: String
