@@ -31,7 +31,7 @@ export class QueryStatus extends PubSub {
                 window.setTimeout(() => this.publish(this.commands.shrine.fetchQuery, {id, dataVersion, timeoutSeconds}), 5000);
             }
             else {
-                ///this.publish(this.commands.shrine.exportResult, { ...{}, ...this.status });
+                this.publish(this.commands.shrine.exportResult, { ...{}, ...this.status });
             }
         });
 

@@ -96,7 +96,9 @@ System.register(['aurelia-framework', 'services/query-status.model', 'services/p
                             window.setTimeout(function () {
                                 return _this2.publish(_this2.commands.shrine.fetchQuery, { id: id, dataVersion: dataVersion, timeoutSeconds: timeoutSeconds });
                             }, 5000);
-                        } else {}
+                        } else {
+                            _this2.publish(_this2.commands.shrine.exportResult, _extends({}, _this2.status));
+                        }
                     });
 
                     if (privateProps.get(this).isDevEnv) {

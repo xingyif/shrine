@@ -1,7 +1,7 @@
 System.register(['./pub-sub'], function (_export, _context) {
     "use strict";
 
-    var PubSub, privateProps, Export, convertObjectToCSV;
+    var PubSub, Export, convertObjectToCSV;
 
     function _classCallCheck(instance, Constructor) {
         if (!(instance instanceof Constructor)) {
@@ -38,8 +38,6 @@ System.register(['./pub-sub'], function (_export, _context) {
             PubSub = _pubSub.PubSub;
         }],
         execute: function () {
-            privateProps = new WeakMap();
-
             _export('Export', Export = function (_PubSub) {
                 _inherits(Export, _PubSub);
 
@@ -50,10 +48,7 @@ System.register(['./pub-sub'], function (_export, _context) {
                         rest[_key] = arguments[_key];
                     }
 
-                    var _this = _possibleConstructorReturn(this, _PubSub.call.apply(_PubSub, [this].concat(rest)));
-
-                    privateProps.set(_this, {});
-                    return _this;
+                    return _possibleConstructorReturn(this, _PubSub.call.apply(_PubSub, [this].concat(rest)));
                 }
 
                 Export.prototype.listen = function listen() {
@@ -66,51 +61,58 @@ System.register(['./pub-sub'], function (_export, _context) {
             _export('Export', Export);
 
             convertObjectToCSV = function convertObjectToCSV(d) {
-
                 var nodeNames = d.nodes.map(function (n) {
                     return n.adapterNode;
                 });
                 var nodes = d.nodes;
+                var m = new Map();
+                nodes.forEach(function (_ref) {
+                    var breakdowns = _ref.breakdowns;
+                    return breakdowns.forEach(function (_ref2) {
+                        var _m$get;
 
-                var breakdownMap = new Map();
-                nodes.map(function (_ref) {
-                    var breakdowns = _ref.breakdowns,
-                        adapterNode = _ref.adapterNode;
-                    return breakdowns.map(function (_ref2) {
-                        var description = _ref2.resultType.i2b2Options.description;
-                        return breakdownMap.set(description, {});
+                        var description = _ref2.resultType.i2b2Options.description,
+                            results = _ref2.results;
+
+                        m.has(description) ? (_m$get = m.get(description)).add.apply(_m$get, results.map(function (r) {
+                            return r.dataKey;
+                        })) : m.set(description, new Set(results.map(function (r) {
+                            return r.dataKey;
+                        })));
                     });
                 });
 
-                for (var _iterator = breakdownMap, _isArray = Array.isArray(_iterator), _i = 0, _iterator = _isArray ? _iterator : _iterator[Symbol.iterator]();;) {
-                    var _ref3;
-
-                    if (_isArray) {
-                        if (_i >= _iterator.length) break;
-                        _ref3 = _iterator[_i++];
-                    } else {
-                        _i = _iterator.next();
-                        if (_i.done) break;
-                        _ref3 = _i.value;
-                    }
-
-                    var m = _ref3;
-
-                    console.log(m);
-                }
-
-                var line1 = 'data:text/csv;charset=utf-8,SHRINE QUERY RESULTS (OBFUSCATED PATIENT COUNTS),' + d.nodes.map(function (n) {
+                var line1 = 'data:text/csv;charset=utf-8,SHRINE QUERY RESULTS (OBFUSCATED PATIENT COUNTS),' + nodes.map(function (n) {
                     return n.adapterNode;
                 }).join(',');
-                var line2 = '\nAll Patients,' + d.nodes.map(function (n) {
+                var line2 = '\nAll Patients,' + nodes.map(function (n) {
                     return n.count;
                 }).join(',');
-                var csv = encodeURI('' + line1 + line2);
+                var result = [];
+                m.forEach(function (v, k) {
+                    result.push.apply(result, [''].concat(Array.from(v).map(function (s) {
+                        var title = k.split(' ').shift() + '|' + s;
+                        var values = nodes.map(function (_ref3) {
+                            var breakdowns = _ref3.breakdowns;
+
+                            var b = breakdowns.find(function (_ref4) {
+                                var description = _ref4.resultType.i2b2Options.description,
+                                    results = _ref4.results;
+                                return description === k;
+                            });
+                            var r = b ? b.results.find(function (r) {
+                                return r.dataKey === s;
+                            }) : undefined;
+                            return r ? r.value : 'unavailable';
+                        });
+                        return title + ',' + values.join(",");
+                    })));
+                });
+                var csv = encodeURI('' + line1 + line2 + result.join('\n'));
                 var link = document.createElement('a');
                 var breakdowns = d.nodes.map(function (n) {
                     return n.breakdowns;
                 });
-
                 link.setAttribute('href', csv);
                 link.setAttribute('download', 'test.csv');
             };

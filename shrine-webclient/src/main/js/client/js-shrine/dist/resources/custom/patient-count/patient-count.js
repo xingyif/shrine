@@ -65,9 +65,7 @@ System.register(['aurelia-framework'], function (_export, _context) {
                     _initDefineProp(this, 'result', _descriptor, this);
                 }
 
-                PatientCount.prototype.attached = function attached() {
-                    console.log(this.result);
-                };
+                PatientCount.prototype.attached = function attached() {};
 
                 return PatientCount;
             }(), (_descriptor = _applyDecoratedDescriptor(_class2.prototype, 'result', [bindable], {

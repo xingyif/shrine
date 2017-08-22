@@ -11,7 +11,8 @@ export class QueryStatusModel {
             return new Promise((resolve, reject) => {                
                 const nodes = [...data.results];
                 const dataVersion = data.dataVersion;
-                const query = {...data.query, ...{complete: data.isComplete}};
+                const complete = nodes.filter(n => 'ERROR,COMPLETED,FINISHED'.includes(n.status)).length === nodes.length;
+                const query = {...data.query, ...{complete: complete}};
                 resolve({
                    query,
                    nodes,
