@@ -2,6 +2,7 @@ package net.shrine.hornetqmom
 
 import akka.actor.ActorRefFactory
 import net.shrine.messagequeueservice.{Message, MessageSerializer, Queue, QueueSerializer}
+import net.shrine.source.ConfigSource
 import org.json4s.NoTypeHints
 import org.json4s.native.Serialization
 import org.json4s.native.Serialization.read
@@ -100,6 +101,26 @@ class HornetQMomWebApiTest extends FlatSpec with ScalatestRouteTest with HornetQ
     // given timeout is 1 seconds
     Get(s"/mom/receiveMessage/$queueName?timeOutSeconds=1") ~> momRoute ~> check {
       assertResult(InternalServerError)(status)
+    }
+  }
+}
+
+@RunWith(classOf[JUnitRunner])
+class HornetQMomWebApiConfigTest extends FlatSpec with ScalatestRouteTest with HornetQMomWebApi {
+  override def actorRefFactory: ActorRefFactory = system
+
+  private val queueName = "testQueue"
+
+
+  override val enabled: Boolean = ConfigSource.config.getString("shrine.messagequeue.hornetQWebApiTest.enabled").toBoolean
+
+  "HornetQMomWebApi" should "block user from using the API and return a 404 response" in {
+
+    Put(s"/mom/createQueue/$queueName") ~> momRoute ~> check {
+      val response = new String(body.data.toByteArray)
+
+      assertResult("HornetQWebApi needs to be enabled before use!")(response)
+      assertResult(NotFound)(status)
     }
   }
 }

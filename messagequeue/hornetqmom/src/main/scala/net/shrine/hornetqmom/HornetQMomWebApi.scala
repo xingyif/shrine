@@ -7,7 +7,7 @@ import net.shrine.source.ConfigSource
 import org.json4s.native.Serialization
 import org.json4s.native.Serialization.{read, write}
 import org.json4s.{Formats, NoTypeHints}
-import spray.http.{HttpEntity, HttpResponse, StatusCodes}
+import spray.http.StatusCodes
 import spray.routing.{HttpService, Route}
 
 import scala.collection.immutable.Seq
@@ -27,13 +27,17 @@ trait HornetQMomWebApi extends HttpService
 
   def momRoute: Route = pathPrefix("mom") {
 
-//    if (!enabled) {respondWithStatus(StatusCodes.NotFound){complete{"HornetQWebApi needs to be enabled before use!"}}}
-//    else {
+    if (!enabled) {
+        respondWithStatus(StatusCodes.NotFound) {
+          complete("HornetQWebApi needs to be enabled before use!")
+      }
+    } else {
       put {
         createQueue ~
           sendMessage ~
           acknowledge
       } ~ receiveMessage ~ getQueues ~ deleteQueue
+    }
   }
 
   // SQS returns CreateQueueResult, which contains queueUrl: String
