@@ -91,16 +91,18 @@ trait DashboardService extends HttpService with Loggable {
   def authenticatedInBrowser: Route = pathPrefixTest("user"|"admin"|"toDashboard") {
     logRequestResponse(logEntryForRequestResponse _) { //logging is controlled by Akka's config, slf4j, and log4j config
       reportIfFailedToAuthenticate {
-        authenticate(userAuthenticator.basicUserAuthenticator) { user =>
-          pathPrefix("user") {
-            userRoute(user)
-          } ~
-            pathPrefix("admin") {
-              adminRoute(user)
+        detach() {
+          authenticate(userAuthenticator.basicUserAuthenticator) { user =>
+            pathPrefix("user") {
+              userRoute(user)
             } ~
-            pathPrefix("toDashboard") {
-              toDashboardRoute(user)
-            }
+              pathPrefix("admin") {
+                adminRoute(user)
+              } ~
+              pathPrefix("toDashboard") {
+                toDashboardRoute(user)
+              }
+          }
         }
       }
     }
@@ -114,9 +116,11 @@ trait DashboardService extends HttpService with Loggable {
   def authenticatedDashboard:Route = pathPrefix("fromDashboard") {
     logRequestResponse(logEntryForRequestResponse _) { //logging is controlled by Akka's config, slf4j, and log4j config
       get { //all remote dashboard calls are gets.
-        authenticate(ShrineJwtAuthenticator.authenticate) { user =>
-          info(s"Sucessfully authenticated user `$user`")
-          adminRoute(user)
+        detach(){
+          authenticate(ShrineJwtAuthenticator.authenticate) { user =>
+            info(s"Sucessfully authenticated user `$user`")
+            adminRoute(user)
+          }
         }
       }
     }
@@ -246,15 +250,16 @@ trait DashboardService extends HttpService with Loggable {
 
   // TODO: Move this over to Status API?
   lazy val verifySignature:Route = {
-
-    formField("sha256".as[String].?) { sha256: Option[String] =>
-      val response = sha256.map(s => KeyStoreInfo.hasher.handleSig(s))
-      implicit val format = ShaResponse.json4sFormats
-      response match {
-        case None                                           => complete(StatusCodes.BadRequest)
-        case Some(sh@ShaResponse(ShaResponse.badFormat, _)) => complete(StatusCodes.BadRequest -> sh)
-        case Some(sh@ShaResponse(_, false))                 => complete(StatusCodes.NotFound -> sh)
-        case Some(sh@ShaResponse(_, true))                  => complete(StatusCodes.OK -> sh)
+    detach() {
+      formField("sha256".as[String].?) { sha256: Option[String] =>
+        val response = sha256.map(s => KeyStoreInfo.hasher.handleSig(s))
+        implicit val format = ShaResponse.json4sFormats
+        response match {
+          case None => complete(StatusCodes.BadRequest)
+          case Some(sh@ShaResponse(ShaResponse.badFormat, _)) => complete(StatusCodes.BadRequest -> sh)
+          case Some(sh@ShaResponse(_, false)) => complete(StatusCodes.NotFound -> sh)
+          case Some(sh@ShaResponse(_, true)) => complete(StatusCodes.OK -> sh)
+        }
       }
     }
   }
@@ -289,7 +294,9 @@ trait DashboardService extends HttpService with Loggable {
   }
 
   def getFromSubService(key: String):Route = {
-    requestUriThenRoute(s"$statusBaseUrl/$key")
+    detach() {
+      requestUriThenRoute(s"$statusBaseUrl/$key")
+    }
   }
 
   // table based view, can see N problems at a time. Front end sends how many problems that they want
@@ -310,6 +317,7 @@ trait DashboardService extends HttpService with Loggable {
           val n = Math.max(0, nPreMax)
           val moddedOffset = floorMod(Math.max(0, offsetPreMod), n)
 
+          detach() {
           val query = for {
             result <- db.IO.sizeAndProblemDigest(n, moddedOffset)
           } yield (result._2, floorMod(Math.max(0, moddedOffset), n), n, result._1)
@@ -325,7 +333,7 @@ trait DashboardService extends HttpService with Loggable {
           val response: ProblemResponse = ProblemResponse(tupled._1, tupled._2, tupled._3, tupled._4)
           implicit val formats = response.json4sMarshaller
           complete(response)
-    }}}
+    }}}}
   }
 }
 
