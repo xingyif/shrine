@@ -136,14 +136,15 @@
 		i2b2.events.exportQueryResult = new YAHOO.util.CustomEvent("exportQueryResult", i2b2);
 
 		i2b2.events.queryResultAvailable.subscribe(function () {
-			jQuery('#crcStatusBox .TopTabs .opXML').first()
+			jQuery('#crcStatusBox .TopTabs .opXML #shrineCSVExport')
 				.css({opacity: 1})
 				.click(function(e) {
+					e.stopPropagation();
 					i2b2.events.exportQueryResult.fire(); 
 				});
 		});
 		i2b2.events.queryResultUnavailable.subscribe(function () {
-			jQuery('#crcStatusBox .TopTabs .opXML').first()
+			jQuery('#crcStatusBox .TopTabs .opXML #shrineCSVExport')
 				.css({opacity: 0.5})
 				.off('click');
 		});
@@ -180,7 +181,7 @@
 
 	function addExportIcon($) {
 		$('#crcStatusBox .TopTabs .opXML').prepend(
-			'<a href="JavaScript:alert("export")>' +
+			'<a href="JavaScript:alert("export") id="shrineCSVExport">' +
 				'<img width="16" height="16" border="0" style="opacity: .5" src="js-i2b2/cells/SHRINE/assets/csv.png" alt="Export Results"/>' +
 			'</a>');
 	}
