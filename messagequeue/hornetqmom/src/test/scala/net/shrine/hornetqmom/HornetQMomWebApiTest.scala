@@ -37,6 +37,16 @@ class HornetQMomWebApiTest extends FlatSpec with ScalatestRouteTest with HornetQ
       assertResult(queueName)(responseQueueName)
     }
 
+    // should be OK to create a queue twice
+    Put(s"/mom/createQueue/$queueName") ~> momRoute ~> check {
+      val response = new String(body.data.toByteArray)
+      implicit val formats = Serialization.formats(NoTypeHints)
+      val jsonToQueue = read[Queue](response)(formats, manifest[Queue])
+      val responseQueueName = jsonToQueue.name
+      assertResult(Created)(status)
+      assertResult(queueName)(responseQueueName)
+    }
+
     Put(s"/mom/sendMessage/$messageContent/$queueName") ~> momRoute ~> check {
       assertResult(Accepted)(status)
     }
@@ -71,6 +81,23 @@ class HornetQMomWebApiTest extends FlatSpec with ScalatestRouteTest with HornetQ
 
     Delete(s"/mom/deleteQueue/$queueName") ~> momRoute ~> check {
       assertResult(OK)(status)
+    }
+  }
+
+  "HornetQMomWebApi" should "respond Internal server error with the corresponding error message when " +
+    "failures occur while creating/deleting the given queue, sending/receiving message, getting queues" in {
+
+    Delete(s"/mom/deleteQueue/$queueName") ~> momRoute ~> check {
+      assertResult(InternalServerError)(status)
+    }
+
+    Put(s"/mom/sendMessage/$messageContent/$queueName") ~> momRoute ~> check {
+      assertResult(InternalServerError)(status)
+    }
+
+    // given timeout is 1 seconds
+    Get(s"/mom/receiveMessage/$queueName?timeOutSeconds=1") ~> momRoute ~> check {
+      assertResult(InternalServerError)(status)
     }
   }
 }

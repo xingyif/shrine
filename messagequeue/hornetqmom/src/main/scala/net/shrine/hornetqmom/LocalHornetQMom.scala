@@ -97,7 +97,6 @@ object LocalHornetQMom extends MessageQueueService {
   override def queues: Try[Seq[Queue]] = {
     val getQueuesTry: Try[Seq[Queue]] = for {
       hornetQTry: HornetQServerControl <- Try {
-        // val serverControl: HornetQServerControl = hornetQServer.getHornetQServerControl
         hornetQServer.getHornetQServerControl
       }
       getQueuesTry: Seq[Queue] <- Try {
@@ -112,6 +111,11 @@ object LocalHornetQMom extends MessageQueueService {
   def send(contents: String, to: Queue): Try[Unit] = {
     val sendTry: Try[Unit] = for {
       sendTry <- Try {
+        // check if the queue exists first
+        if (!this.queues.get.map(_.name).contains(to.name)) {
+          throw new NoSuchElementException(s"Given Queue ${to.name} does not exist in HornetQ server! Please create the queue first!")
+        }
+
         val producer: ClientProducer = session.createProducer(to.name)
         val message = session.createMessage(true)
         message.putStringProperty(propName, contents)
@@ -132,12 +136,12 @@ object LocalHornetQMom extends MessageQueueService {
     * @return Some message before the timeout, or None
     */
   def receive(from: Queue, timeout: Duration): Try[Option[Message]] = {
-    if (!queuesToConsumers.contains(from)) {
-      throw new NoSuchElementException(s"Given Queue ${from.name} does not exist in HornetQ server! Please create the queue first!")
-    }
     val receiveMessageTry: Try[Option[Message]] = for {
     //todo handle the case where either stop or close has been called on something gracefully
       messageConsumer: ClientConsumer <- Try {
+        if (!queuesToConsumers.contains(from)) {
+          throw new NoSuchElementException(s"Given Queue ${from.name} does not exist in HornetQ server! Please create the queue first!")
+        }
         queuesToConsumers(from)
       }
       message: Option[Message] <- Try {

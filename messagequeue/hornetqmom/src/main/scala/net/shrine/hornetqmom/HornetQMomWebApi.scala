@@ -40,7 +40,7 @@ trait HornetQMomWebApi extends HttpService
         if (createdQueueTry.isFailure) {
           respondWithStatus(StatusCodes.InternalServerError) {
             complete(s"HornetQ throws an exception while trying to create the queue $queueName," +
-              s"HornetQ Server response: ${createdQueueTry.get}")
+              s"HornetQ Server response: ${createdQueueTry.failed.get}")
           }
         } else {
           implicit val formats = Serialization.formats(NoTypeHints)
@@ -61,7 +61,7 @@ trait HornetQMomWebApi extends HttpService
         if (deleteQueueTry.isFailure) {
           respondWithStatus(StatusCodes.InternalServerError) {
             complete(s"HornetQ throws an exception while trying to delete the queue $queueName," +
-              s"HornetQ Server response: ${deleteQueueTry.get}")
+              s"HornetQ Server response: ${deleteQueueTry.failed.get}")
           }
         } else {
           complete(StatusCodes.OK)
@@ -77,7 +77,7 @@ trait HornetQMomWebApi extends HttpService
       if (sendTry.isFailure) {
         respondWithStatus(StatusCodes.InternalServerError) {
           complete(s"HornetQ throws an exception while trying to send a message to the queue $toQueue," +
-            s"HornetQ Server response: ${sendTry.get}")
+            s"HornetQ Server response: ${sendTry.failed.get}")
         }
       } else {
         complete(StatusCodes.Accepted)
@@ -96,7 +96,7 @@ trait HornetQMomWebApi extends HttpService
             if (receiveTry.isFailure) {
               respondWithStatus(StatusCodes.InternalServerError) {
                 complete(s"HornetQ throws an exception while trying to send a message to the queue $fromQueue," +
-                  s"HornetQ Server response: ${receiveTry.get}")
+                  s"HornetQ Server response: ${receiveTry.failed.get}")
               }
             } else {
               implicit val formats = Serialization.formats(NoTypeHints) + new MessageSerializer
@@ -119,7 +119,7 @@ trait HornetQMomWebApi extends HttpService
             LogEntry(s"\n  Request: acknowledge/$messageJSON\n  Response: ${acknowledgeTry.get}", Logging.DebugLevel)
             respondWithStatus(StatusCodes.InternalServerError) {
               complete(s"HornetQ throws an exception while trying to complete the given message," +
-                s"HornetQ Server response: ${acknowledgeTry.get}")
+                s"HornetQ Server response: ${acknowledgeTry.failed.get}")
             }
           } else {
             complete(StatusCodes.ResetContent)
@@ -139,7 +139,7 @@ trait HornetQMomWebApi extends HttpService
           if (getQueuesTry.isFailure) {
             respondWithStatus(StatusCodes.InternalServerError) {
               complete(s"HornetQ throws an exception while trying to get all queue names," +
-                s"HornetQ Server response: ${getQueuesTry.get}")
+                s"HornetQ Server response: ${getQueuesTry.failed.get}")
             }
           } else {
             complete(write[Seq[Queue]](LocalHornetQMom.queues.get)(formats))
