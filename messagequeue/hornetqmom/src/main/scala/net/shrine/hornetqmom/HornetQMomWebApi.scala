@@ -12,6 +12,7 @@ import spray.routing.{HttpService, Route}
 
 import scala.collection.immutable.Seq
 import scala.concurrent.duration.Duration
+import scala.util.Try
 import scala.util.control.NonFatal
 /**
   * A web API that provides access to the internal HornetQMom library.
@@ -35,11 +36,18 @@ trait HornetQMomWebApi extends HttpService
   def createQueue: Route =
     path("createQueue" / Segment) { queueName =>
       detach() {
-        val createdQueue: Queue = LocalHornetQMom.createQueueIfAbsent(queueName)
-        implicit val formats = Serialization.formats(NoTypeHints)
-        val response: String = write[Queue](createdQueue)(formats)
-        respondWithStatus(StatusCodes.Created) {
-          complete(response)
+        val createdQueueTry: Try[Queue] = LocalHornetQMom.createQueueIfAbsent(queueName)
+        if (createdQueueTry.isFailure) {
+          respondWithStatus(StatusCodes.InternalServerError) {
+            complete(s"HornetQ throws an exception while trying to create the queue $queueName," +
+              s"HornetQ Server response: ${createdQueueTry.get}")
+          }
+        } else {
+          implicit val formats = Serialization.formats(NoTypeHints)
+          val response: String = write[Queue](createdQueueTry.get)(formats)
+          respondWithStatus(StatusCodes.Created) {
+            complete(response)
+          }
         }
       }
   }
@@ -49,8 +57,15 @@ trait HornetQMomWebApi extends HttpService
   def deleteQueue: Route = path("deleteQueue" / Segment) { queueName =>
     delete {
       detach() {
-        LocalHornetQMom.deleteQueue(queueName)
-        complete(StatusCodes.OK)
+        val deleteQueueTry: Try[Unit] = LocalHornetQMom.deleteQueue(queueName)
+        if (deleteQueueTry.isFailure) {
+          respondWithStatus(StatusCodes.InternalServerError) {
+            complete(s"HornetQ throws an exception while trying to delete the queue $queueName," +
+              s"HornetQ Server response: ${deleteQueueTry.get}")
+          }
+        } else {
+          complete(StatusCodes.OK)
+        }
       }
     }
   }
@@ -58,8 +73,15 @@ trait HornetQMomWebApi extends HttpService
   // SQS sendMessage(String queueUrl, String messageBody) => SendMessageResult
   def sendMessage: Route = path("sendMessage" / Segment / Segment) { (messageContent, toQueue) =>
     detach() {
-      LocalHornetQMom.send(messageContent, Queue.apply(toQueue))
-      complete(StatusCodes.Accepted)
+      val sendTry: Try[Unit] = LocalHornetQMom.send(messageContent, Queue.apply(toQueue))
+      if (sendTry.isFailure) {
+        respondWithStatus(StatusCodes.InternalServerError) {
+          complete(s"HornetQ throws an exception while trying to send a message to the queue $toQueue," +
+            s"HornetQ Server response: ${sendTry.get}")
+        }
+      } else {
+        complete(StatusCodes.Accepted)
+      }
     }
   }
 
@@ -70,9 +92,16 @@ trait HornetQMomWebApi extends HttpService
         parameter('timeOutSeconds ? 20) { timeOutSeconds =>
           val timeout: Duration = Duration.create(timeOutSeconds, "seconds")
           detach() {
-            val response: Option[Message] = LocalHornetQMom.receive(Queue.apply(fromQueue), timeout)
-            implicit val formats = Serialization.formats(NoTypeHints) + new MessageSerializer
-            response.fold(complete(StatusCodes.NotFound))(msg => complete(write(response)(formats)))
+            val receiveTry: Try[Option[Message]] = LocalHornetQMom.receive(Queue.apply(fromQueue), timeout)
+            if (receiveTry.isFailure) {
+              respondWithStatus(StatusCodes.InternalServerError) {
+                complete(s"HornetQ throws an exception while trying to send a message to the queue $fromQueue," +
+                  s"HornetQ Server response: ${receiveTry.get}")
+              }
+            } else {
+              implicit val formats = Serialization.formats(NoTypeHints) + new MessageSerializer
+              receiveTry.get.fold(complete(StatusCodes.NotFound))(msg => complete(write(receiveTry.get)(formats)))
+            }
           }
         }
       }
@@ -85,12 +114,15 @@ trait HornetQMomWebApi extends HttpService
       detach() {
         try {
           val msg: Message = read[Message](messageJSON)(formats, manifest[Message])
-          LocalHornetQMom.completeMessage(msg)
-          complete(StatusCodes.ResetContent)
-        } catch {
-          case NonFatal(x) => {
-            LogEntry(s"\n  Request: acknowledge/$messageJSON\n  Response: $x", Logging.DebugLevel)
-            complete(StatusCodes.BadRequest)
+          val acknowledgeTry: Try[Unit] = LocalHornetQMom.completeMessage(msg)
+          if (acknowledgeTry.isFailure) {
+            LogEntry(s"\n  Request: acknowledge/$messageJSON\n  Response: ${acknowledgeTry.get}", Logging.DebugLevel)
+            respondWithStatus(StatusCodes.InternalServerError) {
+              complete(s"HornetQ throws an exception while trying to complete the given message," +
+                s"HornetQ Server response: ${acknowledgeTry.get}")
+            }
+          } else {
+            complete(StatusCodes.ResetContent)
           }
         }
       }
@@ -103,7 +135,15 @@ trait HornetQMomWebApi extends HttpService
       detach() {
         implicit val formats = Serialization.formats(NoTypeHints)
         respondWithStatus(StatusCodes.OK) {
-          complete(write[Seq[Queue]](LocalHornetQMom.queues)(formats))
+          val getQueuesTry: Try[Seq[Queue]] = LocalHornetQMom.queues
+          if (getQueuesTry.isFailure) {
+            respondWithStatus(StatusCodes.InternalServerError) {
+              complete(s"HornetQ throws an exception while trying to get all queue names," +
+                s"HornetQ Server response: ${getQueuesTry.get}")
+            }
+          } else {
+            complete(write[Seq[Queue]](LocalHornetQMom.queues.get)(formats))
+          }
         }
       }
     }

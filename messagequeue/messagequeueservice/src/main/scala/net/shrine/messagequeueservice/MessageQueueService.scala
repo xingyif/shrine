@@ -8,6 +8,7 @@ import org.json4s.{CustomSerializer, DefaultFormats, Formats, _}
 
 import scala.collection.immutable.Seq
 import scala.concurrent.duration.Duration
+import scala.util.Try
 /**
   * This object mostly imitates AWS SQS' API via an embedded HornetQ. See http://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/examples-sqs.html
   *
@@ -18,12 +19,12 @@ import scala.concurrent.duration.Duration
 //todo in 1.24, create an AwsSqs implementation of the trait
 
 trait MessageQueueService {
-  def createQueueIfAbsent(queueName:String):Queue
-  def deleteQueue(queueName:String)
-  def queues:Seq[Queue]
-  def send(contents:String,to:Queue):Unit
-  def receive(from:Queue,timeout:Duration):Option[Message]
-  def completeMessage(message:Message):Unit
+  def createQueueIfAbsent(queueName:String): Try[Queue]
+  def deleteQueue(queueName:String): Try[Unit]
+  def queues: Try[Seq[Queue]]
+  def send(contents:String,to:Queue): Try[Unit]
+  def receive(from:Queue,timeout:Duration): Try[Option[Message]]
+  def completeMessage(message:Message): Try[Unit]
 
 }
 
