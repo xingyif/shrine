@@ -89,21 +89,19 @@ case class StewardDatabase(schemaDef:StewardSchema,dataSource: DataSource) exten
   }
 
   def updateRequestForTopicAccess(user:User,topicId:TopicId,topicRequest:InboundTopicRequest):Try[OutboundTopic] = Try {
-
-    dbRun(mostRecentTopicQuery.filter(_.id === topicId).result.headOption.flatMap{ option =>
+      dbRun(mostRecentTopicQuery.filter(_.id === topicId).result.headOption.flatMap { option =>
         val oldTopicRecord = option.getOrElse(throw TopicDoesNotExist(topicId = topicId))
-        if(user.username != oldTopicRecord.createdBy) throw DetectedAttemptByWrongUserToChangeTopic(topicId,user.username,oldTopicRecord.createdBy)
-        if(oldTopicRecord.state == TopicState.approved) throw ApprovedTopicCanNotBeChanged(topicId)
+        if (user.username != oldTopicRecord.createdBy) throw DetectedAttemptByWrongUserToChangeTopic(topicId, user.username, oldTopicRecord.createdBy)
+        if (oldTopicRecord.state == TopicState.approved) throw ApprovedTopicCanNotBeChanged(topicId)
 
         val updatedTopic = oldTopicRecord.copy(name = topicRequest.name,
-                                                description = topicRequest.description,
-                                                changedBy = user.username,
-                                                changeDate = System.currentTimeMillis())
-        (allTopicQuery += updatedTopic).flatMap{_ =>
-          outboundUsersForNamesAction(Set(updatedTopic.createdBy,updatedTopic.changedBy)).map(updatedTopic.toOutboundTopic)
+          description = topicRequest.description,
+          changedBy = user.username,
+          changeDate = System.currentTimeMillis())
+        (allTopicQuery += updatedTopic).flatMap { _ =>
+          outboundUsersForNamesAction(Set(updatedTopic.createdBy, updatedTopic.changedBy)).map(updatedTopic.toOutboundTopic)
         }
-      }
-    )
+      })
   }
 
   def selectTopicsForResearcher(parameters:QueryParameters):ResearchersTopics = {
@@ -129,13 +127,13 @@ case class StewardDatabase(schemaDef:StewardSchema,dataSource: DataSource) exten
 
   def selectTopicsForSteward(queryParameters: QueryParameters):StewardsTopics = {
 
-    val (count,topics,userNamesToOutboundUsers) = dbRun{
-      for{
-        count <- topicCountQuery(queryParameters).length.result
-        topics <- topicSelectQuery(queryParameters).result
-        userNamesToOutboundUsers <- outboundUsersForNamesAction((topics.map(_.createdBy) ++ topics.map(_.changedBy)).to[Set])
-      } yield (count,topics,userNamesToOutboundUsers)
-    }
+      val (count, topics, userNamesToOutboundUsers) = dbRun {
+        for {
+          count <- topicCountQuery(queryParameters).length.result
+          topics <- topicSelectQuery(queryParameters).result
+          userNamesToOutboundUsers <- outboundUsersForNamesAction((topics.map(_.createdBy) ++ topics.map(_.changedBy)).to[Set])
+        } yield (count, topics, userNamesToOutboundUsers)
+      }
 
     StewardsTopics(count,
                     queryParameters.skipOption.getOrElse(0),
@@ -180,13 +178,14 @@ case class StewardDatabase(schemaDef:StewardSchema,dataSource: DataSource) exten
 
     val noTopicRecord:Option[TopicRecord] = None
     val noOpDBIO:DBIOAction[Option[TopicRecord], NoStream, Effect.Write] = DBIO.successful(noTopicRecord)
-
-    dbRun(mostRecentTopicQuery.filter(_.id === topicId).result.headOption.flatMap(
-      _.fold(noOpDBIO){ originalTopic =>
-        val updatedTopic = originalTopic.copy(state = state, changedBy = userId, changeDate = System.currentTimeMillis())
-        (allTopicQuery += updatedTopic).map(_ => Option(updatedTopic))
-      }
-    ))
+    blocking {
+      dbRun(mostRecentTopicQuery.filter(_.id === topicId).result.headOption.flatMap(
+        _.fold(noOpDBIO) { originalTopic =>
+          val updatedTopic = originalTopic.copy(state = state, changedBy = userId, changeDate = System.currentTimeMillis())
+          (allTopicQuery += updatedTopic).map(_ => Option(updatedTopic))
+        }
+      ))
+    }
   }
 
   def selectTopicCountsPerState(queryParameters: QueryParameters):TopicsPerState = {

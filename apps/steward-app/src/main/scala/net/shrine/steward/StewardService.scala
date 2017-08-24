@@ -76,13 +76,13 @@ trait StewardService extends HttpService with Json4sSupport {
   def authenticatedInBrowser: Route = pathPrefixTest("user"|"steward"|"researcher") {
     reportIfFailedToAuthenticate {
         authenticate(userAuthenticator.basicUserAuthenticator) { user =>
-
-          StewardDatabase.db.upsertUser(user)
-
-          pathPrefix("user") {userRoute(user)} ~
-          pathPrefix("steward") {stewardRoute(user)} ~
-          pathPrefix("researcher") {researcherRoute(user)}
-      }
+          detach() {
+            StewardDatabase.db.upsertUser(user)
+            pathPrefix("user") {userRoute(user)} ~
+            pathPrefix("steward") {stewardRoute(user)} ~
+            pathPrefix("researcher") {researcherRoute(user)}
+          }
+        }
     }
   }
 
@@ -128,13 +128,15 @@ trait StewardService extends HttpService with Json4sSupport {
   }
 
   def routeForQepUser:Route = pathPrefix("qep") {
-    authenticate(userAuthenticator.basicUserAuthenticator) { user =>
+    detach() {
+      authenticate(userAuthenticator.basicUserAuthenticator) { user =>
 
-      StewardDatabase.db.upsertUser(user)
+        StewardDatabase.db.upsertUser(user)
 
-      authorize(Authorizer.authorizeQep(user)) {
-        pathPrefix("requestQueryAccess") ( requestQueryAccess ) ~
-        pathPrefix("approvedTopics") ( getApprovedTopicsForUser )
+        authorize(Authorizer.authorizeQep(user)) {
+          pathPrefix("requestQueryAccess")(requestQueryAccess) ~
+            pathPrefix("approvedTopics")(getApprovedTopicsForUser)
+        }
       }
     }
   }
@@ -144,24 +146,28 @@ trait StewardService extends HttpService with Json4sSupport {
   }
 
   def requestQueryAccessWithTopic:Route = path("user" /Segment/ "topic" / IntNumber) { (userId,topicId) =>
-    entity(as[InboundShrineQuery]) { shrineQuery:InboundShrineQuery =>
-      //todo really pull the user out of the shrine query and check vs the PM. If they aren't there, reject them for this new reason
-      val result: (TopicState, Option[TopicIdAndName]) = StewardDatabase.db.logAndCheckQuery(userId,Some(topicId),shrineQuery)
+    entity(as[InboundShrineQuery]) { shrineQuery: InboundShrineQuery =>
+      detach() {
+        //todo really pull the user out of the shrine query and check vs the PM. If they aren't there, reject them for this new reason
+        val result: (TopicState, Option[TopicIdAndName]) = StewardDatabase.db.logAndCheckQuery(userId, Some(topicId), shrineQuery)
 
-      respondWithStatus(result._1.statusCode) {
-        if(result._1.statusCode == StatusCodes.OK) complete (result._2.getOrElse(""))
-        else complete(result._1.message)
+        respondWithStatus(result._1.statusCode) {
+          if (result._1.statusCode == StatusCodes.OK) complete(result._2.getOrElse(""))
+          else complete(result._1.message)
+        }
       }
     }
   }
 
   def requestQueryAccessWithoutTopic:Route = path("user" /Segment) { userId =>
-    entity(as[InboundShrineQuery]) { shrineQuery:InboundShrineQuery =>
-      //todo really pull the user out of the shrine query and check vs the PM. If they aren't there, reject them for this new reason
-      val result = StewardDatabase.db.logAndCheckQuery(userId,None,shrineQuery)
-      respondWithStatus(result._1.statusCode) {
-        if(result._1.statusCode == StatusCodes.OK) complete (result._2)
-        else complete(result._1.message)
+    entity(as[InboundShrineQuery]) { shrineQuery: InboundShrineQuery =>
+      detach() {
+        //todo really pull the user out of the shrine query and check vs the PM. If they aren't there, reject them for this new reason
+        val result = StewardDatabase.db.logAndCheckQuery(userId, None, shrineQuery)
+        respondWithStatus(result._1.statusCode) {
+          if (result._1.statusCode == StatusCodes.OK) complete(result._2)
+          else complete(result._1.message)
+        }
       }
     }
   }
@@ -169,11 +175,13 @@ trait StewardService extends HttpService with Json4sSupport {
   lazy val getApprovedTopicsForUser:Route = get {
     //todo change to "researcher"
     path("user" /Segment) { userId =>
-      //todo really pull the user out of the shrine query and check vs the PM. If they aren't there, reject them for this new reason
-      val queryParameters = QueryParameters(researcherIdOption = Some(userId),stateOption = Some(TopicState.approved))
-      val researchersTopics = StewardDatabase.db.selectTopicsForResearcher(queryParameters)
+      detach() {
+        //todo really pull the user out of the shrine query and check vs the PM. If they aren't there, reject them for this new reason
+        val queryParameters = QueryParameters(researcherIdOption = Some(userId), stateOption = Some(TopicState.approved))
+        val researchersTopics = StewardDatabase.db.selectTopicsForResearcher(queryParameters)
 
-      complete(researchersTopics)
+        complete(researchersTopics)
+      }
     }
   }
 
@@ -186,10 +194,12 @@ trait StewardService extends HttpService with Json4sSupport {
 
   def getUserTopics(userId:UserName):Route = get {
     //lookup topics for this user in the db
-   matchQueryParameters(Some(userId)){queryParameters:QueryParameters =>
-      val researchersTopics = StewardDatabase.db.selectTopicsForResearcher(queryParameters)
-      complete(researchersTopics)
-    }
+   matchQueryParameters(Some(userId)) { queryParameters: QueryParameters =>
+     detach() {
+       val researchersTopics = StewardDatabase.db.selectTopicsForResearcher(queryParameters)
+       complete(researchersTopics)
+     }
+   }
   }
 
   def matchQueryParameters(userName: Option[UserName])(parameterRoute:QueryParameters => Route): Route =  {
@@ -235,22 +245,25 @@ trait StewardService extends HttpService with Json4sSupport {
                                     topicIdOption: Option[TopicId],
                                     asJson: Option[Boolean]) =
     get {
-      matchQueryParameters(userIdOption) { queryParameters: QueryParameters =>
-        val queryHistory = StewardDatabase.db.selectQueryHistory(queryParameters, topicIdOption)
+      detach() {
+        matchQueryParameters(userIdOption) { queryParameters: QueryParameters =>
+          val queryHistory = StewardDatabase.db.selectQueryHistory(queryParameters, topicIdOption)
 
-        if (asJson.getOrElse(false))
-          complete(queryHistory.convertToJson)
-        else
-          complete(queryHistory)
+          if (asJson.getOrElse(false))
+            complete(queryHistory.convertToJson)
+          else
+            complete(queryHistory)
+        }
       }
     }
 
   def requestTopicAccess(user:User):Route = post {
     entity(as[InboundTopicRequest]) { topicRequest: InboundTopicRequest =>
       //todo notify the data stewards
-      StewardDatabase.db.createRequestForTopicAccess(user,topicRequest)
-
-      complete(StatusCodes.Accepted)
+      detach() {
+        StewardDatabase.db.createRequestForTopicAccess(user, topicRequest)
+        complete(StatusCodes.Accepted)
+      }
     }
   }
 
@@ -258,25 +271,27 @@ trait StewardService extends HttpService with Json4sSupport {
     path(IntNumber) { topicId => 
       entity(as[InboundTopicRequest]) { topicRequest: InboundTopicRequest =>
         //todo notify the data stewards
-        val updatedTopicTry:Try[OutboundTopic] = StewardDatabase.db.updateRequestForTopicAccess(user, topicId, topicRequest)
+        detach() {
+          val updatedTopicTry: Try[OutboundTopic] = StewardDatabase.db.updateRequestForTopicAccess(user, topicId, topicRequest)
 
-        updatedTopicTry match {
-          case Success(updatedTopic) =>
-            respondWithStatus(StatusCodes.Accepted) {
-              complete(updatedTopic)
-            }
+          updatedTopicTry match {
+            case Success(updatedTopic) =>
+              respondWithStatus(StatusCodes.Accepted) {
+                complete(updatedTopic)
+              }
 
-          case Failure(x) => x match {
-            case x:TopicDoesNotExist => respondWithStatus(StatusCodes.NotFound) {
-              complete(x.getMessage)
+            case Failure(x) => x match {
+              case x: TopicDoesNotExist => respondWithStatus(StatusCodes.NotFound) {
+                complete(x.getMessage)
+              }
+              case x: ApprovedTopicCanNotBeChanged => respondWithStatus(StatusCodes.Forbidden) {
+                complete(x.getMessage)
+              }
+              case x: DetectedAttemptByWrongUserToChangeTopic => respondWithStatus(StatusCodes.Forbidden) {
+                complete(x.getMessage)
+              }
+              case _ => throw x
             }
-            case x:ApprovedTopicCanNotBeChanged => respondWithStatus(StatusCodes.Forbidden) {
-              complete(x.getMessage)
-            }
-            case x:DetectedAttemptByWrongUserToChangeTopic => respondWithStatus(StatusCodes.Forbidden) {
-              complete(x.getMessage)
-            }
-            case _ => throw x
           }
         }
       }
@@ -308,9 +323,11 @@ trait StewardService extends HttpService with Json4sSupport {
   def getTopicsForSteward(userIdOption:Option[UserName]):Route = get {
     //lookup topics for this user in the db
     matchQueryParameters(userIdOption) { queryParameters: QueryParameters =>
-      val stewardsTopics:StewardsTopics = StewardDatabase.db.selectTopicsForSteward(queryParameters)
+      detach() {
+        val stewardsTopics: StewardsTopics = StewardDatabase.db.selectTopicsForSteward(queryParameters)
 
-      complete(stewardsTopics)
+        complete(stewardsTopics)
+      }
     }
   }
 
@@ -320,9 +337,11 @@ trait StewardService extends HttpService with Json4sSupport {
 
   def changeStateForTopic(state:TopicState,user:User):Route = post {
     path("topic" / IntNumber) { topicId =>
-      StewardDatabase.db.changeTopicState(topicId, state, user.username).fold(respondWithStatus(StatusCodes.UnprocessableEntity){
-        complete(s"No topic found for $topicId")
-      })(topic => complete(StatusCodes.OK))
+      detach() {
+        StewardDatabase.db.changeTopicState(topicId, state, user.username).fold(respondWithStatus(StatusCodes.UnprocessableEntity) {
+          complete(s"No topic found for $topicId")
+        })(topic => complete(StatusCodes.OK))
+      }
     }
   }
 
@@ -331,16 +350,20 @@ trait StewardService extends HttpService with Json4sSupport {
 
   def getQueriesPerUser:Route = get{
     matchQueryParameters(None) { queryParameters: QueryParameters =>
-      val result = StewardDatabase.db.selectShrineQueryCountsPerUser(queryParameters)
+      detach() {
+        val result = StewardDatabase.db.selectShrineQueryCountsPerUser(queryParameters)
 
-      complete(result)
+        complete(result)
+      }
     }
   }
 
   def getTopicsPerState:Route = get{
     matchQueryParameters(None) { queryParameters: QueryParameters =>
-      val result = StewardDatabase.db.selectTopicCountsPerState(queryParameters)
-      complete(result)
+      detach() {
+        val result = StewardDatabase.db.selectTopicCountsPerState(queryParameters)
+        complete(result)
+      }
     }
   }
 }
