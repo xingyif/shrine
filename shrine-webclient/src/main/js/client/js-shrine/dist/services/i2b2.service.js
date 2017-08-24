@@ -51,7 +51,11 @@ System.register(['ramda', './container'], function (_export, _context) {
                 I2B2Service.prototype.onViewSelected = function (f) {
                     return prop('addEventListener', ctx).value ? Container.of(ctx.value.addEventListener('message', f, false)) : Container.of(null);
                 };
-
+                I2B2Service.prototype.onExport = function (f) {
+                    return events(ctx).map(function (v) {
+                        return v.exportQueryResult.subscribe(f);
+                    });
+                };
                 I2B2Service.prototype.loadHistory = function () {
                     return crc(ctx).map(function (v) {
                         return v.view.history.doRefreshAll();
@@ -80,6 +84,16 @@ System.register(['ramda', './container'], function (_export, _context) {
                 I2B2Service.prototype.unflagQuery = function (id) {
                     return crc(ctx).map(function (v) {
                         return v.ctrlr.history.Unflag({ queryId: id });
+                    });
+                };
+                I2B2Service.prototype.publishQueryUnavailable = function () {
+                    return events(ctx).map(function (v) {
+                        return v.queryResultUnavailable.fire();
+                    });
+                };
+                I2B2Service.prototype.publishQueryAvailable = function () {
+                    return events(ctx).map(function (v) {
+                        return v.queryResultAvailable.fire();
                     });
                 };
             }, _class.inject = [window], _temp));

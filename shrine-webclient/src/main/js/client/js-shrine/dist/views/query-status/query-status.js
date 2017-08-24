@@ -1,7 +1,17 @@
 System.register(['aurelia-framework', 'services/query-status.model', 'services/pub-sub'], function (_export, _context) {
     "use strict";
 
-    var customElement, QueryStatusModel, PubSub, _extends, _dec, _class, _class2, _temp, QueryStatus, timeoutSeconds, defaultVersion, privateProps, initialState;
+    var customElement, observable, QueryStatusModel, PubSub, _extends, _dec, _class, _desc, _value, _class2, _descriptor, _class3, _temp, QueryStatus, timeoutSeconds, defaultVersion, me, initialState;
+
+    function _initDefineProp(target, property, descriptor, context) {
+        if (!descriptor) return;
+        Object.defineProperty(target, property, {
+            enumerable: descriptor.enumerable,
+            configurable: descriptor.configurable,
+            writable: descriptor.writable,
+            value: descriptor.initializer ? descriptor.initializer.call(context) : void 0
+        });
+    }
 
     function _classCallCheck(instance, Constructor) {
         if (!(instance instanceof Constructor)) {
@@ -33,9 +43,43 @@ System.register(['aurelia-framework', 'services/query-status.model', 'services/p
         if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
     }
 
+    function _applyDecoratedDescriptor(target, property, decorators, descriptor, context) {
+        var desc = {};
+        Object['ke' + 'ys'](descriptor).forEach(function (key) {
+            desc[key] = descriptor[key];
+        });
+        desc.enumerable = !!desc.enumerable;
+        desc.configurable = !!desc.configurable;
+
+        if ('value' in desc || desc.initializer) {
+            desc.writable = true;
+        }
+
+        desc = decorators.slice().reverse().reduce(function (desc, decorator) {
+            return decorator(target, property, desc) || desc;
+        }, desc);
+
+        if (context && desc.initializer !== void 0) {
+            desc.value = desc.initializer ? desc.initializer.call(context) : void 0;
+            desc.initializer = undefined;
+        }
+
+        if (desc.initializer === void 0) {
+            Object['define' + 'Property'](target, property, desc);
+            desc = null;
+        }
+
+        return desc;
+    }
+
+    function _initializerWarningHelper(descriptor, context) {
+        throw new Error('Decorating class property failed. Please ensure that transform-class-properties is enabled.');
+    }
+
     return {
         setters: [function (_aureliaFramework) {
             customElement = _aureliaFramework.customElement;
+            observable = _aureliaFramework.observable;
         }, function (_servicesQueryStatusModel) {
             QueryStatusModel = _servicesQueryStatusModel.QueryStatusModel;
         }, function (_servicesPubSub) {
@@ -56,7 +100,7 @@ System.register(['aurelia-framework', 'services/query-status.model', 'services/p
                 return target;
             };
 
-            _export('QueryStatus', QueryStatus = (_dec = customElement('query-status'), _dec(_class = (_temp = _class2 = function (_PubSub) {
+            _export('QueryStatus', QueryStatus = (_dec = customElement('query-status'), _dec(_class = (_class2 = (_temp = _class3 = function (_PubSub) {
                 _inherits(QueryStatus, _PubSub);
 
                 function QueryStatus(queryStatus) {
@@ -68,11 +112,24 @@ System.register(['aurelia-framework', 'services/query-status.model', 'services/p
 
                     var _this = _possibleConstructorReturn(this, _PubSub.call.apply(_PubSub, [this].concat(rest)));
 
-                    privateProps.set(_this, {
-                        isDevEnv: document.location.href.includes('http://localhost:8000/')
+                    _initDefineProp(_this, 'status', _descriptor, _this);
+
+                    me.set(_this, {
+                        isDevEnv: document.location.href.includes('http://localhost:8000/'),
+                        exportAvailable: false
                     });
                     return _this;
                 }
+
+                QueryStatus.prototype.statusChanged = function statusChanged(newValue, oldValue) {
+                    if (!newValue.nodes || !newValue.nodes.length) {
+                        me.get(this).exportAvailable = false;
+                        this.publish(this.notifications.shrine.queryUnavailable);
+                    } else {
+                        me.get(this).exportAvailable = true;
+                        this.publish(this.notifications.shrine.queryAvailable);
+                    }
+                };
 
                 QueryStatus.prototype.attached = function attached() {
                     var _this2 = this;
@@ -83,6 +140,10 @@ System.register(['aurelia-framework', 'services/query-status.model', 'services/p
                     });
                     this.subscribe(this.notifications.i2b2.networkIdReceived, function (id) {
                         _this2.publish(_this2.commands.shrine.fetchQuery, { id: id, timeoutSeconds: timeoutSeconds, dataVersion: defaultVersion });
+                    });
+
+                    this.subscribe(this.notifications.i2b2.exportQuery, function () {
+                        _this2.publish(_this2.commands.shrine.exportResult, _extends({}, _this2.status));
                     });
                     this.subscribe(this.notifications.shrine.queryReceived, function (data) {
                         var query = data.query;
@@ -96,25 +157,26 @@ System.register(['aurelia-framework', 'services/query-status.model', 'services/p
                             window.setTimeout(function () {
                                 return _this2.publish(_this2.commands.shrine.fetchQuery, { id: id, dataVersion: dataVersion, timeoutSeconds: timeoutSeconds });
                             }, 5000);
-                        } else {
-                            _this2.publish(_this2.commands.shrine.exportResult, _extends({}, _this2.status));
                         }
                     });
 
-                    if (privateProps.get(this).isDevEnv) {
+                    if (me.get(this).isDevEnv) {
                         this.publish(this.notifications.i2b2.queryStarted, "started query");
                         this.publish(this.notifications.i2b2.networkIdReceived, 1);
                     }
                 };
 
                 return QueryStatus;
-            }(PubSub), _class2.inject = [QueryStatusModel], _temp)) || _class));
+            }(PubSub), _class3.inject = [QueryStatusModel], _temp), (_descriptor = _applyDecoratedDescriptor(_class2.prototype, 'status', [observable], {
+                enumerable: true,
+                initializer: null
+            })), _class2)) || _class));
 
             _export('QueryStatus', QueryStatus);
 
             timeoutSeconds = 15;
             defaultVersion = -1;
-            privateProps = new WeakMap();
+            me = new WeakMap();
 
             initialState = function initialState() {
                 return { query: { queryName: null, updated: null, complete: false }, nodes: null };

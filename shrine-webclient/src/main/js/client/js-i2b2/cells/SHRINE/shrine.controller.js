@@ -64,6 +64,8 @@
 			}
 		}
 
+		//<img src="js-i2b2/cells/CRC/assets/csv.png">
+
 		$$('#crcDlgResultOutputPRC input')[0].disabled = true;
 		$('crcDlgResultOutputPRS').hide();
 	}
@@ -126,10 +128,25 @@
 	}
 
 	function overrideI2B2($, i2b2, YAHOO) {
-		
+		//-- plugin communication --//
 		i2b2.events.networkIdReceived = new YAHOO.util.CustomEvent("networkIdReceived", i2b2);
 		i2b2.events.afterQueryInit = new YAHOO.util.CustomEvent("afterQueryInit", i2b2);
+		i2b2.events.queryResultAvailable = new YAHOO.util.CustomEvent("queryResultAvailable", i2b2);
+		i2b2.events.queryResultUnavailable = new YAHOO.util.CustomEvent("queryResultUnvailable", i2b2);
+		i2b2.events.exportQueryResult = new YAHOO.util.CustomEvent("exportQueryResult", i2b2);
 
+		i2b2.events.queryResultAvailable.subscribe(function () {
+			jQuery('#crcStatusBox .TopTabs .opXML').first()
+				.css({opacity: 1})
+				.click(function(e) {
+					i2b2.events.exportQueryResult.fire(); 
+				});
+		});
+		i2b2.events.queryResultUnavailable.subscribe(function () {
+			jQuery('#crcStatusBox .TopTabs .opXML').first()
+				.css({opacity: 0.5})
+				.off('click');
+		});
 		var _queryRun = i2b2.CRC.ctrlr.QT._queryRun;
 		i2b2.CRC.ctrlr.QT._queryRun = function (name, options) {
 			i2b2.events.afterQueryInit.fire({ name: name, data: options });
@@ -143,6 +160,7 @@
 		removeI2B2Tabs($);
 		removeI2B2Panels($);
 		removeI2B2PrintIcon($);
+		addExportIcon($);
 		addShrineTab($);
 		addShrinePanel($);
 	}
@@ -158,6 +176,13 @@
 	function removeI2B2PrintIcon($) {
 		$('#crcStatusBox .TopTabs .opXML')
 			.children().first().remove();
+	}
+
+	function addExportIcon($) {
+		$('#crcStatusBox .TopTabs .opXML').prepend(
+			'<a href="JavaScript:alert("export")>' +
+				'<img width="16" height="16" border="0" style="opacity: .5" src="js-i2b2/cells/SHRINE/assets/csv.png" alt="Export Results"/>' +
+			'</a>');
 	}
 
 	function addShrineTab($) {

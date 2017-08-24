@@ -74,7 +74,9 @@ System.register(['./pub-sub', './i2b2.service'], function (_export, _context) {
                         i2b2Svc.onViewSelected(function (e) {
                             return _this.publish(_this.notifications.i2b2.viewSelected, e.data);
                         });
-
+                        i2b2Svc.onExport(function () {
+                            return _this.publish(_this.notifications.i2b2.exportQuery);
+                        });
                         _this.subscribe(_this.commands.i2b2.cloneQuery, function (d) {
                             return i2b2Svc.loadQuery(d);
                         });
@@ -89,6 +91,12 @@ System.register(['./pub-sub', './i2b2.service'], function (_export, _context) {
                         });
                         _this.subscribe(_this.commands.i2b2.unflagQuery, function (d) {
                             return i2b2Svc.unflagQuery(d);
+                        });
+                        _this.subscribe(_this.notifications.shrine.queryUnavailable, function () {
+                            return i2b2Svc.publishQueryUnavailable();
+                        });
+                        _this.subscribe(_this.notifications.shrine.queryAvailable, function () {
+                            return i2b2Svc.publishQueryAvailable();
                         });
                     };
                     return _this;

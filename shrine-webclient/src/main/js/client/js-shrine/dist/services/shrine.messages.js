@@ -13,12 +13,16 @@ System.register([], function (_export, _context) {
                     historyRefreshed: 'notification.from.i2b2.history.refreshed',
                     queryStarted: 'notification.from.i2b2.query.started',
                     messageReceived: 'notification.from.i2b2.message.received',
-                    networkIdReceived: 'notification.from.i2b2.networkId.receieved'
+                    networkIdReceived: 'notification.from.i2b2.networkId.receieved',
+                    exportQuery: 'notification.from.i2b2.export.query'
                 },
 
                 shrine: {
                     queriesReceived: 'notification.from.shrine.queries.received',
-                    queryReceived: 'notification.from.shrine.query.recieved'
+                    queryReceived: 'notification.from.shrine.query.recieved',
+                    queryUnavailable: 'notification.from.shrine.query.unavailable',
+                    queryAvailable: 'notification.from.shrine.query.available'
+
                 }
             });
 

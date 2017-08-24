@@ -1,7 +1,7 @@
 System.register(['./pub-sub'], function (_export, _context) {
     "use strict";
 
-    var PubSub, Export, convertObjectToCSV;
+    var PubSub, QueryExport, convertObjectToCSV;
 
     function _classCallCheck(instance, Constructor) {
         if (!(instance instanceof Constructor)) {
@@ -38,11 +38,11 @@ System.register(['./pub-sub'], function (_export, _context) {
             PubSub = _pubSub.PubSub;
         }],
         execute: function () {
-            _export('Export', Export = function (_PubSub) {
-                _inherits(Export, _PubSub);
+            _export('QueryExport', QueryExport = function (_PubSub) {
+                _inherits(QueryExport, _PubSub);
 
-                function Export() {
-                    _classCallCheck(this, Export);
+                function QueryExport() {
+                    _classCallCheck(this, QueryExport);
 
                     for (var _len = arguments.length, rest = Array(_len), _key = 0; _key < _len; _key++) {
                         rest[_key] = arguments[_key];
@@ -51,14 +51,14 @@ System.register(['./pub-sub'], function (_export, _context) {
                     return _possibleConstructorReturn(this, _PubSub.call.apply(_PubSub, [this].concat(rest)));
                 }
 
-                Export.prototype.listen = function listen() {
+                QueryExport.prototype.listen = function listen() {
                     this.subscribe(this.commands.shrine.exportResult, convertObjectToCSV);
                 };
 
-                return Export;
+                return QueryExport;
             }(PubSub));
 
-            _export('Export', Export);
+            _export('QueryExport', QueryExport);
 
             convertObjectToCSV = function convertObjectToCSV(d) {
                 var nodeNames = d.nodes.map(function (n) {
@@ -73,8 +73,7 @@ System.register(['./pub-sub'], function (_export, _context) {
 
                         var description = _ref2.resultType.i2b2Options.description,
                             results = _ref2.results;
-
-                        m.has(description) ? (_m$get = m.get(description)).add.apply(_m$get, results.map(function (r) {
+                        return m.has(description) ? (_m$get = m.get(description)).add.apply(_m$get, results.map(function (r) {
                             return r.dataKey;
                         })) : m.set(description, new Set(results.map(function (r) {
                             return r.dataKey;
@@ -110,13 +109,11 @@ System.register(['./pub-sub'], function (_export, _context) {
                 });
                 var csv = encodeURI('' + line1 + line2 + result.join('\n'));
                 var link = document.createElement('a');
-                var breakdowns = d.nodes.map(function (n) {
-                    return n.breakdowns;
-                });
                 link.setAttribute('href', csv);
-                link.setAttribute('download', 'test.csv');
+                link.setAttribute('download', 'export.csv');
+                link.click();
             };
         }
     };
 });
-//# sourceMappingURL=export.js.map
+//# sourceMappingURL=query-export.js.map
