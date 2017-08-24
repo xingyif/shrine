@@ -178,14 +178,12 @@ case class StewardDatabase(schemaDef:StewardSchema,dataSource: DataSource) exten
 
     val noTopicRecord:Option[TopicRecord] = None
     val noOpDBIO:DBIOAction[Option[TopicRecord], NoStream, Effect.Write] = DBIO.successful(noTopicRecord)
-    blocking {
       dbRun(mostRecentTopicQuery.filter(_.id === topicId).result.headOption.flatMap(
         _.fold(noOpDBIO) { originalTopic =>
           val updatedTopic = originalTopic.copy(state = state, changedBy = userId, changeDate = System.currentTimeMillis())
           (allTopicQuery += updatedTopic).map(_ => Option(updatedTopic))
         }
       ))
-    }
   }
 
   def selectTopicCountsPerState(queryParameters: QueryParameters):TopicsPerState = {
@@ -298,18 +296,20 @@ case class StewardDatabase(schemaDef:StewardSchema,dataSource: DataSource) exten
 
   private def shrineQueryCountQuery(queryParameters: QueryParameters,topicParameter:Option[TopicId]):Query[QueryTable, QueryTable#TableElementType, Seq] = {
 
-    val allShrineQueries:Query[QueryTable, QueryTable#TableElementType, Seq] = allQueryTable
+    blocking {
+      val allShrineQueries: Query[QueryTable, QueryTable#TableElementType, Seq] = allQueryTable
 
-    val topicFilter:Query[QueryTable, QueryTable#TableElementType, Seq] = topicParameter.fold(allShrineQueries)(topicId => allShrineQueries.filter(_.topicId === topicId))
+      val topicFilter: Query[QueryTable, QueryTable#TableElementType, Seq] = topicParameter.fold(allShrineQueries)(topicId => allShrineQueries.filter(_.topicId === topicId))
 
-    val researcherFilter:Query[QueryTable, QueryTable#TableElementType, Seq] = queryParameters.researcherIdOption.fold(topicFilter)(researcherId => topicFilter.filter(_.researcherId === researcherId))
-    //todo this is probably a binary Approved/Not approved
-    val stateFilter:Query[QueryTable, QueryTable#TableElementType, Seq] = queryParameters.stateOption.fold(researcherFilter)(stewardResponse => researcherFilter.filter(_.stewardResponse === stewardResponse.name))
+      val researcherFilter: Query[QueryTable, QueryTable#TableElementType, Seq] = queryParameters.researcherIdOption.fold(topicFilter)(researcherId => topicFilter.filter(_.researcherId === researcherId))
+      //todo this is probably a binary Approved/Not approved
+      val stateFilter: Query[QueryTable, QueryTable#TableElementType, Seq] = queryParameters.stateOption.fold(researcherFilter)(stewardResponse => researcherFilter.filter(_.stewardResponse === stewardResponse.name))
 
-    val minDateFilter = queryParameters.minDate.fold(stateFilter)(minDate => stateFilter.filter(_.date >= minDate))
-    val maxDateFilter = queryParameters.maxDate.fold(minDateFilter)(maxDate => minDateFilter.filter(_.date <= maxDate))
+      val minDateFilter = queryParameters.minDate.fold(stateFilter)(minDate => stateFilter.filter(_.date >= minDate))
+      val maxDateFilter = queryParameters.maxDate.fold(minDateFilter)(maxDate => minDateFilter.filter(_.date <= maxDate))
 
-    maxDateFilter
+      maxDateFilter
+    }
   }
 
   def selectShrineQueryCountsPerUser(queryParameters: QueryParameters):QueriesPerUser = {
