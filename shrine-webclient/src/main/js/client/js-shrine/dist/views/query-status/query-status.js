@@ -138,8 +138,12 @@ System.register(['aurelia-framework', 'services/query-status.model', 'services/p
                         _this2.status = initialState();
                         _this2.status.query.queryName = n;
                     });
-                    this.subscribe(this.notifications.i2b2.networkIdReceived, function (id) {
-                        _this2.publish(_this2.commands.shrine.fetchQuery, { id: id, timeoutSeconds: timeoutSeconds, dataVersion: defaultVersion });
+
+                    this.subscribe(this.notifications.i2b2.networkIdReceived, function (d) {
+                        var networkId = d.networkId;
+                        _this2.status = _extends({}, _this2.status, { nodes: initialState().nodes });
+                        _this2.status.query.queryName = d.name || _this2.status.query.queryName;
+                        _this2.publish(_this2.commands.shrine.fetchQuery, { networkId: networkId, timeoutSeconds: timeoutSeconds, dataVersion: defaultVersion });
                     });
 
                     this.subscribe(this.notifications.i2b2.exportQuery, function () {
@@ -178,7 +182,7 @@ System.register(['aurelia-framework', 'services/query-status.model', 'services/p
             defaultVersion = -1;
             me = new WeakMap();
 
-            initialState = function initialState() {
+            initialState = function initialState(n) {
                 return { query: { queryName: null, updated: null, complete: false }, nodes: null };
             };
         }

@@ -493,6 +493,12 @@ i2b2.events.afterCellInit.subscribe(
                 { lazyload: true,
                     trigger: $('crcHistoryBox'),
                     itemdata: [
+                        { text: "Run", onClick: {fn: function() {
+                            var cr = i2b2.CRC.view.history.contextRecord;
+                            if(cr && cr.origData){
+                                i2b2.events.networkIdReceived.fire({networkId: cr.origData.id, name: cr.origData.name});
+                            } 
+                        }}},
                         { text: "Rename", 	onclick: { fn: i2b2.CRC.view.history.doRename } },
                         { text: "Delete", 		onclick: { fn: i2b2.CRC.view.history.doDelete } },
                         { text: "Refresh All",	onclick: { fn: i2b2.CRC.view.history.doRefreshAll } },

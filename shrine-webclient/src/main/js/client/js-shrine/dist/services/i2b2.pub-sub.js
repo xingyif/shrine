@@ -69,7 +69,7 @@ System.register(['./pub-sub', './i2b2.service'], function (_export, _context) {
                             return _this.publish(_this.notifications.i2b2.queryStarted, d[0].name);
                         });
                         i2b2Svc.onNetworkId(function (e, d) {
-                            return _this.publish(_this.notifications.i2b2.networkIdReceived, d[0].networkId);
+                            return _this.publish(_this.notifications.i2b2.networkIdReceived, d[0]);
                         });
                         i2b2Svc.onViewSelected(function (e) {
                             return _this.publish(_this.notifications.i2b2.viewSelected, e.data);

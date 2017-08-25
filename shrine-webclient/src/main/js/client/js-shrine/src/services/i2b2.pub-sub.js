@@ -11,7 +11,7 @@ export class I2B2PubSub extends PubSub{
                 : () => this.publish(this.notifications.i2b2.tabMin));
             i2b2Svc.onHistory(() => this.publish(this.notifications.i2b2.historyRefreshed));
             i2b2Svc.onQuery((e, d) => this.publish(this.notifications.i2b2.queryStarted, d[0].name));
-            i2b2Svc.onNetworkId((e, d) => this.publish(this.notifications.i2b2.networkIdReceived, d[0].networkId));
+            i2b2Svc.onNetworkId((e, d) => this.publish(this.notifications.i2b2.networkIdReceived, d[0]));
             i2b2Svc.onViewSelected(e => this.publish(this.notifications.i2b2.viewSelected, e.data));
             i2b2Svc.onExport(() => this.publish(this.notifications.i2b2.exportQuery));          
             this.subscribe(this.commands.i2b2.cloneQuery, d => i2b2Svc.loadQuery(d));

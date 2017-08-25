@@ -28,8 +28,12 @@ export class QueryStatus extends PubSub {
             this.status = initialState();
             this.status.query.queryName = n;
         });
-        this.subscribe(this.notifications.i2b2.networkIdReceived, id => {
-            this.publish(this.commands.shrine.fetchQuery, {id, timeoutSeconds, dataVersion: defaultVersion})
+
+        this.subscribe(this.notifications.i2b2.networkIdReceived, d => {
+            const networkId = d.networkId;
+            this.status = {...this.status, ...{nodes: initialState().nodes}};
+            this.status.query.queryName = d.name || this.status.query.queryName;
+            this.publish(this.commands.shrine.fetchQuery, {networkId, timeoutSeconds, dataVersion: defaultVersion})
         });
 
         this.subscribe(this.notifications.i2b2.exportQuery, () => {
@@ -57,4 +61,4 @@ export class QueryStatus extends PubSub {
 const timeoutSeconds = 15;
 const defaultVersion = -1;
 const me = new WeakMap();
-const initialState = () => ({ query: { queryName: null, updated: null, complete: false }, nodes: null });
+const initialState = (n) => ({ query: { queryName: null, updated: null, complete: false }, nodes: null });

@@ -26,6 +26,9 @@ export class QueryStatusModel {
             .then(result => publishNetworkId(result))
             .catch(error => logError(error));
 
+        /*
+            want to be able to reject on timeout or on a new request.
+        */
         const loadQuery = (d) => {
             return qep.fetchQuery(d.id, d.timeoutSeconds, d.dataVersion)
             .then(result => toModel(result))
@@ -33,7 +36,6 @@ export class QueryStatusModel {
             .then(model => publishQuery(model));
         }
            
-            
         const init = () => {
             evtAgg.subscribe(commands.shrine.fetchQuery, loadQuery);
         }
