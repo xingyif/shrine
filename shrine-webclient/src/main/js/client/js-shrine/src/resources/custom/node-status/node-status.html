@@ -5,17 +5,17 @@
         </div>
         <div style="flex: 1">
             <span if.one-way="'STATUS,FINISHED'.includes(result.status)" style="display: inline-block; color: #0000dd">
-                  &nbsp; <span style="color: black">${result.statusMessage}</span>
+                  &nbsp; <span style="color: black">COMPLETED</span>
             </span>
             <span>
                 &nbsp;
                 <a if.one-way="result.status === 'ERROR'" class="query-error-anchor" 
                 href="#" style="color:#ff0000" click.delegate="publish(commands.i2b2.showError, result)">      
-                    ERROR: ${result.statusDescription}
+                    ERROR
                 </a>
             </span>
             <span if.one-way="!'ERROR,COMPLETED,FINISHED'.includes(result.status)">
-                &nbsp; <span style="color: #00dd00">${result.statusMessage}</span>
+                &nbsp; <span style="color: #00dd00">RUNNING</span>
             </span>
         </div>
         <div style="flex:1">

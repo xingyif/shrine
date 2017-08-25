@@ -161,6 +161,7 @@
 		removeI2B2Tabs($);
 		removeI2B2Panels($);
 		removeI2B2PrintIcon($);
+		removeI2B2PrintQueryBox($);
 		addExportIcon($);
 		addShrineTab($);
 		addShrinePanel($);
@@ -177,6 +178,10 @@
 	function removeI2B2PrintIcon($) {
 		$('#crcStatusBox .TopTabs .opXML')
 			.children().first().remove();
+	}
+
+	function removeI2B2PrintQueryBox($) {
+		$("#printQueryBox").remove();
 	}
 
 	function addExportIcon($) {
