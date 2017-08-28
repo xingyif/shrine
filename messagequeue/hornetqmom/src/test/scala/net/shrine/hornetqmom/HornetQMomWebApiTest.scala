@@ -79,7 +79,7 @@ class HornetQMomWebApiTest extends FlatSpec with ScalatestRouteTest with HornetQ
       assertResult(ResetContent)(status)
     }
 
-    Delete(s"/mom/deleteQueue/$queueName") ~> momRoute ~> check {
+    Put(s"/mom/deleteQueue/$queueName") ~> momRoute ~> check {
       assertResult(OK)(status)
     }
   }
@@ -87,7 +87,7 @@ class HornetQMomWebApiTest extends FlatSpec with ScalatestRouteTest with HornetQ
   "HornetQMomWebApi" should "respond Internal server error with the corresponding error message when " +
     "failures occur while creating/deleting the given queue, sending/receiving message, getting queues" in {
 
-    Delete(s"/mom/deleteQueue/$queueName") ~> momRoute ~> check {
+    Put(s"/mom/deleteQueue/$queueName") ~> momRoute ~> check {
       assertResult(InternalServerError)(status)
     }
 

@@ -68,7 +68,7 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
   override def createQueueIfAbsent(queueName: String): Try[Queue] = {
     val createQueueUrl = momUrl + s"/createQueue/$queueName"
     val request: HttpRequest = HttpRequest(HttpMethods.PUT, createQueueUrl)
-    val tryQueue: Try[Queue] = for {
+    for {
       response: HttpResponse <- Try(HttpClient.webApiCall(request))
       queue: Queue <- Try {
         val queueString = response.entity.asString
@@ -76,22 +76,19 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
         read[Queue](queueString)(formats, manifest[Queue])
       }
     } yield queue
-    tryQueue
   }
 
   override def deleteQueue(queueName: String): Try[Unit] = {
     val deleteQueueUrl = momUrl + s"/deleteQueue/$queueName"
     val request: HttpRequest = HttpRequest(HttpMethods.DELETE, deleteQueueUrl)
-    val deleteTry: Try[Unit] = for {
-      response <- Try(HttpClient.webApiCall(request)) // StatusCodes.OK
-    } yield response
-    deleteTry
+    val response: Try[Unit] = Try(HttpClient.webApiCall(request)) // StatusCodes.OK
+    response
   }
 
   override def queues: Try[Seq[Queue]] = {
     val getQueuesUrl = momUrl + s"/getQueues"
     val request: HttpRequest = HttpRequest(HttpMethods.GET, getQueuesUrl)
-    val tryQueues: Try[Seq[Queue]] = for {
+    for {
       response: HttpResponse <- Try(HttpClient.webApiCall(request))
       allQueues: Seq[Queue] <- Try {
         val allQueues: String = response.entity.asString
@@ -99,32 +96,27 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
         read[Seq[Queue]](allQueues)(formats, manifest[Seq[Queue]])
       }
     } yield allQueues
-    tryQueues
   }
 
   override def send(contents: String, to: Queue): Try[Unit] = {
     val sendMessageUrl = momUrl + s"/sendMessage/$contents/${to.name}"
     val request: HttpRequest = HttpRequest(HttpMethods.PUT, sendMessageUrl)
-    val sendTry: Try[Unit] = for {
+    for {
       response: HttpResponse <- Try(HttpClient.webApiCall(request))
     } yield response
-    sendTry
   }
 
   override def receive(from: Queue, timeout: Duration): Try[Option[Message]] = {
     val seconds = timeout.toSeconds
     val receiveMessageUrl = momUrl + s"/receiveMessage/${from.name}?timeOutSeconds=$seconds"
     val request: HttpRequest = HttpRequest(HttpMethods.GET, receiveMessageUrl)
-    val tryReceive: Try[Option[Message]] = for {
+    for {
       response: HttpResponse <- Try(HttpClient.webApiCall(request))
-      messageResponse: Option[Message] = {
-        val responseString: String = response.entity.asString
-        implicit val formats = Serialization.formats(NoTypeHints) + new MessageSerializer
-        val messageResponse: Message = read[Message](responseString)(formats, manifest[Message])
-        Option(messageResponse)
-      }
+      responseString: String <- Try { response.entity.asString }
+      formats <- Try { Serialization.formats(NoTypeHints) + new MessageSerializer}
+      messageResponse: Message <- Try { read[Message](responseString)(formats, manifest[Message]) }
+      messageResponse: Option[Message] <- Try { Option(messageResponse) }
     } yield messageResponse
-    tryReceive
   }
 
   override def completeMessage(message: Message): Try[Unit] = {
@@ -134,10 +126,9 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
     val entity: HttpEntity = HttpEntity(messageString)
     val completeMessageUrl: String = momUrl + s"/acknowledge" // HttpEntity
     val request: HttpRequest = HttpRequest(HttpMethods.PUT, completeMessageUrl).withEntity(entity)
-    val completeTry: Try[Unit] = for {
+    for {
       response: HttpResponse <- Try(HttpClient.webApiCall(request))
     } yield response
-    completeTry
   }
 }
 

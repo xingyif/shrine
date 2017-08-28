@@ -1,7 +1,7 @@
 package net.shrine.hornetqmom
 
 import com.typesafe.config.Config
-import net.shrine.messagequeueservice.{Message, MessageQueueService, Queue}
+import net.shrine.messagequeueservice.{Message, MessageQueueService, NoSuchQueueExistsInHornetQ, Queue}
 import net.shrine.source.ConfigSource
 import org.hornetq.api.core.client.{ClientConsumer, ClientMessage, ClientProducer, ClientSession, ClientSessionFactory, HornetQClient, ServerLocator}
 import org.hornetq.api.core.management.HornetQServerControl
@@ -67,8 +67,8 @@ object LocalHornetQMom extends MessageQueueService {
 
   //queue lifecycle
   def createQueueIfAbsent(queueName: String): Try[Queue] = {
-    val serverControl: HornetQServerControl = hornetQServer.getHornetQServerControl
-    val createQueueTry: Try[Queue] = for {
+    for {
+      serverControl: HornetQServerControl <- Try{ hornetQServer.getHornetQServerControl }
       createQueueInHornetQ <- Try {
         if (!this.queues.get.map(_.name).contains(queueName)) {
           serverControl.createQueue(queueName, queueName, true)
@@ -80,22 +80,20 @@ object LocalHornetQMom extends MessageQueueService {
         newQueue
       }
     } yield useNewQueueToUpdateMapTry
-    createQueueTry
   }
 
   def deleteQueue(queueName: String): Try[Unit] = {
-    val deleteQueueTry: Try[Unit] = for {
+    for {
       deleteTry <- Try {
         queuesToConsumers.remove(Queue(queueName)).foreach(_.close())
         val serverControl: HornetQServerControl = hornetQServer.getHornetQServerControl
         serverControl.destroyQueue(queueName)
       }
     } yield deleteTry
-    deleteQueueTry
   }
 
   override def queues: Try[Seq[Queue]] = {
-    val getQueuesTry: Try[Seq[Queue]] = for {
+    for {
       hornetQTry: HornetQServerControl <- Try {
         hornetQServer.getHornetQServerControl
       }
@@ -104,28 +102,25 @@ object LocalHornetQMom extends MessageQueueService {
         queueNames.map(Queue(_)).to[Seq]
       }
     } yield getQueuesTry
-    getQueuesTry
   }
 
   //send a message
   def send(contents: String, to: Queue): Try[Unit] = {
-    val sendTry: Try[Unit] = for {
+    for {
       sendTry <- Try {
         // check if the queue exists first
         if (!this.queues.get.map(_.name).contains(to.name)) {
-          throw new NoSuchElementException(s"Given Queue ${to.name} does not exist in HornetQ server! Please create the queue first!")
+          throw NoSuchQueueExistsInHornetQ(to)
         }
-
-        val producer: ClientProducer = session.createProducer(to.name)
-        val message = session.createMessage(true)
-        message.putStringProperty(propName, contents)
-
+      }
+      producer: ClientProducer <- Try{ session.createProducer(to.name) }
+      message <- Try{ session.createMessage(true) }
+      constructMessage <- Try { message.putStringProperty(propName, contents) }
+      sendMessage <- Try {
         producer.send(message)
-
         producer.close()
       }
-    } yield sendTry
-    sendTry
+    } yield sendMessage
   }
 
   //receive a message
@@ -136,7 +131,7 @@ object LocalHornetQMom extends MessageQueueService {
     * @return Some message before the timeout, or None
     */
   def receive(from: Queue, timeout: Duration): Try[Option[Message]] = {
-    val receiveMessageTry: Try[Option[Message]] = for {
+    for {
     //todo handle the case where either stop or close has been called on something gracefully
       messageConsumer: ClientConsumer <- Try {
         if (!queuesToConsumers.contains(from)) {
@@ -151,17 +146,15 @@ object LocalHornetQMom extends MessageQueueService {
         }
       }
     } yield message
-    receiveMessageTry
   }
 
   //todo dead letter queue for all messages. See http://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/examples-sqs-dead-letter-queues.html
 
   //complete a message
   override def completeMessage(message: Message): Try[Unit] = {
-    val completeTry: Try[Unit] = for {
+    for {
       completeMessageTry <- Try { message.complete() }
     } yield completeMessageTry
-    completeTry
   }
 
 }
@@ -174,7 +167,7 @@ object LocalHornetQMomStopper {
 
   def stop(): Try[Unit] = {
     //todo fill in as part of SHIRINE-2128
-    val tryStop: Try[Unit] = for {
+    for {
       config: Config <- Try {
         ConfigSource.config.getConfig("shrine.messagequeue.hornetq")
       }
@@ -183,7 +176,6 @@ object LocalHornetQMomStopper {
       }
 
     } yield hornetQStop
-    tryStop
   }
 
 }

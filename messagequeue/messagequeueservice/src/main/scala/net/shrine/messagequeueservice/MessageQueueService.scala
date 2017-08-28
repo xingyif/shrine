@@ -62,3 +62,11 @@ class MessageSerializer extends CustomSerializer[Message](format => (
   }
 ))
 // todo test MessageSerializer
+
+
+case class NoSuchQueueExistsInHornetQ(proposedQueue: Queue) extends Exception {
+  override def getMessage: String = {
+    s"Given Queue ${proposedQueue.name} does not exist in HornetQ server! Please create the queue first!"
+  }
+
+}
