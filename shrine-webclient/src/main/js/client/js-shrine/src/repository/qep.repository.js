@@ -1,3 +1,8 @@
+/*
+https://ilikekillnerds.com/2015/10/all-about-the-aurelia-fetch-client/
+http://foreverframe.net/using-interceptors-with-aurelia-fetch-client/
+*/
+
 import { HttpClient } from 'aurelia-fetch-client';
 import 'fetch';
 export class QEPRepository {
@@ -28,7 +33,6 @@ export class QEPRepository {
         return auth;
     }
 
-    //https://shrine-qa2.catalyst:6443/shrine-metadata/qep/queryResults?skip=2&limit=3
     fetchPreviousQueries(limit, skip = 0) {
         return this.http.fetch(`qep/queryResults?limit=${limit}&skip=${skip}`)
             .then(response => response.json())
