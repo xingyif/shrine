@@ -17,7 +17,8 @@ export class QueryStatusModel {
         const logError = error => console.log(`ERROR: ${error}`);
         const toModel = data => {
             return new Promise((resolve, reject) => {                
-                const nodes = [...data.results];
+                const nodes = [...data.results.sort((a, b) => 
+                    a.adapterNode.toUpperCase() <= b.adapterNode.toUpperCase()? -1 : 1)];
                 const dataVersion = data.dataVersion;
                 const complete = nodes.length > 0 && nodes.filter(n => 'ERROR,COMPLETED,FINISHED'.includes(n.status)).length === nodes.length;
                 const query = {...data.query, ...{complete: complete}};

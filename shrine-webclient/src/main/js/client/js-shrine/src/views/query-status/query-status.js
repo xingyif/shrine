@@ -31,8 +31,10 @@ export class QueryStatus extends PubSub {
 
         this.subscribe(this.notifications.i2b2.networkIdReceived, d => {
             const networkId = d.networkId;
-            this.status = {...this.status, ...{nodes: initialState().nodes}};
-            this.status.query.queryName = d.name || this.status.query.queryName;
+            const state = initialState();
+            const nodes = state.nodes;
+            state.query.queryName = d.name || state.query.queryName; 
+            this.status = this.status? {...this.status, ...{nodes}} : state;
             this.publish(this.commands.shrine.fetchQuery, {networkId, timeoutSeconds, dataVersion: defaultVersion})
         });
 

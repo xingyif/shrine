@@ -141,8 +141,10 @@ System.register(['aurelia-framework', 'services/query-status.model', 'services/p
 
                     this.subscribe(this.notifications.i2b2.networkIdReceived, function (d) {
                         var networkId = d.networkId;
-                        _this2.status = _extends({}, _this2.status, { nodes: initialState().nodes });
-                        _this2.status.query.queryName = d.name || _this2.status.query.queryName;
+                        var state = initialState();
+                        var nodes = state.nodes;
+                        state.query.queryName = d.name || state.query.queryName;
+                        _this2.status = _this2.status ? _extends({}, _this2.status, { nodes: nodes }) : state;
                         _this2.publish(_this2.commands.shrine.fetchQuery, { networkId: networkId, timeoutSeconds: timeoutSeconds, dataVersion: defaultVersion });
                     });
 
