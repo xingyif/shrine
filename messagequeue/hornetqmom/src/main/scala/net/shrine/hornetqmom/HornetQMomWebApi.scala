@@ -24,12 +24,17 @@ trait HornetQMomWebApi extends HttpService
   with Loggable {
 
   val enabled: Boolean = ConfigSource.config.getString("shrine.messagequeue.hornetQWebApi.enabled").toBoolean
+  val warningMessage: String = "If you intend for this node to serve as this SHRINE network's messaging hub " +
+                        "set shrine.messagequeue.hornetQWebApi.enabled to true in your shrine.conf." +
+                        " You do not want to do this unless you are the hub admin!"
 
   def momRoute: Route = pathPrefix("mom") {
 
     if (!enabled) {
-        respondWithStatus(StatusCodes.NotFound) {
-          complete("HornetQWebApi needs to be enabled before use!")
+      val configProblem: CannotUseHornetQMomWebApi = CannotUseHornetQMomWebApi(new UnsupportedOperationException)
+      warn(s"HornetQMomWebApi is not available to use due to configProblem ${configProblem.description}!")
+      respondWithStatus(StatusCodes.NotFound) {
+        complete(warningMessage)
       }
     } else {
       put {
@@ -157,7 +162,6 @@ trait HornetQMomWebApi extends HttpService
     }
   }
 
-
   def internalServerErrorOccured(x: Throwable, function: String): Route = {
     respondWithStatus(StatusCodes.InternalServerError) {
       val serverErrorProblem: HornetQMomServerErrorProblem = HornetQMomServerErrorProblem(x, function)
@@ -176,4 +180,15 @@ case class HornetQMomServerErrorProblem(x:Throwable, function:String) extends Ab
   override val summary: String = "SHRINE cannot use HornetQMomWebApi due to a server error occurred in hornetQ."
   override val description: String = s"HornetQ throws an exception while trying to $function," +
                                       s" the server's response is: ${x.getMessage} from ${x.getClass}."
+}
+
+
+
+case class CannotUseHornetQMomWebApiProblem(x:Throwable) extends AbstractProblem(ProblemSources.Adapter) {
+
+  override val throwable = Some(x)
+  override val summary: String = "SHRINE cannot use HornetQMomWebApi due to configuration in shrine.conf."
+  override val description: String = "If you intend for this node to serve as this SHRINE network's messaging hub " +
+                              "set shrine.messagequeue.hornetQWebApi.enabled to true in your shrine.conf." +
+                              " You do not want to do this unless you are the hub admin!"
 }

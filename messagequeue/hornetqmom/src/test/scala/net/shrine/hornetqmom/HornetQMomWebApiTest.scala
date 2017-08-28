@@ -119,8 +119,10 @@ class HornetQMomWebApiConfigTest extends FlatSpec with ScalatestRouteTest with H
     Put(s"/mom/createQueue/$queueName") ~> momRoute ~> check {
       val response = new String(body.data.toByteArray)
 
-      assertResult("HornetQWebApi needs to be enabled before use!")(response)
+      assertResult(warningMessage)(response)
       assertResult(NotFound)(status)
     }
   }
 }
+
+case class
