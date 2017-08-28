@@ -55,8 +55,8 @@ export class QueryStatus extends PubSub {
         });
 
         if (me.get(this).isDevEnv) {
-            this.publish(this.notifications.i2b2.queryStarted, "started query");
-            this.publish(this.notifications.i2b2.networkIdReceived, 1);
+            //this.publish(this.notifications.i2b2.queryStarted, "started query");
+            this.publish(this.notifications.i2b2.networkIdReceived, {networkId: 1, name: "started query"});
         }
     }
 }
