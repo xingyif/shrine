@@ -178,7 +178,6 @@ if not
 
   def selectResultsRow(queryId:NetworkQueryId,user:User):Either[(StatusCode,String),ResultsRow] = {
     //query once and determine if the latest change > afterVersion
-    blocking {
       val queryOption: Option[QepQuery] = QepQueryDb.db.selectQueryById(queryId)
       queryOption.map { query: QepQuery =>
         if (user.sameUserAs(query.userName, query.userDomain)) {
@@ -191,7 +190,6 @@ if not
         }
         else Left((StatusCodes.Forbidden, s"Query $queryId belongs to a different user"))
       }.getOrElse(Left[(StatusCode, String), ResultsRow]((StatusCodes.NotFound, s"No query with id $queryId found")))
-    }
   }
 
   def queryResultsTable(user: User): Route = path("queryResultsTable") {

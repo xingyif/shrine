@@ -296,7 +296,6 @@ case class StewardDatabase(schemaDef:StewardSchema,dataSource: DataSource) exten
 
   private def shrineQueryCountQuery(queryParameters: QueryParameters,topicParameter:Option[TopicId]):Query[QueryTable, QueryTable#TableElementType, Seq] = {
 
-    blocking {
       val allShrineQueries: Query[QueryTable, QueryTable#TableElementType, Seq] = allQueryTable
 
       val topicFilter: Query[QueryTable, QueryTable#TableElementType, Seq] = topicParameter.fold(allShrineQueries)(topicId => allShrineQueries.filter(_.topicId === topicId))
@@ -309,7 +308,6 @@ case class StewardDatabase(schemaDef:StewardSchema,dataSource: DataSource) exten
       val maxDateFilter = queryParameters.maxDate.fold(minDateFilter)(maxDate => minDateFilter.filter(_.date <= maxDate))
 
       maxDateFilter
-    }
   }
 
   def selectShrineQueryCountsPerUser(queryParameters: QueryParameters):QueriesPerUser = {

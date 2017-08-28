@@ -91,7 +91,6 @@ trait DashboardService extends HttpService with Loggable {
   def authenticatedInBrowser: Route = pathPrefixTest("user"|"admin"|"toDashboard") {
     logRequestResponse(logEntryForRequestResponse _) { //logging is controlled by Akka's config, slf4j, and log4j config
       reportIfFailedToAuthenticate {
-        detach() {
           authenticate(userAuthenticator.basicUserAuthenticator) { user =>
             pathPrefix("user") {
               userRoute(user)
@@ -102,9 +101,8 @@ trait DashboardService extends HttpService with Loggable {
               pathPrefix("toDashboard") {
                 toDashboardRoute(user)
               }
-          }
+            }
         }
-      }
     }
   }
 
@@ -116,11 +114,9 @@ trait DashboardService extends HttpService with Loggable {
   def authenticatedDashboard:Route = pathPrefix("fromDashboard") {
     logRequestResponse(logEntryForRequestResponse _) { //logging is controlled by Akka's config, slf4j, and log4j config
       get { //all remote dashboard calls are gets.
-        detach(){
-          authenticate(ShrineJwtAuthenticator.authenticate) { user =>
-            info(s"Sucessfully authenticated user `$user`")
-            adminRoute(user)
-          }
+        authenticate(ShrineJwtAuthenticator.authenticate) { user =>
+          info(s"Sucessfully authenticated user `$user`")
+          adminRoute(user)
         }
       }
     }
@@ -159,8 +155,9 @@ trait DashboardService extends HttpService with Loggable {
 
     pathPrefix("happy") {
       val happyBaseUrl: String = ConfigSource.config.getString("shrine.dashboard.happyBaseUrl")
-
-      forwardUnmatchedPath(happyBaseUrl)
+      detach() {
+        forwardUnmatchedPath(happyBaseUrl)
+      }
     } ~
       pathPrefix("messWithHappyVersion") { //todo is this used?
       val happyBaseUrl: String = ConfigSource.config.getString("shrine.dashboard.happyBaseUrl")
@@ -171,8 +168,9 @@ trait DashboardService extends HttpService with Loggable {
             ctx.complete(s"Got '$result' from $uri")
           }
         }
-
-        requestUriThenRoute(happyBaseUrl+"/version",pullClasspathFromConfig)
+        detach() {
+          requestUriThenRoute(happyBaseUrl + "/version", pullClasspathFromConfig)
+        }
       } ~
     pathPrefix("ping")   { complete("pong") }~
     pathPrefix("status") { statusRoute(user) }
@@ -217,7 +215,9 @@ trait DashboardService extends HttpService with Loggable {
                 val baseUrl = s"${downstreamUrl.getProtocol}://$dnsName:$port$remoteDashboardPathPrefix"
 
                 info(s"toDashboardRoute: BaseURL: $baseUrl")
-                forwardUnmatchedPath(baseUrl,Some(ShrineJwtAuthenticator.createOAuthCredentials(user, dnsName)))
+                detach() {
+                  forwardUnmatchedPath(baseUrl, Some(ShrineJwtAuthenticator.createOAuthCredentials(user, dnsName)))
+                }
             }
       }
     }
@@ -250,7 +250,6 @@ trait DashboardService extends HttpService with Loggable {
 
   // TODO: Move this over to Status API?
   lazy val verifySignature:Route = {
-    detach() {
       formField("sha256".as[String].?) { sha256: Option[String] =>
         val response = sha256.map(s => KeyStoreInfo.hasher.handleSig(s))
         implicit val format = ShaResponse.json4sFormats
@@ -259,7 +258,6 @@ trait DashboardService extends HttpService with Loggable {
           case Some(sh@ShaResponse(ShaResponse.badFormat, _)) => complete(StatusCodes.BadRequest -> sh)
           case Some(sh@ShaResponse(_, false)) => complete(StatusCodes.NotFound -> sh)
           case Some(sh@ShaResponse(_, true)) => complete(StatusCodes.OK -> sh)
-        }
       }
     }
   }
@@ -318,22 +316,25 @@ trait DashboardService extends HttpService with Loggable {
           val moddedOffset = floorMod(Math.max(0, offsetPreMod), n)
 
           detach() {
-          val query = for {
-            result <- db.IO.sizeAndProblemDigest(n, moddedOffset)
-          } yield (result._2, floorMod(Math.max(0, moddedOffset), n), n, result._1)
+            val query = for {
+              result <- db.IO.sizeAndProblemDigest(n, moddedOffset)
+            } yield (result._2, floorMod(Math.max(0, moddedOffset), n), n, result._1)
 
-          val query2 = for {
-            dateOffset <- db.IO.findIndexOfDate(epoch.getOrElse(0))
-            moddedOffset = floorMod(dateOffset, n)
-            result <- db.IO.sizeAndProblemDigest(n, moddedOffset)
-          } yield (result._2, moddedOffset, n, result._1)
+            val query2 = for {
+              dateOffset <- db.IO.findIndexOfDate(epoch.getOrElse(0))
+              moddedOffset = floorMod(dateOffset, n)
+              result <- db.IO.sizeAndProblemDigest(n, moddedOffset)
+            } yield (result._2, moddedOffset, n, result._1)
 
-          val queryReal = if (epoch.isEmpty) query else query2
-          val tupled = db.runBlocking(queryReal)
-          val response: ProblemResponse = ProblemResponse(tupled._1, tupled._2, tupled._3, tupled._4)
-          implicit val formats = response.json4sMarshaller
-          complete(response)
-    }}}}
+            val queryReal = if (epoch.isEmpty) query else query2
+            val tupled = db.runBlocking(queryReal)
+            val response: ProblemResponse = ProblemResponse(tupled._1, tupled._2, tupled._3, tupled._4)
+            implicit val formats = response.json4sMarshaller
+            complete(response)
+          }
+        }
+      }
+    }
   }
 }
 

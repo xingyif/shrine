@@ -88,7 +88,6 @@ object ShrineJwtAuthenticator extends Loggable {
   }
 
   def createOAuthCredentials(user:User, dnsName: String): OAuth2BearerToken = {
-    blocking {
       val oauthEntry = certCollection match {
         case HubCertCollection(myEntry, _, _) => myEntry
         case DownStreamCertCollection(myEntry, _, _) => myEntry // Note: The DownStreamCertCollection will never be accepted
@@ -108,7 +107,6 @@ object ShrineJwtAuthenticator extends Loggable {
         compact()
 
       OAuth2BearerToken(jwtsString)
-    }
   }
 
   def extractAuthorizationHeader(request: HttpRequest):Try[HttpHeader] = Try {

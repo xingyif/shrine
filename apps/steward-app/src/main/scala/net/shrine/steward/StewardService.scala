@@ -75,14 +75,12 @@ trait StewardService extends HttpService with Json4sSupport {
   //pathPrefixTest shields the QEP code from the redirect.
   def authenticatedInBrowser: Route = pathPrefixTest("user"|"steward"|"researcher") {
     reportIfFailedToAuthenticate {
-        authenticate(userAuthenticator.basicUserAuthenticator) { user =>
-          detach() {
-            StewardDatabase.db.upsertUser(user)
-            pathPrefix("user") {userRoute(user)} ~
-            pathPrefix("steward") {stewardRoute(user)} ~
-            pathPrefix("researcher") {researcherRoute(user)}
-          }
-        }
+      authenticate(userAuthenticator.basicUserAuthenticator) { user =>
+        StewardDatabase.db.upsertUser(user)
+          pathPrefix("user") {userRoute(user)} ~
+          pathPrefix("steward") {stewardRoute(user)} ~
+          pathPrefix("researcher") {researcherRoute(user)}
+      }
     }
   }
 
@@ -128,7 +126,6 @@ trait StewardService extends HttpService with Json4sSupport {
   }
 
   def routeForQepUser:Route = pathPrefix("qep") {
-    detach() {
       authenticate(userAuthenticator.basicUserAuthenticator) { user =>
 
         StewardDatabase.db.upsertUser(user)
@@ -136,7 +133,6 @@ trait StewardService extends HttpService with Json4sSupport {
         authorize(Authorizer.authorizeQep(user)) {
           pathPrefix("requestQueryAccess")(requestQueryAccess) ~
             pathPrefix("approvedTopics")(getApprovedTopicsForUser)
-        }
       }
     }
   }
@@ -147,27 +143,23 @@ trait StewardService extends HttpService with Json4sSupport {
 
   def requestQueryAccessWithTopic:Route = path("user" /Segment/ "topic" / IntNumber) { (userId,topicId) =>
     entity(as[InboundShrineQuery]) { shrineQuery: InboundShrineQuery =>
-      detach() {
         //todo really pull the user out of the shrine query and check vs the PM. If they aren't there, reject them for this new reason
         val result: (TopicState, Option[TopicIdAndName]) = StewardDatabase.db.logAndCheckQuery(userId, Some(topicId), shrineQuery)
 
         respondWithStatus(result._1.statusCode) {
           if (result._1.statusCode == StatusCodes.OK) complete(result._2.getOrElse(""))
           else complete(result._1.message)
-        }
       }
     }
   }
 
   def requestQueryAccessWithoutTopic:Route = path("user" /Segment) { userId =>
     entity(as[InboundShrineQuery]) { shrineQuery: InboundShrineQuery =>
-      detach() {
         //todo really pull the user out of the shrine query and check vs the PM. If they aren't there, reject them for this new reason
         val result = StewardDatabase.db.logAndCheckQuery(userId, None, shrineQuery)
         respondWithStatus(result._1.statusCode) {
           if (result._1.statusCode == StatusCodes.OK) complete(result._2)
           else complete(result._1.message)
-        }
       }
     }
   }
@@ -175,13 +167,11 @@ trait StewardService extends HttpService with Json4sSupport {
   lazy val getApprovedTopicsForUser:Route = get {
     //todo change to "researcher"
     path("user" /Segment) { userId =>
-      detach() {
         //todo really pull the user out of the shrine query and check vs the PM. If they aren't there, reject them for this new reason
         val queryParameters = QueryParameters(researcherIdOption = Some(userId), stateOption = Some(TopicState.approved))
         val researchersTopics = StewardDatabase.db.selectTopicsForResearcher(queryParameters)
 
         complete(researchersTopics)
-      }
     }
   }
 
