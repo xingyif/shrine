@@ -42,7 +42,24 @@ case class Message(hornetQMessage:ClientMessage) extends DefaultJsonSupport {
   def complete() = hornetQMessage.acknowledge()
 }
 
-case class Queue(name:String) extends DefaultJsonSupport
+case class Queue(var name:String) extends DefaultJsonSupport {
+  // filter all (Unicode) characters that are not letters
+  // filter neither letters nor (decimal) digits, replaceAll("[^\\p{L}]+", "")
+  name = name.filterNot(c => c.isWhitespace).replaceAll("[^\\p{L}\\p{Nd}]+", "")
+  if (name.length == 0) {
+    throw new IllegalArgumentException("ERROR: A valid Queue name must contain at least one letter!")
+  }
+}
+
+class QueueSerializer extends CustomSerializer[Queue](format => (
+  {
+    case JObject(JField("name", JString(s)) :: Nil) => Queue(s)
+  },
+  {
+    case queue: Queue =>
+      JObject(JField("name", JString(queue.name)) :: Nil)
+  }
+))
 
 class MessageSerializer extends CustomSerializer[Message](format => (
   {

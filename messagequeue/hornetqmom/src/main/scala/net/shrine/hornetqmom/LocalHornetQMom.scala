@@ -67,27 +67,28 @@ object LocalHornetQMom extends MessageQueueService {
 
   //queue lifecycle
   def createQueueIfAbsent(queueName: String): Try[Queue] = {
+    val proposedQueue: Queue = Queue(queueName)
     for {
       serverControl: HornetQServerControl <- Try{ hornetQServer.getHornetQServerControl }
       createQueueInHornetQ <- Try {
-        if (!this.queues.get.map(_.name).contains(queueName)) {
-          serverControl.createQueue(queueName, queueName, true)
+        if (!this.queues.get.map(_.name).contains(proposedQueue.name)) {
+          serverControl.createQueue(proposedQueue.name, proposedQueue.name, true)
         }
       }
       useNewQueueToUpdateMapTry: Queue <- Try {
-        val newQueue: Queue = Queue(queueName)
-        queuesToConsumers.getOrElseUpdate(newQueue, { session.createConsumer(newQueue.name) })
-        newQueue
+        queuesToConsumers.getOrElseUpdate(proposedQueue, { session.createConsumer(proposedQueue.name) })
+        proposedQueue
       }
     } yield useNewQueueToUpdateMapTry
   }
 
   def deleteQueue(queueName: String): Try[Unit] = {
+    val proposedQueue: Queue = Queue(queueName)
     for {
       deleteTry <- Try {
-        queuesToConsumers.remove(Queue(queueName)).foreach(_.close())
+        queuesToConsumers.remove(proposedQueue).foreach(_.close())
         val serverControl: HornetQServerControl = hornetQServer.getHornetQServerControl
-        serverControl.destroyQueue(queueName)
+        serverControl.destroyQueue(proposedQueue.name)
       }
     } yield deleteTry
   }

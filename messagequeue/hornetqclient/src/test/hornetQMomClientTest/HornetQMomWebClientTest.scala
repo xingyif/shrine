@@ -17,7 +17,7 @@
 import net.shrine.hornetqclient.HornetQMomWebClient
 import net.shrine.messagequeueservice.{Message, Queue}
 import scala.collection.immutable.Seq
-val firstQueue: Queue = HornetQMomWebClient.createQueueIfAbsent("q1").get
+val firstQueue: Queue = HornetQMomWebClient.createQueueIfAbsent("firstQueue").get
 HornetQMomWebClient.send("firstMessage", firstQueue)
 import scala.concurrent.duration.Duration
 val firstDuration: Duration = Duration.create(1, "seconds")

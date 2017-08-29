@@ -2,7 +2,7 @@ package net.shrine.hornetqmom
 
 import akka.event.Logging
 import net.shrine.log.Loggable
-import net.shrine.messagequeueservice.{Message, MessageSerializer, Queue}
+import net.shrine.messagequeueservice.{Message, MessageSerializer, Queue, QueueSerializer}
 import net.shrine.problem.{AbstractProblem, ProblemSources}
 import org.json4s.native.Serialization
 import org.json4s.native.Serialization.{read, write}
@@ -39,7 +39,7 @@ trait HornetQMomWebApi extends HttpService
         val createdQueueTry: Try[Queue] = LocalHornetQMom.createQueueIfAbsent(queueName)
         createdQueueTry match {
           case Success(queue) => {
-            implicit val formats = Serialization.formats(NoTypeHints)
+            implicit val formats = Serialization.formats(NoTypeHints) + new QueueSerializer
             val response: String = write[Queue](queue)(formats)
             respondWithStatus(StatusCodes.Created) {
               complete(response)
@@ -71,15 +71,18 @@ trait HornetQMomWebApi extends HttpService
   }
 
   // SQS sendMessage(String queueUrl, String messageBody) => SendMessageResult
-  def sendMessage: Route = path("sendMessage" / Segment / Segment) { (messageContent, toQueue) =>
-    detach() {
-      val sendTry: Try[Unit] = LocalHornetQMom.send(messageContent, Queue.apply(toQueue))
-      sendTry match {
-        case Success(v) => {
-          complete(StatusCodes.Accepted)
-        }
-        case Failure(x) => {
-          internalServerErrorOccured(x, "sendMessage")
+  def sendMessage: Route = path("sendMessage" / Segment) { toQueue =>
+    requestInstance { request =>
+      val messageContent = request.entity.asString
+      detach() {
+        val sendTry: Try[Unit] = LocalHornetQMom.send(messageContent, Queue(toQueue))
+        sendTry match {
+          case Success(v) => {
+            complete(StatusCodes.Accepted)
+          }
+          case Failure(x) => {
+            internalServerErrorOccured(x, "sendMessage")
+          }
         }
       }
     }
@@ -92,7 +95,7 @@ trait HornetQMomWebApi extends HttpService
         parameter('timeOutSeconds ? 20) { timeOutSeconds =>
           val timeout: Duration = Duration.create(timeOutSeconds, "seconds")
           detach() {
-            val receiveTry: Try[Option[Message]] = LocalHornetQMom.receive(Queue.apply(fromQueue), timeout)
+            val receiveTry: Try[Option[Message]] = LocalHornetQMom.receive(Queue(fromQueue), timeout)
             receiveTry match {
               case Success(optMessage) => {
                 implicit val formats = Serialization.formats(NoTypeHints) + new MessageSerializer
@@ -130,7 +133,7 @@ trait HornetQMomWebApi extends HttpService
   def getQueues: Route = path("getQueues") {
     get {
       detach() {
-        implicit val formats = Serialization.formats(NoTypeHints)
+        implicit val formats = Serialization.formats(NoTypeHints) + new QueueSerializer
         respondWithStatus(StatusCodes.OK) {
           val getQueuesTry: Try[Seq[Queue]] = LocalHornetQMom.queues
           getQueuesTry match {

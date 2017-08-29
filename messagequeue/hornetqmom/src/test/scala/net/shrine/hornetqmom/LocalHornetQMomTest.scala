@@ -139,5 +139,18 @@ class LocalHornetQMomTest extends FlatSpec with BeforeAndAfterAll with ScalaFutu
     assert(receiveTry.isFailure)
   }
 
-    override def afterAll() = LocalHornetQMomStopper.stop()
+  "HornetQ" should "be able to filter the special characters in queue name" in {
+
+    val queueName = "test# Qu%eueFilter"
+
+    assert(LocalHornetQMom.queues.get.isEmpty)
+
+    val queue = LocalHornetQMom.createQueueIfAbsent(queueName).get
+
+    assert(LocalHornetQMom.queues.get == Seq(queue))
+    LocalHornetQMom.deleteQueue(queue.name)
+  }
+
+
+  override def afterAll() = LocalHornetQMomStopper.stop()
 }
