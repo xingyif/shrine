@@ -1,5 +1,6 @@
 package net.shrine.messagequeueservice
 
+import net.shrine.source.ConfigSource
 import net.shrine.spray.DefaultJsonSupport
 import org.hornetq.api.core.client.ClientMessage
 import org.hornetq.core.client.impl.ClientMessageImpl
@@ -25,6 +26,19 @@ trait MessageQueueService {
   def receive(from:Queue,timeout:Duration):Option[Message]
   def completeMessage(message:Message):Unit
 
+}
+
+object MessageQueueService {
+
+  lazy val service:MessageQueueService = {
+    import scala.reflect.runtime.universe.runtimeMirror
+
+    val momClassName = ConfigSource.config.getString("shrine.messagequeue.implementation")
+    val classLoaderMirror = runtimeMirror(getClass.getClassLoader)
+    val module = classLoaderMirror.staticModule(momClassName)
+
+    classLoaderMirror.reflectModule(module).instance.asInstanceOf[MessageQueueService]
+  }
 }
 
 case class Message(hornetQMessage:ClientMessage) extends DefaultJsonSupport {
