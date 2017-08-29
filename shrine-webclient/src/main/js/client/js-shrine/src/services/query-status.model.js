@@ -36,29 +36,10 @@ export class QueryStatusModel {
             .catch(error => logError(error));
 
         const loadQuery = (d) => {           
-            return new Promise((resolve, reject) => {
-                if(isBusy()) {
-                    reject('Query Status Service busy');
-                }
-                else {
-                    isBusy(true)
-                    resolve(
-                        qep.fetchQuery(d.networkId, d.timeoutSeconds, d.dataVersion)
-                        .then(result => {
-                            isBusy(true);
-                            return toModel(result);
-                        })
-                        .catch(error => {
-                            isBusy(false);
-                            reject(error);
-                        })
-                        .then(model => {
-                            isBusy(false);
-                            publishQuery(model);
-                        })
-                    );
-                }
-            });
+            qep.fetchQuery(d.networkId, d.timeoutSeconds, d.dataVersion)
+            .then(result => toModel(result))
+            .catch(error => logError(error))
+            .then(model => publishQuery(model));
         }
            
         const init = () => {

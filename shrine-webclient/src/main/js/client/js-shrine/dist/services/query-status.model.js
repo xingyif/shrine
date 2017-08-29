@@ -80,22 +80,12 @@ System.register(['aurelia-event-aggregator', 'repository/qep.repository', './shr
                 };
 
                 var loadQuery = function loadQuery(d) {
-                    return new Promise(function (resolve, reject) {
-                        if (isBusy()) {
-                            reject('Query Status Service busy');
-                        } else {
-                            isBusy(true);
-                            resolve(qep.fetchQuery(d.networkId, d.timeoutSeconds, d.dataVersion).then(function (result) {
-                                isBusy(true);
-                                return toModel(result);
-                            }).catch(function (error) {
-                                isBusy(false);
-                                reject(error);
-                            }).then(function (model) {
-                                isBusy(false);
-                                publishQuery(model);
-                            }));
-                        }
+                    qep.fetchQuery(d.networkId, d.timeoutSeconds, d.dataVersion).then(function (result) {
+                        return toModel(result);
+                    }).catch(function (error) {
+                        return logError(error);
+                    }).then(function (model) {
+                        return publishQuery(model);
                     });
                 };
 
