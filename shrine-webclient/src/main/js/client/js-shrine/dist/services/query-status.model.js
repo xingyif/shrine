@@ -55,9 +55,7 @@ System.register(['aurelia-event-aggregator', 'repository/qep.repository', './shr
                 };
                 var toModel = function toModel(data) {
                     return new Promise(function (resolve, reject) {
-                        var nodes = [].concat(data.results.sort(function (a, b) {
-                            return a.adapterNode.toUpperCase() <= b.adapterNode.toUpperCase() ? -1 : 1;
-                        }));
+                        var nodes = [].concat(data.results);
                         var dataVersion = data.dataVersion;
                         var complete = nodes.length > 0 && nodes.filter(function (n) {
                             return 'ERROR,COMPLETED,FINISHED'.includes(n.status);
