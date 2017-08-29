@@ -497,6 +497,7 @@ i2b2.events.afterCellInit.subscribe(
                             var cr = i2b2.CRC.view.history.contextRecord;
                             if(cr && cr.origData){
                                 i2b2.events.networkIdReceived.fire({networkId: cr.origData.id, name: cr.origData.name});
+                                i2b2.CRC.ctrlr.QT.doQueryLoad(cr.origData.id);
                             } 
                         }}},
                         { text: "Rename", 	onclick: { fn: i2b2.CRC.view.history.doRename } },
