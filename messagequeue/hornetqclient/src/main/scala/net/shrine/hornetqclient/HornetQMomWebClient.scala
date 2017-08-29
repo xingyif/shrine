@@ -2,7 +2,7 @@ package net.shrine.hornetqclient
 
 import akka.actor.{Actor, ActorRef, ActorRefFactory, ActorSystem, Props}
 import net.shrine.log.Loggable
-import net.shrine.messagequeueservice.{Message, MessageQueueService, MessageSerializer, Queue}
+import net.shrine.messagequeueservice.{Message, MessageQueueService, MessageSerializer, Queue, QueueSerializer}
 import net.shrine.source.ConfigSource
 import org.json4s.native.Serialization
 import org.json4s.native.Serialization.{read, write}
@@ -65,67 +65,66 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
 
   val momUrl: String = ConfigSource.config.getString("shrine.messagequeue.hornetq.serverUrl")
 
-  override def createQueueIfAbsent(queueName: String): Queue = {
-    val createQueueUrl = momUrl + s"/createQueue/$queueName"
+  override def createQueueIfAbsent(queueName: String): Try[Queue] = {
+    val proposedQueue: Queue = Queue(queueName)
+    val createQueueUrl = momUrl + s"/createQueue/${proposedQueue.name}"
     val request: HttpRequest = HttpRequest(HttpMethods.PUT, createQueueUrl)
-    val tryQueue: Try[Queue] = for {
+    for {
       response: HttpResponse <- Try(HttpClient.webApiCall(request))
       queue: Queue <- Try {
         val queueString = response.entity.asString
-        implicit val formats = Serialization.formats(NoTypeHints)
+        implicit val formats = Serialization.formats(NoTypeHints) + new QueueSerializer
         read[Queue](queueString)(formats, manifest[Queue])
       }
     } yield queue
-    tryQueue.get
   }
 
-  override def deleteQueue(queueName: String): Unit = {
-    val deleteQueueUrl = momUrl + s"/deleteQueue/$queueName"
-    val request: HttpRequest = HttpRequest(HttpMethods.DELETE, deleteQueueUrl)
-    for {
-      response <- Try(HttpClient.webApiCall(request)) // StatusCodes.OK
-    } yield response
+  override def deleteQueue(queueName: String): Try[Unit] = {
+    val proposedQueue: Queue = Queue(queueName)
+    val deleteQueueUrl = momUrl + s"/deleteQueue/${proposedQueue.name}"
+    val request: HttpRequest = HttpRequest(HttpMethods.PUT, deleteQueueUrl)
+    Try(HttpClient.webApiCall(request)) // StatusCodes.OK
   }
 
-  override def queues: Seq[Queue] = {
+  override def queues: Try[Seq[Queue]] = {
     val getQueuesUrl = momUrl + s"/getQueues"
     val request: HttpRequest = HttpRequest(HttpMethods.GET, getQueuesUrl)
-    val tryQueues: Try[Seq[Queue]] = for {
+    for {
       response: HttpResponse <- Try(HttpClient.webApiCall(request))
       allQueues: Seq[Queue] <- Try {
         val allQueues: String = response.entity.asString
-        implicit val formats = Serialization.formats(NoTypeHints)
+        implicit val formats = Serialization.formats(NoTypeHints) + new QueueSerializer
         read[Seq[Queue]](allQueues)(formats, manifest[Seq[Queue]])
       }
     } yield allQueues
-    tryQueues.get
   }
 
-  override def send(contents: String, to: Queue): Unit = {
-    val sendMessageUrl = momUrl + s"/sendMessage/$contents/${to.name}"
-    val request: HttpRequest = HttpRequest(HttpMethods.PUT, sendMessageUrl)
+  override def send(contents: String, to: Queue): Try[Unit] = {
+    val sendMessageUrl = momUrl + s"/sendMessage/${to.name}"
+    val request: HttpRequest = HttpRequest(
+      method = HttpMethods.PUT,
+      uri = sendMessageUrl,
+      entity = HttpEntity(contents)  //todo set contents as XML or json
+    )
     for {
       response: HttpResponse <- Try(HttpClient.webApiCall(request))
     } yield response
   }
 
-  override def receive(from: Queue, timeout: Duration): Option[Message] = {
+  override def receive(from: Queue, timeout: Duration): Try[Option[Message]] = {
     val seconds = timeout.toSeconds
     val receiveMessageUrl = momUrl + s"/receiveMessage/${from.name}?timeOutSeconds=$seconds"
     val request: HttpRequest = HttpRequest(HttpMethods.GET, receiveMessageUrl)
-    val tryReceive: Try[Option[Message]] = for {
+    for {
       response: HttpResponse <- Try(HttpClient.webApiCall(request))
-      messageResponse: Option[Message] = {
-        val responseString: String = response.entity.asString
-        implicit val formats = Serialization.formats(NoTypeHints) + new MessageSerializer
-        val messageResponse: Message = read[Message](responseString)(formats, manifest[Message])
-        Option(messageResponse)
-      }
+      responseString: String <- Try { response.entity.asString }
+      formats <- Try { Serialization.formats(NoTypeHints) + new MessageSerializer}
+      messageResponse: Message <- Try { read[Message](responseString)(formats, manifest[Message]) }
+      messageResponse: Option[Message] <- Try { Option(messageResponse) }
     } yield messageResponse
-    tryReceive.get
   }
 
-  override def completeMessage(message: Message): Unit = {
+  override def completeMessage(message: Message): Try[Unit] = {
     implicit val formats: Formats = Serialization.formats(NoTypeHints) + new MessageSerializer
     val messageString: String = write[Message](message)(formats)
 
