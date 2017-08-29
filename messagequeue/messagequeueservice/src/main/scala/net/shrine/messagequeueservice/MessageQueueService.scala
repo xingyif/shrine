@@ -1,5 +1,6 @@
 package net.shrine.messagequeueservice
 
+import net.shrine.problem.{AbstractProblem, ProblemSources}
 import net.shrine.spray.DefaultJsonSupport
 import org.hornetq.api.core.client.ClientMessage
 import org.hornetq.core.client.impl.ClientMessageImpl

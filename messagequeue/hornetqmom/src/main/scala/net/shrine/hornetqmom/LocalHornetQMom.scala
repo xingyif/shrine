@@ -3,17 +3,17 @@ package net.shrine.hornetqmom
 import com.typesafe.config.Config
 import net.shrine.messagequeueservice.{Message, MessageQueueService, NoSuchQueueExistsInHornetQ, Queue}
 import net.shrine.source.ConfigSource
+import org.hornetq.api.core.TransportConfiguration
 import org.hornetq.api.core.client.{ClientConsumer, ClientMessage, ClientProducer, ClientSession, ClientSessionFactory, HornetQClient, ServerLocator}
 import org.hornetq.api.core.management.HornetQServerControl
-import org.hornetq.api.core.{HornetQQueueExistsException, TransportConfiguration}
 import org.hornetq.core.config.impl.ConfigurationImpl
 import org.hornetq.core.remoting.impl.invm.{InVMAcceptorFactory, InVMConnectorFactory}
 import org.hornetq.core.server.{HornetQServer, HornetQServers}
 
+import scala.collection.concurrent.{TrieMap, Map => ConcurrentMap}
 import scala.collection.immutable.Seq
 import scala.concurrent.blocking
 import scala.concurrent.duration.Duration
-import scala.collection.concurrent.{TrieMap, Map => ConcurrentMap}
 import scala.util.Try
 /**
   * This object is the local version of the Message-Oriented Middleware API, which uses HornetQ service

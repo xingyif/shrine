@@ -3,6 +3,7 @@ package net.shrine.hornetqmom
 import akka.event.Logging
 import net.shrine.log.Loggable
 import net.shrine.messagequeueservice.{Message, MessageSerializer, Queue}
+import net.shrine.problem.{AbstractProblem, ProblemSources}
 import org.json4s.native.Serialization
 import org.json4s.native.Serialization.{read, write}
 import org.json4s.{Formats, NoTypeHints}
@@ -13,7 +14,6 @@ import spray.routing.{HttpService, Route}
 import scala.collection.immutable.Seq
 import scala.concurrent.duration.Duration
 import scala.util.{Failure, Success, Try}
-import scala.util.control.NonFatal
 /**
   * A web API that provides access to the internal HornetQMom library.
   * Allows client to createQueue, deleteQueue, sendMessage, receiveMessage, getQueues, and sendReceipt
@@ -25,11 +25,11 @@ trait HornetQMomWebApi extends HttpService
   with Loggable {
 
   def momRoute: Route = pathPrefix("mom") {
-      put {
-        createQueue ~
-          sendMessage ~
-          acknowledge
-      } ~ receiveMessage ~ getQueues ~ deleteQueue
+    put {
+      createQueue ~
+        sendMessage ~
+        acknowledge
+    } ~ receiveMessage ~ getQueues ~ deleteQueue
   }
 
   // SQS returns CreateQueueResult, which contains queueUrl: String
@@ -46,14 +46,11 @@ trait HornetQMomWebApi extends HttpService
             }
           }
           case Failure(x) => {
-            respondWithStatus(StatusCodes.InternalServerError) {
-              complete(s"HornetQ throws an exception while trying to create the queue $queueName," +
-                s"HornetQ Server response: ${createdQueueTry.failed.get}")
-            }
+            internalServerErrorOccured(x, "createQueue")
           }
         }
       }
-  }
+    }
 
   // SQS takes in DeleteMessageRequest, which contains a queueUrl: String and a ReceiptHandle: String
   // returns a DeleteMessageResult, toString for debugging
@@ -66,10 +63,7 @@ trait HornetQMomWebApi extends HttpService
             complete(StatusCodes.OK)
           }
           case Failure(x) => {
-            respondWithStatus(StatusCodes.InternalServerError) {
-              complete(s"HornetQ throws an exception while trying to delete the queue $queueName," +
-                s"HornetQ Server response: ${deleteQueueTry.failed.get}")
-            }
+            internalServerErrorOccured(x, "deleteQueue")
           }
         }
       }
@@ -85,10 +79,7 @@ trait HornetQMomWebApi extends HttpService
           complete(StatusCodes.Accepted)
         }
         case Failure(x) => {
-          respondWithStatus(StatusCodes.InternalServerError) {
-            complete(s"HornetQ throws an exception while trying to send a message to the queue $toQueue," +
-              s"HornetQ Server response: ${sendTry.failed.get}")
-          }
+          internalServerErrorOccured(x, "sendMessage")
         }
       }
     }
@@ -108,10 +99,7 @@ trait HornetQMomWebApi extends HttpService
                 optMessage.fold(complete(StatusCodes.NotFound))(msg => complete(write(optMessage)(formats)))
               }
               case Failure(x) => {
-                respondWithStatus(StatusCodes.InternalServerError) {
-                  complete(s"HornetQ throws an exception while trying to send a message to the queue $fromQueue," +
-                    s"HornetQ Server response: ${receiveTry.failed.get}")
-                }
+                internalServerErrorOccured(x, "receiveMessage")
               }
             }
           }
@@ -131,11 +119,7 @@ trait HornetQMomWebApi extends HttpService
             complete(StatusCodes.ResetContent)
           }
           case Failure(x) => {
-            LogEntry(s"\n  Request: acknowledge/$messageJSON\n  Response: ${acknowledgeTry.get}", Logging.DebugLevel)
-            respondWithStatus(StatusCodes.InternalServerError) {
-              complete(s"HornetQ throws an exception while trying to complete the given message," +
-                s"HornetQ Server response: ${acknowledgeTry.failed.get}")
-            }
+            internalServerErrorOccured(x, "acknowledge")
           }
         }
       }
@@ -151,13 +135,10 @@ trait HornetQMomWebApi extends HttpService
           val getQueuesTry: Try[Seq[Queue]] = LocalHornetQMom.queues
           getQueuesTry match {
             case Success(seqQueue) => {
-              complete(write[Seq[Queue]](seqQueue)(formats))
+              complete(write[Seq[Queue]](LocalHornetQMom.queues.get)(formats))
             }
             case Failure(x) => {
-              respondWithStatus(StatusCodes.InternalServerError) {
-                complete(s"HornetQ throws an exception while trying to get all queue names," +
-                  s"HornetQ Server response: ${getQueuesTry.failed.get}")
-              }
+              internalServerErrorOccured(x, "getQueues")
             }
           }
         }
@@ -165,4 +146,23 @@ trait HornetQMomWebApi extends HttpService
     }
   }
 
+
+  def internalServerErrorOccured(x: Throwable, function: String): Route = {
+    respondWithStatus(StatusCodes.InternalServerError) {
+      val serverErrorProblem: HornetQMomServerErrorProblem = HornetQMomServerErrorProblem(x, function)
+      debug(s"HornetQ encountered a Problem during $function, Problem Details: $serverErrorProblem")
+      complete(s"HornetQ throws an exception while trying to $function. HornetQ Server response: ${x.getMessage} from ${x.getClass}")
+    }
+  }
+
+}
+
+
+
+case class HornetQMomServerErrorProblem(x:Throwable, function:String) extends AbstractProblem(ProblemSources.Adapter) {
+
+  override val throwable = Some(x)
+  override val summary: String = "SHRINE cannot use HornetQMomWebApi due to a server error occurred in hornetQ."
+  override val description: String = s"HornetQ throws an exception while trying to $function," +
+                                      s" the server's response is: ${x.getMessage} from ${x.getClass}."
 }

@@ -1,7 +1,6 @@
 package net.shrine.hornetqmom
 
 import net.shrine.messagequeueservice.{Message, Queue}
-import org.hornetq.core.client.impl.ClientMessageImpl
 import org.junit.runner.RunWith
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.junit.JUnitRunner
@@ -10,7 +9,6 @@ import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers}
 import scala.collection.immutable.Seq
 import scala.concurrent.duration._
 import scala.language.postfixOps
-import scala.util.Try
 /**
   * Test create, delete queue, send, and receive message, getQueueNames, and acknoledge using HornetQ service
   */
