@@ -17,8 +17,7 @@ export class QueryStatusModel {
         const logError = error => console.log(`ERROR: ${error}`);
         const toModel = data => {
             return new Promise((resolve, reject) => {                
-                const nodes = [...data.results.sort((a, b) => 
-                    a.adapterNode.toUpperCase() <= b.adapterNode.toUpperCase()? -1 : 1)];
+                const nodes = [...data.results];
                 const dataVersion = data.dataVersion;
                 const complete = nodes.length > 0 && nodes.filter(n => 'ERROR,COMPLETED,FINISHED'.includes(n.status)).length === nodes.length;
                 const query = {...data.query, ...{complete: complete}};
@@ -35,41 +34,16 @@ export class QueryStatusModel {
             .then(result => publishNetworkId(result))
             .catch(error => logError(error));
 
-        /*
-            want to be able to reject on timeout or on a new request.
-        */
         const loadQuery = (d) => {           
-            return new Promise((resolve, reject) => {
-                if(isBusy()) {
-                    reject('Query Status Service busy');
-                }
-                else {
-                    isBusy(true)
-                    resolve(
-                        qep.fetchQuery(d.id, d.timeoutSeconds, d.dataVersion)
-                        .then(result => {
-                            isBusy(true);
-                            return toModel(result);
-                        })
-                        .catch(error => {
-                            isBusy(false);
-                            reject(error);
-                        })
-                        .then(model => {
-                            isBusy(false);
-                            publishQuery(model);
-                        })
-                    );
-                }
-            });
+            qep.fetchQuery(d.networkId, d.timeoutSeconds, d.dataVersion)
+            .then(result => toModel(result))
+            .catch(error => logError(error))
+            .then(model => publishQuery(model));
         }
            
         const init = () => {
             evtAgg.subscribe(commands.shrine.fetchQuery, loadQuery);
         }
         init();
-    }
-    get isBusy() {
-        return 
-    }
+    }tt
 }

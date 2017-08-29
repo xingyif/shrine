@@ -426,12 +426,10 @@ i2b2.CRC.view.QT.splitterDragged = function () {
 
     /* Deal with Footer and its components */
     var footer = $("qryToolFooter");	// footer
-    var printBox = $('printQueryBox');	// print query
     var groupCount = $("groupCount");	// # of groups
     var scrollBox = $("scrollBox");		// scroll control
 
     footer.style.width = Math.max(basicWidth - 40, 0) + "px"; // adjust footer width
-    groupCount.style.width = Math.max(parseInt(footer.style.width) - (printBox.offsetLeft + printBox.offsetWidth) - scrollBox.offsetWidth - 5, 0) + "px"; // adjust groupCount width
 
     /* Deal with Baloons */
     var baloonBox = $("queryBalloonBox");

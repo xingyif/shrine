@@ -47,16 +47,16 @@ export class QueryStatus extends PubSub {
             const dataVersion= data.dataVersion;
             const updated = Number(new Date());
             const complete = data.query.complete;
-            const id = data.query.networkId;
+            const networkId = data.query.networkId;
             this.status = { ...this.status, ...{ query, nodes, updated } }
             if (!complete) {
-                window.setTimeout(() => this.publish(this.commands.shrine.fetchQuery, {id, dataVersion, timeoutSeconds}), 5000);
+                window.setTimeout(() => this.publish(this.commands.shrine.fetchQuery, {networkId, dataVersion, timeoutSeconds}), 5000);
             }
         });
 
         if (me.get(this).isDevEnv) {
-            this.publish(this.notifications.i2b2.queryStarted, "started query");
-            this.publish(this.notifications.i2b2.networkIdReceived, 1);
+            //this.publish(this.notifications.i2b2.queryStarted, "started query");
+            this.publish(this.notifications.i2b2.networkIdReceived, {networkId: 1, name: "started query"});
         }
     }
 }
