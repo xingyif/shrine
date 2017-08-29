@@ -166,17 +166,14 @@ object LocalHornetQMom extends MessageQueueService {
 //todo is this a good way to write this code?
 object LocalHornetQMomStopper {
 
-  def stop(): Try[Unit] = {
+  def stop(): Unit = {
     //todo fill in as part of SHIRINE-2128
     for {
       config: Config <- Try {
         ConfigSource.config.getConfig("shrine.messagequeue.hornetq")
       }
-      hornetQStop: Unit <- Try {
-        LocalHornetQMom.stop()
-      }
-
-    } yield hornetQStop
+    } yield config
+    LocalHornetQMom.stop()
   }
 
 }

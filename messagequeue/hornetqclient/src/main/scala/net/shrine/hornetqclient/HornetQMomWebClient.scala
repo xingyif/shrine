@@ -83,8 +83,7 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
     val proposedQueue: Queue = Queue(queueName)
     val deleteQueueUrl = momUrl + s"/deleteQueue/${proposedQueue.name}"
     val request: HttpRequest = HttpRequest(HttpMethods.PUT, deleteQueueUrl)
-    val response: Try[Unit] = Try(HttpClient.webApiCall(request)) // StatusCodes.OK
-    response
+    Try(HttpClient.webApiCall(request)) // StatusCodes.OK
   }
 
   override def queues: Try[Seq[Queue]] = {
