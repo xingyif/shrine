@@ -157,11 +157,11 @@ System.register(['aurelia-framework', 'services/query-status.model', 'services/p
                         var dataVersion = data.dataVersion;
                         var updated = Number(new Date());
                         var complete = data.query.complete;
-                        var id = data.query.networkId;
+                        var networkId = data.query.networkId;
                         _this2.status = _extends({}, _this2.status, { query: query, nodes: nodes, updated: updated });
                         if (!complete) {
                             window.setTimeout(function () {
-                                return _this2.publish(_this2.commands.shrine.fetchQuery, { id: id, dataVersion: dataVersion, timeoutSeconds: timeoutSeconds });
+                                return _this2.publish(_this2.commands.shrine.fetchQuery, { networkId: networkId, dataVersion: dataVersion, timeoutSeconds: timeoutSeconds });
                             }, 5000);
                         }
                     });
