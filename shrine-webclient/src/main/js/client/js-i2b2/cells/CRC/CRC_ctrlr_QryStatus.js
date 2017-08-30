@@ -346,6 +346,10 @@ i2b2.CRC.ctrlr.QueryStatus.prototype = function () {
 			private_singleton_isRunning = false;
 			$('runBoxText').innerHTML = "Run Query";
 			i2b2.CRC.ctrlr.currentQueryStatus = false;
+			//@todo: clear the checkboxes.
+			/*
+			jQuery('#dialogQryRunResultType input[type="checkbox"]').each()?
+			*/
 		}
 
         /**

@@ -145,7 +145,7 @@
 		});
 		i2b2.events.queryResultUnavailable.subscribe(function () {
 			jQuery('#crcStatusBox .TopTabs .opXML #shrineCSVExport')
-				.css({opacity: 0.5})
+				.css({opacity: 0.25})
 				.off('click');
 		});
 		var _queryRun = i2b2.CRC.ctrlr.QT._queryRun;
@@ -166,7 +166,7 @@
 		addShrineTab($);
 		addShrinePanel($);
 		jQuery('#crcStatusBox .TopTabs .opXML #shrineCSVExport')
-		.css({opacity: 0.5})
+		.css({opacity: 0.25})
 	}
 
 	function removeI2B2Tabs($) {
@@ -188,8 +188,8 @@
 
 	function addExportIcon($) {
 		$('#crcStatusBox .TopTabs .opXML').prepend(
-			'<a id="shrineCSVExport">' +
-				'<img width="16" height="16" border="0" style="cursor: pointer" src="js-i2b2/cells/SHRINE/assets/csv.png" alt="Export Results"/>' +
+			'<a id="shrineCSVExport" style="cursor: pointer; text-decoration:underline; color: blue;">' +
+				'Export to CSV' +
 			'</a>');
 	}
 

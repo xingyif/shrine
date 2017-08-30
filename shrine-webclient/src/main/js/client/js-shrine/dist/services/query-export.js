@@ -61,48 +61,52 @@ System.register(['./pub-sub'], function (_export, _context) {
             _export('QueryExport', QueryExport);
 
             convertObjectToCSV = function convertObjectToCSV(d) {
-                var nodeNames = d.nodes.map(function (n) {
-                    return n.adapterNode;
-                });
-                var nodes = d.nodes;
+                var nodes = d.nodes.sort();
                 var m = new Map();
-                nodes.forEach(function (_ref) {
-                    var breakdowns = _ref.breakdowns;
-                    return breakdowns.forEach(function (_ref2) {
+                var desc = function desc(_ref) {
+                    var description = _ref.resultType.i2b2Options.description;
+                    return description;
+                };
+                var brdSort = function brdSort(a, b) {
+                    return desc(a) <= desc(b) ? -1 : 1;
+                };
+                nodes.forEach(function (_ref2) {
+                    var breakdowns = _ref2.breakdowns;
+                    return breakdowns.sort(brdSort).forEach(function (_ref3) {
                         var _m$get;
 
-                        var description = _ref2.resultType.i2b2Options.description,
-                            results = _ref2.results;
+                        var description = _ref3.resultType.i2b2Options.description,
+                            results = _ref3.results;
                         return m.has(description) ? (_m$get = m.get(description)).add.apply(_m$get, results.map(function (r) {
                             return r.dataKey;
-                        })) : m.set(description, new Set(results.map(function (r) {
+                        }).sort()) : m.set(description, new Set(results.map(function (r) {
                             return r.dataKey;
-                        })));
+                        }).sort()));
                     });
                 });
 
-                var line1 = 'data:text/csv;charset=utf-8,SHRINE QUERY RESULTS (OBFUSCATED PATIENT COUNTS),' + nodes.map(function (n) {
+                var line1 = 'data:text/csv;charset=utf-8,SHRINE QUERY RESULTS (OBFUSCATED PATIENT COUNTS),' + [''].concat(nodes.map(function (n) {
                     return n.adapterNode;
-                }).join(',');
-                var line2 = '\nAll Patients,' + nodes.map(function (n) {
+                }).join(','));
+                var line2 = '\nAll Patients,' + [''].concat(nodes.map(function (n) {
                     return n.count;
-                }).join(',');
+                }).join(','));
                 var result = [];
                 m.forEach(function (v, k) {
                     result.push.apply(result, [''].concat(Array.from(v).map(function (s) {
-                        var title = k.split(' ').shift() + '|' + s;
-                        var values = nodes.map(function (_ref3) {
-                            var breakdowns = _ref3.breakdowns;
+                        var title = k.split(' ').shift() + ',' + s;
+                        var values = nodes.map(function (_ref4) {
+                            var breakdowns = _ref4.breakdowns;
 
-                            var b = breakdowns.find(function (_ref4) {
-                                var description = _ref4.resultType.i2b2Options.description,
-                                    results = _ref4.results;
+                            var b = breakdowns.find(function (_ref5) {
+                                var description = _ref5.resultType.i2b2Options.description,
+                                    results = _ref5.results;
                                 return description === k;
                             });
                             var r = b ? b.results.find(function (r) {
                                 return r.dataKey === s;
                             }) : undefined;
-                            return r ? r.value : 'unavailable';
+                            return !r ? 'unavailable' : r.value > 0 ? r.value : 0;
                         });
                         return title + ',' + values.join(",");
                     })));
