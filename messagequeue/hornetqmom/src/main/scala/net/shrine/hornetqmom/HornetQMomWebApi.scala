@@ -166,13 +166,14 @@ trait HornetQMomWebApi extends HttpService
     respondWithStatus(StatusCodes.InternalServerError) {
       val serverErrorProblem: HornetQMomServerErrorProblem = HornetQMomServerErrorProblem(x, function)
       debug(s"HornetQ encountered a Problem during $function, Problem Details: $serverErrorProblem")
-      complete(s"HornetQ throws an exception while trying to $function. HornetQ Server response: ${x.getMessage} from ${x.getClass}")
+      complete(s"HornetQ throws an exception while trying to $function. HornetQ Server response: ${x.getMessage}" +
+        s"Exception is from ${x.getClass}")
     }
   }
 
 }
 
-case class HornetQMomServerErrorProblem(x:Throwable, function:String) extends AbstractProblem(ProblemSources.Adapter) {
+case class HornetQMomServerErrorProblem(x:Throwable, function:String) extends AbstractProblem(ProblemSources.Hub) {
 
   override val throwable = Some(x)
   override val summary: String = "SHRINE cannot use HornetQMomWebApi due to a server error occurred in hornetQ."
@@ -180,7 +181,7 @@ case class HornetQMomServerErrorProblem(x:Throwable, function:String) extends Ab
                                       s" the server's response is: ${x.getMessage} from ${x.getClass}."
 }
 
-case class CannotUseHornetQMomWebApiProblem(x:Throwable) extends AbstractProblem(ProblemSources.Adapter) {
+case class CannotUseHornetQMomWebApiProblem(x:Throwable) extends AbstractProblem(ProblemSources.Hub) {
 
   override val throwable = Some(x)
   override val summary: String = "SHRINE cannot use HornetQMomWebApi due to configuration in shrine.conf."
