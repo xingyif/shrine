@@ -1,12 +1,15 @@
 package net.shrine.broadcaster
 
 import net.shrine.adapter.client.{AdapterClient, RemoteAdapterClient}
+import net.shrine.audit.NetworkQueryId
 import net.shrine.broadcaster.dao.HubDao
 import net.shrine.client.TimeoutException
 import net.shrine.log.Loggable
+import net.shrine.messagequeueservice.MessageQueueService
 import net.shrine.protocol.{BroadcastMessage, FailureResult, RunQueryRequest, SingleNodeResult, Timeout}
 
 import scala.concurrent.Future
+import scala.util.{Failure, Success, Try}
 import scala.util.control.NonFatal
 
 /**
@@ -26,17 +29,20 @@ final case class AdapterClientBroadcaster(destinations: Set[NodeHandle], dao: Hu
 
     for {
       nodeHandle <- destinations
-//todo for SHRINE-2120      shrineResponse: SingleNodeResult <- callAdapter(message, nodeHandle)
-      shrineResponse <- callAdapter(message, nodeHandle)
+//todo more status for SHRINE-2120
+      shrineResponse: SingleNodeResult <- callAdapter(message, nodeHandle)
     } {
       try {
         message.request match {
-          case rqr:RunQueryRequest => {
+          case rqr:RunQueryRequest =>
             debug(s"RunQueryRequest's nodeId is ${rqr.nodeId}")
             //todo SHRINE-2120 send to the QEP queue named nodeId
-            //todo send a shrineResponse.toXml .
-            //todo use the json envelope when you get to SHRINE-2177
-          }
+            //todo get to the point where there's always a nodeId and clean this up
+            rqr.nodeId.fold{
+              debug(s"Did not send to queue because nodeId is None")
+            }{ nodeId =>
+              sendToQep(shrineResponse,rqr.networkQueryId,nodeId.name)
+            }
           case _ => debug(s"Not a RunQueryRequest but a ${message.request.getClass.getSimpleName}.")
         }
 
@@ -45,6 +51,25 @@ final case class AdapterClientBroadcaster(destinations: Set[NodeHandle], dao: Hu
     }
 
     multiplexer
+  }
+
+  private def sendToQep(shrineResponse: SingleNodeResult,networkQueryId: NetworkQueryId,queueName:String):Unit = {
+    val s: Try[Unit] = for {
+      queue <- MessageQueueService.service.createQueueIfAbsent(queueName)
+      //todo use the json envelope when you get to SHRINE-2177
+      sent <- MessageQueueService.service.send(shrineResponse.toXml.text, queue)
+    } yield sent
+    s.transform({itWorked =>
+      debug(s"Result from ${shrineResponse.origin.name} sent to queue")
+      Success(itWorked)
+    },{throwable: Throwable =>
+      throwable match
+      {
+        case NonFatal(x) => error(s"Could not send result from hub to $queueName for $networkQueryId", x) //todo better error handling
+        case _ => //no op
+      }
+      Failure(throwable)
+    })
   }
 
   private[broadcaster] def callAdapter(message: BroadcastMessage, nodeHandle: NodeHandle): Future[SingleNodeResult] = {
