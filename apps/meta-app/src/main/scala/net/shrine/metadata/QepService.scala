@@ -195,35 +195,33 @@ if not
   def queryResultsTable(user: User): Route = path("queryResultsTable") {
 
     matchQueryParameters(Some(user.username)) { queryParameters: QueryParameters =>
-      blocking {
-        val queryRowCount: Int = QepQueryDb.db.countPreviousQueriesByUserAndDomain(
-          userName = user.username,
-          domain = user.domain
-        )
+      val queryRowCount: Int = QepQueryDb.db.countPreviousQueriesByUserAndDomain(
+        userName = user.username,
+        domain = user.domain
+      )
 
-        val queries: Seq[QepQuery] = QepQueryDb.db.selectPreviousQueriesByUserAndDomain(
-          userName = user.username,
-          domain = user.domain,
-          skip = queryParameters.skipOption,
-          limit = queryParameters.limitOption
-        )
-        //todo revisit json structure to remove things the front-end doesn't use
-        val adapters: Seq[String] = QepQueryDb.db.selectDistinctAdaptersWithResults
+      val queries: Seq[QepQuery] = QepQueryDb.db.selectPreviousQueriesByUserAndDomain(
+        userName = user.username,
+        domain = user.domain,
+        skip = queryParameters.skipOption,
+        limit = queryParameters.limitOption
+      )
+      //todo revisit json structure to remove things the front-end doesn't use
+      val adapters: Seq[String] = QepQueryDb.db.selectDistinctAdaptersWithResults
 
-        val flags: Map[NetworkQueryId, QueryFlag] = QepQueryDb.db.selectMostRecentQepQueryFlagsFor(queries.map(q => q.networkId).to[Set])
-          .map(q => q._1 -> QueryFlag(q._2))
+      val flags: Map[NetworkQueryId, QueryFlag] = QepQueryDb.db.selectMostRecentQepQueryFlagsFor(queries.map(q => q.networkId).to[Set])
+        .map(q => q._1 -> QueryFlag(q._2))
 
-        val queryResults: Seq[ResultsRow] = queries.map(q => ResultsRow(
-          query = QueryCell(q, flags.get(q.networkId)),
-          results = QepQueryDb.db.selectMostRecentFullQueryResultsFor(q.networkId).map(Result(_))))
+      val queryResults: Seq[ResultsRow] = queries.map(q => ResultsRow(
+        query = QueryCell(q, flags.get(q.networkId)),
+        results = QepQueryDb.db.selectMostRecentFullQueryResultsFor(q.networkId).map(Result(_))))
 
-        val table: ResultsTable = ResultsTable(queryRowCount, queryParameters.skipOption.getOrElse(0), adapters, queryResults)
+      val table: ResultsTable = ResultsTable(queryRowCount, queryParameters.skipOption.getOrElse(0), adapters, queryResults)
 
-        val jsonTable: Json = Json(table)
-        val formattedTable: String = Json.format(jsonTable)(humanReadable())
+      val jsonTable: Json = Json(table)
+      val formattedTable: String = Json.format(jsonTable)(humanReadable())
 
-        complete(formattedTable)
-      }
+      complete(formattedTable)
     }
   }
 
