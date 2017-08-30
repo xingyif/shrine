@@ -124,5 +124,3 @@ class HornetQMomWebApiConfigTest extends FlatSpec with ScalatestRouteTest with H
     }
   }
 }
-
-case class

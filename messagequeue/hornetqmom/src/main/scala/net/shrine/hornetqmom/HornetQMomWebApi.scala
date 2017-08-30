@@ -31,7 +31,7 @@ trait HornetQMomWebApi extends HttpService
   def momRoute: Route = pathPrefix("mom") {
 
     if (!enabled) {
-      val configProblem: CannotUseHornetQMomWebApi = CannotUseHornetQMomWebApi(new UnsupportedOperationException)
+      val configProblem: CannotUseHornetQMomWebApiProblem = CannotUseHornetQMomWebApiProblem(new UnsupportedOperationException)
       warn(s"HornetQMomWebApi is not available to use due to configProblem ${configProblem.description}!")
       respondWithStatus(StatusCodes.NotFound) {
         complete(warningMessage)
@@ -172,8 +172,6 @@ trait HornetQMomWebApi extends HttpService
 
 }
 
-
-
 case class HornetQMomServerErrorProblem(x:Throwable, function:String) extends AbstractProblem(ProblemSources.Adapter) {
 
   override val throwable = Some(x)
@@ -181,8 +179,6 @@ case class HornetQMomServerErrorProblem(x:Throwable, function:String) extends Ab
   override val description: String = s"HornetQ throws an exception while trying to $function," +
                                       s" the server's response is: ${x.getMessage} from ${x.getClass}."
 }
-
-
 
 case class CannotUseHornetQMomWebApiProblem(x:Throwable) extends AbstractProblem(ProblemSources.Adapter) {
 
