@@ -4,6 +4,7 @@ import com.typesafe.config.Config
 import net.shrine.config.ConfigExtensions
 import net.shrine.log.Log
 import net.shrine.messagequeueservice.{Message, MessageQueueService}
+import net.shrine.problem.ProblemNotYetEncoded
 import net.shrine.protocol.{ResultOutputType, ResultOutputTypes, RunQueryResponse}
 import net.shrine.qep.querydb.QepQueryDb
 import net.shrine.source.ConfigSource
@@ -42,7 +43,7 @@ object QepReceiver {
   pollingThread.start()
 
   //todo maybe pass this in from outside and make the thing a case class
-  val queue = MessageQueueService.service.createQueueIfAbsent(ConfigSource.config.getString("shrine.humanReadableNodeName"))
+  val queue = MessageQueueService.service.createQueueIfAbsent(ConfigSource.config.getString("shrine.humanReadableNodeName")).get //todo better than get. handle errors
   val pollDuration = Duration("15 seconds") //todo from config
 
   lazy val config: Config = ConfigSource.config
@@ -51,8 +52,14 @@ object QepReceiver {
   val breakdownTypes: Set[ResultOutputType] = shrineConfig.getOptionConfigured("breakdownResultOutputTypes", ResultOutputTypes.fromConfig).getOrElse(Set.empty)
 
   def receiveAMessage(): Unit = {
-    val message: Option[Message] = MessageQueueService.service.receive(queue, pollDuration) //todo make this configurable (and testable)
-    message.foreach(interpretAMessage)
+    val maybeMessage: Try[Option[Message]] = MessageQueueService.service.receive(queue, pollDuration) //todo make this configurable (and testable)
+    maybeMessage.transform({m =>
+      m.foreach(interpretAMessage)
+      Success(m)
+    },{x =>
+      ProblemNotYetEncoded("Something went wrong during receive",x) //todo create full-up problem
+      Failure(x)
+    })
   }
 
   val unit = ()

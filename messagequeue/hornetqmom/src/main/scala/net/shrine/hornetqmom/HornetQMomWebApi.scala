@@ -2,7 +2,8 @@ package net.shrine.hornetqmom
 
 import akka.event.Logging
 import net.shrine.log.Loggable
-import net.shrine.messagequeueservice.{Message, MessageSerializer, Queue}
+import net.shrine.messagequeueservice.{Message, MessageSerializer, Queue, QueueSerializer}
+import net.shrine.problem.{AbstractProblem, ProblemSources}
 import org.json4s.native.Serialization
 import org.json4s.native.Serialization.{read, write}
 import org.json4s.{Formats, NoTypeHints}
@@ -12,7 +13,7 @@ import spray.routing.{HttpService, Route}
 
 import scala.collection.immutable.Seq
 import scala.concurrent.duration.Duration
-import scala.util.control.NonFatal
+import scala.util.{Failure, Success, Try}
 /**
   * A web API that provides access to the internal HornetQMom library.
   * Allows client to createQueue, deleteQueue, sendMessage, receiveMessage, getQueues, and sendReceipt
@@ -24,42 +25,66 @@ trait HornetQMomWebApi extends HttpService
   with Loggable {
 
   def momRoute: Route = pathPrefix("mom") {
-      put {
-        createQueue ~
-          sendMessage ~
-          acknowledge
-      } ~ receiveMessage ~ getQueues ~ deleteQueue
+    put {
+      createQueue ~
+        sendMessage ~
+        acknowledge
+    } ~ receiveMessage ~ getQueues ~ deleteQueue
   }
 
   // SQS returns CreateQueueResult, which contains queueUrl: String
   def createQueue: Route =
     path("createQueue" / Segment) { queueName =>
       detach() {
-        val createdQueue: Queue = LocalHornetQMom.createQueueIfAbsent(queueName)
-        implicit val formats = Serialization.formats(NoTypeHints)
-        val response: String = write[Queue](createdQueue)(formats)
-        respondWithStatus(StatusCodes.Created) {
-          complete(response)
+        val createdQueueTry: Try[Queue] = LocalHornetQMom.createQueueIfAbsent(queueName)
+        createdQueueTry match {
+          case Success(queue) => {
+            implicit val formats = Serialization.formats(NoTypeHints) + new QueueSerializer
+            val response: String = write[Queue](queue)(formats)
+            respondWithStatus(StatusCodes.Created) {
+              complete(response)
+            }
+          }
+          case Failure(x) => {
+            internalServerErrorOccured(x, "createQueue")
+          }
         }
       }
-  }
+    }
 
   // SQS takes in DeleteMessageRequest, which contains a queueUrl: String and a ReceiptHandle: String
   // returns a DeleteMessageResult, toString for debugging
   def deleteQueue: Route = path("deleteQueue" / Segment) { queueName =>
-    delete {
+    put {
       detach() {
-        LocalHornetQMom.deleteQueue(queueName)
-        complete(StatusCodes.OK)
+        val deleteQueueTry: Try[Unit] = LocalHornetQMom.deleteQueue(queueName)
+        deleteQueueTry match {
+          case Success(v) => {
+            complete(StatusCodes.OK)
+          }
+          case Failure(x) => {
+            internalServerErrorOccured(x, "deleteQueue")
+          }
+        }
       }
     }
   }
 
   // SQS sendMessage(String queueUrl, String messageBody) => SendMessageResult
-  def sendMessage: Route = path("sendMessage" / Segment / Segment) { (messageContent, toQueue) =>
-    detach() {
-      LocalHornetQMom.send(messageContent, Queue.apply(toQueue))
-      complete(StatusCodes.Accepted)
+  def sendMessage: Route = path("sendMessage" / Segment) { toQueue =>
+    requestInstance { request =>
+      val messageContent = request.entity.asString
+      detach() {
+        val sendTry: Try[Unit] = LocalHornetQMom.send(messageContent, Queue(toQueue))
+        sendTry match {
+          case Success(v) => {
+            complete(StatusCodes.Accepted)
+          }
+          case Failure(x) => {
+            internalServerErrorOccured(x, "sendMessage")
+          }
+        }
+      }
     }
   }
 
@@ -70,9 +95,16 @@ trait HornetQMomWebApi extends HttpService
         parameter('timeOutSeconds ? 20) { timeOutSeconds =>
           val timeout: Duration = Duration.create(timeOutSeconds, "seconds")
           detach() {
-            val response: Option[Message] = LocalHornetQMom.receive(Queue.apply(fromQueue), timeout)
-            implicit val formats = Serialization.formats(NoTypeHints) + new MessageSerializer
-            response.fold(complete(StatusCodes.NotFound))(msg => complete(write(response)(formats)))
+            val receiveTry: Try[Option[Message]] = LocalHornetQMom.receive(Queue(fromQueue), timeout)
+            receiveTry match {
+              case Success(optMessage) => {
+                implicit val formats = Serialization.formats(NoTypeHints) + new MessageSerializer
+                optMessage.fold(complete(StatusCodes.NotFound))(msg => complete(write(optMessage)(formats)))
+              }
+              case Failure(x) => {
+                internalServerErrorOccured(x, "receiveMessage")
+              }
+            }
           }
         }
       }
@@ -83,14 +115,14 @@ trait HornetQMomWebApi extends HttpService
     entity(as[String]) { messageJSON =>
       implicit val formats: Formats = Serialization.formats(NoTypeHints) + new MessageSerializer
       detach() {
-        try {
-          val msg: Message = read[Message](messageJSON)(formats, manifest[Message])
-          LocalHornetQMom.completeMessage(msg)
-          complete(StatusCodes.ResetContent)
-        } catch {
-          case NonFatal(x) => {
-            LogEntry(s"\n  Request: acknowledge/$messageJSON\n  Response: $x", Logging.DebugLevel)
-            complete(StatusCodes.BadRequest)
+        val msg: Message = read[Message](messageJSON)(formats, manifest[Message])
+        val acknowledgeTry: Try[Unit] = LocalHornetQMom.completeMessage(msg)
+        acknowledgeTry match {
+          case Success(v) => {
+            complete(StatusCodes.ResetContent)
+          }
+          case Failure(x) => {
+            internalServerErrorOccured(x, "acknowledge")
           }
         }
       }
@@ -101,12 +133,39 @@ trait HornetQMomWebApi extends HttpService
   def getQueues: Route = path("getQueues") {
     get {
       detach() {
-        implicit val formats = Serialization.formats(NoTypeHints)
+        implicit val formats = Serialization.formats(NoTypeHints) + new QueueSerializer
         respondWithStatus(StatusCodes.OK) {
-          complete(write[Seq[Queue]](LocalHornetQMom.queues)(formats))
+          val getQueuesTry: Try[Seq[Queue]] = LocalHornetQMom.queues
+          getQueuesTry match {
+            case Success(seqQueue) => {
+              complete(write[Seq[Queue]](LocalHornetQMom.queues.get)(formats))
+            }
+            case Failure(x) => {
+              internalServerErrorOccured(x, "getQueues")
+            }
+          }
         }
       }
     }
   }
 
+
+  def internalServerErrorOccured(x: Throwable, function: String): Route = {
+    respondWithStatus(StatusCodes.InternalServerError) {
+      val serverErrorProblem: HornetQMomServerErrorProblem = HornetQMomServerErrorProblem(x, function)
+      debug(s"HornetQ encountered a Problem during $function, Problem Details: $serverErrorProblem")
+      complete(s"HornetQ throws an exception while trying to $function. HornetQ Server response: ${x.getMessage} from ${x.getClass}")
+    }
+  }
+
+}
+
+
+
+case class HornetQMomServerErrorProblem(x:Throwable, function:String) extends AbstractProblem(ProblemSources.Adapter) {
+
+  override val throwable = Some(x)
+  override val summary: String = "SHRINE cannot use HornetQMomWebApi due to a server error occurred in hornetQ."
+  override val description: String = s"HornetQ throws an exception while trying to $function," +
+                                      s" the server's response is: ${x.getMessage} from ${x.getClass}."
 }

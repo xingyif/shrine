@@ -1,19 +1,20 @@
 package net.shrine.hornetqmom
 
 import com.typesafe.config.Config
-import net.shrine.messagequeueservice.{Message, MessageQueueService, Queue}
+import net.shrine.messagequeueservice.{Message, MessageQueueService, NoSuchQueueExistsInHornetQ, Queue}
 import net.shrine.source.ConfigSource
-import org.hornetq.api.core.client.{ClientConsumer, ClientMessage, ClientSession, ClientSessionFactory, HornetQClient, ServerLocator}
+import org.hornetq.api.core.TransportConfiguration
+import org.hornetq.api.core.client.{ClientConsumer, ClientMessage, ClientProducer, ClientSession, ClientSessionFactory, HornetQClient, ServerLocator}
 import org.hornetq.api.core.management.HornetQServerControl
-import org.hornetq.api.core.{HornetQQueueExistsException, TransportConfiguration}
 import org.hornetq.core.config.impl.ConfigurationImpl
 import org.hornetq.core.remoting.impl.invm.{InVMAcceptorFactory, InVMConnectorFactory}
 import org.hornetq.core.server.{HornetQServer, HornetQServers}
 
+import scala.collection.concurrent.{TrieMap, Map => ConcurrentMap}
 import scala.collection.immutable.Seq
 import scala.concurrent.blocking
 import scala.concurrent.duration.Duration
-import scala.collection.concurrent.{TrieMap, Map => ConcurrentMap}
+import scala.util.Try
 /**
   * This object is the local version of the Message-Oriented Middleware API, which uses HornetQ service
   * @author david
@@ -22,7 +23,7 @@ import scala.collection.concurrent.{TrieMap, Map => ConcurrentMap}
 
 object LocalHornetQMom extends MessageQueueService {
 
-  val config:Config = ConfigSource.config.getConfig("shrine.messagequeue.hornetq")
+  val config: Config = ConfigSource.config.getConfig("shrine.messagequeue.hornetq")
 
   // todo use the config to set everything needed here that isn't hard-coded.
   val hornetQConfiguration = new ConfigurationImpl()
@@ -44,11 +45,11 @@ object LocalHornetQMom extends MessageQueueService {
   val sessionFactory: ClientSessionFactory = serverLocator.createSessionFactory()
 
   //arguments are boolean xa, boolean autoCommitSends, boolean autoCommitAcks .
-  val session: ClientSession = sessionFactory.createSession(false,true,true)
+  val session: ClientSession = sessionFactory.createSession(false, true, true)
   session.start()
 
   //keep a map of live queues to ClientConsumers to provide a path for completing messages
-  val queuesToConsumers:ConcurrentMap[Queue, ClientConsumer] = TrieMap.empty
+  val queuesToConsumers: ConcurrentMap[Queue, ClientConsumer] = TrieMap.empty
 
   val propName = "contents"
 
@@ -65,43 +66,62 @@ object LocalHornetQMom extends MessageQueueService {
   }
 
   //queue lifecycle
-  def createQueueIfAbsent(queueName:String):Queue = {
-    val serverControl: HornetQServerControl = hornetQServer.getHornetQServerControl
-    if(!queues.map(_.name).contains(queueName)) {
-      try serverControl.createQueue(queueName, queueName, true)
-      catch {
-        case alreadyExists: HornetQQueueExistsException => //Already have what we want. Something slipped in between checking queues for this queue and creating it.
+  def createQueueIfAbsent(queueName: String): Try[Queue] = {
+    val proposedQueue: Queue = Queue(queueName)
+    for {
+      serverControl: HornetQServerControl <- Try{ hornetQServer.getHornetQServerControl }
+      createQueueInHornetQ <- Try {
+        if (!this.queues.get.map(_.name).contains(proposedQueue.name)) {
+          serverControl.createQueue(proposedQueue.name, proposedQueue.name, true)
+        }
       }
-    }
-    val queue = Queue(queueName)
-    queuesToConsumers.getOrElseUpdate(queue,{session.createConsumer(queue.name)})
-    queue
+      useNewQueueToUpdateMapTry: Queue <- Try {
+        queuesToConsumers.getOrElseUpdate(proposedQueue, { session.createConsumer(proposedQueue.name) })
+        proposedQueue
+      }
+    } yield useNewQueueToUpdateMapTry
   }
 
-  def deleteQueue(queueName:String) = {
-    queuesToConsumers.remove(Queue(queueName)).foreach(_.close())
-
-    val serverControl: HornetQServerControl = hornetQServer.getHornetQServerControl
-    serverControl.destroyQueue(queueName)
+  def deleteQueue(queueName: String): Try[Unit] = {
+    val proposedQueue: Queue = Queue(queueName)
+    for {
+      deleteTry <- Try {
+        queuesToConsumers.remove(proposedQueue).foreach(_.close())
+        val serverControl: HornetQServerControl = hornetQServer.getHornetQServerControl
+        serverControl.destroyQueue(proposedQueue.name)
+      }
+    } yield deleteTry
   }
 
-  override def queues:Seq[Queue] = {
-    val serverControl: HornetQServerControl = hornetQServer.getHornetQServerControl
-    val queueNames: Array[String] = serverControl.getQueueNames
-    queueNames.map(Queue(_)).to[Seq]
+  override def queues: Try[Seq[Queue]] = {
+    for {
+      hornetQTry: HornetQServerControl <- Try {
+        hornetQServer.getHornetQServerControl
+      }
+      getQueuesTry: Seq[Queue] <- Try {
+        val queueNames: Array[String] = hornetQTry.getQueueNames
+        queueNames.map(Queue(_)).to[Seq]
+      }
+    } yield getQueuesTry
   }
 
   //send a message
-  def send(contents:String,to:Queue):Unit = {
-    val producer = session.createProducer(to.name)
-    try {
-      val message = session.createMessage(true)
-      message.putStringProperty(propName, contents)
-
-      producer.send(message)
-    } finally {
-      producer.close()
-    }
+  def send(contents: String, to: Queue): Try[Unit] = {
+    for {
+      sendTry <- Try {
+        // check if the queue exists first
+        if (!this.queues.get.map(_.name).contains(to.name)) {
+          throw NoSuchQueueExistsInHornetQ(to)
+        }
+      }
+      producer: ClientProducer <- Try{ session.createProducer(to.name) }
+      message <- Try{ session.createMessage(true) }
+      constructMessage <- Try { message.putStringProperty(propName, contents) }
+      sendMessage <- Try {
+        producer.send(message)
+        producer.close()
+      }
+    } yield sendMessage
   }
 
   //receive a message
@@ -111,22 +131,33 @@ object LocalHornetQMom extends MessageQueueService {
     *
     * @return Some message before the timeout, or None
     */
-  def receive(from:Queue,timeout:Duration):Option[Message] = {
-    // todo check if queue exists, if not throw exception
-    val messageConsumer: ClientConsumer = queuesToConsumers(from) //todo handle the case where either stop or close has been called on something gracefully
-    blocking {
-      val messageReceived: Option[ClientMessage] = Option(messageConsumer.receive(timeout.toMillis))
-      val message = messageReceived.map(Message(_))
-
-      message
-    }
+  def receive(from: Queue, timeout: Duration): Try[Option[Message]] = {
+    for {
+    //todo handle the case where either stop or close has been called on something gracefully
+      messageConsumer: ClientConsumer <- Try {
+        if (!queuesToConsumers.contains(from)) {
+          throw new NoSuchElementException(s"Given Queue ${from.name} does not exist in HornetQ server! Please create the queue first!")
+        }
+        queuesToConsumers(from)
+      }
+      message: Option[Message] <- Try {
+        blocking {
+          val messageReceived: Option[ClientMessage] = Option(messageConsumer.receive(timeout.toMillis))
+          messageReceived.map(Message(_))
+        }
+      }
+    } yield message
   }
 
   //todo dead letter queue for all messages. See http://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/examples-sqs-dead-letter-queues.html
 
   //complete a message
-  //todo better here or on the message itself??
-  override def completeMessage(message:Message):Unit = message.complete()
+  override def completeMessage(message: Message): Try[Unit] = {
+    for {
+      completeMessageTry <- Try { message.complete() }
+    } yield completeMessageTry
+  }
+
 }
 
 /**
@@ -135,10 +166,13 @@ object LocalHornetQMom extends MessageQueueService {
 //todo is this a good way to write this code?
 object LocalHornetQMomStopper {
 
-  def stop() = {
+  def stop(): Unit = {
     //todo fill in as part of SHIRINE-2128
-    val config: Config = ConfigSource.config.getConfig("shrine.messagequeue.hornetq")
-
+    for {
+      config: Config <- Try {
+        ConfigSource.config.getConfig("shrine.messagequeue.hornetq")
+      }
+    } yield config
     LocalHornetQMom.stop()
   }
 
