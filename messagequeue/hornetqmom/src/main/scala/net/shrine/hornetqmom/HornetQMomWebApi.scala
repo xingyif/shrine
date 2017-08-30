@@ -1,14 +1,13 @@
 package net.shrine.hornetqmom
 
-import akka.event.Logging
 import net.shrine.log.Loggable
 import net.shrine.messagequeueservice.{Message, MessageSerializer, Queue, QueueSerializer}
 import net.shrine.problem.{AbstractProblem, ProblemSources}
+import net.shrine.source.ConfigSource
 import org.json4s.native.Serialization
 import org.json4s.native.Serialization.{read, write}
 import org.json4s.{Formats, NoTypeHints}
 import spray.http.StatusCodes
-import spray.routing.directives.LogEntry
 import spray.routing.{HttpService, Route}
 
 import scala.collection.immutable.Seq
@@ -24,12 +23,26 @@ import scala.util.{Failure, Success, Try}
 trait HornetQMomWebApi extends HttpService
   with Loggable {
 
+  val enabled: Boolean = ConfigSource.config.getString("shrine.messagequeue.hornetQWebApi.enabled").toBoolean
+  val warningMessage: String = "If you intend for this node to serve as this SHRINE network's messaging hub " +
+                        "set shrine.messagequeue.hornetQWebApi.enabled to true in your shrine.conf." +
+                        " You do not want to do this unless you are the hub admin!"
+
   def momRoute: Route = pathPrefix("mom") {
-    put {
-      createQueue ~
-        sendMessage ~
-        acknowledge
-    } ~ receiveMessage ~ getQueues ~ deleteQueue
+
+    if (!enabled) {
+      val configProblem: CannotUseHornetQMomWebApiProblem = CannotUseHornetQMomWebApiProblem(new UnsupportedOperationException)
+      warn(s"HornetQMomWebApi is not available to use due to configProblem ${configProblem.description}!")
+      respondWithStatus(StatusCodes.NotFound) {
+        complete(warningMessage)
+      }
+    } else {
+      put {
+        createQueue ~
+          sendMessage ~
+          acknowledge
+      } ~ receiveMessage ~ getQueues ~ deleteQueue
+    }
   }
 
   // SQS returns CreateQueueResult, which contains queueUrl: String
@@ -149,23 +162,30 @@ trait HornetQMomWebApi extends HttpService
     }
   }
 
-
   def internalServerErrorOccured(x: Throwable, function: String): Route = {
     respondWithStatus(StatusCodes.InternalServerError) {
       val serverErrorProblem: HornetQMomServerErrorProblem = HornetQMomServerErrorProblem(x, function)
       debug(s"HornetQ encountered a Problem during $function, Problem Details: $serverErrorProblem")
-      complete(s"HornetQ throws an exception while trying to $function. HornetQ Server response: ${x.getMessage} from ${x.getClass}")
+      complete(s"HornetQ throws an exception while trying to $function. HornetQ Server response: ${x.getMessage}" +
+        s"Exception is from ${x.getClass}")
     }
   }
 
 }
 
-
-
-case class HornetQMomServerErrorProblem(x:Throwable, function:String) extends AbstractProblem(ProblemSources.Adapter) {
+case class HornetQMomServerErrorProblem(x:Throwable, function:String) extends AbstractProblem(ProblemSources.Hub) {
 
   override val throwable = Some(x)
   override val summary: String = "SHRINE cannot use HornetQMomWebApi due to a server error occurred in hornetQ."
   override val description: String = s"HornetQ throws an exception while trying to $function," +
                                       s" the server's response is: ${x.getMessage} from ${x.getClass}."
+}
+
+case class CannotUseHornetQMomWebApiProblem(x:Throwable) extends AbstractProblem(ProblemSources.Hub) {
+
+  override val throwable = Some(x)
+  override val summary: String = "SHRINE cannot use HornetQMomWebApi due to configuration in shrine.conf."
+  override val description: String = "If you intend for this node to serve as this SHRINE network's messaging hub " +
+                              "set shrine.messagequeue.hornetQWebApi.enabled to true in your shrine.conf." +
+                              " You do not want to do this unless you are the hub admin!"
 }
