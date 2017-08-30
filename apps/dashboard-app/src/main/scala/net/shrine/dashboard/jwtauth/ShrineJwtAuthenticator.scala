@@ -18,7 +18,7 @@ import spray.routing.AuthenticationFailedRejection
 import spray.routing.AuthenticationFailedRejection.{CredentialsMissing, CredentialsRejected}
 import spray.routing.authentication._
 
-import scala.concurrent.{blocking, ExecutionContext, Future}
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 
 /**
