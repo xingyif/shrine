@@ -88,18 +88,17 @@ object ShrineJwtAuthenticator extends Loggable {
   }
 
   def createOAuthCredentials(user:User, dnsName: String): OAuth2BearerToken = {
+      val oauthEntry = certCollection match {
+        case HubCertCollection(myEntry, _, _) => myEntry
+        case DownStreamCertCollection(myEntry, _, _) => myEntry // Note: The DownStreamCertCollection will never be accepted
+        case PeerCertCollection(_, _, sites) => sites.find(_.url == dnsName).get.entry.get
+        // This looks really dangerous, but it's an invariant that all remote sites for PeerToPeer collections have entries.
+      }
+      val base64Cert: String = TextCodec.BASE64URL.encode(oauthEntry.cert.getEncoded)
 
-    val oauthEntry = certCollection match {
-      case HubCertCollection(myEntry, _, _) => myEntry
-      case DownStreamCertCollection(myEntry, _, _) => myEntry // Note: The DownStreamCertCollection will never be accepted
-      case PeerCertCollection(_, _, sites) => sites.find(_.url == dnsName).get.entry.get
-      // This looks really dangerous, but it's an invariant that all remote sites for PeerToPeer collections have entries.
-    }
-    val base64Cert:String = TextCodec.BASE64URL.encode(oauthEntry.cert.getEncoded)
-
-    val key: PrivateKey = certCollection.myEntry.privateKey.get
-    val expiration: Date = new Date(System.currentTimeMillis() + 30 * 1000) //good for 30 seconds
-    val jwtsString = Jwts.builder().
+      val key: PrivateKey = certCollection.myEntry.privateKey.get
+      val expiration: Date = new Date(System.currentTimeMillis() + 30 * 1000) //good for 30 seconds
+      val jwtsString = Jwts.builder().
         setHeaderParam("kid", base64Cert).
         setSubject(s"${user.username} at ${user.domain}").
         setIssuer(java.net.InetAddress.getLocalHost.getHostName). //todo is it OK for me to use issuer this way or should I use my own claim?
@@ -107,7 +106,7 @@ object ShrineJwtAuthenticator extends Loggable {
         signWith(SignatureAlgorithm.RS512, key).
         compact()
 
-    OAuth2BearerToken(jwtsString)
+      OAuth2BearerToken(jwtsString)
   }
 
   def extractAuthorizationHeader(request: HttpRequest):Try[HttpHeader] = Try {

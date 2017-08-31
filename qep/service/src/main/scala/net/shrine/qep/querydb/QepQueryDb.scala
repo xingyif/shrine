@@ -41,9 +41,7 @@ case class QepQueryDb(schemaDef:QepQuerySchema,dataSource: DataSource,timeout:Du
   def dbRun[R](action: DBIOAction[R, NoStream, Nothing]):R = {
     val future: Future[R] = database.run(action)
     try {
-      blocking {
         Await.result(future, timeout)
-      }
     }
     catch {
       case tx:TimeoutException => throw TimeoutInDbIoActionException(dataSource, timeout, tx)

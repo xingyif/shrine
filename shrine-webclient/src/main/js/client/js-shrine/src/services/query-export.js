@@ -9,24 +9,25 @@ export class QueryExport extends PubSub{
 }
 
 const convertObjectToCSV = (d) => {
-    const nodeNames = d.nodes.map(n => n.adapterNode);
-    const nodes = d.nodes;
+    const nodes = d.nodes.sort();
     const m = new Map();
+    const desc = ({resultType:{i2b2Options:{description}}}) => description;
+    const brdSort = (a,b) => desc(a) <= desc(b)? -1 : 1;
     nodes.forEach(({breakdowns}) => 
-        breakdowns.forEach(({resultType:{i2b2Options:{description}}, results}) => 
-            m.has(description)? m.get(description).add(...results.map(r => r.dataKey)) : m.set(description, new Set(results.map(r => r.dataKey)))
-    ));
+        breakdowns.sort(brdSort).forEach(({resultType:{i2b2Options:{description}}, results}) => 
+            m.has(description)? m.get(description).add(...results.map(r => r.dataKey).sort()) : m.set(description, new Set(results.map(r => r.dataKey).sort()))
+        ));
 
-    const line1 = `data:text/csv;charset=utf-8,SHRINE QUERY RESULTS (OBFUSCATED PATIENT COUNTS),${nodes.map(n => n.adapterNode).join(',')}`;
-    const line2 = `\nAll Patients,${nodes.map(n => n.count).join(',')}`;
+    const line1 = `data:text/csv;charset=utf-8,SHRINE QUERY RESULTS (OBFUSCATED PATIENT COUNTS),${['', ...nodes.map(n => n.adapterNode).join(',')]}`;
+    const line2 = `\nAll Patients,${['', ...nodes.map(n => n.count).join(',')]}`;
     const result = [];
     m.forEach((v, k) => {
         result.push('',...Array.from(v).map(s => {
-            const title = `${k.split(' ').shift()}|${s}`;
+            const title = `${k.split(' ').shift()},${s}`;
             const values = nodes.map(({breakdowns}) => {
                 const b = breakdowns.find(({resultType:{i2b2Options:{description}}, results}) => description === k);
                 const r = b? b.results.find(r => r.dataKey === s) : undefined;
-                return r? r.value : 'unavailable';
+                return !r? 'unavailable': r.value > 0? r.value : 0;
             });
             return `${title},${values.join(",")}`;
         }));
