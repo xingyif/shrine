@@ -22,42 +22,58 @@ import scala.util.control.NonFatal
 //todo in 1.24, look into a streaming API for messages
 object QepReceiver {
 
+  Log.debug("started init of QepReceiver")
+
   val receiveMessageRunnable: Runnable = new Runnable {
     override def run(): Unit = {
       while(true) { //forever
         try {
+          Log.debug("About to call receive.")
           receiveAMessage()
+          Log.debug("Successfully called receive.")
         } catch {
           case NonFatal(x) => Log.error("Exception while receiving a message.",x)//todo new kind of problem
           //pass-through to blow up the thread, receive no more results, do something dramatic in UncaughtExceptionHandler.
+          case x => Log.error("Fatal exception while receiving a message",x)
+                    throw x
         }
       }
     }
   }
+
+  Log.debug("Made the runnable for QepReceiver")
 
   //create a daemon thread that long-polls for messages forever
   val pollingThread = new Thread(receiveMessageRunnable,"Receive message thread")
   pollingThread.setDaemon(true)
 //todo   pollingThread.setUncaughtExceptionHandler()
 
-  pollingThread.start()
+  Log.debug("made the thread for QepReceiver")
 
   //todo maybe pass this in from outside and make the thing a case class
-  val queue = MessageQueueService.service.createQueueIfAbsent(ConfigSource.config.getString("shrine.humanReadableNodeName")).get //todo better than get. handle errors
+  lazy val queue = MessageQueueService.service.createQueueIfAbsent(ConfigSource.config.getString("shrine.humanReadableNodeName")).get //todo better than get. handle errors
   val pollDuration = Duration("15 seconds") //todo from config
 
-  lazy val config: Config = ConfigSource.config
+  val config: Config = ConfigSource.config
   val shrineConfig = config.getConfig("shrine")
 
   val breakdownTypes: Set[ResultOutputType] = shrineConfig.getOptionConfigured("breakdownResultOutputTypes", ResultOutputTypes.fromConfig).getOrElse(Set.empty)
 
+  pollingThread.start()
+
+  Log.debug("Started the QepReceiver thread")
+
   def receiveAMessage(): Unit = {
+    Log.debug(s"QepReceiver about to poll for a message on $queue")
+
     val maybeMessage: Try[Option[Message]] = MessageQueueService.service.receive(queue, pollDuration) //todo make this configurable (and testable)
+    Log.debug(s"QepReceiver received $maybeMessage from $queue")
+
     maybeMessage.transform({m =>
       m.foreach(interpretAMessage)
       Success(m)
     },{x =>
-      ProblemNotYetEncoded("Something went wrong during receive",x) //todo create full-up problem
+      ProblemNotYetEncoded(s"Something went wrong during receive from $queue",x) //todo create full-up problem
       Failure(x)
     })
   }

@@ -1,6 +1,7 @@
 package net.shrine.hornetqmom
 
 import com.typesafe.config.Config
+import net.shrine.log.Log
 import net.shrine.messagequeueservice.{Message, MessageQueueService, NoSuchQueueExistsInHornetQ, Queue}
 import net.shrine.source.ConfigSource
 import org.hornetq.api.core.TransportConfiguration
@@ -142,7 +143,9 @@ object LocalHornetQMom extends MessageQueueService {
       }
       message: Option[Message] <- Try {
         blocking {
+          Log.debug(s"LocalHornetQMom receive from $from about to start")
           val messageReceived: Option[ClientMessage] = Option(messageConsumer.receive(timeout.toMillis))
+          Log.debug(s"LocalHornetQMom received $messageReceived from $from")
           messageReceived.map(Message(_))
         }
       }

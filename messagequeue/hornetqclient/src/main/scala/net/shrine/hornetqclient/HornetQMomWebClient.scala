@@ -7,12 +7,12 @@ import net.shrine.source.ConfigSource
 import org.json4s.native.Serialization
 import org.json4s.native.Serialization.{read, write}
 import org.json4s.{Formats, NoTypeHints}
-import spray.http.{HttpEntity, HttpMethods, HttpRequest, HttpResponse}
+import spray.http.{HttpEntity, HttpMethods, HttpRequest, HttpResponse, StatusCodes}
 
 import scala.collection.immutable.Seq
 import scala.concurrent.ExecutionContext
-import scala.concurrent.duration.Duration
-import scala.util.Try
+import scala.concurrent.duration.{Duration, DurationLong, FiniteDuration}
+import scala.util.{Failure, Success, Try}
 import scala.util.control.NonFatal
 
 /**
@@ -71,13 +71,29 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
     val request: HttpRequest = HttpRequest(HttpMethods.PUT, createQueueUrl)
     for {
       response: HttpResponse <- Try(HttpClient.webApiCall(request))
-      queue: Queue <- Try {
-        val queueString = response.entity.asString
-        implicit val formats = Serialization.formats(NoTypeHints) + new QueueSerializer
-        read[Queue](queueString)(formats, manifest[Queue])
-      }
+      queue: Queue <- queueFromResponse(response)
     } yield queue
   }
+
+  def queueFromResponse(response: HttpResponse):Try[Queue] = Try {
+    if(response.status == StatusCodes.Created) {
+      val queueString = response.entity.asString
+      debug(s"queueString is $queueString")
+      implicit val formats = Serialization.formats(NoTypeHints) + new QueueSerializer
+      read[Queue](queueString)(formats, manifest[Queue])
+    } else {
+      throw new IllegalStateException(s"Response status is ${response.status}, not Created. Cannot make a queue from this response: ${response.entity.asString}")
+    }
+  }.transform({ s =>
+    Success(s)
+  },{throwable =>
+    throwable match {
+      case NonFatal(x) => error(s"Unable to create a Queue from '${response.entity.asString}' due to exception",throwable)  //todo probably want to wrap more information into a new Throwable here
+      case _ =>
+    }
+    Failure(throwable)
+
+  })
 
   override def deleteQueue(queueName: String): Try[Unit] = {
     val proposedQueue: Queue = Queue(queueName)
@@ -107,22 +123,42 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
       entity = HttpEntity(contents)  //todo set contents as XML or json
     )
     for {
-      response: HttpResponse <- Try(HttpClient.webApiCall(request))
+      response: HttpResponse <- Try(HttpClient.webApiCall(request,3L seconds)) //todo configurable
     } yield response
   }
 
+  //todo test receiving no message
   override def receive(from: Queue, timeout: Duration): Try[Option[Message]] = {
     val seconds = timeout.toSeconds
     val receiveMessageUrl = momUrl + s"/receiveMessage/${from.name}?timeOutSeconds=$seconds"
     val request: HttpRequest = HttpRequest(HttpMethods.GET, receiveMessageUrl)
+    val httpRequestTimeout: FiniteDuration = (timeout.toSeconds + 1) second //todo configurable
+
     for {
-      response: HttpResponse <- Try(HttpClient.webApiCall(request))
-      responseString: String <- Try { response.entity.asString }
-      formats <- Try { Serialization.formats(NoTypeHints) + new MessageSerializer}
-      messageResponse: Message <- Try { read[Message](responseString)(formats, manifest[Message]) }
-      messageResponse: Option[Message] <- Try { Option(messageResponse) }
-    } yield messageResponse
+      response: HttpResponse <- Try(HttpClient.webApiCall(request, httpRequestTimeout))
+      messageResponse: Option[Message] <- messageOptionFromResponse(response)
+    } yield (messageResponse)
   }
+
+  def messageOptionFromResponse(response: HttpResponse):Try[Option[Message]] = Try {
+    if(response.status == StatusCodes.NotFound) None
+    else if (response.status == StatusCodes.OK) Some {
+      val responseString = response.entity.asString
+      val formats = Serialization.formats(NoTypeHints) + new MessageSerializer
+      read[Message](responseString)(formats, manifest[Message])
+    } else {
+      throw new IllegalStateException(s"Response status is ${response.status}, not OK or NotFound. Cannot make a Message from this response: ${response.entity.asString}")
+    }
+  }.transform({ s =>
+    Success(s)
+  },{throwable =>
+    throwable match {
+      case NonFatal(x) => error(s"Unable to create a Message from '${response.entity.asString}' due to exception",throwable) //todo probably want to wrap more information into a new Throwable here
+      case _ =>
+    }
+    Failure(throwable)
+  })
+
 
   override def completeMessage(message: Message): Try[Unit] = {
     implicit val formats: Formats = Serialization.formats(NoTypeHints) + new MessageSerializer

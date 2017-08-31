@@ -1,6 +1,7 @@
 package net.shrine.metadata
 
 import akka.actor.{ActorRef, ActorSystem, Props}
+import akka.routing.RoundRobinPool
 import net.shrine.problem.ProblemHandler
 import net.shrine.source.ConfigSource
 import spray.servlet.WebBoot
@@ -27,14 +28,15 @@ class Boot extends WebBoot {
     case x: ExceptionInInitializerError => CannotStartMetaData(x); throw x
   }
 
-  def startServiceActor() = try {
+  def startServiceActor(): ActorRef = try {
     //TODO: create a common interface for Problems to hide behind, so that it doesn't exist anywhere in the code
     //TODO: except for when brought into scope by a DatabaseProblemHandler
     val handler:ProblemHandler = ConfigSource.getObject("shrine.problem.problemHandler", ConfigSource.config)
     handler.warmUp()
 
     // the service actor replies to incoming HttpRequests
-    system.actorOf(Props[MetaDataActor])
+    system.actorOf(RoundRobinPool(100).props(Props[MetaDataActor]), "MetaDataActors") //todo what is a reasonable number?
+    //todo if this works, do it in the dashboard as well
   }
   catch {
     case NonFatal(x) => CannotStartMetaData(x); throw x
