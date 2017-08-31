@@ -15,12 +15,14 @@
 // :load <path-to-file>
 
 import net.shrine.hornetqclient.HornetQMomWebClient
-val firstQueue = HornetQMomWebClient.createQueueIfAbsent("q1")
+import net.shrine.messagequeueservice.{Message, Queue}
+import scala.collection.immutable.Seq
+val firstQueue: Queue = HornetQMomWebClient.createQueueIfAbsent("firstQueue").get
 HornetQMomWebClient.send("firstMessage", firstQueue)
 import scala.concurrent.duration.Duration
-val firstDuration = Duration.create(1, "seconds")
-val receivedMsg = HornetQMomWebClient.receive(firstQueue, firstDuration)
-val msg = receivedMsg.get
-val allQueues = HornetQMomWebClient.queues
+val firstDuration: Duration = Duration.create(1, "seconds")
+val receivedMsg: Option[Message] = HornetQMomWebClient.receive(firstQueue, firstDuration).get
+val msg: Message = receivedMsg.get
+val allQueues: Seq[Queue] = HornetQMomWebClient.queues.get
 HornetQMomWebClient.completeMessage(msg)
 HornetQMomWebClient.deleteQueue("q1")

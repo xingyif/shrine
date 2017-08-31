@@ -1,25 +1,16 @@
 package net.shrine.dashboard.httpclient
 
 import java.io.InputStream
-import java.security.cert.X509Certificate
-import javax.net.ssl.{SSLContext, X509TrustManager}
 
-import net.shrine.log.Loggable
-import spray.can.Http
-import akka.io.IO
-import akka.actor.{ActorRef, ActorSystem}
-import spray.can.Http.{ConnectionAttemptFailedException, HostConnectorSetup}
-import spray.http.{HttpCredentials, HttpEntity, HttpHeader, HttpHeaders, HttpRequest, HttpResponse, StatusCodes, Uri}
-import spray.io.ClientSSLEngineProvider
-import spray.routing.{RequestContext, Route}
-import akka.pattern.ask
+import akka.actor.ActorSystem
 import net.shrine.hornetqclient.HttpClient
+import net.shrine.log.Loggable
 import net.shrine.source.ConfigSource
+import spray.http.{HttpCredentials, HttpEntity, HttpHeader, HttpHeaders, HttpRequest, HttpResponse, StatusCodes, Uri}
+import spray.routing.{RequestContext, Route}
 
-import scala.concurrent.{Await, Future, TimeoutException, blocking}
-import scala.concurrent.duration.DurationInt
+import scala.concurrent.blocking
 import scala.language.postfixOps
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.control.NonFatal
 
 /**
@@ -53,7 +44,9 @@ trait HttpClientDirectives extends Loggable {
     ctx => {
 
       val resourceUri = baseUri.withPath(baseUri.path.++(ctx.unmatchedPath)).withQuery(ctx.request.uri.query)
-      requestUriThenRoute(resourceUri,route,maybeCredentials)(ctx)
+      blocking {
+        requestUriThenRoute(resourceUri,route,maybeCredentials)(ctx)
+      }
     }
   }
 
@@ -72,10 +65,12 @@ trait HttpClientDirectives extends Loggable {
                           maybeCredentials:Option[HttpCredentials] = None
                          ): Route = {
     ctx => {
-      val httpResponse = httpResponseForUri(resourceUri,ctx,maybeCredentials)
-      info(s"Got $httpResponse for $resourceUri")
+      blocking {
+        val httpResponse = httpResponseForUri(resourceUri, ctx, maybeCredentials)
+        info(s"Got $httpResponse for $resourceUri")
 
-      handleCommonErrorsOrRoute(route)(httpResponse,resourceUri)(ctx)
+        handleCommonErrorsOrRoute(route)(httpResponse, resourceUri)(ctx)
+      }
     }
   }
 

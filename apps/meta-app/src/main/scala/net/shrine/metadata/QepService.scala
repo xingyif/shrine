@@ -19,7 +19,7 @@ import spray.http.{StatusCode, StatusCodes}
 import spray.routing._
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Promise
+import scala.concurrent.{blocking, Promise}
 import scala.concurrent.duration._
 import scala.language.postfixOps
 import scala.util.Try
@@ -178,25 +178,23 @@ if not
 
   def selectResultsRow(queryId:NetworkQueryId,user:User):Either[(StatusCode,String),ResultsRow] = {
     //query once and determine if the latest change > afterVersion
+      val queryOption: Option[QepQuery] = QepQueryDb.db.selectQueryById(queryId)
+      queryOption.map { query: QepQuery =>
+        if (user.sameUserAs(query.userName, query.userDomain)) {
+          val mostRecentQueryResults: Seq[Result] = QepQueryDb.db.selectMostRecentFullQueryResultsFor(queryId).map(Result(_))
+          val flag = QepQueryDb.db.selectMostRecentQepQueryFlagFor(queryId).map(QueryFlag(_))
+          val queryCell = QueryCell(query, flag)
+          val queryAndResults = ResultsRow(queryCell, mostRecentQueryResults)
 
-    val queryOption: Option[QepQuery] = QepQueryDb.db.selectQueryById(queryId)
-    queryOption.map{query: QepQuery =>
-      if (user.sameUserAs(query.userName, query.userDomain)) {
-        val mostRecentQueryResults: Seq[Result] = QepQueryDb.db.selectMostRecentFullQueryResultsFor(queryId).map(Result(_))
-        val flag = QepQueryDb.db.selectMostRecentQepQueryFlagFor(queryId).map(QueryFlag(_))
-        val queryCell = QueryCell(query, flag)
-        val queryAndResults = ResultsRow(queryCell, mostRecentQueryResults)
-
-        Right(queryAndResults)
-      }
-      else Left((StatusCodes.Forbidden,s"Query $queryId belongs to a different user"))
-    }.getOrElse(Left[(StatusCode,String),ResultsRow]((StatusCodes.NotFound,s"No query with id $queryId found")))
+          Right(queryAndResults)
+        }
+        else Left((StatusCodes.Forbidden, s"Query $queryId belongs to a different user"))
+      }.getOrElse(Left[(StatusCode, String), ResultsRow]((StatusCodes.NotFound, s"No query with id $queryId found")))
   }
 
   def queryResultsTable(user: User): Route = path("queryResultsTable") {
 
-    matchQueryParameters(Some(user.username)){ queryParameters:QueryParameters =>
-
+    matchQueryParameters(Some(user.username)) { queryParameters: QueryParameters =>
       val queryRowCount: Int = QepQueryDb.db.countPreviousQueriesByUserAndDomain(
         userName = user.username,
         domain = user.domain
@@ -215,10 +213,10 @@ if not
         .map(q => q._1 -> QueryFlag(q._2))
 
       val queryResults: Seq[ResultsRow] = queries.map(q => ResultsRow(
-        query = QueryCell(q,flags.get(q.networkId)),
+        query = QueryCell(q, flags.get(q.networkId)),
         results = QepQueryDb.db.selectMostRecentFullQueryResultsFor(q.networkId).map(Result(_))))
 
-      val table: ResultsTable = ResultsTable(queryRowCount,queryParameters.skipOption.getOrElse(0),adapters,queryResults)
+      val table: ResultsTable = ResultsTable(queryRowCount, queryParameters.skipOption.getOrElse(0), adapters, queryResults)
 
       val jsonTable: Json = Json(table)
       val formattedTable: String = Json.format(jsonTable)(humanReadable())
