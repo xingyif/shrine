@@ -22,8 +22,6 @@ import scala.util.control.NonFatal
 //todo in 1.24, look into a streaming API for messages
 object QepReceiver {
 
-  Log.debug("started init of QepReceiver")
-
   val receiveMessageRunnable: Runnable = new Runnable {
     override def run(): Unit = {
       while(true) { //forever
@@ -41,14 +39,10 @@ object QepReceiver {
     }
   }
 
-  Log.debug("Made the runnable for QepReceiver")
-
   //create a daemon thread that long-polls for messages forever
   val pollingThread = new Thread(receiveMessageRunnable,"Receive message thread")
   pollingThread.setDaemon(true)
 //todo   pollingThread.setUncaughtExceptionHandler()
-
-  Log.debug("made the thread for QepReceiver")
 
   //todo maybe pass this in from outside and make the thing a case class
   lazy val queue = MessageQueueService.service.createQueueIfAbsent(ConfigSource.config.getString("shrine.humanReadableNodeName")).get //todo better than get. handle errors
@@ -60,14 +54,10 @@ object QepReceiver {
   val breakdownTypes: Set[ResultOutputType] = shrineConfig.getOptionConfigured("breakdownResultOutputTypes", ResultOutputTypes.fromConfig).getOrElse(Set.empty)
 
   pollingThread.start()
-
-  Log.debug("Started the QepReceiver thread")
+  Log.debug(s"Started the QepReceiver thread for $queue")
 
   def receiveAMessage(): Unit = {
-    Log.debug(s"QepReceiver about to poll for a message on $queue")
-
     val maybeMessage: Try[Option[Message]] = MessageQueueService.service.receive(queue, pollDuration) //todo make this configurable (and testable)
-    Log.debug(s"QepReceiver received $maybeMessage from $queue")
 
     maybeMessage.transform({m =>
       m.foreach(interpretAMessage)
@@ -85,6 +75,7 @@ object QepReceiver {
     val xmlString = message.contents
     val rqrt: Try[RunQueryResponse] = RunQueryResponse.fromXmlString(breakdownTypes)(xmlString)
     rqrt.transform({ rqr =>
+      Log.debug(s"Inserting result from ${rqr.singleNodeResult.description} for query ${rqr.queryId}")
       QepQueryDb.db.insertQueryResult(rqr.queryId, rqr.singleNodeResult)
       message.complete()
       Success(unit)

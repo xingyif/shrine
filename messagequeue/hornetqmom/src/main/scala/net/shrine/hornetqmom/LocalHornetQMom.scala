@@ -143,9 +143,7 @@ object LocalHornetQMom extends MessageQueueService {
       }
       message: Option[Message] <- Try {
         blocking {
-          Log.debug(s"LocalHornetQMom receive from $from about to start")
           val messageReceived: Option[ClientMessage] = Option(messageConsumer.receive(timeout.toMillis))
-          Log.debug(s"LocalHornetQMom received $messageReceived from $from")
           messageReceived.map(Message(_))
         }
       }

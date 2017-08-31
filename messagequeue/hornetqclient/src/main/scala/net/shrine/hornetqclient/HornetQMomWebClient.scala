@@ -78,7 +78,6 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
   def queueFromResponse(response: HttpResponse):Try[Queue] = Try {
     if(response.status == StatusCodes.Created) {
       val queueString = response.entity.asString
-      debug(s"queueString is $queueString")
       implicit val formats = Serialization.formats(NoTypeHints) + new QueueSerializer
       read[Queue](queueString)(formats, manifest[Queue])
     } else {
