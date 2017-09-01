@@ -125,10 +125,10 @@ object LocalHornetQMom extends MessageQueueService {
         }
       }
       producer: ClientProducer <- Try{ session.createProducer(to.name) }
-      message <- Try{ session.createMessage(true) }
-      constructMessage <- Try { message.putStringProperty(propName, contents) }
+      message <- Try{ session.createMessage(true).putStringProperty(propName, contents) }
       sendMessage <- Try {
         producer.send(message)
+        Log.debug(s"Message $message sent to $to in HornetQ")
         producer.close()
       }
     } yield sendMessage
@@ -153,6 +153,7 @@ object LocalHornetQMom extends MessageQueueService {
       message: Option[Message] <- Try {
         blocking {
           val messageReceived: Option[ClientMessage] = Option(messageConsumer.receive(timeout.toMillis))
+          messageReceived.foreach(m => Log.debug(s"Received ${m} from $from in HornetQ"))
           messageReceived.map(Message(_))
         }
       }

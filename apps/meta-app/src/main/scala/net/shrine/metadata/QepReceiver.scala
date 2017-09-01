@@ -71,8 +71,8 @@ object QepReceiver {
     }
 
     val unit = ()
-    def interpretAMessage(message: Message,queue: Queue):Unit = {
-      Log.debug(s"Received a message from $queue")
+    def interpretAMessage(message: Message,queue: Queue): Unit = {
+      Log.debug(s"Received a message from $queue of $message")
 
       val xmlString = message.contents
       val rqrt: Try[RunQueryResponse] = RunQueryResponse.fromXmlString(breakdownTypes)(xmlString)
@@ -82,6 +82,10 @@ object QepReceiver {
         message.complete()
         Success(unit)
       },{ x =>
+        x match {
+          case NonFatal(nfx) => Log.error(s"Could not decode message $xmlString ",x)
+          case _ =>
+        }
         Failure(x)
       }).get
     }

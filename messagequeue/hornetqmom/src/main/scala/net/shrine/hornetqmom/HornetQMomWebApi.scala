@@ -23,7 +23,7 @@ import scala.util.{Failure, Success, Try}
 trait HornetQMomWebApi extends HttpService
   with Loggable {
 
-  val enabled: Boolean = ConfigSource.config.getString("shrine.messagequeue.hornetQWebApi.enabled").toBoolean
+  def enabled: Boolean = ConfigSource.config.getBoolean("shrine.messagequeue.hornetQWebApi.enabled")
   val warningMessage: String = "If you intend for this node to serve as this SHRINE network's messaging hub " +
                         "set shrine.messagequeue.hornetQWebApi.enabled to true in your shrine.conf." +
                         " You do not want to do this unless you are the hub admin!"
@@ -87,6 +87,9 @@ trait HornetQMomWebApi extends HttpService
   def sendMessage: Route = path("sendMessage" / Segment) { toQueue =>
     requestInstance { request =>
       val messageContent = request.entity.asString
+
+      debug(s"sendMessage to $toQueue '$messageContent'")
+
       detach() {
         val sendTry: Try[Unit] = LocalHornetQMom.send(messageContent, Queue(toQueue))
         sendTry match {
@@ -111,8 +114,12 @@ trait HornetQMomWebApi extends HttpService
             val receiveTry: Try[Option[Message]] = LocalHornetQMom.receive(Queue(fromQueue), timeout)
             receiveTry match {
               case Success(optMessage) => {
-                implicit val formats = Serialization.formats(NoTypeHints) + new MessageSerializer
-                optMessage.fold(complete(StatusCodes.NotFound))(msg => complete(write(optMessage)(formats)))
+                optMessage.fold(complete(StatusCodes.NotFound)){msg =>
+                  implicit val formats = Serialization.formats(NoTypeHints) + new MessageSerializer
+                  val messageJson = write(msg)
+                  debug(s"receiveMessage json is $messageJson")
+                  complete(write(msg)(formats))
+                }
               }
               case Failure(x) => {
                 internalServerErrorOccured(x, "receiveMessage")

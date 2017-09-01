@@ -31,94 +31,98 @@ class HornetQMomWebApiTest extends FlatSpec with ScalatestRouteTest with HornetQ
 
   "HornetQMomWebApi" should "create/delete the given queue, send/receive message, get queues" in {
 
-    Put(s"/mom/createQueue/$queueName") ~> momRoute ~> check {
-      val response = new String(body.data.toByteArray)
-      if (!enabled) {
-        assertResult(NotFound)(status)
-        assertResult(warningMessage)(response)
-      } else {
-        implicit val formats = Serialization.formats(NoTypeHints) + new QueueSerializer
-        println(response)
-        val jsonToQueue = read[Queue](response)(formats, manifest[Queue])
-        val responseQueueName = jsonToQueue.name
-        assertResult(Created)(status)
-        assertResult(queueName)(responseQueueName)
+    ConfigSource.atomicConfig.configForBlock("shrine.messagequeue.hornetQWebApi.enabled","true","HornetQMomWebApiTest") {
+
+      Put(s"/mom/createQueue/$queueName") ~> momRoute ~> check {
+        val response = new String(body.data.toByteArray)
+        if (!enabled) {
+          assertResult(NotFound)(status)
+          assertResult(warningMessage)(response)
+        } else {
+          implicit val formats = Serialization.formats(NoTypeHints) + new QueueSerializer
+          println(response)
+          val jsonToQueue = read[Queue](response)(formats, manifest[Queue])
+          val responseQueueName = jsonToQueue.name
+          assertResult(Created)(status)
+          assertResult(queueName)(responseQueueName)
+        }
       }
-    }
 
-    // should be OK to create a queue twice
-    Put(s"/mom/createQueue/$queueName") ~> momRoute ~> check {
-      val response = new String(body.data.toByteArray)
-      if (!enabled) {
-        assertResult(NotFound)(status)
-        assertResult(warningMessage)(response)
-      } else {
-        implicit val formats = Serialization.formats(NoTypeHints) + new QueueSerializer
-        val jsonToQueue = read[Queue](response)(formats, manifest[Queue])
-        val responseQueueName = jsonToQueue.name
-        assertResult(Created)(status)
-        assertResult(queueName)(responseQueueName)
+      // should be OK to create a queue twice
+      Put(s"/mom/createQueue/$queueName") ~> momRoute ~> check {
+        val response = new String(body.data.toByteArray)
+        if (!enabled) {
+          assertResult(NotFound)(status)
+          assertResult(warningMessage)(response)
+        } else {
+          implicit val formats = Serialization.formats(NoTypeHints) + new QueueSerializer
+          val jsonToQueue = read[Queue](response)(formats, manifest[Queue])
+          val responseQueueName = jsonToQueue.name
+          assertResult(Created)(status)
+          assertResult(queueName)(responseQueueName)
+        }
       }
-    }
 
-    Put(s"/mom/sendMessage/$queueName", HttpEntity(s"$messageContent")) ~> momRoute ~> check {
-      val response = new String(body.data.toByteArray)
-      if (!enabled) {
-        assertResult(NotFound)(status)
-        assertResult(warningMessage)(response)
-      } else {
-        assertResult(Accepted)(status)
+      Put(s"/mom/sendMessage/$queueName", HttpEntity(s"$messageContent")) ~> momRoute ~> check {
+        val response = new String(body.data.toByteArray)
+        if (!enabled) {
+          assertResult(NotFound)(status)
+          assertResult(warningMessage)(response)
+        } else {
+          assertResult(Accepted)(status)
+        }
       }
-    }
 
-    Get(s"/mom/getQueues") ~> momRoute ~> check {
-      val response: String = new String(body.data.toByteArray)
-      if (!enabled) {
-        assertResult(NotFound)(status)
-        assertResult(warningMessage)(response)
-      } else {
-        implicit val formats = Serialization.formats(NoTypeHints) + new QueueSerializer
-        val jsonToSeq: Seq[Queue] = read[Seq[Queue]](response, false)(formats, manifest[Seq[Queue]])
+      Get(s"/mom/getQueues") ~> momRoute ~> check {
+        val response: String = new String(body.data.toByteArray)
+        if (!enabled) {
+          assertResult(NotFound)(status)
+          assertResult(warningMessage)(response)
+        } else {
+          implicit val formats = Serialization.formats(NoTypeHints) + new QueueSerializer
+          val jsonToSeq: Seq[Queue] = read[Seq[Queue]](response, false)(formats, manifest[Seq[Queue]])
 
-        assertResult(OK)(status)
-        assertResult(queueName)(jsonToSeq.head.name)
+          assertResult(OK)(status)
+          assertResult(queueName)(jsonToSeq.head.name)
+        }
       }
-    }
 
-    // given timeout is 2 seconds
-    Get(s"/mom/receiveMessage/$queueName?timeOutSeconds=2") ~> momRoute ~> check {
-      val response = new String(body.data.toByteArray)
-      receivedMessage = response
-      if (!enabled) {
-        assertResult(NotFound)(status)
-        assertResult(warningMessage)(response)
-      } else {
-        implicit val formats = Serialization.formats(NoTypeHints) + new MessageSerializer
-        val responseToMessage: Message = read[Message](response)(formats, manifest[Message])
+      // given timeout is 2 seconds
+      Get(s"/mom/receiveMessage/$queueName?timeOutSeconds=2") ~> momRoute ~> check {
+        val response = new String(body.data.toByteArray)
+        receivedMessage = response
+        if (!enabled) {
+          assertResult(NotFound)(status)
+          assertResult(warningMessage)(response)
+        } else {
+          implicit val formats = Serialization.formats(NoTypeHints) + new MessageSerializer
+          val responseToMessage: Message = read[Message](response)(formats, manifest[Message])
 
-        assertResult(OK)(status)
-        assert(responseToMessage.isInstanceOf[Message])
+          assertResult(OK)(status)
+          assert(responseToMessage.isInstanceOf[Message])
+          //todo contents is always null assertResult(messageContent)(responseToMessage.contents)
+        }
       }
-    }
 
-    Put("/mom/acknowledge", HttpEntity(s"$receivedMessage")) ~> momRoute ~> check {
-      val response = new String(body.data.toByteArray)
-      if (!enabled) {
-        assertResult(NotFound)(status)
-        assertResult(warningMessage)(response)
-      } else {
-        implicit val formats = Serialization.formats(NoTypeHints) + new MessageSerializer
-        assertResult(ResetContent)(status)
+      Put("/mom/acknowledge", HttpEntity(s"$receivedMessage")) ~> momRoute ~> check {
+        val response = new String(body.data.toByteArray)
+        if (!enabled) {
+          assertResult(NotFound)(status)
+          assertResult(warningMessage)(response)
+        } else {
+          implicit val formats = Serialization.formats(NoTypeHints) + new MessageSerializer
+          assertResult(ResetContent)(status)
+        }
       }
-    }
 
-    Put(s"/mom/deleteQueue/$queueName") ~> momRoute ~> check {
-      val response = new String(body.data.toByteArray)
-      if (!enabled) {
-        assertResult(NotFound)(status)
-        assertResult(warningMessage)(response)
-      } else {
-        assertResult(OK)(status)
+      Put(s"/mom/deleteQueue/$queueName") ~> momRoute ~> check {
+        val response = new String(body.data.toByteArray)
+        if (!enabled) {
+          assertResult(NotFound)(status)
+          assertResult(warningMessage)(response)
+        } else {
+          assertResult(OK)(status)
+        }
       }
     }
   }

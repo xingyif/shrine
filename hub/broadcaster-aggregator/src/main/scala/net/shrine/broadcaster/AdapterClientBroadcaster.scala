@@ -57,7 +57,7 @@ final case class AdapterClientBroadcaster(destinations: Set[NodeHandle], dao: Hu
     val s: Try[Unit] = for {
       queue <- MessageQueueService.service.createQueueIfAbsent(queueName)
       //todo use the json envelope when you get to SHRINE-2177
-      sent <- MessageQueueService.service.send(shrineResponse.toXml.text, queue)
+      sent <- MessageQueueService.service.send(shrineResponse.toXmlString, queue)
     } yield sent
     s.transform({itWorked =>
       debug(s"Result from ${shrineResponse.origin.name} sent to queue")

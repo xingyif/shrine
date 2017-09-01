@@ -117,6 +117,9 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
   }
 
   override def send(contents: String, to: Queue): Try[Unit] = {
+
+    debug(s"send to $to '$contents'")
+
     val sendMessageUrl = momUrl + s"/sendMessage/${to.name}"
     val request: HttpRequest = HttpRequest(
       method = HttpMethods.PUT,
