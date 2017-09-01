@@ -100,7 +100,7 @@ class HornetQMomWebApiTest extends FlatSpec with ScalatestRouteTest with HornetQ
 
           assertResult(OK)(status)
           assert(responseToMessage.isInstanceOf[Message])
-          //todo contents is always null assertResult(messageContent)(responseToMessage.contents)
+          assertResult(messageContent)(responseToMessage.contents)
         }
       }
 

@@ -44,15 +44,18 @@ object MessageQueueService {
 
 case class Message(hornetQMessage:ClientMessage) extends DefaultJsonSupport {
   override implicit def json4sFormats: Formats = DefaultFormats
-  val propName = "contents"
 
   def getClientMessage = hornetQMessage
 
-  def contents = hornetQMessage.getStringProperty(propName)
+  def contents = hornetQMessage.getStringProperty(Message.contentsKey)
 
   def getMessageID = hornetQMessage.getMessageID
 
   def complete() = hornetQMessage.acknowledge()
+}
+
+object Message {
+  val contentsKey = "contents"
 }
 
 case class Queue(var name:String) extends DefaultJsonSupport {
@@ -74,22 +77,40 @@ class QueueSerializer extends CustomSerializer[Queue](format => (
   }
 ))
 
+//todo make this an object
+//todo move to HornetQMomWebApi
 class MessageSerializer extends CustomSerializer[Message](format => (
   {
-    //JObject(List((hornetQMessage,JObject(List((type,JInt(0)), (durable,JBool(false)), (expiration,JInt(0)), (timestamp,JInt(1502218873012)), (priority,JInt(4)))))))
-    // type, durable, expiration, timestamp, priority, initialMessageBufferSize
-    case JObject(JField("hornetQMessage", JObject(JField("type", JInt(s)) :: JField("durable", JBool(d)) :: JField("expiration", JInt(e))
-      :: JField("timestamp", JInt(t)) :: JField("priority", JInt(p)) :: Nil)) :: Nil) =>
-      new Message(new ClientMessageImpl(s.toByte, d, e.toLong, t.toLong, p.toByte, 0))
-  },
+
+    //JObject(List((hornetQMessage,JObject(List((type,JInt(0)), (durable,JBool(true)), (expiration,JInt(0)), (timestamp,JInt(1504275142323)), (priority,JInt(4)), (contents,JString(test Content)))))))
+    case JObject(
+      JField("hornetQMessage", JObject(
+        JField("type", JInt(s)) ::
+        JField("durable", JBool(d)) ::
+        JField("expiration", JInt(e)) ::
+        JField("timestamp", JInt(t)) ::
+        JField("priority", JInt(p)) ::
+        JField(Message.contentsKey, JString(contents)) ::
+        Nil)
+      ) :: Nil ) => {
+        val hornetQClientMessage = new ClientMessageImpl(s.toByte, d, e.toLong, t.toLong, p.toByte, 0)
+        hornetQClientMessage.putStringProperty(Message.contentsKey,contents)
+
+        Message(hornetQClientMessage)
+      }
+   },
   {
     case msg: Message =>
-      JObject(JField("hornetQMessage",
-        JObject(JField("type", JLong(msg.getClientMessage.getType)) ::
+      JObject(
+        JField("hornetQMessage",
+        JObject(
+          JField("type", JLong(msg.getClientMessage.getType)) ::
           JField("durable", JBool(msg.getClientMessage.isDurable)) ::
           JField("expiration", JLong(msg.getClientMessage.getExpiration)) ::
           JField("timestamp", JLong(msg.getClientMessage.getTimestamp)) ::
-          JField("priority", JLong(msg.getClientMessage.getPriority)) :: Nil)) :: Nil)
+          JField("priority", JLong(msg.getClientMessage.getPriority)) ::
+          JField(Message.contentsKey, JString(msg.contents)) ::
+          Nil)) :: Nil)
   }
 ))
 
