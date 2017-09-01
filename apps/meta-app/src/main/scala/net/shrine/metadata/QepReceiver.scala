@@ -6,7 +6,7 @@ import net.shrine.hornetqclient.CouldNotCreateQueueButOKToRetryException
 import net.shrine.log.Log
 import net.shrine.messagequeueservice.{Message, MessageQueueService, Queue}
 import net.shrine.problem.ProblemNotYetEncoded
-import net.shrine.protocol.{ResultOutputType, ResultOutputTypes, RunQueryResponse}
+import net.shrine.protocol.{AggregatedRunQueryResponse, ResultOutputType, ResultOutputTypes, RunQueryResponse}
 import net.shrine.qep.querydb.QepQueryDb
 import net.shrine.source.ConfigSource
 
@@ -48,7 +48,7 @@ object QepReceiver {
           //todo only ask to receive a message if there are incomplete queries SHRINE-2196
           Log.debug("About to call receive.")
           receiveAMessage(queue)
-          Log.debug("Successfully called receive.")
+          Log.debug("Called receive.")
         } catch {
           case NonFatal(x) => Log.error("Exception while receiving a message.", x) //todo new kind of problem
           //pass-through to blow up the thread, receive no more results, do something dramatic in UncaughtExceptionHandler.
@@ -71,19 +71,21 @@ object QepReceiver {
     }
 
     val unit = ()
+    //todo as Try
     def interpretAMessage(message: Message,queue: Queue): Unit = {
       Log.debug(s"Received a message from $queue of $message")
 
       val xmlString = message.contents
-      val rqrt: Try[RunQueryResponse] = RunQueryResponse.fromXmlString(breakdownTypes)(xmlString)
+      val rqrt: Try[AggregatedRunQueryResponse] = AggregatedRunQueryResponse.fromXmlString(breakdownTypes)(xmlString)
+
       rqrt.transform({ rqr =>
-        Log.debug(s"Inserting result from ${rqr.singleNodeResult.description} for query ${rqr.queryId}")
-        QepQueryDb.db.insertQueryResult(rqr.queryId, rqr.singleNodeResult)
+        QepQueryDb.db.insertQueryResult(rqr.queryId, rqr.results.head)
+        Log.debug(s"Inserted result from ${rqr.results.head.description} for query ${rqr.queryId}")
         message.complete()
         Success(unit)
       },{ x =>
         x match {
-          case NonFatal(nfx) => Log.error(s"Could not decode message $xmlString ",x)
+          case NonFatal(nfx) => Log.error(s"Could not decode message '$xmlString' ",x)
           case _ =>
         }
         Failure(x)
@@ -104,7 +106,7 @@ object QepReceiver {
       //todo for fun figure out how to do this without the var. maybe a Stream ?
       var lastAttempt:Try[Queue] = tryToCreateQueue()
       while(keepGoing(lastAttempt).get) {
-        Log.debug(s"Last attempt to create a queue resulted in ${lastAttempt}. Sleeping $pollDuration before next attempt")
+        Log.debug(s"Last attempt to create a queue resulted in $lastAttempt. Sleeping $pollDuration before next attempt")
         Thread.sleep(pollDuration.toMillis)
         lastAttempt = tryToCreateQueue()
       }

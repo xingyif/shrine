@@ -27,7 +27,6 @@ class HornetQMomWebApiTest extends FlatSpec with ScalatestRouteTest with HornetQ
   private val queue: Queue = Queue(proposedQueueName)
   private val queueName: String = queue.name // "testQueue"
   private val messageContent = "test Content"
-  private var receivedMessage: String = ""
 
   "HornetQMomWebApi" should "create/delete the given queue, send/receive message, get queues" in {
 
@@ -86,6 +85,8 @@ class HornetQMomWebApiTest extends FlatSpec with ScalatestRouteTest with HornetQ
           assertResult(queueName)(jsonToSeq.head.name)
         }
       }
+
+      var receivedMessage: String = ""
 
       // given timeout is 2 seconds
       Get(s"/mom/receiveMessage/$queueName?timeOutSeconds=2") ~> momRoute ~> check {
