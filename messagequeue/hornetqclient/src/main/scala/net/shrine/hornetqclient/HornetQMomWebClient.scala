@@ -7,7 +7,7 @@ import net.shrine.source.ConfigSource
 import org.json4s.native.Serialization
 import org.json4s.native.Serialization.{read, write}
 import org.json4s.{Formats, NoTypeHints}
-import spray.http.{HttpEntity, HttpMethods, HttpRequest, HttpResponse, StatusCodes}
+import spray.http.{HttpEntity, HttpMethods, HttpRequest, HttpResponse, StatusCode, StatusCodes}
 
 import scala.collection.immutable.Seq
 import scala.concurrent.ExecutionContext
@@ -81,7 +81,9 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
       implicit val formats = Serialization.formats(NoTypeHints) + new QueueSerializer
       read[Queue](queueString)(formats, manifest[Queue])
     } else {
-      throw new IllegalStateException(s"Response status is ${response.status}, not Created. Cannot make a queue from this response: ${response.entity.asString}")
+      if((response.status == StatusCodes.NotFound) ||
+        (response.status == StatusCodes.RequestTimeout))throw new CouldNotCreateQueueButOKToRetryException(response.status,response.entity.asString)
+      else throw new IllegalStateException(s"Response status is ${response.status}, not Created. Cannot make a queue from this response: ${response.entity.asString}") //todo more specific custom exception
     }
   }.transform({ s =>
     Success(s)
@@ -171,6 +173,8 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
     } yield response
   }
 }
+
+case class CouldNotCreateQueueButOKToRetryException(status:StatusCode,contents:String) extends Exception(s"Could not create a queue due to status code $status with message '$contents'")
 
 // TODO in SHRINE-2167: Extract and share a SHRINE actor system
 //class HornetQMomWebClientServiceActor extends Actor with MetaDataService {

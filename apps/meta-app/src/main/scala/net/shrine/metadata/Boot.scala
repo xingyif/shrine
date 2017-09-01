@@ -30,13 +30,12 @@ class Boot extends WebBoot {
 
   def startServiceActor(): ActorRef = try {
     //TODO: create a common interface for Problems to hide behind, so that it doesn't exist anywhere in the code
-    //TODO: except for when brought into scope by a DatabaseProblemHandler
+    //TODO: except for when brought into scope
     val handler:ProblemHandler = ConfigSource.getObject("shrine.problem.problemHandler", ConfigSource.config)
     handler.warmUp()
 
     // the service actor replies to incoming HttpRequests
-    system.actorOf(RoundRobinPool(100).props(Props[MetaDataActor]), "MetaDataActors") //todo what is a reasonable number?
-    //todo if this works, do it in the dashboard as well
+    system.actorOf(RoundRobinPool(100).props(Props[MetaDataActor]), "MetaDataActors") //todo what is a reasonable number? (I've asked the google group 8-31)
   }
   catch {
     case NonFatal(x) => CannotStartMetaData(x); throw x
