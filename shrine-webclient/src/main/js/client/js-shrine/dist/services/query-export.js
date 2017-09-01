@@ -115,7 +115,9 @@ System.register(['./pub-sub'], function (_export, _context) {
                 var link = document.createElement('a');
                 link.setAttribute('href', csv);
                 link.setAttribute('download', 'export.csv');
+                document.body.appendChild(link);
                 link.click();
+                document.body.removeChild(link);
             };
         }
     };
