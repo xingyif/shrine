@@ -5,8 +5,8 @@ import net.shrine.config.ConfigExtensions
 import net.shrine.hornetqclient.CouldNotCreateQueueButOKToRetryException
 import net.shrine.log.Log
 import net.shrine.messagequeueservice.{Message, MessageQueueService, Queue}
-import net.shrine.problem.ProblemNotYetEncoded
-import net.shrine.protocol.{AggregatedRunQueryResponse, ResultOutputType, ResultOutputTypes, RunQueryResponse}
+import net.shrine.problem.{AbstractProblem, ProblemSources}
+import net.shrine.protocol.{AggregatedRunQueryResponse, ResultOutputType, ResultOutputTypes}
 import net.shrine.qep.querydb.QepQueryDb
 import net.shrine.source.ConfigSource
 
@@ -50,7 +50,7 @@ object QepReceiver {
           receiveAMessage(queue)
           Log.debug("Called receive.")
         } catch {
-          case NonFatal(x) => Log.error("Exception while receiving a message.", x) //todo new kind of problem
+          case NonFatal(x) => ExceptionWhileReceivingMessage(queue,x)
           //pass-through to blow up the thread, receive no more results, do something dramatic in UncaughtExceptionHandler.
           case x => Log.error("Fatal exception while receiving a message", x)
             throw x
@@ -59,20 +59,21 @@ object QepReceiver {
     }
 
     def receiveAMessage(queue:Queue): Unit = {
-      val maybeMessage: Try[Option[Message]] = MessageQueueService.service.receive(queue, pollDuration) //todo make this configurable (and testable)
+      val maybeMessage: Try[Option[Message]] = MessageQueueService.service.receive(queue, pollDuration) //todo make pollDuration configurable (and testable)
 
       maybeMessage.transform({m =>
-        m.foreach(interpretAMessage(_,queue))
-        Success(m)
+        m.map(interpretAMessage(_,queue)).getOrElse(Success())
       },{x =>
-        ProblemNotYetEncoded(s"Something went wrong during receive from $queue",x) //todo create full-up problem
+        x match {
+          case NonFatal(nfx) => ExceptionWhileReceivingMessage(queue,x)
+          case _ => //pass through
+        }
         Failure(x)
       })
     }
 
-    val unit = ()
-    //todo as Try
-    def interpretAMessage(message: Message,queue: Queue): Unit = {
+    def interpretAMessage(message: Message,queue: Queue): Try[Unit] = {
+      val unit = ()
       Log.debug(s"Received a message from $queue of $message")
 
       val xmlString = message.contents
@@ -85,11 +86,11 @@ object QepReceiver {
         Success(unit)
       },{ x =>
         x match {
-          case NonFatal(nfx) => Log.error(s"Could not decode message '$xmlString' ",x)
-          case _ =>
+          case NonFatal(nfx) => QepReceiverCouldNotDecodeMessage(xmlString,queue,x)
+          case _ => //pass through
         }
         Failure(x)
-      }).get
+      })
     }
 
     def createQueue(nodeName:String):Queue = {
@@ -103,7 +104,7 @@ object QepReceiver {
         case x => Failure(x)
       })
 
-      //todo for fun figure out how to do this without the var. maybe a Stream ?
+      //todo for fun figure out how to do this without the var. maybe a Stream ? SHRINE-2211
       var lastAttempt:Try[Queue] = tryToCreateQueue()
       while(keepGoing(lastAttempt).get) {
         Log.debug(s"Last attempt to create a queue resulted in $lastAttempt. Sleeping $pollDuration before next attempt")
@@ -115,4 +116,25 @@ object QepReceiver {
       lastAttempt.get
     }
   }
+}
+
+case class ExceptionWhileReceivingMessage(queue:Queue, x:Throwable) extends AbstractProblem(ProblemSources.Qep) {
+
+  override val throwable = Some(x)
+
+  override def summary: String = s"The QEP encountered an exception while trying to receive a message from $queue"
+
+  override def description: String = s"The QEP encountered an exception while trying to receive a message from $queue on ${Thread.currentThread().getName}: ${x.getMessage}"
+}
+
+case class QepReceiverCouldNotDecodeMessage(messageString:String,queue:Queue, x:Throwable) extends AbstractProblem(ProblemSources.Qep) {
+
+  override val throwable = Some(x)
+
+  override def summary: String = s"The QEP could not decode a message from $queue"
+
+  override def description: String =
+    s"""The QEP encountered an exception while trying to decode a message from $queue on ${Thread.currentThread().getName}:
+       |${x.getMessage}
+       |$messageString""".stripMargin
 }

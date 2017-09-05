@@ -34,12 +34,12 @@ object HttpClient extends Loggable {
     debug(s"Requesting $request uri is ${request.uri} path is ${request.uri.path}")
     blocking {
       val future:Future[HttpResponse] = for {
-        Http.HostConnectorInfo(connector, _) <- transport.ask(createConnector(request))(deadline - System.currentTimeMillis() milliseconds) //todo make this timeout configurable
-        response <- connector.ask(request)(deadline - System.currentTimeMillis() milliseconds).mapTo[HttpResponse] //todo make this timeout configurable
+        Http.HostConnectorInfo(connector, _) <- transport.ask(createConnector(request))(deadline - System.currentTimeMillis() milliseconds)
+        response <- connector.ask(request)(deadline - System.currentTimeMillis() milliseconds).mapTo[HttpResponse]
       } yield response
       try {
         //wait a second longer than the deadline before timing out the Await, to let the actors timeout
-        Await.result(future, deadline + 1000 - System.currentTimeMillis() milliseconds)  //todo make this timeout configurable
+        Await.result(future, deadline + 1000 - System.currentTimeMillis() milliseconds)  //todo make this time gap configurable SHRINE-2217
       }
       catch {
         //todo definitely need the Try instead of this sloppy replacement of the HttpResponse.

@@ -1,6 +1,6 @@
 package net.shrine.hornetqclient
 
-import akka.actor.{Actor, ActorRef, ActorRefFactory, ActorSystem, Props}
+import akka.actor.ActorSystem
 import net.shrine.log.Loggable
 import net.shrine.messagequeueservice.{Message, MessageQueueService, MessageSerializer, Queue, QueueSerializer}
 import net.shrine.source.ConfigSource
@@ -10,10 +10,10 @@ import org.json4s.{Formats, NoTypeHints}
 import spray.http.{HttpEntity, HttpMethods, HttpRequest, HttpResponse, StatusCode, StatusCodes}
 
 import scala.collection.immutable.Seq
-import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.{Duration, DurationLong, FiniteDuration}
-import scala.util.{Failure, Success, Try}
+import scala.language.postfixOps
 import scala.util.control.NonFatal
+import scala.util.{Failure, Success, Try}
 
 /**
   * A simple HornetQMomWebClient that uses HornetQMomWebApi to createQueue,
@@ -83,13 +83,13 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
     } else {
       if((response.status == StatusCodes.NotFound) ||
         (response.status == StatusCodes.RequestTimeout))throw new CouldNotCreateQueueButOKToRetryException(response.status,response.entity.asString)
-      else throw new IllegalStateException(s"Response status is ${response.status}, not Created. Cannot make a queue from this response: ${response.entity.asString}") //todo more specific custom exception
+      else throw new IllegalStateException(s"Response status is ${response.status}, not Created. Cannot make a queue from this response: ${response.entity.asString}") //todo more specific custom exception SHRINE-2213
     }
   }.transform({ s =>
     Success(s)
   },{throwable =>
     throwable match {
-      case NonFatal(x) => error(s"Unable to create a Queue from '${response.entity.asString}' due to exception",throwable)  //todo probably want to wrap more information into a new Throwable here
+      case NonFatal(x) => error(s"Unable to create a Queue from '${response.entity.asString}' due to exception",throwable)  //todo probably want to wrap more information into a new Throwable here SHRINE-2213
       case _ =>
     }
     Failure(throwable)
@@ -124,24 +124,24 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
     val request: HttpRequest = HttpRequest(
       method = HttpMethods.PUT,
       uri = sendMessageUrl,
-      entity = HttpEntity(contents)  //todo set contents as XML or json
+      entity = HttpEntity(contents)  //todo set contents as XML or json SHRINE-2215
     )
     for {
-      response: HttpResponse <- Try(HttpClient.webApiCall(request,3L seconds)) //todo configurable
+      response: HttpResponse <- Try(HttpClient.webApiCall(request,3L seconds)) //todo configurable SHRINE-2214
     } yield response
   }
 
-  //todo test receiving no message
+  //todo test receiving no message SHRINE-2213
   override def receive(from: Queue, timeout: Duration): Try[Option[Message]] = {
     val seconds = timeout.toSeconds
     val receiveMessageUrl = momUrl + s"/receiveMessage/${from.name}?timeOutSeconds=$seconds"
     val request: HttpRequest = HttpRequest(HttpMethods.GET, receiveMessageUrl)
-    val httpRequestTimeout: FiniteDuration = (timeout.toSeconds + 1) second //todo configurable
+    val httpRequestTimeout: FiniteDuration = (timeout.toSeconds + 1) second //todo configurable SHRINE-2214
 
     for {
       response: HttpResponse <- Try(HttpClient.webApiCall(request, httpRequestTimeout))
       messageResponse: Option[Message] <- messageOptionFromResponse(response)
-    } yield (messageResponse)
+    } yield messageResponse
   }
 
   def messageOptionFromResponse(response: HttpResponse):Try[Option[Message]] = Try {
@@ -157,7 +157,7 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
     Success(s)
   },{throwable =>
     throwable match {
-      case NonFatal(x) => error(s"Unable to create a Message from '${response.entity.asString}' due to exception",throwable) //todo probably want to wrap more information into a new Throwable here
+      case NonFatal(x) => error(s"Unable to create a Message from '${response.entity.asString}' due to exception",throwable) //todo probably want to report a Problem here SHRINE-2216
       case _ =>
     }
     Failure(throwable)

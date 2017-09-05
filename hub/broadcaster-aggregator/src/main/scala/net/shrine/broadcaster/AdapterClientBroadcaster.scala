@@ -2,11 +2,13 @@ package net.shrine.broadcaster
 
 import net.shrine.adapter.client.{AdapterClient, RemoteAdapterClient}
 import net.shrine.aggregation.RunQueryAggregator
+import net.shrine.audit.NetworkQueryId
 import net.shrine.broadcaster.dao.HubDao
 import net.shrine.client.TimeoutException
 import net.shrine.log.Loggable
-import net.shrine.messagequeueservice.MessageQueueService
-import net.shrine.protocol.{AggregatedRunQueryResponse, BaseShrineResponse, BroadcastMessage, FailureResult, RunQueryRequest, RunQueryResponse, SingleNodeResult, Timeout}
+import net.shrine.messagequeueservice.{MessageQueueService}
+import net.shrine.problem.{AbstractProblem, ProblemSources}
+import net.shrine.protocol.{AggregatedRunQueryResponse, BaseShrineResponse, BroadcastMessage, FailureResult, RunQueryRequest, SingleNodeResult, Timeout}
 
 import scala.concurrent.Future
 import scala.util.control.NonFatal
@@ -29,21 +31,19 @@ final case class AdapterClientBroadcaster(destinations: Set[NodeHandle], dao: Hu
 
     for {
       nodeHandle <- destinations
-//todo more status for SHRINE-2120
+//todo more status for SHRINE-2122 and SHRINE-2123
       shrineResponse: SingleNodeResult <- callAdapter(message, nodeHandle)
     } {
       try {
         message.request match {
           case runQueryRequest:RunQueryRequest =>
             debug(s"RunQueryRequest's nodeId is ${runQueryRequest.nodeId}")
-            //todo SHRINE-2120 send to the QEP queue named nodeId
-            //todo get to the point where there's always a nodeId and clean this up
             runQueryRequest.nodeId.fold{
-              debug(s"Did not send to queue because nodeId is None")
+              error(s"Did not send to queue because nodeId is None")
             }{ nodeId =>
 
-              //todo make a RunQueryResponse from the SingleNodeResult
-              val aggregator = new RunQueryAggregator( //to convert the SingleNodeResult into a RunQueryResponse
+              // make an AggregateRunQueryResponse from the SingleNodeResult
+              val aggregator = new RunQueryAggregator( //to convert the SingleNodeResult into an AggregateRunQueryResponse
                 runQueryRequest.networkQueryId,
                 runQueryRequest.authn.username,
                 runQueryRequest.authn.domain,
@@ -55,7 +55,7 @@ final case class AdapterClientBroadcaster(destinations: Set[NodeHandle], dao: Hu
 
               response match {
                 case runQueryResponse:AggregatedRunQueryResponse => sendToQep(runQueryResponse,nodeId.name)
-                case _ => debug(s"response is not a RunQueryResponse. It is ${response.toString}") //todo really good error message
+                case _ => error(s"response is not a AggregatedRunQueryResponse. It is ${response.toString}")
               }
             }
           case _ => debug(s"Not a RunQueryRequest but a ${message.request.getClass.getSimpleName}.")
@@ -80,7 +80,7 @@ final case class AdapterClientBroadcaster(destinations: Set[NodeHandle], dao: Hu
     },{throwable: Throwable =>
       throwable match
       {
-        case NonFatal(x) => error(s"Could not send result from hub to $queueName for ${runQueryResponse.queryId}", x) //todo better error handling
+        case NonFatal(x) =>ExceptionWhileSendingMessage(runQueryResponse.queryId,queueName,x)
         case _ => //no op
       }
       Failure(throwable)
@@ -129,4 +129,13 @@ final case class AdapterClientBroadcaster(destinations: Set[NodeHandle], dao: Hu
       info(s"  ${handle.nodeId}: ${clientToString(handle.client)}")
     }
   }
+}
+
+case class ExceptionWhileSendingMessage(networkQueryId: NetworkQueryId,queueName:String, x:Throwable) extends AbstractProblem(ProblemSources.Hub) {
+
+  override val throwable = Some(x)
+
+  override def summary: String = s"The Hub encountered an exception while trying to send a message to $queueName"
+
+  override def description: String = s"The Hub encountered an exception while trying to send a message about $networkQueryId from $queueName : ${x.getMessage}"
 }

@@ -77,8 +77,8 @@ class QueueSerializer extends CustomSerializer[Queue](format => (
   }
 ))
 
-//todo make this an object
-//todo move to HornetQMomWebApi
+//todo make this an object SHRINE-2218
+//todo move to HornetQMomWebApi SHRINE-2218
 class MessageSerializer extends CustomSerializer[Message](format => (
   {
 

@@ -117,8 +117,7 @@ trait HornetQMomWebApi extends HttpService
                 optMessage.fold(complete(StatusCodes.NotFound)){msg =>
                   implicit val formats = Serialization.formats(NoTypeHints) + new MessageSerializer
                   val messageJson = write(msg)
-                  debug(s"receiveMessage json is $messageJson")
-                  complete(write(msg)(formats))
+                  complete(messageJson)
                 }
               }
               case Failure(x) => {

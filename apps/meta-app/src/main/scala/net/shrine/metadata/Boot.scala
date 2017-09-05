@@ -35,7 +35,7 @@ class Boot extends WebBoot {
     handler.warmUp()
 
     // the service actor replies to incoming HttpRequests
-    system.actorOf(RoundRobinPool(100).props(Props[MetaDataActor]), "MetaDataActors") //todo what is a reasonable number? (I've asked the google group 8-31)
+    system.actorOf(RoundRobinPool(100).props(Props[MetaDataActor]), "MetaDataActors")
   }
   catch {
     case NonFatal(x) => CannotStartMetaData(x); throw x
