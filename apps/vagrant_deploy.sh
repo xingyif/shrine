@@ -55,17 +55,27 @@ validates_vagrant_context()
   fi
 }
 
+exitIfFailed()
+{
+  local retVal=$1
+  local errorMsg=$2
+  echo $retVal
+  if [[ ! $retVal -eq 0 ]]; then
+    echo "$errorMsg"
+    exit $retVal
+  fi
+}
+
 generates_ssh_cfg()
 {
   local vagrant_context=$1
   cd $vagrant_context
   vagrant ssh-config > ssh.cfg
   for machine in ${MACHINES[@]}; do
-    if [[ -d $BUFFER ]]; then
-      echo "Removing previous buffer $BUFFER"
-      vagrant ssh $machine -c "rm -r $BUFFER"
-    fi
+    vagrant ssh $machine -c "rm -rf $BUFFER"
     vagrant ssh $machine -c "mkdir $BUFFER"
+    retVal=$(vagrant ssh $machine -c "echo "$?"")
+    exitIfFailed $retVal "ERROR: Unable to remove $BUFFER!"
     vagrant ssh $machine -c "chmod 0711 /home/vagrant"
     vagrant ssh $machine -c "chmod 1777 $BUFFER"
   done
@@ -76,7 +86,7 @@ cleanup()
   local vagrant_context=$1
   cd $vagrant_context
   for machine in ${MACHINES[@]}; do
-    vagrant ssh $machine -c "rm -r $BUFFER"
+    vagrant ssh $machine -c "rm -rf $BUFFER"
   done
   rm ssh.cfg
 }
@@ -99,9 +109,15 @@ scp_war()
     echo "Deploying app .war file: $app_dir/$local_war_context/$local_war_file to machine: $machine"
     cd $vagrant_context
     scp -F ssh.cfg $app_dir/$local_war_context/$local_war_file $machine:$BUFFER
+    retVal=$(vagrant ssh $machine -c "echo "$?"")
+    exitIfFailed $retVal "ERROR: Unable to scp local war file to vagrant! Please check your configuration!"
 
     vagrant ssh $machine -c "sudo -u shrine cp --no-preserve=mode $BUFFER/$local_war_file $vagrant_war_context"
+    retVal=$(vagrant ssh $machine -c "echo "$?"")
+    exitIfFailed $retVal "ERROR: Unable to move war file to $vagrant_war_context on $machine! Please check your configuration!"
     vagrant ssh $machine -c "sudo rm $BUFFER/$local_war_file"
+    retVal=$(vagrant ssh $machine -c "echo "$?"")
+    exitIfFailed $retVal "ERROR: Unable to remove file $BUFFER/$local_war_file on $machine! Please check your configuration!"
   done
 }
 

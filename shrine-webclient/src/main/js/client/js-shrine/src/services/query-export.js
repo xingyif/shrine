@@ -36,5 +36,7 @@ const convertObjectToCSV = (d) => {
     const link = document.createElement('a');
     link.setAttribute('href', csv);
     link.setAttribute('download', 'export.csv');
+    document.body.appendChild(link);
     link.click();
+    document.body.removeChild(link);
 }
