@@ -99,7 +99,7 @@
                 text: "Done",
                 handler: function() {this.cancel();},
                 isDefault: true
-            }]11
+            }]
         });
 
         //$ = prototype.js
@@ -148,26 +148,3 @@
             '</div>';
     }
 })();
-
-<div id="dialogErrorDetail" style="display:none;">
-    <div class="hd" style="background:#6677AA;">Query Error Detail</div>
-    <div class="bd">
-        <br />
-        <button id='btnExpandErrorDetail'>More
-            Detail
-        </button>
-        <button id='btnContractErrorDetail'
-                style='display: none'>Less Detail
-        </button>
-        <a id="dlgNetworkStatus"
-           style="cursor: pointer; position:absolute; right:20px;
-               top: 58px; text-decoration:
-               underline; color:blue; display: none">Network
-            Status</a>
-        <div style="border: 1px solid #C0C0C0; max-height: 450px;
-        background-color: #FFFFFF; overflow: scroll; word-wrap: break-word; padding: 10px 5px;"
-             id="errorDetailDiv" class="StatusBoxText">
-        </div>
-    </div>
-</div>
-
