@@ -38,6 +38,8 @@ trait QepService extends HttpService with Loggable {
   def system: ActorSystem
   val qepQueryDbChangeNotifier = QepQueryDbChangeNotifier(system)
 
+  val qepReceiver = QepReceiver //start the QepReceiver by bringing it into context
+
   val qepInfo =
     """
       |The SHRINE query entry point service.

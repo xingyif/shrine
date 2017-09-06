@@ -13,7 +13,7 @@ import spray.http.{HttpEntity, HttpRequest, HttpResponse, StatusCodes}
 import spray.io.ClientSSLEngineProvider
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.duration.DurationInt
+import scala.concurrent.duration.{Duration, DurationInt, DurationLong}
 import scala.concurrent.{Await, Future, TimeoutException, blocking}
 import scala.language.postfixOps
 import scala.util.control.NonFatal
@@ -24,22 +24,28 @@ import scala.util.control.NonFatal
 object HttpClient extends Loggable {
 
   //todo hand back a Try, Failures with custom exceptions instead of a crappy response
-  def webApiCall(request:HttpRequest)(implicit system: ActorSystem): HttpResponse = {
+  //todo Really a Future would be even better
+  def webApiCall(request:HttpRequest,timeout:Duration = 10 seconds)(implicit system: ActorSystem): HttpResponse = {
+
+    val deadline = System.currentTimeMillis() + timeout.toMillis
+
     val transport: ActorRef = IO(Http)(system)
 
     debug(s"Requesting $request uri is ${request.uri} path is ${request.uri.path}")
     blocking {
       val future:Future[HttpResponse] = for {
-        Http.HostConnectorInfo(connector, _) <- transport.ask(createConnector(request))(10 seconds) //todo make this timeout configurable
-        response <- connector.ask(request)(10 seconds).mapTo[HttpResponse] //todo make this timeout configurable
+        Http.HostConnectorInfo(connector, _) <- transport.ask(createConnector(request))(deadline - System.currentTimeMillis() milliseconds)
+        response <- connector.ask(request)(deadline - System.currentTimeMillis() milliseconds).mapTo[HttpResponse]
       } yield response
       try {
-        Await.result(future, 10 seconds)  //todo make this timeout configurable
+        //wait a second longer than the deadline before timing out the Await, to let the actors timeout
+        Await.result(future, deadline + 1000 - System.currentTimeMillis() milliseconds)  //todo make this time gap configurable SHRINE-2217
       }
       catch {
+        //todo definitely need the Try instead of this sloppy replacement of the HttpResponse.
         case x:TimeoutException => {
           debug(s"${request.uri} failed with ${x.getMessage}", x)
-          HttpResponse(status = StatusCodes.RequestTimeout,entity = HttpEntity(s"${request.uri} timed out after 10 seconds. ${x.getMessage}"))
+          HttpResponse(status = StatusCodes.RequestTimeout,entity = HttpEntity(s"${request.uri} timed out after ${timeout}. ${x.getMessage}"))
         }
         //todo is there a better message? What comes up in real life?
         case x:ConnectionAttemptFailedException => {

@@ -1,9 +1,10 @@
 package net.shrine.hornetqmom
 
 import com.typesafe.config.Config
+import net.shrine.log.Log
 import net.shrine.messagequeueservice.{Message, MessageQueueService, NoSuchQueueExistsInHornetQ, Queue}
 import net.shrine.source.ConfigSource
-import org.hornetq.api.core.TransportConfiguration
+import org.hornetq.api.core.{HornetQQueueExistsException, TransportConfiguration}
 import org.hornetq.api.core.client.{ClientConsumer, ClientMessage, ClientProducer, ClientSession, ClientSessionFactory, HornetQClient, ServerLocator}
 import org.hornetq.api.core.management.HornetQServerControl
 import org.hornetq.core.config.impl.ConfigurationImpl
@@ -17,6 +18,7 @@ import scala.concurrent.duration.Duration
 import scala.util.Try
 /**
   * This object is the local version of the Message-Oriented Middleware API, which uses HornetQ service
+  *
   * @author david
   * @since 7/18/17
   */
@@ -67,19 +69,27 @@ object LocalHornetQMom extends MessageQueueService {
 
   //queue lifecycle
   def createQueueIfAbsent(queueName: String): Try[Queue] = {
+    val unit = ()
+
     val proposedQueue: Queue = Queue(queueName)
     for {
       serverControl: HornetQServerControl <- Try{ hornetQServer.getHornetQServerControl }
-      createQueueInHornetQ <- Try {
-        if (!this.queues.get.map(_.name).contains(proposedQueue.name)) {
-          serverControl.createQueue(proposedQueue.name, proposedQueue.name, true)
-        }
+      queuesSoFar <- queues
+      queueToUse <- Try {
+        queuesSoFar.find(_.name == proposedQueue.name).fold{
+          try {
+            serverControl.createQueue(proposedQueue.name, proposedQueue.name, true)
+          } catch {
+            case hqqex:HornetQQueueExistsException => Log.debug(s"Caught and ignored a HornetQQueueExistsException in createQueueIfAbsent.",hqqex)
+          }
+          proposedQueue
+        }{
+          queue => queue}
       }
-      useNewQueueToUpdateMapTry: Queue <- Try {
+      consumer <- Try {
         queuesToConsumers.getOrElseUpdate(proposedQueue, { session.createConsumer(proposedQueue.name) })
-        proposedQueue
       }
-    } yield useNewQueueToUpdateMapTry
+    } yield queueToUse
   }
 
   def deleteQueue(queueName: String): Try[Unit] = {
@@ -115,10 +125,10 @@ object LocalHornetQMom extends MessageQueueService {
         }
       }
       producer: ClientProducer <- Try{ session.createProducer(to.name) }
-      message <- Try{ session.createMessage(true) }
-      constructMessage <- Try { message.putStringProperty(propName, contents) }
+      message <- Try{ session.createMessage(true).putStringProperty(propName, contents) }
       sendMessage <- Try {
         producer.send(message)
+        Log.debug(s"Message $message sent to $to in HornetQ")
         producer.close()
       }
     } yield sendMessage
@@ -143,6 +153,7 @@ object LocalHornetQMom extends MessageQueueService {
       message: Option[Message] <- Try {
         blocking {
           val messageReceived: Option[ClientMessage] = Option(messageConsumer.receive(timeout.toMillis))
+          messageReceived.foreach(m => Log.debug(s"Received ${m} from $from in HornetQ"))
           messageReceived.map(Message(_))
         }
       }
