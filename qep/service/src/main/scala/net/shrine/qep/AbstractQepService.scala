@@ -186,14 +186,10 @@ trait AbstractQepService[BaseResp <: BaseShrineResponse] extends Loggable {
         debug(s"Received $hubResponse for ${authorizedRequest.networkQueryId}")
           hubResponse match {
           case aggregated: AggregatedRunQueryResponse =>
-            info(s"Received ${aggregated.statusTypeName} for ${authorizedRequest.networkQueryId}")
+            info(s"Received ${aggregated.statusTypeName} and ignored results for ${authorizedRequest.networkQueryId}")
             blocking {
-              //here's the part that puts results in the QEP cache database
-              //todo once queries arrive at the QEP via a queue, no need to put them into the database. They can just fall on the floor
-              //todo remove with SHRINE-2149
+              //now that queries arrive at the QEP via a queue, no need to put them into the database. They can just fall on the floor
               //todo record the query's state in a way that will stop polling in 1.23. See SHRINE-2148
-              aggregated.results.foreach(QepQueryDb.db.insertQueryResult(authorizedRequest.networkQueryId, _))
-              debug(s"Recorded ${authorizedRequest.networkQueryId} aggregated response in the QEP database")
             }
           case _ => IncorrectResponseFromHub(hubResponse,authorizedRequest.networkQueryId)
           }
