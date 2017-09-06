@@ -117,34 +117,32 @@
 
     // ES5 :(
     function getDialogHTML(data) {
-        return 
-            '<div id="pluginErrorDetail" style="display:none;">' +
+        var html = '<div id="pluginErrorDetail" style="display:none;">' +
             '<div class="hd" style="background:#6677AA;">SHRINE Result Status</div>' +
             '<div class="bd">' +
             '<br />' +
-            '<button>More Detail </button>' +
-            '<button style="display: none">Less Detail</button>' +
             '<div style="border: 1px solid #C0C0C0; max-height: 450px;' +
             'background-color: #FFFFFF; overflow: scroll; word-wrap: break-word; padding: 10px 5px;"' +
-            'id="pluginErrorDetail" class="StatusBoxText">' +
+            'class="StatusBoxText">' +
             '<div><b>Summary:</b></div>' +
             '<div>' + data.status + '</div><br/>' +
             '<div><b>Description:</b></div>' +
             '<div><p>' + data.statusMessage + '</p></div><br/>' +
-            '<span id="pluginMoreDetail" style="display:none">' + 
+            '<span id="pluginMoreDetail">' + 
                 '<div><b>Codec:</b></div>' +
-                '<div>' + data.problemDigest && data.problemDigest.codec? data.problemDigest.codec : 'not available' + '</div><br/>' +
+                '<div>' + (data.problemDigest && data.problemDigest.codec? data.problemDigest.codec : 'not available') + '</div><br/>' +
                 '<div><b>Stamp:</b></div>' +
-                '<div>' + data.problemDigest && data.problemDigest.stampText? data.problemDigest.stampText : 'not available' + '</div><br/>' +
+                '<div>' + (data.problemDigest && data.problemDigest.stampText? data.problemDigest.stampText : 'not available') + '</div><br/>' +
                 '<div><b>Stack Trace Name:</b></div>' +
-                '<div>' + data.problemDigest && data.problemDigest.codec? data.problemDigest.codec : 'not available' + '</div><br/>' +
+                '<div>' + (data.problemDigest && data.problemDigest.codec? data.problemDigest.codec : 'not available') + '</div><br/>' +
                 '<div><b>Stack Trace Message:</b></div>' +
-                '<div>' + data.problemDigest && data.problemDigest.description? data.problemDigest.description : 'not available' + '</div><br/>' +
+                '<div>' + (data.problemDigest && data.problemDigest.description? data.problemDigest.description : 'not available') + '</div><br/>' +
                 '<div><b>Stack Trace Details:</b></div>' +
-                '<div>' + data.problemDigest && data.problemDigest.detailsString? data.problemDigest.detailsString.split(',').join(',\n') : 'not available' + '</div><br/>' +
+                '<div>' + (data.problemDigest && data.problemDigest.detailsString? data.problemDigest.detailsString.split(',').join(',<br/>') : 'not available') + '</div><br/>' +
             '</span>'
             '</div>' +
             '</div>' +
             '</div>';
+            return html;
     }
 })();
