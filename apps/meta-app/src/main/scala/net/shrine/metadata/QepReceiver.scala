@@ -4,11 +4,13 @@ import com.typesafe.config.Config
 import net.shrine.config.ConfigExtensions
 import net.shrine.hornetqclient.CouldNotCreateQueueButOKToRetryException
 import net.shrine.log.Log
+import net.shrine.messagequeueservice.protocol.Envelope
 import net.shrine.messagequeueservice.{Message, MessageQueueService, Queue}
 import net.shrine.problem.{AbstractProblem, ProblemSources}
 import net.shrine.protocol.{AggregatedRunQueryResponse, ResultOutputType, ResultOutputTypes}
 import net.shrine.qep.querydb.QepQueryDb
 import net.shrine.source.ConfigSource
+import net.shrine.util.Versions
 
 import scala.concurrent.duration.Duration
 import scala.util.{Failure, Success, Try}
@@ -76,17 +78,25 @@ object QepReceiver {
       val unit = ()
       Log.debug(s"Received a message from $queue of $message")
 
-      val xmlString = message.contents
-      val rqrt: Try[AggregatedRunQueryResponse] = AggregatedRunQueryResponse.fromXmlString(breakdownTypes)(xmlString)
+      val contents = message.contents
 
-      rqrt.transform({ rqr =>
+      Envelope.fromJson(contents).flatMap{
+        case e:Envelope if e.shrineVersion == Versions.version => Success(e)
+        case e:Envelope => Failure(new IllegalArgumentException(s"Envelope version is not ${Versions.version}")) //todo better exception
+        case notE => Failure(new IllegalArgumentException(s"Not an expected message Envelope but a ${notE.getClass}")) //todo better exception
+      }.flatMap {
+        case Envelope(contentsType, contents, shrineVersion) if contentsType == AggregatedRunQueryResponse.getClass.getSimpleName => {
+          AggregatedRunQueryResponse.fromXmlString(breakdownTypes)(contents)
+        }
+        case _ => Failure(new IllegalArgumentException("Not an expected type of message from this queue")) //todo better exception
+      }.transform({ rqr =>
         QepQueryDb.db.insertQueryResult(rqr.queryId, rqr.results.head)
         Log.debug(s"Inserted result from ${rqr.results.head.description} for query ${rqr.queryId}")
         message.complete()
         Success(unit)
       },{ x =>
         x match {
-          case NonFatal(nfx) => QepReceiverCouldNotDecodeMessage(xmlString,queue,x)
+          case NonFatal(nfx) => QepReceiverCouldNotDecodeMessage(contents,queue,x)
           case _ => //pass through
         }
         Failure(x)

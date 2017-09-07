@@ -17,12 +17,12 @@ final class EnvelopeTest {
 
     implicit val formats = Serialization.formats(ShortTypeHints(List(classOf[Envelope])))
 
-    val testContentsJson: String = exampleContents.asJson
+    val testContentsJson: String = exampleContents.toJson
 
-    val expectedEnvelope = Envelope(ExampleContents.getClass.getSimpleName,testContentsJson)
-    val envelopeJson = write(expectedEnvelope)(Serialization.formats(ShortTypeHints(List(classOf[Envelope]))))
+    val expectedEnvelope: Envelope = Envelope(ExampleContents.getClass.getSimpleName,testContentsJson)
+    val envelopeJson:String = expectedEnvelope.toJson
 
-    val envelope = read[Envelope](envelopeJson)
+    val envelope = Envelope.fromJson(envelopeJson).get
 
     assert(expectedEnvelope == envelope)
 
@@ -35,7 +35,7 @@ final class EnvelopeTest {
 }
 
 case class ExampleContents(string:String) {
-  def asJson = write(this)(ExampleContents.exampleContentsFormats)
+  def toJson = write(this)(ExampleContents.exampleContentsFormats)
 }
 
 object ExampleContents {

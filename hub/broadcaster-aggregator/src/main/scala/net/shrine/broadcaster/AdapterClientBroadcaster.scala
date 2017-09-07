@@ -7,6 +7,7 @@ import net.shrine.broadcaster.dao.HubDao
 import net.shrine.client.TimeoutException
 import net.shrine.log.Loggable
 import net.shrine.messagequeueservice.MessageQueueService
+import net.shrine.messagequeueservice.protocol.Envelope
 import net.shrine.problem.{AbstractProblem, ProblemSources}
 import net.shrine.protocol.{AggregatedRunQueryResponse, BaseShrineResponse, BroadcastMessage, FailureResult, RunQueryRequest, SingleNodeResult, Timeout}
 
@@ -68,10 +69,11 @@ final case class AdapterClientBroadcaster(destinations: Set[NodeHandle], dao: Hu
   }
 
   private def sendToQep(runQueryResponse: AggregatedRunQueryResponse,queueName:String):Unit = {
+    val envelope = Envelope(AggregatedRunQueryResponse.getClass.getSimpleName,runQueryResponse.toXmlString)
+
     val s: Try[Unit] = for {
       queue <- MessageQueueService.service.createQueueIfAbsent(queueName)
-      //todo use the json envelope when you get to SHRINE-2177
-      sent <- MessageQueueService.service.send(runQueryResponse.toXmlString, queue)
+      sent <- MessageQueueService.service.send(envelope.toJson, queue)
     } yield sent
     s.transform({itWorked =>
       debug(s"Result from ${runQueryResponse.results.head.description.get} sent to queue")
