@@ -1,5 +1,5 @@
 <template>
-    <div style="height: 100%; overflow: auto">
+    <div style="height: 100%; overflow: auto" class="query-status">
         <div style="display: flex" if.one-way="status.query.queryName">
             <div style="flex:1">Status of Query: ${status.query.queryName}</div>
             <div style="flex:1" if.one-way="status.nodes.length">Last Updated: ${status.updated | dateTime}</div>
