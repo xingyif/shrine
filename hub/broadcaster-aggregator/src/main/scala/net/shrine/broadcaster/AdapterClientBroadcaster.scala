@@ -6,7 +6,7 @@ import net.shrine.audit.NetworkQueryId
 import net.shrine.broadcaster.dao.HubDao
 import net.shrine.client.TimeoutException
 import net.shrine.log.Loggable
-import net.shrine.messagequeueservice.{MessageQueueService}
+import net.shrine.messagequeueservice.MessageQueueService
 import net.shrine.problem.{AbstractProblem, ProblemSources}
 import net.shrine.protocol.{AggregatedRunQueryResponse, BaseShrineResponse, BroadcastMessage, FailureResult, RunQueryRequest, SingleNodeResult, Timeout}
 
@@ -31,7 +31,6 @@ final case class AdapterClientBroadcaster(destinations: Set[NodeHandle], dao: Hu
 
     for {
       nodeHandle <- destinations
-//todo more status for SHRINE-2122 and SHRINE-2123
       shrineResponse: SingleNodeResult <- callAdapter(message, nodeHandle)
     } {
       try {
@@ -90,6 +89,9 @@ final case class AdapterClientBroadcaster(destinations: Set[NodeHandle], dao: Hu
   private[broadcaster] def callAdapter(message: BroadcastMessage, nodeHandle: NodeHandle): Future[SingleNodeResult] = {
     val NodeHandle(nodeId, client) = nodeHandle
 
+    //todo more status for SHRINE-2122
+    // todo send back json containing just enough to fill a QueryResultRow
+    // may need to do SHRINE-2177 to make this work
     client.query(message).recover {
       case e: TimeoutException =>
         error(s"Broadcasting to $nodeId timed out")
@@ -100,6 +102,8 @@ final case class AdapterClientBroadcaster(destinations: Set[NodeHandle], dao: Hu
         FailureResult(nodeId, e)
 
     }
+    //todo more status for SHRINE-2123
+    // todo send back json containing just enough to fill a QueryResultRow
   }
 
   private[broadcaster] def logResultsIfNecessary(message: BroadcastMessage, result: SingleNodeResult): Unit = logIfNecessary(message) { _ =>

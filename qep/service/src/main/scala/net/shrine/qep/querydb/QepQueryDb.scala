@@ -543,7 +543,7 @@ object QueryResultRow extends ((Long,NetworkQueryId,Long,String,Option[ResultOut
       resultId = result.resultId,
       networkQueryId = networkQueryId,
       instanceId = result.instanceId,
-      adapterNode = result.description.getOrElse(s"$result has None in its description field, not a name of an adapter node."),
+      adapterNode = result.description.getOrElse(s"$result has None in its description field, instead of the name of an adapter node."),
       resultType = result.resultType,
       size = result.setSize,
       startDate = result.startDate.map(_.toGregorianCalendar.getTimeInMillis),

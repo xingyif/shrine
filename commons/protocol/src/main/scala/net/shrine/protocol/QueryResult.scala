@@ -178,6 +178,7 @@ final case class QueryResult (
 
 object QueryResult {
 
+  //todo add two new Statuses for the intermediate observations at the hub
   final case class StatusType(
     name: String,
     isDone: Boolean,
