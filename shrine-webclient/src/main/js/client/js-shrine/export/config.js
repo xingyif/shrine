@@ -650,9 +650,6 @@ System.config({
       "views/query-viewer/context-menu/context-menu.html!github:systemjs/plugin-text@0.0.8.js",
       "views/query-viewer/context-menu/context-menu.js",
       "views/query-viewer/date.converter.js",
-      "views/query-viewer/loading-bar/loading-bar.html!github:systemjs/plugin-text@0.0.8.js",
-      "views/query-viewer/loading-bar/loading-bar.js",
-      "views/query-viewer/loading-bar/row-loader.html!github:systemjs/plugin-text@0.0.8.js",
       "views/query-viewer/paginator/paginator.html!github:systemjs/plugin-text@0.0.8.js",
       "views/query-viewer/paginator/paginator.js",
       "views/query-viewer/query-status/query-status.html!github:systemjs/plugin-text@0.0.8.js",
@@ -660,6 +657,9 @@ System.config({
       "views/query-viewer/query-viewer.config.js",
       "views/query-viewer/query-viewer.html!github:systemjs/plugin-text@0.0.8.js",
       "views/query-viewer/query-viewer.js",
+      "views/query-viewer/result-row/loading-bar/loading-bar.html!github:systemjs/plugin-text@0.0.8.js",
+      "views/query-viewer/result-row/loading-bar/loading-bar.js",
+      "views/query-viewer/result-row/loading-bar/row-loader.html!github:systemjs/plugin-text@0.0.8.js",
       "views/query-viewer/scroll.service.js"
     ]
   },
@@ -740,9 +740,6 @@ System.config({
     "views/query-viewer/date.converter.js": [
       "moment"
     ],
-    "views/query-viewer/loading-bar/loading-bar.js": [
-      "aurelia-framework"
-    ],
     "views/query-viewer/paginator/paginator.js": [
       "aurelia-framework"
     ],
@@ -755,6 +752,9 @@ System.config({
       "common/queries.model",
       "./scroll.service",
       "common/shrine.messages"
+    ],
+    "views/query-viewer/result-row/loading-bar/loading-bar.js": [
+      "aurelia-framework"
     ],
     "views/query-viewer/scroll.service.js": [
       "ramda",

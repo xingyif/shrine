@@ -6,4 +6,8 @@ export class Error extends PubSub{
     constructor(...rest) {
         super(...rest);
     }
+
+    attached() {
+        console.log(this.result);
+    }
 }

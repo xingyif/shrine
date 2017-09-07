@@ -102,6 +102,10 @@ System.register(['aurelia-framework', 'services/pub-sub'], function (_export, _c
                     return _this;
                 }
 
+                Error.prototype.attached = function attached() {
+                    console.log(this.result);
+                };
+
                 return Error;
             }(PubSub), (_descriptor = _applyDecoratedDescriptor(_class2.prototype, 'result', [bindable], {
                 enumerable: true,

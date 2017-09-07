@@ -118,7 +118,7 @@
     // ES5 :(
     function getDialogHTML(data) {
         var html = '<div id="pluginErrorDetail" style="display:none;">' +
-            '<div class="hd" style="background:#6677AA;">SHRINE Result Status</div>' +
+            '<div class="hd" style="background:#6677AA;">Query Error Detail</div>' +
             '<div class="bd">' +
             '<br />' +
             '<div style="border: 1px solid #C0C0C0; max-height: 450px;' +
