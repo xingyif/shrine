@@ -77,6 +77,9 @@ System.register(['./pub-sub', './i2b2.service'], function (_export, _context) {
                         i2b2Svc.onExport(function () {
                             return _this.publish(_this.notifications.i2b2.exportQuery);
                         });
+                        i2b2Svc.onClearQuery(function () {
+                            return _this.publish(_this.notifications.i2b2.clearQuery);
+                        });
                         _this.subscribe(_this.commands.i2b2.cloneQuery, function (d) {
                             return i2b2Svc.loadQuery(d);
                         });

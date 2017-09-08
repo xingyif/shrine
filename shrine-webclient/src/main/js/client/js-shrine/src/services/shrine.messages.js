@@ -7,7 +7,8 @@ export const notifications = {
         queryStarted: 'notification.from.i2b2.query.started',
         messageReceived: 'notification.from.i2b2.message.received',
         networkIdReceived: 'notification.from.i2b2.networkId.receieved',
-        exportQuery: 'notification.from.i2b2.export.query'
+        exportQuery: 'notification.from.i2b2.export.query',
+        clearQuery: 'notification.from.i2b2.clear.query'
     },
 
     shrine: {
