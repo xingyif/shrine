@@ -201,7 +201,7 @@
 	}
 
 	function addShrinePanel($) {
-		$('#crcStatusBox .StatusBox').append('<div id="shrinePlugin" class="shrinePluginContent" oncontextmenu="return false"></div>');
+		$('#crcStatusBox .StatusBox').append('<div id="shrinePlugin" class="shrinePluginContent" oncontextmenu="return false" style="padding: 0;"></div>');
 	}
 })();
 
