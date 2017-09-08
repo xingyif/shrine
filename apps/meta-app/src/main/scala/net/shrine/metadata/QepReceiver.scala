@@ -7,9 +7,10 @@ import net.shrine.log.Log
 import net.shrine.messagequeueservice.protocol.Envelope
 import net.shrine.messagequeueservice.{Message, MessageQueueService, Queue}
 import net.shrine.problem.{AbstractProblem, ProblemSources}
-import net.shrine.protocol.{AggregatedRunQueryResponse, ResultOutputType, ResultOutputTypes}
-import net.shrine.qep.querydb.QepQueryDb
+import net.shrine.protocol.{AggregatedRunQueryResponse, QueryResult, ResultOutputType, ResultOutputTypes}
+import net.shrine.qep.querydb.{QepQueryDb, QueryResultRow}
 import net.shrine.source.ConfigSource
+import net.shrine.status.protocol.IncrementalQueryResult
 import net.shrine.util.Versions
 
 import scala.concurrent.duration.Duration
@@ -86,19 +87,44 @@ object QepReceiver {
         case notE => Failure(new IllegalArgumentException(s"Not an expected message Envelope but a ${notE.getClass}")) //todo better exception
       }.flatMap {
         case Envelope(contentsType, contents, shrineVersion) if contentsType == AggregatedRunQueryResponse.getClass.getSimpleName => {
-          AggregatedRunQueryResponse.fromXmlString(breakdownTypes)(contents)
+          AggregatedRunQueryResponse.fromXmlString(breakdownTypes)(contents).flatMap{ rqr =>
+            QepQueryDb.db.insertQueryResult(rqr.queryId, rqr.results.head)
+            Log.debug(s"Inserted result from ${rqr.results.head.description} for query ${rqr.queryId}")
+            Success(unit)
+          }
         }
-        case _ => Failure(new IllegalArgumentException("Not an expected type of message from this queue")) //todo better exception
-      }.transform({ rqr =>
-        QepQueryDb.db.insertQueryResult(rqr.queryId, rqr.results.head)
-        Log.debug(s"Inserted result from ${rqr.results.head.description} for query ${rqr.queryId}")
+        case Envelope(contentsType, contents, shrineVersion) if contentsType == IncrementalQueryResult.incrementalQueryResultsEnvelopeContentsType => {
+          val changeDate = System.currentTimeMillis()
+          IncrementalQueryResult.seqFromJson(contents).flatMap { iqrs: Seq[IncrementalQueryResult] =>
+            val rows = iqrs.map(iqr => QueryResultRow(
+              resultId = -1L,
+              networkQueryId = iqr.networkQueryId,
+              instanceId = -1L,
+              adapterNode = iqr.adapterNodeName,
+              resultType = None,
+              size = 0L,
+              startDate = None,
+              endDate = None,
+              status = QueryResult.StatusType.valueOf(iqr.statusTypeName).get,
+              statusMessage = Some(iqr.statusMessage),
+              changeDate = changeDate
+            ))
+
+            QepQueryDb.db.insertQueryResultRows(rows)
+            Log.debug(s"Inserted incremental results $iqrs")
+            Success(unit)
+          }
+        }
+        case _ => Failure(new IllegalArgumentException(s"Not an expected type of message from this queue: $contents")) //todo better exception
+      }.transform({ s =>
         message.complete()
         Success(unit)
       },{ x =>
         x match {
           case NonFatal(nfx) => QepReceiverCouldNotDecodeMessage(contents,queue,x)
-          case _ => //pass through
+          case x =>  throw x//blow something up
         }
+        message.complete() //complete anyway. Can't be interpreted, so we don't want to see it again
         Failure(x)
       })
     }
