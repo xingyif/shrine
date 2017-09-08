@@ -193,44 +193,25 @@ object QueueSerializer extends CustomSerializer[Queue](format => (
   }
 ))
 
-object MessageSerializer extends CustomSerializer[Message](format => (
-  {
-    case JObject(
-    JField("hornetQClientMessage",
-    JObject(
-//    JField("type", JInt(msgType)) ::
-//      JField("messageID", JInt(id)) ::
-//      JField("durable", JBool(durable)) ::
-//      JField("expiration", JInt(expiration)) ::
-//      JField("timestamp", JInt(timestamp)) ::
-//      JField("priority", JInt(priority)) ::
-//      JField(Message.contentsKey, JString(contents)) ::
-      JField("uuid", JString(messageUUID)) ::
-        JField(Message.contentsKey, JString(contents))
-        :: Nil))
-      :: Nil) => {
-//      val hornetQClientMessage: ClientMessageImpl = new ClientMessageImpl(msgType.toByte, durable, expiration.toLong, timestamp.toLong, priority.toByte, 0)
-//      hornetQClientMessage.putStringProperty(Message.contentsKey, contents)
-      val id: UUID = UUID.fromString(messageUUID)
-      val message: Message = Message(id, contents)
-      message
-    }
-  }, {
+object MessageSerializer extends CustomSerializer[Message](format => ( {
+  case JObject(
+  JField("hornetQClientMessage",
+  JObject(
+  JField("uuid", JString(messageUUID)) ::
+    JField(Message.contentsKey, JString(contents))
+    :: Nil))
+    :: Nil) => {
+    val id: UUID = UUID.fromString(messageUUID)
+    val message: Message = Message(id, contents)
+    message
+  }
+}, {
   case msg: Message =>
     JObject(
       JField("hornetQClientMessage",
       JObject(
         JField("uuid", JString(msg.messageUUID.toString)) ::
           JField(Message.contentsKey, JString(msg.contents))
-
-          //        JField("type", JLong(msg.getClientMessage.getType)) ::
-//          JField("messageID", JLong(msg.getClientMessage.getMessageID)) ::
-//          JField("durable", JBool(msg.getClientMessage.isDurable)) ::
-//          JField("expiration", JLong(msg.getClientMessage.getExpiration)) ::
-//          JField("timestamp", JLong(msg.getClientMessage.getTimestamp)) ::
-//          JField("priority", JLong(msg.getClientMessage.getPriority)) ::
-//          JField(Message.contentsKey, JString(msg.contents)) ::
-//          JField("belongsToQueue", JString(msg.getBelongedQueueName))
           :: Nil))
       :: Nil)
 }

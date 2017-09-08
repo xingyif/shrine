@@ -47,42 +47,6 @@ object MessageQueueService {
 
 case class Message(messageUUID: UUID, contents: String) extends DefaultJsonSupport {
   override implicit def json4sFormats: Formats = DefaultFormats
-//  object ClientMessageImpl {
-//
-//    lazy val clientMessageImpl:ClientMessageImpl = {
-//      import scala.reflect.runtime.universe.runtimeMirror
-//
-//      val clientMsgImplClassName = ConfigSource.config.getString("shrine.messagequeue.clientMessageImpl")
-//      val classLoaderMirror = runtimeMirror(getClass.getClassLoader)
-//      val module = classLoaderMirror.staticModule(clientMsgImplClassName)
-//
-//      classLoaderMirror.reflectModule(module).instance.asInstanceOf[ClientMessageImpl]
-//    }
-//  }
-
-//  def getClientMessage = hornetQMessage
-//
-//  def contents = hornetQMessage.getStringProperty(Message.contentsKey)
-//
-//  def getMessageID = hornetQMessage.getMessageID
-
-
-//  private def setMessageID(messageID: Long) = {
-//    val clientMessageImplClass = hornetQMessage.getClass
-//    println("all fields: " + clientMessageImplClass.getDeclaredFields.foreach(a => println("field: "+ a)))
-//    val messageIDField = clientMessageImplClass.getDeclaredField("messageID")
-//    messageIDField.setAccessible(true)
-//    messageIDField.setLong(hornetQMessage, messageID)
-//    println("messageID: " + hornetQMessage.getMessageID)
-//  }
-
-//  private def setConsumer(consumer: ClientConsumer) = {}
-
-//  def complete() = {
-//    this.setMessageID(this.messageId)
-//
-//    hornetQMessage.acknowledge()
-//  }
 }
 
 object Message {
