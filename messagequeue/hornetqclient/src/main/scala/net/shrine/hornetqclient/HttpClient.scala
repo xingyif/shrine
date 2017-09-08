@@ -32,31 +32,29 @@ object HttpClient extends Loggable {
     val transport: ActorRef = IO(Http)(system)
 
     debug(s"Requesting $request uri is ${request.uri} path is ${request.uri.path}")
-    blocking {
-      val future:Future[HttpResponse] = for {
-        Http.HostConnectorInfo(connector, _) <- transport.ask(createConnector(request))(deadline - System.currentTimeMillis() milliseconds)
-        response <- connector.ask(request)(deadline - System.currentTimeMillis() milliseconds).mapTo[HttpResponse]
-      } yield response
-      try {
-        //wait a second longer than the deadline before timing out the Await, to let the actors timeout
-        Await.result(future, deadline + 1000 - System.currentTimeMillis() milliseconds)  //todo make this time gap configurable SHRINE-2217
+    val future: Future[HttpResponse] = for {
+      Http.HostConnectorInfo(connector, _) <- transport.ask(createConnector(request))(deadline - System.currentTimeMillis() milliseconds)
+      response <- connector.ask(request)(deadline - System.currentTimeMillis() milliseconds).mapTo[HttpResponse]
+    } yield response
+    try {
+      //wait a second longer than the deadline before timing out the Await, to let the actors timeout
+      Await.result(future, deadline + 1000 - System.currentTimeMillis() milliseconds) //todo make this time gap configurable SHRINE-2217
+    }
+    catch {
+      //todo definitely need the Try instead of this sloppy replacement of the HttpResponse.
+      case x: TimeoutException => {
+        debug(s"${request.uri} failed with ${x.getMessage}", x)
+        HttpResponse(status = StatusCodes.RequestTimeout, entity = HttpEntity(s"${request.uri} timed out after ${timeout}. ${x.getMessage}"))
       }
-      catch {
-        //todo definitely need the Try instead of this sloppy replacement of the HttpResponse.
-        case x:TimeoutException => {
-          debug(s"${request.uri} failed with ${x.getMessage}", x)
-          HttpResponse(status = StatusCodes.RequestTimeout,entity = HttpEntity(s"${request.uri} timed out after ${timeout}. ${x.getMessage}"))
-        }
-        //todo is there a better message? What comes up in real life?
-        case x:ConnectionAttemptFailedException => {
-          //no web service is there to respond
-          debug(s"${request.uri} failed with ${x.getMessage}", x)
-          HttpResponse(status = StatusCodes.NotFound,entity = HttpEntity(s"${request.uri} failed with ${x.getMessage}"))
-        }
-        case NonFatal(x) => {
-          debug(s"${request.uri} failed with ${x.getMessage}",x)
-          HttpResponse(status = StatusCodes.InternalServerError,entity = HttpEntity(s"${request.uri} failed with ${x.getMessage}"))
-        }
+      //todo is there a better message? What comes up in real life?
+      case x: ConnectionAttemptFailedException => {
+        //no web service is there to respond
+        debug(s"${request.uri} failed with ${x.getMessage}", x)
+        HttpResponse(status = StatusCodes.NotFound, entity = HttpEntity(s"${request.uri} failed with ${x.getMessage}"))
+      }
+      case NonFatal(x) => {
+        debug(s"${request.uri} failed with ${x.getMessage}", x)
+        HttpResponse(status = StatusCodes.InternalServerError, entity = HttpEntity(s"${request.uri} failed with ${x.getMessage}"))
       }
     }
   }
