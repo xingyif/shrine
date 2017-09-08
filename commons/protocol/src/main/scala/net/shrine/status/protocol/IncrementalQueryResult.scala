@@ -17,13 +17,7 @@ case class IncrementalQueryResult(
                                    adapterNodeName:String,
                                    statusTypeName:String,
                                    statusMessage:String
-                                 ) {
-
-  def toJson:String = {
-    Serialization.write(this)(IncrementalQueryResult.formats)
-  }
-
-}
+                                 )
 
 object IncrementalQueryResult {
   val formats = Serialization.formats(ShortTypeHints(List(classOf[IncrementalQueryResult])))

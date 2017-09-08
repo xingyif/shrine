@@ -334,7 +334,6 @@ case class QepQuerySchema(jdbcProfile: JdbcProfile,moreBreakdowns: Set[ResultOut
   val allQueryResultRows = TableQuery[QepQueryResults]
 
   //Most recent query result rows for each queryId from each adapter
-  //todo check result lifecycles for SHRINE-2122
   val mostRecentQueryResultRows: Query[QepQueryResults, QueryResultRow, Seq] = for(
     queryResultRows <- allQueryResultRows if !allQueryResultRows.filter(_.networkQueryId === queryResultRows.networkQueryId).filter(_.adapterNode === queryResultRows.adapterNode).filter(_.changeDate > queryResultRows.changeDate).exists
   ) yield queryResultRows

@@ -1,7 +1,7 @@
 package net.shrine.messagequeueservice
 
 /**
-  * This package contains general JSON protocol envelopes for SHRINE's messages. Subpackages are specialized by version, and have version names.
+  * This package contains a general JSON protocol envelope for SHRINE's messages.
   *
   * @author david 
   * @since 9/7/17

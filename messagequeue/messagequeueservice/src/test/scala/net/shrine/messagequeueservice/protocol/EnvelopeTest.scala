@@ -7,8 +7,6 @@ import org.junit.Test
 
 import scala.util.Try
 
-//todo decide which testing library to use
-
 final class EnvelopeTest {
 
   @Test

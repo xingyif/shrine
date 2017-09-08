@@ -15,7 +15,10 @@ import org.json4s.native.Serialization
   */
 
 //if you need to add fields to this case class they must be Options with default values of None to support serializing to and from JSON
-case class Envelope(contentsType:String,contents:String,shrineVersion:String = Versions.version) {
+case class Envelope(
+                    contentsType:String,
+                    contents:String,
+                    shrineVersion:String = Versions.version) {
 
   def decode[T](decoder:String => T):Try[T] = Try{
     decoder(contents)

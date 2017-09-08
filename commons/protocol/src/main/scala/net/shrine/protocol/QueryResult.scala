@@ -178,20 +178,17 @@ final case class QueryResult (
 
 object QueryResult {
 
-  //todo add two new Statuses for the intermediate observations at the hub
   final case class StatusType(
     name: String,
     isDone: Boolean,
     i2b2Id: Option[Int] = Some(-1),
     private val doToI2b2:(QueryResult => NodeSeq) = StatusType.defaultToI2b2,
-    lifeCycle:Int = Int.MaxValue //MaxValue indicates that the CRC is done with the request. Greater integers are further along in the lifecycle
+    isCrcCallCompleted:Boolean = true
     ) extends StatusType.Value {
 
     def isError = this == StatusType.Error
 
     def toI2b2(queryResult: QueryResult): NodeSeq = doToI2b2(queryResult)
-
-    def isCrcCallCompleted = lifeCycle == Int.MaxValue
   }
 
   object StatusType extends SEnum[StatusType] {
@@ -225,8 +222,7 @@ object QueryResult {
     val NoMoreQueue = StatusType("NO_MORE_QUEUE", isDone = false)
 
     //SHRINE's internal states as reported by the hub
-    val HubWillSubmit = StatusType("HUB_WILL_SUBMIT",isDone = false,lifeCycle = 10)
-    val HubSubmittedRequest = StatusType("HUB_SUBMITTED_REQUEST",isDone = false,lifeCycle = 20)
+    val HubWillSubmit = StatusType("HUB_WILL_SUBMIT",isDone = false,isCrcCallCompleted = true)
   }
 
   def extractLong(nodeSeq: NodeSeq)(elemName: String): Long = (nodeSeq \ elemName).text.toLong

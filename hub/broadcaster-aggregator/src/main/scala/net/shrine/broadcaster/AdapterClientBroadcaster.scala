@@ -2,7 +2,6 @@ package net.shrine.broadcaster
 
 import net.shrine.adapter.client.{AdapterClient, RemoteAdapterClient}
 import net.shrine.aggregation.RunQueryAggregator
-import net.shrine.audit.NetworkQueryId
 import net.shrine.broadcaster.dao.HubDao
 import net.shrine.client.TimeoutException
 import net.shrine.log.Loggable
@@ -80,7 +79,7 @@ final case class AdapterClientBroadcaster(destinations: Set[NodeHandle], dao: Hu
                 case runQueryResponse:AggregatedRunQueryResponse =>
                   val envelope = Envelope(AggregatedRunQueryResponse.getClass.getSimpleName,runQueryResponse.toXmlString)
                   sendToQep(envelope,nodeId.name,s"Result from ${runQueryResponse.results.head.description.get}")
-                case _ => error(s"response is not a AggregatedRunQueryResponse. It is ${response.toString}")
+                case _ => error(s"response is not a AggregatedRunQueryResponse. It is a ${response.toString}")
               }
             }
           case _ => debug(s"Not a RunQueryRequest but a ${message.request.getClass.getSimpleName}.")
@@ -106,7 +105,7 @@ final case class AdapterClientBroadcaster(destinations: Set[NodeHandle], dao: Hu
       throwable match
       {
         case NonFatal(x) =>ExceptionWhileSendingMessage(logDescription,queueName,x)
-        case _ => //no op
+        case _ => throw throwable
       }
       Failure(throwable)
     })
@@ -126,8 +125,6 @@ final case class AdapterClientBroadcaster(destinations: Set[NodeHandle], dao: Hu
         FailureResult(nodeId, e)
 
     }
-    //todo more status for SHRINE-2123
-    // todo send back json containing just enough to fill a QueryResultRow
   }
 
   private[broadcaster] def logResultsIfNecessary(message: BroadcastMessage, result: SingleNodeResult): Unit = logIfNecessary(message) { _ =>
