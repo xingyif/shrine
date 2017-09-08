@@ -6,12 +6,6 @@
         </div>
     </div>
     <span>&nbsp;&nbsp;${result.status}</span>
-    <patient-count if.one-way="result.status === 'COMPLETED' || result.status === 'FINISHED'" 
-    result.one-way="result"></patient-count>
-    <error if.one-way="result.status === 'ERROR'" result.one-way="result">
-
-    </error>
-    <span if.one-way="['ERROR','COMPLETED','FINISHED'].indexOf(result.status) === -1">
-        &nbsp;- <span style="color: #00dd00">${result.statusMessage}</span>
-    </span>
+    <compose view.bind="component">
+    </compose>
 </template>

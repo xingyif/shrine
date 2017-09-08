@@ -620,15 +620,14 @@ System.config({
       "resources/converters/result-value.converter.js",
       "resources/custom/breakdown/breakdown.html!github:systemjs/plugin-text@0.0.8.js",
       "resources/custom/breakdown/breakdown.js",
-      "resources/custom/error/error.html!github:systemjs/plugin-text@0.0.8.js",
-      "resources/custom/error/error.js",
+      "resources/custom/node-result/error.html!github:systemjs/plugin-text@0.0.8.js",
       "resources/custom/node-result/node-result.html!github:systemjs/plugin-text@0.0.8.js",
       "resources/custom/node-result/node-result.js",
+      "resources/custom/node-result/patient-count.html!github:systemjs/plugin-text@0.0.8.js",
+      "resources/custom/node-result/status-msg.html!github:systemjs/plugin-text@0.0.8.js",
       "resources/custom/node-status/node-status.html!github:systemjs/plugin-text@0.0.8.js",
       "resources/custom/node-status/node-status.js",
       "resources/custom/node-status/temp.html!github:systemjs/plugin-text@0.0.8.js",
-      "resources/custom/patient-count/patient-count.html!github:systemjs/plugin-text@0.0.8.js",
-      "resources/custom/patient-count/patient-count.js",
       "resources/index.js",
       "services/container.js",
       "services/i2b2.pub-sub.js",
@@ -674,19 +673,12 @@ System.config({
     "resources/custom/breakdown/breakdown.js": [
       "aurelia-framework"
     ],
-    "resources/custom/error/error.js": [
-      "aurelia-framework",
-      "services/pub-sub"
-    ],
     "resources/custom/node-result/node-result.js": [
       "aurelia-framework"
     ],
     "resources/custom/node-status/node-status.js": [
       "aurelia-framework",
       "services/pub-sub"
-    ],
-    "resources/custom/patient-count/patient-count.js": [
-      "aurelia-framework"
     ],
     "services/container.js": [
       "ramda"

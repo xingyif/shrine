@@ -12,11 +12,9 @@ export function configure(aurelia) {
 
     const customPrefix = 'custom';
     const custom = [
-        'error/error',
         'breakdown/breakdown',
         'node-result/node-result',
-        'node-status/node-status',
-        'patient-count/patient-count'
+        'node-status/node-status'
     ];
     aurelia.globalResources(...custom.map(c => `./${customPrefix}/${c}`));
 }
