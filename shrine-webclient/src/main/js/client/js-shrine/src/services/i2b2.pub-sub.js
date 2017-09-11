@@ -13,7 +13,8 @@ export class I2B2PubSub extends PubSub{
             i2b2Svc.onQuery((e, d) => this.publish(this.notifications.i2b2.queryStarted, d[0].name));
             i2b2Svc.onNetworkId((e, d) => this.publish(this.notifications.i2b2.networkIdReceived, d[0]));
             i2b2Svc.onViewSelected(e => this.publish(this.notifications.i2b2.viewSelected, e.data));
-            i2b2Svc.onExport(() => this.publish(this.notifications.i2b2.exportQuery));          
+            i2b2Svc.onExport(() => this.publish(this.notifications.i2b2.exportQuery)); 
+            i2b2Svc.onClearQuery(() => this.publish(this.notifications.i2b2.clearQuery));         
             this.subscribe(this.commands.i2b2.cloneQuery, d => i2b2Svc.loadQuery(d));
             this.subscribe(this.commands.i2b2.showError, d => i2b2Svc.errorDetail(d));
             this.subscribe(this.commands.i2b2.renameQuery, d => i2b2Svc.renameQuery(d));

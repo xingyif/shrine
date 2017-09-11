@@ -41,6 +41,10 @@ export class QueryStatus extends PubSub {
         this.subscribe(this.notifications.i2b2.exportQuery, () => {
             this.publish(this.commands.shrine.exportResult, { ...{}, ...this.status });
         })
+
+        this.subscribe(this.notifications.i2b2.clearQuery, () => {
+            this.status = initialState();
+        })
         this.subscribe(this.notifications.shrine.queryReceived, data => {
             const query = data.query;
             const nodes = data.nodes;

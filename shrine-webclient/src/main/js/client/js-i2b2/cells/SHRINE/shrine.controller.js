@@ -134,6 +134,7 @@
 		i2b2.events.queryResultAvailable = new YAHOO.util.CustomEvent("queryResultAvailable", i2b2);
 		i2b2.events.queryResultUnavailable = new YAHOO.util.CustomEvent("queryResultUnvailable", i2b2);
 		i2b2.events.exportQueryResult = new YAHOO.util.CustomEvent("exportQueryResult", i2b2);
+		i2b2.events.clearQuery = new YAHOO.util.CustomEvent("clearQuery", i2b2);
 
 		i2b2.events.queryResultAvailable.subscribe(function () {
 			jQuery('#crcStatusBox .TopTabs .opXML #shrineCSVExport')
@@ -155,6 +156,13 @@
 		}
 		i2b2.CRC.view.status.showDisplay = function () {
 		}
+
+		var _doQueryClear = i2b2.CRC.ctrlr.QT.doQueryClear;
+		i2b2.CRC.ctrlr.QT.doQueryClear = function() {
+			_doQueryClear.apply(i2b2.CRC.ctrlr.QT, []);
+			i2b2.events.clearQuery.fire(); 
+		}
+
 	}
 
 	function overrideQueryPanelHTML($) {
@@ -201,7 +209,7 @@
 	}
 
 	function addShrinePanel($) {
-		$('#crcStatusBox .StatusBox').append('<div id="shrinePlugin" class="shrinePluginContent" oncontextmenu="return false"></div>');
+		$('#crcStatusBox .StatusBox').append('<div id="shrinePlugin" class="shrinePluginContent" oncontextmenu="return false" style="padding: 0;"></div>');
 	}
 })();
 
