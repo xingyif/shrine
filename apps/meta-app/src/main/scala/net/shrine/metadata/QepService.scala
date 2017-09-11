@@ -5,13 +5,13 @@ import java.util.UUID
 import akka.actor.ActorSystem
 import net.shrine.audit.{NetworkQueryId, QueryName, Time}
 import net.shrine.authorization.steward.UserName
+import net.shrine.config.ConfigExtensions
 import net.shrine.i2b2.protocol.pm.User
 import net.shrine.log.Loggable
 import net.shrine.problem.{AbstractProblem, ProblemDigest, ProblemSources}
-import net.shrine.protocol.ResultOutputType
+import net.shrine.protocol.{QueryResult, ResultOutputType}
 import net.shrine.qep.querydb.{FullQueryResult, QepQuery, QepQueryBreakdownResultsRow, QepQueryDb, QepQueryDbChangeNotifier, QepQueryFlag}
 import net.shrine.source.ConfigSource
-import net.shrine.config.ConfigExtensions
 import rapture.json._
 import rapture.json.formatters.humanReadable
 import rapture.json.jsonBackends.jawn._
@@ -19,7 +19,7 @@ import spray.http.{StatusCode, StatusCodes}
 import spray.routing._
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.{blocking, Promise}
+import scala.concurrent.Promise
 import scala.concurrent.duration._
 import scala.language.postfixOps
 import scala.util.Try
@@ -183,10 +183,15 @@ if not
       val queryOption: Option[QepQuery] = QepQueryDb.db.selectQueryById(queryId)
       queryOption.map { query: QepQuery =>
         if (user.sameUserAs(query.userName, query.userDomain)) {
+
+          debug(s"Query from the database is $query")
+
           val mostRecentQueryResults: Seq[Result] = QepQueryDb.db.selectMostRecentFullQueryResultsFor(queryId).map(Result(_))
           val flag = QepQueryDb.db.selectMostRecentQepQueryFlagFor(queryId).map(QueryFlag(_))
           val queryCell = QueryCell(query, flag)
           val queryAndResults = ResultsRow(queryCell, mostRecentQueryResults)
+
+          debug(s"queryAndResults is $queryAndResults")
 
           Right(queryAndResults)
         }
@@ -319,7 +324,7 @@ case class Result (
   breakdowns: Seq[BreakdownResultsForType],
   problemDigest:Option[ProblemDigestForJson]
 ) {
-  def isComplete = true //todo until I get to SHRINE-2148
+  def isComplete = QueryResult.StatusType.valueOf(status).get.isCrcCallCompleted
 }
 
 object Result {

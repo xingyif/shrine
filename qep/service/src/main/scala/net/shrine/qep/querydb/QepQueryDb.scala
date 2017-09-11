@@ -163,7 +163,15 @@ case class QepQueryDb(schemaDef:QepQuerySchema,dataSource: DataSource,timeout:Du
     )
   }
 
-//todo only used in tests. Is that OK?
+  def insertQueryResultRow(queryResultRow: QueryResultRow) = {
+    dbRun(allQueryResultRows += queryResultRow)
+  }
+
+  def insertQueryResultRows(queryResultRows: Seq[QueryResultRow]) = {
+    dbRun(allQueryResultRows ++= queryResultRows)
+  }
+
+  //todo only used in tests. Is that OK?
   def selectMostRecentQepResultRowsFor(networkId:NetworkQueryId): Seq[QueryResultRow] = {
     dbRun(mostRecentQueryResultRows.filter(_.networkQueryId === networkId).result)
   }
@@ -543,7 +551,7 @@ object QueryResultRow extends ((Long,NetworkQueryId,Long,String,Option[ResultOut
       resultId = result.resultId,
       networkQueryId = networkQueryId,
       instanceId = result.instanceId,
-      adapterNode = result.description.getOrElse(s"$result has None in its description field, not a name of an adapter node."),
+      adapterNode = result.description.getOrElse(s"$result has None in its description field, instead of the name of an adapter node."),
       resultType = result.resultType,
       size = result.setSize,
       startDate = result.startDate.map(_.toGregorianCalendar.getTimeInMillis),

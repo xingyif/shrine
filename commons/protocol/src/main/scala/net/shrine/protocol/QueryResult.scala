@@ -182,7 +182,9 @@ object QueryResult {
     name: String,
     isDone: Boolean,
     i2b2Id: Option[Int] = Some(-1),
-    private val doToI2b2:(QueryResult => NodeSeq) = StatusType.defaultToI2b2) extends StatusType.Value {
+    private val doToI2b2:(QueryResult => NodeSeq) = StatusType.defaultToI2b2,
+    isCrcCallCompleted:Boolean = true
+    ) extends StatusType.Value {
 
     def isError = this == StatusType.Error
 
@@ -218,6 +220,9 @@ object QueryResult {
     val MediumQueue = StatusType("MEDIUM_QUEUE", isDone = false)
     val LargeQueue = StatusType("LARGE_QUEUE", isDone = false)
     val NoMoreQueue = StatusType("NO_MORE_QUEUE", isDone = false)
+
+    //SHRINE's internal states as reported by the hub
+    val HubWillSubmit = StatusType("HUB_WILL_SUBMIT",isDone = false,isCrcCallCompleted = false)
   }
 
   def extractLong(nodeSeq: NodeSeq)(elemName: String): Long = (nodeSeq \ elemName).text.toLong
