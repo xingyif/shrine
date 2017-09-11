@@ -222,7 +222,7 @@ object QueryResult {
     val NoMoreQueue = StatusType("NO_MORE_QUEUE", isDone = false)
 
     //SHRINE's internal states as reported by the hub
-    val HubWillSubmit = StatusType("HUB_WILL_SUBMIT",isDone = false,isCrcCallCompleted = true)
+    val HubWillSubmit = StatusType("HUB_WILL_SUBMIT",isDone = false,isCrcCallCompleted = false)
   }
 
   def extractLong(nodeSeq: NodeSeq)(elemName: String): Long = (nodeSeq \ elemName).text.toLong

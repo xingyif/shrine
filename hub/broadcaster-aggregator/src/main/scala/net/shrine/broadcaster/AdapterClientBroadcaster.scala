@@ -114,7 +114,6 @@ final case class AdapterClientBroadcaster(destinations: Set[NodeHandle], dao: Hu
   private[broadcaster] def callAdapter(message: BroadcastMessage, nodeHandle: NodeHandle): Future[SingleNodeResult] = {
     val NodeHandle(nodeId, client) = nodeHandle
 
-    // may need to do SHRINE-2177 to make this work
     client.query(message).recover {
       case e: TimeoutException =>
         error(s"Broadcasting to $nodeId timed out")
@@ -123,7 +122,6 @@ final case class AdapterClientBroadcaster(destinations: Set[NodeHandle], dao: Hu
       case NonFatal(e) =>
         error(s"Broadcasting to $nodeId failed with ", e)
         FailureResult(nodeId, e)
-
     }
   }
 
