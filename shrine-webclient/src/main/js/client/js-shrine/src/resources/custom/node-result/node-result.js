@@ -1,8 +1,13 @@
 import {customElement, bindable} from 'aurelia-framework';
+import {PubSub} from 'services/pub-sub';
 @customElement('node-result')
-export class NodeResult{
+export class NodeResult extends PubSub{
     @bindable result;
     @bindable queryName;
+
+    constructor(...rest) {
+        super(...rest);
+    }
 
     attached() {
         const status = this.result.status;
