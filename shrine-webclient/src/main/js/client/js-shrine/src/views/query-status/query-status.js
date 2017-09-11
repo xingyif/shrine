@@ -54,7 +54,7 @@ export class QueryStatus extends PubSub {
             const networkId = data.query.networkId;
             this.status = { ...this.status, ...{ query, nodes, updated } }
             if (!complete) {
-                window.setTimeout(() => this.publish(this.commands.shrine.fetchQuery, {networkId, dataVersion, timeoutSeconds}), 5000);
+                this.publish(this.commands.shrine.fetchQuery, {networkId, dataVersion, timeoutSeconds});
             }
         });
 
