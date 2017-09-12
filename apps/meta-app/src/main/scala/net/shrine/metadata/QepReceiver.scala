@@ -11,11 +11,10 @@ import net.shrine.protocol.{AggregatedRunQueryResponse, QueryResult, ResultOutpu
 import net.shrine.qep.querydb.{QepQueryDb, QueryResultRow}
 import net.shrine.source.ConfigSource
 import net.shrine.status.protocol.IncrementalQueryResult
-import net.shrine.util.Versions
 
 import scala.concurrent.duration.Duration
-import scala.util.{Failure, Success, Try}
 import scala.util.control.NonFatal
+import scala.util.{Failure, Success, Try}
 
 /**
   * Receives messages and writes the result to the QEP's cache
@@ -38,7 +37,7 @@ object QepReceiver {
 
   case class QepReceiverRunner(nodeName:String) extends Runnable {
 
-    val pollDuration = Duration("15 seconds") //todo from config
+    val pollDuration = Duration("15 seconds") //todo from config SHRINE-2198
 
     val breakdownTypes: Set[ResultOutputType] = ConfigSource.config.getOptionConfigured("shrine.breakdownResultOutputTypes", ResultOutputTypes.fromConfig).getOrElse(Set.empty)
 
@@ -62,7 +61,7 @@ object QepReceiver {
     }
 
     def receiveAMessage(queue:Queue): Unit = {
-      val maybeMessage: Try[Option[Message]] = MessageQueueService.service.receive(queue, pollDuration) //todo make pollDuration configurable (and testable)
+      val maybeMessage: Try[Option[Message]] = MessageQueueService.service.receive(queue, pollDuration) //todo make pollDuration configurable (and testable) SHRINE-2198
 
       maybeMessage.transform({m =>
         m.map(interpretAMessage(_,queue)).getOrElse(Success())
@@ -79,22 +78,21 @@ object QepReceiver {
       val unit = ()
       Log.debug(s"Received a message from $queue of $message")
 
-      val contents = message.contents
+      val envelopeJson = message.contents
 
-      Envelope.fromJson(contents).
+      Envelope.fromJson(envelopeJson).
         flatMap{
         case e:Envelope => e.checkVersionExactMatch
         case notE => Failure(new IllegalArgumentException(s"Not an expected message Envelope but a ${notE.getClass}"))
       }.
         flatMap {
-        case Envelope(contentsType, contents, shrineVersion) if contentsType == AggregatedRunQueryResponse.getClass.getSimpleName => {
+        case Envelope(contentsType, contents, shrineVersion) if contentsType == AggregatedRunQueryResponse.getClass.getSimpleName =>
           AggregatedRunQueryResponse.fromXmlString(breakdownTypes)(contents).flatMap{ rqr =>
             QepQueryDb.db.insertQueryResult(rqr.queryId, rqr.results.head)
             Log.debug(s"Inserted result from ${rqr.results.head.description} for query ${rqr.queryId}")
             Success(unit)
           }
-        }
-        case Envelope(contentsType, contents, shrineVersion) if contentsType == IncrementalQueryResult.incrementalQueryResultsEnvelopeContentsType => {
+        case Envelope(contentsType, contents, shrineVersion) if contentsType == IncrementalQueryResult.incrementalQueryResultsEnvelopeContentsType =>
           val changeDate = System.currentTimeMillis()
           IncrementalQueryResult.seqFromJson(contents).flatMap { iqrs: Seq[IncrementalQueryResult] =>
             val rows = iqrs.map(iqr => QueryResultRow(
@@ -115,16 +113,15 @@ object QepReceiver {
             Log.debug(s"Inserted incremental results $iqrs")
             Success(unit)
           }
-        }
         case e:Envelope => Failure(UnexpectedMessageContentsType(e,queue))
-        case _ => Failure(new IllegalArgumentException(s"Received something other than an envelope from this queue: $contents"))
+        case _ => Failure(new IllegalArgumentException(s"Received something other than an envelope from this queue: $envelopeJson"))
         }.transform({ s =>
         message.complete()
         Success(unit)
       },{ x =>
         x match {
-          case NonFatal(nfx) => QepReceiverCouldNotDecodeMessage(contents,queue,x)
-          case x =>  throw x//blow something up
+          case NonFatal(nfx) => QepReceiverCouldNotDecodeMessage(envelopeJson,queue,x)
+          case throwable =>  throw throwable//blow something up
         }
         message.complete() //complete anyway. Can't be interpreted, so we don't want to see it again
         Failure(x)
