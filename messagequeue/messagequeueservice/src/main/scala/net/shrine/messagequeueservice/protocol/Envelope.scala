@@ -4,7 +4,7 @@ import net.shrine.util.Versions
 import org.json4s.ShortTypeHints
 import org.json4s.native.Serialization
 
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 import org.json4s.native.Serialization
 
 /**
@@ -28,7 +28,14 @@ case class Envelope(
     Serialization.write(this)(Envelope.envelopeFormats)
   }
 
+  val unit = ()
+  def checkVersionExactMatch: Try[Envelope] = {
+    if(shrineVersion == Versions.version) Success(this)
+    else Failure(VersionMismatchException(shrineVersion))
+  }
 }
+
+case class VersionMismatchException(badVersion:String) extends Exception(s"Cannot use an Envelope with version $badVersion in ${Versions.version}")
 
 object Envelope {
   val envelopeFormats = Serialization.formats(ShortTypeHints(List(classOf[Envelope])))

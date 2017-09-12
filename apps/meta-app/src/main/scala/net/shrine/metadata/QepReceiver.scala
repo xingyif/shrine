@@ -81,11 +81,12 @@ object QepReceiver {
 
       val contents = message.contents
 
-      Envelope.fromJson(contents).flatMap{
-        case e:Envelope if e.shrineVersion == Versions.version => Success(e)
-        case e:Envelope => Failure(new IllegalArgumentException(s"Envelope version is not ${Versions.version}")) //todo better exception
-        case notE => Failure(new IllegalArgumentException(s"Not an expected message Envelope but a ${notE.getClass}")) //todo better exception
-      }.flatMap {
+      Envelope.fromJson(contents).
+        flatMap{
+        case e:Envelope => e.checkVersionExactMatch
+        case notE => Failure(new IllegalArgumentException(s"Not an expected message Envelope but a ${notE.getClass}"))
+      }.
+        flatMap {
         case Envelope(contentsType, contents, shrineVersion) if contentsType == AggregatedRunQueryResponse.getClass.getSimpleName => {
           AggregatedRunQueryResponse.fromXmlString(breakdownTypes)(contents).flatMap{ rqr =>
             QepQueryDb.db.insertQueryResult(rqr.queryId, rqr.results.head)
@@ -115,8 +116,9 @@ object QepReceiver {
             Success(unit)
           }
         }
-        case _ => Failure(new IllegalArgumentException(s"Not an expected type of message from this queue: $contents")) //todo better exception
-      }.transform({ s =>
+        case e:Envelope => Failure(UnexpectedMessageContentsType(e,queue))
+        case _ => Failure(new IllegalArgumentException(s"Received something other than an envelope from this queue: $contents"))
+        }.transform({ s =>
         message.complete()
         Success(unit)
       },{ x =>
@@ -153,6 +155,8 @@ object QepReceiver {
     }
   }
 }
+
+case class UnexpectedMessageContentsType(envelope: Envelope,queue: Queue) extends Exception(s"Could not interpret message with contents type of ${envelope.contentsType} from queue ${queue.name} from shrine version ${envelope.shrineVersion}")
 
 case class ExceptionWhileReceivingMessage(queue:Queue, x:Throwable) extends AbstractProblem(ProblemSources.Qep) {
 
