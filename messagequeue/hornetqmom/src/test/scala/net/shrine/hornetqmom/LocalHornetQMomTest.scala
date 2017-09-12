@@ -1,6 +1,6 @@
 package net.shrine.hornetqmom
 
-import net.shrine.messagequeueservice.Queue
+import net.shrine.messagequeueservice.{Message, Queue}
 import org.junit.runner.RunWith
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.junit.JUnitRunner
@@ -30,15 +30,15 @@ class LocalHornetQMomTest extends FlatSpec with BeforeAndAfterAll with ScalaFutu
     val sendTry = LocalHornetQMom.send(testContents, queue)
     assert(sendTry.isSuccess)
 
-    val message: Option[LocalHornetQMom.LocalHornetQMessage] = LocalHornetQMom.receive(queue,1 second).get
+    val message: Option[Message] = LocalHornetQMom.receive(queue,1 second).get
 
     assert(message.isDefined)
-    assert(message.get.getContents == testContents)
+    assert(message.get.contents == testContents)
 
     val completeTry: Try[Unit] = message.get.complete()
     assert(completeTry.isSuccess)
 
-    val shouldBeNoMessage: Option[LocalHornetQMom.LocalHornetQMessage] = LocalHornetQMom.receive(queue,1 second).get
+    val shouldBeNoMessage: Option[Message] = LocalHornetQMom.receive(queue,1 second).get
 
     assert(shouldBeNoMessage.isEmpty)
 
@@ -61,15 +61,15 @@ class LocalHornetQMomTest extends FlatSpec with BeforeAndAfterAll with ScalaFutu
     val sendTry = LocalHornetQMom.send(testContents1,queue)
     assert(sendTry.isSuccess)
 
-    val message1: Option[LocalHornetQMom.LocalHornetQMessage] = LocalHornetQMom.receive(queue,1 second).get
+    val message1: Option[Message] = LocalHornetQMom.receive(queue,1 second).get
 
     assert(message1.isDefined)
-    assert(message1.get.getContents == testContents1)
+    assert(message1.get.contents == testContents1)
 
     val completeTry = message1.get.complete()
     assert(completeTry.isSuccess)
 
-    val shouldBeNoMessage1: Option[LocalHornetQMom.LocalHornetQMessage] = LocalHornetQMom.receive(queue,1 second).get
+    val shouldBeNoMessage1: Option[Message] = LocalHornetQMom.receive(queue,1 second).get
 
     assert(shouldBeNoMessage1.isEmpty)
 
@@ -81,23 +81,23 @@ class LocalHornetQMomTest extends FlatSpec with BeforeAndAfterAll with ScalaFutu
     val sendTry3 = LocalHornetQMom.send(testContents3,queue)
     assert(sendTry3.isSuccess)
 
-    val message2: Option[LocalHornetQMom.LocalHornetQMessage] = LocalHornetQMom.receive(queue,1 second).get
+    val message2: Option[Message] = LocalHornetQMom.receive(queue,1 second).get
 
     assert(message2.isDefined)
-    assert(message2.get.getContents == testContents2)
+    assert(message2.get.contents == testContents2)
 
     val completeTry2 = message2.get.complete()
     assert(completeTry2.isSuccess)
 
-    val message3: Option[LocalHornetQMom.LocalHornetQMessage] = LocalHornetQMom.receive(queue,1 second).get
+    val message3: Option[Message] = LocalHornetQMom.receive(queue,1 second).get
 
     assert(message3.isDefined)
-    assert(message3.get.getContents == testContents3)
+    assert(message3.get.contents == testContents3)
 
     val completeTry3 = message3.get.complete()
     assert(completeTry3.isSuccess)
 
-    val shouldBeNoMessage4: Option[LocalHornetQMom.LocalHornetQMessage] = LocalHornetQMom.receive(queue,1 second).get
+    val shouldBeNoMessage4: Option[Message] = LocalHornetQMom.receive(queue,1 second).get
 
     assert(shouldBeNoMessage4.isEmpty)
 

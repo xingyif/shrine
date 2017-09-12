@@ -174,9 +174,9 @@ object LocalHornetQMom extends MessageQueueService {
 
   //todo dead letter queue for all messages. See http://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/examples-sqs-dead-letter-queues.html
 
-  case class LocalHornetQMessage private(contents: String, clientMessage: ClientMessage) extends Message {
+  case class LocalHornetQMessage private(messageContent: String, clientMessage: ClientMessage) extends Message {
 
-    override def getContents: String = contents
+    override def contents: String = messageContent
 
     //complete a message
     override def complete(): Try[Unit] = {

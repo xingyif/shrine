@@ -4,11 +4,15 @@ import java.util.UUID
 
 import akka.actor.ActorSystem
 <<<<<<< HEAD
+<<<<<<< HEAD
 import net.shrine.config.ConfigExtensions
 import net.shrine.hornetqmom.{MessageSerializer, QueueSerializer}
 =======
 import net.shrine.hornetqmom.{MessageContainer, QueueSerializer}
 >>>>>>> fixed conflicts
+=======
+import net.shrine.hornetqmom.MessageContainer
+>>>>>>> implemented Dave's review comments
 import net.shrine.log.Loggable
 import net.shrine.messagequeueservice.{Message, MessageQueueService, Queue}
 import net.shrine.source.ConfigSource
@@ -86,7 +90,7 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
   def queueFromResponse(response: HttpResponse):Try[Queue] = Try {
     if(response.status == StatusCodes.Created) {
       val queueString = response.entity.asString
-      implicit val formats = Serialization.formats(NoTypeHints) + QueueSerializer
+      implicit val formats = Serialization.formats(NoTypeHints)
       read[Queue](queueString)(formats, manifest[Queue])
     } else {
       if((response.status == StatusCodes.NotFound) ||
@@ -118,7 +122,7 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
       response: HttpResponse <- Try(HttpClient.webApiCall(request, webClientTimeOutSecond))
       allQueues: Seq[Queue] <- Try {
         val allQueues: String = response.entity.asString
-        implicit val formats = Serialization.formats(NoTypeHints) +  QueueSerializer
+        implicit val formats = Serialization.formats(NoTypeHints)
         read[Seq[Queue]](allQueues)(formats, manifest[Seq[Queue]])
       }
     } yield allQueues
@@ -170,23 +174,20 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
     Failure(throwable)
   })
 
-  case class HornetQClientMessage private(messageID: UUID, contents: String) extends Message {
-
-  override def completeMessage(messageID: UUID): Try[Unit] = {
-    val entity: HttpEntity = HttpEntity(messageID.toString)
-    val completeMessageUrl: String = momUrl + s"/acknowledge" // HttpEntity
-    val request: HttpRequest = HttpRequest(HttpMethods.PUT, completeMessageUrl).withEntity(entity)
-    for {
-      response: HttpResponse <- Try(HttpClient.webApiCall(request, webClientTimeOutSecond))
-    } yield response
-    override def getContents: String = contents
+  case class HornetQClientMessage private(messageID: UUID, messageContent: String) extends Message {
 
     override def complete(): Try[Unit] = {
       val entity: HttpEntity = HttpEntity(messageID.toString)
-      val completeMessageUrl: String = momUrl + s"/acknowledge"
+      val completeMessageUrl: String = s"$momUrl/acknowledge"
       val request: HttpRequest = HttpRequest(HttpMethods.PUT, completeMessageUrl).withEntity(entity)
       for {
-        response: HttpResponse <- Try(HttpClient.webApiCall(request))
+        response: HttpResponse <- Try(HttpClient.webApiCall(request)).transform({r =>
+          info(s"Message ${this.messageID} completed with ${r.status}")
+          Success(r)
+        }, { throwable =>
+          debug(s"Message ${this.messageID} failed in its complete process due to ${throwable.getMessage}")
+          Failure(throwable)
+        })
       } yield response
     }
   }

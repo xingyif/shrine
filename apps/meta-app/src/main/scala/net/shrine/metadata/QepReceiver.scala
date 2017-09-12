@@ -5,7 +5,7 @@ import javax.servlet.{ServletContextEvent, ServletContextListener}
 
 import com.typesafe.config.Config
 import net.shrine.config.ConfigExtensions
-import net.shrine.hornetqclient.{CouldNotCreateQueueButOKToRetryException, HornetQMomWebClient}
+import net.shrine.hornetqclient.CouldNotCreateQueueButOKToRetryException
 import net.shrine.log.Log
 import net.shrine.messagequeueservice.protocol.Envelope
 import net.shrine.messagequeueservice.{Message, MessageQueueService, Queue}
@@ -96,7 +96,7 @@ object QepReceiver {
       val unit = ()
       Log.debug(s"Received a message from $queue of $message")
 
-      val envelopeJson = message.getContents
+      val envelopeJson = message.contents
 
       Envelope.fromJson(envelopeJson).
         flatMap{

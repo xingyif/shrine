@@ -35,7 +35,7 @@ class HornetQMomWebApiTest extends FlatSpec with ScalatestRouteTest with HornetQ
 
       Put(s"/mom/createQueue/$queueName") ~> momRoute ~> check {
         val response = new String(body.data.toByteArray)
-        implicit val formats = Serialization.formats(NoTypeHints) + QueueSerializer
+        implicit val formats = Serialization.formats(NoTypeHints)
         val jsonToQueue = read[Queue](response)(formats, manifest[Queue])
         val responseQueueName = jsonToQueue.name
         assertResult(Created)(status)
@@ -45,7 +45,7 @@ class HornetQMomWebApiTest extends FlatSpec with ScalatestRouteTest with HornetQ
       // should be OK to create a queue twice
       Put(s"/mom/createQueue/$queueName") ~> momRoute ~> check {
         val response = new String(body.data.toByteArray)
-        implicit val formats = Serialization.formats(NoTypeHints) + QueueSerializer
+        implicit val formats = Serialization.formats(NoTypeHints)
         val jsonToQueue = read[Queue](response)(formats, manifest[Queue])
         val responseQueueName = jsonToQueue.name
         assertResult(Created)(status)
@@ -58,7 +58,7 @@ class HornetQMomWebApiTest extends FlatSpec with ScalatestRouteTest with HornetQ
 
       Get(s"/mom/getQueues") ~> momRoute ~> check {
         val response: String = new String(body.data.toByteArray)
-        implicit val formats = Serialization.formats(NoTypeHints) + QueueSerializer
+        implicit val formats = Serialization.formats(NoTypeHints)
         val jsonToSeq: Seq[Queue] = read[Seq[Queue]](response)(formats, manifest[Seq[Queue]])
 
         assertResult(OK)(status)
@@ -77,6 +77,13 @@ class HornetQMomWebApiTest extends FlatSpec with ScalatestRouteTest with HornetQ
 
       Put("/mom/acknowledge", HttpEntity(s"$messageUUID")) ~> momRoute ~> check {
         assertResult(ResetContent)(status)
+      }
+
+      val nonExistingUUID = "f31af7b5-6c3a-4309-942a-f4f4b6644442"
+      Put("/mom/acknowledge", HttpEntity(s"$nonExistingUUID")) ~> momRoute ~> check {
+        val response = new String(body.data.toByteArray)
+        assertResult(NotFound)(status)
+        assertResult(MessageDoesNotExistException(nonExistingUUID).getMessage)(response)
       }
 
       Put(s"/mom/deleteQueue/$queueName") ~> momRoute ~> check {

@@ -6,10 +6,9 @@ import net.shrine.log.Loggable
 import net.shrine.messagequeueservice.Queue
 import net.shrine.problem.{AbstractProblem, ProblemSources}
 import net.shrine.source.ConfigSource
-import org.json4s.JsonAST.{JField, JObject}
 import org.json4s.native.Serialization
 import org.json4s.native.Serialization.write
-import org.json4s.{CustomSerializer, JString, NoTypeHints, ShortTypeHints}
+import org.json4s.{NoTypeHints, ShortTypeHints}
 import spray.http.StatusCodes
 import spray.routing.{HttpService, Route}
 
@@ -59,7 +58,7 @@ trait HornetQMomWebApi extends HttpService
         val createdQueueTry: Try[Queue] = LocalHornetQMom.createQueueIfAbsent(queueName)
         createdQueueTry match {
           case Success(queue) => {
-            implicit val formats = Serialization.formats(NoTypeHints) + QueueSerializer
+            implicit val formats = Serialization.formats(NoTypeHints)
             val response: String = write[Queue](queue)(formats)
             respondWithStatus(StatusCodes.Created) {
               complete(response)
@@ -125,7 +124,7 @@ trait HornetQMomWebApi extends HttpService
                   // add message in the map with an unique UUID
                   val msgID = UUID.randomUUID()
                   idToMessages.getOrElseUpdate(msgID, localHornetQMessage)
-                  complete(MessageContainer(msgID.toString, localHornetQMessage.getContents).toJson)
+                  complete(MessageContainer(msgID.toString, localHornetQMessage.contents).toJson)
                 }
               }
               case Failure(x) => {
@@ -143,18 +142,26 @@ trait HornetQMomWebApi extends HttpService
       detach() {
         val id: UUID = UUID.fromString(messageUUID)
         // retrieve the localMessage from the concurrent hashmap
-        Try {
-          if (!idToMessages.contains(id)) {
-            throw new NoSuchElementException(s"Cannot match given $id to any Message in HornetQ server! Message does not exist!")
-          }
-        }
-        val acknowledgeTry: Try[Unit] = idToMessages(id).complete()
-        acknowledgeTry match {
-          case Success(v) => {
+        val getMessageTry: Try[LocalHornetQMom.LocalHornetQMessage] = Try {
+          idToMessages(id)
+        }.transform({ message =>
+          Success(message)
+        }, { throwable =>
+          Failure(MessageDoesNotExistException(messageUUID))
+        })
+
+        getMessageTry match {
+          case Success(message) => {
+            message.complete()
             complete(StatusCodes.ResetContent)
           }
           case Failure(x) => {
-            internalServerErrorOccured(x, "acknowledge")
+            x match {
+              case m: MessageDoesNotExistException => {
+                respondWithStatus(StatusCodes.NotFound){ complete(m.getMessage) }
+              }
+              case _ => internalServerErrorOccured(x, "acknowledge")
+            }
           }
         }
       }
@@ -165,7 +172,7 @@ trait HornetQMomWebApi extends HttpService
   def getQueues: Route = path("getQueues") {
     get {
       detach() {
-        implicit val formats = Serialization.formats(NoTypeHints) + QueueSerializer
+        implicit val formats = Serialization.formats(NoTypeHints)
         respondWithStatus(StatusCodes.OK) {
           val getQueuesTry: Try[Seq[Queue]] = LocalHornetQMom.queues
           getQueuesTry match {
@@ -192,15 +199,6 @@ trait HornetQMomWebApi extends HttpService
 
 }
 
-object QueueSerializer extends CustomSerializer[Queue](format => (
-  {
-    case JObject(JField("name", JString(s)) :: Nil) => Queue(s)
-  },
-  {
-    case queue: Queue =>
-      JObject(JField("name", JString(queue.name)) :: Nil)
-  }
-))
 
 case class MessageContainer(id: String, contents: String) {
   def toJson: String = {
@@ -234,3 +232,5 @@ case class CannotUseHornetQMomWebApiProblem(x:Throwable) extends AbstractProblem
                               "set shrine.messagequeue.hornetQWebApi.enabled to true in your shrine.conf." +
                               " You do not want to do this unless you are the hub admin!"
 }
+
+case class MessageDoesNotExistException(id: String) extends Exception(s"Cannot match given $id to any Message in HornetQ server! Message does not exist!")

@@ -1,7 +1,6 @@
 package net.shrine.hornetqmom
 
 import akka.actor.ActorRefFactory
-import net.shrine.source.ConfigSource
 import org.junit.runner.RunWith
 import org.scalatest.FlatSpec
 import org.scalatest.junit.JUnitRunner
@@ -19,9 +18,6 @@ class HornetQMomWebApiConfigTest extends FlatSpec with ScalatestRouteTest with H
   override def actorRefFactory: ActorRefFactory = system
 
   private val queueName = "testQueue"
-
-
-  override val enabled: Boolean = ConfigSource.config.getBoolean("shrine.messagequeue.hornetQWebApiTest.enabled")
 
   "HornetQMomWebApi" should "block user from using the API and return a 404 response" in {
 

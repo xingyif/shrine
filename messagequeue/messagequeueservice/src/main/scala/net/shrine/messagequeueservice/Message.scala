@@ -12,7 +12,7 @@ import scala.util.Try
 trait Message extends DefaultJsonSupport {
   override implicit def json4sFormats: Formats = DefaultFormats
   def complete(): Try[Unit]
-  def getContents: String
+  def contents: String
 }
 
 object Message {
