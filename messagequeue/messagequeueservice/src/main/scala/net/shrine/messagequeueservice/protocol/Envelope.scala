@@ -28,7 +28,6 @@ case class Envelope(
     Serialization.write(this)(Envelope.envelopeFormats)
   }
 
-  val unit = ()
   def checkVersionExactMatch: Try[Envelope] = {
     if(shrineVersion == Versions.version) Success(this)
     else Failure(VersionMismatchException(shrineVersion))
