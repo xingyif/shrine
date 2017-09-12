@@ -84,7 +84,7 @@ System.register(['./pub-sub', './i2b2.service'], function (_export, _context) {
                             return i2b2Svc.loadQuery(d);
                         });
                         _this.subscribe(_this.commands.i2b2.showError, function (d) {
-                            return i2b2Svc.errorDetail(d);
+                            i2b2Svc.errorDetail(d);
                         });
                         _this.subscribe(_this.commands.i2b2.renameQuery, function (d) {
                             return i2b2Svc.renameQuery(d);

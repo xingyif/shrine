@@ -86,6 +86,7 @@
     function errorDetail(data) {
 
         var j$ = jQuery;
+        j$('#pluginErrorDetail').remove();
 
         j$('body').append(j$(getDialogHTML(data)))
 
@@ -97,7 +98,9 @@
             zindex: 700,
             buttons: [{
                 text: "Done",
-                handler: function() {this.cancel();},
+                handler: function() {
+                    this.cancel();
+                },
                 isDefault: true
             }]
         });

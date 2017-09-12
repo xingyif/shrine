@@ -73,7 +73,7 @@ System.register(['ramda', './container'], function (_export, _context) {
                 };
                 I2B2Service.prototype.errorDetail = function (d) {
                     return shrine(ctx).map(function (v) {
-                        return v.plugin.errorDetail(d);
+                        v.plugin.errorDetail(d);
                     });
                 };
                 I2B2Service.prototype.renameQuery = function (id) {

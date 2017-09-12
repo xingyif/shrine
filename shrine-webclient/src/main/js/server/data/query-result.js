@@ -22,6 +22,27 @@ module.exports = {
             }
         },
         {
+            "count": 0,
+            "networkQueryId": 2421519216383772200,
+            "statusMessage": "No results available",
+            statusDescription: undefined,
+            "changeDate": 1501001608958,
+            "instanceId": 0,
+            "resultId": 0,
+            "status": "ERROR",
+            "adapterNode": "shrine-dev2",
+            "breakdowns": [
+            ],
+            "problemDigest": {
+                "codec":"net.shrine.adapter.QueryNotFound",
+                "description":"No query with id 8252740983617941467 found on shrine-dev2.catalyst",
+                 "detailsString":"line1,lin2,line3",
+                "epoch":0,
+                "stampText":"Wed Sep 06 12:45:32 EDT 2017 on shrine-dev2.catalyst Adapter",
+                "summary":"Query not found"
+            }
+        },
+        {
             "count": 1795,
             "networkQueryId": 2421519216383772200,
             "statusMessage": "FINISHED",
@@ -38,7 +59,7 @@ module.exports = {
                     "displayType": "CATNUM"
                 }
             },
-            "adapterNode": "shrine-dev2",
+            "adapterNode": "shrine-dev3",
             "breakdowns": [
                 {
                     resultType: {

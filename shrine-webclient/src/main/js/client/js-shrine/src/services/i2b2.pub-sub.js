@@ -16,7 +16,9 @@ export class I2B2PubSub extends PubSub{
             i2b2Svc.onExport(() => this.publish(this.notifications.i2b2.exportQuery)); 
             i2b2Svc.onClearQuery(() => this.publish(this.notifications.i2b2.clearQuery));         
             this.subscribe(this.commands.i2b2.cloneQuery, d => i2b2Svc.loadQuery(d));
-            this.subscribe(this.commands.i2b2.showError, d => i2b2Svc.errorDetail(d));
+            this.subscribe(this.commands.i2b2.showError, d => {
+                i2b2Svc.errorDetail(d)
+            });
             this.subscribe(this.commands.i2b2.renameQuery, d => i2b2Svc.renameQuery(d));
             this.subscribe(this.commands.i2b2.flagQuery, d => i2b2Svc.flagQuery(d));
             this.subscribe(this.commands.i2b2.unflagQuery, d => i2b2Svc.unflagQuery(d));
