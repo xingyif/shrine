@@ -618,6 +618,7 @@ System.config({
       "resources/converters/datetime.value.converter.js",
       "resources/converters/result-style.converter.js",
       "resources/converters/result-value.converter.js",
+      "resources/converters/truncate.converter.js",
       "resources/custom/breakdown/breakdown.html!github:systemjs/plugin-text@0.0.8.js",
       "resources/custom/breakdown/breakdown.js",
       "resources/custom/node-result/error.html!github:systemjs/plugin-text@0.0.8.js",

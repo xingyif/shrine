@@ -6,7 +6,8 @@ export function configure(aurelia) {
         'count-value-converter',
         'datetime.value.converter',
         'result-style.converter',
-        'result-value.converter'
+        'result-value.converter',
+        'truncate.converter'
     ];
     aurelia.globalResources(...converters.map(c => `./${converterPrefix}/${c}`));
 

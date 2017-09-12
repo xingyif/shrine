@@ -1,7 +1,8 @@
 <template>
     <div style="height: 100%; overflow: auto" class="query-status">
         <div style="display: flex" if.one-way="status.query.queryName">
-            <div style="flex:1">Status of Query ${status.query.queryName} at Each Institution:</div>
+            <div style="flex:1">Status of Query ${status.query.queryName | truncate}
+                <span if.one-way="status.nodes.length"><br/>at Each Institution:</span></div>
             <div style="flex:1" if.one-way="status.nodes.length">Last Updated on: ${status.updated | dateTime}</div>
             <div style="flex:1" if.one-way="!status.nodes.length">Waiting on response from network...</div>
         </div>

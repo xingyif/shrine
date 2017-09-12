@@ -4,7 +4,7 @@ System.register([], function (_export, _context) {
     function configure(aurelia) {
 
         var converterPrefix = 'converters';
-        var converters = ['box-style.converter', 'count-value-converter', 'datetime.value.converter', 'result-style.converter', 'result-value.converter'];
+        var converters = ['box-style.converter', 'count-value-converter', 'datetime.value.converter', 'result-style.converter', 'result-value.converter', 'truncate.converter'];
         aurelia.globalResources.apply(aurelia, converters.map(function (c) {
             return './' + converterPrefix + '/' + c;
         }));
