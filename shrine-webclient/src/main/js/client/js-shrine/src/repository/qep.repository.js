@@ -34,25 +34,25 @@ export class QEPRepository {
     }
 
     fetchPreviousQueries(limit, skip = 0) {
-        return this.http.fetch(`qep/queryResults?limit=${limit}&skip=${skip}`)
+        return this.http.fetch(`qep/queryResults?limit=${limit}&skip=${skip}`, {method: 'get'})
             .then(response => response.json())
             .catch(error => error);
     }
 
     fetchNetworkId(queryName) {
-        return this.http.fetch(`qep/networkId?queryName='${queryName}'`)
+        return this.http.fetch(`qep/networkId?queryName='${queryName}'`, {method: 'get'})
             .then(response => response.json())
             .catch(error => error);
     }
 
     fetchQuery(networkId, timeoutSeconds, afterVersion) {//
-        return this.http.fetch(`qep/queryResult/${networkId}?timeoutSeconds=${timeoutSeconds}&afterVersion=${afterVersion}`)
+        return this.http.fetch(`qep/queryResult/${networkId}?timeoutSeconds=${timeoutSeconds}&afterVersion=${afterVersion}`, {method: 'get'})
             .then(response => response.json())
             .catch(error => error);
     }
 
     fetchStewardEmail() {
-        return this.http.fetch('data?key=stewardEmail')
+        return this.http.fetch('data?key=stewardEmail', {method: 'get'})
             .then(response => response.json())
             .then(address => {
                 return (address.indexOf('\"') > 0) ?

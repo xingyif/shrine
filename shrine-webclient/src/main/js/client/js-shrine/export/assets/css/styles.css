@@ -1,3 +1,6 @@
+.query-status {
+  font-family: arial,helvetica; }
+
 .mailto {
   box-sizing: border-box;
   display: flex;
@@ -38,9 +41,6 @@
     text-align: center; }
   .mailto .email {
     position: relative; }
-
-.query-status {
-  font-family: arial,helvetica; }
 
 
 /*{
