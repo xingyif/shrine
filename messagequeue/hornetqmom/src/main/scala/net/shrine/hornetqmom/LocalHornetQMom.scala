@@ -1,7 +1,5 @@
 package net.shrine.hornetqmom
 
-import java.util.UUID
-
 import com.typesafe.config.Config
 import net.shrine.log.Log
 import net.shrine.messagequeueservice.{Message, MessageQueueService, NoSuchQueueExistsInHornetQ, Queue}
@@ -54,9 +52,6 @@ object LocalHornetQMom extends MessageQueueService {
 
   //keep a map of live queues to ClientConsumers to provide a path for completing messages
   val queuesToConsumers: ConcurrentMap[Queue, ClientConsumer] = TrieMap.empty
-
-  // keep a map of messages and ids
-  val idToMessages: ConcurrentMap[UUID, Option[ClientMessage]] = TrieMap.empty
 
   /**
     * Use HornetQMomStopper to stop the hornetQServer without unintentially starting it
@@ -146,7 +141,7 @@ object LocalHornetQMom extends MessageQueueService {
     *
     * @return Some message before the timeout, or None
     */
-  def receive(from: Queue, timeout: Duration): Try[Option[Message]] = {
+  def receive(from: Queue, timeout: Duration): Try[Option[LocalHornetQMessage]] = {
     for {
     //todo handle the case where either stop or close has been called on something gracefully
       messageConsumer: ClientConsumer <- Try {
@@ -156,13 +151,11 @@ object LocalHornetQMom extends MessageQueueService {
         queuesToConsumers(from)
       }
 
-      message: Option[Message] <- Try {
+      message: Option[LocalHornetQMessage] <- Try {
         blocking {
           val messageReceived: Option[ClientMessage] = Option(messageConsumer.receive(timeout.toMillis))
           messageReceived.foreach(m => Log.debug(s"Received $m from $from in HornetQ"))
-          val msgID = UUID.randomUUID()
-          idToMessages.getOrElseUpdate(msgID, messageReceived)
-          messageReceived.map(clientMsg => Message(msgID, clientMsg.getStringProperty(Message.contentsKey)))
+          messageReceived.map(clientMsg => LocalHornetQMessage(clientMsg.getStringProperty(Message.contentsKey), clientMsg))
         }
       }
     } yield message
@@ -181,18 +174,17 @@ object LocalHornetQMom extends MessageQueueService {
 
   //todo dead letter queue for all messages. See http://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/examples-sqs-dead-letter-queues.html
 
-  //complete a message
-  override def completeMessage(messageID: UUID): Try[Unit] = {
-    for {
-      completeMessageTry <- Try {
-        if (!idToMessages.contains(messageID)) {
-          throw new NoSuchElementException(s"Cannot match given $messageID to any Message in HornetQ server! Message does not exist!")
-        }
-       idToMessages(messageID).foreach(clientMessage => clientMessage.acknowledge())
-      }
-    } yield completeMessageTry
-  }
+  case class LocalHornetQMessage private(contents: String, clientMessage: ClientMessage) extends Message {
 
+    override def getContents: String = contents
+
+    //complete a message
+    override def complete(): Try[Unit] = {
+      for {
+        completeClientMessage: Unit <- Try { clientMessage.acknowledge() }
+      } yield completeClientMessage
+    }
+  }
 }
 
 /**

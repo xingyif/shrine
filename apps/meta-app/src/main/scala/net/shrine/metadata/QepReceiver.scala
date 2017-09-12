@@ -96,7 +96,7 @@ object QepReceiver {
       val unit = ()
       Log.debug(s"Received a message from $queue of $message")
 
-      val envelopeJson = message.contents
+      val envelopeJson = message.getContents
 
       Envelope.fromJson(envelopeJson).
         flatMap{

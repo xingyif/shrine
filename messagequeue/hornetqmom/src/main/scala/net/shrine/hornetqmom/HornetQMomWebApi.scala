@@ -6,13 +6,16 @@ import net.shrine.log.Loggable
 import net.shrine.messagequeueservice.{Message, Queue}
 import net.shrine.problem.{AbstractProblem, ProblemSources}
 import net.shrine.source.ConfigSource
+import net.shrine.spray.DefaultJsonSupport
+import org.hornetq.api.core.client.ClientMessage
 import org.json4s.JsonAST.{JField, JObject}
 import org.json4s.native.Serialization
 import org.json4s.native.Serialization.{read, write}
-import org.json4s.{CustomSerializer, Formats, JString, NoTypeHints}
+import org.json4s.{CustomSerializer, Formats, JString, NoTypeHints, ShortTypeHints}
 import spray.http.StatusCodes
 import spray.routing.{HttpService, Route}
 
+import scala.collection.concurrent.TrieMap
 import scala.collection.immutable.Seq
 import scala.concurrent.duration.Duration
 import scala.util.{Failure, Success, Try}
@@ -30,6 +33,9 @@ trait HornetQMomWebApi extends HttpService
   val warningMessage: String = "If you intend for this node to serve as this SHRINE network's messaging hub " +
                         "set shrine.messagequeue.hornetQWebApi.enabled to true in your shrine.conf." +
                         " You do not want to do this unless you are the hub admin!"
+
+  // keep a map of messages and ids
+  private val idToMessages: TrieMap[UUID, LocalHornetQMom.LocalHornetQMessage] = TrieMap.empty
 
   def momRoute: Route = pathPrefix("mom") {
 
@@ -114,13 +120,14 @@ trait HornetQMomWebApi extends HttpService
         parameter('timeOutSeconds ? 20) { timeOutSeconds =>
           val timeout: Duration = Duration.create(timeOutSeconds, "seconds")
           detach() {
-            val receiveTry: Try[Option[Message]] = LocalHornetQMom.receive(Queue(fromQueue), timeout)
+            val receiveTry: Try[Option[LocalHornetQMom.LocalHornetQMessage]] = LocalHornetQMom.receive(Queue(fromQueue), timeout)
             receiveTry match {
-              case Success(optMessage) => {
-                optMessage.fold(complete(StatusCodes.NotFound)){msg =>
-                  implicit val formats = Serialization.formats(NoTypeHints) + MessageSerializer
-                  val messageJson = write(msg)
-                  complete(messageJson)
+              case Success(optionMessage) => {
+                optionMessage.fold(complete(StatusCodes.NotFound)){localHornetQMessage =>
+                  // add message in the map with an unique UUID
+                  val msgID = UUID.randomUUID()
+                  idToMessages.getOrElseUpdate(msgID, localHornetQMessage)
+                  complete(MessageContainer(msgID.toString, localHornetQMessage.getContents).toJson)
                 }
               }
               case Failure(x) => {
@@ -135,11 +142,15 @@ trait HornetQMomWebApi extends HttpService
   // SQS has DeleteMessageResult deleteMessage(String queueUrl, String receiptHandle)
   def acknowledge: Route = path("acknowledge") {
     entity(as[String]) { messageUUID =>
-      implicit val formats: Formats = Serialization.formats(NoTypeHints) + MessageSerializer
       detach() {
-        val msg: Message = read[Message](messageUUID)(formats, manifest[Message])
-        val id: UUID = msg.messageUUID
-        val acknowledgeTry: Try[Unit] = LocalHornetQMom.completeMessage(id)
+        val id: UUID = UUID.fromString(messageUUID)
+        // retrieve the localMessage from the concurrent hashmap
+        Try {
+          if (!idToMessages.contains(id)) {
+            throw new NoSuchElementException(s"Cannot match given $id to any Message in HornetQ server! Message does not exist!")
+          }
+        }
+        val acknowledgeTry: Try[Unit] = idToMessages(id).complete()
         acknowledgeTry match {
           case Success(v) => {
             complete(StatusCodes.ResetContent)
@@ -193,29 +204,21 @@ object QueueSerializer extends CustomSerializer[Queue](format => (
   }
 ))
 
-object MessageSerializer extends CustomSerializer[Message](format => ( {
-  case JObject(
-  JField("hornetQClientMessage",
-  JObject(
-  JField("uuid", JString(messageUUID)) ::
-    JField(Message.contentsKey, JString(contents))
-    :: Nil))
-    :: Nil) => {
-    val id: UUID = UUID.fromString(messageUUID)
-    val message: Message = Message(id, contents)
-    message
+case class MessageContainer(id: String, contents: String) {
+  def toJson: String = {
+    Serialization.write(this)(MessageContainer.messageFormats)
   }
-}, {
-  case msg: Message =>
-    JObject(
-      JField("hornetQClientMessage",
-      JObject(
-        JField("uuid", JString(msg.messageUUID.toString)) ::
-          JField(Message.contentsKey, JString(msg.contents))
-          :: Nil))
-      :: Nil)
 }
-))
+
+object MessageContainer {
+  val messageFormats = Serialization.formats(ShortTypeHints(List(classOf[MessageContainer])))
+
+  def fromJson(jsonString: String): MessageContainer = {
+    implicit val formats = messageFormats
+    Serialization.read[MessageContainer](jsonString)
+  }
+}
+
 
 case class HornetQMomServerErrorProblem(x:Throwable, function:String) extends AbstractProblem(ProblemSources.Hub) {
 

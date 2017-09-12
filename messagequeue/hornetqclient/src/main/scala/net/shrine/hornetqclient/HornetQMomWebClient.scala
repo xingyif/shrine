@@ -3,8 +3,12 @@ package net.shrine.hornetqclient
 import java.util.UUID
 
 import akka.actor.ActorSystem
+<<<<<<< HEAD
 import net.shrine.config.ConfigExtensions
 import net.shrine.hornetqmom.{MessageSerializer, QueueSerializer}
+=======
+import net.shrine.hornetqmom.{MessageContainer, QueueSerializer}
+>>>>>>> fixed conflicts
 import net.shrine.log.Loggable
 import net.shrine.messagequeueservice.{Message, MessageQueueService, Queue}
 import net.shrine.source.ConfigSource
@@ -151,13 +155,13 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
     if(response.status == StatusCodes.NotFound) None
     else if (response.status == StatusCodes.OK) Some {
       val responseString = response.entity.asString
-      val formats = Serialization.formats(NoTypeHints) + MessageSerializer
-      read[Message](responseString)(formats, manifest[Message])
+      MessageContainer.fromJson(responseString)
     } else {
       throw new IllegalStateException(s"Response status is ${response.status}, not OK or NotFound. Cannot make a Message from this response: ${response.entity.asString}")
     }
   }.transform({ s =>
-    Success(s)
+    val hornetQMessage = s.map(msg => HornetQClientMessage(UUID.fromString(msg.id), msg.contents))
+    Success(hornetQMessage)
   },{throwable =>
     throwable match {
       case NonFatal(x) => error(s"Unable to create a Message from '${response.entity.asString}' due to exception",throwable) //todo probably want to report a Problem here SHRINE-2216
@@ -166,6 +170,7 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
     Failure(throwable)
   })
 
+  case class HornetQClientMessage private(messageID: UUID, contents: String) extends Message {
 
   override def completeMessage(messageID: UUID): Try[Unit] = {
     val entity: HttpEntity = HttpEntity(messageID.toString)
@@ -174,7 +179,18 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
     for {
       response: HttpResponse <- Try(HttpClient.webApiCall(request, webClientTimeOutSecond))
     } yield response
+    override def getContents: String = contents
+
+    override def complete(): Try[Unit] = {
+      val entity: HttpEntity = HttpEntity(messageID.toString)
+      val completeMessageUrl: String = momUrl + s"/acknowledge"
+      val request: HttpRequest = HttpRequest(HttpMethods.PUT, completeMessageUrl).withEntity(entity)
+      for {
+        response: HttpResponse <- Try(HttpClient.webApiCall(request))
+      } yield response
+    }
   }
+
 }
 
 case class CouldNotCreateQueueButOKToRetryException(status:StatusCode,contents:String) extends Exception(s"Could not create a queue due to status code $status with message '$contents'")

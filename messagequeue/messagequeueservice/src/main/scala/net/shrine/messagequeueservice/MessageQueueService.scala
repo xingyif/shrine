@@ -1,14 +1,7 @@
 package net.shrine.messagequeueservice
 
-import java.util.UUID
-
 import net.shrine.source.ConfigSource
 import net.shrine.spray.DefaultJsonSupport
-import org.hornetq.api.core.SimpleString
-import org.hornetq.api.core.client.{ClientConsumer, ClientMessage}
-import org.hornetq.core.client.impl.ClientMessageImpl
-import org.json4s.JsonAST.{JField, JObject}
-import org.json4s.{CustomSerializer, DefaultFormats, Formats, _}
 
 import scala.collection.immutable.Seq
 import scala.concurrent.duration.Duration
@@ -28,8 +21,6 @@ trait MessageQueueService {
   def queues: Try[Seq[Queue]]
   def send(contents:String,to:Queue): Try[Unit]
   def receive(from:Queue,timeout:Duration): Try[Option[Message]]
-  def completeMessage(messageID:UUID): Try[Unit]
-
 }
 
 object MessageQueueService {
@@ -45,13 +36,6 @@ object MessageQueueService {
   }
 }
 
-case class Message(messageUUID: UUID, contents: String) extends DefaultJsonSupport {
-  override implicit def json4sFormats: Formats = DefaultFormats
-}
-
-object Message {
-  val contentsKey = "contents"
-}
 
 case class Queue(var name:String) extends DefaultJsonSupport {
   // filter all (Unicode) characters that are not letters

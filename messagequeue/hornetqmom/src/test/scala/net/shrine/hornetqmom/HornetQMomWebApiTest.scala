@@ -1,7 +1,7 @@
 package net.shrine.hornetqmom
 
 import akka.actor.ActorRefFactory
-import net.shrine.messagequeueservice.{Message, Queue}
+import net.shrine.messagequeueservice.Queue
 import net.shrine.source.ConfigSource
 import org.json4s.NoTypeHints
 import org.json4s.native.Serialization
@@ -65,22 +65,17 @@ class HornetQMomWebApiTest extends FlatSpec with ScalatestRouteTest with HornetQ
         assertResult(queueName)(jsonToSeq.head.name)
       }
 
-      var receivedMessage: String = ""
-
+      var messageUUID: String = ""
       // given timeout is 2 seconds
       Get(s"/mom/receiveMessage/$queueName?timeOutSeconds=2") ~> momRoute ~> check {
         val response = new String(body.data.toByteArray)
-        receivedMessage = response
-        implicit val formats = Serialization.formats(NoTypeHints) + MessageSerializer
-        val responseToMessage: Message = read[Message](response)(formats, manifest[Message])
-
         assertResult(OK)(status)
-        assert(responseToMessage.isInstanceOf[Message])
-        assertResult(messageContent)(responseToMessage.contents)
+        val responseMsg = MessageContainer.fromJson(response)
+        messageUUID = responseMsg.id
+        assertResult(responseMsg.contents)(messageContent)
       }
 
-      Put("/mom/acknowledge", HttpEntity(s"$receivedMessage")) ~> momRoute ~> check {
-        implicit val formats = Serialization.formats(NoTypeHints) + MessageSerializer
+      Put("/mom/acknowledge", HttpEntity(s"$messageUUID")) ~> momRoute ~> check {
         assertResult(ResetContent)(status)
       }
 
