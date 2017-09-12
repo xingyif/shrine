@@ -127,7 +127,7 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
       entity = HttpEntity(contents)  //todo set contents as XML or json SHRINE-2215
     )
     for {
-      response: HttpResponse <- Try(HttpClient.webApiCall(request,3L seconds)) //todo configurable SHRINE-2214
+      response: HttpResponse <- Try(HttpClient.webApiCall(request))
     } yield response
   }
 
@@ -136,10 +136,9 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
     val seconds = timeout.toSeconds
     val receiveMessageUrl = momUrl + s"/receiveMessage/${from.name}?timeOutSeconds=$seconds"
     val request: HttpRequest = HttpRequest(HttpMethods.GET, receiveMessageUrl)
-    val httpRequestTimeout: FiniteDuration = (timeout.toSeconds + 1) second //todo configurable SHRINE-2214
 
     for {
-      response: HttpResponse <- Try(HttpClient.webApiCall(request, httpRequestTimeout))
+      response: HttpResponse <- Try(HttpClient.webApiCall(request))
       messageResponse: Option[Message] <- messageOptionFromResponse(response)
     } yield messageResponse
   }

@@ -7,6 +7,7 @@ import akka.actor.{ActorRef, ActorSystem}
 import akka.io.IO
 import akka.pattern.ask
 import net.shrine.log.Loggable
+import net.shrine.source.ConfigSource
 import spray.can.Http
 import spray.can.Http.{ConnectionAttemptFailedException, HostConnectorSetup}
 import spray.http.{HttpEntity, HttpRequest, HttpResponse, StatusCodes}
@@ -14,7 +15,7 @@ import spray.io.ClientSSLEngineProvider
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.{Duration, DurationInt, DurationLong}
-import scala.concurrent.{Await, Future, TimeoutException, blocking}
+import scala.concurrent.{Await, Future, TimeoutException}
 import scala.language.postfixOps
 import scala.util.control.NonFatal
 
@@ -25,9 +26,10 @@ object HttpClient extends Loggable {
 
   //todo hand back a Try, Failures with custom exceptions instead of a crappy response
   //todo Really a Future would be even better
-  def webApiCall(request:HttpRequest,timeout:Duration = 10 seconds)(implicit system: ActorSystem): HttpResponse = {
+  def webApiCall(request:HttpRequest)(implicit system: ActorSystem): HttpResponse = {
 
-    val deadline = System.currentTimeMillis() + timeout.toMillis
+    val timeout: Long = ConfigSource.config.getDuration("shrine.messagequeue.httpClient.timeOutSecond").toMillis
+    val deadline = System.currentTimeMillis() + timeout
 
     val transport: ActorRef = IO(Http)(system)
 
