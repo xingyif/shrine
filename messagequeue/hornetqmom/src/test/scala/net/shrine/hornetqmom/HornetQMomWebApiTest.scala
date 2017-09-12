@@ -85,20 +85,23 @@ class HornetQMomWebApiTest extends FlatSpec with ScalatestRouteTest with HornetQ
     }
   }
 
-  "HornetQMomWebApi" should "respond Internal server error with the corresponding error message when " +
+  "HornetQMomWebApi" should "respond InternalServerError with the corresponding error message when " +
     "failures occur while creating/deleting the given queue, sending/receiving message, getting queues" in {
 
-    Put(s"/mom/deleteQueue/$queueName") ~> momRoute ~> check {
-      assertResult(InternalServerError)(status)
-    }
+    ConfigSource.atomicConfig.configForBlock("shrine.messagequeue.hornetQWebApi.enabled", "true", "HornetQMomWebApiTest") {
 
-    Put(s"/mom/sendMessage/$queueName", HttpEntity(s"$messageContent")) ~> momRoute ~> check {
-      assertResult(InternalServerError)(status)
-    }
+      Put(s"/mom/deleteQueue/$queueName") ~> momRoute ~> check {
+        assertResult(InternalServerError)(status)
+      }
 
-    // given timeout is 1 seconds
-    Get(s"/mom/receiveMessage/$queueName?timeOutSeconds=1") ~> momRoute ~> check {
-      assertResult(InternalServerError)(status)
+      Put(s"/mom/sendMessage/$queueName", HttpEntity(s"$messageContent")) ~> momRoute ~> check {
+        assertResult(InternalServerError)(status)
+      }
+
+      // given timeout is 1 seconds
+      Get(s"/mom/receiveMessage/$queueName?timeOutSeconds=1") ~> momRoute ~> check {
+        assertResult(InternalServerError)(status)
+      }
     }
   }
 }

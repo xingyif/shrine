@@ -3,15 +3,13 @@ package net.shrine.hornetqmom
 import java.util.UUID
 
 import net.shrine.log.Loggable
-import net.shrine.messagequeueservice.{Message, Queue}
+import net.shrine.messagequeueservice.Queue
 import net.shrine.problem.{AbstractProblem, ProblemSources}
 import net.shrine.source.ConfigSource
-import net.shrine.spray.DefaultJsonSupport
-import org.hornetq.api.core.client.ClientMessage
 import org.json4s.JsonAST.{JField, JObject}
 import org.json4s.native.Serialization
-import org.json4s.native.Serialization.{read, write}
-import org.json4s.{CustomSerializer, Formats, JString, NoTypeHints, ShortTypeHints}
+import org.json4s.native.Serialization.write
+import org.json4s.{CustomSerializer, JString, NoTypeHints, ShortTypeHints}
 import spray.http.StatusCodes
 import spray.routing.{HttpService, Route}
 
