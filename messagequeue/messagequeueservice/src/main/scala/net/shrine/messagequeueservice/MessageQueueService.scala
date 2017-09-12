@@ -1,8 +1,11 @@
 package net.shrine.messagequeueservice
 
+import java.util.UUID
+
 import net.shrine.source.ConfigSource
 import net.shrine.spray.DefaultJsonSupport
-import org.hornetq.api.core.client.ClientMessage
+import org.hornetq.api.core.SimpleString
+import org.hornetq.api.core.client.{ClientConsumer, ClientMessage}
 import org.hornetq.core.client.impl.ClientMessageImpl
 import org.json4s.JsonAST.{JField, JObject}
 import org.json4s.{CustomSerializer, DefaultFormats, Formats, _}
@@ -25,7 +28,7 @@ trait MessageQueueService {
   def queues: Try[Seq[Queue]]
   def send(contents:String,to:Queue): Try[Unit]
   def receive(from:Queue,timeout:Duration): Try[Option[Message]]
-  def completeMessage(message:Message): Try[Unit]
+  def completeMessage(messageID:UUID): Try[Unit]
 
 }
 
@@ -42,16 +45,44 @@ object MessageQueueService {
   }
 }
 
-case class Message(hornetQMessage:ClientMessage) extends DefaultJsonSupport {
+case class Message(messageUUID: UUID, contents: String) extends DefaultJsonSupport {
   override implicit def json4sFormats: Formats = DefaultFormats
+//  object ClientMessageImpl {
+//
+//    lazy val clientMessageImpl:ClientMessageImpl = {
+//      import scala.reflect.runtime.universe.runtimeMirror
+//
+//      val clientMsgImplClassName = ConfigSource.config.getString("shrine.messagequeue.clientMessageImpl")
+//      val classLoaderMirror = runtimeMirror(getClass.getClassLoader)
+//      val module = classLoaderMirror.staticModule(clientMsgImplClassName)
+//
+//      classLoaderMirror.reflectModule(module).instance.asInstanceOf[ClientMessageImpl]
+//    }
+//  }
 
-  def getClientMessage = hornetQMessage
+//  def getClientMessage = hornetQMessage
+//
+//  def contents = hornetQMessage.getStringProperty(Message.contentsKey)
+//
+//  def getMessageID = hornetQMessage.getMessageID
 
-  def contents = hornetQMessage.getStringProperty(Message.contentsKey)
 
-  def getMessageID = hornetQMessage.getMessageID
+//  private def setMessageID(messageID: Long) = {
+//    val clientMessageImplClass = hornetQMessage.getClass
+//    println("all fields: " + clientMessageImplClass.getDeclaredFields.foreach(a => println("field: "+ a)))
+//    val messageIDField = clientMessageImplClass.getDeclaredField("messageID")
+//    messageIDField.setAccessible(true)
+//    messageIDField.setLong(hornetQMessage, messageID)
+//    println("messageID: " + hornetQMessage.getMessageID)
+//  }
 
-  def complete() = hornetQMessage.acknowledge()
+//  private def setConsumer(consumer: ClientConsumer) = {}
+
+//  def complete() = {
+//    this.setMessageID(this.messageId)
+//
+//    hornetQMessage.acknowledge()
+//  }
 }
 
 object Message {
@@ -66,54 +97,6 @@ case class Queue(var name:String) extends DefaultJsonSupport {
     throw new IllegalArgumentException("ERROR: A valid Queue name must contain at least one letter!")
   }
 }
-
-class QueueSerializer extends CustomSerializer[Queue](format => (
-  {
-    case JObject(JField("name", JString(s)) :: Nil) => Queue(s)
-  },
-  {
-    case queue: Queue =>
-      JObject(JField("name", JString(queue.name)) :: Nil)
-  }
-))
-
-//todo make this an object SHRINE-2218
-//todo move to HornetQMomWebApi SHRINE-2218
-class MessageSerializer extends CustomSerializer[Message](format => (
-  {
-
-    //JObject(List((hornetQMessage,JObject(List((type,JInt(0)), (durable,JBool(true)), (expiration,JInt(0)), (timestamp,JInt(1504275142323)), (priority,JInt(4)), (contents,JString(test Content)))))))
-    case JObject(
-      JField("hornetQMessage", JObject(
-        JField("type", JInt(s)) ::
-        JField("durable", JBool(d)) ::
-        JField("expiration", JInt(e)) ::
-        JField("timestamp", JInt(t)) ::
-        JField("priority", JInt(p)) ::
-        JField(Message.contentsKey, JString(contents)) ::
-        Nil)
-      ) :: Nil ) => {
-        val hornetQClientMessage = new ClientMessageImpl(s.toByte, d, e.toLong, t.toLong, p.toByte, 0)
-        hornetQClientMessage.putStringProperty(Message.contentsKey,contents)
-
-        Message(hornetQClientMessage)
-      }
-   },
-  {
-    case msg: Message =>
-      JObject(
-        JField("hornetQMessage",
-        JObject(
-          JField("type", JLong(msg.getClientMessage.getType)) ::
-          JField("durable", JBool(msg.getClientMessage.isDurable)) ::
-          JField("expiration", JLong(msg.getClientMessage.getExpiration)) ::
-          JField("timestamp", JLong(msg.getClientMessage.getTimestamp)) ::
-          JField("priority", JLong(msg.getClientMessage.getPriority)) ::
-          JField(Message.contentsKey, JString(msg.contents)) ::
-          Nil)) :: Nil)
-  }
-))
-
 
 case class NoSuchQueueExistsInHornetQ(proposedQueue: Queue) extends Exception {
   override def getMessage: String = {

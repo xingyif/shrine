@@ -1,13 +1,16 @@
 package net.shrine.hornetqclient
 
+import java.util.UUID
+
 import akka.actor.ActorSystem
 import net.shrine.config.ConfigExtensions
+import net.shrine.hornetqmom.{MessageSerializer, QueueSerializer}
 import net.shrine.log.Loggable
-import net.shrine.messagequeueservice.{Message, MessageQueueService, MessageSerializer, Queue, QueueSerializer}
+import net.shrine.messagequeueservice.{Message, MessageQueueService, Queue}
 import net.shrine.source.ConfigSource
+import org.json4s.NoTypeHints
 import org.json4s.native.Serialization
-import org.json4s.native.Serialization.{read, write}
-import org.json4s.{Formats, NoTypeHints}
+import org.json4s.native.Serialization.read
 import spray.http.{HttpEntity, HttpMethods, HttpRequest, HttpResponse, StatusCode, StatusCodes}
 import scala.collection.immutable.Seq
 import scala.concurrent.duration.Duration
@@ -79,7 +82,7 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
   def queueFromResponse(response: HttpResponse):Try[Queue] = Try {
     if(response.status == StatusCodes.Created) {
       val queueString = response.entity.asString
-      implicit val formats = Serialization.formats(NoTypeHints) + new QueueSerializer
+      implicit val formats = Serialization.formats(NoTypeHints) + QueueSerializer
       read[Queue](queueString)(formats, manifest[Queue])
     } else {
       if((response.status == StatusCodes.NotFound) ||
@@ -111,7 +114,7 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
       response: HttpResponse <- Try(HttpClient.webApiCall(request, webClientTimeOutSecond))
       allQueues: Seq[Queue] <- Try {
         val allQueues: String = response.entity.asString
-        implicit val formats = Serialization.formats(NoTypeHints) + new QueueSerializer
+        implicit val formats = Serialization.formats(NoTypeHints) +  QueueSerializer
         read[Seq[Queue]](allQueues)(formats, manifest[Seq[Queue]])
       }
     } yield allQueues
@@ -148,7 +151,7 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
     if(response.status == StatusCodes.NotFound) None
     else if (response.status == StatusCodes.OK) Some {
       val responseString = response.entity.asString
-      val formats = Serialization.formats(NoTypeHints) + new MessageSerializer
+      val formats = Serialization.formats(NoTypeHints) + MessageSerializer
       read[Message](responseString)(formats, manifest[Message])
     } else {
       throw new IllegalStateException(s"Response status is ${response.status}, not OK or NotFound. Cannot make a Message from this response: ${response.entity.asString}")
@@ -164,11 +167,8 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
   })
 
 
-  override def completeMessage(message: Message): Try[Unit] = {
-    implicit val formats: Formats = Serialization.formats(NoTypeHints) + new MessageSerializer
-    val messageString: String = write[Message](message)(formats)
-
-    val entity: HttpEntity = HttpEntity(messageString)
+  override def completeMessage(messageID: UUID): Try[Unit] = {
+    val entity: HttpEntity = HttpEntity(messageID.toString)
     val completeMessageUrl: String = momUrl + s"/acknowledge" // HttpEntity
     val request: HttpRequest = HttpRequest(HttpMethods.PUT, completeMessageUrl).withEntity(entity)
     for {

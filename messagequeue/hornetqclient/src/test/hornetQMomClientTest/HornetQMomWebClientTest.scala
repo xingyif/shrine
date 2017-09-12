@@ -24,5 +24,5 @@ val firstDuration: Duration = Duration.create(1, "seconds")
 val receivedMsg: Option[Message] = HornetQMomWebClient.receive(firstQueue, firstDuration).get
 val msg: Message = receivedMsg.get
 val allQueues: Seq[Queue] = HornetQMomWebClient.queues.get
-HornetQMomWebClient.completeMessage(msg)
+HornetQMomWebClient.completeMessage(msg.messageUUID)
 HornetQMomWebClient.deleteQueue("q1")
