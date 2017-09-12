@@ -113,7 +113,7 @@ object QepReceiver {
             Log.debug(s"Inserted incremental results $iqrs")
             Success(unit)
           }
-        case e:Envelope => Failure(UnexpectedMessageContentsType(e,queue))
+        case e:Envelope => Failure(UnexpectedMessageContentsTypeException(e,queue))
         case _ => Failure(new IllegalArgumentException(s"Received something other than an envelope from this queue: $envelopeJson"))
         }.transform({ s =>
         message.complete()
@@ -153,7 +153,7 @@ object QepReceiver {
   }
 }
 
-case class UnexpectedMessageContentsType(envelope: Envelope,queue: Queue) extends Exception(s"Could not interpret message with contents type of ${envelope.contentsType} from queue ${queue.name} from shrine version ${envelope.shrineVersion}")
+case class UnexpectedMessageContentsTypeException(envelope: Envelope, queue: Queue) extends Exception(s"Could not interpret message with contents type of ${envelope.contentsType} from queue ${queue.name} from shrine version ${envelope.shrineVersion}")
 
 case class ExceptionWhileReceivingMessage(queue:Queue, x:Throwable) extends AbstractProblem(ProblemSources.Qep) {
 
