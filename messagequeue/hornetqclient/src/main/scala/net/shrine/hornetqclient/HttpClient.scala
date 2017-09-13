@@ -41,7 +41,8 @@ object HttpClient extends Loggable {
     } yield response
     try {
       //wait a second longer than the deadline before timing out the Await, to let the actors timeout
-      Await.result(future, deadline + 1000 - System.currentTimeMillis() milliseconds) //todo make this time gap configurable SHRINE-2217
+      val timeOutWaitGap = ConfigSource.config.get("shrine.messagequeue.httpClient.timeOutWaitGap", Duration(_)).toMillis
+      Await.result(future, deadline + timeOutWaitGap - System.currentTimeMillis() milliseconds)
     }
     catch {
       //todo definitely need the Try instead of this sloppy replacement of the HttpResponse.
