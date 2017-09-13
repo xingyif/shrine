@@ -2,12 +2,12 @@ package net.shrine.hornetqclient
 
 import java.security.cert.X509Certificate
 import javax.net.ssl.{SSLContext, X509TrustManager}
-import net.shrine.config.ConfigExtensions
 import akka.actor.{ActorRef, ActorSystem}
 import akka.io.IO
 import akka.pattern.ask
 import net.shrine.log.Loggable
 import net.shrine.source.ConfigSource
+import net.shrine.config.ConfigExtensions
 import spray.can.Http
 import spray.can.Http.{ConnectionAttemptFailedException, HostConnectorSetup}
 import spray.http.{HttpEntity, HttpRequest, HttpResponse, StatusCodes}
@@ -26,10 +26,11 @@ object HttpClient extends Loggable {
 
   //todo hand back a Try, Failures with custom exceptions instead of a crappy response
   //todo Really a Future would be even better
-  def webApiCall(request:HttpRequest)(implicit system: ActorSystem): HttpResponse = {
+  def webApiCall(request:HttpRequest,
+                 timeout:Duration = ConfigSource.config.get("shrine.messagequeue.httpClient.defaultTimeOutSecond", Duration(_)))
+                (implicit system: ActorSystem): HttpResponse = {
 
-    val timeout: Long = ConfigSource.config.get("shrine.messagequeue.httpClient.timeOutSecond",Duration(_)).toMillis
-    val deadline = System.currentTimeMillis() + timeout
+    val deadline = System.currentTimeMillis() + timeout.toMillis
 
     val transport: ActorRef = IO(Http)(system)
 
