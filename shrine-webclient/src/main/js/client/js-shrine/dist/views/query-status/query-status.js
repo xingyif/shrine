@@ -1,7 +1,7 @@
 System.register(['aurelia-framework', 'services/query-status.model', 'services/pub-sub'], function (_export, _context) {
     "use strict";
 
-    var customElement, observable, QueryStatusModel, PubSub, _extends, _dec, _class, _desc, _value, _class2, _descriptor, _class3, _temp, QueryStatus, timeoutSeconds, defaultVersion, me, initialState;
+    var customElement, observable, QueryStatusModel, PubSub, _extends, _dec, _class, _desc, _value, _class2, _descriptor, _class3, _temp, QueryStatus, TIMEOUT_SECONDS, DEFAULT_VERSION, me, initialState;
 
     function _initDefineProp(target, property, descriptor, context) {
         if (!descriptor) return;
@@ -125,10 +125,10 @@ System.register(['aurelia-framework', 'services/query-status.model', 'services/p
                     if (!newValue.nodes || !newValue.nodes.length) {
                         me.get(this).exportAvailable = false;
                         this.publish(this.notifications.shrine.queryUnavailable);
-                    } else {
-                        me.get(this).exportAvailable = true;
-                        this.publish(this.notifications.shrine.queryAvailable);
+                        return;
                     }
+                    me.get(this).exportAvailable = true;
+                    this.publish(this.notifications.shrine.queryAvailable);
                 };
 
                 QueryStatus.prototype.attached = function attached() {
@@ -140,12 +140,15 @@ System.register(['aurelia-framework', 'services/query-status.model', 'services/p
                     });
 
                     this.subscribe(this.notifications.i2b2.networkIdReceived, function (d) {
-                        var networkId = d.networkId;
+                        var networkId = d.networkId,
+                            name = d.name;
+
                         var state = initialState();
                         var nodes = state.nodes;
-                        state.query.queryName = d.name || state.query.queryName;
+
+                        state.query.queryName = name || state.query.queryName;
                         _this2.status = _this2.status ? _extends({}, _this2.status, { nodes: nodes }) : state;
-                        _this2.publish(_this2.commands.shrine.fetchQuery, { networkId: networkId, timeoutSeconds: timeoutSeconds, dataVersion: defaultVersion });
+                        _this2.publish(_this2.commands.shrine.fetchQuery, { networkId: networkId, timeoutSeconds: TIMEOUT_SECONDS, dataVersion: DEFAULT_VERSION });
                     });
 
                     this.subscribe(this.notifications.i2b2.exportQuery, function () {
@@ -156,15 +159,16 @@ System.register(['aurelia-framework', 'services/query-status.model', 'services/p
                         _this2.status = initialState();
                     });
                     this.subscribe(this.notifications.shrine.queryReceived, function (data) {
-                        var query = data.query;
-                        var nodes = data.nodes;
-                        var dataVersion = data.dataVersion;
+                        var query = data.query,
+                            nodes = data.nodes,
+                            dataVersion = data.dataVersion,
+                            complete = data.complete,
+                            networkId = data.query.networkId;
+
                         var updated = Number(new Date());
-                        var complete = data.query.complete;
-                        var networkId = data.query.networkId;
                         _this2.status = _extends({}, _this2.status, { query: query, nodes: nodes, updated: updated });
                         if (!complete) {
-                            _this2.publish(_this2.commands.shrine.fetchQuery, { networkId: networkId, dataVersion: dataVersion, timeoutSeconds: timeoutSeconds });
+                            _this2.publish(_this2.commands.shrine.fetchQuery, { networkId: networkId, dataVersion: dataVersion, TIMEOUT_SECONDS: TIMEOUT_SECONDS });
                         }
                     });
 
@@ -181,8 +185,8 @@ System.register(['aurelia-framework', 'services/query-status.model', 'services/p
 
             _export('QueryStatus', QueryStatus);
 
-            timeoutSeconds = 15;
-            defaultVersion = -1;
+            TIMEOUT_SECONDS = 15;
+            DEFAULT_VERSION = -1;
             me = new WeakMap();
 
             initialState = function initialState(n) {

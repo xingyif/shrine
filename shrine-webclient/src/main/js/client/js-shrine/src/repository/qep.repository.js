@@ -47,7 +47,11 @@ export class QEPRepository {
 
     fetchQuery(networkId, timeoutSeconds, afterVersion) {//
         return this.http.fetch(`qep/queryResult/${networkId}?timeoutSeconds=${timeoutSeconds}&afterVersion=${afterVersion}`, {method: 'get'})
-            .then(response => response.json())
+            .then(response => {
+                const {url, statusText, status, ok} = response;
+                console.log(`fetchQuery: ${url} - ${ok} - ${status} - ${statusText}`);
+                return response.json();
+            })
             .catch(error => error);
     }
 
