@@ -176,7 +176,7 @@ object LocalHornetQMom extends MessageQueueService {
 
   case class LocalHornetQMessage private(clientMessage: ClientMessage) extends Message {
 
-    val createdTime: Long = System.currentTimeMillis()
+    private val createdTime: Long = System.currentTimeMillis()
     override def contents: String = clientMessage.getStringProperty(Message.contentsKey)
 
     //complete a message
