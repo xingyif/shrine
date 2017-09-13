@@ -2,6 +2,7 @@ package net.shrine.metadata
 
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.routing.RoundRobinPool
+import net.shrine.log.Log
 import net.shrine.problem.ProblemHandler
 import net.shrine.source.ConfigSource
 import spray.servlet.WebBoot
@@ -28,18 +29,24 @@ class Boot extends WebBoot {
     case x: ExceptionInInitializerError => CannotStartMetaData(x); throw x
   }
 
-  def startServiceActor(): ActorRef = try {
+  def startServiceActor(): ActorRef = {
     //TODO: create a common interface for Problems to hide behind, so that it doesn't exist anywhere in the code
     //TODO: except for when brought into scope
-    val handler:ProblemHandler = ConfigSource.getObject("shrine.problem.problemHandler", ConfigSource.config)
-    handler.warmUp()
-
-    // the service actor replies to incoming HttpRequests
-    system.actorOf(RoundRobinPool(100).props(Props[MetaDataActor]), "MetaDataActors")
-  }
-  catch {
-    case NonFatal(x) => CannotStartMetaData(x); throw x
-    case x: ExceptionInInitializerError => CannotStartMetaData(x); throw x
+    try {
+      val handler: ProblemHandler = ConfigSource.getObject("shrine.problem.problemHandler", ConfigSource.config)
+      handler.warmUp()
+    }
+    catch {
+      case NonFatal(x) => Log.error("Exception during ProblemHandler warm up",x)
+    }
+    try {
+      // the service actor replies to incoming HttpRequests
+      system.actorOf(RoundRobinPool(100).props(Props[MetaDataActor]), "MetaDataActors")
+    }
+    catch {
+      case NonFatal(x) => CannotStartMetaData(x); throw x
+      case x: ExceptionInInitializerError => CannotStartMetaData(x); throw x
+    }
   }
 
 }
