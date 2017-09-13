@@ -107,10 +107,7 @@ object ShrineOrchestrator extends ShrineJaxrsResources with Loggable {
     breakdownTypes,
     hubDao
   ))
-
-  //todo anything that requires qepConfig should be inside QueryEntryPointComponents's apply
-  protected lazy val qepConfig = shrineConfig.getConfig("queryEntryPoint")
-
+  
   lazy val queryEntryPointComponents:Option[QueryEntryPointComponents] = shrineConfig.getOptionConfiguredIf("queryEntryPoint", QueryEntryPointComponents(_,
     certCollection,
     breakdownTypes,
