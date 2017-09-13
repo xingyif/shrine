@@ -2,7 +2,7 @@ package net.shrine.hornetqclient
 
 import java.security.cert.X509Certificate
 import javax.net.ssl.{SSLContext, X509TrustManager}
-
+import net.shrine.config.ConfigExtensions
 import akka.actor.{ActorRef, ActorSystem}
 import akka.io.IO
 import akka.pattern.ask
@@ -28,7 +28,7 @@ object HttpClient extends Loggable {
   //todo Really a Future would be even better
   def webApiCall(request:HttpRequest)(implicit system: ActorSystem): HttpResponse = {
 
-    val timeout: Long = ConfigSource.config.getDuration("shrine.messagequeue.httpClient.timeOutSecond").toMillis
+    val timeout: Long = ConfigSource.config.get("shrine.messagequeue.httpClient.timeOutSecond",Duration(_)).toMillis
     val deadline = System.currentTimeMillis() + timeout
 
     val transport: ActorRef = IO(Http)(system)
