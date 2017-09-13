@@ -37,12 +37,12 @@ object QepReceiver {
   pollingThread.setDaemon(true)
   //todo   pollingThread.setUncaughtExceptionHandler() SHRINE-2198
 
-  def start() = {
+  def start(): Unit = {
     pollingThread.start()
     Log.debug(s"Started the QepReceiver thread for $nodeName")
   }
 
-  def stop() = {
+  def stop(): Unit = {
     runner.stop()
   }
 
@@ -50,7 +50,7 @@ object QepReceiver {
 
     val keepGoing = new AtomicBoolean(true)
 
-    def stop() = {
+    def stop(): Unit = {
       keepGoing.set(false)
       Log.debug(s"${this.getClass.getSimpleName} keepGoing set to ${keepGoing.get()}. Will stop asking for messages after the current request.")
     }
