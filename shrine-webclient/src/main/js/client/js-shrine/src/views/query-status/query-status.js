@@ -16,11 +16,10 @@ export class QueryStatus extends PubSub {
         if(!newValue.nodes || !newValue.nodes.length) {
             me.get(this).exportAvailable = false;
             this.publish(this.notifications.shrine.queryUnavailable);
+            return;
         }
-        else {
-            me.get(this).exportAvailable = true;
-            this.publish(this.notifications.shrine.queryAvailable);
-        }
+        me.get(this).exportAvailable = true;
+        this.publish(this.notifications.shrine.queryAvailable);
     }
     attached() {
         // -- subscribers -- //
@@ -30,12 +29,12 @@ export class QueryStatus extends PubSub {
         });
 
         this.subscribe(this.notifications.i2b2.networkIdReceived, d => {
-            const networkId = d.networkId;
+            const {networkId, name} = d;
             const state = initialState();
-            const nodes = state.nodes;
-            state.query.queryName = d.name || state.query.queryName; 
+            const {nodes} = state;
+            state.query.queryName = name || state.query.queryName; 
             this.status = this.status? {...this.status, ...{nodes}} : state;
-            this.publish(this.commands.shrine.fetchQuery, {networkId, timeoutSeconds, dataVersion: defaultVersion})
+            this.publish(this.commands.shrine.fetchQuery, {networkId, timeoutSeconds: TIMEOUT_SECONDS, dataVersion: DEFAULT_VERSION})
         });
 
         this.subscribe(this.notifications.i2b2.exportQuery, () => {
@@ -46,15 +45,11 @@ export class QueryStatus extends PubSub {
             this.status = initialState();
         })
         this.subscribe(this.notifications.shrine.queryReceived, data => {
-            const query = data.query;
-            const nodes = data.nodes;
-            const dataVersion= data.dataVersion;
+            const {query, nodes, dataVersion, complete, query:{networkId}} = data; 
             const updated = Number(new Date());
-            const complete = data.query.complete;
-            const networkId = data.query.networkId;
             this.status = { ...this.status, ...{ query, nodes, updated } }
             if (!complete) {
-                this.publish(this.commands.shrine.fetchQuery, {networkId, dataVersion, timeoutSeconds});
+                this.publish(this.commands.shrine.fetchQuery, {networkId, dataVersion, TIMEOUT_SECONDS});
             }
         });
 
@@ -64,7 +59,7 @@ export class QueryStatus extends PubSub {
         }
     }
 }
-const timeoutSeconds = 15;
-const defaultVersion = -1;
+const TIMEOUT_SECONDS = 15;
+const DEFAULT_VERSION = -1;
 const me = new WeakMap();
 const initialState = (n) => ({ query: { queryName: null, updated: null, complete: false }, nodes: null });

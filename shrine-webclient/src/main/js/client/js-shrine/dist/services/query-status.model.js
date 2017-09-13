@@ -50,19 +50,20 @@ System.register(['aurelia-event-aggregator', 'repository/qep.repository', './shr
                 var publishQuery = function publishQuery(model) {
                     return evtAgg.publish(notifications.shrine.queryReceived, model);
                 };
-                var logError = function logError(error) {
-                    return console.log('ERROR: ' + error);
-                };
                 var toModel = function toModel(data) {
                     return new Promise(function (resolve, reject) {
-                        var nodes = data.results.length === 0 ? [] : [].concat(data.results.sort(function (a, b) {
+                        var results = data.results,
+                            dataVersion = data.dataVersion,
+                            queryData = data.query;
+
+                        var sort = function sort(a, b) {
                             return a.adapterNode.toUpperCase() <= b.adapterNode.toUpperCase() ? -1 : 1;
-                        }));
-                        var dataVersion = data.dataVersion;
+                        };
+                        var nodes = results.length === 0 ? [] : [].concat(results.sort(sort));
                         var complete = nodes.length > 0 && nodes.filter(function (n) {
                             return 'ERROR,COMPLETED,FINISHED'.includes(n.status);
-                        }).length === nodes.length;
-                        var query = _extends({}, data.query, { complete: complete });
+                        }).length === nodes.lenth;
+                        var query = _extends({}, queryData, { complete: complete });
                         resolve({
                             query: query,
                             nodes: nodes,
@@ -83,7 +84,7 @@ System.register(['aurelia-event-aggregator', 'repository/qep.repository', './shr
                     qep.fetchQuery(d.networkId, d.timeoutSeconds, d.dataVersion).then(function (result) {
                         return toModel(result);
                     }).catch(function (error) {
-                        return logError(error);
+                        return console.log('ERROR: ' + error);
                     }).then(function (model) {
                         return publishQuery(model);
                     });

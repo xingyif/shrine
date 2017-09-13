@@ -204,98 +204,6 @@ System.config({
       "indexof": "npm:indexof@0.0.1"
     }
   },
-  depCache: {
-    "repository/qep.repository.js": [
-      "aurelia-fetch-client",
-      "fetch"
-    ],
-    "resources/converters/datetime.value.converter.js": [
-      "moment"
-    ],
-    "resources/custom/breakdown/breakdown.js": [
-      "aurelia-framework"
-    ],
-    "resources/custom/node-result/node-result.js": [
-      "aurelia-framework",
-      "services/pub-sub"
-    ],
-    "resources/custom/node-status/node-status.js": [
-      "aurelia-framework",
-      "services/pub-sub"
-    ],
-    "services/container.js": [
-      "ramda"
-    ],
-    "services/i2b2.pub-sub.js": [
-      "./pub-sub",
-      "./i2b2.service"
-    ],
-    "services/i2b2.service.js": [
-      "ramda",
-      "./container"
-    ],
-    "services/pub-sub.js": [
-      "aurelia-event-aggregator",
-      "./shrine.messages"
-    ],
-    "services/queries.model.js": [
-      "aurelia-event-aggregator",
-      "repository/qep.repository",
-      "./shrine.messages"
-    ],
-    "services/query-export.js": [
-      "./pub-sub"
-    ],
-    "services/query-status.model.js": [
-      "aurelia-event-aggregator",
-      "repository/qep.repository",
-      "./shrine.messages"
-    ],
-    "shell.js": [
-      "services/i2b2.pub-sub",
-      "services/query-export"
-    ],
-    "views/mailto/mailto.js": [
-      "views/mailto/mailto.service",
-      "views/mailto/mailto.config"
-    ],
-    "views/mailto/mailto.service.js": [
-      "repository/qep.repository"
-    ],
-    "views/query-status/query-status.js": [
-      "aurelia-framework",
-      "services/query-status.model",
-      "services/pub-sub"
-    ],
-    "views/query-viewer/context-menu/context-menu.js": [
-      "aurelia-framework",
-      "aurelia-event-aggregator",
-      "common/shrine.messages"
-    ],
-    "views/query-viewer/date.converter.js": [
-      "moment"
-    ],
-    "views/query-viewer/paginator/paginator.js": [
-      "aurelia-framework"
-    ],
-    "views/query-viewer/query-status/query-status.js": [
-      "aurelia-framework",
-      "ramda"
-    ],
-    "views/query-viewer/query-viewer.js": [
-      "aurelia-event-aggregator",
-      "common/queries.model",
-      "./scroll.service",
-      "common/shrine.messages"
-    ],
-    "views/query-viewer/result-row/loading-bar/loading-bar.js": [
-      "aurelia-framework"
-    ],
-    "views/query-viewer/scroll.service.js": [
-      "ramda",
-      "common/container"
-    ]
-  },
   bundles: {
     "app-build.js": [
       "main.js",
@@ -753,6 +661,98 @@ System.config({
       "npm:ramda@0.23.0/src/zip.js",
       "npm:ramda@0.23.0/src/zipObj.js",
       "npm:ramda@0.23.0/src/zipWith.js"
+    ]
+  },
+  depCache: {
+    "repository/qep.repository.js": [
+      "aurelia-fetch-client",
+      "fetch"
+    ],
+    "resources/converters/datetime.value.converter.js": [
+      "moment"
+    ],
+    "resources/custom/breakdown/breakdown.js": [
+      "aurelia-framework"
+    ],
+    "resources/custom/node-result/node-result.js": [
+      "aurelia-framework",
+      "services/pub-sub"
+    ],
+    "resources/custom/node-status/node-status.js": [
+      "aurelia-framework",
+      "services/pub-sub"
+    ],
+    "services/container.js": [
+      "ramda"
+    ],
+    "services/i2b2.pub-sub.js": [
+      "./pub-sub",
+      "./i2b2.service"
+    ],
+    "services/i2b2.service.js": [
+      "ramda",
+      "./container"
+    ],
+    "services/pub-sub.js": [
+      "aurelia-event-aggregator",
+      "./shrine.messages"
+    ],
+    "services/queries.model.js": [
+      "aurelia-event-aggregator",
+      "repository/qep.repository",
+      "./shrine.messages"
+    ],
+    "services/query-export.js": [
+      "./pub-sub"
+    ],
+    "services/query-status.model.js": [
+      "aurelia-event-aggregator",
+      "repository/qep.repository",
+      "./shrine.messages"
+    ],
+    "shell.js": [
+      "services/i2b2.pub-sub",
+      "services/query-export"
+    ],
+    "views/mailto/mailto.js": [
+      "views/mailto/mailto.service",
+      "views/mailto/mailto.config"
+    ],
+    "views/mailto/mailto.service.js": [
+      "repository/qep.repository"
+    ],
+    "views/query-status/query-status.js": [
+      "aurelia-framework",
+      "services/query-status.model",
+      "services/pub-sub"
+    ],
+    "views/query-viewer/context-menu/context-menu.js": [
+      "aurelia-framework",
+      "aurelia-event-aggregator",
+      "common/shrine.messages"
+    ],
+    "views/query-viewer/date.converter.js": [
+      "moment"
+    ],
+    "views/query-viewer/paginator/paginator.js": [
+      "aurelia-framework"
+    ],
+    "views/query-viewer/query-status/query-status.js": [
+      "aurelia-framework",
+      "ramda"
+    ],
+    "views/query-viewer/query-viewer.js": [
+      "aurelia-event-aggregator",
+      "common/queries.model",
+      "./scroll.service",
+      "common/shrine.messages"
+    ],
+    "views/query-viewer/result-row/loading-bar/loading-bar.js": [
+      "aurelia-framework"
+    ],
+    "views/query-viewer/scroll.service.js": [
+      "ramda",
+      "common/container"
     ]
   }
 });

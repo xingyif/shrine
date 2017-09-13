@@ -68,6 +68,12 @@ System.register(['aurelia-fetch-client', 'fetch'], function (_export, _context) 
 
                 QEPRepository.prototype.fetchQuery = function fetchQuery(networkId, timeoutSeconds, afterVersion) {
                     return this.http.fetch('qep/queryResult/' + networkId + '?timeoutSeconds=' + timeoutSeconds + '&afterVersion=' + afterVersion, { method: 'get' }).then(function (response) {
+                        var url = response.url,
+                            statusText = response.statusText,
+                            status = response.status,
+                            ok = response.ok;
+
+                        console.log('fetchQuery: ' + url + ' - ' + ok + ' - ' + status + ' - ' + statusText);
                         return response.json();
                     }).catch(function (error) {
                         return error;
