@@ -141,7 +141,7 @@ object LocalHornetQMom extends MessageQueueService {
     *
     * @return Some message before the timeout, or None
     */
-  def receive(from: Queue, timeout: Duration): Try[Option[LocalHornetQMessage]] = {
+  def receive(from: Queue, timeout: Duration): Try[Option[Message]] = {
     for {
     //todo handle the case where either stop or close has been called on something gracefully
       messageConsumer: ClientConsumer <- Try {
@@ -155,7 +155,7 @@ object LocalHornetQMom extends MessageQueueService {
         blocking {
           val messageReceived: Option[ClientMessage] = Option(messageConsumer.receive(timeout.toMillis))
           messageReceived.foreach(m => Log.debug(s"Received $m from $from in HornetQ"))
-          messageReceived.map(clientMsg => LocalHornetQMessage(clientMsg.getStringProperty(Message.contentsKey), clientMsg))
+          messageReceived.map(clientMsg => LocalHornetQMessage(clientMsg))
         }
       }
     } yield message
@@ -172,18 +172,17 @@ object LocalHornetQMom extends MessageQueueService {
     } yield messageConsumer
   }
 
-  //todo dead letter queue for all messages. See http://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/examples-sqs-dead-letter-queues.html
+  //todo dead letter queue for all messages SHRINE-2261
 
-  case class LocalHornetQMessage private(messageContent: String, clientMessage: ClientMessage) extends Message {
+  case class LocalHornetQMessage private(clientMessage: ClientMessage) extends Message {
 
-    override def contents: String = messageContent
+    val createdTime: Long = System.currentTimeMillis()
+    override def contents: String = clientMessage.getStringProperty(Message.contentsKey)
 
     //complete a message
-    override def complete(): Try[Unit] = {
-      for {
-        completeClientMessage: Unit <- Try { clientMessage.acknowledge() }
-      } yield completeClientMessage
-    }
+    override def complete(): Try[Unit] = Try { clientMessage.acknowledge() }
+
+    override def createdTimeInMillis: Long = createdTime
   }
 }
 

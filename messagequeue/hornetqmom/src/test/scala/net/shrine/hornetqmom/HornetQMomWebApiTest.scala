@@ -1,5 +1,5 @@
 package net.shrine.hornetqmom
-
+import java.util.UUID
 import akka.actor.ActorRefFactory
 import net.shrine.messagequeueservice.Queue
 import net.shrine.source.ConfigSource
@@ -79,7 +79,7 @@ class HornetQMomWebApiTest extends FlatSpec with ScalatestRouteTest with HornetQ
         assertResult(ResetContent)(status)
       }
 
-      val nonExistingUUID = "f31af7b5-6c3a-4309-942a-f4f4b6644442"
+      val nonExistingUUID = UUID.randomUUID()
       Put("/mom/acknowledge", HttpEntity(s"$nonExistingUUID")) ~> momRoute ~> check {
         val response = new String(body.data.toByteArray)
         assertResult(NotFound)(status)

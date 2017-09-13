@@ -1,18 +1,16 @@
 package net.shrine.messagequeueservice
 
-import net.shrine.spray.DefaultJsonSupport
-import org.json4s.{DefaultFormats, Formats}
-
 import scala.util.Try
 
 /**
+  * A Message Trait that is implemented by LocalHornetQMessage and HornetQClientMessage
   * Created by yifan on 9/8/17.
   */
 
-trait Message extends DefaultJsonSupport {
-  override implicit def json4sFormats: Formats = DefaultFormats
+trait Message {
   def complete(): Try[Unit]
   def contents: String
+  def createdTimeInMillis: Long
 }
 
 object Message {

@@ -176,6 +176,9 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
 
   case class HornetQClientMessage private(messageID: UUID, messageContent: String) extends Message {
 
+    private val createdTime: Long = System.currentTimeMillis()
+    override def contents: String = messageContent
+
     override def complete(): Try[Unit] = {
       val entity: HttpEntity = HttpEntity(messageID.toString)
       val completeMessageUrl: String = s"$momUrl/acknowledge"
@@ -190,6 +193,8 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
         })
       } yield response
     }
+
+    override def createdTimeInMillis: Long = createdTime
   }
 
 }

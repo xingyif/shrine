@@ -2,8 +2,8 @@ package net.shrine.hornetqmom
 
 import java.util.UUID
 
-import net.shrine.log.Loggable
-import net.shrine.messagequeueservice.Queue
+import net.shrine.log.{Log, Loggable}
+import net.shrine.messagequeueservice.{Message, Queue}
 import net.shrine.problem.{AbstractProblem, ProblemSources}
 import net.shrine.source.ConfigSource
 import org.json4s.native.Serialization
@@ -15,6 +15,7 @@ import spray.routing.{HttpService, Route}
 import scala.collection.concurrent.TrieMap
 import scala.collection.immutable.Seq
 import scala.concurrent.duration.Duration
+import scala.util.control.NonFatal
 import scala.util.{Failure, Success, Try}
 /**
   * A web API that provides access to the internal HornetQMom library.
@@ -32,7 +33,37 @@ trait HornetQMomWebApi extends HttpService
                         " You do not want to do this unless you are the hub admin!"
 
   // keep a map of messages and ids
-  private val idToMessages: TrieMap[UUID, LocalHornetQMom.LocalHornetQMessage] = TrieMap.empty
+  private val idToMessages: TrieMap[UUID, Message] = TrieMap.empty
+  // a sentinel that monitors the hashmap of idToMessages, any message that has been outstanding for more than 3X or 10X
+  // time-to-live need to get cleaned out of this map
+  val messageTimeOutInMillis: Long = ConfigSource.config.getLong("shrine.messagequeue.hornetQWebApi.messageTimeOutInMillis")
+  val sentinelThread: Thread = new Thread(MapSentinelRunner(messageTimeOutInMillis),s"${getClass.getSimpleName} mapWatcher")
+  sentinelThread.setDaemon(true)
+
+  sentinelThread.start()
+  Log.debug(s"Started the sentinel thread that cleans up outstanding messages that exceed $messageTimeOutInMillis milliseconds")
+
+  case class MapSentinelRunner(timeOutInMillis: Long) extends Runnable {
+    // watches the map
+    override def run(): Unit = {
+      val currentTimeInMillis = System.currentTimeMillis()
+      while (true) {
+        //forever
+        try {
+          Log.debug("About to clean up outstanding messages.")
+          idToMessages.retain({ (uuid, localHornetQMessage) =>
+            (currentTimeInMillis - localHornetQMessage.createdTimeInMillis) < timeOutInMillis
+          })
+          Log.debug("Outstanding messages have been cleaned from the map.")
+        } catch {
+          case NonFatal(x) => ExceptionWhileCleaningUpMessageProblem(timeOutInMillis, x)
+          //pass-through to blow up the thread, receive no more results, do something dramatic in UncaughtExceptionHandler.
+          case x => Log.error("Fatal exception while cleaning up outstanding messages", x)
+            throw x
+        }
+      }
+    }
+  }
 
   def momRoute: Route = pathPrefix("mom") {
 
@@ -117,7 +148,7 @@ trait HornetQMomWebApi extends HttpService
         parameter('timeOutSeconds ? 20) { timeOutSeconds =>
           val timeout: Duration = Duration.create(timeOutSeconds, "seconds")
           detach() {
-            val receiveTry: Try[Option[LocalHornetQMom.LocalHornetQMessage]] = LocalHornetQMom.receive(Queue(fromQueue), timeout)
+            val receiveTry: Try[Option[Message]] = LocalHornetQMom.receive(Queue(fromQueue), timeout)
             receiveTry match {
               case Success(optionMessage) => {
                 optionMessage.fold(complete(StatusCodes.NotFound)){localHornetQMessage =>
@@ -142,12 +173,12 @@ trait HornetQMomWebApi extends HttpService
       detach() {
         val id: UUID = UUID.fromString(messageUUID)
         // retrieve the localMessage from the concurrent hashmap
-        val getMessageTry: Try[LocalHornetQMom.LocalHornetQMessage] = Try {
+        val getMessageTry: Try[Message] = Try {
           idToMessages(id)
         }.transform({ message =>
           Success(message)
         }, { throwable =>
-          Failure(MessageDoesNotExistException(messageUUID))
+          Failure(MessageDoesNotExistException(id))
         })
 
         getMessageTry match {
@@ -233,4 +264,16 @@ case class CannotUseHornetQMomWebApiProblem(x:Throwable) extends AbstractProblem
                               " You do not want to do this unless you are the hub admin!"
 }
 
-case class MessageDoesNotExistException(id: String) extends Exception(s"Cannot match given $id to any Message in HornetQ server! Message does not exist!")
+case class MessageDoesNotExistException(id: UUID) extends Exception(s"Cannot match given ${id.toString} to any Message in HornetQ server! Message does not exist!")
+
+case class ExceptionWhileCleaningUpMessageProblem(timeOutInMillis: Long, x:Throwable) extends AbstractProblem(ProblemSources.Hub) {
+
+  override val throwable = Some(x)
+
+  override def summary: String = s"The Hub encountered an exception while trying to " +
+    s"cleanup messages that has been outstanding for more than $timeOutInMillis milliseconds"
+
+  override def description: String = s"The Hub encountered an exception while trying to " +
+    s"cleanup messages that has been received for more than $timeOutInMillis milliseconds " +
+    s"on Thread ${Thread.currentThread().getName}: ${x.getMessage}"
+}
