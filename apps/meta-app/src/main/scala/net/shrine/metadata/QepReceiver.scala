@@ -1,5 +1,8 @@
 package net.shrine.metadata
 
+import java.util.concurrent.atomic.AtomicBoolean
+import javax.servlet.{ServletContextEvent, ServletContextListener}
+
 import com.typesafe.config.Config
 import net.shrine.config.ConfigExtensions
 import net.shrine.hornetqclient.CouldNotCreateQueueButOKToRetryException
@@ -28,14 +31,29 @@ object QepReceiver {
   val nodeName = config.getString("shrine.humanReadableNodeName")
 
   //create a daemon thread that long-polls for messages forever
-  val pollingThread = new Thread(QepReceiverRunner(nodeName),s"${getClass.getSimpleName} poller")
+  val runner = QepReceiverRunner(nodeName)
+
+  val pollingThread = new Thread(runner,s"${getClass.getSimpleName} poller")
   pollingThread.setDaemon(true)
   //todo   pollingThread.setUncaughtExceptionHandler() SHRINE-2198
 
-  pollingThread.start()
-  Log.debug(s"Started the QepReceiver thread for $nodeName")
+  def start(): Unit = {
+    pollingThread.start()
+    Log.debug(s"Started the QepReceiver thread for $nodeName")
+  }
+
+  def stop(): Unit = {
+    runner.stop()
+  }
 
   case class QepReceiverRunner(nodeName:String) extends Runnable {
+
+    val keepGoing = new AtomicBoolean(true)
+
+    def stop(): Unit = {
+      keepGoing.set(false)
+      Log.debug(s"${this.getClass.getSimpleName} keepGoing set to ${keepGoing.get()}. Will stop asking for messages after the current request.")
+    }
 
     val pollDuration = Duration("15 seconds") //todo from config SHRINE-2198
 
@@ -44,7 +62,7 @@ object QepReceiver {
     override def run(): Unit = {
       val queue = createQueue(nodeName)
 
-      while (true) {
+      while (keepGoing.get()) {
         //forever
         try {
           //todo only ask to receive a message if there are incomplete queries SHRINE-2196
@@ -58,6 +76,7 @@ object QepReceiver {
             throw x
         }
       }
+      Log.debug(s"QepReceiverRunner will stop. keepGoing is ${keepGoing.get()}")
     }
 
     def receiveAMessage(queue:Queue): Unit = {
@@ -174,4 +193,16 @@ case class QepReceiverCouldNotDecodeMessage(messageString:String,queue:Queue, x:
     s"""The QEP encountered an exception while trying to decode a message from $queue on ${Thread.currentThread().getName}:
        |${x.getMessage}
        |$messageString""".stripMargin
+}
+
+class QueueReceiverContextListener extends ServletContextListener {
+
+
+  override def contextInitialized(servletContextEvent: ServletContextEvent): Unit = {
+    QepReceiver.start()
+  }
+
+  override def contextDestroyed(servletContextEvent: ServletContextEvent): Unit = {
+    QepReceiver.stop()
+  }
 }
