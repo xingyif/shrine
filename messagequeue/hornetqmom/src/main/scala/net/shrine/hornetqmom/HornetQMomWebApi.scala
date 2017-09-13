@@ -1,7 +1,7 @@
 package net.shrine.hornetqmom
 
 import java.util.UUID
-
+import net.shrine.config.ConfigExtensions
 import net.shrine.log.{Log, Loggable}
 import net.shrine.messagequeueservice.{Message, Queue}
 import net.shrine.problem.{AbstractProblem, ProblemSources}
@@ -36,7 +36,7 @@ trait HornetQMomWebApi extends HttpService
   private val idToMessages: TrieMap[UUID, Message] = TrieMap.empty
   // a sentinel that monitors the hashmap of idToMessages, any message that has been outstanding for more than 3X or 10X
   // time-to-live need to get cleaned out of this map
-  val messageTimeOutInMillis: Long = ConfigSource.config.getLong("shrine.messagequeue.hornetQWebApi.messageTimeOutInMillis")
+  val messageTimeOutInMillis: Long = ConfigSource.config.get("shrine.messagequeue.hornetQWebApi.messageTimeOutInMillis", Duration(_)).toMillis
   val sentinelThread: Thread = new Thread(MapSentinelRunner(messageTimeOutInMillis),s"${getClass.getSimpleName} mapWatcher")
   sentinelThread.setDaemon(true)
 
