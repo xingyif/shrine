@@ -1,16 +1,18 @@
 package net.shrine.hornetqclient
 
 import java.util.UUID
+
 import akka.actor.ActorSystem
 import net.shrine.config.ConfigExtensions
 import net.shrine.hornetqmom.MessageContainer
 import net.shrine.log.Loggable
-import net.shrine.messagequeueservice.{Message, MessageQueueService, Queue}
+import net.shrine.messagequeueservice.{CouldNotCreateQueueButOKToRetryException, Message, MessageQueueService, Queue}
 import net.shrine.source.ConfigSource
 import org.json4s.NoTypeHints
 import org.json4s.native.Serialization
 import org.json4s.native.Serialization.read
-import spray.http.{HttpEntity, HttpMethods, HttpRequest, HttpResponse, StatusCode, StatusCodes}
+import spray.http.{HttpEntity, HttpMethods, HttpRequest, HttpResponse, StatusCodes}
+
 import scala.collection.immutable.Seq
 import scala.concurrent.duration.Duration
 import scala.language.postfixOps
@@ -29,7 +31,7 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
   // we need an ActorSystem to host our application in
   implicit val system: ActorSystem = ActorSystem("momServer", ConfigSource.config)
 
-  val webClientTimeOutSecond: Duration = ConfigSource.config.get("shrine.messagequeue.hornetq.webClientTimeOutSecond", Duration(_))
+  val webClientTimeOut: Duration = ConfigSource.config.get("shrine.messagequeue.hornetq.webClientTimeOutSecond", Duration(_))
   // TODO in SHRINE-2167: Extract and share a SHRINE actor system
   // the service actor replies to incoming HttpRequests
 //  implicit val serviceActor: ActorRef = startServiceActor()
@@ -73,7 +75,7 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
     val createQueueUrl = momUrl + s"/createQueue/${proposedQueue.name}"
     val request: HttpRequest = HttpRequest(HttpMethods.PUT, createQueueUrl)
     for {
-      response: HttpResponse <- Try(HttpClient.webApiCall(request, webClientTimeOutSecond))
+      response: HttpResponse <- Try(HttpClient.webApiCall(request, webClientTimeOut))
       queue: Queue <- queueFromResponse(response)
     } yield queue
   }
@@ -103,14 +105,14 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
     val proposedQueue: Queue = Queue(queueName)
     val deleteQueueUrl = momUrl + s"/deleteQueue/${proposedQueue.name}"
     val request: HttpRequest = HttpRequest(HttpMethods.PUT, deleteQueueUrl)
-    Try(HttpClient.webApiCall(request, webClientTimeOutSecond)) // StatusCodes.OK
+    Try(HttpClient.webApiCall(request, webClientTimeOut)) // StatusCodes.OK
   }
 
   override def queues: Try[Seq[Queue]] = {
     val getQueuesUrl = momUrl + s"/getQueues"
     val request: HttpRequest = HttpRequest(HttpMethods.GET, getQueuesUrl)
     for {
-      response: HttpResponse <- Try(HttpClient.webApiCall(request, webClientTimeOutSecond))
+      response: HttpResponse <- Try(HttpClient.webApiCall(request, webClientTimeOut))
       allQueues: Seq[Queue] <- Try {
         val allQueues: String = response.entity.asString
         implicit val formats = Serialization.formats(NoTypeHints)
@@ -130,7 +132,7 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
       entity = HttpEntity(contents)  //todo set contents as XML or json SHRINE-2215
     )
     for {
-      response: HttpResponse <- Try(HttpClient.webApiCall(request, webClientTimeOutSecond))
+      response: HttpResponse <- Try(HttpClient.webApiCall(request, webClientTimeOut))
     } yield response
   }
 
@@ -141,7 +143,8 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
     val request: HttpRequest = HttpRequest(HttpMethods.GET, receiveMessageUrl)
 
     for {
-      response: HttpResponse <- Try(HttpClient.webApiCall(request, webClientTimeOutSecond))
+    //use the time to make the API call plus the timeout for the long poll
+      response: HttpResponse <- Try(HttpClient.webApiCall(request, webClientTimeOut + timeout)) 
       messageResponse: Option[Message] <- messageOptionFromResponse(response)
     } yield messageResponse
   }
@@ -186,8 +189,6 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
   }
 
 }
-
-case class CouldNotCreateQueueButOKToRetryException(status:StatusCode,contents:String) extends Exception(s"Could not create a queue due to status code $status with message '$contents'")
 
 // TODO in SHRINE-2167: Extract and share a SHRINE actor system
 //class HornetQMomWebClientServiceActor extends Actor with MetaDataService {
