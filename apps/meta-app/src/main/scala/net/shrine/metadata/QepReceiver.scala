@@ -15,7 +15,7 @@ import net.shrine.qep.querydb.{QepQueryDb, QueryResultRow}
 import net.shrine.source.ConfigSource
 import net.shrine.status.protocol.IncrementalQueryResult
 
-import scala.concurrent.duration.{Duration, FiniteDuration}
+import scala.concurrent.duration.Duration
 import scala.util.control.NonFatal
 import scala.util.{Failure, Success, Try}
 
@@ -65,7 +65,6 @@ object QepReceiver {
       while (keepGoing.get()) {
         //forever
         try {
-          //todo only ask to receive a message if there are incomplete queries SHRINE-2196
           Log.debug("About to call receive.")
           receiveAMessage(queue)
           Log.debug("Called receive.")
@@ -80,7 +79,7 @@ object QepReceiver {
     }
 
     def receiveAMessage(queue:Queue): Unit = {
-      val maybeMessage: Try[Option[Message]] = MessageQueueService.service.receive(queue, pollDuration) //todo make pollDuration configurable (and testable) SHRINE-2198
+      val maybeMessage: Try[Option[Message]] = MessageQueueService.service.receive(queue, pollDuration) 
 
       maybeMessage.transform({m =>
         m.map(interpretAMessage(_,queue)).getOrElse(Success())
