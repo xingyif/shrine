@@ -3,16 +3,8 @@ package net.shrine.hornetqclient
 import java.util.UUID
 
 import akka.actor.ActorSystem
-<<<<<<< HEAD
-<<<<<<< HEAD
 import net.shrine.config.ConfigExtensions
-import net.shrine.hornetqmom.{MessageSerializer, QueueSerializer}
-=======
-import net.shrine.hornetqmom.{MessageContainer, QueueSerializer}
->>>>>>> fixed conflicts
-=======
 import net.shrine.hornetqmom.MessageContainer
->>>>>>> implemented Dave's review comments
 import net.shrine.log.Loggable
 import net.shrine.messagequeueservice.{Message, MessageQueueService, Queue}
 import net.shrine.source.ConfigSource
