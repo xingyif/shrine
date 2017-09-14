@@ -2,11 +2,12 @@ package net.shrine.hornetqclient
 
 import java.security.cert.X509Certificate
 import javax.net.ssl.{SSLContext, X509TrustManager}
-
 import akka.actor.{ActorRef, ActorSystem}
 import akka.io.IO
 import akka.pattern.ask
 import net.shrine.log.Loggable
+import net.shrine.source.ConfigSource
+import net.shrine.config.ConfigExtensions
 import spray.can.Http
 import spray.can.Http.{ConnectionAttemptFailedException, HostConnectorSetup}
 import spray.http.{HttpEntity, HttpRequest, HttpResponse, StatusCodes}
@@ -14,7 +15,7 @@ import spray.io.ClientSSLEngineProvider
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.{Duration, DurationInt, DurationLong}
-import scala.concurrent.{Await, Future, TimeoutException, blocking}
+import scala.concurrent.{Await, Future, TimeoutException}
 import scala.language.postfixOps
 import scala.util.control.NonFatal
 
@@ -25,7 +26,9 @@ object HttpClient extends Loggable {
 
   //todo hand back a Try, Failures with custom exceptions instead of a crappy response
   //todo Really a Future would be even better
-  def webApiCall(request:HttpRequest,timeout:Duration = 10 seconds)(implicit system: ActorSystem): HttpResponse = {
+  def webApiCall(request:HttpRequest,
+                 timeout:Duration = ConfigSource.config.get("shrine.messagequeue.httpClient.defaultTimeOutSecond", Duration(_)))
+                (implicit system: ActorSystem): HttpResponse = {
 
     val deadline = System.currentTimeMillis() + timeout.toMillis
 
@@ -38,7 +41,8 @@ object HttpClient extends Loggable {
     } yield response
     try {
       //wait a second longer than the deadline before timing out the Await, to let the actors timeout
-      Await.result(future, deadline + 1000 - System.currentTimeMillis() milliseconds) //todo make this time gap configurable SHRINE-2217
+      val timeOutWaitGap = ConfigSource.config.get("shrine.messagequeue.httpClient.timeOutWaitGap", Duration(_)).toMillis
+      Await.result(future, deadline + timeOutWaitGap - System.currentTimeMillis() milliseconds)
     }
     catch {
       //todo definitely need the Try instead of this sloppy replacement of the HttpResponse.

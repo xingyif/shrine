@@ -1,6 +1,7 @@
 package net.shrine.hornetqclient
 
 import akka.actor.ActorSystem
+import net.shrine.config.ConfigExtensions
 import net.shrine.log.Loggable
 import net.shrine.messagequeueservice.{Message, MessageQueueService, MessageSerializer, Queue, QueueSerializer}
 import net.shrine.source.ConfigSource
@@ -8,9 +9,8 @@ import org.json4s.native.Serialization
 import org.json4s.native.Serialization.{read, write}
 import org.json4s.{Formats, NoTypeHints}
 import spray.http.{HttpEntity, HttpMethods, HttpRequest, HttpResponse, StatusCode, StatusCodes}
-
 import scala.collection.immutable.Seq
-import scala.concurrent.duration.{Duration, DurationLong, FiniteDuration}
+import scala.concurrent.duration.Duration
 import scala.language.postfixOps
 import scala.util.control.NonFatal
 import scala.util.{Failure, Success, Try}
@@ -27,6 +27,7 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
   // we need an ActorSystem to host our application in
   implicit val system: ActorSystem = ActorSystem("momServer", ConfigSource.config)
 
+  val webClientTimeOutSecond: Duration = ConfigSource.config.get("shrine.messagequeue.hornetq.webClientTimeOutSecond", Duration(_))
   // TODO in SHRINE-2167: Extract and share a SHRINE actor system
   // the service actor replies to incoming HttpRequests
 //  implicit val serviceActor: ActorRef = startServiceActor()
@@ -70,7 +71,7 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
     val createQueueUrl = momUrl + s"/createQueue/${proposedQueue.name}"
     val request: HttpRequest = HttpRequest(HttpMethods.PUT, createQueueUrl)
     for {
-      response: HttpResponse <- Try(HttpClient.webApiCall(request))
+      response: HttpResponse <- Try(HttpClient.webApiCall(request, webClientTimeOutSecond))
       queue: Queue <- queueFromResponse(response)
     } yield queue
   }
@@ -100,14 +101,14 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
     val proposedQueue: Queue = Queue(queueName)
     val deleteQueueUrl = momUrl + s"/deleteQueue/${proposedQueue.name}"
     val request: HttpRequest = HttpRequest(HttpMethods.PUT, deleteQueueUrl)
-    Try(HttpClient.webApiCall(request)) // StatusCodes.OK
+    Try(HttpClient.webApiCall(request, webClientTimeOutSecond)) // StatusCodes.OK
   }
 
   override def queues: Try[Seq[Queue]] = {
     val getQueuesUrl = momUrl + s"/getQueues"
     val request: HttpRequest = HttpRequest(HttpMethods.GET, getQueuesUrl)
     for {
-      response: HttpResponse <- Try(HttpClient.webApiCall(request))
+      response: HttpResponse <- Try(HttpClient.webApiCall(request, webClientTimeOutSecond))
       allQueues: Seq[Queue] <- Try {
         val allQueues: String = response.entity.asString
         implicit val formats = Serialization.formats(NoTypeHints) + new QueueSerializer
@@ -127,7 +128,7 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
       entity = HttpEntity(contents)  //todo set contents as XML or json SHRINE-2215
     )
     for {
-      response: HttpResponse <- Try(HttpClient.webApiCall(request,3L seconds)) //todo configurable SHRINE-2214
+      response: HttpResponse <- Try(HttpClient.webApiCall(request, webClientTimeOutSecond))
     } yield response
   }
 
@@ -136,10 +137,9 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
     val seconds = timeout.toSeconds
     val receiveMessageUrl = momUrl + s"/receiveMessage/${from.name}?timeOutSeconds=$seconds"
     val request: HttpRequest = HttpRequest(HttpMethods.GET, receiveMessageUrl)
-    val httpRequestTimeout: FiniteDuration = (timeout.toSeconds + 1) second //todo configurable SHRINE-2214
 
     for {
-      response: HttpResponse <- Try(HttpClient.webApiCall(request, httpRequestTimeout))
+      response: HttpResponse <- Try(HttpClient.webApiCall(request, webClientTimeOutSecond))
       messageResponse: Option[Message] <- messageOptionFromResponse(response)
     } yield messageResponse
   }
@@ -172,7 +172,7 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
     val completeMessageUrl: String = momUrl + s"/acknowledge" // HttpEntity
     val request: HttpRequest = HttpRequest(HttpMethods.PUT, completeMessageUrl).withEntity(entity)
     for {
-      response: HttpResponse <- Try(HttpClient.webApiCall(request))
+      response: HttpResponse <- Try(HttpClient.webApiCall(request, webClientTimeOutSecond))
     } yield response
   }
 }
