@@ -174,17 +174,12 @@ object LocalHornetQMom extends MessageQueueService {
 /**
   * If the configuration is such that HornetQ should have been started use this object to stop it
   */
-//todo is this a good way to write this code?
 object LocalHornetQMomStopper {
 
   def stop(): Unit = {
-    //todo fill in as part of SHIRINE-2128
-    for {
-      config: Config <- Try {
-        ConfigSource.config.getConfig("shrine.messagequeue.hornetq")
-      }
-    } yield config
-    LocalHornetQMom.stop()
+    if(ConfigSource.config.getBoolean("shrine.messagequeue.hornetQWebApi.enabled")) {
+      LocalHornetQMom.stop()
+    }
   }
 
 }
