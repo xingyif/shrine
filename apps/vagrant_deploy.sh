@@ -9,8 +9,8 @@ declare -a MACHINES=( shrine-hub shrine-node1 )
 # Change this to be: the .war file directory in vagrant box
 VAGRANT_WAR_CONTEXT=/opt/shrine/tomcat/webapps
 # Change this to be: local vagrant directory
-VAGRANT_CONTEXT=~/vagrant-shrine-network
-#VAGRANT_CONTEXT=~/projects/vagrantShrine/vagrant-shrine-network
+#VAGRANT_CONTEXT=~/vagrant-shrine-network
+VAGRANT_CONTEXT=~/projects/vagrantShrine/vagrant-shrine-network
 
 #------------DO NOT MODIFY-----------------------
 BUFFER=/home/vagrant/m3shrine
