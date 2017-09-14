@@ -79,7 +79,7 @@ object QepReceiver {
     }
 
     def receiveAMessage(queue:Queue): Unit = {
-      val maybeMessage: Try[Option[Message]] = MessageQueueService.service.receive(queue, pollDuration) 
+      val maybeMessage: Try[Option[Message]] = MessageQueueService.service.receive(queue, pollDuration)
 
       maybeMessage.transform({m =>
         m.map(interpretAMessage(_,queue)).getOrElse(Success())
