@@ -134,12 +134,8 @@ System.register(['aurelia-framework', 'services/query-status.model', 'services/p
                 QueryStatus.prototype.attached = function attached() {
                     var _this2 = this;
 
-                    this.subscribe(this.notifications.i2b2.queryStarted, function (n) {
-                        _this2.status = initialState();
-                        _this2.status.query.queryName = n;
-                    });
-
                     this.subscribe(this.notifications.i2b2.networkIdReceived, function (d) {
+                        if (_this2.status && _this2.status.canceled) return;
                         var networkId = d.networkId,
                             name = d.name;
 
@@ -157,7 +153,7 @@ System.register(['aurelia-framework', 'services/query-status.model', 'services/p
                     });
 
                     this.subscribe(this.notifications.i2b2.clearQuery, function () {
-                        _this2.status = initialState();
+                        _this2.status = _extends({}, initialState(), { canceled: true });
                     });
                     this.subscribe(this.notifications.shrine.queryReceived, function (data) {
                         var query = data.query,
@@ -168,7 +164,7 @@ System.register(['aurelia-framework', 'services/query-status.model', 'services/p
                             networkId = data.query.networkId;
 
                         var timeoutSeconds = TIMEOUT_SECONDS;
-                        if (networkId !== _this2.status.query.networkId) return;
+                        if (networkId !== _this2.status.query.networkId || _this2.status.canceled) return;
                         var updated = Number(new Date());
                         _this2.status = _extends({}, _this2.status, { query: query, nodes: nodes, updated: updated });
                         if (!complete) {
@@ -194,7 +190,7 @@ System.register(['aurelia-framework', 'services/query-status.model', 'services/p
             me = new WeakMap();
 
             initialState = function initialState(n) {
-                return { query: { networkId: null, queryName: null, updated: null, complete: false }, nodes: null };
+                return { query: { networkId: null, queryName: null, updated: null, complete: false, canceled: false }, nodes: null };
             };
         }
     };

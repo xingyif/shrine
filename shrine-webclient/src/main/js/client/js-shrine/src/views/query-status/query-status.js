@@ -23,12 +23,13 @@ export class QueryStatus extends PubSub {
     }
     attached() {
         // -- subscribers -- //
-        this.subscribe(this.notifications.i2b2.queryStarted, (n) => {
+        /*this.subscribe(this.notifications.i2b2.queryStarted, (n) => {
             this.status = initialState();
             this.status.query.queryName = n;
-        });
+        });*/
 
         this.subscribe(this.notifications.i2b2.networkIdReceived, d => {
+            if(this.status && this.status.canceled) return;
             const {networkId, name} = d;
             const state = initialState();
             const {nodes} = state;
@@ -43,12 +44,12 @@ export class QueryStatus extends PubSub {
         })
 
         this.subscribe(this.notifications.i2b2.clearQuery, () => {
-            this.status = initialState();
+            this.status = {...initialState(), ...{canceled: true}};
         })
         this.subscribe(this.notifications.shrine.queryReceived, data => {
             const {query, nodes, dataVersion = DEFAULT_VERSION, complete, query:{networkId}} = data; 
             const timeoutSeconds = TIMEOUT_SECONDS;
-            if(networkId !== this.status.query.networkId) return;
+            if(networkId !== this.status.query.networkId || this.status.canceled) return;
             const updated = Number(new Date());
             this.status = { ...this.status, ...{ query, nodes, updated } }
             if (!complete) {
@@ -65,4 +66,4 @@ export class QueryStatus extends PubSub {
 const TIMEOUT_SECONDS = 15;
 const DEFAULT_VERSION = -1;
 const me = new WeakMap();
-const initialState = (n) => ({ query: { networkId: null, queryName: null, updated: null, complete: false }, nodes: null });
+const initialState = (n) => ({ query: { networkId: null, queryName: null, updated: null, complete: false, canceled: false}, nodes: null });

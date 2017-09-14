@@ -333,8 +333,8 @@ i2b2.CRC.ctrlr.QueryStatus.prototype = function () {
 		this.callbackQueryDef.scope = this;
 
 		this.callbackQueryDef.callback = function (results) {
+			if(!i2b2.CRC.ctrlr.currentQueryStatus) return;
 			var networkId = results.refXML.getElementsByTagName('query_master_id')[0].firstChild.nodeValue;
-			console.log('networkId: ' + networkId);
 			i2b2.events.networkIdReceived.fire({networkId: networkId});
 			i2b2.CRC.ctrlr.history.Refresh();
 			clearQuery();
