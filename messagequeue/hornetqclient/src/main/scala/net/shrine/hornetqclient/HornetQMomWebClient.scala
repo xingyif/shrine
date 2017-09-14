@@ -1,16 +1,18 @@
 package net.shrine.hornetqclient
 
 import java.util.UUID
+
 import akka.actor.ActorSystem
 import net.shrine.config.ConfigExtensions
 import net.shrine.hornetqmom.MessageContainer
 import net.shrine.log.Loggable
-import net.shrine.messagequeueservice.{Message, MessageQueueService, Queue}
+import net.shrine.messagequeueservice.{CouldNotCreateQueueButOKToRetryException, Message, MessageQueueService, Queue}
 import net.shrine.source.ConfigSource
 import org.json4s.NoTypeHints
 import org.json4s.native.Serialization
 import org.json4s.native.Serialization.read
 import spray.http.{HttpEntity, HttpMethods, HttpRequest, HttpResponse, StatusCode, StatusCodes}
+
 import scala.collection.immutable.Seq
 import scala.concurrent.duration.Duration
 import scala.language.postfixOps

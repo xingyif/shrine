@@ -2,12 +2,13 @@ package net.shrine.messagequeueservice
 
 import net.shrine.source.ConfigSource
 import net.shrine.spray.DefaultJsonSupport
+import spray.http.StatusCode
 
 import scala.collection.immutable.Seq
 import scala.concurrent.duration.Duration
 import scala.util.Try
 /**
-  * This object mostly imitates AWS SQS' API via an embedded HornetQ. See http://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/examples-sqs.html
+  * This API mostly imitates AWS SQS' API via an embedded HornetQ. See http://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/examples-sqs.html
   *
   * @author david
   * @since 7/18/17
@@ -46,9 +47,6 @@ case class Queue(var name:String) extends DefaultJsonSupport {
   }
 }
 
-case class NoSuchQueueExistsInHornetQ(proposedQueue: Queue) extends Exception {
-  override def getMessage: String = {
-    s"Given Queue ${proposedQueue.name} does not exist in HornetQ server! Please create the queue first!"
-  }
+case class NoSuchQueueExistsInHornetQ(proposedQueue: Queue) extends Exception(s"Given Queue ${proposedQueue.name} does not exist in HornetQ server! Please create the queue first!")
 
 case class CouldNotCreateQueueButOKToRetryException(status:StatusCode,contents:String) extends Exception(s"Could not create a queue due to status code $status with message '$contents'")
