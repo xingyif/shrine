@@ -10,9 +10,10 @@ System.config({
     "aurelia-animator-css": "npm:aurelia-animator-css@1.0.1",
     "aurelia-bootstrapper": "npm:aurelia-bootstrapper@1.0.0",
     "aurelia-event-aggregator": "npm:aurelia-event-aggregator@1.0.1",
-    "aurelia-fetch-client": "npm:aurelia-fetch-client@1.0.1",
+    "aurelia-fetch-client": "npm:aurelia-fetch-client@1.1.3",
     "aurelia-framework": "npm:aurelia-framework@1.0.6",
     "aurelia-history-browser": "npm:aurelia-history-browser@1.0.0",
+    "aurelia-http-client": "npm:aurelia-http-client@1.1.1",
     "aurelia-loader-default": "npm:aurelia-loader-default@1.0.0",
     "aurelia-logging-console": "npm:aurelia-logging-console@1.0.0",
     "aurelia-pal-browser": "npm:aurelia-pal-browser@1.0.0",
@@ -23,7 +24,7 @@ System.config({
     "aurelia-templating-router": "npm:aurelia-templating-router@1.0.0",
     "bluebird": "npm:bluebird@3.4.1",
     "bootstrap": "github:twbs/bootstrap@3.3.7",
-    "fetch": "github:github/fetch@1.0.0",
+    "fetch": "github:github/fetch@2.0.3",
     "font-awesome": "npm:font-awesome@4.7.0",
     "jquery": "npm:jquery@2.2.4",
     "moment": "npm:moment@2.18.1",
@@ -55,13 +56,13 @@ System.config({
     },
     "npm:aurelia-animator-css@1.0.1": {
       "aurelia-metadata": "npm:aurelia-metadata@1.0.3",
-      "aurelia-pal": "npm:aurelia-pal@1.3.0",
+      "aurelia-pal": "npm:aurelia-pal@1.4.0",
       "aurelia-templating": "npm:aurelia-templating@1.1.1"
     },
     "npm:aurelia-binding@1.0.9": {
       "aurelia-logging": "npm:aurelia-logging@1.3.1",
       "aurelia-metadata": "npm:aurelia-metadata@1.0.3",
-      "aurelia-pal": "npm:aurelia-pal@1.3.0",
+      "aurelia-pal": "npm:aurelia-pal@1.4.0",
       "aurelia-task-queue": "npm:aurelia-task-queue@1.1.0"
     },
     "npm:aurelia-bootstrapper@1.0.0": {
@@ -71,7 +72,7 @@ System.config({
       "aurelia-history-browser": "npm:aurelia-history-browser@1.0.0",
       "aurelia-loader-default": "npm:aurelia-loader-default@1.0.0",
       "aurelia-logging-console": "npm:aurelia-logging-console@1.0.0",
-      "aurelia-pal": "npm:aurelia-pal@1.3.0",
+      "aurelia-pal": "npm:aurelia-pal@1.4.0",
       "aurelia-pal-browser": "npm:aurelia-pal-browser@1.0.0",
       "aurelia-polyfills": "npm:aurelia-polyfills@1.1.1",
       "aurelia-router": "npm:aurelia-router@1.3.0",
@@ -82,7 +83,7 @@ System.config({
     },
     "npm:aurelia-dependency-injection@1.3.1": {
       "aurelia-metadata": "npm:aurelia-metadata@1.0.3",
-      "aurelia-pal": "npm:aurelia-pal@1.3.0"
+      "aurelia-pal": "npm:aurelia-pal@1.4.0"
     },
     "npm:aurelia-event-aggregator@1.0.1": {
       "aurelia-logging": "npm:aurelia-logging@1.3.1"
@@ -93,19 +94,23 @@ System.config({
       "aurelia-loader": "npm:aurelia-loader@1.0.0",
       "aurelia-logging": "npm:aurelia-logging@1.3.1",
       "aurelia-metadata": "npm:aurelia-metadata@1.0.3",
-      "aurelia-pal": "npm:aurelia-pal@1.3.0",
+      "aurelia-pal": "npm:aurelia-pal@1.4.0",
       "aurelia-path": "npm:aurelia-path@1.1.1",
       "aurelia-task-queue": "npm:aurelia-task-queue@1.1.0",
       "aurelia-templating": "npm:aurelia-templating@1.1.1"
     },
     "npm:aurelia-history-browser@1.0.0": {
       "aurelia-history": "npm:aurelia-history@1.0.0",
-      "aurelia-pal": "npm:aurelia-pal@1.3.0"
+      "aurelia-pal": "npm:aurelia-pal@1.4.0"
+    },
+    "npm:aurelia-http-client@1.1.1": {
+      "aurelia-pal": "npm:aurelia-pal@1.4.0",
+      "aurelia-path": "npm:aurelia-path@1.1.1"
     },
     "npm:aurelia-loader-default@1.0.0": {
       "aurelia-loader": "npm:aurelia-loader@1.0.0",
       "aurelia-metadata": "npm:aurelia-metadata@1.0.3",
-      "aurelia-pal": "npm:aurelia-pal@1.3.0"
+      "aurelia-pal": "npm:aurelia-pal@1.4.0"
     },
     "npm:aurelia-loader@1.0.0": {
       "aurelia-metadata": "npm:aurelia-metadata@1.0.3",
@@ -115,13 +120,13 @@ System.config({
       "aurelia-logging": "npm:aurelia-logging@1.3.1"
     },
     "npm:aurelia-metadata@1.0.3": {
-      "aurelia-pal": "npm:aurelia-pal@1.3.0"
+      "aurelia-pal": "npm:aurelia-pal@1.4.0"
     },
     "npm:aurelia-pal-browser@1.0.0": {
-      "aurelia-pal": "npm:aurelia-pal@1.3.0"
+      "aurelia-pal": "npm:aurelia-pal@1.4.0"
     },
     "npm:aurelia-polyfills@1.1.1": {
-      "aurelia-pal": "npm:aurelia-pal@1.3.0"
+      "aurelia-pal": "npm:aurelia-pal@1.4.0"
     },
     "npm:aurelia-route-recognizer@1.1.0": {
       "aurelia-path": "npm:aurelia-path@1.1.1"
@@ -135,7 +140,7 @@ System.config({
       "aurelia-route-recognizer": "npm:aurelia-route-recognizer@1.1.0"
     },
     "npm:aurelia-task-queue@1.1.0": {
-      "aurelia-pal": "npm:aurelia-pal@1.3.0"
+      "aurelia-pal": "npm:aurelia-pal@1.4.0"
     },
     "npm:aurelia-templating-binding@1.0.0": {
       "aurelia-binding": "npm:aurelia-binding@1.0.9",
@@ -148,7 +153,7 @@ System.config({
       "aurelia-loader": "npm:aurelia-loader@1.0.0",
       "aurelia-logging": "npm:aurelia-logging@1.3.1",
       "aurelia-metadata": "npm:aurelia-metadata@1.0.3",
-      "aurelia-pal": "npm:aurelia-pal@1.3.0",
+      "aurelia-pal": "npm:aurelia-pal@1.4.0",
       "aurelia-path": "npm:aurelia-path@1.1.1",
       "aurelia-task-queue": "npm:aurelia-task-queue@1.1.0",
       "aurelia-templating": "npm:aurelia-templating@1.1.1"
@@ -157,7 +162,7 @@ System.config({
       "aurelia-dependency-injection": "npm:aurelia-dependency-injection@1.3.1",
       "aurelia-logging": "npm:aurelia-logging@1.3.1",
       "aurelia-metadata": "npm:aurelia-metadata@1.0.3",
-      "aurelia-pal": "npm:aurelia-pal@1.3.0",
+      "aurelia-pal": "npm:aurelia-pal@1.4.0",
       "aurelia-path": "npm:aurelia-path@1.1.1",
       "aurelia-router": "npm:aurelia-router@1.3.0",
       "aurelia-templating": "npm:aurelia-templating@1.1.1"
@@ -168,7 +173,7 @@ System.config({
       "aurelia-loader": "npm:aurelia-loader@1.0.0",
       "aurelia-logging": "npm:aurelia-logging@1.3.1",
       "aurelia-metadata": "npm:aurelia-metadata@1.0.3",
-      "aurelia-pal": "npm:aurelia-pal@1.3.0",
+      "aurelia-pal": "npm:aurelia-pal@1.4.0",
       "aurelia-path": "npm:aurelia-path@1.1.1",
       "aurelia-task-queue": "npm:aurelia-task-queue@1.1.0"
     },
@@ -203,6 +208,98 @@ System.config({
     "npm:vm-browserify@0.0.4": {
       "indexof": "npm:indexof@0.0.1"
     }
+  },
+  depCache: {
+    "repository/qep.repository.js": [
+      "aurelia-fetch-client",
+      "fetch"
+    ],
+    "resources/converters/datetime.value.converter.js": [
+      "moment"
+    ],
+    "resources/custom/breakdown/breakdown.js": [
+      "aurelia-framework"
+    ],
+    "resources/custom/node-result/node-result.js": [
+      "aurelia-framework",
+      "services/pub-sub"
+    ],
+    "resources/custom/node-status/node-status.js": [
+      "aurelia-framework",
+      "services/pub-sub"
+    ],
+    "services/container.js": [
+      "ramda"
+    ],
+    "services/i2b2.pub-sub.js": [
+      "./pub-sub",
+      "./i2b2.service"
+    ],
+    "services/i2b2.service.js": [
+      "ramda",
+      "./container"
+    ],
+    "services/pub-sub.js": [
+      "aurelia-event-aggregator",
+      "./shrine.messages"
+    ],
+    "services/queries.model.js": [
+      "aurelia-event-aggregator",
+      "repository/qep.repository",
+      "./shrine.messages"
+    ],
+    "services/query-export.js": [
+      "./pub-sub"
+    ],
+    "services/query-status.model.js": [
+      "aurelia-event-aggregator",
+      "repository/qep.repository",
+      "./shrine.messages"
+    ],
+    "shell.js": [
+      "services/i2b2.pub-sub",
+      "services/query-export"
+    ],
+    "views/mailto/mailto.js": [
+      "views/mailto/mailto.service",
+      "views/mailto/mailto.config"
+    ],
+    "views/mailto/mailto.service.js": [
+      "repository/qep.repository"
+    ],
+    "views/query-status/query-status.js": [
+      "aurelia-framework",
+      "services/query-status.model",
+      "services/pub-sub"
+    ],
+    "views/query-viewer/context-menu/context-menu.js": [
+      "aurelia-framework",
+      "aurelia-event-aggregator",
+      "common/shrine.messages"
+    ],
+    "views/query-viewer/date.converter.js": [
+      "moment"
+    ],
+    "views/query-viewer/paginator/paginator.js": [
+      "aurelia-framework"
+    ],
+    "views/query-viewer/query-status/query-status.js": [
+      "aurelia-framework",
+      "ramda"
+    ],
+    "views/query-viewer/query-viewer.js": [
+      "aurelia-event-aggregator",
+      "common/queries.model",
+      "./scroll.service",
+      "common/shrine.messages"
+    ],
+    "views/query-viewer/result-row/loading-bar/loading-bar.js": [
+      "aurelia-framework"
+    ],
+    "views/query-viewer/scroll.service.js": [
+      "ramda",
+      "common/container"
+    ]
   },
   bundles: {
     "app-build.js": [
@@ -258,8 +355,8 @@ System.config({
       "views/query-viewer/scroll.service.js"
     ],
     "aurelia.js": [
-      "github:github/fetch@1.0.0.js",
-      "github:github/fetch@1.0.0/fetch.js",
+      "github:github/fetch@2.0.3.js",
+      "github:github/fetch@2.0.3/fetch.js",
       "github:jspm/nodelibs-process@0.1.2.js",
       "github:jspm/nodelibs-process@0.1.2/index.js",
       "npm:aurelia-binding@1.0.9.js",
@@ -270,8 +367,8 @@ System.config({
       "npm:aurelia-dependency-injection@1.3.1/aurelia-dependency-injection.js",
       "npm:aurelia-event-aggregator@1.0.1.js",
       "npm:aurelia-event-aggregator@1.0.1/aurelia-event-aggregator.js",
-      "npm:aurelia-fetch-client@1.0.1.js",
-      "npm:aurelia-fetch-client@1.0.1/aurelia-fetch-client.js",
+      "npm:aurelia-fetch-client@1.1.3.js",
+      "npm:aurelia-fetch-client@1.1.3/aurelia-fetch-client.js",
       "npm:aurelia-framework@1.0.6.js",
       "npm:aurelia-framework@1.0.6/aurelia-framework.js",
       "npm:aurelia-history-browser@1.0.0.js",
@@ -290,8 +387,8 @@ System.config({
       "npm:aurelia-metadata@1.0.3/aurelia-metadata.js",
       "npm:aurelia-pal-browser@1.0.0.js",
       "npm:aurelia-pal-browser@1.0.0/aurelia-pal-browser.js",
-      "npm:aurelia-pal@1.3.0.js",
-      "npm:aurelia-pal@1.3.0/aurelia-pal.js",
+      "npm:aurelia-pal@1.4.0.js",
+      "npm:aurelia-pal@1.4.0/aurelia-pal.js",
       "npm:aurelia-path@1.1.1.js",
       "npm:aurelia-path@1.1.1/aurelia-path.js",
       "npm:aurelia-polyfills@1.1.1.js",
@@ -661,98 +758,6 @@ System.config({
       "npm:ramda@0.23.0/src/zip.js",
       "npm:ramda@0.23.0/src/zipObj.js",
       "npm:ramda@0.23.0/src/zipWith.js"
-    ]
-  },
-  depCache: {
-    "repository/qep.repository.js": [
-      "aurelia-fetch-client",
-      "fetch"
-    ],
-    "resources/converters/datetime.value.converter.js": [
-      "moment"
-    ],
-    "resources/custom/breakdown/breakdown.js": [
-      "aurelia-framework"
-    ],
-    "resources/custom/node-result/node-result.js": [
-      "aurelia-framework",
-      "services/pub-sub"
-    ],
-    "resources/custom/node-status/node-status.js": [
-      "aurelia-framework",
-      "services/pub-sub"
-    ],
-    "services/container.js": [
-      "ramda"
-    ],
-    "services/i2b2.pub-sub.js": [
-      "./pub-sub",
-      "./i2b2.service"
-    ],
-    "services/i2b2.service.js": [
-      "ramda",
-      "./container"
-    ],
-    "services/pub-sub.js": [
-      "aurelia-event-aggregator",
-      "./shrine.messages"
-    ],
-    "services/queries.model.js": [
-      "aurelia-event-aggregator",
-      "repository/qep.repository",
-      "./shrine.messages"
-    ],
-    "services/query-export.js": [
-      "./pub-sub"
-    ],
-    "services/query-status.model.js": [
-      "aurelia-event-aggregator",
-      "repository/qep.repository",
-      "./shrine.messages"
-    ],
-    "shell.js": [
-      "services/i2b2.pub-sub",
-      "services/query-export"
-    ],
-    "views/mailto/mailto.js": [
-      "views/mailto/mailto.service",
-      "views/mailto/mailto.config"
-    ],
-    "views/mailto/mailto.service.js": [
-      "repository/qep.repository"
-    ],
-    "views/query-status/query-status.js": [
-      "aurelia-framework",
-      "services/query-status.model",
-      "services/pub-sub"
-    ],
-    "views/query-viewer/context-menu/context-menu.js": [
-      "aurelia-framework",
-      "aurelia-event-aggregator",
-      "common/shrine.messages"
-    ],
-    "views/query-viewer/date.converter.js": [
-      "moment"
-    ],
-    "views/query-viewer/paginator/paginator.js": [
-      "aurelia-framework"
-    ],
-    "views/query-viewer/query-status/query-status.js": [
-      "aurelia-framework",
-      "ramda"
-    ],
-    "views/query-viewer/query-viewer.js": [
-      "aurelia-event-aggregator",
-      "common/queries.model",
-      "./scroll.service",
-      "common/shrine.messages"
-    ],
-    "views/query-viewer/result-row/loading-bar/loading-bar.js": [
-      "aurelia-framework"
-    ],
-    "views/query-viewer/scroll.service.js": [
-      "ramda",
-      "common/container"
     ]
   }
 });

@@ -146,8 +146,9 @@ System.register(['aurelia-framework', 'services/query-status.model', 'services/p
                         var state = initialState();
                         var nodes = state.nodes;
 
-                        state.query.queryName = name || state.query.queryName;
+                        var queryName = name || state.query.queryName;
                         _this2.status = _this2.status ? _extends({}, _this2.status, { nodes: nodes }) : state;
+                        _this2.status.query = _extends({}, _this2.status.query, { queryName: queryName, networkId: networkId });
                         _this2.publish(_this2.commands.shrine.fetchQuery, { networkId: networkId, timeoutSeconds: TIMEOUT_SECONDS, dataVersion: DEFAULT_VERSION });
                     });
 
@@ -161,19 +162,22 @@ System.register(['aurelia-framework', 'services/query-status.model', 'services/p
                     this.subscribe(this.notifications.shrine.queryReceived, function (data) {
                         var query = data.query,
                             nodes = data.nodes,
-                            dataVersion = data.dataVersion,
+                            _data$dataVersion = data.dataVersion,
+                            dataVersion = _data$dataVersion === undefined ? DEFAULT_VERSION : _data$dataVersion,
                             complete = data.complete,
                             networkId = data.query.networkId;
 
+                        var timeoutSeconds = TIMEOUT_SECONDS;
+                        if (networkId !== _this2.status.query.networkId) return;
                         var updated = Number(new Date());
                         _this2.status = _extends({}, _this2.status, { query: query, nodes: nodes, updated: updated });
                         if (!complete) {
-                            _this2.publish(_this2.commands.shrine.fetchQuery, { networkId: networkId, dataVersion: dataVersion, TIMEOUT_SECONDS: TIMEOUT_SECONDS });
+                            _this2.publish(_this2.commands.shrine.fetchQuery, { networkId: networkId, dataVersion: dataVersion, timeoutSeconds: timeoutSeconds });
                         }
                     });
 
                     if (me.get(this).isDevEnv) {
-                        this.publish(this.notifications.i2b2.networkIdReceived, { networkId: 1, name: "started query" });
+                        this.publish(this.notifications.i2b2.networkIdReceived, { networkId: '2421519216383772161', name: "started query" });
                     }
                 };
 
@@ -190,7 +194,7 @@ System.register(['aurelia-framework', 'services/query-status.model', 'services/p
             me = new WeakMap();
 
             initialState = function initialState(n) {
-                return { query: { queryName: null, updated: null, complete: false }, nodes: null };
+                return { query: { networkId: null, queryName: null, updated: null, complete: false }, nodes: null };
             };
         }
     };

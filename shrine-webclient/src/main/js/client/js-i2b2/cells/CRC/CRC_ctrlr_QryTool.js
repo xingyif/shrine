@@ -345,14 +345,13 @@ function QueryToolController() {
 
 // ================================================================================================== //
     this.doQueryRun = function() {
-        // function to build and run query
-        if (i2b2.CRC.ctrlr.currentQueryStatus != false && i2b2.CRC.ctrlr.currentQueryStatus.isQueryRunning()) {
+
+		if (i2b2.CRC.ctrlr.currentQueryStatus != false && i2b2.CRC.ctrlr.currentQueryStatus.isQueryRunning()) {
             i2b2.CRC.ctrlr.currentQueryStatus.cancelQuery();
             i2b2.CRC.ctrlr.currentQueryStatus = false;
-            //alert('A query is already running.\n Please wait until the currently running query has finished.');
             return void(0);
         }
-
+		
         /*
         * Method added for edge case where
         * dragging previous query does not add items to panel.  Will occur when ontology

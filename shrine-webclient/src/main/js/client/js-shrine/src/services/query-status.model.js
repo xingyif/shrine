@@ -1,14 +1,6 @@
 import {EventAggregator} from 'aurelia-event-aggregator';
 import {QEPRepository} from 'repository/qep.repository';
 import {commands, notifications} from './shrine.messages';
-const isBusy = (() => {
-    let inProgress = false; 
-    return v => {
-        inProgress = v === undefined? inProgress: 
-            v? true : false;
-        return inProgress;
-    }; 
-})();
 export class QueryStatusModel {
     static inject = [EventAggregator, QEPRepository, notifications];
     constructor(evtAgg, qep, notifications) {

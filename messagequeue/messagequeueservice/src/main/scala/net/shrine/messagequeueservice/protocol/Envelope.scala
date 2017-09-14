@@ -5,7 +5,6 @@ import org.json4s.ShortTypeHints
 import org.json4s.native.Serialization
 
 import scala.util.{Failure, Success, Try}
-import org.json4s.native.Serialization
 
 /**
   * A json-friendly container for unpacking different messages of known types based on metadata.

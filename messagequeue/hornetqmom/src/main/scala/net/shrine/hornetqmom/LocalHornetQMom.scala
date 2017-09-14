@@ -53,8 +53,6 @@ object LocalHornetQMom extends MessageQueueService {
   //keep a map of live queues to ClientConsumers to provide a path for completing messages
   val queuesToConsumers: ConcurrentMap[Queue, ClientConsumer] = TrieMap.empty
 
-  val propName = "contents"
-
   /**
     * Use HornetQMomStopper to stop the hornetQServer without unintentially starting it
     */
@@ -125,7 +123,9 @@ object LocalHornetQMom extends MessageQueueService {
         }
       }
       producer: ClientProducer <- Try{ session.createProducer(to.name) }
-      message <- Try{ session.createMessage(true).putStringProperty(propName, contents) }
+      message <- Try{
+        session.createMessage(true).putStringProperty(Message.contentsKey, contents)
+      }
       sendMessage <- Try {
         producer.send(message)
         Log.debug(s"Message $message sent to $to in HornetQ")
@@ -150,41 +150,48 @@ object LocalHornetQMom extends MessageQueueService {
         }
         queuesToConsumers(from)
       }
-      message: Option[Message] <- Try {
+
+      message: Option[LocalHornetQMessage] <- Try {
         blocking {
           val messageReceived: Option[ClientMessage] = Option(messageConsumer.receive(timeout.toMillis))
-          messageReceived.foreach(m => Log.debug(s"Received ${m} from $from in HornetQ"))
-          messageReceived.map(Message(_))
+          messageReceived.foreach(m => Log.debug(s"Received $m from $from in HornetQ"))
+          messageReceived.map(clientMsg => LocalHornetQMessage(clientMsg))
         }
       }
     } yield message
   }
 
-  //todo dead letter queue for all messages. See http://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/examples-sqs-dead-letter-queues.html
-
-  //complete a message
-  override def completeMessage(message: Message): Try[Unit] = {
+  def getQueueConsumer(queue: Queue): Try[ClientConsumer] = {
     for {
-      completeMessageTry <- Try { message.complete() }
-    } yield completeMessageTry
+      messageConsumer: ClientConsumer <- Try {
+        if (!queuesToConsumers.contains(queue)) {
+          throw new NoSuchElementException(s"Given Queue ${queue.name} does not exist in HornetQ server! Please create the queue first!")
+        }
+        queuesToConsumers(queue)
+      }
+    } yield messageConsumer
   }
 
+  //todo dead letter queue for all messages SHRINE-2261
+
+  case class LocalHornetQMessage private(clientMessage: ClientMessage) extends Message {
+
+    override def contents: String = clientMessage.getStringProperty(Message.contentsKey)
+
+    //complete a message
+    override def complete(): Try[Unit] = Try { clientMessage.acknowledge() }
+  }
 }
 
 /**
   * If the configuration is such that HornetQ should have been started use this object to stop it
   */
-//todo is this a good way to write this code?
 object LocalHornetQMomStopper {
 
   def stop(): Unit = {
-    //todo fill in as part of SHIRINE-2128
-    for {
-      config: Config <- Try {
-        ConfigSource.config.getConfig("shrine.messagequeue.hornetq")
-      }
-    } yield config
-    LocalHornetQMom.stop()
+    if(ConfigSource.config.getBoolean("shrine.messagequeue.hornetQWebApi.enabled")) {
+      LocalHornetQMom.stop()
+    }
   }
 
 }

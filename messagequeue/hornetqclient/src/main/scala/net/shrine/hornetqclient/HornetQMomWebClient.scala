@@ -1,16 +1,18 @@
 package net.shrine.hornetqclient
 
+import java.util.UUID
 import akka.actor.ActorSystem
+import net.shrine.config.ConfigExtensions
+import net.shrine.hornetqmom.MessageContainer
 import net.shrine.log.Loggable
-import net.shrine.messagequeueservice.{CouldNotCreateQueueButOKToRetryException, Message, MessageQueueService, MessageSerializer, Queue, QueueSerializer}
+import net.shrine.messagequeueservice.{Message, MessageQueueService, Queue}
 import net.shrine.source.ConfigSource
+import org.json4s.NoTypeHints
 import org.json4s.native.Serialization
-import org.json4s.native.Serialization.{read, write}
-import org.json4s.{Formats, NoTypeHints}
+import org.json4s.native.Serialization.read
 import spray.http.{HttpEntity, HttpMethods, HttpRequest, HttpResponse, StatusCode, StatusCodes}
-
 import scala.collection.immutable.Seq
-import scala.concurrent.duration.{Duration, DurationLong, FiniteDuration}
+import scala.concurrent.duration.Duration
 import scala.language.postfixOps
 import scala.util.control.NonFatal
 import scala.util.{Failure, Success, Try}
@@ -27,6 +29,7 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
   // we need an ActorSystem to host our application in
   implicit val system: ActorSystem = ActorSystem("momServer", ConfigSource.config)
 
+  val webClientTimeOutSecond: Duration = ConfigSource.config.get("shrine.messagequeue.hornetq.webClientTimeOutSecond", Duration(_))
   // TODO in SHRINE-2167: Extract and share a SHRINE actor system
   // the service actor replies to incoming HttpRequests
 //  implicit val serviceActor: ActorRef = startServiceActor()
@@ -70,7 +73,7 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
     val createQueueUrl = momUrl + s"/createQueue/${proposedQueue.name}"
     val request: HttpRequest = HttpRequest(HttpMethods.PUT, createQueueUrl)
     for {
-      response: HttpResponse <- Try(HttpClient.webApiCall(request))
+      response: HttpResponse <- Try(HttpClient.webApiCall(request, webClientTimeOutSecond))
       queue: Queue <- queueFromResponse(response)
     } yield queue
   }
@@ -78,7 +81,7 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
   def queueFromResponse(response: HttpResponse):Try[Queue] = Try {
     if(response.status == StatusCodes.Created) {
       val queueString = response.entity.asString
-      implicit val formats = Serialization.formats(NoTypeHints) + new QueueSerializer
+      implicit val formats = Serialization.formats(NoTypeHints)
       read[Queue](queueString)(formats, manifest[Queue])
     } else {
       if((response.status == StatusCodes.NotFound) ||
@@ -100,17 +103,17 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
     val proposedQueue: Queue = Queue(queueName)
     val deleteQueueUrl = momUrl + s"/deleteQueue/${proposedQueue.name}"
     val request: HttpRequest = HttpRequest(HttpMethods.PUT, deleteQueueUrl)
-    Try(HttpClient.webApiCall(request)) // StatusCodes.OK
+    Try(HttpClient.webApiCall(request, webClientTimeOutSecond)) // StatusCodes.OK
   }
 
   override def queues: Try[Seq[Queue]] = {
     val getQueuesUrl = momUrl + s"/getQueues"
     val request: HttpRequest = HttpRequest(HttpMethods.GET, getQueuesUrl)
     for {
-      response: HttpResponse <- Try(HttpClient.webApiCall(request))
+      response: HttpResponse <- Try(HttpClient.webApiCall(request, webClientTimeOutSecond))
       allQueues: Seq[Queue] <- Try {
         val allQueues: String = response.entity.asString
-        implicit val formats = Serialization.formats(NoTypeHints) + new QueueSerializer
+        implicit val formats = Serialization.formats(NoTypeHints)
         read[Seq[Queue]](allQueues)(formats, manifest[Seq[Queue]])
       }
     } yield allQueues
@@ -127,7 +130,7 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
       entity = HttpEntity(contents)  //todo set contents as XML or json SHRINE-2215
     )
     for {
-      response: HttpResponse <- Try(HttpClient.webApiCall(request,3L seconds)) //todo configurable SHRINE-2214
+      response: HttpResponse <- Try(HttpClient.webApiCall(request, webClientTimeOutSecond))
     } yield response
   }
 
@@ -136,10 +139,9 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
     val seconds = timeout.toSeconds
     val receiveMessageUrl = momUrl + s"/receiveMessage/${from.name}?timeOutSeconds=$seconds"
     val request: HttpRequest = HttpRequest(HttpMethods.GET, receiveMessageUrl)
-    val httpRequestTimeout: FiniteDuration = (timeout.toSeconds + 1) second //todo configurable SHRINE-2214
 
     for {
-      response: HttpResponse <- Try(HttpClient.webApiCall(request, httpRequestTimeout))
+      response: HttpResponse <- Try(HttpClient.webApiCall(request, webClientTimeOutSecond))
       messageResponse: Option[Message] <- messageOptionFromResponse(response)
     } yield messageResponse
   }
@@ -148,13 +150,13 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
     if(response.status == StatusCodes.NotFound) None
     else if (response.status == StatusCodes.OK) Some {
       val responseString = response.entity.asString
-      val formats = Serialization.formats(NoTypeHints) + new MessageSerializer
-      read[Message](responseString)(formats, manifest[Message])
+      MessageContainer.fromJson(responseString)
     } else {
       throw new IllegalStateException(s"Response status is ${response.status}, not OK or NotFound. Cannot make a Message from this response: ${response.entity.asString}")
     }
   }.transform({ s =>
-    Success(s)
+    val hornetQMessage = s.map(msg => HornetQClientMessage(UUID.fromString(msg.id), msg.contents))
+    Success(hornetQMessage)
   },{throwable =>
     throwable match {
       case NonFatal(x) => error(s"Unable to create a Message from '${response.entity.asString}' due to exception",throwable) //todo probably want to report a Problem here SHRINE-2216
@@ -163,18 +165,26 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
     Failure(throwable)
   })
 
+  case class HornetQClientMessage private(messageID: UUID, messageContent: String) extends Message {
 
-  override def completeMessage(message: Message): Try[Unit] = {
-    implicit val formats: Formats = Serialization.formats(NoTypeHints) + new MessageSerializer
-    val messageString: String = write[Message](message)(formats)
+    override def contents: String = messageContent
 
-    val entity: HttpEntity = HttpEntity(messageString)
-    val completeMessageUrl: String = momUrl + s"/acknowledge" // HttpEntity
-    val request: HttpRequest = HttpRequest(HttpMethods.PUT, completeMessageUrl).withEntity(entity)
-    for {
-      response: HttpResponse <- Try(HttpClient.webApiCall(request))
-    } yield response
+    override def complete(): Try[Unit] = {
+      val entity: HttpEntity = HttpEntity(messageID.toString)
+      val completeMessageUrl: String = s"$momUrl/acknowledge"
+      val request: HttpRequest = HttpRequest(HttpMethods.PUT, completeMessageUrl).withEntity(entity)
+      for {
+        response: HttpResponse <- Try(HttpClient.webApiCall(request)).transform({r =>
+          info(s"Message ${this.messageID} completed with ${r.status}")
+          Success(r)
+        }, { throwable =>
+          debug(s"Message ${this.messageID} failed in its complete process due to ${throwable.getMessage}")
+          Failure(throwable)
+        })
+      } yield response
+    }
   }
+
 }
 
 // TODO in SHRINE-2167: Extract and share a SHRINE actor system
