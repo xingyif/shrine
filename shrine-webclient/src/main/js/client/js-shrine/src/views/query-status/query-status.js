@@ -23,10 +23,10 @@ export class QueryStatus extends PubSub {
     }
     attached() {
         // -- subscribers -- //
-        /*this.subscribe(this.notifications.i2b2.queryStarted, (n) => {
+        this.subscribe(this.notifications.i2b2.queryStarted, (n) => {
             this.status = initialState();
             this.status.query.queryName = n;
-        });*/
+        });
 
         this.subscribe(this.notifications.i2b2.networkIdReceived, d => {
             if(this.status && this.status.canceled) return;

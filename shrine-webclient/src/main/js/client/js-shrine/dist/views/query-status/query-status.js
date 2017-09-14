@@ -134,6 +134,11 @@ System.register(['aurelia-framework', 'services/query-status.model', 'services/p
                 QueryStatus.prototype.attached = function attached() {
                     var _this2 = this;
 
+                    this.subscribe(this.notifications.i2b2.queryStarted, function (n) {
+                        _this2.status = initialState();
+                        _this2.status.query.queryName = n;
+                    });
+
                     this.subscribe(this.notifications.i2b2.networkIdReceived, function (d) {
                         if (_this2.status && _this2.status.canceled) return;
                         var networkId = d.networkId,

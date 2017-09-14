@@ -349,7 +349,6 @@ function QueryToolController() {
 		if (i2b2.CRC.ctrlr.currentQueryStatus != false && i2b2.CRC.ctrlr.currentQueryStatus.isQueryRunning()) {
             i2b2.CRC.ctrlr.currentQueryStatus.cancelQuery();
 			i2b2.CRC.ctrlr.currentQueryStatus = false;
-			i2b2.events.clearQuery.fire(); 
             return;
         }
 		
