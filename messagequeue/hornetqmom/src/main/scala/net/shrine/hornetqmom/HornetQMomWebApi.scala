@@ -33,34 +33,23 @@ trait HornetQMomWebApi extends HttpService
                         " You do not want to do this unless you are the hub admin!"
 
   // keep a map of messages and ids
-  private val idToMessages: TrieMap[UUID, Message] = TrieMap.empty
-  // a sentinel that monitors the hashmap of idToMessages, any message that has been outstanding for more than 3X or 10X
-  // time-to-live need to get cleaned out of this map
-  val messageTimeOutInMillis: Long = ConfigSource.config.get("shrine.messagequeue.hornetQWebApi.messageTimeOutInMillis", Duration(_)).toMillis
-  val sentinelThread: Thread = new Thread(MapSentinelRunner(messageTimeOutInMillis),s"${getClass.getSimpleName} mapWatcher")
-  sentinelThread.setDaemon(true)
-
-  sentinelThread.start()
-  Log.debug(s"Started the sentinel thread that cleans up outstanding messages that exceed $messageTimeOutInMillis milliseconds")
+  private val idToMessages: TrieMap[UUID, (Message, Long)] = TrieMap.empty
 
   case class MapSentinelRunner(timeOutInMillis: Long) extends Runnable {
     // watches the map
     override def run(): Unit = {
       val currentTimeInMillis = System.currentTimeMillis()
-      while (true) {
-        //forever
-        try {
-          Log.debug("About to clean up outstanding messages.")
-          idToMessages.retain({ (uuid, localHornetQMessage) =>
-            (currentTimeInMillis - localHornetQMessage.createdTimeInMillis) < timeOutInMillis
-          })
-          Log.debug("Outstanding messages have been cleaned from the map.")
-        } catch {
-          case NonFatal(x) => ExceptionWhileCleaningUpMessageProblem(timeOutInMillis, x)
-          //pass-through to blow up the thread, receive no more results, do something dramatic in UncaughtExceptionHandler.
-          case x => Log.error("Fatal exception while cleaning up outstanding messages", x)
-            throw x
-        }
+      try {
+        Log.debug("About to clean up outstanding messages.")
+        idToMessages.retain({ (uuid, localHornetQMessageAndCreatedTime) =>
+          (currentTimeInMillis - localHornetQMessageAndCreatedTime._2) < timeOutInMillis
+        })
+        Log.debug(s"Outstanding messages that exceed $timeOutInMillis milliseconds have been cleaned from the map.")
+      } catch {
+        case NonFatal(x) => ExceptionWhileCleaningUpMessageProblem(timeOutInMillis, x)
+        //pass-through to blow up the thread, receive no more results, do something dramatic in UncaughtExceptionHandler.
+        case x => Log.error("Fatal exception while cleaning up outstanding messages", x)
+          throw x
       }
     }
   }
@@ -154,7 +143,8 @@ trait HornetQMomWebApi extends HttpService
                 optionMessage.fold(complete(StatusCodes.NotFound)){localHornetQMessage =>
                   // add message in the map with an unique UUID
                   val msgID = UUID.randomUUID()
-                  idToMessages.getOrElseUpdate(msgID, localHornetQMessage)
+                  idToMessages.getOrElseUpdate(msgID, (localHornetQMessage, System.currentTimeMillis()))
+                  sentinelScheduler()
                   complete(MessageContainer(msgID.toString, localHornetQMessage.contents).toJson)
                 }
               }
@@ -167,6 +157,27 @@ trait HornetQMomWebApi extends HttpService
       }
     }
 
+  private def sentinelScheduler() = {
+    import java.util.concurrent.Executors
+    import java.util.concurrent.ScheduledExecutorService
+    import java.util.concurrent.TimeUnit
+
+    // a sentinel that monitors the hashmap of idToMessages, any message that has been outstanding for more than 3X or 10X
+    // time-to-live need to get cleaned out of this map
+    val messageTimeOutInMillis: Long = ConfigSource.config.get("shrine.messagequeue.hornetQWebApi.messageTimeOutSeconds", Duration(_)).toMillis
+    val sentinelRunner: MapSentinelRunner = MapSentinelRunner(messageTimeOutInMillis)
+    try {
+      Log.debug(s"Starting the sentinel scheduler that cleans outstanding messages exceeds 3 times $messageTimeOutInMillis")
+      val scheduler: ScheduledExecutorService = Executors.newScheduledThreadPool(1)
+      scheduler.schedule(sentinelRunner, messageTimeOutInMillis * 3, TimeUnit.MILLISECONDS)
+    } catch {
+      case NonFatal(x) => ExceptionWhileSchedulingSentinelProblem(messageTimeOutInMillis, x)
+      //pass-through to blow up the thread, receive no more results, do something dramatic in UncaughtExceptionHandler.
+      case x => Log.error("Fatal exception while scheduling a sentinel for cleaning up outstanding messages", x)
+        throw x
+    }
+  }
+
   // SQS has DeleteMessageResult deleteMessage(String queueUrl, String receiptHandle)
   def acknowledge: Route = path("acknowledge") {
     entity(as[String]) { messageUUID =>
@@ -175,8 +186,8 @@ trait HornetQMomWebApi extends HttpService
         // retrieve the localMessage from the concurrent hashmap
         val getMessageTry: Try[Message] = Try {
           idToMessages(id)
-        }.transform({ message =>
-          Success(message)
+        }.transform({ messageAndTime =>
+          Success(messageAndTime._1)
         }, { throwable =>
           Failure(MessageDoesNotExistException(id))
         })
@@ -275,5 +286,16 @@ case class ExceptionWhileCleaningUpMessageProblem(timeOutInMillis: Long, x:Throw
 
   override def description: String = s"The Hub encountered an exception while trying to " +
     s"cleanup messages that has been received for more than $timeOutInMillis milliseconds " +
+    s"on Thread ${Thread.currentThread().getName}: ${x.getMessage}"
+}
+
+case class ExceptionWhileSchedulingSentinelProblem(timeOutInMillis: Long, x:Throwable) extends AbstractProblem(ProblemSources.Hub) {
+  override val throwable = Some(x)
+
+  override def summary: String = s"The Hub encountered an exception while trying to " +
+    s"schedule a sentinel that cleans up outstanding messages exceed $timeOutInMillis milliseconds"
+
+  override def description: String = s"The Hub encountered an exception while trying to " +
+    s"schedule a sentinel that cleans up outstanding messages exceed $timeOutInMillis milliseconds " +
     s"on Thread ${Thread.currentThread().getName}: ${x.getMessage}"
 }

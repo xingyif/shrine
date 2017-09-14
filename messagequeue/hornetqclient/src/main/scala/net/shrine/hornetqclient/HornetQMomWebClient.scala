@@ -1,7 +1,6 @@
 package net.shrine.hornetqclient
 
 import java.util.UUID
-
 import akka.actor.ActorSystem
 import net.shrine.config.ConfigExtensions
 import net.shrine.hornetqmom.MessageContainer
@@ -168,7 +167,6 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
 
   case class HornetQClientMessage private(messageID: UUID, messageContent: String) extends Message {
 
-    private val createdTime: Long = System.currentTimeMillis()
     override def contents: String = messageContent
 
     override def complete(): Try[Unit] = {
@@ -185,8 +183,6 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
         })
       } yield response
     }
-
-    override def createdTimeInMillis: Long = createdTime
   }
 
 }
