@@ -35,7 +35,7 @@ object QepReceiver {
 
   val pollingThread = new Thread(runner,s"${getClass.getSimpleName} poller")
   pollingThread.setDaemon(true)
-  //todo   pollingThread.setUncaughtExceptionHandler() SHRINE-2198
+  pollingThread.setUncaughtExceptionHandler(QepReceiverUncaughtExceptionHandler) 
 
   def start(): Unit = {
     pollingThread.start()
@@ -172,6 +172,22 @@ object QepReceiver {
   }
 }
 
+object QepReceiverUncaughtExceptionHandler extends Thread.UncaughtExceptionHandler {
+  override def uncaughtException(thread: Thread, throwable: Throwable): Unit = QepReceiverThreadEndedByThrowable(thread,throwable)
+}
+
+class QueueReceiverContextListener extends ServletContextListener {
+
+
+  override def contextInitialized(servletContextEvent: ServletContextEvent): Unit = {
+    QepReceiver.start()
+  }
+
+  override def contextDestroyed(servletContextEvent: ServletContextEvent): Unit = {
+    QepReceiver.stop()
+  }
+}
+
 case class UnexpectedMessageContentsTypeException(envelope: Envelope, queue: Queue) extends Exception(s"Could not interpret message with contents type of ${envelope.contentsType} from queue ${queue.name} from shrine version ${envelope.shrineVersion}")
 
 case class ExceptionWhileReceivingMessage(queue:Queue, x:Throwable) extends AbstractProblem(ProblemSources.Qep) {
@@ -195,14 +211,12 @@ case class QepReceiverCouldNotDecodeMessage(messageString:String,queue:Queue, x:
        |$messageString""".stripMargin
 }
 
-class QueueReceiverContextListener extends ServletContextListener {
+case class QepReceiverThreadEndedByThrowable(thread:Thread, x:Throwable) extends AbstractProblem(ProblemSources.Qep) {
 
+  override val throwable = Some(x)
 
-  override def contextInitialized(servletContextEvent: ServletContextEvent): Unit = {
-    QepReceiver.start()
-  }
+  override def summary: String = s"The Qep Receiver's thread stopped because of an uncaught exception."
 
-  override def contextDestroyed(servletContextEvent: ServletContextEvent): Unit = {
-    QepReceiver.stop()
-  }
+  override def description: String =
+    s"""The Qep Receiver's thread ${thread.getName} stopped because of an uncaught exception"""
 }
