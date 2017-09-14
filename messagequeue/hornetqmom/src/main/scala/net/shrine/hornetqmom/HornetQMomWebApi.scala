@@ -172,6 +172,7 @@ trait HornetQMomWebApi extends HttpService
       Log.debug(s"Starting the sentinel scheduler that cleans outstanding messages exceeds 3 times $messageTimeOutInMillis")
       val scheduler: ScheduledExecutorService = Executors.newScheduledThreadPool(1)
       scheduler.schedule(sentinelRunner, messageTimeOutInMillis * 3, TimeUnit.MILLISECONDS)
+      scheduler.shutdown()
     } catch {
       case NonFatal(x) => ExceptionWhileSchedulingSentinelProblem(messageTimeOutInMillis, x)
       //pass-through to blow up the thread, receive no more results, do something dramatic in UncaughtExceptionHandler.
