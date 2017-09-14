@@ -83,7 +83,7 @@ class HornetQMomWebApiTest extends FlatSpec with ScalatestRouteTest with HornetQ
       Put("/mom/acknowledge", HttpEntity(s"$nonExistingUUID")) ~> momRoute ~> check {
         val response = new String(body.data.toByteArray)
         assertResult(NotFound)(status)
-        assertResult(MessageDoesNotExistException(nonExistingUUID).getMessage)(response)
+        assertResult(MessageDoesNotExistInMapProblem(nonExistingUUID).description)(response)
       }
 
       Put(s"/mom/deleteQueue/$queueName") ~> momRoute ~> check {
