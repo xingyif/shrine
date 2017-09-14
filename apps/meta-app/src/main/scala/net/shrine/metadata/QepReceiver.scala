@@ -29,13 +29,15 @@ object QepReceiver {
 
   val config: Config = ConfigSource.config
   val nodeName = config.getString("shrine.humanReadableNodeName")
+  val pollDuration = config.get("shrine.messagequeue.receiveWaitTime",Duration(_))
+
 
   //create a daemon thread that long-polls for messages forever
-  val runner = QepReceiverRunner(nodeName)
+  val runner = QepReceiverRunner(nodeName,pollDuration)
 
   val pollingThread = new Thread(runner,s"${getClass.getSimpleName} poller")
   pollingThread.setDaemon(true)
-  //todo   pollingThread.setUncaughtExceptionHandler() SHRINE-2198
+  pollingThread.setUncaughtExceptionHandler(QepReceiverUncaughtExceptionHandler)
 
   def start(): Unit = {
     pollingThread.start()
@@ -46,7 +48,7 @@ object QepReceiver {
     runner.stop()
   }
 
-  case class QepReceiverRunner(nodeName:String) extends Runnable {
+  case class QepReceiverRunner(nodeName:String,pollDuration:Duration) extends Runnable {
 
     val keepGoing = new AtomicBoolean(true)
 
@@ -54,8 +56,6 @@ object QepReceiver {
       keepGoing.set(false)
       Log.debug(s"${this.getClass.getSimpleName} keepGoing set to ${keepGoing.get()}. Will stop asking for messages after the current request.")
     }
-
-    val pollDuration = Duration("15 seconds") //todo from config SHRINE-2198
 
     val breakdownTypes: Set[ResultOutputType] = ConfigSource.config.getOptionConfigured("shrine.breakdownResultOutputTypes", ResultOutputTypes.fromConfig).getOrElse(Set.empty)
 
@@ -65,7 +65,6 @@ object QepReceiver {
       while (keepGoing.get()) {
         //forever
         try {
-          //todo only ask to receive a message if there are incomplete queries SHRINE-2196
           Log.debug("About to call receive.")
           receiveAMessage(queue)
           Log.debug("Called receive.")
@@ -80,7 +79,7 @@ object QepReceiver {
     }
 
     def receiveAMessage(queue:Queue): Unit = {
-      val maybeMessage: Try[Option[Message]] = MessageQueueService.service.receive(queue, pollDuration) //todo make pollDuration configurable (and testable) SHRINE-2198
+      val maybeMessage: Try[Option[Message]] = MessageQueueService.service.receive(queue, pollDuration)
 
       maybeMessage.transform({m =>
         m.map(interpretAMessage(_,queue)).getOrElse(Success())
@@ -172,6 +171,22 @@ object QepReceiver {
   }
 }
 
+object QepReceiverUncaughtExceptionHandler extends Thread.UncaughtExceptionHandler {
+  override def uncaughtException(thread: Thread, throwable: Throwable): Unit = QepReceiverThreadEndedByThrowable(thread,throwable)
+}
+
+class QueueReceiverContextListener extends ServletContextListener {
+
+
+  override def contextInitialized(servletContextEvent: ServletContextEvent): Unit = {
+    QepReceiver.start()
+  }
+
+  override def contextDestroyed(servletContextEvent: ServletContextEvent): Unit = {
+    QepReceiver.stop()
+  }
+}
+
 case class UnexpectedMessageContentsTypeException(envelope: Envelope, queue: Queue) extends Exception(s"Could not interpret message with contents type of ${envelope.contentsType} from queue ${queue.name} from shrine version ${envelope.shrineVersion}")
 
 case class ExceptionWhileReceivingMessage(queue:Queue, x:Throwable) extends AbstractProblem(ProblemSources.Qep) {
@@ -195,14 +210,12 @@ case class QepReceiverCouldNotDecodeMessage(messageString:String,queue:Queue, x:
        |$messageString""".stripMargin
 }
 
-class QueueReceiverContextListener extends ServletContextListener {
+case class QepReceiverThreadEndedByThrowable(thread:Thread, x:Throwable) extends AbstractProblem(ProblemSources.Qep) {
 
+  override val throwable = Some(x)
 
-  override def contextInitialized(servletContextEvent: ServletContextEvent): Unit = {
-    QepReceiver.start()
-  }
+  override def summary: String = s"The Qep Receiver's thread stopped because of an uncaught exception."
 
-  override def contextDestroyed(servletContextEvent: ServletContextEvent): Unit = {
-    QepReceiver.stop()
-  }
+  override def description: String =
+    s"""The Qep Receiver's thread ${thread.getName} stopped because of an uncaught exception"""
 }
