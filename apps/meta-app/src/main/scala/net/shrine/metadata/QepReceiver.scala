@@ -15,7 +15,7 @@ import net.shrine.qep.querydb.{QepQueryDb, QueryResultRow}
 import net.shrine.source.ConfigSource
 import net.shrine.status.protocol.IncrementalQueryResult
 
-import scala.concurrent.duration.Duration
+import scala.concurrent.duration.{Duration, FiniteDuration}
 import scala.util.control.NonFatal
 import scala.util.{Failure, Success, Try}
 
@@ -29,13 +29,15 @@ object QepReceiver {
 
   val config: Config = ConfigSource.config
   val nodeName = config.getString("shrine.humanReadableNodeName")
+  val pollDuration = config.get("shrine.messagequeue.receiveWaitTime",Duration(_))
+
 
   //create a daemon thread that long-polls for messages forever
-  val runner = QepReceiverRunner(nodeName)
+  val runner = QepReceiverRunner(nodeName,pollDuration)
 
   val pollingThread = new Thread(runner,s"${getClass.getSimpleName} poller")
   pollingThread.setDaemon(true)
-  pollingThread.setUncaughtExceptionHandler(QepReceiverUncaughtExceptionHandler) 
+  pollingThread.setUncaughtExceptionHandler(QepReceiverUncaughtExceptionHandler)
 
   def start(): Unit = {
     pollingThread.start()
@@ -46,7 +48,7 @@ object QepReceiver {
     runner.stop()
   }
 
-  case class QepReceiverRunner(nodeName:String) extends Runnable {
+  case class QepReceiverRunner(nodeName:String,pollDuration:Duration) extends Runnable {
 
     val keepGoing = new AtomicBoolean(true)
 
@@ -54,8 +56,6 @@ object QepReceiver {
       keepGoing.set(false)
       Log.debug(s"${this.getClass.getSimpleName} keepGoing set to ${keepGoing.get()}. Will stop asking for messages after the current request.")
     }
-
-    val pollDuration = Duration("15 seconds") //todo from config SHRINE-2198
 
     val breakdownTypes: Set[ResultOutputType] = ConfigSource.config.getOptionConfigured("shrine.breakdownResultOutputTypes", ResultOutputTypes.fromConfig).getOrElse(Set.empty)
 
