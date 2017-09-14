@@ -27,7 +27,7 @@ object HttpClient extends Loggable {
   //todo hand back a Try, Failures with custom exceptions instead of a crappy response
   //todo Really a Future would be even better
   def webApiCall(request:HttpRequest,
-                 timeout:Duration = ConfigSource.config.get("shrine.messagequeue.httpClient.defaultTimeOutSecond", Duration(_)))
+                 timeout:Duration = ConfigSource.config.get("shrine.messagequeue.httpClient.defaultTimeOut", Duration(_)))
                 (implicit system: ActorSystem): HttpResponse = {
 
     val deadline = System.currentTimeMillis() + timeout.toMillis
