@@ -1,7 +1,7 @@
 System.register(['aurelia-event-aggregator', 'repository/qep.repository', './shrine.messages'], function (_export, _context) {
     "use strict";
 
-    var EventAggregator, QEPRepository, commands, notifications, _extends, _class, _temp, isBusy, QueryStatusModel;
+    var EventAggregator, QEPRepository, commands, notifications, _extends, _class, _temp, QueryStatusModel;
 
     function _classCallCheck(instance, Constructor) {
         if (!(instance instanceof Constructor)) {
@@ -32,14 +32,6 @@ System.register(['aurelia-event-aggregator', 'repository/qep.repository', './shr
 
                 return target;
             };
-
-            isBusy = function () {
-                var inProgress = false;
-                return function (v) {
-                    inProgress = v === undefined ? inProgress : v ? true : false;
-                    return inProgress;
-                };
-            }();
 
             _export('QueryStatusModel', QueryStatusModel = (_temp = _class = function QueryStatusModel(evtAgg, qep, notifications) {
                 _classCallCheck(this, QueryStatusModel);

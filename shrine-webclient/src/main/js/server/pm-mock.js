@@ -57,7 +57,7 @@ function start(dir) {
 
 router.get('/shrine-metadata/qep/queryResult/:id', (req, res) => {
   const result= require('./data/query-result');
-  const TIMEOUT = 5000;
+  const TIMEOUT = 15000;
   setTimeout(() => res.json(result), TIMEOUT);
 });
 

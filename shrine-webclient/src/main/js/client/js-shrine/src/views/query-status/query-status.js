@@ -32,8 +32,9 @@ export class QueryStatus extends PubSub {
             const {networkId, name} = d;
             const state = initialState();
             const {nodes} = state;
-            state.query.queryName = name || state.query.queryName; 
+            const queryName = name || state.query.queryName; 
             this.status = this.status? {...this.status, ...{nodes}} : state;
+            this.status.query = {...this.status.query, ...{queryName, networkId}};
             this.publish(this.commands.shrine.fetchQuery, {networkId, timeoutSeconds: TIMEOUT_SECONDS, dataVersion: DEFAULT_VERSION})
         });
 
@@ -45,21 +46,23 @@ export class QueryStatus extends PubSub {
             this.status = initialState();
         })
         this.subscribe(this.notifications.shrine.queryReceived, data => {
-            const {query, nodes, dataVersion, complete, query:{networkId}} = data; 
+            const {query, nodes, dataVersion = DEFAULT_VERSION, complete, query:{networkId}} = data; 
+            const timeoutSeconds = TIMEOUT_SECONDS;
+            if(networkId !== this.status.query.networkId) return;
             const updated = Number(new Date());
             this.status = { ...this.status, ...{ query, nodes, updated } }
             if (!complete) {
-                this.publish(this.commands.shrine.fetchQuery, {networkId, dataVersion, TIMEOUT_SECONDS});
+                this.publish(this.commands.shrine.fetchQuery, {networkId, dataVersion, timeoutSeconds});
             }
         });
 
         if (me.get(this).isDevEnv) {
             //this.publish(this.notifications.i2b2.queryStarted, "started query");
-            this.publish(this.notifications.i2b2.networkIdReceived, {networkId: 1, name: "started query"});
+            this.publish(this.notifications.i2b2.networkIdReceived, {networkId: '2421519216383772161', name: "started query"});
         }
     }
 }
 const TIMEOUT_SECONDS = 15;
 const DEFAULT_VERSION = -1;
 const me = new WeakMap();
-const initialState = (n) => ({ query: { queryName: null, updated: null, complete: false }, nodes: null });
+const initialState = (n) => ({ query: { networkId: null, queryName: null, updated: null, complete: false }, nodes: null });
