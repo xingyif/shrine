@@ -5,10 +5,9 @@ import javax.servlet.{ServletContextEvent, ServletContextListener}
 
 import com.typesafe.config.Config
 import net.shrine.config.ConfigExtensions
-import net.shrine.hornetqclient.CouldNotCreateQueueButOKToRetryException
 import net.shrine.log.Log
 import net.shrine.messagequeueservice.protocol.Envelope
-import net.shrine.messagequeueservice.{Message, MessageQueueService, Queue}
+import net.shrine.messagequeueservice.{CouldNotCreateQueueButOKToRetryException, Message, MessageQueueService, Queue}
 import net.shrine.problem.{AbstractProblem, ProblemSources}
 import net.shrine.protocol.{AggregatedRunQueryResponse, QueryResult, ResultOutputType, ResultOutputTypes}
 import net.shrine.qep.querydb.{QepQueryDb, QueryResultRow}

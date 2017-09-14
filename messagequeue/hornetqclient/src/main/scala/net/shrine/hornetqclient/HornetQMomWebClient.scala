@@ -2,7 +2,7 @@ package net.shrine.hornetqclient
 
 import akka.actor.ActorSystem
 import net.shrine.log.Loggable
-import net.shrine.messagequeueservice.{Message, MessageQueueService, MessageSerializer, Queue, QueueSerializer}
+import net.shrine.messagequeueservice.{CouldNotCreateQueueButOKToRetryException, Message, MessageQueueService, MessageSerializer, Queue, QueueSerializer}
 import net.shrine.source.ConfigSource
 import org.json4s.native.Serialization
 import org.json4s.native.Serialization.{read, write}
@@ -176,8 +176,6 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
     } yield response
   }
 }
-
-case class CouldNotCreateQueueButOKToRetryException(status:StatusCode,contents:String) extends Exception(s"Could not create a queue due to status code $status with message '$contents'")
 
 // TODO in SHRINE-2167: Extract and share a SHRINE actor system
 //class HornetQMomWebClientServiceActor extends Actor with MetaDataService {

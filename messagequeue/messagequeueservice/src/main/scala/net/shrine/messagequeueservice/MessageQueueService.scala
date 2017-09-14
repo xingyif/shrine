@@ -6,6 +6,7 @@ import org.hornetq.api.core.client.ClientMessage
 import org.hornetq.core.client.impl.ClientMessageImpl
 import org.json4s.JsonAST.{JField, JObject}
 import org.json4s.{CustomSerializer, DefaultFormats, Formats, _}
+import spray.http.StatusCode
 
 import scala.collection.immutable.Seq
 import scala.concurrent.duration.Duration
@@ -16,7 +17,7 @@ import scala.util.Try
   * @author david
   * @since 7/18/17
   */
-//todo in 1.23 all but the server side will use the client RemoteHornetQ implementation (which will call to the server at the hub)
+// in 1.23 all but the server side will use the client RemoteHornetQ implementation (which will call to the server at the hub)
 //todo in 1.24, create an AwsSqs implementation of the trait
 
 trait MessageQueueService {
@@ -115,9 +116,6 @@ class MessageSerializer extends CustomSerializer[Message](format => (
 ))
 
 
-case class NoSuchQueueExistsInHornetQ(proposedQueue: Queue) extends Exception {
-  override def getMessage: String = {
-    s"Given Queue ${proposedQueue.name} does not exist in HornetQ server! Please create the queue first!"
-  }
+case class NoSuchQueueExistsInHornetQ(proposedQueue: Queue) extends Exception(s"Given Queue ${proposedQueue.name} does not exist in HornetQ server! Please create the queue first!")
 
-}
+case class CouldNotCreateQueueButOKToRetryException(status:StatusCode,contents:String) extends Exception(s"Could not create a queue due to status code $status with message '$contents'")
