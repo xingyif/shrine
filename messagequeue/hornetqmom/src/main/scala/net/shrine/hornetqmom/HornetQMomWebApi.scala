@@ -290,13 +290,12 @@ case class MessageDoesNotExistException(id: UUID) extends Exception(s"Cannot mat
 
 case class MessageDoesNotExistInMapProblem(id: UUID) extends AbstractProblem(ProblemSources.Hub) {
 
-  override def summary: String = s"The Hub encountered an exception while trying to " +
-    s"find message with the given $id in the process of complete the message!"
+  override def summary: String = s"The client expected message $id, but the server did not find it and could not complete() the message."
 
-  override def description: String = s"The Hub encountered an exception while trying to " +
-    s"find message with the given $id in the process of complete the message." +
+  override def description: String = s"The client expected message $id, but the server did not find it and could not complete() the message." +
     s" Message either has never been received or already been completed!"
 }
+
 case class ExceptionWhileCleaningUpMessageProblem(timeOutInMillis: Long, x:Throwable) extends AbstractProblem(ProblemSources.Hub) {
 
   override val throwable = Some(x)
