@@ -1,3 +1,7 @@
+.query-status {
+  font-family: arial,helvetica;
+  padding: .5rem; }
+
 .mailto {
   box-sizing: border-box;
   display: flex;
@@ -38,10 +42,6 @@
     text-align: center; }
   .mailto .email {
     position: relative; }
-
-.query-status {
-  font-family: arial,helvetica;
-  padding: .5rem; }
 
 
 /*{
@@ -105,6 +105,90 @@ ul.context-menu {
     ul.context-menu li:last-child {
       border-bottom: 0;
       border-radius: 0 0 5px 5px; }
+
+.paginator * {
+  -webkit-transition: all .10s ease-in-out;
+  transition: all .10s ease-in-out;
+  font-family: 'Open Sans'; }
+
+.paginator {
+  margin: 0; }
+
+.paginator--center {
+  text-align: center; }
+
+.paginator--right {
+  text-align: right; }
+
+.paginator .btn-group {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  display: inline-block; }
+
+.paginator .btn-group__item {
+  margin: 0;
+  padding: 0;
+  height: 40px;
+  float: left; }
+
+.paginator .btn-group__item .btn {
+  margin: 0;
+  padding: .5em .75em;
+  border: 0;
+  font-weight: 300;
+  background-color: transparent;
+  box-shadow: inset 0 -2px 0 0 #777;
+  color: #777; }
+
+.paginator .btn-group__item .btn:hover {
+  box-shadow: inset 0 -4px 0 0 #626C92;
+  cursor: pointer; }
+
+.paginator .btn-group__item .current {
+  box-shadow: inset 0 -4px 0 0 #626C92;
+  color: #626C92;
+  font-weight: bold; }
+
+.paginator .btn-group__item .current:hover {
+  box-shadow: inset 0 -4px 0 0 #626C92;
+  cursor: pointer; }
+
+.paginator .btn[disabled] {
+  box-shadow: inset 0 -2px 0 0 #e6e6e6;
+  color: #e6e6e6; }
+
+.paginator .btn[disabled]:hover {
+  box-shadow: inset 0 -2px 0 0 #626C92;
+  cursor: pointer; }
+
+.paginator .i-chevron-left,
+.paginator .i-chevron-right {
+  margin: 15px;
+  border-style: solid;
+  border-color: #3a3a3a;
+  width: 5px;
+  height: 5px;
+  display: block;
+  cursor: pointer; }
+
+.paginator .i-chevron-left {
+  border-width: 1px 0 0 1px;
+  -webkit-transform: rotate(-45deg);
+  -ms-transform: rotate(-45deg);
+  transform: rotate(-45deg); }
+
+.paginator .i-chevron-right {
+  border-width: 1px 1px 0 0;
+  -ms-transform: rotate(45deg);
+  -webkit-transform: rotate(45deg);
+  transform: rotate(45deg); }
+
+.paginator .i-chevron-left:hover {
+  border-width: 2px 0 0 2px; }
+
+.paginator .i-chevron-right:hover {
+  border-width: 2px 2px 0 0; }
 
 svg.query-status {
   height: 25px;
@@ -208,90 +292,6 @@ svg.query-status {
 
 .flex-table.query-viewer .flex-table-row:first-child .flex-table-item .tooltip [data-line1]::after {
   bottom: calc(-100% - 20px); }
-
-.paginator * {
-  -webkit-transition: all .10s ease-in-out;
-  transition: all .10s ease-in-out;
-  font-family: 'Open Sans'; }
-
-.paginator {
-  margin: 0; }
-
-.paginator--center {
-  text-align: center; }
-
-.paginator--right {
-  text-align: right; }
-
-.paginator .btn-group {
-  list-style-type: none;
-  margin: 0;
-  padding: 0;
-  display: inline-block; }
-
-.paginator .btn-group__item {
-  margin: 0;
-  padding: 0;
-  height: 40px;
-  float: left; }
-
-.paginator .btn-group__item .btn {
-  margin: 0;
-  padding: .5em .75em;
-  border: 0;
-  font-weight: 300;
-  background-color: transparent;
-  box-shadow: inset 0 -2px 0 0 #777;
-  color: #777; }
-
-.paginator .btn-group__item .btn:hover {
-  box-shadow: inset 0 -4px 0 0 #626C92;
-  cursor: pointer; }
-
-.paginator .btn-group__item .current {
-  box-shadow: inset 0 -4px 0 0 #626C92;
-  color: #626C92;
-  font-weight: bold; }
-
-.paginator .btn-group__item .current:hover {
-  box-shadow: inset 0 -4px 0 0 #626C92;
-  cursor: pointer; }
-
-.paginator .btn[disabled] {
-  box-shadow: inset 0 -2px 0 0 #e6e6e6;
-  color: #e6e6e6; }
-
-.paginator .btn[disabled]:hover {
-  box-shadow: inset 0 -2px 0 0 #626C92;
-  cursor: pointer; }
-
-.paginator .i-chevron-left,
-.paginator .i-chevron-right {
-  margin: 15px;
-  border-style: solid;
-  border-color: #3a3a3a;
-  width: 5px;
-  height: 5px;
-  display: block;
-  cursor: pointer; }
-
-.paginator .i-chevron-left {
-  border-width: 1px 0 0 1px;
-  -webkit-transform: rotate(-45deg);
-  -ms-transform: rotate(-45deg);
-  transform: rotate(-45deg); }
-
-.paginator .i-chevron-right {
-  border-width: 1px 1px 0 0;
-  -ms-transform: rotate(45deg);
-  -webkit-transform: rotate(45deg);
-  transform: rotate(45deg); }
-
-.paginator .i-chevron-left:hover {
-  border-width: 2px 0 0 2px; }
-
-.paginator .i-chevron-right:hover {
-  border-width: 2px 2px 0 0; }
 
 @import url(http://fonts.googleapis.com/css?family=Roboto:400,300&subset=latin,latin-ext);
 .loader {
