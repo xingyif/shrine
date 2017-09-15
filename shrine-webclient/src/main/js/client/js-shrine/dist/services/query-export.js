@@ -71,8 +71,10 @@ System.register(['./pub-sub'], function (_export, _context) {
                     return desc(a) <= desc(b) ? -1 : 1;
                 };
                 nodes.forEach(function (_ref2) {
-                    var breakdowns = _ref2.breakdowns;
-                    return breakdowns.sort(brdSort).forEach(function (_ref3) {
+                    var _ref2$breakdowns = _ref2.breakdowns,
+                        breakdowns = _ref2$breakdowns === undefined ? [] : _ref2$breakdowns;
+
+                    breakdowns.sort(brdSort).forEach(function (_ref3) {
                         var _m$get;
 
                         var description = _ref3.resultType.i2b2Options.description,
@@ -89,14 +91,15 @@ System.register(['./pub-sub'], function (_export, _context) {
                     return n.adapterNode;
                 }).join(','));
                 var line2 = '\nAll Patients,' + [''].concat(nodes.map(function (n) {
-                    return n.count;
+                    return n.count ? n.count > 0 ? n.count : 0 : 'unavailable';
                 }).join(','));
                 var result = [];
                 m.forEach(function (v, k) {
                     result.push.apply(result, [''].concat(Array.from(v).map(function (s) {
                         var title = k.split(' ').shift() + ',' + s;
                         var values = nodes.map(function (_ref4) {
-                            var breakdowns = _ref4.breakdowns;
+                            var _ref4$breakdowns = _ref4.breakdowns,
+                                breakdowns = _ref4$breakdowns === undefined ? [] : _ref4$breakdowns;
 
                             var b = breakdowns.find(function (_ref5) {
                                 var description = _ref5.resultType.i2b2Options.description,

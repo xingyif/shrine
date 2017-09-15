@@ -112,7 +112,7 @@ System.register(['aurelia-framework', 'services/query-status.model', 'services/p
 
                     var _this = _possibleConstructorReturn(this, _PubSub.call.apply(_PubSub, [this].concat(rest)));
 
-                    _initDefineProp(_this, 'status', _descriptor, _this);
+                    _initDefineProp(_this, 'nodes', _descriptor, _this);
 
                     me.set(_this, {
                         isDevEnv: document.location.href.includes('http://localhost:8000/'),
@@ -121,8 +121,8 @@ System.register(['aurelia-framework', 'services/query-status.model', 'services/p
                     return _this;
                 }
 
-                QueryStatus.prototype.statusChanged = function statusChanged(newValue, oldValue) {
-                    if (!newValue.nodes || !newValue.nodes.length) {
+                QueryStatus.prototype.nodesChanged = function nodesChanged(newValue, oldValue) {
+                    if (!newValue || !newValue.length) {
                         me.get(this).exportAvailable = false;
                         this.publish(this.notifications.shrine.queryUnavailable);
                         return;
@@ -131,11 +131,17 @@ System.register(['aurelia-framework', 'services/query-status.model', 'services/p
                     this.publish(this.notifications.shrine.queryAvailable);
                 };
 
+                QueryStatus.prototype.exportTest = function exportTest() {
+                    var nodes = this.nodes;
+                    this.publish(this.commands.shrine.exportResult, { nodes: nodes });
+                };
+
                 QueryStatus.prototype.attached = function attached() {
                     var _this2 = this;
 
                     this.subscribe(this.notifications.i2b2.queryStarted, function (n) {
-                        _this2.status = initialState();
+                        _this2.status = initialState().status;
+                        _this2.nodes = initialState().nodes;
                         _this2.status.query.queryName = n;
                     });
 
@@ -144,7 +150,7 @@ System.register(['aurelia-framework', 'services/query-status.model', 'services/p
                         var networkId = d.networkId;
 
                         _this2.status.query.networkId = networkId;
-                        _this2.status.nodes = initialState().nodes;
+                        _this2.nodes = initialState().nodes;
                         _this2.publish(_this2.commands.shrine.fetchQuery, { networkId: networkId, timeoutSeconds: TIMEOUT_SECONDS, dataVersion: DEFAULT_VERSION });
                     });
 
@@ -166,7 +172,8 @@ System.register(['aurelia-framework', 'services/query-status.model', 'services/p
                         var timeoutSeconds = TIMEOUT_SECONDS;
                         if (networkId !== _this2.status.query.networkId || _this2.status.canceled) return;
                         var updated = Number(new Date());
-                        Object.assign(_this2.status, { query: query, nodes: nodes, updated: updated });
+                        Object.assign(_this2.status, { query: query, updated: updated });
+                        _this2.nodes = nodes;
                         if (!complete) {
                             _this2.publish(_this2.commands.shrine.fetchQuery, { networkId: networkId, dataVersion: dataVersion, timeoutSeconds: timeoutSeconds });
                         }
@@ -181,7 +188,7 @@ System.register(['aurelia-framework', 'services/query-status.model', 'services/p
                 };
 
                 return QueryStatus;
-            }(PubSub), _class3.inject = [QueryStatusModel], _temp), (_descriptor = _applyDecoratedDescriptor(_class2.prototype, 'status', [observable], {
+            }(PubSub), _class3.inject = [QueryStatusModel], _temp), (_descriptor = _applyDecoratedDescriptor(_class2.prototype, 'nodes', [observable], {
                 enumerable: true,
                 initializer: null
             })), _class2)) || _class));
@@ -193,7 +200,7 @@ System.register(['aurelia-framework', 'services/query-status.model', 'services/p
             me = new WeakMap();
 
             initialState = function initialState(n) {
-                return { query: { networkId: null, queryName: null, updated: null, complete: false, canceled: false }, nodes: null };
+                return { status: { query: { networkId: null, queryName: null, updated: null, complete: false, canceled: false } }, nodes: [] };
             };
         }
     };
