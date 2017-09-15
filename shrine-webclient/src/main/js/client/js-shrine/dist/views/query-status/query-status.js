@@ -131,11 +131,6 @@ System.register(['aurelia-framework', 'services/query-status.model', 'services/p
                     this.publish(this.notifications.shrine.queryAvailable);
                 };
 
-                QueryStatus.prototype.exportTest = function exportTest() {
-                    var nodes = this.nodes;
-                    this.publish(this.commands.shrine.exportResult, { nodes: nodes });
-                };
-
                 QueryStatus.prototype.attached = function attached() {
                     var _this2 = this;
 

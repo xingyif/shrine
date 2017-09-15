@@ -21,11 +21,6 @@ export class QueryStatus extends PubSub {
         me.get(this).exportAvailable = true;
         this.publish(this.notifications.shrine.queryAvailable);
     }
-    //TODO: testing remove!!!
-    exportTest() {
-        const nodes = this.nodes;
-        this.publish(this.commands.shrine.exportResult, {nodes});
-    }
     attached() {
         // -- subscribers -- //
         this.subscribe(this.notifications.i2b2.queryStarted, (n) => {
