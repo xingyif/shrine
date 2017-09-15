@@ -1,6 +1,7 @@
 package net.shrine.hornetqmom
 
 import com.typesafe.config.Config
+import net.shrine.config.ConfigExtensions
 import net.shrine.log.Log
 import net.shrine.messagequeueservice.{Message, MessageQueueService, NoSuchQueueExistsInHornetQ, Queue}
 import net.shrine.source.ConfigSource
@@ -124,7 +125,11 @@ object LocalHornetQMom extends MessageQueueService {
       }
       producer: ClientProducer <- Try{ session.createProducer(to.name) }
       message <- Try{
-        session.createMessage(true).putStringProperty(Message.contentsKey, contents)
+        val msg = session.createMessage(true).putStringProperty(Message.contentsKey, contents)
+        val messageTimeToLiveInMillis: Long = ConfigSource.config.get("shrine.messagequeue.hornetQWebApi.messageTimeToLive", Duration(_)).toMillis
+        println(s"in localHonetQ, messageTimeToLiveInMillis is $messageTimeToLiveInMillis")
+        msg.setExpiration(System.currentTimeMillis() + messageTimeToLiveInMillis)
+        msg
       }
       sendMessage <- Try {
         producer.send(message)

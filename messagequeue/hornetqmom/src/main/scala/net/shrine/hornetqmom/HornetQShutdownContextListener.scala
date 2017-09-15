@@ -18,6 +18,7 @@ class HornetQShutdownContextListener extends ServletContextListener {
 
   override def contextDestroyed(servletContextEvent: ServletContextEvent): Unit = {
     LocalHornetQMomStopper.stop()
+    MessageMapCleaningScheduler.shutDown()
     LogEntry(s"${getClass.getSimpleName} context destroyed $servletContextEvent", Logging.InfoLevel)
   }
 }

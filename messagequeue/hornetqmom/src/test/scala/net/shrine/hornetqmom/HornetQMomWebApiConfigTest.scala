@@ -1,6 +1,7 @@
 package net.shrine.hornetqmom
 
 import akka.actor.ActorRefFactory
+import net.shrine.source.ConfigSource
 import org.junit.runner.RunWith
 import org.scalatest.FlatSpec
 import org.scalatest.junit.JUnitRunner
@@ -21,11 +22,13 @@ class HornetQMomWebApiConfigTest extends FlatSpec with ScalatestRouteTest with H
 
   "HornetQMomWebApi" should "block user from using the API and return a 404 response" in {
 
-    Put(s"/mom/createQueue/$queueName") ~> momRoute ~> check {
-      val response = new String(body.data.toByteArray)
+    ConfigSource.atomicConfig.configForBlock("shrine.messagequeue.hornetQWebApi.enabled", "false", "HornetQMomWebApiConfigTest") {
+      Put(s"/mom/createQueue/$queueName") ~> momRoute ~> check {
+        val response = new String(body.data.toByteArray)
 
-      assertResult(warningMessage)(response)
-      assertResult(NotFound)(status)
+        assertResult(warningMessage)(response)
+        assertResult(NotFound)(status)
+      }
     }
   }
 }
