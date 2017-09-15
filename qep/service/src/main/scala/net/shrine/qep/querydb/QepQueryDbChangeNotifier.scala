@@ -1,17 +1,18 @@
 package net.shrine.qep.querydb
 
 import java.util.UUID
+import java.util.concurrent.{Executors, ScheduledExecutorService, TimeUnit}
 
 import akka.actor.ActorSystem
 import com.typesafe.config.Config
 import net.shrine.audit.NetworkQueryId
 import net.shrine.source.ConfigSource
 import net.shrine.config.ConfigExtensions
+import net.shrine.log.Log
 
 import scala.concurrent.Promise
 import scala.collection.concurrent.{TrieMap, Map => ConcurrentMap}
 import scala.concurrent.duration.{Duration, FiniteDuration}
-
 import scala.concurrent.ExecutionContext.Implicits.global
 
 /**
@@ -24,7 +25,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
   */
 //todo when we do the json data work, this class can grow up to be part of that subproject and leave here
 //todo maybe use a separate actor system, if needed, to let the QepQueryDb or something wrapping it, receive messages in the QEP data. The actorSystem is only used for scheduling. SHRINE-2167
-case class QepQueryDbChangeNotifier(actorSystem: ActorSystem) {
+object QepQueryDbChangeNotifier {
 
   val config:Config = ConfigSource.config.getConfig("shrine.queryEntryPoint.changeNotifier")
 
@@ -37,14 +38,25 @@ case class QepQueryDbChangeNotifier(actorSystem: ActorSystem) {
   val longPollRequestsToComplete:ConcurrentMap[UUID,Trigger] = TrieMap.empty
 
   /* scan all the pending Promises to see if any can be fulfilled */
-  def triggerDataChangeFor(queryId:NetworkQueryId) = longPollRequestsToComplete.values.filter(_.networkQueryId == queryId).map(_.promise.trySuccess(unit))
+  def triggerDataChangeFor(queryId:NetworkQueryId) = {
+    longPollRequestsToComplete.values.filter(_.networkQueryId == queryId).map{ trigger:Trigger =>
+      Log.debug(s"Will trigger $trigger ")
+      trigger.promise.trySuccess(unit)
+    }
+  }
 
   val interval: FiniteDuration = Some(config.get("interval",Duration(_))).collect { case d: FiniteDuration => d }.get
 
-  actorSystem.scheduler.schedule(interval,interval)({
-    val expireTime = System.currentTimeMillis() - interval.toMillis
-    longPollRequestsToComplete.retain((id,x) => x.instertTime <= expireTime)
-  })
+  val scheduler: ScheduledExecutorService = Executors.newScheduledThreadPool(1)
+
+  val runnable:Runnable = new Runnable {
+    override def run(): Unit = {
+      val expireTime = System.currentTimeMillis() - interval.toMillis
+      longPollRequestsToComplete.retain((id, x) => x.instertTime <= expireTime)
+    }
+  }
+
+  scheduler.scheduleAtFixedRate(runnable,interval.toMillis,interval.toMillis,TimeUnit.MILLISECONDS)
 
   def putLongPollRequest(requstId:UUID,queryId:NetworkQueryId,promise: Promise[Unit]) = longPollRequestsToComplete.put(
     requstId,

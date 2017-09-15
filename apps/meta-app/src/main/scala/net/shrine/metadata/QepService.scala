@@ -36,7 +36,6 @@ import scala.util.control.NonFatal
 trait QepService extends HttpService with Loggable {
 
   def system: ActorSystem
-  val qepQueryDbChangeNotifier = QepQueryDbChangeNotifier(system)
 
   val qepReceiver = QepReceiver //start the QepReceiver by bringing it into context
 
@@ -132,11 +131,11 @@ if not
 
           val httpRequestId = UUID.randomUUID()
           //put id -> okToRespondIfNewData in a map so that outside processes can trigger it
-          qepQueryDbChangeNotifier.putLongPollRequest(httpRequestId,queryId,okToRespondIfNewData)
+          QepQueryDbChangeNotifier.putLongPollRequest(httpRequestId,queryId,okToRespondIfNewData)
 
           onSuccess(okToRespond.future){ latestResultsRow:Either[(StatusCode,String),ResultsRow] =>
             //clean up concurrent bits before responding
-            qepQueryDbChangeNotifier.removeLongPollRequest(httpRequestId)
+            QepQueryDbChangeNotifier.removeLongPollRequest(httpRequestId)
             timeoutCanceller.cancel()
             completeWithQueryResult(queryId,latestResultsRow)
           }

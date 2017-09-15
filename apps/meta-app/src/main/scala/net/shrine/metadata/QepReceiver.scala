@@ -10,7 +10,7 @@ import net.shrine.messagequeueservice.protocol.Envelope
 import net.shrine.messagequeueservice.{CouldNotCreateQueueButOKToRetryException, Message, MessageQueueService, Queue}
 import net.shrine.problem.{AbstractProblem, ProblemSources}
 import net.shrine.protocol.{AggregatedRunQueryResponse, QueryResult, ResultOutputType, ResultOutputTypes}
-import net.shrine.qep.querydb.{QepQueryDb, QueryResultRow}
+import net.shrine.qep.querydb.{QepQueryDb, QepQueryDbChangeNotifier, QueryResultRow}
 import net.shrine.source.ConfigSource
 import net.shrine.status.protocol.IncrementalQueryResult
 
@@ -128,7 +128,7 @@ object QepReceiver {
 
             QepQueryDb.db.insertQueryResultRows(rows)
             Log.debug(s"Inserted incremental results $iqrs")
-            //todo bump the triggerDataChangeFor
+            rows.headOption.map(row => QepQueryDbChangeNotifier.triggerDataChangeFor(row.networkQueryId))
             Success(unit)
           }
         case e:Envelope => Failure(UnexpectedMessageContentsTypeException(e,queue))
@@ -184,6 +184,7 @@ class QueueReceiverContextListener extends ServletContextListener {
 
   override def contextDestroyed(servletContextEvent: ServletContextEvent): Unit = {
     QepReceiver.stop()
+    QepQueryDbChangeNotifier.scheduler.shutdown()
   }
 }
 
