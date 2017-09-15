@@ -78,7 +78,7 @@ object LocalHornetQMom extends MessageQueueService {
           try {
             serverControl.createQueue(proposedQueue.name, proposedQueue.name, true)
           } catch {
-            case hqqex:HornetQQueueExistsException => Log.debug(s"Caught and ignored a HornetQQueueExistsException in createQueueIfAbsent.",hqqex)
+            case hqqex:HornetQQueueExistsException => Log.debug(s"Ignored a HornetQQueueExistsException in createQueueIfAbsent because ${proposedQueue} already exists.")
           }
           proposedQueue
         }{
