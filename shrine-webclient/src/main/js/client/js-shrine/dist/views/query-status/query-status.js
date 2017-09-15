@@ -131,11 +131,6 @@ System.register(['aurelia-framework', 'services/query-status.model', 'services/p
                     this.publish(this.notifications.shrine.queryAvailable);
                 };
 
-                QueryStatus.prototype.exportTest = function exportTest() {
-                    var nodes = this.nodes;
-                    this.publish(this.commands.shrine.exportResult, { nodes: nodes });
-                };
-
                 QueryStatus.prototype.attached = function attached() {
                     var _this2 = this;
 
@@ -155,7 +150,8 @@ System.register(['aurelia-framework', 'services/query-status.model', 'services/p
                     });
 
                     this.subscribe(this.notifications.i2b2.exportQuery, function () {
-                        _this2.publish(_this2.commands.shrine.exportResult, _extends({}, _this2.status));
+                        var nodes = _this2.nodes;
+                        _this2.publish(_this2.commands.shrine.exportResult, { nodes: nodes });
                     });
 
                     this.subscribe(this.notifications.i2b2.clearQuery, function () {
