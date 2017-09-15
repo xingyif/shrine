@@ -184,6 +184,7 @@ class QueueReceiverContextListener extends ServletContextListener {
 
   override def contextDestroyed(servletContextEvent: ServletContextEvent): Unit = {
     QepReceiver.stop()
+    QepQueryDbChangeNotifier.scheduler.shutdown()
   }
 }
 
