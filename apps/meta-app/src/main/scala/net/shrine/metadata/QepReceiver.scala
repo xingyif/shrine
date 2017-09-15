@@ -128,6 +128,7 @@ object QepReceiver {
 
             QepQueryDb.db.insertQueryResultRows(rows)
             Log.debug(s"Inserted incremental results $iqrs")
+            //todo bump the triggerDataChangeFor
             Success(unit)
           }
         case e:Envelope => Failure(UnexpectedMessageContentsTypeException(e,queue))

@@ -101,7 +101,7 @@ if not
           completeWithQueryResult(queryId,troubleOrResultsRow)
         }
         else {
-          debug(s"Creating promises to respond about $queryId with a version later than $afterVersion by $deadline ")
+          debug(s"No new data. Will create promise to respond about $queryId with a version later than $afterVersion by $deadline ")
           // the Promise used to respond
           val okToRespond = Promise[Either[(StatusCode,String),ResultsRow]]()
 
@@ -130,13 +130,13 @@ if not
             x
           })
 
-          val requestId = UUID.randomUUID()
+          val httpRequestId = UUID.randomUUID()
           //put id -> okToRespondIfNewData in a map so that outside processes can trigger it
-          qepQueryDbChangeNotifier.putLongPollRequest(requestId,queryId,okToRespondIfNewData)
+          qepQueryDbChangeNotifier.putLongPollRequest(httpRequestId,queryId,okToRespondIfNewData)
 
           onSuccess(okToRespond.future){ latestResultsRow:Either[(StatusCode,String),ResultsRow] =>
             //clean up concurrent bits before responding
-            qepQueryDbChangeNotifier.removeLongPollRequest(requestId)
+            qepQueryDbChangeNotifier.removeLongPollRequest(httpRequestId)
             timeoutCanceller.cancel()
             completeWithQueryResult(queryId,latestResultsRow)
           }
@@ -156,11 +156,13 @@ if not
                        resultsRow:Either[(StatusCode,String),ResultsRow]
                       ):Boolean = {
     val currentTime = System.currentTimeMillis()
-    if (currentTime >= deadline) true
+    val shouldRespond =if (currentTime >= deadline) true
     else resultsRow.fold(
       {_._1 != StatusCodes.NotFound},
       {_.dataVersion > afterVersion}
     )
+    debug(s"Should respond to $resultsRow is $shouldRespond")
+    shouldRespond
   }
 
   def completeWithQueryResult(networkQueryId: NetworkQueryId,troubleOrResultsRow:Either[(StatusCode,String),ResultsRow]): Route = {
