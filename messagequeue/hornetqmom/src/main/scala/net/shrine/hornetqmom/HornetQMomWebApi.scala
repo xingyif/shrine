@@ -166,13 +166,13 @@ trait HornetQMomWebApi extends HttpService
     idToMessages.update(msgID, (localHornetQMessage, System.currentTimeMillis()))
     // a sentinel that monitors the hashmap of idToMessages, any message that has been outstanding for more than 3X or 10X
     // time-to-live need to get cleaned out of this map
-    val messageTimeOutInMillis: Long = ConfigSource.config.get("shrine.messagequeue.hornetQWebApi.messageTimeOutSeconds", Duration(_)).toMillis
-    val sentinelRunner: MapSentinelRunner = MapSentinelRunner(messageTimeOutInMillis)
+    val messageTimeToLiveInMillis: Long = ConfigSource.config.get("shrine.messagequeue.hornetQWebApi.messageTimeToLive", Duration(_)).toMillis
+    val sentinelRunner: MapSentinelRunner = MapSentinelRunner(messageTimeToLiveInMillis)
     try {
-      Log.debug(s"Starting the sentinel scheduler that cleans outstanding messages exceeds 3 times $messageTimeOutInMillis")
-      MessageMapCleaningScheduler.schedule(sentinelRunner, messageTimeOutInMillis * 3, TimeUnit.MILLISECONDS)
+      Log.debug(s"Starting the sentinel scheduler that cleans outstanding messages exceeds 3 times $messageTimeToLiveInMillis")
+      MessageMapCleaningScheduler.schedule(sentinelRunner, messageTimeToLiveInMillis * 3, TimeUnit.MILLISECONDS)
     } catch {
-      case NonFatal(x) => ExceptionWhileSchedulingSentinelProblem(messageTimeOutInMillis, x)
+      case NonFatal(x) => ExceptionWhileSchedulingSentinelProblem(messageTimeToLiveInMillis, x)
       //pass-through to blow up the thread, receive no more results, do something dramatic in UncaughtExceptionHandler.
       case x => Log.error("Fatal exception while scheduling a sentinel for cleaning up outstanding messages", x)
         throw x
@@ -301,7 +301,7 @@ case class MessageDoesNotExistInMapProblem(id: UUID) extends AbstractProblem(Pro
 
   override def summary: String = s"The client expected message $id, but the server did not find it and could not complete() the message."
 
-  override def description: String = s"The client expected message $id, but the server did not find it and could not complete() the message." +
+  override def description: String = s"The client expected message $id from , but the server did not find it and could not complete() the message." +
     s" Message either has never been received or already been completed!"
 }
 

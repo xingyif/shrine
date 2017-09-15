@@ -126,8 +126,9 @@ object LocalHornetQMom extends MessageQueueService {
       producer: ClientProducer <- Try{ session.createProducer(to.name) }
       message <- Try{
         val msg = session.createMessage(true).putStringProperty(Message.contentsKey, contents)
-        val messageTimeOutInMillis: Long = ConfigSource.config.get("shrine.messagequeue.hornetQWebApi.messageTimeOutSeconds", Duration(_)).toMillis
-        msg.setExpiration(System.currentTimeMillis() + messageTimeOutInMillis)
+        val messageTimeToLiveInMillis: Long = ConfigSource.config.get("shrine.messagequeue.hornetQWebApi.messageTimeToLive", Duration(_)).toMillis
+        println(s"in localHonetQ, messageTimeToLiveInMillis is $messageTimeToLiveInMillis")
+        msg.setExpiration(System.currentTimeMillis() + messageTimeToLiveInMillis)
         msg
       }
       sendMessage <- Try {
