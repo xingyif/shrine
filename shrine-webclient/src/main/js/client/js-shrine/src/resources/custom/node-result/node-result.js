@@ -11,12 +11,18 @@ export class NodeResult extends PubSub{
 
     attached() {
         const status = this.result.status;
-        this.component = './status-msg.html';
+        this.component = './submitted.html';
         if(status === "ERROR") {
             this.component = './error.html';
         }
-        else if(['COMPLETED', 'FINISHED'].indexOf(status) > -1) {
+        else if('COMPLETED,FINISHED'.includes(status)) {
             this.component = './patient-count.html';
+        }
+        else if('PROCESSING,INCOMPLETE,COMPLETE'.includes(status)) {
+            this.component = './status.html';
+        }
+        else if(status.toLowerCase().includes('queue')) {
+            this.component = './queued.html';
         }
     }
 }
