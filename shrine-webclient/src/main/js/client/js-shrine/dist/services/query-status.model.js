@@ -52,9 +52,7 @@ System.register(['aurelia-event-aggregator', 'repository/qep.repository', './shr
                             return a.adapterNode.toUpperCase() <= b.adapterNode.toUpperCase() ? -1 : 1;
                         };
                         var nodes = results.length === 0 ? [] : [].concat(results.sort(sort));
-                        var complete = nodes.length > 0 && nodes.filter(function (n) {
-                            return 'ERROR,COMPLETED,FINISHED'.includes(n.status);
-                        }).length === nodes.lenth;
+                        var complete = data.isComplete;
                         var query = _extends({}, queryData, { complete: complete });
                         resolve({
                             query: query,

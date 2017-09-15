@@ -140,15 +140,11 @@ System.register(['aurelia-framework', 'services/query-status.model', 'services/p
                     });
 
                     this.subscribe(this.notifications.i2b2.networkIdReceived, function (d) {
-                        var networkId = d.networkId,
-                            name = d.name;
+                        if (_this2.status && _this2.status.canceled) return;
+                        var networkId = d.networkId;
 
-                        var state = initialState();
-                        var nodes = state.nodes;
-
-                        var queryName = name || state.query.queryName;
-                        _this2.status = _this2.status ? _extends({}, _this2.status, { nodes: nodes }) : state;
-                        _this2.status.query = _extends({}, _this2.status.query, { queryName: queryName, networkId: networkId });
+                        _this2.status.query.networkId = networkId;
+                        _this2.status.nodes = initialState().nodes;
                         _this2.publish(_this2.commands.shrine.fetchQuery, { networkId: networkId, timeoutSeconds: TIMEOUT_SECONDS, dataVersion: DEFAULT_VERSION });
                     });
 
@@ -157,7 +153,7 @@ System.register(['aurelia-framework', 'services/query-status.model', 'services/p
                     });
 
                     this.subscribe(this.notifications.i2b2.clearQuery, function () {
-                        _this2.status = initialState();
+                        _this2.status = _extends({}, initialState(), { canceled: true });
                     });
                     this.subscribe(this.notifications.shrine.queryReceived, function (data) {
                         var query = data.query,
@@ -168,16 +164,19 @@ System.register(['aurelia-framework', 'services/query-status.model', 'services/p
                             networkId = data.query.networkId;
 
                         var timeoutSeconds = TIMEOUT_SECONDS;
-                        if (networkId !== _this2.status.query.networkId) return;
+                        if (networkId !== _this2.status.query.networkId || _this2.status.canceled) return;
                         var updated = Number(new Date());
-                        _this2.status = _extends({}, _this2.status, { query: query, nodes: nodes, updated: updated });
+                        Object.assign(_this2.status, { query: query, nodes: nodes, updated: updated });
                         if (!complete) {
                             _this2.publish(_this2.commands.shrine.fetchQuery, { networkId: networkId, dataVersion: dataVersion, timeoutSeconds: timeoutSeconds });
                         }
                     });
 
                     if (me.get(this).isDevEnv) {
-                        this.publish(this.notifications.i2b2.networkIdReceived, { networkId: '2421519216383772161', name: "started query" });
+                        this.publish(this.notifications.i2b2.queryStarted, "started query");
+                        window.setTimeout(function () {
+                            return _this2.publish(_this2.notifications.i2b2.networkIdReceived, { networkId: '2421519216383772161', name: "started query" });
+                        }, 2000);
                     }
                 };
 
@@ -194,7 +193,7 @@ System.register(['aurelia-framework', 'services/query-status.model', 'services/p
             me = new WeakMap();
 
             initialState = function initialState(n) {
-                return { query: { networkId: null, queryName: null, updated: null, complete: false }, nodes: null };
+                return { query: { networkId: null, queryName: null, updated: null, complete: false, canceled: false }, nodes: null };
             };
         }
     };

@@ -11,8 +11,8 @@ export class QueryStatusModel {
                 const {results, dataVersion, query: queryData} = data;
                 const sort = (a, b) => a.adapterNode.toUpperCase() <= b.adapterNode.toUpperCase()? -1 : 1;
                 const nodes = results.length === 0? [] : [...results.sort(sort)];
-                const complete = nodes.length > 0 && nodes.filter(n => 'ERROR,COMPLETED,FINISHED'.includes(n.status)).length === nodes.lenth;
-                const query = {...queryData, ...{complete: complete}};
+                const complete = data.isComplete;
+                const query = {...queryData, ...{complete}};
                 resolve({
                    query,
                    nodes,

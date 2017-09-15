@@ -42,6 +42,64 @@ module.exports = {
                 "summary":"Query not found"
             }
         },
+
+        {
+            "count": 1795,
+            "networkQueryId": 2421519216383772200,
+            "statusMessage": "HUB_WILL_SUBMIT",
+            "changeDate": 1501001608966,
+            "instanceId": 174,
+            "resultId": 320,
+            "status": "HUB_WILL_SUBMIT",
+            "resultType": {
+                "isBreakdown": false,
+                "name": "PATIENT_COUNT_XML",
+                "id": 4,
+                "i2b2Options": {
+                    "description": "Number of patients",
+                    "displayType": "CATNUM"
+                }
+            },
+            "adapterNode": "shrine-dev4"
+        },
+        {
+            "count": 1795,
+            "networkQueryId": 2421519216383772200,
+            "statusMessage": "SMALL_QUEUE",
+            "changeDate": 1501001608966,
+            "instanceId": 174,
+            "resultId": 320,
+            "status": "SMALL_QUEUE",
+            "resultType": {
+                "isBreakdown": false,
+                "name": "PATIENT_COUNT_XML",
+                "id": 4,
+                "i2b2Options": {
+                    "description": "Number of patients",
+                    "displayType": "CATNUM"
+                }
+            },
+            "adapterNode": "shrine-dev5"
+        },
+        {
+            "count": 1795,
+            "networkQueryId": 2421519216383772200,
+            "statusMessage": "PROCESSING",
+            "changeDate": 1501001608966,
+            "instanceId": 174,
+            "resultId": 320,
+            "status": "PROCESSING",
+            "resultType": {
+                "isBreakdown": false,
+                "name": "PATIENT_COUNT_XML",
+                "id": 4,
+                "i2b2Options": {
+                    "description": "Number of patients",
+                    "displayType": "CATNUM"
+                }
+            },
+            "adapterNode": "shrine-dev6"
+        },
         {
             "count": 1795,
             "networkQueryId": 2421519216383772200,

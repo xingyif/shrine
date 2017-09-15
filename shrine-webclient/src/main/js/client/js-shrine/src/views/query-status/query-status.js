@@ -29,12 +29,10 @@ export class QueryStatus extends PubSub {
         });
 
         this.subscribe(this.notifications.i2b2.networkIdReceived, d => {
-            const {networkId, name} = d;
-            const state = initialState();
-            const {nodes} = state;
-            const queryName = name || state.query.queryName; 
-            this.status = this.status? {...this.status, ...{nodes}} : state;
-            this.status.query = {...this.status.query, ...{queryName, networkId}};
+            if(this.status && this.status.canceled) return;
+            const {networkId} = d;
+            this.status.query.networkId = networkId;
+            this.status.nodes = initialState().nodes;
             this.publish(this.commands.shrine.fetchQuery, {networkId, timeoutSeconds: TIMEOUT_SECONDS, dataVersion: DEFAULT_VERSION})
         });
 
@@ -43,26 +41,27 @@ export class QueryStatus extends PubSub {
         })
 
         this.subscribe(this.notifications.i2b2.clearQuery, () => {
-            this.status = initialState();
+            this.status = {...initialState(), ...{canceled: true}};
         })
         this.subscribe(this.notifications.shrine.queryReceived, data => {
             const {query, nodes, dataVersion = DEFAULT_VERSION, complete, query:{networkId}} = data; 
             const timeoutSeconds = TIMEOUT_SECONDS;
-            if(networkId !== this.status.query.networkId) return;
+            if(networkId !== this.status.query.networkId || this.status.canceled) return;
             const updated = Number(new Date());
-            this.status = { ...this.status, ...{ query, nodes, updated } }
+            Object.assign(this.status, {query, nodes, updated});
             if (!complete) {
                 this.publish(this.commands.shrine.fetchQuery, {networkId, dataVersion, timeoutSeconds});
             }
         });
 
         if (me.get(this).isDevEnv) {
-            //this.publish(this.notifications.i2b2.queryStarted, "started query");
-            this.publish(this.notifications.i2b2.networkIdReceived, {networkId: '2421519216383772161', name: "started query"});
+            this.publish(this.notifications.i2b2.queryStarted, "started query");
+            window.setTimeout(() => 
+                this.publish(this.notifications.i2b2.networkIdReceived, {networkId: '2421519216383772161', name: "started query"}), 2000);
         }
     }
 }
 const TIMEOUT_SECONDS = 15;
 const DEFAULT_VERSION = -1;
 const me = new WeakMap();
-const initialState = (n) => ({ query: { networkId: null, queryName: null, updated: null, complete: false }, nodes: null });
+const initialState = (n) => ({ query: { networkId: null, queryName: null, updated: null, complete: false, canceled: false}, nodes: null });
