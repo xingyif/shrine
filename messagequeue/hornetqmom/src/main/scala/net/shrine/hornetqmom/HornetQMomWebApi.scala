@@ -3,7 +3,6 @@ package net.shrine.hornetqmom
 import java.util.UUID
 
 import net.shrine.config.ConfigExtensions
-import net.shrine.hornetqmom.LocalHornetQMom.LocalHornetQMessage
 import net.shrine.log.{Log, Loggable}
 import net.shrine.messagequeueservice.{Message, Queue}
 import net.shrine.problem.{AbstractProblem, ProblemSources}
@@ -33,7 +32,12 @@ trait HornetQMomWebApi extends HttpService
   val warningMessage: String = "If you intend for this node to serve as this SHRINE network's messaging hub " +
                         "set shrine.messagequeue.hornetQWebApi.enabled to true in your shrine.conf." +
                         " You do not want to do this unless you are the hub admin!"
-
+  if(!enabled) {
+    //todo this is where the enabled check goes
+    // this is not a problem for any downstream nodes. Only a problem for hubs in 1.23, and it will be obvious
+    //  val configProblem: CannotUseHornetQMomWebApiProblem = CannotUseHornetQMomWebApiProblem(new UnsupportedOperationException)
+    debug(s"HornetQMomWebApi is not enabled.")
+  }
   // keep a map of messages and ids
   private val idToMessages: TrieMap[UUID, (Message, Long)] = TrieMap.empty
 
@@ -59,8 +63,6 @@ trait HornetQMomWebApi extends HttpService
   def momRoute: Route = pathPrefix("mom") {
 
     if (!enabled) {
-      val configProblem: CannotUseHornetQMomWebApiProblem = CannotUseHornetQMomWebApiProblem(new UnsupportedOperationException)
-      warn(s"HornetQMomWebApi is not available to use due to configProblem ${configProblem.description}!")
       respondWithStatus(StatusCodes.NotFound) {
         complete(warningMessage)
       }
@@ -159,9 +161,7 @@ trait HornetQMomWebApi extends HttpService
     }
 
   private def scheduleCleanupMessageMap(msgID: UUID, localHornetQMessage: Message) = {
-    import java.util.concurrent.Executors
-    import java.util.concurrent.ScheduledExecutorService
-    import java.util.concurrent.TimeUnit
+    import java.util.concurrent.{Executors, ScheduledExecutorService, TimeUnit}
 
     idToMessages.update(msgID, (localHornetQMessage, System.currentTimeMillis()))
     // a sentinel that monitors the hashmap of idToMessages, any message that has been outstanding for more than 3X or 10X
