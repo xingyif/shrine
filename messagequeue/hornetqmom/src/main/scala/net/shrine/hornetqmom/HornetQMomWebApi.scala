@@ -257,7 +257,7 @@ object MessageMapCleaningScheduler {
     scheduler.schedule(command, delay, unit)
   }
   def shutDown() = {
-    scheduler.shutdown()
+    scheduler.shutdownNow()
   }
 }
 
