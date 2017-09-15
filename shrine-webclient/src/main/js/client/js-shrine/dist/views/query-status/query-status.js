@@ -150,7 +150,8 @@ System.register(['aurelia-framework', 'services/query-status.model', 'services/p
                     });
 
                     this.subscribe(this.notifications.i2b2.exportQuery, function () {
-                        _this2.publish(_this2.commands.shrine.exportResult, _extends({}, _this2.status));
+                        var nodes = _this2.nodes;
+                        _this2.publish(_this2.commands.shrine.exportResult, { nodes: nodes });
                     });
 
                     this.subscribe(this.notifications.i2b2.clearQuery, function () {
