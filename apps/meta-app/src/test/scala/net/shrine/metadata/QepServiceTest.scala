@@ -3,7 +3,7 @@ package net.shrine.metadata
 import akka.actor.ActorRefFactory
 import net.shrine.i2b2.protocol.pm.User
 import net.shrine.protocol.{Credential, QueryResult, ResultOutputType}
-import net.shrine.qep.querydb.{QepQuery, QepQueryDb, QueryResultRow}
+import net.shrine.qep.querydb.{QepQuery, QepQueryDb, QepQueryDbChangeNotifier, QueryResultRow}
 import org.json4s.DefaultFormats
 import org.scalatest.{BeforeAndAfterEach, Suite}
 
@@ -227,7 +227,7 @@ class QepServiceTest extends FlatSpec with ScalatestRouteTest with QepService wi
     object Inserter extends Runnable {
       override def run(): Unit = {
         QepQueryDb.db.insertQepResultRow(qepResultRowFromBch)
-        qepQueryDbChangeNotifier.triggerDataChangeFor(qepResultRowFromBch.networkQueryId)
+        QepQueryDbChangeNotifier.triggerDataChangeFor(qepResultRowFromBch.networkQueryId)
       }
     }
 
