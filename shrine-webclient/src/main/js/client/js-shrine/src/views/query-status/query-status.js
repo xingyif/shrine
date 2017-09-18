@@ -30,8 +30,8 @@ export class QueryStatus extends PubSub {
         });
 
         this.subscribe(this.notifications.i2b2.networkIdReceived, d => {
-            const runningPreviousQuery = !this.status;
-            if(runningPreviousQuery) this.status = initialState();
+            const runningPreviousQuery = this.status === undefined;
+            if(runningPreviousQuery) this.status = initialState().status;
             if(this.status.canceled) return;
             const {networkId} = d;
             this.status.query.networkId = networkId;
@@ -45,7 +45,8 @@ export class QueryStatus extends PubSub {
         })
 
         this.subscribe(this.notifications.i2b2.clearQuery, () => {
-            this.status = {...initialState(), ...{canceled: true}};
+            this.status = {...initialState().status, ...{canceled: true}};
+            this.nodes = initialState().nodes;
         })
         this.subscribe(this.notifications.shrine.queryReceived, data => {
             const {query, nodes, dataVersion = DEFAULT_VERSION, complete, query:{networkId}} = data; 

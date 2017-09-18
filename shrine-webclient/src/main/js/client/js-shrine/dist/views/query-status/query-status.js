@@ -141,8 +141,8 @@ System.register(['aurelia-framework', 'services/query-status.model', 'services/p
                     });
 
                     this.subscribe(this.notifications.i2b2.networkIdReceived, function (d) {
-                        var runningPreviousQuery = !_this2.status;
-                        if (runningPreviousQuery) _this2.status = initialState();
+                        var runningPreviousQuery = _this2.status === undefined;
+                        if (runningPreviousQuery) _this2.status = initialState().status;
                         if (_this2.status.canceled) return;
                         var networkId = d.networkId;
 
@@ -157,7 +157,8 @@ System.register(['aurelia-framework', 'services/query-status.model', 'services/p
                     });
 
                     this.subscribe(this.notifications.i2b2.clearQuery, function () {
-                        _this2.status = _extends({}, initialState(), { canceled: true });
+                        _this2.status = _extends({}, initialState().status, { canceled: true });
+                        _this2.nodes = initialState().nodes;
                     });
                     this.subscribe(this.notifications.shrine.queryReceived, function (data) {
                         var query = data.query,
