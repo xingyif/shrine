@@ -30,7 +30,9 @@ export class QueryStatus extends PubSub {
         });
 
         this.subscribe(this.notifications.i2b2.networkIdReceived, d => {
-            if(this.status && this.status.canceled) return;
+            const runningPreviousQuery = !this.status;
+            if(runningPreviousQuery) this.status = initialState();
+            if(this.status.canceled) return;
             const {networkId} = d;
             this.status.query.networkId = networkId;
             this.nodes = initialState().nodes;

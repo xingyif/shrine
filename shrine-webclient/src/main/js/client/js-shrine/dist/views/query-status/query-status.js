@@ -141,7 +141,9 @@ System.register(['aurelia-framework', 'services/query-status.model', 'services/p
                     });
 
                     this.subscribe(this.notifications.i2b2.networkIdReceived, function (d) {
-                        if (_this2.status && _this2.status.canceled) return;
+                        var runningPreviousQuery = !_this2.status;
+                        if (runningPreviousQuery) _this2.status = initialState();
+                        if (_this2.status.canceled) return;
                         var networkId = d.networkId;
 
                         _this2.status.query.networkId = networkId;
