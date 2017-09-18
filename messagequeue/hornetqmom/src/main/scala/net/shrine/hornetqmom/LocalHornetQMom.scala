@@ -18,7 +18,7 @@ import scala.collection.concurrent.{TrieMap, Map => ConcurrentMap}
 import scala.collection.immutable.Seq
 import scala.concurrent.blocking
 import scala.concurrent.duration.Duration
-import scala.util.Try
+import scala.util.{Success, Try}
 /**
   * This object is the local version of the Message-Oriented Middleware API, which uses HornetQ service
   *
@@ -183,14 +183,7 @@ object LocalHornetQMom extends MessageQueueService {
 //      shadowQueue.foreach(queue => Option(queue.pollFirst(timeout.toMillis,TimeUnit.MILLISECONDS)))
       val shadowMessage: Option[String] = shadowQueue.map(queue => Option(queue.poll())).flatten
 
-      (shadowMessage,message) match {
-        case (Some(sm),Some(m)) => //this is fine. Both have a message
-        case (None,None) => //this is fine. Neither has a message
-        case (Some(sm),None) => Log.error(s"A shadowMessage exists, but message is $message")//this is bad, and what I think is going on
-        case (None,Some(m)) => Log.error(s"No shadowMessage exists for a message")//this is bad, but possibly not terrible if the shadowMessage was already polled
-      }
-
-      message
+      shadowMessage.map(SimpleMessage(_))
     }
   }
 
@@ -214,6 +207,12 @@ object LocalHornetQMom extends MessageQueueService {
     //complete a message
     override def complete(): Try[Unit] = Try { clientMessage.acknowledge() }
   }
+
+  val unit = ()
+  case class SimpleMessage(contents:String) extends Message {
+    override def complete(): Try[Unit] = Success(unit) //todo fill this in when you build out complete
+  }
+
 }
 
 /**
