@@ -1,5 +1,7 @@
 package net.shrine.hornetqmom
 
+import java.util.concurrent.{BlockingDeque, LinkedBlockingDeque, TimeUnit}
+
 import com.typesafe.config.Config
 import net.shrine.config.ConfigExtensions
 import net.shrine.log.Log
@@ -66,9 +68,12 @@ object LocalHornetQMom extends MessageQueueService {
     hornetQServer.stop()
   }
 
+  val namesToShadowQueues:ConcurrentMap[String,BlockingDeque[String]] = TrieMap.empty
+
   //queue lifecycle
   def createQueueIfAbsent(queueName: String): Try[Queue] = {
-    val unit = ()
+
+    namesToShadowQueues.getOrElseUpdate(queueName, new LinkedBlockingDeque[String]())
 
     val proposedQueue: Queue = Queue(queueName)
     for {
@@ -79,7 +84,7 @@ object LocalHornetQMom extends MessageQueueService {
           try {
             serverControl.createQueue(proposedQueue.name, proposedQueue.name, true)
           } catch {
-            case hqqex:HornetQQueueExistsException => Log.debug(s"Ignored a HornetQQueueExistsException in createQueueIfAbsent because ${proposedQueue} already exists.")
+            case hqqex:HornetQQueueExistsException => Log.debug(s"Ignored a HornetQQueueExistsException in createQueueIfAbsent because $proposedQueue already exists.")
           }
           proposedQueue
         }{
@@ -92,6 +97,8 @@ object LocalHornetQMom extends MessageQueueService {
   }
 
   def deleteQueue(queueName: String): Try[Unit] = {
+    namesToShadowQueues.remove(queueName)
+
     val proposedQueue: Queue = Queue(queueName)
     for {
       deleteTry <- Try {
@@ -103,6 +110,8 @@ object LocalHornetQMom extends MessageQueueService {
   }
 
   override def queues: Try[Seq[Queue]] = {
+    namesToShadowQueues.keys
+
     for {
       hornetQTry: HornetQServerControl <- Try {
         hornetQServer.getHornetQServerControl
@@ -135,7 +144,13 @@ object LocalHornetQMom extends MessageQueueService {
         Log.debug(s"Message $message sent to $to in HornetQ")
         producer.close()
       }
-    } yield sendMessage
+    } yield {
+      val shadowQueue = namesToShadowQueues.get(to.name)
+      shadowQueue.foreach(queue => queue.addLast(contents))
+      Log.debug(s"After send to ${to.name} - shadowQueue ${shadowQueue.map(_.size)} ${shadowQueue.map(_.toString)}")
+
+      sendMessage
+    }
   }
 
   //receive a message
@@ -162,7 +177,21 @@ object LocalHornetQMom extends MessageQueueService {
           messageReceived.map(clientMsg => LocalHornetQMessage(clientMsg))
         }
       }
-    } yield message
+    } yield {
+      val shadowQueue = namesToShadowQueues.get(from.name)
+      Log.debug(s"Before receive from ${from.name} - shadowQueue ${shadowQueue.map(_.size)} ${shadowQueue.map(_.toString)}")
+//      shadowQueue.foreach(queue => Option(queue.pollFirst(timeout.toMillis,TimeUnit.MILLISECONDS)))
+      val shadowMessage: Option[String] = shadowQueue.map(queue => Option(queue.poll())).flatten
+
+      (shadowMessage,message) match {
+        case (Some(sm),Some(m)) => //this is fine. Both have a message
+        case (None,None) => //this is fine. Neither has a message
+        case (Some(sm),None) => Log.error(s"A shadowMessage exists, but message is $message")//this is bad, and what I think is going on
+        case (None,Some(m)) => Log.error(s"No shadowMessage exists for a message")//this is bad, but possibly not terrible if the shadowMessage was already polled
+      }
+
+      message
+    }
   }
 
   def getQueueConsumer(queue: Queue): Try[ClientConsumer] = {
