@@ -32,7 +32,6 @@ export class QueryStatus extends PubSub {
         this.subscribe(this.notifications.i2b2.networkIdReceived, d => {
             const runningPreviousQuery = this.status === undefined;
             if(runningPreviousQuery) this.status = initialState().status;
-            if(this.status.canceled) return;
             const {networkId} = d;
             this.status.query.networkId = networkId;
             this.nodes = initialState().nodes;
@@ -45,13 +44,13 @@ export class QueryStatus extends PubSub {
         })
 
         this.subscribe(this.notifications.i2b2.clearQuery, () => {
-            this.status = {...initialState().status, ...{canceled: true}};
             this.nodes = initialState().nodes;
+            this.status =  initialState().status;
         })
         this.subscribe(this.notifications.shrine.queryReceived, data => {
             const {query, nodes, dataVersion = DEFAULT_VERSION, complete, query:{networkId}} = data; 
             const timeoutSeconds = TIMEOUT_SECONDS;
-            if(networkId !== this.status.query.networkId || this.status.canceled) return;
+            if(networkId !== this.status.query.networkId) return;
             const updated = Number(new Date());
             Object.assign(this.status, {query, updated});
             this.nodes = nodes;
@@ -70,4 +69,4 @@ export class QueryStatus extends PubSub {
 const TIMEOUT_SECONDS = 15;
 const DEFAULT_VERSION = -1;
 const me = new WeakMap();
-const initialState = (n) => ({status: { query: { networkId: null, queryName: null, updated: null, complete: false, canceled: false}}, nodes: [] });
+const initialState = (n) => ({status: { query: { networkId: null, queryName: null, updated: null, complete: false}}, nodes: [] });

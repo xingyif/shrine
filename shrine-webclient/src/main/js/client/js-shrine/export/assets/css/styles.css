@@ -39,10 +39,6 @@
   .mailto .email {
     position: relative; }
 
-.query-status {
-  font-family: arial,helvetica;
-  padding: .5rem; }
-
 
 /*{
     position: relative;
@@ -64,6 +60,10 @@
     background-color: #337ab7;
     border-color: #337ab7;
 }*/
+
+.query-status {
+  font-family: arial,helvetica;
+  padding: .5rem; }
 
 @import url(http://fonts.googleapis.com/css?family=Roboto:400,300&subset=latin,latin-ext);
 ul.context-menu {

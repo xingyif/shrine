@@ -158,9 +158,9 @@
 		}
 
 		var _doQueryClear = i2b2.CRC.ctrlr.QT.doQueryClear;
-		i2b2.CRC.ctrlr.QT.doQueryClear = function() {
+		i2b2.CRC.ctrlr.QT.doQueryClear = function(clearStatus) {
 			_doQueryClear.apply(i2b2.CRC.ctrlr.QT, []);
-			i2b2.events.clearQuery.fire(); 
+			if(clearStatus === true) i2b2.events.clearQuery.fire();
 		}
 
 	}

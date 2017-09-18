@@ -1,7 +1,7 @@
 System.register(['aurelia-framework', 'services/query-status.model', 'services/pub-sub'], function (_export, _context) {
     "use strict";
 
-    var customElement, observable, QueryStatusModel, PubSub, _extends, _dec, _class, _desc, _value, _class2, _descriptor, _class3, _temp, QueryStatus, TIMEOUT_SECONDS, DEFAULT_VERSION, me, initialState;
+    var customElement, observable, QueryStatusModel, PubSub, _dec, _class, _desc, _value, _class2, _descriptor, _class3, _temp, QueryStatus, TIMEOUT_SECONDS, DEFAULT_VERSION, me, initialState;
 
     function _initDefineProp(target, property, descriptor, context) {
         if (!descriptor) return;
@@ -86,20 +86,6 @@ System.register(['aurelia-framework', 'services/query-status.model', 'services/p
             PubSub = _servicesPubSub.PubSub;
         }],
         execute: function () {
-            _extends = Object.assign || function (target) {
-                for (var i = 1; i < arguments.length; i++) {
-                    var source = arguments[i];
-
-                    for (var key in source) {
-                        if (Object.prototype.hasOwnProperty.call(source, key)) {
-                            target[key] = source[key];
-                        }
-                    }
-                }
-
-                return target;
-            };
-
             _export('QueryStatus', QueryStatus = (_dec = customElement('query-status'), _dec(_class = (_class2 = (_temp = _class3 = function (_PubSub) {
                 _inherits(QueryStatus, _PubSub);
 
@@ -143,7 +129,6 @@ System.register(['aurelia-framework', 'services/query-status.model', 'services/p
                     this.subscribe(this.notifications.i2b2.networkIdReceived, function (d) {
                         var runningPreviousQuery = _this2.status === undefined;
                         if (runningPreviousQuery) _this2.status = initialState().status;
-                        if (_this2.status.canceled) return;
                         var networkId = d.networkId;
 
                         _this2.status.query.networkId = networkId;
@@ -157,8 +142,8 @@ System.register(['aurelia-framework', 'services/query-status.model', 'services/p
                     });
 
                     this.subscribe(this.notifications.i2b2.clearQuery, function () {
-                        _this2.status = _extends({}, initialState().status, { canceled: true });
                         _this2.nodes = initialState().nodes;
+                        _this2.status = initialState().status;
                     });
                     this.subscribe(this.notifications.shrine.queryReceived, function (data) {
                         var query = data.query,
@@ -169,7 +154,7 @@ System.register(['aurelia-framework', 'services/query-status.model', 'services/p
                             networkId = data.query.networkId;
 
                         var timeoutSeconds = TIMEOUT_SECONDS;
-                        if (networkId !== _this2.status.query.networkId || _this2.status.canceled) return;
+                        if (networkId !== _this2.status.query.networkId) return;
                         var updated = Number(new Date());
                         Object.assign(_this2.status, { query: query, updated: updated });
                         _this2.nodes = nodes;
@@ -199,7 +184,7 @@ System.register(['aurelia-framework', 'services/query-status.model', 'services/p
             me = new WeakMap();
 
             initialState = function initialState(n) {
-                return { status: { query: { networkId: null, queryName: null, updated: null, complete: false, canceled: false } }, nodes: [] };
+                return { status: { query: { networkId: null, queryName: null, updated: null, complete: false } }, nodes: [] };
             };
         }
     };
