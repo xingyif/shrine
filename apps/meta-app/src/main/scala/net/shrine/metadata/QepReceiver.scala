@@ -107,6 +107,7 @@ object QepReceiver {
           AggregatedRunQueryResponse.fromXmlString(breakdownTypes)(contents).flatMap{ rqr =>
             QepQueryDb.db.insertQueryResult(rqr.queryId, rqr.results.head)
             Log.debug(s"Inserted result from ${rqr.results.head.description} for query ${rqr.queryId}")
+            QepQueryDbChangeNotifier.triggerDataChangeFor(rqr.queryId)
             Success(unit)
           }
         case Envelope(contentsType, contents, shrineVersion) if contentsType == IncrementalQueryResult.incrementalQueryResultsEnvelopeContentsType =>
@@ -128,7 +129,7 @@ object QepReceiver {
 
             QepQueryDb.db.insertQueryResultRows(rows)
             Log.debug(s"Inserted incremental results $iqrs")
-            rows.headOption.map(row => QepQueryDbChangeNotifier.triggerDataChangeFor(row.networkQueryId))
+            rows.headOption.foreach(row => QepQueryDbChangeNotifier.triggerDataChangeFor(row.networkQueryId))
             Success(unit)
           }
         case e:Envelope => Failure(UnexpectedMessageContentsTypeException(e,queue))
