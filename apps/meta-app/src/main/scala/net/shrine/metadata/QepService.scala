@@ -96,6 +96,7 @@ if not
       detach(){
         val troubleOrResultsRow = selectResultsRow(queryId, user)
         if (shouldRespondNow(deadline, afterVersion, troubleOrResultsRow)) {
+          debug(s"Will respond to request for $queryId immediately with $troubleOrResultsRow ")
           //bypass all the concurrent/interrupt business. Just reply.
           completeWithQueryResult(queryId,troubleOrResultsRow)
         }
@@ -121,9 +122,13 @@ if not
           //Set up for an interrupt from new data
           val okToRespondIfNewData = Promise[Unit]()
           okToRespondIfNewData.future.transform({unit =>
+            debug(s"Checking for new data for $queryId")
+
             val latestResultsRow = selectResultsRow(queryId, user)
+
             if(shouldRespondNow(deadline,afterVersion,latestResultsRow)) {
-              okToRespond.tryComplete(Try(selectResultsRow(queryId, user)))
+              debug(s"Responding to new data for $queryId")
+              okToRespond.trySuccess(latestResultsRow)
             }
           },{x:Throwable =>  x match {case NonFatal(t) => ExceptionWhilePreparingTriggeredResponse(queryId,t)}
             x
@@ -173,6 +178,7 @@ if not
       }
     }, { queryAndResults =>
       //everything is fine. Respond now.
+      debug(s"care dataVersion in reply is ${queryAndResults.dataVersion}")
       val json: Json = Json(queryAndResults)
       val formattedJson: String = Json.format(json)(humanReadable())
       complete(formattedJson)
@@ -192,7 +198,7 @@ if not
           val queryCell = QueryCell(query, flag)
           val queryAndResults = ResultsRow(queryCell, mostRecentQueryResults)
 
-          debug(s"queryAndResults is $queryAndResults")
+          debug(s"queryAndResults for $queryId version ${queryAndResults.dataVersion} is $queryAndResults")
 
           Right(queryAndResults)
         }
