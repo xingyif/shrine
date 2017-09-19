@@ -51,7 +51,7 @@ object LocalHornetQMom extends MessageQueueService {
 
   //send a message
   def send(contents: String, to: Queue): Try[Unit] = Try{
-    val queue = namesToShadowQueues.getOrElse(to.name,throw new IllegalStateException(s"queue $to not found"))
+    val queue = namesToShadowQueues.getOrElse(to.name,throw new IllegalStateException(s"queue $to not found")) //todo better error handling SHRINE-2308
     queue.addLast(contents)
     Log.debug(s"After send to ${to.name} - shadowQueue ${queue.size} $queue")
   }
