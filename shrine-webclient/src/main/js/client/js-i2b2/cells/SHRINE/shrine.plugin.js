@@ -21,8 +21,9 @@
     i2b2.SHRINE.plugin.ZoomView = zoomView;
     i2b2.SHRINE.plugin.navigateTo = navigateTo;
     i2b2.SHRINE.plugin.errorDetail = errorDetail;
-
-
+    i2b2.SHRINE.plugin.enableRunQueryButton = enableRunQueryButton;
+    i2b2.SHRINE.plugin.disableRunQueryButton = disableRunQueryButton;
+    
     function zoomView() {
         const height = jQuery('#infoQueryStatusText').css('height');
         jQuery('#shrinePlugin').css('height', height);
@@ -65,7 +66,6 @@
         $(pluginId).hide(e);
     }
 
-
     function mailTo() {
         i2b2.CRC.view.status.selectTab('shrine');
     }
@@ -74,14 +74,11 @@
         i2b2.CRC.view.status.selectTab('shrine');
     }
 
-    
-    
     function navigateTo(route) {
         i2b2.CRC.view.status.selectTab('shrine');
         showDisplay(route);
         window.frames['shrine-plugin'].window.postMessage(route, '*');
     }
-
 
     function errorDetail(data) {
 
@@ -147,5 +144,13 @@
             '</div>' +
             '</div>';
             return html;
+    }
+
+    function disableRunQueryButton() {
+        jQuery('#runBoxText').parent().bind('click', function(e) { e.preventDefault()});
+    }
+
+    function enableRunQueryButton() {
+        jQuery('#runBoxText').parent().unbind('click');
     }
 })();

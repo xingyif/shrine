@@ -148,10 +148,8 @@ i2b2.CRC.ctrlr.QueryStatus.prototype = function () {
 		} else {
 			self.dispDIV.innerHTML = '<div style="clear:both;"><div style="float:left; font-weight:bold">Finished Query: "' + self.QM.name + '"</div>';
 			self.dispDIV.innerHTML += '<div style="float:right">[' + s + ' secs]</div>';
-			//		self.dispDIV.innerHTML += '<div style="margin-left:20px; clear:both; height:16px; line-height:16px; "><div height:16px; line-height:16px; ">Compute Time: ' + (Math.floor((self.QI.end_date - self.QI.start_date)/100))/10 + ' secs</div></div>';
-			//		self.dispDIV.innerHTML += '</div>';
 			$('runBoxText').innerHTML = "Run Query";
-
+			i2b2.SHRINE.plugin.enableRunQueryButton();
 		}
 		self.dispDIV.innerHTML += '</div>';
 		if ((!private_singleton_isRunning) && (undefined != self.QI.end_date)) {
@@ -302,6 +300,7 @@ i2b2.CRC.ctrlr.QueryStatus.prototype = function () {
 				private_refreshInterrupt = false;
 				private_singleton_isRunning = false;
 				$('runBoxText').innerHTML = "Run Query";
+				i2b2.SHRINE.plugin.enableRunQueryButton();
 				self.dispDIV.innerHTML += '<div style="clear:both; height:16px; line-height:16px; text-align:center; color:r#ff0000;">QUERY CANCELLED</div>';
 				i2b2.CRC.ctrlr.currentQueryStatus = false;
 			} catch (e) { }
@@ -345,6 +344,7 @@ i2b2.CRC.ctrlr.QueryStatus.prototype = function () {
 			private_refreshInterrupt = false;
 			private_singleton_isRunning = false;
 			$('runBoxText').innerHTML = "Run Query";
+			i2b2.SHRINE.plugin.enableRunQueryButton();
 			i2b2.CRC.ctrlr.currentQueryStatus = false;
 			jQuery('#dialogQryRunResultType input[type="checkbox"]')
 				.each(function(a, b) { b.checked = b.disabled });

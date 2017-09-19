@@ -149,6 +149,7 @@
 				.css({opacity: 0.25})
 				.off('click');
 		});
+		
 		var _queryRun = i2b2.CRC.ctrlr.QT._queryRun;
 		i2b2.CRC.ctrlr.QT._queryRun = function (name, options) {
 			i2b2.events.afterQueryInit.fire({ name: name, data: options });
