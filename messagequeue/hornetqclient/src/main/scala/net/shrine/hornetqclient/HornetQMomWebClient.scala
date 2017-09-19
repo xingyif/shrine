@@ -36,7 +36,7 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
   def webClientConfig = ConfigSource.config.getConfig("shrine.messagequeue.blockingq")
 
   //todo Yifan's work changes the name to webClientTimeOut
-  val webClientTimeOut: Duration = webClientConfig.get("webClientTimeOutSecond", Duration(_))
+  val webClientTimeOut: Duration = webClientConfig.get("webClientTimeOut", Duration(_))
   // TODO in SHRINE-2167: Extract and share a SHRINE actor system
   // the service actor replies to incoming HttpRequests
   //  implicit val serviceActor: ActorRef = startServiceActor()
