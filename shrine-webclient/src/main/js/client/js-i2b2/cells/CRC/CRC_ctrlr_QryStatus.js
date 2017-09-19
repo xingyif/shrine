@@ -344,7 +344,6 @@ i2b2.CRC.ctrlr.QueryStatus.prototype = function () {
 			private_refreshInterrupt = false;
 			private_singleton_isRunning = false;
 			$('runBoxText').innerHTML = "Run Query";
-			i2b2.SHRINE.plugin.enableRunQueryButton();
 			i2b2.CRC.ctrlr.currentQueryStatus = false;
 			jQuery('#dialogQryRunResultType input[type="checkbox"]')
 				.each(function(a, b) { b.checked = b.disabled });

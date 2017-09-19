@@ -143,6 +143,7 @@
 					e.stopPropagation();
 					i2b2.events.exportQueryResult.fire(); 
 				});
+				i2b2.SHRINE.plugin.enableRunQueryButton();
 		});
 		i2b2.events.queryResultUnavailable.subscribe(function () {
 			jQuery('#crcStatusBox .TopTabs .opXML #shrineCSVExport')
@@ -152,6 +153,7 @@
 		
 		var _queryRun = i2b2.CRC.ctrlr.QT._queryRun;
 		i2b2.CRC.ctrlr.QT._queryRun = function (name, options) {
+			i2b2.SHRINE.plugin.disableRunQueryButton();
 			i2b2.events.afterQueryInit.fire({ name: name, data: options });
 			return _queryRun.apply(i2b2.CRC.ctrlr.QT, [name, options]);
 		}

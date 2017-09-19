@@ -473,7 +473,6 @@ function QueryToolController() {
         params.psm_result_output = '<result_output_list>'+result_output+'</result_output_list>\n';
 
 		// create query object
-		i2b2.SHRINE.plugin.disableRunQueryButton();
         i2b2.CRC.ctrlr.currentQueryStatus = new i2b2.CRC.ctrlr.QueryStatus($('infoQueryStatusText'));
         i2b2.CRC.ctrlr.currentQueryStatus.startQuery(inQueryName, params);
     }
