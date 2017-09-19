@@ -178,7 +178,7 @@ if not
       }
     }, { queryAndResults =>
       //everything is fine. Respond now.
-      debug(s"care dataVersion in reply is ${queryAndResults.dataVersion}")
+      debug(s"dataVersion in reply is ${queryAndResults.dataVersion}")
       val json: Json = Json(queryAndResults)
       val formattedJson: String = Json.format(json)(humanReadable())
       complete(formattedJson)

@@ -47,6 +47,4 @@ case class Queue(var name:String) extends DefaultJsonSupport {
   }
 }
 
-case class NoSuchQueueExistsInHornetQ(proposedQueue: Queue) extends Exception(s"Given Queue ${proposedQueue.name} does not exist in HornetQ server! Please create the queue first!")
-
 case class CouldNotCreateQueueButOKToRetryException(status:StatusCode,contents:String) extends Exception(s"Could not create a queue due to status code $status with message '$contents'")

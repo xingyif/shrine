@@ -34,9 +34,6 @@ trait HornetQMomWebApi extends HttpService
                         "set shrine.messagequeue.hornetQWebApi.enabled to true in your shrine.conf." +
                         " You do not want to do this unless you are the hub admin!"
   if(!enabled) {
-    //todo this is where the enabled check goes
-    // this is not a problem for any downstream nodes. Only a problem for hubs in 1.23, and it will be obvious
-    //  val configProblem: CannotUseHornetQMomWebApiProblem = CannotUseHornetQMomWebApiProblem(new UnsupportedOperationException)
     debug(s"HornetQMomWebApi is not enabled.")
   }
   // keep a map of messages and ids
