@@ -5,7 +5,7 @@ import java.util.concurrent.{BlockingDeque, LinkedBlockingDeque, TimeUnit}
 import com.typesafe.config.Config
 import net.shrine.config.ConfigExtensions
 import net.shrine.log.Log
-import net.shrine.messagequeueservice.{Message, MessageQueueService, NoSuchQueueExistsInHornetQ, Queue}
+import net.shrine.messagequeueservice.{Message, MessageQueueService, Queue}
 import net.shrine.source.ConfigSource
 
 import scala.collection.concurrent.{TrieMap, Map => ConcurrentMap}
@@ -27,11 +27,11 @@ object LocalHornetQMom extends MessageQueueService {
   /**
     * Use HornetQMomStopper to stop the hornetQServer without unintentially starting it
     */
-  // todo drop this
   private[hornetqmom] def stop() = {
+    //todo use to turn off the scheduler for redelivery and time to live SHRINE-2209
   }
 
-  //todo key should be a Queue instead of a String
+  //todo key should be a Queue instead of a String SHRINE-2208
   val namesToShadowQueues:ConcurrentMap[String,BlockingDeque[String]] = TrieMap.empty
 
   //queue lifecycle
@@ -41,7 +41,7 @@ object LocalHornetQMom extends MessageQueueService {
   }
 
   def deleteQueue(queueName: String): Try[Unit] = Try{
-    namesToShadowQueues.remove(queueName).getOrElse(throw new IllegalStateException(s"$queueName not found")) //todo this is actually fine - the state we want
+    namesToShadowQueues.remove(queueName).getOrElse(throw new IllegalStateException(s"$queueName not found")) //todo this is actually fine - the state we want SHRINE-2208
   }
 
   override def queues: Try[Seq[Queue]] = Try{
@@ -63,7 +63,7 @@ object LocalHornetQMom extends MessageQueueService {
     * @return Some message before the timeout, or None
     */
   def receive(from: Queue, timeout: Duration): Try[Option[Message]] = Try {
-    val shadowQueue = namesToShadowQueues.getOrElse(from.name,throw new IllegalStateException(s"Queue $from not found")) //todo better exception
+    val shadowQueue = namesToShadowQueues.getOrElse(from.name,throw new IllegalStateException(s"Queue $from not found")) //todo better exception SHRINE-2208
     Log.debug(s"Before receive from ${from.name} - shadowQueue ${shadowQueue.size} ${shadowQueue.toString}")
     blocking {
       val shadowMessage: Option[String] = Option(shadowQueue.pollFirst(timeout.toMillis, TimeUnit.MILLISECONDS))
@@ -75,7 +75,7 @@ object LocalHornetQMom extends MessageQueueService {
 
   val unit = ()
   case class SimpleMessage(contents:String) extends Message {
-    override def complete(): Try[Unit] = Success(unit) //todo fill this in when you build out complete
+    override def complete(): Try[Unit] = Success(unit) //todo fill this in when you build out complete SHRINE-2209
   }
 
 }
