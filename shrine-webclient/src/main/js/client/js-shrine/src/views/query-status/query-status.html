@@ -1,5 +1,5 @@
 <template>
-    <div style="height: 100%; overflow: auto" class="query-status">
+    <div style="height: 100%; overflow: scroll;" class="query-status">
         <div style="display: flex" if.one-way="status.query.queryName">
             <div style="flex:1">Status of Query ${status.query.queryName | truncate}
                 <span if.one-way="nodes.length"><br/>at Each Institution:</span></div>
