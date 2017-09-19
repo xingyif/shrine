@@ -97,14 +97,17 @@ class HornetQMomWebApiTest extends FlatSpec with ScalatestRouteTest with HornetQ
 
     ConfigSource.atomicConfig.configForBlock("shrine.messagequeue.hornetQWebApi.enabled", "true", "HornetQMomWebApiTest") {
 
+      //todo Not a problem. The system is in the state you want.
       Put(s"/mom/deleteQueue/$queueName") ~> momRoute ~> check {
         assertResult(InternalServerError)(status)
       }
 
+      //todo I don't think this one rates more than a 404
       Put(s"/mom/sendMessage/$queueName", HttpEntity(s"$messageContent")) ~> momRoute ~> check {
         assertResult(InternalServerError)(status)
       }
 
+      //todo I don't think this one rates more than a 404
       // given timeout is 1 seconds
       Get(s"/mom/receiveMessage/$queueName?timeOutSeconds=1") ~> momRoute ~> check {
         assertResult(InternalServerError)(status)
