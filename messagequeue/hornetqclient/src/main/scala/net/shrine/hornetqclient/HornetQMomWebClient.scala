@@ -4,7 +4,7 @@ import java.util.UUID
 
 import akka.actor.ActorSystem
 import net.shrine.config.ConfigExtensions
-import net.shrine.hornetqmom.MessageContainer
+import net.shrine.hornetqmom.LocalHornetQMom.SimpleMessage
 import net.shrine.log.Loggable
 import net.shrine.messagequeueservice.{CouldNotCompleteMomTaskButOKToRetryException, Message, MessageQueueService, Queue}
 import net.shrine.source.ConfigSource
@@ -159,14 +159,14 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
       None
     } else if (response.status == StatusCodes.OK) Some {
       val responseString = response.entity.asString
-      MessageContainer.fromJson(responseString)
+      SimpleMessage.fromJson(responseString)
     } else if ((response.status == StatusCodes.NotFound) || (response.status == StatusCodes.RequestTimeout) || (response.status == StatusCodes.InternalServerError)) {
       throw CouldNotCompleteMomTaskButOKToRetryException(s"receive a message from ${from.name}", Some(response.status), Some(response.entity.asString))
     } else {
       throw new IllegalStateException(s"Response status is ${response.status}, not OK or NotFound. Cannot make a Message from this response: ${response.entity.asString}")
     }
   }.transform({ s =>
-    val hornetQMessage = s.map(msg => HornetQClientMessage(UUID.fromString(msg.id), msg.contents))
+    val hornetQMessage = s.map(msg => HornetQClientMessage(msg.deliveryAttemptUUID, msg.contents))
     Success(hornetQMessage)
   }, { throwable =>
     throwable match {
@@ -194,6 +194,8 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
         })
       } yield response
     }
+
+    override def deliveryAttemptUUID: UUID = messageID
   }
 
 }

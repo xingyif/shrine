@@ -1,6 +1,8 @@
 package net.shrine.hornetqmom
 import java.util.UUID
+
 import akka.actor.ActorRefFactory
+import net.shrine.hornetqmom.LocalHornetQMom.SimpleMessage
 import net.shrine.messagequeueservice.Queue
 import net.shrine.source.ConfigSource
 import org.json4s.NoTypeHints
@@ -70,8 +72,8 @@ class HornetQMomWebApiTest extends FlatSpec with ScalatestRouteTest with HornetQ
       Get(s"/mom/receiveMessage/$queueName?timeOutSeconds=2") ~> momRoute ~> check {
         val response = new String(body.data.toByteArray)
         assertResult(OK)(status)
-        val responseMsg = MessageContainer.fromJson(response)
-        messageUUID = responseMsg.id
+        val responseMsg: SimpleMessage = SimpleMessage.fromJson(response)
+        messageUUID = responseMsg.deliveryAttemptUUID.toString
         assertResult(responseMsg.contents)(messageContent)
       }
 
@@ -81,9 +83,10 @@ class HornetQMomWebApiTest extends FlatSpec with ScalatestRouteTest with HornetQ
 
       val nonExistingUUID = UUID.randomUUID()
       Put("/mom/acknowledge", HttpEntity(s"$nonExistingUUID")) ~> momRoute ~> check {
-        val response = new String(body.data.toByteArray)
-        assertResult(NotFound)(status)
-        assertResult(MessageDoesNotExistInMapProblem(nonExistingUUID).description)(response)
+//        val response = new String(body.data.toByteArray)
+        // todo is it ok if client is calling acknowledge on a non-existing deliveryAttempt?
+        assertResult(ResetContent)(status)
+//        assertResult(MessageDoesNotExistInMapProblem(nonExistingUUID).description)(response)
       }
 
       Put(s"/mom/deleteQueue/$queueName") ~> momRoute ~> check {
@@ -97,20 +100,20 @@ class HornetQMomWebApiTest extends FlatSpec with ScalatestRouteTest with HornetQ
 
     ConfigSource.atomicConfig.configForBlock("shrine.messagequeue.blockingqWebApi.enabled", "true", "HornetQMomWebApiTest") {
 
-      //todo Not a problem. The system is in the state you want. SHRINE-2208
+      //todo Not a problem. The system is in the state you want. SHRINE-2308
       Put(s"/mom/deleteQueue/$queueName") ~> momRoute ~> check {
         assertResult(InternalServerError)(status)
       }
 
-      //todo I don't think this one rates more than a 404 SHRINE-2208
+      //todo I don't think this one rates more than a 404 SHRINE-2308
       Put(s"/mom/sendMessage/$queueName", HttpEntity(s"$messageContent")) ~> momRoute ~> check {
         assertResult(InternalServerError)(status)
       }
 
-      //todo I don't think this one rates more than a 404 SHRINE-2208
+      //todo I don't think this one rates more than a 404 SHRINE-2308
       // given timeout is 1 seconds
       Get(s"/mom/receiveMessage/$queueName?timeOutSeconds=1") ~> momRoute ~> check {
-        assertResult(InternalServerError)(status)
+        assertResult(NotFound)(status)
       }
     }
   }
