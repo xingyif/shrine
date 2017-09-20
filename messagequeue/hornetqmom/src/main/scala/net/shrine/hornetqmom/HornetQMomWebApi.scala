@@ -15,6 +15,7 @@ import spray.routing.{HttpService, Route}
 
 import scala.collection.immutable.Seq
 import scala.concurrent.duration.Duration
+import scala.util.control.NonFatal
 import scala.util.{Failure, Success, Try}
 /**
   * A web API that provides access to the internal HornetQMom library.
@@ -138,6 +139,9 @@ trait HornetQMomWebApi extends HttpService
                     respondWithStatus(StatusCodes.NotFound) {
                       complete(s"${q.getMessage}")
                     }
+                  }
+                  case NonFatal(nf) => {
+                    complete(s"Unable to receive a Message from '$fromQueue' due to exception $nf")
                   }
                   case _ => {
                     internalServerErrorOccured(x, "receiveMessage")

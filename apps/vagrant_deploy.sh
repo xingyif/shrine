@@ -5,7 +5,7 @@
 
 #--------------MODIFIABLE------------------------
 # Change this to be: a list of destination vagrant machine names
-declare -a MACHINES=( shrine-hub shrine-node1 )
+declare -a MACHINES=( shrine-hub ) # shrine-node1
 # Change this to be: the .war file directory in vagrant box
 VAGRANT_WAR_CONTEXT=/opt/shrine/tomcat/webapps
 # Change this to be: local vagrant directory

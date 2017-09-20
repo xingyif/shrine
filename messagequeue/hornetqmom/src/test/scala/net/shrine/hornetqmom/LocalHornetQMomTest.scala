@@ -1,6 +1,9 @@
 package net.shrine.hornetqmom
 
+import java.util.concurrent.TimeUnit
+import net.shrine.config.ConfigExtensions
 import net.shrine.messagequeueservice.{Message, Queue}
+import net.shrine.source.ConfigSource
 import org.junit.runner.RunWith
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.junit.JUnitRunner
@@ -18,33 +21,57 @@ class LocalHornetQMomTest extends FlatSpec with BeforeAndAfterAll with ScalaFutu
 
   "HornetQ" should "be able to send and receive just one message" in {
 
-    val queueName = "testQueue"
+    val configMap: Map[String, String] = Map("shrine.messagequeue.hornetq.messageTimeToLive" -> "5 seconds",
+      "shrine.messagequeue.hornetq.messageRedeliveryDelay" -> "1 second",
+      "shrine.messagequeue.hornetq.messageMaxDeliveryAttempts" -> "3")
 
-    assert(LocalHornetQMom.queues.get.isEmpty)
+    ConfigSource.atomicConfig.configForBlock(configMap, "LocalHornetQMomTest") {
+      val queueName = "testQueue"
 
-    val queue = LocalHornetQMom.createQueueIfAbsent(queueName).get
+      val messageTimeToLive = ConfigSource.config.get("shrine.messagequeue.hornetq.messageTimeToLive", Duration(_)).toMillis
+      val messageRedeliveryDelay = ConfigSource.config.get("shrine.messagequeue.hornetq.messageRedeliveryDelay", Duration(_)).toMillis
+      val messageMaxDeliveryAttempts = ConfigSource.config.getInt("shrine.messagequeue.hornetq.messageMaxDeliveryAttempts")
 
-    assert(LocalHornetQMom.queues.get == Seq(queue))
+      assert(LocalHornetQMom.queues.get.isEmpty)
 
-    val testContents = "Test message"
-    val sendTry = LocalHornetQMom.send(testContents, queue)
-    assert(sendTry.isSuccess)
+      val queue = LocalHornetQMom.createQueueIfAbsent(queueName).get
 
-    val message: Option[Message] = LocalHornetQMom.receive(queue,1 second).get
+      assert(LocalHornetQMom.queues.get == Seq(queue))
 
-    assert(message.isDefined)
-    assert(message.get.contents == testContents)
+      val testContents = "Test message"
+      val sendTry = LocalHornetQMom.send(testContents, queue)
+      assert(sendTry.isSuccess)
 
-    val completeTry: Try[Unit] = message.get.complete()
-    assert(completeTry.isSuccess)
+      val message: Option[Message] = LocalHornetQMom.receive(queue, 1 second).get
 
-    val shouldBeNoMessage: Option[Message] = LocalHornetQMom.receive(queue,1 second).get
+      assert(message.isDefined)
+      assert(message.get.contents == testContents)
 
-    assert(shouldBeNoMessage.isEmpty)
+      println(messageTimeToLive)
+      println(messageRedeliveryDelay)
+      println(messageMaxDeliveryAttempts)
 
-    val deleteTry = LocalHornetQMom.deleteQueue(queueName)
-    assert(deleteTry.isSuccess)
-    assert(LocalHornetQMom.queues.get.isEmpty)
+      // should be no message redelivered yet
+      val sameMessage1: Option[Message] = LocalHornetQMom.receive(queue, 1 second).get
+      assert(sameMessage1.isEmpty)
+
+      // should have the redelivered message
+      TimeUnit.MILLISECONDS.sleep(2000)
+      val sameMessage2: Option[Message] = LocalHornetQMom.receive(queue, 1 second).get
+//      assert(sameMessage2.isDefined)
+//      assert(sameMessage2.get.contents == testContents)
+
+      val completeTry: Try[Unit] = message.get.complete()
+      assert(completeTry.isSuccess)
+
+      val shouldBeNoMessage: Option[Message] = LocalHornetQMom.receive(queue, 1 second).get
+
+      assert(shouldBeNoMessage.isEmpty)
+
+      val deleteTry = LocalHornetQMom.deleteQueue(queueName)
+      assert(deleteTry.isSuccess)
+      assert(LocalHornetQMom.queues.get.isEmpty)
+    }
   }
 
   "HornetQ" should "be able to send and receive a few messages" in {
@@ -58,10 +85,10 @@ class LocalHornetQMomTest extends FlatSpec with BeforeAndAfterAll with ScalaFutu
     assert(LocalHornetQMom.queues.get == Seq(queue))
 
     val testContents1 = "Test message1"
-    val sendTry = LocalHornetQMom.send(testContents1,queue)
+    val sendTry = LocalHornetQMom.send(testContents1, queue)
     assert(sendTry.isSuccess)
 
-    val message1: Option[Message] = LocalHornetQMom.receive(queue,1 second).get
+    val message1: Option[Message] = LocalHornetQMom.receive(queue, 1 second).get
 
     assert(message1.isDefined)
     assert(message1.get.contents == testContents1)
@@ -69,19 +96,19 @@ class LocalHornetQMomTest extends FlatSpec with BeforeAndAfterAll with ScalaFutu
     val completeTry = message1.get.complete()
     assert(completeTry.isSuccess)
 
-    val shouldBeNoMessage1: Option[Message] = LocalHornetQMom.receive(queue,1 second).get
+    val shouldBeNoMessage1: Option[Message] = LocalHornetQMom.receive(queue, 1 second).get
 
     assert(shouldBeNoMessage1.isEmpty)
 
     val testContents2 = "Test message2"
-    val sendTry2 = LocalHornetQMom.send(testContents2,queue)
+    val sendTry2 = LocalHornetQMom.send(testContents2, queue)
     assert(sendTry2.isSuccess)
 
     val testContents3 = "Test message3"
-    val sendTry3 = LocalHornetQMom.send(testContents3,queue)
+    val sendTry3 = LocalHornetQMom.send(testContents3, queue)
     assert(sendTry3.isSuccess)
 
-    val message2: Option[Message] = LocalHornetQMom.receive(queue,1 second).get
+    val message2: Option[Message] = LocalHornetQMom.receive(queue, 1 second).get
 
     assert(message2.isDefined)
     assert(message2.get.contents == testContents2)
@@ -89,7 +116,7 @@ class LocalHornetQMomTest extends FlatSpec with BeforeAndAfterAll with ScalaFutu
     val completeTry2 = message2.get.complete()
     assert(completeTry2.isSuccess)
 
-    val message3: Option[Message] = LocalHornetQMom.receive(queue,1 second).get
+    val message3: Option[Message] = LocalHornetQMom.receive(queue, 1 second).get
 
     assert(message3.isDefined)
     assert(message3.get.contents == testContents3)
@@ -97,7 +124,7 @@ class LocalHornetQMomTest extends FlatSpec with BeforeAndAfterAll with ScalaFutu
     val completeTry3 = message3.get.complete()
     assert(completeTry3.isSuccess)
 
-    val shouldBeNoMessage4: Option[Message] = LocalHornetQMom.receive(queue,1 second).get
+    val shouldBeNoMessage4: Option[Message] = LocalHornetQMom.receive(queue, 1 second).get
 
     assert(shouldBeNoMessage4.isEmpty)
 
