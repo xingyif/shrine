@@ -31,7 +31,7 @@ class HornetQMomWebApiTest extends FlatSpec with ScalatestRouteTest with HornetQ
 
   "HornetQMomWebApi" should "create/delete the given queue, send/receive message, get queues" in {
 
-    ConfigSource.atomicConfig.configForBlock("shrine.messagequeue.hornetQWebApi.enabled", "true", "HornetQMomWebApiTest") {
+    ConfigSource.atomicConfig.configForBlock("shrine.messagequeue.blockingqWebApi.enabled", "true", "HornetQMomWebApiTest") {
 
       Put(s"/mom/createQueue/$queueName") ~> momRoute ~> check {
         val response = new String(body.data.toByteArray)
@@ -95,7 +95,7 @@ class HornetQMomWebApiTest extends FlatSpec with ScalatestRouteTest with HornetQ
   "HornetQMomWebApi" should "respond InternalServerError with the corresponding error message when " +
     "failures occur while creating/deleting the given queue, sending/receiving message, getting queues" in {
 
-    ConfigSource.atomicConfig.configForBlock("shrine.messagequeue.hornetQWebApi.enabled", "true", "HornetQMomWebApiTest") {
+    ConfigSource.atomicConfig.configForBlock("shrine.messagequeue.blockingqWebApi.enabled", "true", "HornetQMomWebApiTest") {
 
       //todo Not a problem. The system is in the state you want. SHRINE-2208
       Put(s"/mom/deleteQueue/$queueName") ~> momRoute ~> check {

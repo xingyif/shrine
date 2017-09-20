@@ -29,9 +29,14 @@ import scala.util.{Failure, Success, Try}
 trait HornetQMomWebApi extends HttpService
   with Loggable {
 
-  def enabled: Boolean = ConfigSource.config.getBoolean("shrine.messagequeue.hornetQWebApi.enabled")
+  val configPath = "shrine.messagequeue.blockingqWebApi"
+  def webApiConfig = ConfigSource.config.getConfig(configPath)
+
+  //if(!webClientConfig.getConfigOrEmpty("serverUrl").isEmpty) webClientConfig.getString("serverUrl")
+  def enabled: Boolean = webApiConfig.getBoolean("enabled")
+
   val warningMessage: String = "If you intend for this node to serve as this SHRINE network's messaging hub " +
-                        "set shrine.messagequeue.hornetQWebApi.enabled to true in your shrine.conf." +
+                        "set shrine.messagequeue.blockingqWebApi.enabled to true in your shrine.conf." +
                         " You do not want to do this unless you are the hub admin!"
   if(!enabled) {
     debug(s"HornetQMomWebApi is not enabled.")
@@ -163,7 +168,7 @@ trait HornetQMomWebApi extends HttpService
     idToMessages.update(msgID, (localHornetQMessage, System.currentTimeMillis()))
     // a sentinel that monitors the hashmap of idToMessages, any message that has been outstanding for more than 3X or 10X
     // time-to-live need to get cleaned out of this map
-    val messageTimeToLiveInMillis: Long = ConfigSource.config.get("shrine.messagequeue.hornetQWebApi.messageTimeToLive", Duration(_)).toMillis
+    val messageTimeToLiveInMillis: Long = webApiConfig.get("messageTimeToLive", Duration(_)).toMillis
     val sentinelRunner: MapSentinelRunner = MapSentinelRunner(messageTimeToLiveInMillis)
     try {
       Log.debug(s"Starting the sentinel scheduler that cleans outstanding messages exceeds 3 times $messageTimeToLiveInMillis")
@@ -283,6 +288,7 @@ case class HornetQMomServerErrorProblem(x:Throwable, function:String) extends Ab
                                       s" the server's response is: ${x.getMessage} from ${x.getClass}."
 }
 
+//todo is this used anywhere?
 case class CannotUseHornetQMomWebApiProblem(x:Throwable) extends AbstractProblem(ProblemSources.Hub) {
 
   override val throwable = Some(x)
