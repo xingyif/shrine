@@ -36,7 +36,7 @@ trait HornetQMomWebApi extends HttpService
   def enabled: Boolean = webApiConfig.getBoolean("enabled")
 
   val warningMessage: String = "If you intend for this node to serve as this SHRINE network's messaging hub " +
-                        "set shrine.messagequeue.webApiConfig.enabled to true in your shrine.conf." +
+                        "set shrine.messagequeue.blockingqWebApi.enabled to true in your shrine.conf." +
                         " You do not want to do this unless you are the hub admin!"
   if(!enabled) {
     debug(s"HornetQMomWebApi is not enabled.")
