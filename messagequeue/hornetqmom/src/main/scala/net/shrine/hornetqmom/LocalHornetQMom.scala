@@ -43,7 +43,7 @@ object LocalHornetQMom extends MessageQueueService {
     * Use HornetQMomStopper to stop the hornetQServer without unintentially starting it
     */
   private[hornetqmom] def stop() = {
-    //todo use to turn off the scheduler for redelivery and time to live SHRINE-2309
+    MessageScheduler.shutDown()
   }
 
   //todo key should be a Queue instead of a String SHRINE-2308
