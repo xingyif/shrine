@@ -22,7 +22,8 @@ import scala.util.{Success, Try}
 
 object LocalHornetQMom extends MessageQueueService {
 
-  val config: Config = ConfigSource.config.getConfig("shrine.messagequeue.hornetq")
+  val configPath = "shrine.messagequeue.blockingq"
+  val config = ConfigSource.config.getConfig(configPath)
 
   /**
     * Use HornetQMomStopper to stop the hornetQServer without unintentially starting it
@@ -87,9 +88,8 @@ object LocalHornetQMom extends MessageQueueService {
 object LocalHornetQMomStopper {
 
   def stop(): Unit = {
-    if(ConfigSource.config.getBoolean("shrine.messagequeue.hornetQWebApi.enabled")) {
-      LocalHornetQMom.stop()
-    }
+    //a lot less interesting without hornetq - not a big deal to stop schedulers that were never started , maybe nothing to do.
+    LocalHornetQMom.stop()
   }
 
 }

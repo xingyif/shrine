@@ -31,7 +31,11 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
   // we need an ActorSystem to host our application in
   implicit val system: ActorSystem = ActorSystem("momServer", ConfigSource.config)
 
-  val webClientTimeOut: Duration = ConfigSource.config.get("shrine.messagequeue.hornetq.webClientTimeOutSecond", Duration(_))
+  val configPath = "shrine.messagequeue.blockingq"
+  def webClientConfig = ConfigSource.config.getConfig("shrine.messagequeue.blockingq")
+
+  //todo Yifan's work changes the name to webClientTimeOut
+  val webClientTimeOut: Duration = webClientConfig.get("webClientTimeOutSecond", Duration(_))
   // TODO in SHRINE-2167: Extract and share a SHRINE actor system
   // the service actor replies to incoming HttpRequests
 //  implicit val serviceActor: ActorRef = startServiceActor()
@@ -68,7 +72,7 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
 //    }
 //  }
 
-  val momUrl: String = ConfigSource.config.getString("shrine.messagequeue.hornetq.serverUrl")
+  val momUrl: String = webClientConfig.getString("serverUrl")
 
   override def createQueueIfAbsent(queueName: String): Try[Queue] = {
     val proposedQueue: Queue = Queue(queueName)
