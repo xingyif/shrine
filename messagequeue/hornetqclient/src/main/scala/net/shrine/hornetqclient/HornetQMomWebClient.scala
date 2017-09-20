@@ -158,7 +158,7 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
     else if (response.status == StatusCodes.OK) Some {
       val responseString = response.entity.asString
       MessageContainer.fromJson(responseString)
-    } else {
+    } else { //todo handle the relatively benign 408 case of the server isn't up just now
       throw new IllegalStateException(s"Response status is ${response.status}, not OK or NotFound. Cannot make a Message from this response: ${response.entity.asString}")
     }
   }.transform({ s =>
