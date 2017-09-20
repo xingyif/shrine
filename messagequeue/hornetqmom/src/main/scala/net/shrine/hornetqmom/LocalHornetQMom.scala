@@ -169,11 +169,20 @@ object MessageScheduler {
   private val scheduler: ScheduledExecutorService = Executors.newScheduledThreadPool(1)
   private var redeliveryTask: ScheduledFuture[_] = null
 
-  def scheduleMessageRedelivery(deliveryAttemptID: UUID, deliveryAttempt: DeliveryAttempt, messageRedeliveryDelay: Long, messageMaxDeliveryAttempts: Long) = {
+  def scheduleMessageRedelivery(deliveryAttemptID: UUID, deliveryAttempt: DeliveryAttempt, messageRedeliveryDelay: Long, messageMaxDeliveryAttempts: Int) = {
     val messageRedeliveryRunner: MessageRedeliveryRunner = MessageRedeliveryRunner(deliveryAttemptID, deliveryAttempt, messageRedeliveryDelay, messageMaxDeliveryAttempts)
     try {
       Log.debug(s"Scheduling message redelivery, redeliver message in $messageRedeliveryDelay milliseconds, maximum redeliver time $messageMaxDeliveryAttempts")
-      scheduler.scheduleAtFixedRate(messageRedeliveryRunner, messageRedeliveryDelay, messageMaxDeliveryAttempts, TimeUnit.MILLISECONDS)
+      if (messageMaxDeliveryAttempts == -1) {
+        // infinite
+        scheduler.scheduleAtFixedRate(messageRedeliveryRunner, messageRedeliveryDelay, messageRedeliveryDelay, TimeUnit.MILLISECONDS)
+      } else {
+        for (i <- 1 to messageMaxDeliveryAttempts) {
+          println(s"in scheduler, current attempt is $i")
+          Log.debug(s"Scheduling message redelivery attempt $i, redeliver message in $messageRedeliveryDelay milliseconds")
+          scheduler.schedule(messageRedeliveryRunner, messageRedeliveryDelay * i, TimeUnit.MILLISECONDS)
+        }
+      }
     } catch {
       case NonFatal(x) => SchedulingMessageRedeliverySentinelProblem(messageRedeliveryDelay, x)
       //pass-through to blow up the thread, receive no more results, do something dramatic in UncaughtExceptionHandler.
