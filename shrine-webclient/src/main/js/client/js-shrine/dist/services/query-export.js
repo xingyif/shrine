@@ -1,7 +1,7 @@
 System.register(['./pub-sub'], function (_export, _context) {
     "use strict";
 
-    var PubSub, QueryExport, convertObjectToCSV;
+    var PubSub, QueryExport, convertObjectToCSV, exportInIE, exportInWebkitGecko;
 
     function _classCallCheck(instance, Constructor) {
         if (!(instance instanceof Constructor)) {
@@ -87,7 +87,7 @@ System.register(['./pub-sub'], function (_export, _context) {
                     });
                 });
 
-                var line1 = 'data:text/csv;charset=utf-8,SHRINE QUERY RESULTS (OBFUSCATED PATIENT COUNTS),' + [''].concat(nodes.map(function (n) {
+                var line1 = 'SHRINE QUERY RESULTS (OBFUSCATED PATIENT COUNTS),' + [''].concat(nodes.map(function (n) {
                     return n.adapterNode;
                 }).join(','));
                 var line2 = '\nAll Patients,' + [''].concat(nodes.map(function (n) {
@@ -114,13 +114,26 @@ System.register(['./pub-sub'], function (_export, _context) {
                         return title + ',' + values.join(",");
                     })));
                 });
-                var csv = encodeURI('' + line1 + line2 + result.join('\n'));
+                var csv = '' + line1 + line2 + result.join('\n');
+                window.navigator && window.navigator.msSaveOrOpenBlob ? exportInIE(csv) : exportInWebkitGecko(csv);
+            };
+
+            exportInIE = function exportInIE(csv) {
+                var blob = new Blob([decodeURIComponent(encodeURI(csv))], {
+                    type: 'text/csv;charset=utf-8;'
+                });
+                window.navigator.msSaveOrOpenBlob(blob, 'export.csv');
+                return csv;
+            };
+
+            exportInWebkitGecko = function exportInWebkitGecko(csv) {
                 var link = document.createElement('a');
-                link.setAttribute('href', csv);
-                link.setAttribute('download', 'export.csv');
+                var evt = document.createEvent('MouseEvents');
+                !link.download ? link.target = '_blank' : link.download = 'export.csv';
+                link.href = 'data:application/csv;charset=utf-8,' + encodeURIComponent(csv);
                 document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
+                evt.initEvent('click', true, true);
+                link.dispatchEvent(evt);
             };
         }
     };

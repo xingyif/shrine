@@ -19,7 +19,7 @@ const convertObjectToCSV = (d) => {
         )
     });
 
-    const line1 = `data:text/csv;charset=utf-8,SHRINE QUERY RESULTS (OBFUSCATED PATIENT COUNTS),${['', ...nodes.map(n => n.adapterNode).join(',')]}`;
+    const line1 = `SHRINE QUERY RESULTS (OBFUSCATED PATIENT COUNTS),${['', ...nodes.map(n => n.adapterNode).join(',')]}`;
     const line2 = `\nAll Patients,${['', ...nodes.map(n => n.count? (n.count > 0? n.count : 0) : 'unavailable').join(',')]}`;
     const result = [];
     m.forEach((v, k) => {
@@ -33,11 +33,23 @@ const convertObjectToCSV = (d) => {
             return `${title},${values.join(",")}`;
         }));
     });
-    const csv = encodeURI(`${line1}${line2}${result.join('\n')}`);
+    const csv = `${line1}${line2}${result.join('\n')}`;
+    window.navigator && window.navigator.msSaveOrOpenBlob? exportInIE(csv) : exportInWebkitGecko(csv);
+}
+const exportInIE = csv => {
+    const blob = new Blob([decodeURIComponent(encodeURI(csv))], {
+        type: 'text/csv;charset=utf-8;'
+      });
+    window.navigator.msSaveOrOpenBlob(blob, 'export.csv');
+    return csv;
+}
+
+const exportInWebkitGecko = csv => {
     const link = document.createElement('a');
-    link.setAttribute('href', csv);
-    link.setAttribute('download', 'export.csv');
+    const evt = document.createEvent('MouseEvents');
+    !link.download? link.target = '_blank' :  link.download = 'export.csv'
+    link.href = 'data:application/csv;charset=utf-8,' + encodeURIComponent(csv);
     document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    evt.initEvent( 'click', true, true );
+    link.dispatchEvent(evt);
 }
