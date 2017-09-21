@@ -154,8 +154,11 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
   }
 
   def messageOptionFromResponse(response: HttpResponse,from:Queue):Try[Option[Message]] = Try {
-    if(response.status == StatusCodes.NotFound) None
-    else if (response.status == StatusCodes.RequestTimeout) {
+    if(response.status == StatusCodes.NoContent) {
+      None
+    } else if (response.status == StatusCodes.NotFound) {
+      throw new CouldNotCompleteMomTaskButOKToRetryException(s"receive a message from ${from.name}",Some(response.status),Some(response.entity.asString))
+    } else if (response.status == StatusCodes.RequestTimeout) {
       throw new CouldNotCompleteMomTaskButOKToRetryException(s"receive a message from ${from.name}",Some(response.status),Some(response.entity.asString))
     } else if (response.status == StatusCodes.OK) Some { //todo move to top SHRINE-2216
       val responseString = response.entity.asString
