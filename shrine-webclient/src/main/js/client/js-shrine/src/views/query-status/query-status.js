@@ -48,7 +48,8 @@ export class QueryStatus extends PubSub {
             this.status =  initialState().status;
         })
         this.subscribe(this.notifications.shrine.queryReceived, data => {
-            const {query, nodes, dataVersion = DEFAULT_VERSION, complete, query:{networkId}} = data; 
+            const {query, nodes, dataVersion = DEFAULT_VERSION,query:{networkId}} = data; 
+            const {complete = false} = query; 
             const timeoutSeconds = TIMEOUT_SECONDS;
             if(networkId !== this.status.query.networkId) return;
             const updated = Number(new Date());

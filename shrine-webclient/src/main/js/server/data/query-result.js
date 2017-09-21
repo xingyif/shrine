@@ -1,4 +1,6 @@
 module.exports = {
+    "dataVersion": 1,
+    "isComplete": true,
     "results": [
         {
             "count": 0,

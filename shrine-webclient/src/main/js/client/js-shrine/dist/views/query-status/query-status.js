@@ -150,8 +150,9 @@ System.register(['aurelia-framework', 'services/query-status.model', 'services/p
                             nodes = data.nodes,
                             _data$dataVersion = data.dataVersion,
                             dataVersion = _data$dataVersion === undefined ? DEFAULT_VERSION : _data$dataVersion,
-                            complete = data.complete,
                             networkId = data.query.networkId;
+                        var _query$complete = query.complete,
+                            complete = _query$complete === undefined ? false : _query$complete;
 
                         var timeoutSeconds = TIMEOUT_SECONDS;
                         if (networkId !== _this2.status.query.networkId) return;
