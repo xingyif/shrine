@@ -90,7 +90,7 @@ object HttpClient extends Loggable {
         engine
     }
 
-  def createConnector(request: HttpRequest) = {
+  def createConnector(request: HttpRequest): HostConnectorSetup = {
 
     val connector = HostConnectorSetup(host = request.uri.authority.host.toString,
       port = request.uri.effectivePort,

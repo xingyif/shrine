@@ -91,7 +91,7 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
       read[Queue](queueString)(formats, manifest[Queue])
     } else {
       if((response.status == StatusCodes.NotFound) ||
-        (response.status == StatusCodes.RequestTimeout))throw new CouldNotCreateQueueButOKToRetryException(response.status,response.entity.asString)
+        (response.status == StatusCodes.RequestTimeout)) throw new CouldNotCreateQueueButOKToRetryException(response.status,response.entity.asString)
       else throw new IllegalStateException(s"Response status is ${response.status}, not Created. Cannot make a queue from this response: ${response.entity.asString}") //todo more specific custom exception SHRINE-2213
     }
   }.transform({ s =>
@@ -155,10 +155,14 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
 
   def messageOptionFromResponse(response: HttpResponse):Try[Option[Message]] = Try {
     if(response.status == StatusCodes.NotFound) None
+    else if (response.status == StatusCodes.RequestTimeout) {
+      //todo wait a bit before trying again
+      None
+    }
     else if (response.status == StatusCodes.OK) Some {
       val responseString = response.entity.asString
       MessageContainer.fromJson(responseString)
-    } else { //todo handle the relatively benign 408 case of the server isn't up just now
+    } else {
       throw new IllegalStateException(s"Response status is ${response.status}, not OK or NotFound. Cannot make a Message from this response: ${response.entity.asString}")
     }
   }.transform({ s =>

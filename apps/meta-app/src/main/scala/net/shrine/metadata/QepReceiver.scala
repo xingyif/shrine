@@ -4,6 +4,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 import javax.servlet.{ServletContextEvent, ServletContextListener}
 
 import com.typesafe.config.Config
+import net.shrine.broadcaster.{IdAndUrl, NodeListParser}
 import net.shrine.config.ConfigExtensions
 import net.shrine.log.Log
 import net.shrine.messagequeueservice.protocol.Envelope
@@ -39,6 +40,7 @@ object QepReceiver {
   pollingThread.setUncaughtExceptionHandler(QepReceiverUncaughtExceptionHandler)
 
   def start(): Unit = {
+
     pollingThread.start()
     Log.debug(s"Started the QepReceiver thread for $nodeName")
   }
@@ -59,6 +61,17 @@ object QepReceiver {
     val breakdownTypes: Set[ResultOutputType] = ConfigSource.config.getOptionConfigured("shrine.breakdownResultOutputTypes", ResultOutputTypes.fromConfig).getOrElse(Set.empty)
 
     override def run(): Unit = {
+
+      //if hub, create all the queues
+      if(config.getBoolean("shrine.hub.create")) {
+        val otherNodes: List[IdAndUrl] = config.getOptionConfigured("shrine.hub.downstreamNodes", NodeListParser(_)).getOrElse(Nil).to[List]
+        val thisNode:Option[String] = if (config.getBoolean("shrine.hub.shouldQuerySelf")) Some(nodeName)
+        else None
+
+        val nodeNames = ( thisNode :: otherNodes.map(n => Some(n.nodeId.name)) ).flatten
+        nodeNames.foreach(createQueue)
+      }
+
       val queue = createQueue(nodeName)
 
       while (keepGoing.get()) {
@@ -68,6 +81,7 @@ object QepReceiver {
           receiveAMessage(queue)
           Log.debug("Called receive.")
         } catch {
+
           case NonFatal(x) => ExceptionWhileReceivingMessage(queue,x)
           //pass-through to blow up the thread, receive no more results, do something dramatic in UncaughtExceptionHandler.
           case x => Log.error("Fatal exception while receiving a message", x)
@@ -84,7 +98,7 @@ object QepReceiver {
         m.map(interpretAMessage(_,queue)).getOrElse(Success())
       },{x =>
         x match {
-          case NonFatal(nfx) => ExceptionWhileReceivingMessage(queue,x)
+          case NonFatal(nfx) => ExceptionWhileReceivingMessage(queue,x) //todo start here. Look in at the logs to see what's what
           case _ => //pass through
         }
         Failure(x)
