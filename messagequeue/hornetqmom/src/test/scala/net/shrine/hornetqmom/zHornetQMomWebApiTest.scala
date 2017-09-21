@@ -23,7 +23,7 @@ import scala.collection.immutable.Seq
 
 
 @RunWith(classOf[JUnitRunner])
-class HornetQMomWebApiTest extends FlatSpec with ScalatestRouteTest with HornetQMomWebApi {
+class zHornetQMomWebApiTest extends FlatSpec with ScalatestRouteTest with HornetQMomWebApi {
   override def actorRefFactory: ActorRefFactory = system
 
   private val proposedQueueName = "test Queue"
@@ -83,10 +83,9 @@ class HornetQMomWebApiTest extends FlatSpec with ScalatestRouteTest with HornetQ
 
       val nonExistingUUID = UUID.randomUUID()
       Put("/mom/acknowledge", HttpEntity(s"$nonExistingUUID")) ~> momRoute ~> check {
-//        val response = new String(body.data.toByteArray)
-        // todo is it ok if client is calling acknowledge on a non-existing deliveryAttempt?
-        assertResult(ResetContent)(status)
-//        assertResult(MessageDoesNotExistInMapProblem(nonExistingUUID).description)(response)
+        val response = new String(body.data.toByteArray)
+        assertResult(NotFound)(status)
+        assertResult(MessageDoesNotExistAndCannotBeCompletedException(nonExistingUUID).getMessage)(response)
       }
 
       Put(s"/mom/deleteQueue/$queueName") ~> momRoute ~> check {

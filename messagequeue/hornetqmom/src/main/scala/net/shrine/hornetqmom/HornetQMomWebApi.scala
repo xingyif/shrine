@@ -128,7 +128,7 @@ trait HornetQMomWebApi extends HttpService
               case Success(optionMessage) => {
                 optionMessage.fold(
                   respondWithStatus(StatusCodes.NoContent){
-                  complete(s"No current Message available in queue $fromQueue! Resource might be available in the future.")
+                  complete(s"No current Message available in queue $fromQueue!")
                 }){ localMessage =>
                   complete(SimpleMessage(localMessage.deliveryAttemptUUID.toString, localMessage.contents).toJson)
                 }

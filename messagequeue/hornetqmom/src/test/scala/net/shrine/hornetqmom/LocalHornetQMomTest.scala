@@ -21,16 +21,15 @@ class LocalHornetQMomTest extends FlatSpec with BeforeAndAfterAll with ScalaFutu
 
   "HornetQ" should "be able to send and receive just one message" in {
 
-    val configMap: Map[String, String] = Map("shrine.messagequeue.hornetq.messageTimeToLive" -> "5 seconds",
-      "shrine.messagequeue.hornetq.messageRedeliveryDelay" -> "1 second",
-      "shrine.messagequeue.hornetq.messageMaxDeliveryAttempts" -> "3")
+    val configMap: Map[String, String] = Map("shrine.messagequeue.blockingq.messageTimeToLive" -> "5 seconds",
+      "shrine.messagequeue.blockingq.messageRedeliveryDelay" -> "2 second",
+      "shrine.messagequeue.blockingq.messageMaxDeliveryAttempts" -> "2")
 
     ConfigSource.atomicConfig.configForBlock(configMap, "LocalHornetQMomTest") {
-      val queueName = "testQueue"
+      val queueName = "testQueue1"
 
-      val messageTimeToLive = ConfigSource.config.get("shrine.messagequeue.hornetq.messageTimeToLive", Duration(_)).toMillis
-      val messageRedeliveryDelay = ConfigSource.config.get("shrine.messagequeue.hornetq.messageRedeliveryDelay", Duration(_)).toMillis
-      val messageMaxDeliveryAttempts = ConfigSource.config.getInt("shrine.messagequeue.hornetq.messageMaxDeliveryAttempts")
+      val messageTimeToLive = ConfigSource.config.get("shrine.messagequeue.blockingq.messageTimeToLive", Duration(_)).toMillis
+      val messageRedeliveryDelay = ConfigSource.config.get("shrine.messagequeue.blockingq.messageRedeliveryDelay", Duration(_)).toMillis
 
       assert(LocalHornetQMom.queues.get.isEmpty)
 
@@ -42,31 +41,37 @@ class LocalHornetQMomTest extends FlatSpec with BeforeAndAfterAll with ScalaFutu
       val sendTry = LocalHornetQMom.send(testContents, queue)
       assert(sendTry.isSuccess)
 
+      // first time receive
       val message: Option[Message] = LocalHornetQMom.receive(queue, 1 second).get
 
       assert(message.isDefined)
       assert(message.get.contents == testContents)
 
-      println(messageTimeToLive)
-      println(messageRedeliveryDelay)
-      println(messageMaxDeliveryAttempts)
-
-      // should be no message redelivered yet
+      // receive immediately again, should be no message redelivered yet
       val sameMessage1: Option[Message] = LocalHornetQMom.receive(queue, 1 second).get
       assert(sameMessage1.isEmpty)
 
-      // should have the redelivered message
-      TimeUnit.MILLISECONDS.sleep(2000)
+      // receive after the redelivery delay, should have the redelivered message
+      TimeUnit.MILLISECONDS.sleep(messageRedeliveryDelay + 1000)
       val sameMessage2: Option[Message] = LocalHornetQMom.receive(queue, 1 second).get
-//      assert(sameMessage2.isDefined)
-//      assert(sameMessage2.get.contents == testContents)
+      assert(sameMessage2.isDefined)
+      assert(sameMessage2.get.contents == testContents)
 
       val completeTry: Try[Unit] = message.get.complete()
       assert(completeTry.isSuccess)
-
+      // receive after message is completed, should be no message
       val shouldBeNoMessage: Option[Message] = LocalHornetQMom.receive(queue, 1 second).get
 
       assert(shouldBeNoMessage.isEmpty)
+
+      // message should expire
+      val testContents2 = "Test message2"
+      val sendTry2 = LocalHornetQMom.send(testContents2, queue)
+      assert(sendTry2.isSuccess)
+
+      TimeUnit.MILLISECONDS.sleep(messageTimeToLive + 1000)
+      val shouldBeNoMessageExpired: Option[Message] = LocalHornetQMom.receive(queue, 1 second).get
+      assert(shouldBeNoMessageExpired.isEmpty)
 
       val deleteTry = LocalHornetQMom.deleteQueue(queueName)
       assert(deleteTry.isSuccess)
@@ -76,7 +81,7 @@ class LocalHornetQMomTest extends FlatSpec with BeforeAndAfterAll with ScalaFutu
 
   "HornetQ" should "be able to send and receive a few messages" in {
 
-    val queueName = "testQueue"
+    val queueName = "testQueue2"
 
     assert(LocalHornetQMom.queues.get.isEmpty)
 
