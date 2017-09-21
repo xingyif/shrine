@@ -6,7 +6,7 @@ import akka.actor.ActorSystem
 import net.shrine.config.ConfigExtensions
 import net.shrine.hornetqmom.MessageContainer
 import net.shrine.log.Loggable
-import net.shrine.messagequeueservice.{CouldNotCreateQueueButOKToRetryException, Message, MessageQueueService, Queue}
+import net.shrine.messagequeueservice.{CouldNotCompleteMomTaskButOKToRetryException, Message, MessageQueueService, Queue}
 import net.shrine.source.ConfigSource
 import org.json4s.NoTypeHints
 import org.json4s.native.Serialization
@@ -80,18 +80,18 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
     val request: HttpRequest = HttpRequest(HttpMethods.PUT, createQueueUrl)
     for {
       response: HttpResponse <- Try(HttpClient.webApiCall(request, webClientTimeOut))
-      queue: Queue <- queueFromResponse(response)
+      queue: Queue <- queueFromResponse(response,queueName)
     } yield queue
   }
 
-  def queueFromResponse(response: HttpResponse):Try[Queue] = Try {
+  def queueFromResponse(response: HttpResponse,queueName:String):Try[Queue] = Try {
     if(response.status == StatusCodes.Created) {
       val queueString = response.entity.asString
       implicit val formats = Serialization.formats(NoTypeHints)
       read[Queue](queueString)(formats, manifest[Queue])
     } else {
       if((response.status == StatusCodes.NotFound) ||
-        (response.status == StatusCodes.RequestTimeout)) throw new CouldNotCreateQueueButOKToRetryException(response.status,response.entity.asString)
+        (response.status == StatusCodes.RequestTimeout)) throw new CouldNotCompleteMomTaskButOKToRetryException(s"create a queue named $queueName",Some(response.status),Some(response.entity.asString))
       else throw new IllegalStateException(s"Response status is ${response.status}, not Created. Cannot make a queue from this response: ${response.entity.asString}") //todo more specific custom exception SHRINE-2213
     }
   }.transform({ s =>
@@ -149,11 +149,11 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
     for {
     //use the time to make the API call plus the timeout for the long poll
       response: HttpResponse <- Try(HttpClient.webApiCall(request, webClientTimeOut + timeout)) 
-      messageResponse: Option[Message] <- messageOptionFromResponse(response)
+      messageResponse: Option[Message] <- messageOptionFromResponse(response,from)
     } yield messageResponse
   }
 
-  def messageOptionFromResponse(response: HttpResponse):Try[Option[Message]] = Try {
+  def messageOptionFromResponse(response: HttpResponse,from:Queue):Try[Option[Message]] = Try {
     if(response.status == StatusCodes.NotFound) None
     else if (response.status == StatusCodes.RequestTimeout) {
       //todo wait a bit before trying again
@@ -162,6 +162,8 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
     else if (response.status == StatusCodes.OK) Some {
       val responseString = response.entity.asString
       MessageContainer.fromJson(responseString)
+    } else if(response.status == StatusCodes.InternalServerError) {
+      throw new CouldNotCompleteMomTaskButOKToRetryException(s"receive a message from ${from.name}",Some(response.status),Some(response.entity.asString))
     } else {
       throw new IllegalStateException(s"Response status is ${response.status}, not OK or NotFound. Cannot make a Message from this response: ${response.entity.asString}")
     }

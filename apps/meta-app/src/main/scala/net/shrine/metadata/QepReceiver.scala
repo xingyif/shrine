@@ -8,7 +8,7 @@ import net.shrine.broadcaster.{IdAndUrl, NodeListParser}
 import net.shrine.config.ConfigExtensions
 import net.shrine.log.Log
 import net.shrine.messagequeueservice.protocol.Envelope
-import net.shrine.messagequeueservice.{CouldNotCreateQueueButOKToRetryException, Message, MessageQueueService, Queue}
+import net.shrine.messagequeueservice.{CouldNotCompleteMomTaskButOKToRetryException, Message, MessageQueueService, Queue}
 import net.shrine.problem.{AbstractProblem, ProblemSources}
 import net.shrine.protocol.{AggregatedRunQueryResponse, QueryResult, ResultOutputType, ResultOutputTypes}
 import net.shrine.qep.querydb.{QepQueryDb, QepQueryDbChangeNotifier, QueryResultRow}
@@ -98,6 +98,10 @@ object QepReceiver {
         m.map(interpretAMessage(_,queue)).getOrElse(Success())
       },{x =>
         x match {
+          case cncmtbotrx:CouldNotCompleteMomTaskButOKToRetryException => {
+            Log.debug(s"Last attempt to receive resulted in ${cncmtbotrx.getMessage}. Sleeping $pollDuration before next attempt")
+            Thread.sleep(pollDuration.toMillis)
+          }
           case NonFatal(nfx) => ExceptionWhileReceivingMessage(queue,x) //todo start here. Look in at the logs to see what's what
           case _ => //pass through
         }
@@ -168,7 +172,7 @@ object QepReceiver {
         MessageQueueService.service.createQueueIfAbsent(nodeName)
 
       def keepGoing(attempt:Try[Queue]):Try[Boolean] = attempt.transform({queue => Success(false)}, {
-        case okIsh: CouldNotCreateQueueButOKToRetryException => Success(true)
+        case okIsh: CouldNotCompleteMomTaskButOKToRetryException => Success(true)
         case x => Failure(x)
       })
 
