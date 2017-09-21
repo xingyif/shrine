@@ -60,7 +60,8 @@ function QueryToolController() {
         $('crc.innerQueryPanel').show();
         this.panelControllers[0].refTitle.innerHTML =  'Group 1';
         $("defineTemporal-button").innerHTML = "Population in which events occur";
-        i2b2.CRC.view.QT.setQueryTiming(0);
+		i2b2.CRC.view.QT.setQueryTiming(0);
+		i2b2.SHRINE.plugin.enableRunQueryButton();
     }
 
 // ================================================================================================== //
