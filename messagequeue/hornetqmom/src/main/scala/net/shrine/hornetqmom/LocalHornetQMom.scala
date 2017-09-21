@@ -2,10 +2,8 @@ package net.shrine.hornetqmom
 
 import java.util
 import java.util.UUID
-import java.util.concurrent.{BlockingDeque, Executors, LinkedBlockingDeque, ScheduledExecutorService, ScheduledFuture, TimeUnit}
+import java.util.concurrent.{BlockingDeque, Executors, LinkedBlockingDeque, ScheduledExecutorService, TimeUnit}
 
-import akka.japi.Predicate
-import com.typesafe.config.Config
 import net.shrine.config.ConfigExtensions
 import net.shrine.hornetqmom.LocalHornetQMom.{CleanDeliveryAttemptRunner, CleanInternalMessageInDequeRunner, MessageRedeliveryRunner}
 import net.shrine.log.Log
@@ -66,10 +64,9 @@ object LocalHornetQMom extends MessageQueueService {
 
   //send a message
   def send(contents: String, to: Queue): Try[Unit] = Try {
+    val queue = blockingQueuePool.getOrElse(to.name, throw QueueDoesNotExistException(to))
     // schedule future cleanup when the message expires
     MessageScheduler.scheduleCleanupDeliveryAttemptInMap(to, messageTimeToLiveInMillis)
-    // send message to queue
-    val queue = blockingQueuePool.getOrElse(to.name, throw QueueDoesNotExistException(to))
     // creates a message
     val msgID: UUID = UUID.randomUUID()
     val internalMessage: InternalToBeSentMessage = InternalToBeSentMessage(msgID, contents, System.currentTimeMillis(), to)

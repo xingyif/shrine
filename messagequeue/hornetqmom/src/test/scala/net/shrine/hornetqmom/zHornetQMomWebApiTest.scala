@@ -32,8 +32,12 @@ class zHornetQMomWebApiTest extends FlatSpec with ScalatestRouteTest with Hornet
   private val messageContent = "test Content"
 
   "HornetQMomWebApi" should "create/delete the given queue, send/receive message, get queues" in {
+    val configMap: Map[String, String] = Map( "shrine.messagequeue.blockingqWebApi.enabled" -> "true",
+      "shrine.messagequeue.blockingq.messageTimeToLive" -> "5 seconds",
+      "shrine.messagequeue.blockingq.messageRedeliveryDelay" -> "2 second",
+      "shrine.messagequeue.blockingq.messageMaxDeliveryAttempts" -> "2")
 
-    ConfigSource.atomicConfig.configForBlock("shrine.messagequeue.blockingqWebApi.enabled", "true", "HornetQMomWebApiTest") {
+    ConfigSource.atomicConfig.configForBlock(configMap, "LocalHornetQMomTest") {
 
       Put(s"/mom/createQueue/$queueName") ~> momRoute ~> check {
         val response = new String(body.data.toByteArray)
@@ -101,15 +105,13 @@ class zHornetQMomWebApiTest extends FlatSpec with ScalatestRouteTest with Hornet
 
       //todo Not a problem. The system is in the state you want. SHRINE-2308
       Put(s"/mom/deleteQueue/$queueName") ~> momRoute ~> check {
-        assertResult(InternalServerError)(status)
+        assertResult(NotFound)(status)
       }
 
-      //todo I don't think this one rates more than a 404 SHRINE-2308
       Put(s"/mom/sendMessage/$queueName", HttpEntity(s"$messageContent")) ~> momRoute ~> check {
-        assertResult(InternalServerError)(status)
+        assertResult(NotFound)(status)
       }
 
-      //todo I don't think this one rates more than a 404 SHRINE-2308
       // given timeout is 1 seconds
       Get(s"/mom/receiveMessage/$queueName?timeOutSeconds=1") ~> momRoute ~> check {
         assertResult(NotFound)(status)

@@ -88,7 +88,19 @@ trait HornetQMomWebApi extends HttpService
             complete(StatusCodes.OK)
           }
           case Failure(x) => {
-            internalServerErrorOccured(x, "deleteQueue")
+            x match {
+              case q: QueueDoesNotExistException => {
+                respondWithStatus(StatusCodes.NotFound) {
+                  complete(s"${q.getMessage}")
+                }
+              }
+              case NonFatal(nf) => {
+                complete(s"Unable to delete queue '$queueName' due to exception $nf")
+              }
+              case _ => {
+                internalServerErrorOccured(x, "deleteQueue")
+              }
+            }
           }
         }
       }
@@ -109,7 +121,19 @@ trait HornetQMomWebApi extends HttpService
             complete(StatusCodes.Accepted)
           }
           case Failure(x) => {
-            internalServerErrorOccured(x, "sendMessage")
+            x match {
+              case q: QueueDoesNotExistException => {
+                respondWithStatus(StatusCodes.NotFound) {
+                  complete(s"${q.getMessage}")
+                }
+              }
+              case NonFatal(nf) => {
+                complete(s"Unable to send a Message to '$toQueue' due to exception $nf")
+              }
+              case _ => {
+                internalServerErrorOccured(x, "sendMessage")
+              }
+            }
           }
         }
       }
