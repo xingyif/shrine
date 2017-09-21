@@ -94,6 +94,8 @@ object QepReceiver {
     def receiveAMessage(queue:Queue): Unit = {
       val maybeMessage: Try[Option[Message]] = MessageQueueService.service.receive(queue, pollDuration)
 
+      Log.debug(s"$maybeMessage")
+
       maybeMessage.transform({m =>
         m.map(interpretAMessage(_,queue)).getOrElse(Success())
       },{x =>
@@ -103,7 +105,7 @@ object QepReceiver {
             Thread.sleep(pollDuration.toMillis)
           }
           case NonFatal(nfx) => ExceptionWhileReceivingMessage(queue,x) //todo start here. Look in at the logs to see what's what
-          case _ => //pass through
+          case fatal => throw fatal
         }
         Failure(x)
       })
