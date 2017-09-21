@@ -94,17 +94,15 @@ object QepReceiver {
     def receiveAMessage(queue:Queue): Unit = {
       val maybeMessage: Try[Option[Message]] = MessageQueueService.service.receive(queue, pollDuration)
 
-      Log.debug(s"$maybeMessage")
-
       maybeMessage.transform({m =>
-        m.map(interpretAMessage(_,queue)).getOrElse(Success())
+        m.map(interpretAMessage(_,queue)).getOrElse(Success()) //todo rework this in SHRINE-2327
       },{x =>
         x match {
           case cncmtbotrx:CouldNotCompleteMomTaskButOKToRetryException => {
             Log.debug(s"Last attempt to receive resulted in ${cncmtbotrx.getMessage}. Sleeping $pollDuration before next attempt")
             Thread.sleep(pollDuration.toMillis)
           }
-          case NonFatal(nfx) => ExceptionWhileReceivingMessage(queue,x) //todo start here. Look in at the logs to see what's what
+          case NonFatal(nfx) => ExceptionWhileReceivingMessage(queue,x)
           case fatal => throw fatal
         }
         Failure(x)

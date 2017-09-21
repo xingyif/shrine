@@ -32,45 +32,46 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
   implicit val system: ActorSystem = ActorSystem("momServer", ConfigSource.config)
 
   val configPath = "shrine.messagequeue.blockingq"
+
   def webClientConfig = ConfigSource.config.getConfig("shrine.messagequeue.blockingq")
 
   //todo Yifan's work changes the name to webClientTimeOut
   val webClientTimeOut: Duration = webClientConfig.get("webClientTimeOutSecond", Duration(_))
   // TODO in SHRINE-2167: Extract and share a SHRINE actor system
   // the service actor replies to incoming HttpRequests
-//  implicit val serviceActor: ActorRef = startServiceActor()
+  //  implicit val serviceActor: ActorRef = startServiceActor()
 
-//  def startActorSystem(): ActorSystem = try {
-//    val actorSystem: ActorSystem = ActorSystem("momServer", ConfigSource.config)
-//    info(s"Starting ActorSystem: ${actorSystem.name} for HornetQMomWebClient at time: ${actorSystem.startTime}")
-//    actorSystem
-//  } catch {
-//    case NonFatal(x) => {
-//      debug(s"NonFatalException thrown while starting ActorSystem for HornetQMomWebClient: ${x.getMessage}")
-//      throw x
-//    }
-//    case x: ExceptionInInitializerError => {
-//      debug(s"ExceptionInInitializerError thrown while starting ActorSystem for HornetQMomWebClient: ${x.getMessage}")
-//      throw x
-//    }
-//  }
-//
-//  def startServiceActor(): ActorRef = try {
-//    // the service actor replies to incoming HttpRequests
-//    val actor: ActorRef = system.actorOf(Props[HornetQMomWebClientServiceActor])
-//    info(s"Starting ServiceActor: ${actor.toString()} for HornetQMomWebClient")
-//    actor
-//  }
-//  catch {
-//    case NonFatal(x) => {
-//      debug(s"NonFatalException thrown while starting ServiceActor for HornetQMomWebClient: ${x.getMessage}")
-//      throw x
-//    }
-//    case x: ExceptionInInitializerError => {
-//      debug(s"ExceptionInInitializerError thrown while starting ServiceActor for HornetQMomWebClient: ${x.getMessage}")
-//      throw x
-//    }
-//  }
+  //  def startActorSystem(): ActorSystem = try {
+  //    val actorSystem: ActorSystem = ActorSystem("momServer", ConfigSource.config)
+  //    info(s"Starting ActorSystem: ${actorSystem.name} for HornetQMomWebClient at time: ${actorSystem.startTime}")
+  //    actorSystem
+  //  } catch {
+  //    case NonFatal(x) => {
+  //      debug(s"NonFatalException thrown while starting ActorSystem for HornetQMomWebClient: ${x.getMessage}")
+  //      throw x
+  //    }
+  //    case x: ExceptionInInitializerError => {
+  //      debug(s"ExceptionInInitializerError thrown while starting ActorSystem for HornetQMomWebClient: ${x.getMessage}")
+  //      throw x
+  //    }
+  //  }
+  //
+  //  def startServiceActor(): ActorRef = try {
+  //    // the service actor replies to incoming HttpRequests
+  //    val actor: ActorRef = system.actorOf(Props[HornetQMomWebClientServiceActor])
+  //    info(s"Starting ServiceActor: ${actor.toString()} for HornetQMomWebClient")
+  //    actor
+  //  }
+  //  catch {
+  //    case NonFatal(x) => {
+  //      debug(s"NonFatalException thrown while starting ServiceActor for HornetQMomWebClient: ${x.getMessage}")
+  //      throw x
+  //    }
+  //    case x: ExceptionInInitializerError => {
+  //      debug(s"ExceptionInInitializerError thrown while starting ServiceActor for HornetQMomWebClient: ${x.getMessage}")
+  //      throw x
+  //    }
+  //  }
 
   val momUrl: String = webClientConfig.getString("serverUrl")
 
@@ -80,25 +81,25 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
     val request: HttpRequest = HttpRequest(HttpMethods.PUT, createQueueUrl)
     for {
       response: HttpResponse <- Try(HttpClient.webApiCall(request, webClientTimeOut))
-      queue: Queue <- queueFromResponse(response,queueName)
+      queue: Queue <- queueFromResponse(response, queueName)
     } yield queue
   }
 
-  def queueFromResponse(response: HttpResponse,queueName:String):Try[Queue] = Try {
-    if(response.status == StatusCodes.Created) {
+  def queueFromResponse(response: HttpResponse, queueName: String): Try[Queue] = Try {
+    if (response.status == StatusCodes.Created) {
       val queueString = response.entity.asString
       implicit val formats = Serialization.formats(NoTypeHints)
       read[Queue](queueString)(formats, manifest[Queue])
     } else {
-      if((response.status == StatusCodes.NotFound) ||
-        (response.status == StatusCodes.RequestTimeout)) throw new CouldNotCompleteMomTaskButOKToRetryException(s"create a queue named $queueName",Some(response.status),Some(response.entity.asString))
+      if ((response.status == StatusCodes.NotFound) ||
+        (response.status == StatusCodes.RequestTimeout)) throw new CouldNotCompleteMomTaskButOKToRetryException(s"create a queue named $queueName", Some(response.status), Some(response.entity.asString))
       else throw new IllegalStateException(s"Response status is ${response.status}, not Created. Cannot make a queue from this response: ${response.entity.asString}") //todo more specific custom exception SHRINE-2213
     }
   }.transform({ s =>
     Success(s)
-  },{throwable =>
+  }, { throwable =>
     throwable match {
-      case NonFatal(x) => error(s"Unable to create a Queue from '${response.entity.asString}' due to exception",throwable)  //todo probably want to wrap more information into a new Throwable here SHRINE-2213
+      case NonFatal(x) => error(s"Unable to create a Queue from '${response.entity.asString}' due to exception", throwable) //todo probably want to wrap more information into a new Throwable here SHRINE-2213
       case _ =>
     }
     Failure(throwable)
@@ -133,7 +134,7 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
     val request: HttpRequest = HttpRequest(
       method = HttpMethods.PUT,
       uri = sendMessageUrl,
-      entity = HttpEntity(contents)  //todo set contents as XML or json SHRINE-2215
+      entity = HttpEntity(contents) //todo set contents as XML or json SHRINE-2215
     )
     for {
       response: HttpResponse <- Try(HttpClient.webApiCall(request, webClientTimeOut))
@@ -148,32 +149,28 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
 
     for {
     //use the time to make the API call plus the timeout for the long poll
-      response: HttpResponse <- Try(HttpClient.webApiCall(request, webClientTimeOut + timeout)) 
-      messageResponse: Option[Message] <- messageOptionFromResponse(response,from)
+      response: HttpResponse <- Try(HttpClient.webApiCall(request, webClientTimeOut + timeout))
+      messageResponse: Option[Message] <- messageOptionFromResponse(response, from)
     } yield messageResponse
   }
 
-  def messageOptionFromResponse(response: HttpResponse,from:Queue):Try[Option[Message]] = Try {
-    if(response.status == StatusCodes.NoContent) {
+  def messageOptionFromResponse(response: HttpResponse, from: Queue): Try[Option[Message]] = Try {
+    if (response.status == StatusCodes.NoContent) {
       None
-    } else if (response.status == StatusCodes.NotFound) {
-      throw new CouldNotCompleteMomTaskButOKToRetryException(s"receive a message from ${from.name}",Some(response.status),Some(response.entity.asString))
-    } else if (response.status == StatusCodes.RequestTimeout) {
-      throw new CouldNotCompleteMomTaskButOKToRetryException(s"receive a message from ${from.name}",Some(response.status),Some(response.entity.asString))
-    } else if (response.status == StatusCodes.OK) Some { //todo move to top SHRINE-2216
+    } else if (response.status == StatusCodes.OK) Some {
       val responseString = response.entity.asString
       MessageContainer.fromJson(responseString)
-    } else if(response.status == StatusCodes.InternalServerError) {
-      throw new CouldNotCompleteMomTaskButOKToRetryException(s"receive a message from ${from.name}",Some(response.status),Some(response.entity.asString))
+    } else if ((response.status == StatusCodes.NotFound) || (response.status == StatusCodes.RequestTimeout) || (response.status == StatusCodes.InternalServerError)) {
+      throw CouldNotCompleteMomTaskButOKToRetryException(s"receive a message from ${from.name}", Some(response.status), Some(response.entity.asString))
     } else {
       throw new IllegalStateException(s"Response status is ${response.status}, not OK or NotFound. Cannot make a Message from this response: ${response.entity.asString}")
     }
   }.transform({ s =>
     val hornetQMessage = s.map(msg => HornetQClientMessage(UUID.fromString(msg.id), msg.contents))
     Success(hornetQMessage)
-  },{throwable =>
+  }, { throwable =>
     throwable match {
-      case NonFatal(x) => error(s"Unable to create a Message from '${response.entity.asString}' due to exception",throwable) //todo probably want to report a Problem here SHRINE-2216
+      case NonFatal(x) => error(s"Unable to create a Message from '${response.entity.asString}' due to exception", throwable) //todo probably want to report a Problem here SHRINE-2216
       case _ =>
     }
     Failure(throwable)
