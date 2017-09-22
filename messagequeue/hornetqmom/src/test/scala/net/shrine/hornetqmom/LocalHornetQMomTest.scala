@@ -26,7 +26,7 @@ class LocalHornetQMomTest extends FlatSpec with BeforeAndAfterAll with ScalaFutu
       "shrine.messagequeue.blockingq.messageMaxDeliveryAttempts" -> "2")
 
     ConfigSource.atomicConfig.configForBlock(configMap, "LocalHornetQMomTest") {
-      val queueName = "testQueue1"
+      val queueName = "receiveOneMessage"
 
       val messageTimeToLive = ConfigSource.config.get("shrine.messagequeue.blockingq.messageTimeToLive", Duration(_)).toMillis
       val messageRedeliveryDelay = ConfigSource.config.get("shrine.messagequeue.blockingq.messageRedeliveryDelay", Duration(_)).toMillis
@@ -37,7 +37,7 @@ class LocalHornetQMomTest extends FlatSpec with BeforeAndAfterAll with ScalaFutu
 
       assert(LocalHornetQMom.queues.get == Seq(queue))
 
-      val testContents = "Test message"
+      val testContents = "Test message_receiveOneMessage"
       val sendTry = LocalHornetQMom.send(testContents, queue)
       assert(sendTry.isSuccess)
 
@@ -65,7 +65,7 @@ class LocalHornetQMomTest extends FlatSpec with BeforeAndAfterAll with ScalaFutu
       assert(shouldBeNoMessage.isEmpty)
 
       // message should expire
-      val testContents2 = "Test message2"
+      val testContents2 = "Test message_MessageShouldExpire"
       val sendTry2 = LocalHornetQMom.send(testContents2, queue)
       assert(sendTry2.isSuccess)
 
@@ -81,7 +81,7 @@ class LocalHornetQMomTest extends FlatSpec with BeforeAndAfterAll with ScalaFutu
 
   "HornetQ" should "be able to send and receive a few messages" in {
 
-    val queueName = "testQueue2"
+    val queueName = "receiveAFewMessages"
 
     assert(LocalHornetQMom.queues.get.isEmpty)
 
@@ -89,7 +89,7 @@ class LocalHornetQMomTest extends FlatSpec with BeforeAndAfterAll with ScalaFutu
 
     assert(LocalHornetQMom.queues.get == Seq(queue))
 
-    val testContents1 = "Test message1"
+    val testContents1 = "First test message_receiveAFewMessages"
     val sendTry = LocalHornetQMom.send(testContents1, queue)
     assert(sendTry.isSuccess)
 
@@ -105,11 +105,11 @@ class LocalHornetQMomTest extends FlatSpec with BeforeAndAfterAll with ScalaFutu
 
     assert(shouldBeNoMessage1.isEmpty)
 
-    val testContents2 = "Test message2"
+    val testContents2 = "Second test message_receiveAFewMessages"
     val sendTry2 = LocalHornetQMom.send(testContents2, queue)
     assert(sendTry2.isSuccess)
 
-    val testContents3 = "Test message3"
+    val testContents3 = "Third test message_receiveAFewMessages"
     val sendTry3 = LocalHornetQMom.send(testContents3, queue)
     assert(sendTry3.isSuccess)
 
@@ -140,7 +140,7 @@ class LocalHornetQMomTest extends FlatSpec with BeforeAndAfterAll with ScalaFutu
 
   "HornetQ" should "be OK if asked to create the same queue twice " in {
 
-    val queueName = "testQueue"
+    val queueName = "createSameQueueTwice"
     val queue = LocalHornetQMom.createQueueIfAbsent(queueName)
     assert(queue.isSuccess)
     val sameQueue = LocalHornetQMom.createQueueIfAbsent(queueName)
@@ -154,21 +154,21 @@ class LocalHornetQMomTest extends FlatSpec with BeforeAndAfterAll with ScalaFutu
 
   "HornetQ" should "return a failure if deleting a non-existing queue" in {
 
-    val queueName = "testQueue"
+    val queueName = "DeletingNonExistingQueue"
     val deleteQueue = LocalHornetQMom.deleteQueue(queueName)
     assert(deleteQueue.isFailure)
   }
 
   "HornetQ" should "return a failure if sending message to a non-existing queue" in {
 
-    val queueName = "non-existingQueue"
+    val queueName = "SendToNonExistingQueue"
     val sendTry = LocalHornetQMom.send("testContent", Queue(queueName))
     assert(sendTry.isFailure)
   }
 
   "HornetQ" should "return a failure if receiving a message to a non-existing queue" in {
 
-    val queueName = "non-existingQueue"
+    val queueName = "ReceiveFromNonExistingQueue"
     val receiveTry = LocalHornetQMom.receive(Queue(queueName), Duration(1, "second"))
     assert(receiveTry.isFailure)
   }

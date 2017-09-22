@@ -202,15 +202,12 @@ object MessageScheduler {
   def scheduleMessageRedelivery(deliveryAttemptID: UUID, deliveryAttempt: DeliveryAttempt, messageRedeliveryDelay: Long, messageMaxDeliveryAttempts: Int) = {
     val messageRedeliveryRunner: MessageRedeliveryRunner = MessageRedeliveryRunner(deliveryAttemptID, deliveryAttempt, messageRedeliveryDelay, messageMaxDeliveryAttempts)
     try {
-      Log.debug(s"Scheduling message redelivery, redeliver message in $messageRedeliveryDelay milliseconds, maximum redeliver time $messageMaxDeliveryAttempts")
-      if (messageMaxDeliveryAttempts == -1) {
-        // infinite
-        redeliveryScheduler.scheduleAtFixedRate(messageRedeliveryRunner, messageRedeliveryDelay, messageRedeliveryDelay, TimeUnit.MILLISECONDS)
+      val currentAttempt = deliveryAttempt.message.getCurrentAttempt
+      if (currentAttempt < messageMaxDeliveryAttempts) {
+        Log.debug(s"Scheduling message redelivery attempt $currentAttempt, redeliver message in $messageRedeliveryDelay milliseconds.")
+        redeliveryScheduler.schedule(messageRedeliveryRunner, messageRedeliveryDelay, TimeUnit.MILLISECONDS)
       } else {
-        for (i <- 1 to messageMaxDeliveryAttempts) {
-          Log.debug(s"Scheduling message redelivery attempt $i, redeliver message in ${messageRedeliveryDelay * i} milliseconds")
-          redeliveryScheduler.schedule(messageRedeliveryRunner, messageRedeliveryDelay * i, TimeUnit.MILLISECONDS)
-        }
+        Log.debug(s"Not scheduling message redelivery because currentAttempt $currentAttempt reached max attempt number $messageMaxDeliveryAttempts.")
       }
     } catch {
       case NonFatal(x) => SchedulingMessageRedeliverySentinelProblem(messageRedeliveryDelay, x)
@@ -267,11 +264,14 @@ case class InternalToBeSentMessage(id: UUID, contents: String, createdTime: Long
   override def equals(obj: scala.Any): Boolean = {
     obj match {
       case other: InternalToBeSentMessage =>
-        other.toQueue.equals(this.toQueue) && other.id.equals(this.id) && other.createdTime.equals(this.createdTime) &&
-          other.contents.equals(this.contents)
-      case _ =>
-        false
+        other.canEqual(this) && super.equals(other)
+      case _ => false
     }
+  }
+  private var currentAttempt = 0
+  def getCurrentAttempt: Int = currentAttempt
+  def incrementCurrentAttempt(): Unit = {
+    currentAttempt = currentAttempt + 1
   }
 }
 
