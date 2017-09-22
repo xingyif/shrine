@@ -89,21 +89,28 @@ trait AbstractQepService[BaseResp <: BaseShrineResponse] extends Loggable {
       //read from the QEP database code here. Only broadcast if some result is in some sketchy state
       val resultsFromDb: Seq[QueryResult] = QepQueryDb.db.selectMostRecentQepResultsFor(networkId)
 
-      //If any query result was pending
-      val response = if (resultsFromDb.nonEmpty && (!resultsFromDb.exists(!_.statusType.isDone))) {
+      debug(s"result states are ${resultsFromDb.map(_.statusType).mkString(" ")}")
+
+      def shouldAskAdapters:Boolean = {
+        if (resultsFromDb.isEmpty) false //Don't ask if no results exist.
+        else
+          resultsFromDb.forall(_.statusType.isCrcCallCompleted) && //Be sure every CRC has replied to its adapter - hack to deal with this request going to all adapters
+            resultsFromDb.exists(_.statusType.crcPromisedToFinishAfterReply)
+      }
+
+      val response = if (!shouldAskAdapters) {
         debug(s"Using qep cached results for query $networkId")
         AggregatedReadInstanceResultsResponse(networkId, resultsFromDb).asInstanceOf[BaseResp]
       }
       else {
-        debug(s"Requesting results for $networkId from network")
+        info(s"Requesting results for $networkId from network")
         val response = doBroadcastQuery(request, new ReadInstanceResultsAggregator(networkId, false), shouldBroadcast,authResult)
 
         //put the new results in the database if we got what we wanted
         response match {
           case arirr: AggregatedReadInstanceResultsResponse => arirr.results.foreach(r => QepQueryDb.db.insertQueryResult(networkId, r))
-          case _ => //do nothing
+          case _ => warn(s"Response was a ${response.getClass.getSimpleName}, not a ${classOf[AggregatedReadInstanceResultsResponse].getSimpleName}: $response")
         }
-
         response
       }
       response
