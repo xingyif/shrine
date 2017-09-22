@@ -12,7 +12,6 @@ import scala.util.Try
 trait Message {
   def complete(): Try[Unit]
   def contents: String
-  def deliveryAttemptUUID: UUID
 }
 
 object Message {

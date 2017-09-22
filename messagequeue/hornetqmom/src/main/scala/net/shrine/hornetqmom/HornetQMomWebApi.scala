@@ -154,7 +154,8 @@ trait HornetQMomWebApi extends HttpService
                   respondWithStatus(StatusCodes.NoContent){
                   complete(s"No current Message available in queue $fromQueue!")
                 }){ localMessage =>
-                  complete(SimpleMessage(localMessage.deliveryAttemptUUID.toString, localMessage.contents).toJson)
+                  val simpleMessage: SimpleMessage = localMessage.asInstanceOf[SimpleMessage]
+                  complete(simpleMessage.toJson)
                 }
               }
               case Failure(x) => {

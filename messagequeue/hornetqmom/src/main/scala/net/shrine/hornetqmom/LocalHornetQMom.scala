@@ -121,7 +121,7 @@ object LocalHornetQMom extends MessageQueueService {
 
   //todo dead letter queue for all messages SHRINE-2261
 
-  case class SimpleMessage private(deliveryAttemptID: String, content: String) extends Message {
+  case class SimpleMessage (deliveryAttemptID: String, content: String) extends Message {
     def toJson: String = {
       Serialization.write(this)(SimpleMessage.messageFormats)
     }
@@ -129,8 +129,6 @@ object LocalHornetQMom extends MessageQueueService {
       val uuid: UUID = UUID.fromString(deliveryAttemptID)
       LocalHornetQMom.completeMessage(uuid)
     }
-
-    override def deliveryAttemptUUID: UUID = UUID.fromString(deliveryAttemptID)
 
     override def contents: String = this.content
   }

@@ -166,7 +166,7 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
       throw new IllegalStateException(s"Response status is ${response.status}, not OK or NotFound. Cannot make a Message from this response: ${response.entity.asString}")
     }
   }.transform({ s =>
-    val hornetQMessage = s.map(msg => HornetQClientMessage(msg.deliveryAttemptUUID, msg.contents))
+    val hornetQMessage = s.map(msg => HornetQClientMessage(UUID.fromString(msg.deliveryAttemptID), msg.contents))
     Success(hornetQMessage)
   }, { throwable =>
     throwable match {
@@ -194,10 +194,7 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
         })
       } yield response
     }
-
-    override def deliveryAttemptUUID: UUID = messageID
   }
-
 }
 
 // TODO in SHRINE-2167: Extract and share a SHRINE actor system

@@ -77,7 +77,7 @@ class zHornetQMomWebApiTest extends FlatSpec with ScalatestRouteTest with Hornet
         val response = new String(body.data.toByteArray)
         assertResult(OK)(status)
         val responseMsg: SimpleMessage = SimpleMessage.fromJson(response)
-        messageUUID = responseMsg.deliveryAttemptUUID.toString
+        messageUUID = responseMsg.deliveryAttemptID
         assertResult(responseMsg.contents)(messageContent)
       }
 
