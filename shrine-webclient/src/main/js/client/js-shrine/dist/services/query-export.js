@@ -119,12 +119,15 @@ System.register(['./pub-sub'], function (_export, _context) {
             };
 
             exportIEWebkitGecko = function exportIEWebkitGecko(csv) {
+                var context = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : window.parent;
+
+                if (context === undefined) return;
                 var filename = "export.csv";
                 var blob = new Blob([csv]);
-                var isIE = window.navigator !== undefined && window.navigator.msSaveOrOpenBlob !== undefined;
-                if (isIE) window.navigator.msSaveBlob(blob, filename);else {
-                    var a = window.document.createElement("a");
-                    a.href = window.URL.createObjectURL(blob, { type: "text/plain" });
+                var isIE = context.navigator !== undefined && context.navigator.msSaveOrOpenBlob !== undefined;
+                if (isIE) context.navigator.msSaveBlob(blob, filename);else {
+                    var a = context.parent.document.createElement('a');
+                    a.href = context.URL.createObjectURL(blob, { type: "text/plain" });
                     a.download = filename;
                     document.body.appendChild(a);
                     a.click();

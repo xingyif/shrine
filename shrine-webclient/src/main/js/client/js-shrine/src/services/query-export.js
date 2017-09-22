@@ -37,14 +37,15 @@ const convertObjectToCSV = (d) => {
     exportIEWebkitGecko(csv);
 }
 
-const exportIEWebkitGecko = csv => {
+const exportIEWebkitGecko = (csv, context = window.parent) => {
+    if(context === undefined) return;
     const filename = "export.csv";
     const blob = new Blob([csv]);
-    const isIE = window.navigator !== undefined && window.navigator.msSaveOrOpenBlob !== undefined
-    if (isIE) window.navigator.msSaveBlob(blob, filename);
+    const isIE = context.navigator !== undefined && context.navigator.msSaveOrOpenBlob !== undefined
+    if (isIE) context.navigator.msSaveBlob(blob, filename);
     else {
-        const a = window.document.createElement("a");
-        a.href = window.URL.createObjectURL(blob, {type: "text/plain"});
+        const a = context.parent.document.createElement('a');
+        a.href = context.URL.createObjectURL(blob, {type: "text/plain"});
         a.download = filename;
         document.body.appendChild(a);
         a.click();  // IE: "Access is denied"; see: https://connect.microsoft.com/IE/feedback/details/797361/ie-10-treats-blob-url-as-cross-origin-and-denies-access
