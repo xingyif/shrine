@@ -1,7 +1,7 @@
 System.register(['./pub-sub'], function (_export, _context) {
     "use strict";
 
-    var PubSub, QueryExport, convertObjectToCSV, exportInIE, exportInWebkitGecko;
+    var PubSub, QueryExport, convertObjectToCSV, exportIEWebkitGecko;
 
     function _classCallCheck(instance, Constructor) {
         if (!(instance instanceof Constructor)) {
@@ -115,25 +115,21 @@ System.register(['./pub-sub'], function (_export, _context) {
                     })));
                 });
                 var csv = '' + line1 + line2 + result.join('\n');
-                window.navigator && window.navigator.msSaveOrOpenBlob ? exportInIE(csv) : exportInWebkitGecko(csv);
+                exportIEWebkitGecko(csv);
             };
 
-            exportInIE = function exportInIE(csv) {
-                var blob = new Blob([decodeURIComponent(encodeURI(csv))], {
-                    type: 'text/csv;charset=utf-8;'
-                });
-                window.navigator.msSaveOrOpenBlob(blob, 'export.csv');
-                return csv;
-            };
-
-            exportInWebkitGecko = function exportInWebkitGecko(csv) {
-                var link = document.createElement('a');
-                var evt = document.createEvent('MouseEvents');
-                !link.download ? link.target = '_blank' : link.download = 'export.csv';
-                link.href = 'data:application/csv;charset=utf-8,' + encodeURIComponent(csv);
-                document.body.appendChild(link);
-                evt.initEvent('click', true, true);
-                link.dispatchEvent(evt);
+            exportIEWebkitGecko = function exportIEWebkitGecko(csv) {
+                var filename = "export.csv";
+                var blob = new Blob([csv]);
+                var isIE = window.navigator !== undefined && window.navigator.msSaveOrOpenBlob !== undefined;
+                if (isIE) window.navigator.msSaveBlob(blob, filename);else {
+                    var a = window.document.createElement("a");
+                    a.href = window.URL.createObjectURL(blob, { type: "text/plain" });
+                    a.download = filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                }
             };
         }
     };

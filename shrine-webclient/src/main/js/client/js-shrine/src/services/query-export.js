@@ -34,22 +34,20 @@ const convertObjectToCSV = (d) => {
         }));
     });
     const csv = `${line1}${line2}${result.join('\n')}`;
-    window.navigator && window.navigator.msSaveOrOpenBlob? exportInIE(csv) : exportInWebkitGecko(csv);
-}
-const exportInIE = csv => {
-    const blob = new Blob([decodeURIComponent(encodeURI(csv))], {
-        type: 'text/csv;charset=utf-8;'
-      });
-    window.navigator.msSaveOrOpenBlob(blob, 'export.csv');
-    return csv;
+    exportIEWebkitGecko(csv);
 }
 
-const exportInWebkitGecko = csv => {
-    const link = document.createElement('a');
-    const evt = document.createEvent('MouseEvents');
-    !link.download? link.target = '_blank' :  link.download = 'export.csv'
-    link.href = 'data:application/csv;charset=utf-8,' + encodeURIComponent(csv);
-    document.body.appendChild(link);
-    evt.initEvent( 'click', true, true );
-    link.dispatchEvent(evt);
+const exportIEWebkitGecko = csv => {
+    const filename = "export.csv";
+    const blob = new Blob([csv]);
+    const isIE = window.navigator !== undefined && window.navigator.msSaveOrOpenBlob !== undefined
+    if (isIE) window.navigator.msSaveBlob(blob, filename);
+    else {
+        const a = window.document.createElement("a");
+        a.href = window.URL.createObjectURL(blob, {type: "text/plain"});
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();  // IE: "Access is denied"; see: https://connect.microsoft.com/IE/feedback/details/797361/ie-10-treats-blob-url-as-cross-origin-and-denies-access
+        document.body.removeChild(a);
+    }
 }
