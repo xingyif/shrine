@@ -1,7 +1,5 @@
 package net.shrine.messagequeueservice
 
-import java.util.UUID
-
 import scala.util.Try
 
 /**
