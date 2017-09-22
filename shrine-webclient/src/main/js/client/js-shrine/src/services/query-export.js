@@ -47,8 +47,8 @@ const exportIEWebkitGecko = (csv, context = window.parent) => {
         const a = context.parent.document.createElement('a');
         a.href = context.URL.createObjectURL(blob, {type: "text/plain"});
         a.download = filename;
-        document.body.appendChild(a);
+        context.document.body.appendChild(a);
         a.click();  // IE: "Access is denied"; see: https://connect.microsoft.com/IE/feedback/details/797361/ie-10-treats-blob-url-as-cross-origin-and-denies-access
-        document.body.removeChild(a);
+        context.document.body.removeChild(a);
     }
 }

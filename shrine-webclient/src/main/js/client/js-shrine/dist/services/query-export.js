@@ -129,9 +129,9 @@ System.register(['./pub-sub'], function (_export, _context) {
                     var a = context.parent.document.createElement('a');
                     a.href = context.URL.createObjectURL(blob, { type: "text/plain" });
                     a.download = filename;
-                    document.body.appendChild(a);
+                    context.document.body.appendChild(a);
                     a.click();
-                    document.body.removeChild(a);
+                    context.document.body.removeChild(a);
                 }
             };
         }
