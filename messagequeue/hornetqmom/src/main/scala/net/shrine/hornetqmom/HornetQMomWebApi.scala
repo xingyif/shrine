@@ -82,7 +82,9 @@ trait HornetQMomWebApi extends HttpService
   def createQueue: Route =
     path("createQueue" / Segment) { queueName =>
       detach() {
+        debug(s"Start createqueue/$queueName")
         val createdQueueTry: Try[Queue] = LocalHornetQMom.createQueueIfAbsent(queueName)
+        debug(s"createqueueTry is $createdQueueTry")
         createdQueueTry match {
           case Success(queue) => {
             implicit val formats = Serialization.formats(NoTypeHints)
