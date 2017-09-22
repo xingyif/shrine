@@ -188,6 +188,8 @@ object QueryResult {
 
     def isError = this == StatusType.Error
 
+    def crcPromisedToFinishAfterReply = isCrcCallCompleted && !isDone
+
     def toI2b2(queryResult: QueryResult): NodeSeq = doToI2b2(queryResult)
   }
 
