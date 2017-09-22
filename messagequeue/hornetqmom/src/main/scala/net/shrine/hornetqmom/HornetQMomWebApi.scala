@@ -147,7 +147,7 @@ trait HornetQMomWebApi extends HttpService
             val receiveTry: Try[Option[Message]] = LocalHornetQMom.receive(Queue(fromQueue), timeout)
             receiveTry match {
               case Success(optionMessage) => {
-                optionMessage.fold(complete(StatusCodes.NotFound)){localHornetQMessage =>
+                optionMessage.fold(complete(StatusCodes.NoContent)){localHornetQMessage =>
                   // add message in the map with an unique UUID
                   val msgID = UUID.randomUUID()
                   scheduleCleanupMessageMap(msgID, localHornetQMessage)
