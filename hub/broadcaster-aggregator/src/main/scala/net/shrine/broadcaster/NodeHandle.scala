@@ -32,7 +32,7 @@ object NodeHandle {
     val timeout = hubConfig.getConfigured("maxQueryWaitTime",DurationConfigParser(_))
     val httpClient = new JerseyHttpClient(trustParam, timeout, MediaType.APPLICATION_XML)
 
-    val nodes = hubConfig.getOptionConfigured("downstreamNodes", NodeListParser(_)).getOrElse(Nil)
+    val nodes: Iterable[IdAndUrl] = hubConfig.getOptionConfigured("downstreamNodes", NodeListParser(_)).getOrElse(Nil)
     val downstream = nodes.map { case IdAndUrl(nodeId, url) =>
       val poster = Poster(url.toString, httpClient)
 

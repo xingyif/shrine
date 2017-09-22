@@ -4,10 +4,11 @@ import java.util.concurrent.atomic.AtomicBoolean
 import javax.servlet.{ServletContextEvent, ServletContextListener}
 
 import com.typesafe.config.Config
+import net.shrine.broadcaster.{IdAndUrl, NodeListParser}
 import net.shrine.config.ConfigExtensions
 import net.shrine.log.Log
 import net.shrine.messagequeueservice.protocol.Envelope
-import net.shrine.messagequeueservice.{CouldNotCreateQueueButOKToRetryException, Message, MessageQueueService, Queue}
+import net.shrine.messagequeueservice.{CouldNotCompleteMomTaskButOKToRetryException, Message, MessageQueueService, Queue}
 import net.shrine.problem.{AbstractProblem, ProblemSources}
 import net.shrine.protocol.{AggregatedRunQueryResponse, QueryResult, ResultOutputType, ResultOutputTypes}
 import net.shrine.qep.querydb.{QepQueryDb, QepQueryDbChangeNotifier, QueryResultRow}
@@ -39,6 +40,7 @@ object QepReceiver {
   pollingThread.setUncaughtExceptionHandler(QepReceiverUncaughtExceptionHandler)
 
   def start(): Unit = {
+
     pollingThread.start()
     Log.debug(s"Started the QepReceiver thread for $nodeName")
   }
@@ -59,6 +61,17 @@ object QepReceiver {
     val breakdownTypes: Set[ResultOutputType] = ConfigSource.config.getOptionConfigured("shrine.breakdownResultOutputTypes", ResultOutputTypes.fromConfig).getOrElse(Set.empty)
 
     override def run(): Unit = {
+
+      //if hub, create all the queues
+      if(config.getBoolean("shrine.hub.create")) {
+        val otherNodes: List[IdAndUrl] = config.getOptionConfigured("shrine.hub.downstreamNodes", NodeListParser(_)).getOrElse(Nil).to[List]
+        val thisNode:Option[String] = if (config.getBoolean("shrine.hub.shouldQuerySelf")) Some(nodeName)
+        else None
+
+        val nodeNames = ( thisNode :: otherNodes.map(n => Some(n.nodeId.name)) ).flatten
+        nodeNames.foreach(createQueue)
+      }
+
       val queue = createQueue(nodeName)
 
       while (keepGoing.get()) {
@@ -68,6 +81,7 @@ object QepReceiver {
           receiveAMessage(queue)
           Log.debug("Called receive.")
         } catch {
+
           case NonFatal(x) => ExceptionWhileReceivingMessage(queue,x)
           //pass-through to blow up the thread, receive no more results, do something dramatic in UncaughtExceptionHandler.
           case x => Log.error("Fatal exception while receiving a message", x)
@@ -81,11 +95,15 @@ object QepReceiver {
       val maybeMessage: Try[Option[Message]] = MessageQueueService.service.receive(queue, pollDuration)
 
       maybeMessage.transform({m =>
-        m.map(interpretAMessage(_,queue)).getOrElse(Success())
+        m.map(interpretAMessage(_,queue)).getOrElse(Success()) //todo rework this in SHRINE-2327
       },{x =>
         x match {
+          case cncmtbotrx:CouldNotCompleteMomTaskButOKToRetryException => {
+            Log.debug(s"Last attempt to receive resulted in ${cncmtbotrx.getMessage}. Sleeping $pollDuration before next attempt")
+            Thread.sleep(pollDuration.toMillis)
+          }
           case NonFatal(nfx) => ExceptionWhileReceivingMessage(queue,x)
-          case _ => //pass through
+          case fatal => throw fatal
         }
         Failure(x)
       })
@@ -154,7 +172,7 @@ object QepReceiver {
         MessageQueueService.service.createQueueIfAbsent(nodeName)
 
       def keepGoing(attempt:Try[Queue]):Try[Boolean] = attempt.transform({queue => Success(false)}, {
-        case okIsh: CouldNotCreateQueueButOKToRetryException => Success(true)
+        case okIsh: CouldNotCompleteMomTaskButOKToRetryException => Success(true)
         case x => Failure(x)
       })
 

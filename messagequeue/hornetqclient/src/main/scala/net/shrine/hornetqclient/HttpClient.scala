@@ -90,9 +90,9 @@ object HttpClient extends Loggable {
         engine
     }
 
-  def createConnector(request: HttpRequest) = {
+  def createConnector(request: HttpRequest): HostConnectorSetup = {
 
-    val connector = new HostConnectorSetup(host = request.uri.authority.host.toString,
+    val connector = HostConnectorSetup(host = request.uri.authority.host.toString,
       port = request.uri.effectivePort,
       sslEncryption = request.uri.scheme == "https",
       defaultHeaders = request.headers)

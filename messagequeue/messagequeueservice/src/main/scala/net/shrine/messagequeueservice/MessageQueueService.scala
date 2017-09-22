@@ -47,4 +47,6 @@ case class Queue(var name:String) extends DefaultJsonSupport {
   }
 }
 
-case class CouldNotCreateQueueButOKToRetryException(status:StatusCode,contents:String) extends Exception(s"Could not create a queue due to status code $status with message '$contents'")
+case class CouldNotCompleteMomTaskButOKToRetryException(task:String,
+                                                        status:Option[StatusCode] = None,
+                                                        contents:Option[String] = None) extends Exception(s"Could not $task due to status code $status with message '$contents'")
