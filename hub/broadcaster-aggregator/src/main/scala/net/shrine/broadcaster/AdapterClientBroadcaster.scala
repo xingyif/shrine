@@ -4,16 +4,20 @@ import net.shrine.adapter.client.{AdapterClient, RemoteAdapterClient}
 import net.shrine.aggregation.RunQueryAggregator
 import net.shrine.broadcaster.dao.HubDao
 import net.shrine.client.TimeoutException
-import net.shrine.log.Loggable
-import net.shrine.messagequeueservice.MessageQueueService
+import net.shrine.log.{Log, Loggable}
+import net.shrine.messagequeueservice.{CouldNotCompleteMomTaskButOKToRetryException, MessageQueueService, Queue}
 import net.shrine.messagequeueservice.protocol.Envelope
 import net.shrine.problem.{AbstractProblem, ProblemSources}
 import net.shrine.protocol.{AggregatedRunQueryResponse, BaseShrineResponse, BroadcastMessage, FailureResult, QueryResult, RunQueryRequest, SingleNodeResult, Timeout}
 import net.shrine.status.protocol.IncrementalQueryResult
 
+import scala.collection.concurrent.TrieMap
 import scala.concurrent.Future
+import scala.concurrent.duration.Duration
 import scala.util.control.NonFatal
 import scala.util.{Failure, Success, Try}
+
+
 
 /**
  * @author clint
@@ -92,13 +96,41 @@ final case class AdapterClientBroadcaster(destinations: Set[NodeHandle], dao: Hu
     multiplexer
   }
 
+  //todo clean up this cut/paste -remove if not used
+  def createQueue(nodeName:String):Queue = {
+
+    val pollDuration:Duration = Duration("10 seconds")
+
+    //Either come back with the right exception to try again, or a Queue
+    def tryToCreateQueue():Try[Queue] =
+      MessageQueueService.service.createQueueIfAbsent(nodeName)
+
+    def keepGoing(attempt:Try[Queue]):Try[Boolean] = attempt.transform({queue => Success(false)}, {
+      case okIsh: CouldNotCompleteMomTaskButOKToRetryException => Success(true)
+      case x => Failure(x)
+    })
+
+    //todo for fun figure out how to do this without the var. maybe a Stream ? SHRINE-2211
+    var lastAttempt:Try[Queue] = tryToCreateQueue()
+    while(keepGoing(lastAttempt).get) {
+      Log.debug(s"Last attempt to create a queue resulted in $lastAttempt. Sleeping $pollDuration before next attempt")
+      Thread.sleep(pollDuration.toMillis)
+      lastAttempt = tryToCreateQueue()
+    }
+    Log.info(s"Finishing createQueue with $lastAttempt")
+
+    lastAttempt.get
+  }
+
+  val namesToQueues: TrieMap[String, Queue] = TrieMap[String,Queue]()
+
   private def sendToQep(envelope: Envelope,queueName:String,logDescription:String):Unit = {
 
-    val s: Try[Unit] = for {
-      queue <- MessageQueueService.service.createQueueIfAbsent(queueName)
-      sent <- MessageQueueService.service.send(envelope.toJson, queue)
-    } yield sent
-    s.transform({itWorked =>
+    def createThisQueue() = createQueue(queueName)
+
+    val queue = namesToQueues.getOrElseUpdate(queueName,createThisQueue)
+
+    MessageQueueService.service.send(envelope.toJson, queue).transform({itWorked =>
       debug(s"$logDescription sent to queue")
       Success(itWorked)
     },{throwable: Throwable =>
