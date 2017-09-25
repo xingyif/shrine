@@ -2,6 +2,7 @@ package net.shrine.hornetqmom
 
 import java.util
 import java.util.UUID
+import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.{BlockingDeque, Executors, LinkedBlockingDeque, ScheduledExecutorService, TimeUnit}
 
 import net.shrine.config.ConfigExtensions
@@ -194,8 +195,8 @@ object LocalHornetQMom extends MessageQueueService {
 }
 
 object MessageScheduler {
-  private val redeliveryScheduler: ScheduledExecutorService = Executors.newScheduledThreadPool(1)
-  private val cleanupScheduler: ScheduledExecutorService = Executors.newScheduledThreadPool(1)
+  private val redeliveryScheduler: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
+  private val cleanupScheduler: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
 
   def scheduleMessageRedelivery(deliveryAttemptID: UUID, deliveryAttempt: DeliveryAttempt, messageRedeliveryDelay: Long, messageMaxDeliveryAttempts: Int) = {
     val messageRedeliveryRunner: MessageRedeliveryRunner = MessageRedeliveryRunner(deliveryAttemptID, deliveryAttempt, messageRedeliveryDelay, messageMaxDeliveryAttempts)
@@ -259,18 +260,9 @@ object MessageScheduler {
 }
 
 case class InternalToBeSentMessage(id: UUID, contents: String, createdTime: Long, toQueue: Queue) {
-  override def equals(obj: scala.Any): Boolean = {
-    obj match {
-      case other: InternalToBeSentMessage =>
-        other.canEqual(this) && super.equals(other)
-      case _ => false
-    }
-  }
-  private var currentAttempt = 0
-  def getCurrentAttempt: Int = currentAttempt
-  def incrementCurrentAttempt(): Unit = {
-    currentAttempt = currentAttempt + 1
-  }
+  private val currentAttempt: AtomicInteger = new AtomicInteger(0)
+  def getCurrentAttempt: Int = currentAttempt.get()
+  def incrementCurrentAttempt(): Unit = currentAttempt.incrementAndGet()
 }
 
 case class DeliveryAttempt(message: InternalToBeSentMessage, createdTime: Long, fromQueue: Queue)
