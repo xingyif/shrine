@@ -1,7 +1,7 @@
 System.register(['aurelia-framework', 'services/query-status.model', 'services/pub-sub'], function (_export, _context) {
     "use strict";
 
-    var customElement, observable, QueryStatusModel, PubSub, _extends, _dec, _class, _desc, _value, _class2, _descriptor, _class3, _temp, QueryStatus, timeoutSeconds, defaultVersion, me, initialState;
+    var customElement, observable, QueryStatusModel, PubSub, _dec, _class, _desc, _value, _class2, _descriptor, _class3, _temp, QueryStatus, TIMEOUT_SECONDS, DEFAULT_VERSION, me, initialState;
 
     function _initDefineProp(target, property, descriptor, context) {
         if (!descriptor) return;
@@ -86,20 +86,6 @@ System.register(['aurelia-framework', 'services/query-status.model', 'services/p
             PubSub = _servicesPubSub.PubSub;
         }],
         execute: function () {
-            _extends = Object.assign || function (target) {
-                for (var i = 1; i < arguments.length; i++) {
-                    var source = arguments[i];
-
-                    for (var key in source) {
-                        if (Object.prototype.hasOwnProperty.call(source, key)) {
-                            target[key] = source[key];
-                        }
-                    }
-                }
-
-                return target;
-            };
-
             _export('QueryStatus', QueryStatus = (_dec = customElement('query-status'), _dec(_class = (_class2 = (_temp = _class3 = function (_PubSub) {
                 _inherits(QueryStatus, _PubSub);
 
@@ -112,7 +98,7 @@ System.register(['aurelia-framework', 'services/query-status.model', 'services/p
 
                     var _this = _possibleConstructorReturn(this, _PubSub.call.apply(_PubSub, [this].concat(rest)));
 
-                    _initDefineProp(_this, 'status', _descriptor, _this);
+                    _initDefineProp(_this, 'nodes', _descriptor, _this);
 
                     me.set(_this, {
                         isDevEnv: document.location.href.includes('http://localhost:8000/'),
@@ -121,70 +107,85 @@ System.register(['aurelia-framework', 'services/query-status.model', 'services/p
                     return _this;
                 }
 
-                QueryStatus.prototype.statusChanged = function statusChanged(newValue, oldValue) {
-                    if (!newValue.nodes || !newValue.nodes.length) {
+                QueryStatus.prototype.nodesChanged = function nodesChanged(newValue, oldValue) {
+                    if (!newValue || !newValue.length) {
                         me.get(this).exportAvailable = false;
                         this.publish(this.notifications.shrine.queryUnavailable);
-                    } else {
-                        me.get(this).exportAvailable = true;
-                        this.publish(this.notifications.shrine.queryAvailable);
+                        return;
                     }
+                    me.get(this).exportAvailable = true;
+                    this.publish(this.notifications.shrine.queryAvailable);
                 };
 
                 QueryStatus.prototype.attached = function attached() {
                     var _this2 = this;
 
                     this.subscribe(this.notifications.i2b2.queryStarted, function (n) {
-                        _this2.status = initialState();
+                        _this2.status = initialState().status;
+                        _this2.nodes = initialState().nodes;
                         _this2.status.query.queryName = n;
                     });
 
                     this.subscribe(this.notifications.i2b2.networkIdReceived, function (d) {
+                        var runningPreviousQuery = _this2.status === undefined;
+                        if (runningPreviousQuery) _this2.status = initialState().status;
                         var networkId = d.networkId;
-                        var state = initialState();
-                        var nodes = state.nodes;
-                        state.query.queryName = d.name || state.query.queryName;
-                        _this2.status = _this2.status ? _extends({}, _this2.status, { nodes: nodes }) : state;
-                        _this2.publish(_this2.commands.shrine.fetchQuery, { networkId: networkId, timeoutSeconds: timeoutSeconds, dataVersion: defaultVersion });
+
+                        _this2.status.query.networkId = networkId;
+                        _this2.nodes = initialState().nodes;
+                        _this2.publish(_this2.commands.shrine.fetchQuery, { networkId: networkId, timeoutSeconds: TIMEOUT_SECONDS, dataVersion: DEFAULT_VERSION });
                     });
 
                     this.subscribe(this.notifications.i2b2.exportQuery, function () {
-                        _this2.publish(_this2.commands.shrine.exportResult, _extends({}, _this2.status));
+                        var nodes = _this2.nodes;
+                        _this2.publish(_this2.commands.shrine.exportResult, { nodes: nodes });
+                    });
+
+                    this.subscribe(this.notifications.i2b2.clearQuery, function () {
+                        _this2.nodes = initialState().nodes;
+                        _this2.status = initialState().status;
                     });
                     this.subscribe(this.notifications.shrine.queryReceived, function (data) {
-                        var query = data.query;
-                        var nodes = data.nodes;
-                        var dataVersion = data.dataVersion;
+                        var query = data.query,
+                            nodes = data.nodes,
+                            _data$dataVersion = data.dataVersion,
+                            dataVersion = _data$dataVersion === undefined ? DEFAULT_VERSION : _data$dataVersion,
+                            networkId = data.query.networkId;
+                        var _query$complete = query.complete,
+                            complete = _query$complete === undefined ? false : _query$complete;
+
+                        var timeoutSeconds = TIMEOUT_SECONDS;
+                        if (networkId !== _this2.status.query.networkId) return;
                         var updated = Number(new Date());
-                        var complete = data.query.complete;
-                        var networkId = data.query.networkId;
-                        _this2.status = _extends({}, _this2.status, { query: query, nodes: nodes, updated: updated });
+                        Object.assign(_this2.status, { query: query, updated: updated });
+                        _this2.nodes = nodes;
                         if (!complete) {
-                            window.setTimeout(function () {
-                                return _this2.publish(_this2.commands.shrine.fetchQuery, { networkId: networkId, dataVersion: dataVersion, timeoutSeconds: timeoutSeconds });
-                            }, 5000);
+                            _this2.publish(_this2.commands.shrine.fetchQuery, { networkId: networkId, dataVersion: dataVersion, timeoutSeconds: timeoutSeconds });
                         }
                     });
 
                     if (me.get(this).isDevEnv) {
-                        this.publish(this.notifications.i2b2.networkIdReceived, { networkId: 1, name: "started query" });
+                        this.publish(this.notifications.i2b2.queryStarted, "started query");
+                        window.setTimeout(function () {
+                            return _this2.publish(_this2.notifications.i2b2.networkIdReceived, { networkId: '2421519216383772161', name: "started query" });
+                        }, 2000);
                     }
                 };
 
                 return QueryStatus;
-            }(PubSub), _class3.inject = [QueryStatusModel], _temp), (_descriptor = _applyDecoratedDescriptor(_class2.prototype, 'status', [observable], {
+            }(PubSub), _class3.inject = [QueryStatusModel], _temp), (_descriptor = _applyDecoratedDescriptor(_class2.prototype, 'nodes', [observable], {
                 enumerable: true,
                 initializer: null
             })), _class2)) || _class));
 
             _export('QueryStatus', QueryStatus);
 
-            timeoutSeconds = 15;
-            defaultVersion = -1;
+            TIMEOUT_SECONDS = 15;
+            DEFAULT_VERSION = -1;
             me = new WeakMap();
 
             initialState = function initialState(n) {
-                return { query: { queryName: null, updated: null, complete: false }, nodes: null };
+                return { status: { query: { networkId: null, queryName: null, updated: null, complete: false } }, nodes: [] };
             };
         }
     };

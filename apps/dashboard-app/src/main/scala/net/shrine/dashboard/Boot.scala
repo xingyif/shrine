@@ -1,7 +1,7 @@
 package net.shrine.dashboard
 
 import akka.actor.{ActorRef, ActorSystem, Props}
-import net.shrine.log.Log
+import akka.routing.RoundRobinPool
 import net.shrine.problem.{AbstractProblem, ProblemHandler, ProblemSources}
 import net.shrine.source.ConfigSource
 import spray.servlet.WebBoot
@@ -31,8 +31,8 @@ class Boot extends WebBoot {
     val handler:ProblemHandler = ConfigSource.getObject("shrine.problem.problemHandler", ConfigSource.config)
     handler.warmUp()
 
-    // the service actor replies to incoming HttpRequests
-    system.actorOf(Props[DashboardServiceActor])
+    // the service actors reply to incoming HttpRequests
+    system.actorOf(RoundRobinPool(100).props(Props[DashboardServiceActor]), "DashboardServiceActors")
   }
   catch {
     case NonFatal(x) => CannotStartDashboard(x); throw x

@@ -9,6 +9,7 @@ import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers}
 import scala.collection.immutable.Seq
 import scala.concurrent.duration._
 import scala.language.postfixOps
+import scala.util.Try
 /**
   * Test create, delete queue, send, and receive message, getQueueNames, and acknoledge using HornetQ service
   */
@@ -34,7 +35,8 @@ class LocalHornetQMomTest extends FlatSpec with BeforeAndAfterAll with ScalaFutu
     assert(message.isDefined)
     assert(message.get.contents == testContents)
 
-    LocalHornetQMom.completeMessage(message.get)
+    val completeTry: Try[Unit] = message.get.complete()
+    assert(completeTry.isSuccess)
 
     val shouldBeNoMessage: Option[Message] = LocalHornetQMom.receive(queue,1 second).get
 
@@ -64,7 +66,7 @@ class LocalHornetQMomTest extends FlatSpec with BeforeAndAfterAll with ScalaFutu
     assert(message1.isDefined)
     assert(message1.get.contents == testContents1)
 
-    val completeTry = LocalHornetQMom.completeMessage(message1.get)
+    val completeTry = message1.get.complete()
     assert(completeTry.isSuccess)
 
     val shouldBeNoMessage1: Option[Message] = LocalHornetQMom.receive(queue,1 second).get
@@ -84,7 +86,7 @@ class LocalHornetQMomTest extends FlatSpec with BeforeAndAfterAll with ScalaFutu
     assert(message2.isDefined)
     assert(message2.get.contents == testContents2)
 
-    val completeTry2 = LocalHornetQMom.completeMessage(message2.get)
+    val completeTry2 = message2.get.complete()
     assert(completeTry2.isSuccess)
 
     val message3: Option[Message] = LocalHornetQMom.receive(queue,1 second).get
@@ -92,7 +94,7 @@ class LocalHornetQMomTest extends FlatSpec with BeforeAndAfterAll with ScalaFutu
     assert(message3.isDefined)
     assert(message3.get.contents == testContents3)
 
-    val completeTry3 = LocalHornetQMom.completeMessage(message3.get)
+    val completeTry3 = message3.get.complete()
     assert(completeTry3.isSuccess)
 
     val shouldBeNoMessage4: Option[Message] = LocalHornetQMom.receive(queue,1 second).get
@@ -150,7 +152,6 @@ class LocalHornetQMomTest extends FlatSpec with BeforeAndAfterAll with ScalaFutu
     assert(LocalHornetQMom.queues.get == Seq(queue))
     LocalHornetQMom.deleteQueue(queue.name)
   }
-
 
   override def afterAll() = LocalHornetQMomStopper.stop()
 }

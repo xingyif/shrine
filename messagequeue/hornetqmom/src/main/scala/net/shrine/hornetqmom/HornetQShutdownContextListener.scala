@@ -12,12 +12,13 @@ class HornetQShutdownContextListener extends ServletContextListener {
 
 
   override def contextInitialized(servletContextEvent: ServletContextEvent): Unit = {
-    LogEntry(s"Tomcat context initialized for meta-app", Logging.InfoLevel)
+    LogEntry(s"${getClass.getSimpleName} context initialized $servletContextEvent", Logging.InfoLevel)
 
   }
 
   override def contextDestroyed(servletContextEvent: ServletContextEvent): Unit = {
     LocalHornetQMomStopper.stop()
-    LogEntry(s"Tomcat context destroyed and HornetQ server is stopped for meta-app", Logging.InfoLevel)
+    MessageMapCleaningScheduler.shutDown()
+    LogEntry(s"${getClass.getSimpleName} context destroyed $servletContextEvent", Logging.InfoLevel)
   }
 }

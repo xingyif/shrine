@@ -1,7 +1,7 @@
 System.register(['./pub-sub'], function (_export, _context) {
     "use strict";
 
-    var PubSub, QueryExport, convertObjectToCSV;
+    var PubSub, QueryExport, convertObjectToCSV, exportIEWebkitGecko;
 
     function _classCallCheck(instance, Constructor) {
         if (!(instance instanceof Constructor)) {
@@ -71,8 +71,10 @@ System.register(['./pub-sub'], function (_export, _context) {
                     return desc(a) <= desc(b) ? -1 : 1;
                 };
                 nodes.forEach(function (_ref2) {
-                    var breakdowns = _ref2.breakdowns;
-                    return breakdowns.sort(brdSort).forEach(function (_ref3) {
+                    var _ref2$breakdowns = _ref2.breakdowns,
+                        breakdowns = _ref2$breakdowns === undefined ? [] : _ref2$breakdowns;
+
+                    breakdowns.sort(brdSort).forEach(function (_ref3) {
                         var _m$get;
 
                         var description = _ref3.resultType.i2b2Options.description,
@@ -85,18 +87,19 @@ System.register(['./pub-sub'], function (_export, _context) {
                     });
                 });
 
-                var line1 = 'data:text/csv;charset=utf-8,SHRINE QUERY RESULTS (OBFUSCATED PATIENT COUNTS),' + [''].concat(nodes.map(function (n) {
+                var line1 = 'SHRINE QUERY RESULTS (OBFUSCATED PATIENT COUNTS),' + [''].concat(nodes.map(function (n) {
                     return n.adapterNode;
                 }).join(','));
                 var line2 = '\nAll Patients,' + [''].concat(nodes.map(function (n) {
-                    return n.count;
+                    return n.count ? n.count > 0 ? n.count : 0 : 'unavailable';
                 }).join(','));
                 var result = [];
                 m.forEach(function (v, k) {
                     result.push.apply(result, [''].concat(Array.from(v).map(function (s) {
                         var title = k.split(' ').shift() + ',' + s;
                         var values = nodes.map(function (_ref4) {
-                            var breakdowns = _ref4.breakdowns;
+                            var _ref4$breakdowns = _ref4.breakdowns,
+                                breakdowns = _ref4$breakdowns === undefined ? [] : _ref4$breakdowns;
 
                             var b = breakdowns.find(function (_ref5) {
                                 var description = _ref5.resultType.i2b2Options.description,
@@ -111,13 +114,25 @@ System.register(['./pub-sub'], function (_export, _context) {
                         return title + ',' + values.join(",");
                     })));
                 });
-                var csv = encodeURI('' + line1 + line2 + result.join('\n'));
-                var link = document.createElement('a');
-                link.setAttribute('href', csv);
-                link.setAttribute('download', 'export.csv');
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
+                var csv = '' + line1 + line2 + result.join('\n');
+                exportIEWebkitGecko(csv);
+            };
+
+            exportIEWebkitGecko = function exportIEWebkitGecko(csv) {
+                var context = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : window.parent;
+
+                if (context === undefined) return;
+                var filename = "export.csv";
+                var blob = new Blob([csv]);
+                var isIE = context.navigator !== undefined && context.navigator.msSaveOrOpenBlob !== undefined;
+                if (isIE) context.navigator.msSaveBlob(blob, filename);else {
+                    var a = context.parent.document.createElement('a');
+                    a.href = context.URL.createObjectURL(blob, { type: "text/plain" });
+                    a.download = filename;
+                    context.document.body.appendChild(a);
+                    a.click();
+                    context.document.body.removeChild(a);
+                }
             };
         }
     };

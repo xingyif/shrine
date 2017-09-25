@@ -134,6 +134,7 @@
 		i2b2.events.queryResultAvailable = new YAHOO.util.CustomEvent("queryResultAvailable", i2b2);
 		i2b2.events.queryResultUnavailable = new YAHOO.util.CustomEvent("queryResultUnvailable", i2b2);
 		i2b2.events.exportQueryResult = new YAHOO.util.CustomEvent("exportQueryResult", i2b2);
+		i2b2.events.clearQuery = new YAHOO.util.CustomEvent("clearQuery", i2b2);
 
 		i2b2.events.queryResultAvailable.subscribe(function () {
 			jQuery('#crcStatusBox .TopTabs .opXML #shrineCSVExport')
@@ -142,19 +143,29 @@
 					e.stopPropagation();
 					i2b2.events.exportQueryResult.fire(); 
 				});
+				i2b2.SHRINE.plugin.enableRunQueryButton();
 		});
 		i2b2.events.queryResultUnavailable.subscribe(function () {
 			jQuery('#crcStatusBox .TopTabs .opXML #shrineCSVExport')
 				.css({opacity: 0.25})
 				.off('click');
 		});
+		
 		var _queryRun = i2b2.CRC.ctrlr.QT._queryRun;
 		i2b2.CRC.ctrlr.QT._queryRun = function (name, options) {
+			i2b2.SHRINE.plugin.disableRunQueryButton();
 			i2b2.events.afterQueryInit.fire({ name: name, data: options });
 			return _queryRun.apply(i2b2.CRC.ctrlr.QT, [name, options]);
 		}
 		i2b2.CRC.view.status.showDisplay = function () {
 		}
+
+		var _doQueryClear = i2b2.CRC.ctrlr.QT.doQueryClear;
+		i2b2.CRC.ctrlr.QT.doQueryClear = function(clearStatus) {
+			_doQueryClear.apply(i2b2.CRC.ctrlr.QT, []);
+			if(clearStatus === true) i2b2.events.clearQuery.fire();
+		}
+
 	}
 
 	function overrideQueryPanelHTML($) {
@@ -201,7 +212,7 @@
 	}
 
 	function addShrinePanel($) {
-		$('#crcStatusBox .StatusBox').append('<div id="shrinePlugin" class="shrinePluginContent" oncontextmenu="return false"></div>');
+		$('#crcStatusBox .StatusBox').append('<div id="shrinePlugin" class="shrinePluginContent" oncontextmenu="return false" style="padding: 0;"></div>');
 	}
 })();
 

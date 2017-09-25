@@ -1,7 +1,7 @@
 package net.shrine.hornetqmom
-
+import java.util.UUID
 import akka.actor.ActorRefFactory
-import net.shrine.messagequeueservice.{Message, MessageSerializer, Queue, QueueSerializer}
+import net.shrine.messagequeueservice.Queue
 import net.shrine.source.ConfigSource
 import org.json4s.NoTypeHints
 import org.json4s.native.Serialization
@@ -15,6 +15,7 @@ import spray.testkit.ScalatestRouteTest
 
 import scala.collection.immutable.Seq
 /**
+  * Test basic functions of HornetQMomWebApi
   * Created by yifan on 7/27/17.
   */
 
@@ -27,155 +28,90 @@ class HornetQMomWebApiTest extends FlatSpec with ScalatestRouteTest with HornetQ
   private val queue: Queue = Queue(proposedQueueName)
   private val queueName: String = queue.name // "testQueue"
   private val messageContent = "test Content"
-  private var receivedMessage: String = ""
 
   "HornetQMomWebApi" should "create/delete the given queue, send/receive message, get queues" in {
 
-    Put(s"/mom/createQueue/$queueName") ~> momRoute ~> check {
-      val response = new String(body.data.toByteArray)
-      if (!enabled) {
-        assertResult(NotFound)(status)
-        assertResult(warningMessage)(response)
-      } else {
-        implicit val formats = Serialization.formats(NoTypeHints) + new QueueSerializer
-        println(response)
+    ConfigSource.atomicConfig.configForBlock("shrine.messagequeue.blockingqWebApi.enabled", "true", "HornetQMomWebApiTest") {
+
+      Put(s"/mom/createQueue/$queueName") ~> momRoute ~> check {
+        val response = new String(body.data.toByteArray)
+        implicit val formats = Serialization.formats(NoTypeHints)
         val jsonToQueue = read[Queue](response)(formats, manifest[Queue])
         val responseQueueName = jsonToQueue.name
         assertResult(Created)(status)
         assertResult(queueName)(responseQueueName)
       }
-    }
 
-    // should be OK to create a queue twice
-    Put(s"/mom/createQueue/$queueName") ~> momRoute ~> check {
-      val response = new String(body.data.toByteArray)
-      if (!enabled) {
-        assertResult(NotFound)(status)
-        assertResult(warningMessage)(response)
-      } else {
-        implicit val formats = Serialization.formats(NoTypeHints) + new QueueSerializer
+      // should be OK to create a queue twice
+      Put(s"/mom/createQueue/$queueName") ~> momRoute ~> check {
+        val response = new String(body.data.toByteArray)
+        implicit val formats = Serialization.formats(NoTypeHints)
         val jsonToQueue = read[Queue](response)(formats, manifest[Queue])
         val responseQueueName = jsonToQueue.name
         assertResult(Created)(status)
         assertResult(queueName)(responseQueueName)
       }
-    }
 
-    Put(s"/mom/sendMessage/$queueName", HttpEntity(s"$messageContent")) ~> momRoute ~> check {
-      val response = new String(body.data.toByteArray)
-      if (!enabled) {
-        assertResult(NotFound)(status)
-        assertResult(warningMessage)(response)
-      } else {
+      Put(s"/mom/sendMessage/$queueName", HttpEntity(s"$messageContent")) ~> momRoute ~> check {
         assertResult(Accepted)(status)
       }
-    }
 
-    Get(s"/mom/getQueues") ~> momRoute ~> check {
-      val response: String = new String(body.data.toByteArray)
-      if (!enabled) {
-        assertResult(NotFound)(status)
-        assertResult(warningMessage)(response)
-      } else {
-        implicit val formats = Serialization.formats(NoTypeHints) + new QueueSerializer
-        val jsonToSeq: Seq[Queue] = read[Seq[Queue]](response, false)(formats, manifest[Seq[Queue]])
+      Get(s"/mom/getQueues") ~> momRoute ~> check {
+        val response: String = new String(body.data.toByteArray)
+        implicit val formats = Serialization.formats(NoTypeHints)
+        val jsonToSeq: Seq[Queue] = read[Seq[Queue]](response)(formats, manifest[Seq[Queue]])
 
         assertResult(OK)(status)
         assertResult(queueName)(jsonToSeq.head.name)
       }
-    }
 
-    // given timeout is 2 seconds
-    Get(s"/mom/receiveMessage/$queueName?timeOutSeconds=2") ~> momRoute ~> check {
-      val response = new String(body.data.toByteArray)
-      receivedMessage = response
-      if (!enabled) {
-        assertResult(NotFound)(status)
-        assertResult(warningMessage)(response)
-      } else {
-        implicit val formats = Serialization.formats(NoTypeHints) + new MessageSerializer
-        val responseToMessage: Message = read[Message](response)(formats, manifest[Message])
-
+      var messageUUID: String = ""
+      // given timeout is 2 seconds
+      Get(s"/mom/receiveMessage/$queueName?timeOutSeconds=2") ~> momRoute ~> check {
+        val response = new String(body.data.toByteArray)
         assertResult(OK)(status)
-        assert(responseToMessage.isInstanceOf[Message])
+        val responseMsg = MessageContainer.fromJson(response)
+        messageUUID = responseMsg.id
+        assertResult(responseMsg.contents)(messageContent)
       }
-    }
 
-    Put("/mom/acknowledge", HttpEntity(s"$receivedMessage")) ~> momRoute ~> check {
-      val response = new String(body.data.toByteArray)
-      if (!enabled) {
-        assertResult(NotFound)(status)
-        assertResult(warningMessage)(response)
-      } else {
-        implicit val formats = Serialization.formats(NoTypeHints) + new MessageSerializer
+      Put("/mom/acknowledge", HttpEntity(s"$messageUUID")) ~> momRoute ~> check {
         assertResult(ResetContent)(status)
       }
-    }
 
-    Put(s"/mom/deleteQueue/$queueName") ~> momRoute ~> check {
-      val response = new String(body.data.toByteArray)
-      if (!enabled) {
+      val nonExistingUUID = UUID.randomUUID()
+      Put("/mom/acknowledge", HttpEntity(s"$nonExistingUUID")) ~> momRoute ~> check {
+        val response = new String(body.data.toByteArray)
         assertResult(NotFound)(status)
-        assertResult(warningMessage)(response)
-      } else {
+        assertResult(MessageDoesNotExistInMapProblem(nonExistingUUID).description)(response)
+      }
+
+      Put(s"/mom/deleteQueue/$queueName") ~> momRoute ~> check {
         assertResult(OK)(status)
       }
     }
   }
 
-    "HornetQMomWebApi" should "respond Internal server error with the corresponding error message when " +
-      "failures occur while creating/deleting the given queue, sending/receiving message, getting queues" in {
+  "HornetQMomWebApi" should "respond InternalServerError with the corresponding error message when " +
+    "failures occur while creating/deleting the given queue, sending/receiving message, getting queues" in {
 
+    ConfigSource.atomicConfig.configForBlock("shrine.messagequeue.blockingqWebApi.enabled", "true", "HornetQMomWebApiTest") {
+
+      //todo Not a problem. The system is in the state you want. SHRINE-2208
       Put(s"/mom/deleteQueue/$queueName") ~> momRoute ~> check {
-        val response = new String(body.data.toByteArray)
-        if (!enabled) {
-          assertResult(NotFound)(status)
-          assertResult(warningMessage)(response)
-        } else {
-          assertResult(InternalServerError)(status)
-        }
+        assertResult(InternalServerError)(status)
       }
 
+      //todo I don't think this one rates more than a 404 SHRINE-2208
       Put(s"/mom/sendMessage/$queueName", HttpEntity(s"$messageContent")) ~> momRoute ~> check {
-        val response = new String(body.data.toByteArray)
-        if (!enabled) {
-          assertResult(NotFound)(status)
-          assertResult(warningMessage)(response)
-        } else {
-          assertResult(InternalServerError)(status)
-        }
+        assertResult(InternalServerError)(status)
       }
 
+      //todo I don't think this one rates more than a 404 SHRINE-2208
       // given timeout is 1 seconds
       Get(s"/mom/receiveMessage/$queueName?timeOutSeconds=1") ~> momRoute ~> check {
-        val response = new String(body.data.toByteArray)
-        if (!enabled) {
-          assertResult(NotFound)(status)
-          assertResult(warningMessage)(response)
-        } else {
-          assertResult(InternalServerError)(status)
-        }
+        assertResult(InternalServerError)(status)
       }
-    }
-
-}
-
-@RunWith(classOf[JUnitRunner])
-class HornetQMomWebApiConfigTest extends FlatSpec with ScalatestRouteTest with HornetQMomWebApi {
-  override def actorRefFactory: ActorRefFactory = system
-
-  private val queueName = "testQueue"
-
-
-  override val enabled: Boolean = ConfigSource.config.getString("shrine.messagequeue.hornetQWebApiTest.enabled").toBoolean
-
-  "HornetQMomWebApi" should "block user from using the API and return a 404 response" in {
-
-    Put(s"/mom/createQueue/$queueName") ~> momRoute ~> check {
-      val response = new String(body.data.toByteArray)
-
-      assertResult(warningMessage)(response)
-      assertResult(NotFound)(status)
     }
   }
 }

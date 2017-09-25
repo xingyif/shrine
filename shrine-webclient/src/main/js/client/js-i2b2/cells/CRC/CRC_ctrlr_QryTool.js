@@ -60,7 +60,8 @@ function QueryToolController() {
         $('crc.innerQueryPanel').show();
         this.panelControllers[0].refTitle.innerHTML =  'Group 1';
         $("defineTemporal-button").innerHTML = "Population in which events occur";
-        i2b2.CRC.view.QT.setQueryTiming(0);
+		i2b2.CRC.view.QT.setQueryTiming(0);
+		i2b2.SHRINE.plugin.enableRunQueryButton();
     }
 
 // ================================================================================================== //
@@ -345,14 +346,13 @@ function QueryToolController() {
 
 // ================================================================================================== //
     this.doQueryRun = function() {
-        // function to build and run query
-        if (i2b2.CRC.ctrlr.currentQueryStatus != false && i2b2.CRC.ctrlr.currentQueryStatus.isQueryRunning()) {
-            i2b2.CRC.ctrlr.currentQueryStatus.cancelQuery();
-            i2b2.CRC.ctrlr.currentQueryStatus = false;
-            //alert('A query is already running.\n Please wait until the currently running query has finished.');
-            return void(0);
-        }
 
+		if (i2b2.CRC.ctrlr.currentQueryStatus != false && i2b2.CRC.ctrlr.currentQueryStatus.isQueryRunning()) {
+            i2b2.CRC.ctrlr.currentQueryStatus.cancelQuery();
+			i2b2.CRC.ctrlr.currentQueryStatus = false;
+            return;
+        }
+		
         /*
         * Method added for edge case where
         * dragging previous query does not add items to panel.  Will occur when ontology
@@ -473,8 +473,7 @@ function QueryToolController() {
         //result_output = '<result_output priority_index="11" name="patient_count_xml"/>';
         params.psm_result_output = '<result_output_list>'+result_output+'</result_output_list>\n';
 
-        // create query object
-        $('runBoxText').innerHTML = "Cancel Query";
+		// create query object
         i2b2.CRC.ctrlr.currentQueryStatus = new i2b2.CRC.ctrlr.QueryStatus($('infoQueryStatusText'));
         i2b2.CRC.ctrlr.currentQueryStatus.startQuery(inQueryName, params);
     }

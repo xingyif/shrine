@@ -89,21 +89,28 @@ trait AbstractQepService[BaseResp <: BaseShrineResponse] extends Loggable {
       //read from the QEP database code here. Only broadcast if some result is in some sketchy state
       val resultsFromDb: Seq[QueryResult] = QepQueryDb.db.selectMostRecentQepResultsFor(networkId)
 
-      //If any query result was pending
-      val response = if (resultsFromDb.nonEmpty && (!resultsFromDb.exists(!_.statusType.isDone))) {
+      debug(s"result states are ${resultsFromDb.map(_.statusType).mkString(" ")}")
+
+      def shouldAskAdapters:Boolean = {
+        if (resultsFromDb.isEmpty) false //Don't ask if no results exist.
+        else
+          resultsFromDb.forall(_.statusType.isCrcCallCompleted) && //Be sure every CRC has replied to its adapter - hack to deal with this request going to all adapters
+            resultsFromDb.exists(_.statusType.crcPromisedToFinishAfterReply)
+      }
+
+      val response = if (!shouldAskAdapters) {
         debug(s"Using qep cached results for query $networkId")
         AggregatedReadInstanceResultsResponse(networkId, resultsFromDb).asInstanceOf[BaseResp]
       }
       else {
-        debug(s"Requesting results for $networkId from network")
+        info(s"Requesting results for $networkId from network")
         val response = doBroadcastQuery(request, new ReadInstanceResultsAggregator(networkId, false), shouldBroadcast,authResult)
 
         //put the new results in the database if we got what we wanted
         response match {
           case arirr: AggregatedReadInstanceResultsResponse => arirr.results.foreach(r => QepQueryDb.db.insertQueryResult(networkId, r))
-          case _ => //do nothing
+          case _ => warn(s"Response was a ${response.getClass.getSimpleName}, not a ${classOf[AggregatedReadInstanceResultsResponse].getSimpleName}: $response")
         }
-
         response
       }
       response
@@ -186,14 +193,10 @@ trait AbstractQepService[BaseResp <: BaseShrineResponse] extends Loggable {
         debug(s"Received $hubResponse for ${authorizedRequest.networkQueryId}")
           hubResponse match {
           case aggregated: AggregatedRunQueryResponse =>
-            info(s"Received ${aggregated.statusTypeName} for ${authorizedRequest.networkQueryId}")
+            info(s"Received ${aggregated.statusTypeName} and ignored results for ${authorizedRequest.networkQueryId}")
             blocking {
-              //here's the part that puts results in the QEP cache database
-              //todo once queries arrive at the QEP via a queue, no need to put them into the database. They can just fall on the floor
-              //todo remove with SHRINE-2149
+              //now that queries arrive at the QEP via a queue, no need to put them into the database. They can just fall on the floor
               //todo record the query's state in a way that will stop polling in 1.23. See SHRINE-2148
-              aggregated.results.foreach(QepQueryDb.db.insertQueryResult(authorizedRequest.networkQueryId, _))
-              debug(s"Recorded ${authorizedRequest.networkQueryId} aggregated response in the QEP database")
             }
           case _ => IncorrectResponseFromHub(hubResponse,authorizedRequest.networkQueryId)
           }

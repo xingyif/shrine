@@ -1,13 +1,23 @@
 package net.shrine.broadcaster
 
 import net.shrine.adapter.client.{AdapterClient, RemoteAdapterClient}
+import net.shrine.aggregation.RunQueryAggregator
 import net.shrine.broadcaster.dao.HubDao
 import net.shrine.client.TimeoutException
-import net.shrine.log.Loggable
-import net.shrine.protocol.{BroadcastMessage, FailureResult, RunQueryRequest, SingleNodeResult, Timeout}
+import net.shrine.log.{Log, Loggable}
+import net.shrine.messagequeueservice.{CouldNotCompleteMomTaskButOKToRetryException, MessageQueueService, Queue}
+import net.shrine.messagequeueservice.protocol.Envelope
+import net.shrine.problem.{AbstractProblem, ProblemSources}
+import net.shrine.protocol.{AggregatedRunQueryResponse, BaseShrineResponse, BroadcastMessage, FailureResult, QueryResult, RunQueryRequest, SingleNodeResult, Timeout}
+import net.shrine.status.protocol.IncrementalQueryResult
 
+import scala.collection.concurrent.TrieMap
 import scala.concurrent.Future
+import scala.concurrent.duration.Duration
 import scala.util.control.NonFatal
+import scala.util.{Failure, Success, Try}
+
+
 
 /**
  * @author clint
@@ -22,21 +32,60 @@ final case class AdapterClientBroadcaster(destinations: Set[NodeHandle], dao: Hu
   override def broadcast(message: BroadcastMessage): Multiplexer = {
     logOutboundIfNecessary(message)
 
+    //send back json containing just enough to fill a QueryResultRow
+    message.request match {
+      case runQueryRequest: RunQueryRequest =>
+        debug(s"RunQueryRequest's nodeId is ${runQueryRequest.nodeId}")
+        runQueryRequest.nodeId.fold {
+          error(s"Did not send to queue because nodeId is None")
+        } { nodeId => {
+            val hubWillSubmitStatuses = destinations.map { nodeHandle =>
+              IncrementalQueryResult(
+                runQueryRequest.networkQueryId,
+                nodeHandle.nodeId.name,
+                QueryResult.StatusType.HubWillSubmit.name,
+                s"The hub is about to submit query ${runQueryRequest.networkQueryId} to ${nodeHandle.nodeId.name}"
+              )
+            }.to[Seq]
+          val envelope = Envelope(IncrementalQueryResult.incrementalQueryResultsEnvelopeContentsType,IncrementalQueryResult.seqToJson(hubWillSubmitStatuses))
+          sendToQep(envelope,nodeId.name,s"Status update - the hub will submit the query to the adapters for ${runQueryRequest.networkQueryId}")
+        }
+      }
+      case _ => //don't care
+    }
+
     val multiplexer: Multiplexer = new BufferingMultiplexer(destinations.map(_.nodeId))
 
     for {
       nodeHandle <- destinations
-//todo for SHRINE-2120      shrineResponse: SingleNodeResult <- callAdapter(message, nodeHandle)
-      shrineResponse <- callAdapter(message, nodeHandle)
+      shrineResponse: SingleNodeResult <- callAdapter(message, nodeHandle)
     } {
       try {
         message.request match {
-          case rqr:RunQueryRequest => {
-            debug(s"RunQueryRequest's nodeId is ${rqr.nodeId}")
-            //todo SHRINE-2120 send to the QEP queue named nodeId
-            //todo send a shrineResponse.toXml .
-            //todo use the json envelope when you get to SHRINE-2177
-          }
+          case runQueryRequest:RunQueryRequest =>
+            debug(s"RunQueryRequest's nodeId is ${runQueryRequest.nodeId}")
+            runQueryRequest.nodeId.fold{
+              error(s"Did not send to queue because nodeId is None")
+            }{ nodeId =>
+
+              // make an AggregateRunQueryResponse from the SingleNodeResult
+              val aggregator = new RunQueryAggregator( //to convert the SingleNodeResult into an AggregateRunQueryResponse
+                runQueryRequest.networkQueryId,
+                runQueryRequest.authn.username,
+                runQueryRequest.authn.domain,
+                runQueryRequest.queryDefinition,
+                false
+              )
+
+              val response: BaseShrineResponse = aggregator.aggregate(Seq(shrineResponse),Seq.empty,message)
+
+              response match {
+                case runQueryResponse:AggregatedRunQueryResponse =>
+                  val envelope = Envelope(AggregatedRunQueryResponse.getClass.getSimpleName,runQueryResponse.toXmlString)
+                  sendToQep(envelope,nodeId.name,s"Result from ${runQueryResponse.results.head.description.get}")
+                case _ => error(s"response is not a AggregatedRunQueryResponse. It is a ${response.toString}")
+              }
+            }
           case _ => debug(s"Not a RunQueryRequest but a ${message.request.getClass.getSimpleName}.")
         }
 
@@ -45,6 +94,53 @@ final case class AdapterClientBroadcaster(destinations: Set[NodeHandle], dao: Hu
     }
 
     multiplexer
+  }
+
+  //todo clean up this cut/paste -remove if not used
+  def createQueue(nodeName:String):Queue = {
+
+    val pollDuration:Duration = Duration("10 seconds")
+
+    //Either come back with the right exception to try again, or a Queue
+    def tryToCreateQueue():Try[Queue] =
+      MessageQueueService.service.createQueueIfAbsent(nodeName)
+
+    def keepGoing(attempt:Try[Queue]):Try[Boolean] = attempt.transform({queue => Success(false)}, {
+      case okIsh: CouldNotCompleteMomTaskButOKToRetryException => Success(true)
+      case x => Failure(x)
+    })
+
+    //todo for fun figure out how to do this without the var. maybe a Stream ? SHRINE-2211
+    var lastAttempt:Try[Queue] = tryToCreateQueue()
+    while(keepGoing(lastAttempt).get) {
+      Log.debug(s"Last attempt to create a queue resulted in $lastAttempt. Sleeping $pollDuration before next attempt")
+      Thread.sleep(pollDuration.toMillis)
+      lastAttempt = tryToCreateQueue()
+    }
+    Log.info(s"Finishing createQueue with $lastAttempt")
+
+    lastAttempt.get
+  }
+
+  val namesToQueues: TrieMap[String, Queue] = TrieMap[String,Queue]()
+
+  private def sendToQep(envelope: Envelope,queueName:String,logDescription:String):Unit = {
+
+    def createThisQueue() = createQueue(queueName)
+
+    val queue = namesToQueues.getOrElseUpdate(queueName,createThisQueue)
+
+    MessageQueueService.service.send(envelope.toJson, queue).transform({itWorked =>
+      debug(s"$logDescription sent to queue")
+      Success(itWorked)
+    },{throwable: Throwable =>
+      throwable match
+      {
+        case NonFatal(x) =>ExceptionWhileSendingMessage(logDescription,queueName,x)
+        case _ => throw throwable
+      }
+      Failure(throwable)
+    })
   }
 
   private[broadcaster] def callAdapter(message: BroadcastMessage, nodeHandle: NodeHandle): Future[SingleNodeResult] = {
@@ -58,7 +154,6 @@ final case class AdapterClientBroadcaster(destinations: Set[NodeHandle], dao: Hu
       case NonFatal(e) =>
         error(s"Broadcasting to $nodeId failed with ", e)
         FailureResult(nodeId, e)
-
     }
   }
 
@@ -89,4 +184,13 @@ final case class AdapterClientBroadcaster(destinations: Set[NodeHandle], dao: Hu
       info(s"  ${handle.nodeId}: ${clientToString(handle.client)}")
     }
   }
+}
+
+case class ExceptionWhileSendingMessage(logDescription:String,queueName:String, x:Throwable) extends AbstractProblem(ProblemSources.Hub) {
+
+  override val throwable = Some(x)
+
+  override def summary: String = s"The Hub encountered an exception while trying to send a message to $queueName"
+
+  override def description: String = s"The Hub encountered an exception while trying to send a message about $logDescription from $queueName : ${x.getMessage}"
 }

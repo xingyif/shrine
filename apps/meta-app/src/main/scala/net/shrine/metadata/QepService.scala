@@ -5,13 +5,13 @@ import java.util.UUID
 import akka.actor.ActorSystem
 import net.shrine.audit.{NetworkQueryId, QueryName, Time}
 import net.shrine.authorization.steward.UserName
+import net.shrine.config.ConfigExtensions
 import net.shrine.i2b2.protocol.pm.User
 import net.shrine.log.Loggable
 import net.shrine.problem.{AbstractProblem, ProblemDigest, ProblemSources}
-import net.shrine.protocol.ResultOutputType
+import net.shrine.protocol.{QueryResult, ResultOutputType}
 import net.shrine.qep.querydb.{FullQueryResult, QepQuery, QepQueryBreakdownResultsRow, QepQueryDb, QepQueryDbChangeNotifier, QepQueryFlag}
 import net.shrine.source.ConfigSource
-import net.shrine.config.ConfigExtensions
 import rapture.json._
 import rapture.json.formatters.humanReadable
 import rapture.json.jsonBackends.jawn._
@@ -19,7 +19,7 @@ import spray.http.{StatusCode, StatusCodes}
 import spray.routing._
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.{blocking, Promise}
+import scala.concurrent.Promise
 import scala.concurrent.duration._
 import scala.language.postfixOps
 import scala.util.Try
@@ -36,7 +36,8 @@ import scala.util.control.NonFatal
 trait QepService extends HttpService with Loggable {
 
   def system: ActorSystem
-  val qepQueryDbChangeNotifier = QepQueryDbChangeNotifier(system)
+
+  val qepReceiver = QepReceiver //start the QepReceiver by bringing it into context
 
   val qepInfo =
     """
@@ -95,11 +96,12 @@ if not
       detach(){
         val troubleOrResultsRow = selectResultsRow(queryId, user)
         if (shouldRespondNow(deadline, afterVersion, troubleOrResultsRow)) {
+          debug(s"Will respond to request for $queryId immediately with $troubleOrResultsRow ")
           //bypass all the concurrent/interrupt business. Just reply.
           completeWithQueryResult(queryId,troubleOrResultsRow)
         }
         else {
-          debug(s"Creating promises to respond about $queryId with a version later than $afterVersion by $deadline ")
+          debug(s"No new data. Will create promise to respond about $queryId with a version later than $afterVersion by $deadline ")
           // the Promise used to respond
           val okToRespond = Promise[Either[(StatusCode,String),ResultsRow]]()
 
@@ -120,21 +122,25 @@ if not
           //Set up for an interrupt from new data
           val okToRespondIfNewData = Promise[Unit]()
           okToRespondIfNewData.future.transform({unit =>
+            debug(s"Checking for new data for $queryId")
+
             val latestResultsRow = selectResultsRow(queryId, user)
+
             if(shouldRespondNow(deadline,afterVersion,latestResultsRow)) {
-              okToRespond.tryComplete(Try(selectResultsRow(queryId, user)))
+              debug(s"Responding to new data for $queryId")
+              okToRespond.trySuccess(latestResultsRow)
             }
           },{x:Throwable =>  x match {case NonFatal(t) => ExceptionWhilePreparingTriggeredResponse(queryId,t)}
             x
           })
 
-          val requestId = UUID.randomUUID()
+          val httpRequestId = UUID.randomUUID()
           //put id -> okToRespondIfNewData in a map so that outside processes can trigger it
-          qepQueryDbChangeNotifier.putLongPollRequest(requestId,queryId,okToRespondIfNewData)
+          QepQueryDbChangeNotifier.putLongPollRequest(httpRequestId,queryId,okToRespondIfNewData)
 
           onSuccess(okToRespond.future){ latestResultsRow:Either[(StatusCode,String),ResultsRow] =>
             //clean up concurrent bits before responding
-            qepQueryDbChangeNotifier.removeLongPollRequest(requestId)
+            QepQueryDbChangeNotifier.removeLongPollRequest(httpRequestId)
             timeoutCanceller.cancel()
             completeWithQueryResult(queryId,latestResultsRow)
           }
@@ -154,11 +160,13 @@ if not
                        resultsRow:Either[(StatusCode,String),ResultsRow]
                       ):Boolean = {
     val currentTime = System.currentTimeMillis()
-    if (currentTime >= deadline) true
+    val shouldRespond =if (currentTime >= deadline) true
     else resultsRow.fold(
       {_._1 != StatusCodes.NotFound},
       {_.dataVersion > afterVersion}
     )
+    debug(s"Should respond to $resultsRow is $shouldRespond")
+    shouldRespond
   }
 
   def completeWithQueryResult(networkQueryId: NetworkQueryId,troubleOrResultsRow:Either[(StatusCode,String),ResultsRow]): Route = {
@@ -170,6 +178,7 @@ if not
       }
     }, { queryAndResults =>
       //everything is fine. Respond now.
+      debug(s"dataVersion in reply is ${queryAndResults.dataVersion}")
       val json: Json = Json(queryAndResults)
       val formattedJson: String = Json.format(json)(humanReadable())
       complete(formattedJson)
@@ -181,10 +190,15 @@ if not
       val queryOption: Option[QepQuery] = QepQueryDb.db.selectQueryById(queryId)
       queryOption.map { query: QepQuery =>
         if (user.sameUserAs(query.userName, query.userDomain)) {
+
+          debug(s"Query from the database is $query")
+
           val mostRecentQueryResults: Seq[Result] = QepQueryDb.db.selectMostRecentFullQueryResultsFor(queryId).map(Result(_))
           val flag = QepQueryDb.db.selectMostRecentQepQueryFlagFor(queryId).map(QueryFlag(_))
           val queryCell = QueryCell(query, flag)
           val queryAndResults = ResultsRow(queryCell, mostRecentQueryResults)
+
+          debug(s"queryAndResults for $queryId version ${queryAndResults.dataVersion} is $queryAndResults")
 
           Right(queryAndResults)
         }
@@ -317,7 +331,7 @@ case class Result (
   breakdowns: Seq[BreakdownResultsForType],
   problemDigest:Option[ProblemDigestForJson]
 ) {
-  def isComplete = true //todo until I get to SHRINE-2148
+  def isComplete = QueryResult.StatusType.valueOf(status).get.isCrcCallCompleted
 }
 
 object Result {

@@ -51,7 +51,7 @@ System.register(['aurelia-fetch-client', 'fetch'], function (_export, _context) 
                 QEPRepository.prototype.fetchPreviousQueries = function fetchPreviousQueries(limit) {
                     var skip = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
 
-                    return this.http.fetch('qep/queryResults?limit=' + limit + '&skip=' + skip).then(function (response) {
+                    return this.http.fetch('qep/queryResults?limit=' + limit + '&skip=' + skip, { method: 'get' }).then(function (response) {
                         return response.json();
                     }).catch(function (error) {
                         return error;
@@ -59,7 +59,7 @@ System.register(['aurelia-fetch-client', 'fetch'], function (_export, _context) 
                 };
 
                 QEPRepository.prototype.fetchNetworkId = function fetchNetworkId(queryName) {
-                    return this.http.fetch('qep/networkId?queryName=\'' + queryName + '\'').then(function (response) {
+                    return this.http.fetch('qep/networkId?queryName=\'' + queryName + '\'', { method: 'get' }).then(function (response) {
                         return response.json();
                     }).catch(function (error) {
                         return error;
@@ -67,7 +67,13 @@ System.register(['aurelia-fetch-client', 'fetch'], function (_export, _context) 
                 };
 
                 QEPRepository.prototype.fetchQuery = function fetchQuery(networkId, timeoutSeconds, afterVersion) {
-                    return this.http.fetch('qep/queryResult/' + networkId + '?timeoutSeconds=' + timeoutSeconds + '&afterVersion=' + afterVersion).then(function (response) {
+                    return this.http.fetch('qep/queryResult/' + networkId + '?timeoutSeconds=' + timeoutSeconds + '&afterVersion=' + afterVersion, { method: 'get' }).then(function (response) {
+                        var url = response.url,
+                            statusText = response.statusText,
+                            status = response.status,
+                            ok = response.ok;
+
+                        console.log('fetchQuery: ' + url + ' - ' + ok + ' - ' + status + ' - ' + statusText);
                         return response.json();
                     }).catch(function (error) {
                         return error;
@@ -75,7 +81,7 @@ System.register(['aurelia-fetch-client', 'fetch'], function (_export, _context) 
                 };
 
                 QEPRepository.prototype.fetchStewardEmail = function fetchStewardEmail() {
-                    return this.http.fetch('data?key=stewardEmail').then(function (response) {
+                    return this.http.fetch('data?key=stewardEmail', { method: 'get' }).then(function (response) {
                         return response.json();
                     }).then(function (address) {
                         return address.indexOf('\"') > 0 ? address.split('\"')[1] : address;

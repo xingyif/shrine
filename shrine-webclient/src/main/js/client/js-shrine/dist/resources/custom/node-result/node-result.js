@@ -1,7 +1,7 @@
-System.register(['aurelia-framework'], function (_export, _context) {
+System.register(['aurelia-framework', 'services/pub-sub'], function (_export, _context) {
     "use strict";
 
-    var customElement, bindable, _dec, _class, _desc, _value, _class2, _descriptor, _descriptor2, NodeResult;
+    var customElement, bindable, PubSub, _dec, _class, _desc, _value, _class2, _descriptor, _descriptor2, NodeResult;
 
     function _initDefineProp(target, property, descriptor, context) {
         if (!descriptor) return;
@@ -17,6 +17,30 @@ System.register(['aurelia-framework'], function (_export, _context) {
         if (!(instance instanceof Constructor)) {
             throw new TypeError("Cannot call a class as a function");
         }
+    }
+
+    function _possibleConstructorReturn(self, call) {
+        if (!self) {
+            throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+        }
+
+        return call && (typeof call === "object" || typeof call === "function") ? call : self;
+    }
+
+    function _inherits(subClass, superClass) {
+        if (typeof superClass !== "function" && superClass !== null) {
+            throw new TypeError("Super expression must either be null or a function, not " + typeof superClass);
+        }
+
+        subClass.prototype = Object.create(superClass && superClass.prototype, {
+            constructor: {
+                value: subClass,
+                enumerable: false,
+                writable: true,
+                configurable: true
+            }
+        });
+        if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
     }
 
     function _applyDecoratedDescriptor(target, property, decorators, descriptor, context) {
@@ -56,15 +80,45 @@ System.register(['aurelia-framework'], function (_export, _context) {
         setters: [function (_aureliaFramework) {
             customElement = _aureliaFramework.customElement;
             bindable = _aureliaFramework.bindable;
+        }, function (_servicesPubSub) {
+            PubSub = _servicesPubSub.PubSub;
         }],
         execute: function () {
-            _export('NodeResult', NodeResult = (_dec = customElement('node-result'), _dec(_class = (_class2 = function NodeResult() {
-                _classCallCheck(this, NodeResult);
+            _export('NodeResult', NodeResult = (_dec = customElement('node-result'), _dec(_class = (_class2 = function (_PubSub) {
+                _inherits(NodeResult, _PubSub);
 
-                _initDefineProp(this, 'result', _descriptor, this);
+                function NodeResult() {
+                    _classCallCheck(this, NodeResult);
 
-                _initDefineProp(this, 'queryName', _descriptor2, this);
-            }, (_descriptor = _applyDecoratedDescriptor(_class2.prototype, 'result', [bindable], {
+                    for (var _len = arguments.length, rest = Array(_len), _key = 0; _key < _len; _key++) {
+                        rest[_key] = arguments[_key];
+                    }
+
+                    var _this = _possibleConstructorReturn(this, _PubSub.call.apply(_PubSub, [this].concat(rest)));
+
+                    _initDefineProp(_this, 'result', _descriptor, _this);
+
+                    _initDefineProp(_this, 'queryName', _descriptor2, _this);
+
+                    return _this;
+                }
+
+                NodeResult.prototype.attached = function attached() {
+                    var status = this.result.status;
+                    this.component = './submitted.html';
+                    if (status === "ERROR") {
+                        this.component = './error.html';
+                    } else if ('COMPLETED,FINISHED'.includes(status)) {
+                        this.component = './patient-count.html';
+                    } else if ('PROCESSING,INCOMPLETE,COMPLETE'.includes(status)) {
+                        this.component = './status.html';
+                    } else if (status.toLowerCase().includes('queue')) {
+                        this.component = './queued.html';
+                    }
+                };
+
+                return NodeResult;
+            }(PubSub), (_descriptor = _applyDecoratedDescriptor(_class2.prototype, 'result', [bindable], {
                 enumerable: true,
                 initializer: null
             }), _descriptor2 = _applyDecoratedDescriptor(_class2.prototype, 'queryName', [bindable], {

@@ -1,7 +1,7 @@
 System.register(['aurelia-event-aggregator', 'repository/qep.repository', './shrine.messages'], function (_export, _context) {
     "use strict";
 
-    var EventAggregator, QEPRepository, commands, notifications, _extends, _class, _temp, isBusy, QueryStatusModel;
+    var EventAggregator, QEPRepository, commands, notifications, _extends, _class, _temp, QueryStatusModel;
 
     function _classCallCheck(instance, Constructor) {
         if (!(instance instanceof Constructor)) {
@@ -33,14 +33,6 @@ System.register(['aurelia-event-aggregator', 'repository/qep.repository', './shr
                 return target;
             };
 
-            isBusy = function () {
-                var inProgress = false;
-                return function (v) {
-                    inProgress = v === undefined ? inProgress : v ? true : false;
-                    return inProgress;
-                };
-            }();
-
             _export('QueryStatusModel', QueryStatusModel = (_temp = _class = function QueryStatusModel(evtAgg, qep, notifications) {
                 _classCallCheck(this, QueryStatusModel);
 
@@ -50,17 +42,18 @@ System.register(['aurelia-event-aggregator', 'repository/qep.repository', './shr
                 var publishQuery = function publishQuery(model) {
                     return evtAgg.publish(notifications.shrine.queryReceived, model);
                 };
-                var logError = function logError(error) {
-                    return console.log('ERROR: ' + error);
-                };
                 var toModel = function toModel(data) {
                     return new Promise(function (resolve, reject) {
-                        var nodes = [].concat(data.results);
-                        var dataVersion = data.dataVersion;
-                        var complete = nodes.length > 0 && nodes.filter(function (n) {
-                            return 'ERROR,COMPLETED,FINISHED'.includes(n.status);
-                        }).length === nodes.length;
-                        var query = _extends({}, data.query, { complete: complete });
+                        var results = data.results,
+                            dataVersion = data.dataVersion,
+                            queryData = data.query;
+
+                        var sort = function sort(a, b) {
+                            return a.adapterNode.toUpperCase() <= b.adapterNode.toUpperCase() ? -1 : 1;
+                        };
+                        var nodes = results.length === 0 ? [] : [].concat(results.sort(sort));
+                        var complete = data.isComplete;
+                        var query = _extends({}, queryData, { complete: complete });
                         resolve({
                             query: query,
                             nodes: nodes,
@@ -81,7 +74,7 @@ System.register(['aurelia-event-aggregator', 'repository/qep.repository', './shr
                     qep.fetchQuery(d.networkId, d.timeoutSeconds, d.dataVersion).then(function (result) {
                         return toModel(result);
                     }).catch(function (error) {
-                        return logError(error);
+                        return console.log('ERROR: ' + error);
                     }).then(function (model) {
                         return publishQuery(model);
                     });

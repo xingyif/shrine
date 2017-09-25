@@ -1,26 +1,18 @@
 import {EventAggregator} from 'aurelia-event-aggregator';
 import {QEPRepository} from 'repository/qep.repository';
 import {commands, notifications} from './shrine.messages';
-const isBusy = (() => {
-    let inProgress = false; 
-    return v => {
-        inProgress = v === undefined? inProgress: 
-            v? true : false;
-        return inProgress;
-    }; 
-})();
 export class QueryStatusModel {
     static inject = [EventAggregator, QEPRepository, notifications];
     constructor(evtAgg, qep, notifications) {
         const publishNetworkId = id => evtAgg.publish(notifications.i2b2.networkIdReceived, id);
         const publishQuery = model => evtAgg.publish(notifications.shrine.queryReceived, model);
-        const logError = error => console.log(`ERROR: ${error}`);
         const toModel = data => {
-            return new Promise((resolve, reject) => {                
-                const nodes = [...data.results];
-                const dataVersion = data.dataVersion;
-                const complete = nodes.length > 0 && nodes.filter(n => 'ERROR,COMPLETED,FINISHED'.includes(n.status)).length === nodes.length;
-                const query = {...data.query, ...{complete: complete}};
+            return new Promise((resolve, reject) => {   
+                const {results, dataVersion, query: queryData} = data;
+                const sort = (a, b) => a.adapterNode.toUpperCase() <= b.adapterNode.toUpperCase()? -1 : 1;
+                const nodes = results.length === 0? [] : [...results.sort(sort)];
+                const complete = data.isComplete;
+                const query = {...queryData, ...{complete}};
                 resolve({
                    query,
                    nodes,
@@ -37,7 +29,7 @@ export class QueryStatusModel {
         const loadQuery = (d) => {           
             qep.fetchQuery(d.networkId, d.timeoutSeconds, d.dataVersion)
             .then(result => toModel(result))
-            .catch(error => logError(error))
+            .catch(error => console.log(`ERROR: ${error}`))
             .then(model => publishQuery(model));
         }
            

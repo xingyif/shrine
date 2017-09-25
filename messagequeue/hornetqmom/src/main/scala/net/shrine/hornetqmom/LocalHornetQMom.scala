@@ -1,127 +1,60 @@
 package net.shrine.hornetqmom
 
+import java.util.concurrent.{BlockingDeque, LinkedBlockingDeque, TimeUnit}
+
 import com.typesafe.config.Config
-import net.shrine.messagequeueservice.{Message, MessageQueueService, NoSuchQueueExistsInHornetQ, Queue}
+import net.shrine.config.ConfigExtensions
+import net.shrine.log.Log
+import net.shrine.messagequeueservice.{Message, MessageQueueService, Queue}
 import net.shrine.source.ConfigSource
-import org.hornetq.api.core.TransportConfiguration
-import org.hornetq.api.core.client.{ClientConsumer, ClientMessage, ClientProducer, ClientSession, ClientSessionFactory, HornetQClient, ServerLocator}
-import org.hornetq.api.core.management.HornetQServerControl
-import org.hornetq.core.config.impl.ConfigurationImpl
-import org.hornetq.core.remoting.impl.invm.{InVMAcceptorFactory, InVMConnectorFactory}
-import org.hornetq.core.server.{HornetQServer, HornetQServers}
 
 import scala.collection.concurrent.{TrieMap, Map => ConcurrentMap}
 import scala.collection.immutable.Seq
 import scala.concurrent.blocking
 import scala.concurrent.duration.Duration
-import scala.util.Try
+import scala.util.{Success, Try}
 /**
   * This object is the local version of the Message-Oriented Middleware API, which uses HornetQ service
+  *
   * @author david
   * @since 7/18/17
   */
 
 object LocalHornetQMom extends MessageQueueService {
 
-  val config: Config = ConfigSource.config.getConfig("shrine.messagequeue.hornetq")
-
-  // todo use the config to set everything needed here that isn't hard-coded.
-  val hornetQConfiguration = new ConfigurationImpl()
-  // todo from config? What is the journal file about? If temporary, use a Java temp file.
-  hornetQConfiguration.setJournalDirectory("target/data/journal")
-  // todo want this. There are likely many other config bits
-  hornetQConfiguration.setPersistenceEnabled(false)
-  // todo maybe want this
-  hornetQConfiguration.setSecurityEnabled(false)
-  // todo probably just want the InVM version, but need to read up on options
-  hornetQConfiguration.getAcceptorConfigurations.add(new TransportConfiguration(classOf[InVMAcceptorFactory].getName))
-
-  // Create and start the server
-  val hornetQServer: HornetQServer = HornetQServers.newHornetQServer(hornetQConfiguration)
-  hornetQServer.start()
-
-  val serverLocator: ServerLocator = HornetQClient.createServerLocatorWithoutHA(new TransportConfiguration(classOf[InVMConnectorFactory].getName))
-
-  val sessionFactory: ClientSessionFactory = serverLocator.createSessionFactory()
-
-  //arguments are boolean xa, boolean autoCommitSends, boolean autoCommitAcks .
-  val session: ClientSession = sessionFactory.createSession(false, true, true)
-  session.start()
-
-  //keep a map of live queues to ClientConsumers to provide a path for completing messages
-  val queuesToConsumers: ConcurrentMap[Queue, ClientConsumer] = TrieMap.empty
-
-  val propName = "contents"
+  val configPath = "shrine.messagequeue.blockingq"
+  val config = ConfigSource.config.getConfig(configPath)
 
   /**
     * Use HornetQMomStopper to stop the hornetQServer without unintentially starting it
     */
-  // todo drop this into a try
   private[hornetqmom] def stop() = {
-    queuesToConsumers.values.foreach(_.close())
-
-    session.close()
-    sessionFactory.close()
-    hornetQServer.stop()
+    //todo use to turn off the scheduler for redelivery and time to live SHRINE-2309
   }
+
+  //todo key should be a Queue instead of a String SHRINE-2308
+  //todo rename
+  val namesToShadowQueues:ConcurrentMap[String,BlockingDeque[String]] = TrieMap.empty
 
   //queue lifecycle
-  def createQueueIfAbsent(queueName: String): Try[Queue] = {
-    val proposedQueue: Queue = Queue(queueName)
-    for {
-      serverControl: HornetQServerControl <- Try{ hornetQServer.getHornetQServerControl }
-      createQueueInHornetQ <- Try {
-        if (!this.queues.get.map(_.name).contains(proposedQueue.name)) {
-          serverControl.createQueue(proposedQueue.name, proposedQueue.name, true)
-        }
-      }
-      useNewQueueToUpdateMapTry: Queue <- Try {
-        queuesToConsumers.getOrElseUpdate(proposedQueue, { session.createConsumer(proposedQueue.name) })
-        proposedQueue
-      }
-    } yield useNewQueueToUpdateMapTry
+  def createQueueIfAbsent(queueName: String): Try[Queue] = Try {
+    namesToShadowQueues.getOrElseUpdate(queueName, new LinkedBlockingDeque[String]())
+    Queue(queueName)
   }
 
-  def deleteQueue(queueName: String): Try[Unit] = {
-    val proposedQueue: Queue = Queue(queueName)
-    for {
-      deleteTry <- Try {
-        queuesToConsumers.remove(proposedQueue).foreach(_.close())
-        val serverControl: HornetQServerControl = hornetQServer.getHornetQServerControl
-        serverControl.destroyQueue(proposedQueue.name)
-      }
-    } yield deleteTry
+  def deleteQueue(queueName: String): Try[Unit] = Try{
+    namesToShadowQueues.remove(queueName).getOrElse(throw new IllegalStateException(s"$queueName not found")) //todo this is actually fine - the state we want SHRINE-2308
   }
 
-  override def queues: Try[Seq[Queue]] = {
-    for {
-      hornetQTry: HornetQServerControl <- Try {
-        hornetQServer.getHornetQServerControl
-      }
-      getQueuesTry: Seq[Queue] <- Try {
-        val queueNames: Array[String] = hornetQTry.getQueueNames
-        queueNames.map(Queue(_)).to[Seq]
-      }
-    } yield getQueuesTry
+  override def queues: Try[Seq[Queue]] = Try{
+    namesToShadowQueues.keys.map(Queue(_))(collection.breakOut)
   }
 
   //send a message
-  def send(contents: String, to: Queue): Try[Unit] = {
-    for {
-      sendTry <- Try {
-        // check if the queue exists first
-        if (!this.queues.get.map(_.name).contains(to.name)) {
-          throw NoSuchQueueExistsInHornetQ(to)
-        }
-      }
-      producer: ClientProducer <- Try{ session.createProducer(to.name) }
-      message <- Try{ session.createMessage(true) }
-      constructMessage <- Try { message.putStringProperty(propName, contents) }
-      sendMessage <- Try {
-        producer.send(message)
-        producer.close()
-      }
-    } yield sendMessage
+  def send(contents: String, to: Queue): Try[Unit] = Try{
+    val queue = namesToShadowQueues.getOrElse(to.name,throw new IllegalStateException(s"queue $to not found")) //todo better error handling SHRINE-2308
+    queue.addLast(contents)
+    Log.debug(s"After send to ${to.name} - shadowQueue ${queue.size} $queue")
   }
 
   //receive a message
@@ -131,31 +64,20 @@ object LocalHornetQMom extends MessageQueueService {
     *
     * @return Some message before the timeout, or None
     */
-  def receive(from: Queue, timeout: Duration): Try[Option[Message]] = {
-    for {
-    //todo handle the case where either stop or close has been called on something gracefully
-      messageConsumer: ClientConsumer <- Try {
-        if (!queuesToConsumers.contains(from)) {
-          throw new NoSuchElementException(s"Given Queue ${from.name} does not exist in HornetQ server! Please create the queue first!")
-        }
-        queuesToConsumers(from)
-      }
-      message: Option[Message] <- Try {
-        blocking {
-          val messageReceived: Option[ClientMessage] = Option(messageConsumer.receive(timeout.toMillis))
-          messageReceived.map(Message(_))
-        }
-      }
-    } yield message
+  def receive(from: Queue, timeout: Duration): Try[Option[Message]] = Try {
+    val shadowQueue = namesToShadowQueues.getOrElse(from.name,throw new IllegalStateException(s"Queue $from not found")) //todo better exception SHRINE-2308
+    Log.debug(s"Before receive from ${from.name} - shadowQueue ${shadowQueue.size} ${shadowQueue.toString}")
+    blocking {
+      val shadowMessage: Option[String] = Option(shadowQueue.pollFirst(timeout.toMillis, TimeUnit.MILLISECONDS))
+      shadowMessage.map(SimpleMessage(_))
+    }
   }
 
-  //todo dead letter queue for all messages. See http://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/examples-sqs-dead-letter-queues.html
+  //todo dead letter queue for all messages SHRINE-2261
 
-  //complete a message
-  override def completeMessage(message: Message): Try[Unit] = {
-    for {
-      completeMessageTry <- Try { message.complete() }
-    } yield completeMessageTry
+  val unit = ()
+  case class SimpleMessage(contents:String) extends Message {
+    override def complete(): Try[Unit] = Success(unit) //todo fill this in when you build out complete SHRINE-2309
   }
 
 }
@@ -163,16 +85,10 @@ object LocalHornetQMom extends MessageQueueService {
 /**
   * If the configuration is such that HornetQ should have been started use this object to stop it
   */
-//todo is this a good way to write this code?
 object LocalHornetQMomStopper {
 
   def stop(): Unit = {
-    //todo fill in as part of SHIRINE-2128
-    for {
-      config: Config <- Try {
-        ConfigSource.config.getConfig("shrine.messagequeue.hornetq")
-      }
-    } yield config
+    //a lot less interesting without hornetq - not a big deal to stop schedulers that were never started , maybe nothing to do.
     LocalHornetQMom.stop()
   }
 

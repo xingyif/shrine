@@ -16,7 +16,7 @@ import slick.driver.JdbcProfile
 
 import scala.collection.immutable.Iterable
 import scala.concurrent.duration.{Duration, DurationInt}
-import scala.concurrent.{Await, Future, blocking}
+import scala.concurrent.{Await, Future}
 import scala.language.postfixOps
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.control.NonFatal
@@ -38,14 +38,30 @@ case class QepQueryDb(schemaDef:QepQuerySchema,dataSource: DataSource,timeout:Du
 
   def dropTables() = schemaDef.dropTables(database)
 
-  def dbRun[R](action: DBIOAction[R, NoStream, Nothing]):R = {
-    val future: Future[R] = database.run(action)
+  def run[R](dbio: DBIOAction[R, NoStream, _]): Future[R] = {
+    database.run(dbio)
+  }
+
+  def runBlocking[R](dbio: DBIOAction[R, NoStream, _], timeout: Duration = timeout): R = {
     try {
-        Await.result(future, timeout)
-    }
-    catch {
+      Await.result(this.run(dbio), timeout)
+    } catch {
       case tx:TimeoutException => throw TimeoutInDbIoActionException(dataSource, timeout, tx)
-      case NonFatal(x) => throw CouldNotRunDbIoActionException(dataSource,x)
+      case NonFatal(x) => throw CouldNotRunDbIoActionException(dataSource, x)
+    }
+  }
+
+
+  def runTransaction[R](dbio: DBIOAction[R, NoStream, _]): Future[R] = {
+    database.run(dbio.transactionally)
+  }
+
+  def runTransactionBlocking[R](dbio: DBIOAction[R, NoStream, _], timeout: Duration = timeout): R = {
+    try {
+      Await.result(this.run(dbio.transactionally), timeout)
+    } catch {
+      case tx:TimeoutException => throw TimeoutInDbIoActionException(dataSource, timeout, tx)
+      case NonFatal(x) => throw CouldNotRunDbIoActionException(dataSource, x)
     }
   }
 
@@ -56,11 +72,11 @@ case class QepQueryDb(schemaDef:QepQuerySchema,dataSource: DataSource,timeout:Du
   }
 
   def insertQepQuery(qepQuery: QepQuery):Unit = {
-    dbRun(allQepQueryQuery += qepQuery)
+    runBlocking(allQepQueryQuery += qepQuery)
   }
 
   def selectAllQepQueries:Seq[QepQuery] = {
-    dbRun(mostRecentVisibleQepQueries.result)
+    runBlocking(mostRecentVisibleQepQueries.result)
   }
 
   def selectPreviousQueries(request: ReadPreviousQueriesRequest):ReadPreviousQueriesResponse = {
@@ -78,11 +94,11 @@ case class QepQueryDb(schemaDef:QepQuerySchema,dataSource: DataSource,timeout:Du
   def countPreviousQueriesByUserAndDomain(userName: UserName, domain: String):Int = {
     val q = mostRecentVisibleQepQueries.filter(r => r.userName === userName && r.userDomain === domain)
 
-    dbRun(q.size.result)
+    runBlocking(q.size.result)
   }
 
   def selectQueryById(networkQueryId: NetworkQueryId): Option[QepQuery] =
-    dbRun(mostRecentVisibleQepQueries.filter(_.networkId === networkQueryId).result).lastOption
+    runBlocking(mostRecentVisibleQepQueries.filter(_.networkId === networkQueryId).result).lastOption
 
   def selectPreviousQueriesByUserAndDomain(userName: UserName, domain: String, skip:Option[Int] = None, limit:Option[Int] = None):Seq[QepQuery] = {
 
@@ -92,7 +108,7 @@ case class QepQueryDb(schemaDef:QepQuerySchema,dataSource: DataSource,timeout:Du
     val qWithSkip = skip.fold(q)(q.drop)
     val qWithLimit = limit.fold(qWithSkip)(qWithSkip.take)
 
-    val result = dbRun(qWithLimit.result)
+    val result = runBlocking(qWithLimit.result)
 
     debug(s"finished selectPreviousQueriesByUserAndDomain with $result")
 
@@ -102,7 +118,7 @@ case class QepQueryDb(schemaDef:QepQuerySchema,dataSource: DataSource,timeout:Du
   def renamePreviousQuery(request:RenameQueryRequest):Unit = {
 
     val networkQueryId = request.networkQueryId
-    dbRun(
+    runTransactionBlocking(
       for {
         queryResults <- mostRecentVisibleQepQueries.filter(_.networkId === networkQueryId).result
         _ <- allQepQueryQuery ++= queryResults.map(_.copy(queryName = request.queryName,changeDate = System.currentTimeMillis()))
@@ -113,7 +129,7 @@ case class QepQueryDb(schemaDef:QepQuerySchema,dataSource: DataSource,timeout:Du
   def markDeleted(request:DeleteQueryRequest):Unit = {
 
     val networkQueryId = request.networkQueryId
-    dbRun(
+    runTransactionBlocking(
       for {
         queryResults <- mostRecentVisibleQepQueries.filter(_.networkId === networkQueryId).result
         _ <- allQepQueryQuery ++= queryResults.map(_.copy(deleted = true,changeDate = System.currentTimeMillis()))
@@ -130,20 +146,20 @@ case class QepQueryDb(schemaDef:QepQuerySchema,dataSource: DataSource,timeout:Du
   }
 
   def insertQepQueryFlag(qepQueryFlag: QepQueryFlag):Unit = {
-    dbRun(allQepQueryFlags += qepQueryFlag)
+    runBlocking(allQepQueryFlags += qepQueryFlag)
   }
 
   def selectMostRecentQepQueryFlagsFor(networkIds:Set[NetworkQueryId]):Map[NetworkQueryId,QepQueryFlag] = {
-    val flags:Seq[QepQueryFlag] = dbRun(mostRecentQueryFlags.filter(_.networkId inSet networkIds).result)
+    val flags:Seq[QepQueryFlag] = runBlocking(mostRecentQueryFlags.filter(_.networkId inSet networkIds).result)
 
     flags.map(x => x.networkQueryId -> x).toMap
   }
 
   def selectMostRecentQepQueryFlagFor(networkQueryId: NetworkQueryId): Option[QepQueryFlag] =
-    dbRun(mostRecentQueryFlags.filter(_.networkId === networkQueryId).result).lastOption
+    runBlocking(mostRecentQueryFlags.filter(_.networkId === networkQueryId).result).lastOption
 
   def insertQepResultRow(qepQueryRow:QueryResultRow) = {
-    dbRun(allQueryResultRows += qepQueryRow)
+    runBlocking(allQueryResultRows += qepQueryRow)
   }
 
   def insertQueryResult(networkQueryId:NetworkQueryId,result:QueryResult) = {
@@ -154,7 +170,7 @@ case class QepQueryDb(schemaDef:QepQuerySchema,dataSource: DataSource,timeout:Du
     val breakdowns: Iterable[QepQueryBreakdownResultsRow] = result.breakdowns.flatMap(QepQueryBreakdownResultsRow.breakdownRowsFor(networkQueryId,adapterNode,result.resultId,_))
     val problem: Seq[QepProblemDigestRow] = result.problemDigest.map(p => QepProblemDigestRow(networkQueryId,adapterNode,p.codec,p.stampText,p.summary,p.description,p.detailsXml.toString,System.currentTimeMillis())).to[Seq]
 
-    dbRun(
+    runTransactionBlocking(
       for {
       _ <- allQueryResultRows += queryResultRow
       _ <- allBreakdownResultsRows ++= breakdowns
@@ -163,14 +179,22 @@ case class QepQueryDb(schemaDef:QepQuerySchema,dataSource: DataSource,timeout:Du
     )
   }
 
-//todo only used in tests. Is that OK?
+  def insertQueryResultRow(queryResultRow: QueryResultRow) = {
+    runBlocking(allQueryResultRows += queryResultRow)
+  }
+
+  def insertQueryResultRows(queryResultRows: Seq[QueryResultRow]) = {
+    runBlocking(allQueryResultRows ++= queryResultRows)
+  }
+
+  //todo only used in tests. Is that OK?
   def selectMostRecentQepResultRowsFor(networkId:NetworkQueryId): Seq[QueryResultRow] = {
-    dbRun(mostRecentQueryResultRows.filter(_.networkQueryId === networkId).result)
+    runBlocking(mostRecentQueryResultRows.filter(_.networkQueryId === networkId).result)
   }
 
   def selectMostRecentFullQueryResultsFor(networkId:NetworkQueryId): Seq[FullQueryResult] = {
 
-    val (queryResults, breakdowns,problems) = dbRun(
+    val (queryResults, breakdowns,problems) = runTransactionBlocking(
       for {
         queryResults <- mostRecentQueryResultRows.filter(_.networkQueryId === networkId).result
         breakdowns: Seq[QepQueryBreakdownResultsRow] <- mostRecentBreakdownResultsRows.filter(_.networkQueryId === networkId).result
@@ -201,15 +225,15 @@ case class QepQueryDb(schemaDef:QepQuerySchema,dataSource: DataSource,timeout:Du
   }
 
   def insertQueryBreakdown(breakdownResultsRow:QepQueryBreakdownResultsRow) = {
-    dbRun(allBreakdownResultsRows += breakdownResultsRow)
+    runBlocking(allBreakdownResultsRows += breakdownResultsRow)
   }
 
   def selectAllBreakdownResultsRows: Seq[QepQueryBreakdownResultsRow] = {
-    dbRun(allBreakdownResultsRows.result)
+    runBlocking(allBreakdownResultsRows.result)
   }
 
   def selectDistinctAdaptersWithResults:Seq[String] = {
-   dbRun(allQueryResultRows.map(_.adapterNode).distinct.result).sorted
+   runBlocking(allQueryResultRows.map(_.adapterNode).distinct.result).sorted
   }
 }
 
@@ -543,7 +567,7 @@ object QueryResultRow extends ((Long,NetworkQueryId,Long,String,Option[ResultOut
       resultId = result.resultId,
       networkQueryId = networkQueryId,
       instanceId = result.instanceId,
-      adapterNode = result.description.getOrElse(s"$result has None in its description field, not a name of an adapter node."),
+      adapterNode = result.description.getOrElse(s"$result has None in its description field, instead of the name of an adapter node."),
       resultType = result.resultType,
       size = result.setSize,
       startDate = result.startDate.map(_.toGregorianCalendar.getTimeInMillis),

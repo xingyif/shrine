@@ -4,23 +4,28 @@
             ${result.adapterNode}
         </div>
         <div style="flex: 1">
-            <span if.one-way="'STATUS,FINISHED'.includes(result.status)" style="display: inline-block; color: #0000dd">
-                  &nbsp; <span style="color: black">COMPLETED</span>
+            <span if.one-way="'STATUS,FINISHED,COMPLETE'.includes(result.status)" style="display: inline-block; color: #0000dd">
+                  <span style="color: black">COMPLETED</span>
+            </span>
+            <span if.one-way="'PROCESSING,INCOMPLETE'.includes(result.status)" style="display: inline-block; color: #0000dd">
+                  <span style="color: black">${result.status}</span>
+            </span>
+            <span if.one-way="result.status.toLowerCase().includes('queue')">
+                <span style="color: black">QUEUED</span>
             </span>
             <span>
-                &nbsp;
                 <a if.one-way="result.status === 'ERROR'" class="query-error-anchor" 
-                href="#" style="color:#ff0000" click.delegate="publish(commands.i2b2.showError, result)">      
+                href="#" style="color:#ff0000" click.delegate="publish(commands.i2b2.showError, result)">
                     ERROR
                 </a>
             </span>
-            <span if.one-way="!'ERROR,COMPLETED,FINISHED'.includes(result.status)">
-                &nbsp; <span style="color: #00dd00">RUNNING</span>
+            <span if.one-way="result.status.toLowerCase().includes('submit')">
+                <span style="color: #00FF00">SUBMITTED</span>
             </span>
         </div>
         <div style="flex:1">
-             <span if.one-way="'STATUS,FINISHED'.includes(result.status)" style="display: inline-block; color: #0000dd">
-                &nbsp; ${result.count | count}
+             <span if.one-way="'STATUS,FINISHED,COMPLETE'.includes(result.status)" style="display: inline-block; color: #0000dd">
+                Patient Count:&nbsp;${result.count | count}
             </span>
         </div>
 </template>

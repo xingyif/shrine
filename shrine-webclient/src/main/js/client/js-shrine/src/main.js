@@ -1,3 +1,4 @@
+import {stringIncludesPolyfill} from './includes-polyfill';
 export function configure(aurelia) {
     aurelia.use
         .standardConfiguration()
@@ -6,6 +7,7 @@ export function configure(aurelia) {
         .feature('views');
 
     aurelia.start()
+        .then(stringIncludesPolyfill)
         .then(() => aurelia.setRoot('shell'));
 }
 

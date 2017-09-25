@@ -56,6 +56,11 @@ System.register(['ramda', './container'], function (_export, _context) {
                         return v.exportQueryResult.subscribe(f);
                     });
                 };
+                I2B2Service.prototype.onClearQuery = function (f) {
+                    return events(ctx).map(function (v) {
+                        return v.clearQuery.subscribe(f);
+                    });
+                };
                 I2B2Service.prototype.loadHistory = function () {
                     return crc(ctx).map(function (v) {
                         return v.view.history.doRefreshAll();
@@ -68,7 +73,7 @@ System.register(['ramda', './container'], function (_export, _context) {
                 };
                 I2B2Service.prototype.errorDetail = function (d) {
                     return shrine(ctx).map(function (v) {
-                        return v.plugin.errorDetail(d);
+                        v.plugin.errorDetail(d);
                     });
                 };
                 I2B2Service.prototype.renameQuery = function (id) {

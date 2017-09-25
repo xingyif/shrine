@@ -37,8 +37,6 @@ object KeyStoreDescriptorParser extends Loggable {
 
     def getTrustModel: TrustModel = {
 
-      println(qepConfig)
-
       if (!qepConfig.getBoolean(trustModel))
         PeerToPeerModel
       else if (hubConfig.hasPath(isHub))

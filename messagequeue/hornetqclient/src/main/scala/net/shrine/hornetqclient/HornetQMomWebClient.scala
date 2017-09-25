@@ -1,19 +1,23 @@
 package net.shrine.hornetqclient
 
-import akka.actor.{Actor, ActorRef, ActorRefFactory, ActorSystem, Props}
+import java.util.UUID
+
+import akka.actor.ActorSystem
+import net.shrine.config.ConfigExtensions
+import net.shrine.hornetqmom.MessageContainer
 import net.shrine.log.Loggable
-import net.shrine.messagequeueservice.{Message, MessageQueueService, MessageSerializer, Queue, QueueSerializer}
+import net.shrine.messagequeueservice.{CouldNotCompleteMomTaskButOKToRetryException, Message, MessageQueueService, Queue}
 import net.shrine.source.ConfigSource
+import org.json4s.NoTypeHints
 import org.json4s.native.Serialization
-import org.json4s.native.Serialization.{read, write}
-import org.json4s.{Formats, NoTypeHints}
-import spray.http.{HttpEntity, HttpMethods, HttpRequest, HttpResponse}
+import org.json4s.native.Serialization.read
+import spray.http.{HttpEntity, HttpMethods, HttpRequest, HttpResponse, StatusCodes}
 
 import scala.collection.immutable.Seq
-import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.Duration
-import scala.util.Try
+import scala.language.postfixOps
 import scala.util.control.NonFatal
+import scala.util.{Failure, Success, Try}
 
 /**
   * A simple HornetQMomWebClient that uses HornetQMomWebApi to createQueue,
@@ -27,114 +31,171 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
   // we need an ActorSystem to host our application in
   implicit val system: ActorSystem = ActorSystem("momServer", ConfigSource.config)
 
+  val configPath = "shrine.messagequeue.blockingq"
+
+  def webClientConfig = ConfigSource.config.getConfig("shrine.messagequeue.blockingq")
+
+  //todo Yifan's work changes the name to webClientTimeOut
+  val webClientTimeOut: Duration = webClientConfig.get("webClientTimeOutSecond", Duration(_))
   // TODO in SHRINE-2167: Extract and share a SHRINE actor system
   // the service actor replies to incoming HttpRequests
-//  implicit val serviceActor: ActorRef = startServiceActor()
+  //  implicit val serviceActor: ActorRef = startServiceActor()
 
-//  def startActorSystem(): ActorSystem = try {
-//    val actorSystem: ActorSystem = ActorSystem("momServer", ConfigSource.config)
-//    info(s"Starting ActorSystem: ${actorSystem.name} for HornetQMomWebClient at time: ${actorSystem.startTime}")
-//    actorSystem
-//  } catch {
-//    case NonFatal(x) => {
-//      debug(s"NonFatalException thrown while starting ActorSystem for HornetQMomWebClient: ${x.getMessage}")
-//      throw x
-//    }
-//    case x: ExceptionInInitializerError => {
-//      debug(s"ExceptionInInitializerError thrown while starting ActorSystem for HornetQMomWebClient: ${x.getMessage}")
-//      throw x
-//    }
-//  }
-//
-//  def startServiceActor(): ActorRef = try {
-//    // the service actor replies to incoming HttpRequests
-//    val actor: ActorRef = system.actorOf(Props[HornetQMomWebClientServiceActor])
-//    info(s"Starting ServiceActor: ${actor.toString()} for HornetQMomWebClient")
-//    actor
-//  }
-//  catch {
-//    case NonFatal(x) => {
-//      debug(s"NonFatalException thrown while starting ServiceActor for HornetQMomWebClient: ${x.getMessage}")
-//      throw x
-//    }
-//    case x: ExceptionInInitializerError => {
-//      debug(s"ExceptionInInitializerError thrown while starting ServiceActor for HornetQMomWebClient: ${x.getMessage}")
-//      throw x
-//    }
-//  }
+  //  def startActorSystem(): ActorSystem = try {
+  //    val actorSystem: ActorSystem = ActorSystem("momServer", ConfigSource.config)
+  //    info(s"Starting ActorSystem: ${actorSystem.name} for HornetQMomWebClient at time: ${actorSystem.startTime}")
+  //    actorSystem
+  //  } catch {
+  //    case NonFatal(x) => {
+  //      debug(s"NonFatalException thrown while starting ActorSystem for HornetQMomWebClient: ${x.getMessage}")
+  //      throw x
+  //    }
+  //    case x: ExceptionInInitializerError => {
+  //      debug(s"ExceptionInInitializerError thrown while starting ActorSystem for HornetQMomWebClient: ${x.getMessage}")
+  //      throw x
+  //    }
+  //  }
+  //
+  //  def startServiceActor(): ActorRef = try {
+  //    // the service actor replies to incoming HttpRequests
+  //    val actor: ActorRef = system.actorOf(Props[HornetQMomWebClientServiceActor])
+  //    info(s"Starting ServiceActor: ${actor.toString()} for HornetQMomWebClient")
+  //    actor
+  //  }
+  //  catch {
+  //    case NonFatal(x) => {
+  //      debug(s"NonFatalException thrown while starting ServiceActor for HornetQMomWebClient: ${x.getMessage}")
+  //      throw x
+  //    }
+  //    case x: ExceptionInInitializerError => {
+  //      debug(s"ExceptionInInitializerError thrown while starting ServiceActor for HornetQMomWebClient: ${x.getMessage}")
+  //      throw x
+  //    }
+  //  }
 
-  val momUrl: String = ConfigSource.config.getString("shrine.messagequeue.hornetq.serverUrl")
+  val momUrl: String = webClientConfig.getString("serverUrl")
 
   override def createQueueIfAbsent(queueName: String): Try[Queue] = {
     val proposedQueue: Queue = Queue(queueName)
     val createQueueUrl = momUrl + s"/createQueue/${proposedQueue.name}"
     val request: HttpRequest = HttpRequest(HttpMethods.PUT, createQueueUrl)
     for {
-      response: HttpResponse <- Try(HttpClient.webApiCall(request))
-      queue: Queue <- Try {
-        val queueString = response.entity.asString
-        implicit val formats = Serialization.formats(NoTypeHints) + new QueueSerializer
-        read[Queue](queueString)(formats, manifest[Queue])
-      }
+      response: HttpResponse <- Try(HttpClient.webApiCall(request, webClientTimeOut))
+      queue: Queue <- queueFromResponse(response, queueName)
     } yield queue
   }
+
+  def queueFromResponse(response: HttpResponse, queueName: String): Try[Queue] = Try {
+    if (response.status == StatusCodes.Created) {
+      val queueString = response.entity.asString
+      implicit val formats = Serialization.formats(NoTypeHints)
+      read[Queue](queueString)(formats, manifest[Queue])
+    } else {
+      if ((response.status == StatusCodes.NotFound) ||
+        (response.status == StatusCodes.RequestTimeout)) throw new CouldNotCompleteMomTaskButOKToRetryException(s"create a queue named $queueName", Some(response.status), Some(response.entity.asString))
+      else throw new IllegalStateException(s"Response status is ${response.status}, not Created. Cannot make a queue from this response: ${response.entity.asString}") //todo more specific custom exception SHRINE-2213
+    }
+  }.transform({ s =>
+    Success(s)
+  }, { throwable =>
+    throwable match {
+      case NonFatal(x) => error(s"Unable to create a Queue from '${response.entity.asString}' due to exception", throwable) //todo probably want to wrap more information into a new Throwable here SHRINE-2213
+      case _ =>
+    }
+    Failure(throwable)
+
+  })
 
   override def deleteQueue(queueName: String): Try[Unit] = {
     val proposedQueue: Queue = Queue(queueName)
     val deleteQueueUrl = momUrl + s"/deleteQueue/${proposedQueue.name}"
     val request: HttpRequest = HttpRequest(HttpMethods.PUT, deleteQueueUrl)
-    Try(HttpClient.webApiCall(request)) // StatusCodes.OK
+    Try(HttpClient.webApiCall(request, webClientTimeOut)) // StatusCodes.OK
   }
 
   override def queues: Try[Seq[Queue]] = {
     val getQueuesUrl = momUrl + s"/getQueues"
     val request: HttpRequest = HttpRequest(HttpMethods.GET, getQueuesUrl)
     for {
-      response: HttpResponse <- Try(HttpClient.webApiCall(request))
+      response: HttpResponse <- Try(HttpClient.webApiCall(request, webClientTimeOut))
       allQueues: Seq[Queue] <- Try {
         val allQueues: String = response.entity.asString
-        implicit val formats = Serialization.formats(NoTypeHints) + new QueueSerializer
+        implicit val formats = Serialization.formats(NoTypeHints)
         read[Seq[Queue]](allQueues)(formats, manifest[Seq[Queue]])
       }
     } yield allQueues
   }
 
   override def send(contents: String, to: Queue): Try[Unit] = {
+
+    debug(s"send to $to '$contents'")
+
     val sendMessageUrl = momUrl + s"/sendMessage/${to.name}"
     val request: HttpRequest = HttpRequest(
       method = HttpMethods.PUT,
       uri = sendMessageUrl,
-      entity = HttpEntity(contents)  //todo set contents as XML or json
+      entity = HttpEntity(contents) //todo set contents as XML or json SHRINE-2215
     )
     for {
-      response: HttpResponse <- Try(HttpClient.webApiCall(request))
+      response: HttpResponse <- Try(HttpClient.webApiCall(request, webClientTimeOut))
     } yield response
   }
 
+  //todo test receiving no message SHRINE-2213
   override def receive(from: Queue, timeout: Duration): Try[Option[Message]] = {
     val seconds = timeout.toSeconds
     val receiveMessageUrl = momUrl + s"/receiveMessage/${from.name}?timeOutSeconds=$seconds"
     val request: HttpRequest = HttpRequest(HttpMethods.GET, receiveMessageUrl)
+
     for {
-      response: HttpResponse <- Try(HttpClient.webApiCall(request))
-      responseString: String <- Try { response.entity.asString }
-      formats <- Try { Serialization.formats(NoTypeHints) + new MessageSerializer}
-      messageResponse: Message <- Try { read[Message](responseString)(formats, manifest[Message]) }
-      messageResponse: Option[Message] <- Try { Option(messageResponse) }
+    //use the time to make the API call plus the timeout for the long poll
+      response: HttpResponse <- Try(HttpClient.webApiCall(request, webClientTimeOut + timeout))
+      messageResponse: Option[Message] <- messageOptionFromResponse(response, from)
     } yield messageResponse
   }
 
-  override def completeMessage(message: Message): Try[Unit] = {
-    implicit val formats: Formats = Serialization.formats(NoTypeHints) + new MessageSerializer
-    val messageString: String = write[Message](message)(formats)
+  def messageOptionFromResponse(response: HttpResponse, from: Queue): Try[Option[Message]] = Try {
+    if (response.status == StatusCodes.NoContent) {
+      None
+    } else if (response.status == StatusCodes.OK) Some {
+      val responseString = response.entity.asString
+      MessageContainer.fromJson(responseString)
+    } else if ((response.status == StatusCodes.NotFound) || (response.status == StatusCodes.RequestTimeout) || (response.status == StatusCodes.InternalServerError)) {
+      throw CouldNotCompleteMomTaskButOKToRetryException(s"receive a message from ${from.name}", Some(response.status), Some(response.entity.asString))
+    } else {
+      throw new IllegalStateException(s"Response status is ${response.status}, not OK or NotFound. Cannot make a Message from this response: ${response.entity.asString}")
+    }
+  }.transform({ s =>
+    val hornetQMessage = s.map(msg => HornetQClientMessage(UUID.fromString(msg.id), msg.contents))
+    Success(hornetQMessage)
+  }, { throwable =>
+    throwable match {
+      case NonFatal(x) => error(s"Unable to create a Message from '${response.entity.asString}' due to exception", throwable) //todo probably want to report a Problem here SHRINE-2216
+      case _ =>
+    }
+    Failure(throwable)
+  })
 
-    val entity: HttpEntity = HttpEntity(messageString)
-    val completeMessageUrl: String = momUrl + s"/acknowledge" // HttpEntity
-    val request: HttpRequest = HttpRequest(HttpMethods.PUT, completeMessageUrl).withEntity(entity)
-    for {
-      response: HttpResponse <- Try(HttpClient.webApiCall(request))
-    } yield response
+  case class HornetQClientMessage private(messageID: UUID, messageContent: String) extends Message {
+
+    override def contents: String = messageContent
+
+    override def complete(): Try[Unit] = {
+      val entity: HttpEntity = HttpEntity(messageID.toString)
+      val completeMessageUrl: String = s"$momUrl/acknowledge"
+      val request: HttpRequest = HttpRequest(HttpMethods.PUT, completeMessageUrl).withEntity(entity)
+      for {
+        response: HttpResponse <- Try(HttpClient.webApiCall(request)).transform({r =>
+          info(s"Message ${this.messageID} completed with ${r.status}")
+          Success(r)
+        }, { throwable =>
+          debug(s"Message ${this.messageID} failed in its complete process due to ${throwable.getMessage}")
+          Failure(throwable)
+        })
+      } yield response
+    }
   }
+
 }
 
 // TODO in SHRINE-2167: Extract and share a SHRINE actor system

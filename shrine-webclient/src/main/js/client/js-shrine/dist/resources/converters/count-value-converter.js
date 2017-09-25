@@ -18,7 +18,7 @@ System.register([], function (_export, _context) {
                 }
 
                 CountValueConverter.prototype.toView = function toView(value) {
-                    return value < 0 ? "<=10 patients" : value + " +-10 patients";
+                    return value < 0 ? "10 patients or fewer" : value + " +-10 patients";
                 };
 
                 return CountValueConverter;

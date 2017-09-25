@@ -3,7 +3,7 @@ import { QueryStatusModel } from 'services/query-status.model';
 import { PubSub } from 'services/pub-sub';
 @customElement('query-status')
 export class QueryStatus extends PubSub {
-    @observable status
+    @observable nodes
     static inject = [QueryStatusModel];
     constructor(queryStatus, ...rest) {
         super(...rest);
@@ -12,55 +12,62 @@ export class QueryStatus extends PubSub {
             exportAvailable: false
         });
     }
-    statusChanged(newValue, oldValue) {
-        if(!newValue.nodes || !newValue.nodes.length) {
+    nodesChanged(newValue, oldValue) {
+        if(!newValue || !newValue.length) {
             me.get(this).exportAvailable = false;
             this.publish(this.notifications.shrine.queryUnavailable);
+            return;
         }
-        else {
-            me.get(this).exportAvailable = true;
-            this.publish(this.notifications.shrine.queryAvailable);
-        }
+        me.get(this).exportAvailable = true;
+        this.publish(this.notifications.shrine.queryAvailable);
     }
     attached() {
         // -- subscribers -- //
         this.subscribe(this.notifications.i2b2.queryStarted, (n) => {
-            this.status = initialState();
+            this.status = initialState().status;
+            this.nodes = initialState().nodes;
             this.status.query.queryName = n;
         });
 
         this.subscribe(this.notifications.i2b2.networkIdReceived, d => {
-            const networkId = d.networkId;
-            const state = initialState();
-            const nodes = state.nodes;
-            state.query.queryName = d.name || state.query.queryName; 
-            this.status = this.status? {...this.status, ...{nodes}} : state;
-            this.publish(this.commands.shrine.fetchQuery, {networkId, timeoutSeconds, dataVersion: defaultVersion})
+            const runningPreviousQuery = this.status === undefined;
+            if(runningPreviousQuery) this.status = initialState().status;
+            const {networkId} = d;
+            this.status.query.networkId = networkId;
+            this.nodes = initialState().nodes;
+            this.publish(this.commands.shrine.fetchQuery, {networkId, timeoutSeconds: TIMEOUT_SECONDS, dataVersion: DEFAULT_VERSION})
         });
 
         this.subscribe(this.notifications.i2b2.exportQuery, () => {
-            this.publish(this.commands.shrine.exportResult, { ...{}, ...this.status });
+            const nodes = this.nodes;
+            this.publish(this.commands.shrine.exportResult, {nodes});
+        })
+
+        this.subscribe(this.notifications.i2b2.clearQuery, () => {
+            this.nodes = initialState().nodes;
+            this.status =  initialState().status;
         })
         this.subscribe(this.notifications.shrine.queryReceived, data => {
-            const query = data.query;
-            const nodes = data.nodes;
-            const dataVersion= data.dataVersion;
+            const {query, nodes, dataVersion = DEFAULT_VERSION,query:{networkId}} = data; 
+            const {complete = false} = query; 
+            const timeoutSeconds = TIMEOUT_SECONDS;
+            if(networkId !== this.status.query.networkId) return;
             const updated = Number(new Date());
-            const complete = data.query.complete;
-            const networkId = data.query.networkId;
-            this.status = { ...this.status, ...{ query, nodes, updated } }
+            Object.assign(this.status, {query, updated});
+            this.nodes = nodes;
             if (!complete) {
-                window.setTimeout(() => this.publish(this.commands.shrine.fetchQuery, {networkId, dataVersion, timeoutSeconds}), 5000);
+                this.publish(this.commands.shrine.fetchQuery, {networkId, dataVersion, timeoutSeconds});
             }
         });
 
         if (me.get(this).isDevEnv) {
-            //this.publish(this.notifications.i2b2.queryStarted, "started query");
-            this.publish(this.notifications.i2b2.networkIdReceived, {networkId: 1, name: "started query"});
+            this.publish(this.notifications.i2b2.queryStarted, "started query");
+            window.setTimeout(() => 
+                this.publish(this.notifications.i2b2.networkIdReceived, {networkId: '2421519216383772161', name: "started query"}), 2000);
         }
     }
 }
-const timeoutSeconds = 15;
-const defaultVersion = -1;
+const TIMEOUT_SECONDS = 15;
+const DEFAULT_VERSION = -1;
 const me = new WeakMap();
-const initialState = (n) => ({ query: { queryName: null, updated: null, complete: false }, nodes: null });
+const initialState = (n) => ({status: { query: { networkId: null, queryName: null, updated: null, complete: false}}, nodes: [] });
