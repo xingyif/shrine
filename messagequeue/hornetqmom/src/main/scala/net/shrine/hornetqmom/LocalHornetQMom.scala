@@ -115,7 +115,7 @@ object LocalHornetQMom extends MessageQueueService {
     // removes the message from the map
     messageDeliveryAttemptMap.remove(deliveryAttemptID).fold(
       throw MessageDoesNotExistAndCannotBeCompletedException(deliveryAttemptID)) { deliveryAttempt: DeliveryAttempt =>
-      Log.debug(s"Message redelivery was canceled!")
+      Log.debug(s"Message from ${deliveryAttempt.fromQueue} is completed and its redelivery was canceled!")
       deliveryAttempt
     }
   }
@@ -205,6 +205,7 @@ object MessageScheduler {
       if (currentAttempt < messageMaxDeliveryAttempts) {
         Log.debug(s"Scheduling message redelivery attempt $currentAttempt, redeliver message in $messageRedeliveryDelay milliseconds.")
         redeliveryScheduler.schedule(messageRedeliveryRunner, messageRedeliveryDelay, TimeUnit.MILLISECONDS)
+//        future.cancel(true)
       } else {
         Log.debug(s"Not scheduling message redelivery because currentAttempt $currentAttempt reached max attempt number $messageMaxDeliveryAttempts.")
       }
