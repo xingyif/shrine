@@ -3,10 +3,9 @@ package net.shrine.hornetqmom
 import java.util
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicInteger
-import java.util.concurrent.{BlockingDeque, Executors, LinkedBlockingDeque, ScheduledExecutorService, TimeUnit}
+import java.util.concurrent.{BlockingDeque, Executors, LinkedBlockingDeque, ScheduledExecutorService, ScheduledFuture, TimeUnit}
 
 import net.shrine.config.ConfigExtensions
-import net.shrine.hornetqmom.LocalHornetQMom.{CleanDeliveryAttemptRunner, CleanInternalMessageInDequeRunner, MessageRedeliveryRunner}
 import net.shrine.log.Log
 import net.shrine.messagequeueservice.{Message, MessageQueueService, Queue}
 import net.shrine.problem.{AbstractProblem, ProblemSources}
@@ -30,13 +29,17 @@ import scala.util.control.NonFatal
 object LocalHornetQMom extends MessageQueueService {
 
   val configPath = "shrine.messagequeue.blockingq"
+
   def config = ConfigSource.config.getConfig(configPath)
+
   private def messageTimeToLiveInMillis: Long = config.get("messageTimeToLive", Duration(_)).toMillis
+
   private def messageRedeliveryDelay: Long = config.get("messageRedeliveryDelay", Duration(_)).toMillis
+
   private def messageMaxDeliveryAttempts: Int = config.getInt("messageMaxDeliveryAttempts")
 
   // keep a map of messages and ids
-  private val messageDeliveryAttemptMap: TrieMap[UUID, DeliveryAttempt] = TrieMap.empty
+  private val messageDeliveryAttemptMap: TrieMap[UUID, (DeliveryAttempt, ScheduledFuture[_])] = TrieMap.empty
 
   /**
     * Use HornetQMomStopper to stop the hornetQServer without unintentially starting it
@@ -47,7 +50,7 @@ object LocalHornetQMom extends MessageQueueService {
 
   //todo key should be a Queue instead of a String SHRINE-2308
   //todo rename
-  val blockingQueuePool:ConcurrentMap[String,BlockingDeque[InternalToBeSentMessage]] = TrieMap.empty
+  val blockingQueuePool: ConcurrentMap[String, BlockingDeque[InternalToBeSentMessage]] = TrieMap.empty
 
   //queue lifecycle
   def createQueueIfAbsent(queueName: String): Try[Queue] = Try {
@@ -55,24 +58,22 @@ object LocalHornetQMom extends MessageQueueService {
     Queue(queueName)
   }
 
-  def deleteQueue(queueName: String): Try[Unit] = Try{
+  def deleteQueue(queueName: String): Try[Unit] = Try {
     blockingQueuePool.remove(queueName).getOrElse(throw QueueDoesNotExistException(Queue(queueName)))
   }
 
-  override def queues: Try[Seq[Queue]] = Try{
+  override def queues: Try[Seq[Queue]] = Try {
     blockingQueuePool.keys.map(Queue(_))(collection.breakOut)
   }
 
   //send a message
   def send(contents: String, to: Queue): Try[Unit] = Try {
     val queue = blockingQueuePool.getOrElse(to.name, throw QueueDoesNotExistException(to))
-    // schedule future cleanup when the message expires
-    MessageScheduler.scheduleCleanupDeliveryAttemptInMap(to, messageTimeToLiveInMillis)
     // creates a message
     val msgID: UUID = UUID.randomUUID()
     val internalMessage: InternalToBeSentMessage = InternalToBeSentMessage(msgID, contents, System.currentTimeMillis(), to)
-    // schedule future cleanup of this message in blockingQueue if client never call receive
-    MessageScheduler.scheduleCleanupMessageInDeque(to, internalMessage, messageTimeToLiveInMillis)
+    // schedule future cleanup when the message expires
+    MessageScheduler.scheduleMessageExpiry(to, internalMessage, messageTimeToLiveInMillis)
     // waiting if necessary for space to become available
     blocking(queue.putLast(internalMessage))
     Log.debug(s"After send to ${to.name} - shadowQueue ${queue.size} $queue")
@@ -98,8 +99,7 @@ object LocalHornetQMom extends MessageQueueService {
     deliveryAttemptOpt.fold(
       // No message available from the queue
       Log.debug(s"No message available from the queue ${from.name}")
-    ){ deliveryAttempt: DeliveryAttempt =>
-      messageDeliveryAttemptMap.update(deliveryAttemptID, deliveryAttempt)
+    ) { deliveryAttempt: DeliveryAttempt =>
       MessageScheduler.scheduleMessageRedelivery(deliveryAttemptID, deliveryAttempt, messageRedeliveryDelay, messageMaxDeliveryAttempts)
     }
     val messageOpt: Option[Message] = shadowMessage.map { internalToBeSentMessage: InternalToBeSentMessage =>
@@ -110,22 +110,40 @@ object LocalHornetQMom extends MessageQueueService {
   }
 
   def completeMessage(deliveryAttemptID: UUID): Try[Unit] = Try {
-    // cancel message redelivery scheduled task
-    MessageScheduler.cancelScheduledMessageRedelivery(deliveryAttemptID)
-    // removes the message from the map
-    messageDeliveryAttemptMap.remove(deliveryAttemptID).fold(
-      throw MessageDoesNotExistAndCannotBeCompletedException(deliveryAttemptID)) { deliveryAttempt: DeliveryAttempt =>
-      Log.debug(s"Message from ${deliveryAttempt.fromQueue} is completed and its redelivery was canceled!")
-      deliveryAttempt
+    val deliveryAttemptAndFutureTaskOpt: Option[(DeliveryAttempt, ScheduledFuture[_])] = messageDeliveryAttemptMap.get(deliveryAttemptID)
+    deliveryAttemptAndFutureTaskOpt.fold(
+      // if message delivery attempt does not exist in the map, then it might be in the queue or expired
+      throw MessageDoesNotExistAndCannotBeCompletedException(deliveryAttemptID)
+    )
+    { (deliveryAttemptAndFutureTask: (DeliveryAttempt, ScheduledFuture[_])) =>
+      val deliveryAttempt: DeliveryAttempt = deliveryAttemptAndFutureTask._1
+      val internalToBeSentMessage: InternalToBeSentMessage = deliveryAttempt.message
+      val queue: Queue = internalToBeSentMessage.toQueue
+      // removes all deliveryAttempts of the message from the map and cancels all the scheduled redelivers
+        for ((uuid: UUID, eachDAandTask: (DeliveryAttempt, ScheduledFuture[_])) <- messageDeliveryAttemptMap) {
+          if (eachDAandTask._1.message == internalToBeSentMessage) {
+            messageDeliveryAttemptMap.remove(uuid)
+            // cancel message redelivery scheduled task
+            MessageScheduler.cancelScheduledMessageRedelivery(eachDAandTask._2)
+          }
+        }
+      // removed the message from the queue (if it exists)
+      // i.e: if completeMsg is called after it is redelivered, message is back
+      // in queue and waiting to be redelivered again
+      val shadowQueue = blockingQueuePool.getOrElse(queue.name, throw QueueDoesNotExistException(queue))
+      shadowQueue.remove(internalToBeSentMessage)
+      Log.debug(s"Message from ${deliveryAttemptAndFutureTask._1.fromQueue} is completed and its redelivery was canceled!")
+      deliveryAttemptAndFutureTask._1
     }
   }
 
   //todo dead letter queue for all messages SHRINE-2261
 
-  case class SimpleMessage (deliveryAttemptID: String, content: String) extends Message {
+  case class SimpleMessage(deliveryAttemptID: String, content: String) extends Message {
     def toJson: String = {
       Serialization.write(this)(SimpleMessage.messageFormats)
     }
+
     override def complete(): Try[Unit] = Try {
       val uuid: UUID = UUID.fromString(deliveryAttemptID)
       LocalHornetQMom.completeMessage(uuid)
@@ -143,16 +161,20 @@ object LocalHornetQMom extends MessageQueueService {
     }
   }
 
-  case class CleanDeliveryAttemptRunner(queue: Queue, messageTimeToLiveInMillis: Long) extends Runnable {
+  case class CleanExpiredDeliveryAttemptRunner(queue: Queue, messageTimeToLiveInMillis: Long) extends Runnable {
     // watches the map
     override def run(): Unit = {
       try {
         val currentTimeInMillis: Long = System.currentTimeMillis()
         Log.debug(s"About to clean up outstanding messages. DAMap size: ${messageDeliveryAttemptMap.size}")
         // cleans up deliveryAttempt map
-        messageDeliveryAttemptMap.retain({ (uuid, deliveryAttempt: DeliveryAttempt) =>
-          (currentTimeInMillis - deliveryAttempt.createdTime) < messageTimeToLiveInMillis
-        })
+        for ((uuid: UUID, deliveryAttemptAndFutureTask: (DeliveryAttempt, ScheduledFuture[_])) <- messageDeliveryAttemptMap){
+          if ((currentTimeInMillis - deliveryAttemptAndFutureTask._1.message.createdTime) >= messageTimeToLiveInMillis) {
+            messageDeliveryAttemptMap.remove(uuid)
+            // cancels its future message redelivery task
+            MessageScheduler.cancelScheduledMessageRedelivery(deliveryAttemptAndFutureTask._2)
+          }
+        }
         Log.debug(s"Outstanding deliveryAttempts that exceed $messageTimeToLiveInMillis milliseconds have been cleaned from the map. " +
           s"DAMap size: ${messageDeliveryAttemptMap.size}")
       } catch {
@@ -167,14 +189,16 @@ object LocalHornetQMom extends MessageQueueService {
   case class MessageRedeliveryRunner(deliveryAttemptID: UUID, deliveryAttempt: DeliveryAttempt, messageRedeliveryDelay: Long, messageMaxDeliveryAttempts: Long) extends Runnable {
     override def run(): Unit = {
       try {
-        messageDeliveryAttemptMap.remove(deliveryAttemptID).fold(){ deliveryAttempt =>
+        messageDeliveryAttemptMap.get(deliveryAttemptID).fold(
+          Log.debug(s"Could not find deliveryAttempt for message ${deliveryAttempt.message.contents} from queue ${deliveryAttempt.fromQueue}")
+        // todo is log enough? i.e, message has been completed
+        ) { (deliveryAttemptAndFutureTask: (DeliveryAttempt, ScheduledFuture[_]))  =>
           // get the queue that the message was from, and push message back to the head of the deque
-          val shadowQueue = blockingQueuePool.getOrElse(deliveryAttempt.fromQueue.name,
-            // todo message has been completed
-            throw QueueDoesNotExistException(deliveryAttempt.fromQueue))
+          val shadowQueue = blockingQueuePool.getOrElse(deliveryAttemptAndFutureTask._1.fromQueue.name,
+            throw QueueDoesNotExistException(deliveryAttemptAndFutureTask._1.fromQueue))
           // waiting if necessary for space to become available
           Log.debug("About to redelivery a message. Inserted the message back to the head of its queue!")
-          blocking(shadowQueue.putFirst(deliveryAttempt.message))
+          blocking(shadowQueue.putFirst(deliveryAttemptAndFutureTask._1.message))
         }
       }
     }
@@ -192,79 +216,84 @@ object LocalHornetQMom extends MessageQueueService {
     }
   }
 
-}
+  object MessageScheduler {
+    private val scheduler: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
+    //    private val cleanupScheduler: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
 
-object MessageScheduler {
-  private val redeliveryScheduler: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
-  private val cleanupScheduler: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
-
-  def scheduleMessageRedelivery(deliveryAttemptID: UUID, deliveryAttempt: DeliveryAttempt, messageRedeliveryDelay: Long, messageMaxDeliveryAttempts: Int) = {
-    val messageRedeliveryRunner: MessageRedeliveryRunner = MessageRedeliveryRunner(deliveryAttemptID, deliveryAttempt, messageRedeliveryDelay, messageMaxDeliveryAttempts)
-    try {
-      val currentAttempt = deliveryAttempt.message.getCurrentAttempt
-      if (currentAttempt < messageMaxDeliveryAttempts) {
-        Log.debug(s"Scheduling message redelivery attempt $currentAttempt, redeliver message in $messageRedeliveryDelay milliseconds.")
-        redeliveryScheduler.schedule(messageRedeliveryRunner, messageRedeliveryDelay, TimeUnit.MILLISECONDS)
-//        future.cancel(true)
-      } else {
-        Log.debug(s"Not scheduling message redelivery because currentAttempt $currentAttempt reached max attempt number $messageMaxDeliveryAttempts.")
+    def scheduleMessageRedelivery(deliveryAttemptID: UUID, deliveryAttempt: DeliveryAttempt, messageRedeliveryDelay: Long, messageMaxDeliveryAttempts: Int) = {
+      val messageRedeliveryRunner: MessageRedeliveryRunner = MessageRedeliveryRunner(deliveryAttemptID, deliveryAttempt, messageRedeliveryDelay, messageMaxDeliveryAttempts)
+      try {
+        val currentAttempt = deliveryAttempt.message.getCurrentAttempt
+        if (currentAttempt < messageMaxDeliveryAttempts) {
+          Log.debug(s"Scheduling message redelivery attempt $currentAttempt, redeliver message in $messageRedeliveryDelay milliseconds.")
+          val futureTask: ScheduledFuture[_] = scheduler.schedule(messageRedeliveryRunner, messageRedeliveryDelay, TimeUnit.MILLISECONDS)
+          messageDeliveryAttemptMap.update(deliveryAttemptID, (deliveryAttempt, futureTask))
+        } else {
+          Log.debug(s"Not scheduling message redelivery because currentAttempt $currentAttempt reached max attempt number $messageMaxDeliveryAttempts.")
+        }
+      } catch {
+        case NonFatal(x) => SchedulingMessageRedeliverySentinelProblem(messageRedeliveryDelay, x)
+        //pass-through to blow up the thread, receive no more results, do something dramatic in UncaughtExceptionHandler.
+        case x => Log.error("Fatal exception while scheduling a sentinel for cleaning up outstanding messages", x)
+          throw x
       }
-    } catch {
-      case NonFatal(x) => SchedulingMessageRedeliverySentinelProblem(messageRedeliveryDelay, x)
-      //pass-through to blow up the thread, receive no more results, do something dramatic in UncaughtExceptionHandler.
-      case x => Log.error("Fatal exception while scheduling a sentinel for cleaning up outstanding messages", x)
-        throw x
     }
-  }
 
-  def scheduleCleanupDeliveryAttemptInMap(queue: Queue, messageTimeToLiveInMillis: Long) = {
+    def scheduleCleanupExpiredDeliveryAttemptInMap(queue: Queue, messageTimeToLiveInMillis: Long) = {
 
-    // a sentinel that monitors the hashmap of messageDeliveryAttemptMap, any message that has been outstanding will be permanently removed
-    // time-to-live need to get cleaned out of this map
-    val cleanDeliveryAttemptRunner: CleanDeliveryAttemptRunner = CleanDeliveryAttemptRunner(queue, messageTimeToLiveInMillis)
-    try {
-      Log.debug(s"Starting the sentinel scheduler that cleans outstanding deliveryAttempt exceeds message expiration time: $messageTimeToLiveInMillis")
-      cleanupScheduler.schedule(cleanDeliveryAttemptRunner, messageTimeToLiveInMillis, TimeUnit.MILLISECONDS)
-    } catch {
-      case NonFatal(x) => SchedulingCleanUpSentinelProblem(queue, messageTimeToLiveInMillis, x)
-      //pass-through to blow up the thread, receive no more results, do something dramatic in UncaughtExceptionHandler.
-      case x => Log.error("Fatal exception while scheduling a sentinel for cleaning up outstanding messages", x)
-        throw x
+      // a sentinel that monitors the hashmap of messageDeliveryAttemptMap, any message that has been outstanding will be permanently removed
+      // time-to-live need to get cleaned out of this map
+      val cleanDeliveryAttemptRunner: CleanExpiredDeliveryAttemptRunner = CleanExpiredDeliveryAttemptRunner(queue, messageTimeToLiveInMillis)
+      try {
+        Log.debug(s"Starting the sentinel scheduler that cleans outstanding deliveryAttempt exceeds message expiration time: $messageTimeToLiveInMillis")
+        scheduler.schedule(cleanDeliveryAttemptRunner, messageTimeToLiveInMillis, TimeUnit.MILLISECONDS)
+      } catch {
+        case NonFatal(x) => SchedulingCleanUpSentinelProblem(queue, messageTimeToLiveInMillis, x)
+        //pass-through to blow up the thread, receive no more results, do something dramatic in UncaughtExceptionHandler.
+        case x => Log.error("Fatal exception while scheduling a sentinel for cleaning up outstanding messages", x)
+          throw x
+      }
     }
-  }
 
-  def scheduleCleanupMessageInDeque(queue: Queue, messageToBeRemoved: InternalToBeSentMessage, messageTimeToLiveInMillis: Long) = {
-    val cleanInternalMessageInDequeRunner: CleanInternalMessageInDequeRunner = CleanInternalMessageInDequeRunner(messageToBeRemoved, messageTimeToLiveInMillis)
-    try {
-      Log.debug(s"Starting the sentinel scheduler that cleans outstanding internal message in" +
-        s" queue ${messageToBeRemoved.toQueue} exceeds message expiration time: $messageTimeToLiveInMillis")
-      cleanupScheduler.schedule(cleanInternalMessageInDequeRunner, messageTimeToLiveInMillis, TimeUnit.MILLISECONDS)
-    } catch {
-      case NonFatal(x) => SchedulingCleanUpSentinelProblem(queue, messageTimeToLiveInMillis, x)
-      //pass-through to blow up the thread, receive no more results, do something dramatic in UncaughtExceptionHandler.
-      case x => Log.error("Fatal exception while scheduling a sentinel for cleaning up outstanding messages", x)
-        throw x
+    def scheduleCleanupExpiredMessageInDeque(queue: Queue, messageToBeRemoved: InternalToBeSentMessage, messageTimeToLiveInMillis: Long) = {
+      val cleanInternalMessageInDequeRunner: CleanInternalMessageInDequeRunner = CleanInternalMessageInDequeRunner(messageToBeRemoved, messageTimeToLiveInMillis)
+      try {
+        Log.debug(s"Starting the sentinel scheduler that cleans outstanding internal message in" +
+          s" queue ${messageToBeRemoved.toQueue} exceeds message expiration time: $messageTimeToLiveInMillis")
+        scheduler.schedule(cleanInternalMessageInDequeRunner, messageTimeToLiveInMillis, TimeUnit.MILLISECONDS)
+      } catch {
+        case NonFatal(x) => SchedulingCleanUpSentinelProblem(queue, messageTimeToLiveInMillis, x)
+        //pass-through to blow up the thread, receive no more results, do something dramatic in UncaughtExceptionHandler.
+        case x => Log.error("Fatal exception while scheduling a sentinel for cleaning up outstanding messages", x)
+          throw x
+      }
     }
-  }
 
+    def scheduleMessageExpiry(to: Queue, internalMessage: InternalToBeSentMessage, messageTimeToLiveInMillis: Long) = {
+      // schedule future cleanup of deliveryAttempts when the message expires
+      MessageScheduler.scheduleCleanupExpiredDeliveryAttemptInMap(to, messageTimeToLiveInMillis)
+      // schedule future cleanup of this message in blockingQueue if client never call receive
+      MessageScheduler.scheduleCleanupExpiredMessageInDeque(to, internalMessage, messageTimeToLiveInMillis)
+    }
 
-  def cancelScheduledMessageRedelivery(deliveryAttemptID: UUID): Unit = {
-    // returns false if the task could not be cancelled, typically because it has already completed normally;
-    redeliveryScheduler.shutdownNow()
-  }
+    def cancelScheduledMessageRedelivery(futureTask: ScheduledFuture[_]): Unit = {
+      // returns false if the task could not be cancelled, typically because it has already completed normally;
+      futureTask.cancel(true)
+    }
 
-  def shutDown(): util.List[Runnable] = {
-    redeliveryScheduler.shutdownNow()
-    cleanupScheduler.shutdownNow()
+    def shutDown(): util.List[Runnable] = {
+      scheduler.shutdownNow()
+    }
+
   }
 
 }
-
 case class InternalToBeSentMessage(id: UUID, contents: String, createdTime: Long, toQueue: Queue) {
   private val currentAttempt: AtomicInteger = new AtomicInteger(0)
   def getCurrentAttempt: Int = currentAttempt.get()
   def incrementCurrentAttempt(): Unit = currentAttempt.incrementAndGet()
 }
+
 
 case class DeliveryAttempt(message: InternalToBeSentMessage, createdTime: Long, fromQueue: Queue)
 

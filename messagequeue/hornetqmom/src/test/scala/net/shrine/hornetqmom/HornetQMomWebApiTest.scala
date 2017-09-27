@@ -16,6 +16,7 @@ import spray.http.StatusCodes._
 import spray.testkit.ScalatestRouteTest
 
 import scala.collection.immutable.Seq
+import scala.collection.mutable.ArrayBuffer
 /**
   * Test basic functions of HornetQMomWebApi
   * Created by yifan on 7/27/17.
@@ -23,21 +24,21 @@ import scala.collection.immutable.Seq
 
 
 @RunWith(classOf[JUnitRunner])
-class zHornetQMomWebApiTest extends FlatSpec with ScalatestRouteTest with HornetQMomWebApi {
+class HornetQMomWebApiTest extends FlatSpec with ScalatestRouteTest with HornetQMomWebApi {
   override def actorRefFactory: ActorRefFactory = system
 
-  private val proposedQueueName = "test Queue"
+  private val proposedQueueName = "test QueueInWebApi"
   private val queue: Queue = Queue(proposedQueueName)
   private val queueName: String = queue.name // "testQueue"
   private val messageContent = "test Content"
 
   "HornetQMomWebApi" should "create/delete the given queue, send/receive message, get queues" in {
     val configMap: Map[String, String] = Map( "shrine.messagequeue.blockingqWebApi.enabled" -> "true",
-      "shrine.messagequeue.blockingq.messageTimeToLive" -> "5 seconds",
-      "shrine.messagequeue.blockingq.messageRedeliveryDelay" -> "2 second",
+      "shrine.messagequeue.blockingq.messageTimeToLive" -> "2 days",
+      "shrine.messagequeue.blockingq.messageRedeliveryDelay" -> "1 day",
       "shrine.messagequeue.blockingq.messageMaxDeliveryAttempts" -> "2")
 
-    ConfigSource.atomicConfig.configForBlock(configMap, "LocalHornetQMomTest") {
+    ConfigSource.atomicConfig.configForBlock(configMap, "zHornetQMomWebApiTest") {
 
       Put(s"/mom/createQueue/$queueName") ~> momRoute ~> check {
         val response = new String(body.data.toByteArray)
@@ -71,16 +72,17 @@ class zHornetQMomWebApiTest extends FlatSpec with ScalatestRouteTest with Hornet
         assertResult(queueName)(jsonToSeq.head.name)
       }
 
-      var messageUUID: String = ""
+      val messageUUIDList: ArrayBuffer[String] = ArrayBuffer[String]()
       // given timeout is 2 seconds
       Get(s"/mom/receiveMessage/$queueName?timeOutSeconds=2") ~> momRoute ~> check {
         val response = new String(body.data.toByteArray)
         assertResult(OK)(status)
         val responseMsg: SimpleMessage = SimpleMessage.fromJson(response)
-        messageUUID = responseMsg.deliveryAttemptID
+        messageUUIDList += responseMsg.deliveryAttemptID
         assertResult(responseMsg.contents)(messageContent)
       }
 
+      val messageUUID = messageUUIDList(0)
       Put("/mom/acknowledge", HttpEntity(s"$messageUUID")) ~> momRoute ~> check {
         assertResult(ResetContent)(status)
       }

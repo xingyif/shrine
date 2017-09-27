@@ -22,7 +22,7 @@ class LocalHornetQMomTest extends FlatSpec with BeforeAndAfterAll with ScalaFutu
   "HornetQ" should "be able to send and receive just one message" in {
 
     val configMap: Map[String, String] = Map("shrine.messagequeue.blockingq.messageTimeToLive" -> "5 seconds",
-      "shrine.messagequeue.blockingq.messageRedeliveryDelay" -> "2 second",
+      "shrine.messagequeue.blockingq.messageRedeliveryDelay" -> "2 seconds",
       "shrine.messagequeue.blockingq.messageMaxDeliveryAttempts" -> "2")
 
     ConfigSource.atomicConfig.configForBlock(configMap, "LocalHornetQMomTest") {
@@ -177,12 +177,7 @@ class LocalHornetQMomTest extends FlatSpec with BeforeAndAfterAll with ScalaFutu
 
     val queueName = "test# Qu%eueFilter"
 
-    assert(LocalHornetQMom.queues.get.isEmpty)
-
-    val queue = LocalHornetQMom.createQueueIfAbsent(queueName).get
-
-    assert(LocalHornetQMom.queues.get == Seq(queue))
-    LocalHornetQMom.deleteQueue(queue.name)
+    assert(Queue(queueName).name == "testQueueFilter")
   }
 
   override def afterAll() = LocalHornetQMomStopper.stop()
