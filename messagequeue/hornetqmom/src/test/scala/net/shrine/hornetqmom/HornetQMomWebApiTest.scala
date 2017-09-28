@@ -38,7 +38,7 @@ class HornetQMomWebApiTest extends FlatSpec with ScalatestRouteTest with HornetQ
       "shrine.messagequeue.blockingq.messageRedeliveryDelay" -> "1 day",
       "shrine.messagequeue.blockingq.messageMaxDeliveryAttempts" -> "2")
 
-    ConfigSource.atomicConfig.configForBlock(configMap, "zHornetQMomWebApiTest") {
+    ConfigSource.atomicConfig.configForBlock(configMap, "HornetQMomWebApiTest") {
 
       Put(s"/mom/createQueue/$queueName") ~> momRoute ~> check {
         val response = new String(body.data.toByteArray)

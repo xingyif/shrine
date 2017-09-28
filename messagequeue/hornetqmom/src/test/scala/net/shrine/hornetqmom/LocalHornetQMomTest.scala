@@ -19,7 +19,7 @@ import scala.util.Try
 @RunWith(classOf[JUnitRunner])
 class LocalHornetQMomTest extends FlatSpec with BeforeAndAfterAll with ScalaFutures with Matchers {
 
-  "HornetQ" should "be able to send and receive just one message" in {
+  "BlockingQueue" should "be able to send and receive just one message" in {
 
     val configMap: Map[String, String] = Map("shrine.messagequeue.blockingq.messageTimeToLive" -> "5 seconds",
       "shrine.messagequeue.blockingq.messageRedeliveryDelay" -> "2 seconds",
@@ -57,6 +57,11 @@ class LocalHornetQMomTest extends FlatSpec with BeforeAndAfterAll with ScalaFutu
       assert(sameMessage2.isDefined)
       assert(sameMessage2.get.contents == testContents)
 
+      // receive after the redelivery delay again, reached maxRedelivery attempt, should be no message
+      TimeUnit.MILLISECONDS.sleep(messageRedeliveryDelay + 1000)
+      val sameMessage3: Option[Message] = LocalHornetQMom.receive(queue, 1 second).get
+      assert(sameMessage3.isEmpty)
+
       val completeTry: Try[Unit] = message.get.complete()
       assert(completeTry.isSuccess)
       // receive after message is completed, should be no message
@@ -79,7 +84,7 @@ class LocalHornetQMomTest extends FlatSpec with BeforeAndAfterAll with ScalaFutu
     }
   }
 
-  "HornetQ" should "be able to send and receive a few messages" in {
+  "BlockingQueue" should "be able to send and receive a few messages" in {
 
     val queueName = "receiveAFewMessages"
 
@@ -138,7 +143,7 @@ class LocalHornetQMomTest extends FlatSpec with BeforeAndAfterAll with ScalaFutu
     assert(LocalHornetQMom.queues.get.isEmpty)
   }
 
-  "HornetQ" should "be OK if asked to create the same queue twice " in {
+  "BlockingQueue" should "be OK if asked to create the same queue twice " in {
 
     val queueName = "createSameQueueTwice"
     val queue = LocalHornetQMom.createQueueIfAbsent(queueName)
@@ -152,28 +157,28 @@ class LocalHornetQMomTest extends FlatSpec with BeforeAndAfterAll with ScalaFutu
     assert(LocalHornetQMom.queues.get.isEmpty)
   }
 
-  "HornetQ" should "return a failure if deleting a non-existing queue" in {
+  "BlockingQueue" should "return a failure if deleting a non-existing queue" in {
 
     val queueName = "DeletingNonExistingQueue"
     val deleteQueue = LocalHornetQMom.deleteQueue(queueName)
     assert(deleteQueue.isFailure)
   }
 
-  "HornetQ" should "return a failure if sending message to a non-existing queue" in {
+  "BlockingQueue" should "return a failure if sending message to a non-existing queue" in {
 
     val queueName = "SendToNonExistingQueue"
     val sendTry = LocalHornetQMom.send("testContent", Queue(queueName))
     assert(sendTry.isFailure)
   }
 
-  "HornetQ" should "return a failure if receiving a message to a non-existing queue" in {
+  "BlockingQueue" should "return a failure if receiving a message to a non-existing queue" in {
 
     val queueName = "ReceiveFromNonExistingQueue"
     val receiveTry = LocalHornetQMom.receive(Queue(queueName), Duration(1, "second"))
     assert(receiveTry.isFailure)
   }
 
-  "HornetQ" should "be able to filter the special characters in queue name" in {
+  "BlockingQueue" should "be able to filter the special characters in queue name" in {
 
     val queueName = "test# Qu%eueFilter"
 

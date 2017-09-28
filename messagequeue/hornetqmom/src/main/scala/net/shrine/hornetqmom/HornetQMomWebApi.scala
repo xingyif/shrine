@@ -98,7 +98,7 @@ trait HornetQMomWebApi extends HttpService
                 complete(s"Unable to delete queue '$queueName' due to exception $nf")
               }
               case _ => {
-                internalServerErrorOccured(x, "deleteQueue")
+                throw x
               }
             }
           }
@@ -131,7 +131,7 @@ trait HornetQMomWebApi extends HttpService
                 complete(s"Unable to send a Message to '$toQueue' due to exception $nf")
               }
               case _ => {
-                internalServerErrorOccured(x, "sendMessage")
+                throw x
               }
             }
           }
@@ -169,7 +169,7 @@ trait HornetQMomWebApi extends HttpService
                     complete(s"Unable to receive a Message from '$fromQueue' due to exception $nf")
                   }
                   case _ => {
-                    internalServerErrorOccured(x, "receiveMessage")
+                    throw x
                   }
                 }
               }
