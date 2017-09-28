@@ -228,52 +228,19 @@ trait HornetQMomWebApi extends HttpService
     respondWithStatus(StatusCodes.InternalServerError) {
       val serverErrorProblem: HornetQMomServerErrorProblem = HornetQMomServerErrorProblem(x, function)
       debug(s"HornetQ encountered a Problem during $function, Problem Details: $serverErrorProblem")
-      complete(s"HornetQ throws an exception while trying to $function. HornetQ Server response: ${x.getMessage}" +
-        s"Exception is from ${x.getClass}")
+      complete(
+        s"""HornetQ throws an exception while trying to $function.
+           |HornetQ Server response: ${x.getMessage} Exception is from ${x.getClass}""".stripMargin)
     }
   }
 
 }
 
-//case class MessageContainer(id: String, contents: String) {
-//  def toJson: String = {
-//    Serialization.write(this)(MessageContainer.messageFormats)
-//  }
-//}
-//
-//object MessageContainer {
-//  val messageFormats = Serialization.formats(ShortTypeHints(List(classOf[MessageContainer])))
-//
-//  def fromJson(jsonString: String): MessageContainer = {
-//    implicit val formats = messageFormats
-//    Serialization.read[MessageContainer](jsonString)
-//  }
-//}
-
-
 case class HornetQMomServerErrorProblem(x:Throwable, function:String) extends AbstractProblem(ProblemSources.Hub) {
 
   override val throwable = Some(x)
   override val summary: String = "SHRINE cannot use HornetQMomWebApi due to a server error occurred in hornetQ."
-  override val description: String = s"HornetQ throws an exception while trying to $function," +
-                                      s" the server's response is: ${x.getMessage} from ${x.getClass}."
-}
-
-//todo is this used anywhere?
-case class CannotUseHornetQMomWebApiProblem(x:Throwable) extends AbstractProblem(ProblemSources.Hub) {
-
-  override val throwable = Some(x)
-  override val summary: String = "SHRINE cannot use HornetQMomWebApi due to configuration in shrine.conf."
-  override val description: String = "If you intend for this node to serve as this SHRINE network's messaging hub " +
-                              "set shrine.messagequeue.hornetQWebApi.enabled to true in your shrine.conf." +
-                              " You do not want to do this unless you are the hub admin!"
-}
-
-
-case class MessageDoesNotExistInMapProblem(id: UUID) extends AbstractProblem(ProblemSources.Hub) {
-
-  override def summary: String = s"The client expected message $id, but the server did not find it and could not complete() the message."
-
-  override def description: String = s"The client expected message $id from , but the server did not find it and could not complete() the message." +
-    s" Message either has never been received or already been completed!"
+  override val description: String =
+    s"""HornetQ throws an exception while trying to $function,
+       |the server's response is: ${x.getMessage} from ${x.getClass}.""".stripMargin
 }
