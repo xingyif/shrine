@@ -10,7 +10,7 @@ import net.shrine.log.Loggable
 import net.shrine.protocol.{BroadcastMessage, RunQueryRequest, RunQueryResponse, ShrineResponse}
 import net.shrine.slick.TestableDataSourceCreator
 import net.shrine.source.ConfigSource
-import slick.driver.JdbcProfile
+import slick.jdbc.JdbcProfile
 
 import scala.concurrent.duration.{Duration, DurationInt}
 import scala.concurrent.{Await, Future, blocking}
@@ -26,7 +26,7 @@ case class AdapterAuditDb(schemaDef:AdapterAuditSchema,dataSource: DataSource) e
   import schemaDef._
   import jdbcProfile.api._
 
-  val database = Database.forDataSource(dataSource)
+  val database = Database.forDataSource(dataSource, None)
 
   def createTables() = schemaDef.createTables(database)
 
