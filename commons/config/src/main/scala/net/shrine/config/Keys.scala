@@ -12,7 +12,6 @@ object Keys {
   val shrineSteward = "shrineSteward"
   val ontProjectId = "ontProjectId"
   val crcProjectId = "crcProjectId"
-  val setSizeObfuscation = "setSizeObfuscation"
   val isAdapter = "isAdapter"
   val isBroadcaster = "isBroadcaster"
   val adapterLockoutAttemptsThreshold = "adapterLockoutAttemptsThreshold"
@@ -25,6 +24,5 @@ object Keys {
   val queryEntryPoint = "queryEntryPoint" //todo remove once it's not used anymore
   val broadcasterIsLocal = "broadcasterIsLocal"
   val broadcasterServiceEndpoint = "broadcasterServiceEndpoint"
-  val immediatelyRunIncomingQueries = "immediatelyRunIncomingQueries"
   val authenticationType = "authenticationType"
 }
