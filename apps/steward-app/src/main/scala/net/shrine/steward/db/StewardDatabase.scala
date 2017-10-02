@@ -14,7 +14,7 @@ import net.shrine.slick.{CouldNotRunDbIoActionException, DbIoActionException, Ne
 import net.shrine.source.ConfigSource
 import net.shrine.steward.CreateTopicsMode
 import slick.dbio.Effect.Read
-import slick.driver.JdbcProfile
+import slick.jdbc.JdbcProfile
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.{Duration, DurationInt}
@@ -34,7 +34,7 @@ case class StewardDatabase(schemaDef:StewardSchema,dataSource: DataSource) exten
   import schemaDef._
   import jdbcProfile.api._
 
-  val database = Database.forDataSource(dataSource)
+  val database = Database.forDataSource(dataSource, None)
 
   def createTables() = schemaDef.createTables(database)
 

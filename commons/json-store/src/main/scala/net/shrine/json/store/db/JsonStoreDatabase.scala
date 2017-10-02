@@ -9,7 +9,7 @@ import net.shrine.slick.{CouldNotRunDbIoActionException, DbIoActionException, Ne
 import net.shrine.source.ConfigSource
 import net.shrine.util.Versions
 import slick.dbio.SuccessAction
-import slick.driver.JdbcProfile
+import slick.jdbc.JdbcProfile
 import slick.jdbc.meta.MTable
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -34,7 +34,7 @@ object JsonStoreDatabase extends NeedsWarmUp {
   val dataSource: DataSource = TestableDataSourceCreator.dataSource(config)
 
   lazy val db = {
-    val db = Database.forDataSource(dataSource)
+    val db = Database.forDataSource(dataSource, None)
     val createTables: String = "createTablesOnStart"
     if (config.hasPath(createTables) && config.getBoolean(createTables)) {
       Await.ready(db.run(IOActions.createIfNotExists), timeout)

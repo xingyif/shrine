@@ -9,7 +9,7 @@ import net.shrine.log.Loggable
 import net.shrine.protocol.RunQueryRequest
 import net.shrine.slick.{NeedsWarmUp, TestableDataSourceCreator}
 import net.shrine.source.ConfigSource
-import slick.driver.JdbcProfile
+import slick.jdbc.JdbcProfile
 
 import scala.concurrent.duration.{Duration, DurationInt}
 import scala.concurrent.{Await, Future, blocking}
@@ -25,7 +25,7 @@ case class QepAuditDb(schemaDef:QepAuditSchema,dataSource: DataSource) extends L
   import schemaDef._
   import jdbcProfile.api._
 
-  val database = Database.forDataSource(dataSource)
+  val database = Database.forDataSource(dataSource, None)
 
   def warmUp = dbRun(allQepQueryQuery.size.result)
 
