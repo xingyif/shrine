@@ -2,7 +2,7 @@
     'use strict';
 
     // -- angular module -- //
-    angular.module('shrine.commmon.authentication')
+    angular.module('shrine-tools')
         .factory('AuthenticationService', AuthenticationService);
 
 
@@ -122,7 +122,8 @@
          */
         function parseResult(result) {
             //reject promise on fail.
-            if(result.data === Config.FailureResponse) {
+            if(!result.data || result.data === Config.FailureResponse) {
+                clearCredentials();
                 return $q.reject(response);
             }
 
@@ -143,9 +144,12 @@
          * @returns {Promise}
          */
         function rejectResult (result) {
+            clearCredentials();
+            var msg = result && result.data? "invalid login " + result.data.statusText : "invalid login";
+
             var response = {
                 success: false,
-                msg: "invalid login " + result.data.statusText
+                msg: msg
             };
             return $q.reject(response);
         }

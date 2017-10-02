@@ -9,8 +9,7 @@
             'login': {
                 name:'login',
                 files:[
-                    'src/app/common/authentication/authentication.module.js',
-                    'src/app/common/authentication/authentication.service.js',
+                    'src/app/login/authentication.service.js',
                     'src/app/login/login.controller.js'
                 ]
             },
