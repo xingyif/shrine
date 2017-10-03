@@ -136,19 +136,22 @@
 		i2b2.events.exportQueryResult = new YAHOO.util.CustomEvent("exportQueryResult", i2b2);
 		i2b2.events.clearQuery = new YAHOO.util.CustomEvent("clearQuery", i2b2);
 
+		var  fireExportMsg = function(e) {
+			e.stopPropagation();
+			i2b2.events.exportQueryResult.fire(); 
+		}
+
 		i2b2.events.queryResultAvailable.subscribe(function () {
 			jQuery('#crcStatusBox .TopTabs .opXML #shrineCSVExport')
 				.css({opacity: 1})
-				.click(function(e) {
-					e.stopPropagation();
-					i2b2.events.exportQueryResult.fire(); 
-				});
+				.on('click', fireExportMsg)
 				i2b2.SHRINE.plugin.enableRunQueryButton();
 		});
+		
 		i2b2.events.queryResultUnavailable.subscribe(function () {
 			jQuery('#crcStatusBox .TopTabs .opXML #shrineCSVExport')
 				.css({opacity: 0.25})
-				.off('click');
+				.off('click', fireExportMsg);
 		});
 		
 		var _queryRun = i2b2.CRC.ctrlr.QT._queryRun;

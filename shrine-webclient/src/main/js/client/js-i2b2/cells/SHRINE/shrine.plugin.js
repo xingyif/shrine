@@ -146,6 +146,7 @@
             return html;
     }
 
+
     function disableRunQueryButton() {
         jQuery('#runBoxText').parent().bind('click', function(e) { e.preventDefault()});
     }
