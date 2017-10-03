@@ -71,7 +71,7 @@ object LocalHornetQMom extends MessageQueueService {
     val queue = blockingQueuePool.getOrElse(to.name, throw QueueDoesNotExistException(to))
     // creates a message
     val msgID: UUID = UUID.randomUUID()
-    val internalMessage: InternalMessage = InternalMessage(msgID, contents, System.currentTimeMillis(), to)
+    val internalMessage: InternalMessage = InternalMessage(msgID, contents, System.currentTimeMillis(), to, 0)
     // schedule future cleanup when the message expires
     MessageScheduler.scheduleMessageExpiry(to, internalMessage, messageTimeToLiveInMillis)
     // waiting if necessary for space to become available
@@ -93,7 +93,7 @@ object LocalHornetQMom extends MessageQueueService {
     val internalMessage: Option[InternalMessage] = Option(blockingQueue.pollFirst(timeout.toMillis, TimeUnit.MILLISECONDS))
     val deliveryAttemptID = UUID.randomUUID()
     val deliveryAttemptOpt: Option[DeliveryAttempt] = internalMessage.map { internalToBeSentMessage: InternalMessage =>
-      DeliveryAttempt(internalToBeSentMessage, System.currentTimeMillis(), from)
+      DeliveryAttempt(internalToBeSentMessage, internalToBeSentMessage.createdTime, from)
     }
     // add a deliveryAttempt in the DAmap with an unique UUID
     deliveryAttemptOpt.fold(
@@ -170,7 +170,7 @@ object LocalHornetQMom extends MessageQueueService {
         // cleans up deliveryAttempt map
         for ((uuid: UUID, deliveryAttemptAndFutureTask: (DeliveryAttempt, ScheduledFuture[_])) <- messageDeliveryAttemptMap){
           if ((currentTimeInMillis - deliveryAttemptAndFutureTask._1.message.createdTime) >= messageTimeToLiveInMillis) {
-            messageDeliveryAttemptMap.remove(uuid)
+            messageDeliveryAttemptMap.remove(uuid, deliveryAttemptAndFutureTask)
             // cancels its future message redelivery task
             MessageScheduler.cancelScheduledMessageRedelivery(deliveryAttemptAndFutureTask._2)
           }
@@ -190,14 +190,15 @@ object LocalHornetQMom extends MessageQueueService {
     override def run(): Unit = {
       try {
         messageDeliveryAttemptMap.get(deliveryAttemptID).fold(
-          Log.debug(s"Could not find deliveryAttempt for message ${deliveryAttempt.message.contents} from queue ${deliveryAttempt.fromQueue}")
+        Log.debug(s"Could not find deliveryAttempt for message ${deliveryAttempt.message.contents} from queue ${deliveryAttempt.fromQueue}")
         ) { (deliveryAttemptAndFutureTask: (DeliveryAttempt, ScheduledFuture[_]))  =>
           // get the queue that the message was from, and push message back to the head of the deque
           val blockingQueue = blockingQueuePool.getOrElse(deliveryAttemptAndFutureTask._1.fromQueue.name,
             throw QueueDoesNotExistException(deliveryAttemptAndFutureTask._1.fromQueue))
           // waiting if necessary for space to become available
           Log.debug("About to redelivery a message. Inserted the message back to the head of its queue!")
-          blocking(blockingQueue.putFirst(deliveryAttemptAndFutureTask._1.message))
+          val message = deliveryAttemptAndFutureTask._1.message.copy(currentAttemptCount = deliveryAttemptAndFutureTask._1.message.currentAttemptCount + 1)
+          blocking(blockingQueue.putFirst(message))
         }
       }
     }
@@ -208,9 +209,16 @@ object LocalHornetQMom extends MessageQueueService {
       try {
         val blockingQueue = blockingQueuePool.getOrElse(messageToBeRemoved.toQueue.name,
           throw QueueDoesNotExistException(messageToBeRemoved.toQueue))
-        val removed: Boolean = blockingQueue.remove(messageToBeRemoved)
-        Log.debug(s"$removed: Removed internalMessage from it's queue ${messageToBeRemoved.toQueue}" +
-          s" because it exceeds expiration time $messageTimeToLiveInMillis millis")
+        while (!blockingQueue.isEmpty) {
+          val internalMessage: InternalMessage = blockingQueue.element()
+          println(s"internalMSg: $internalMessage")
+          if (System.currentTimeMillis() - internalMessage.createdTime >= messageTimeToLiveInMillis) {
+            val removed = blockingQueue.remove(internalMessage)
+            println(s"internalMsg removed: $removed")
+           Log.debug(s"$removed: Removed internalMessage from it's queue ${messageToBeRemoved.toQueue}" +
+                      s" because it exceeds expiration time $messageTimeToLiveInMillis millis")
+          }
+        }
       }
     }
   }
@@ -221,10 +229,9 @@ object LocalHornetQMom extends MessageQueueService {
     def scheduleMessageRedelivery(deliveryAttemptID: UUID, deliveryAttempt: DeliveryAttempt, messageRedeliveryDelay: Long, messageMaxDeliveryAttempts: Int) = {
       val messageRedeliveryRunner: MessageRedeliveryRunner = MessageRedeliveryRunner(deliveryAttemptID, deliveryAttempt, messageRedeliveryDelay, messageMaxDeliveryAttempts)
       try {
-        val currentAttemptCount = deliveryAttempt.message.getCurrentAttemptCount
+        val currentAttemptCount = deliveryAttempt.message.currentAttemptCount
         if (currentAttemptCount < messageMaxDeliveryAttempts) {
           Log.debug(s"Scheduling message redelivery attempt $currentAttemptCount, redeliver message in $messageRedeliveryDelay milliseconds.")
-          deliveryAttempt.message.incrementCurrentAttemptCount
           val futureTask: ScheduledFuture[_] = scheduler.schedule(messageRedeliveryRunner, messageRedeliveryDelay, TimeUnit.MILLISECONDS)
           messageDeliveryAttemptMap.update(deliveryAttemptID, (deliveryAttempt, futureTask))
         } else {
@@ -283,16 +290,10 @@ object LocalHornetQMom extends MessageQueueService {
     def shutDown(): util.List[Runnable] = {
       scheduler.shutdownNow()
     }
-
   }
-
-}
-case class InternalMessage(id: UUID, contents: String, createdTime: Long, toQueue: Queue) {
-  private val currentAttempt: AtomicInteger = new AtomicInteger(0)
-  def getCurrentAttemptCount: Int = currentAttempt.get()
-  def incrementCurrentAttemptCount: Unit = currentAttempt.incrementAndGet()
 }
 
+case class InternalMessage(id: UUID, contents: String, createdTime: Long, toQueue: Queue, currentAttemptCount: Int)
 
 case class DeliveryAttempt(message: InternalMessage, createdTime: Long, fromQueue: Queue)
 
@@ -347,9 +348,9 @@ case class SchedulingMessageRedeliverySentinelProblem(messageRedeliveryDelay: Lo
 }
 
 case class QueueDoesNotExistException(queueName: Queue) extends Exception(
-  s"""Cannot match given ${queueName.name} to
-     |any Queue in the server! Queue does not exist!""".stripMargin)
+  s"""Cannot match given ${queueName.name} to any Queue in the server!
+     |Queue does not exist!""".stripMargin)
 
 case class MessageDoesNotExistAndCannotBeCompletedException(id: UUID) extends Exception(
-  s"""Message does not exist
-     |and cannot be completed! Message might have already been completed or expired!""".stripMargin)
+  s"""Message does not exist and cannot be completed!
+     |Message might have already been completed or expired!""".stripMargin)

@@ -82,6 +82,13 @@ class HornetQMomWebApiTest extends FlatSpec with ScalatestRouteTest with HornetQ
         assertResult(responseMsg.contents)(messageContent)
       }
 
+      // receive immediately again, should have no message
+      Get(s"/mom/receiveMessage/$queueName?timeOutSeconds=2") ~> momRoute ~> check {
+        val response = new String(body.data.toByteArray)
+        assertResult(NoContent)(status)
+        assertResult(s"No current Message available in queue $queueName!")(response)
+      }
+
       val messageUUID = messageUUIDList(0)
       Put("/mom/acknowledge", HttpEntity(s"$messageUUID")) ~> momRoute ~> check {
         assertResult(ResetContent)(status)

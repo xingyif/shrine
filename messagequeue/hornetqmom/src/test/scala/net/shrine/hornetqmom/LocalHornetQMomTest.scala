@@ -74,6 +74,11 @@ class LocalHornetQMomTest extends FlatSpec with BeforeAndAfterAll with ScalaFutu
       val sendTry2 = LocalHornetQMom.send(testContents2, queue)
       assert(sendTry2.isSuccess)
 
+      // first time receive
+      val messageExpire: Option[Message] = LocalHornetQMom.receive(queue, 1 second).get
+      assert(messageExpire.isDefined)
+      assert(messageExpire.get.contents == testContents2)
+
       TimeUnit.MILLISECONDS.sleep(messageTimeToLive + 1000)
       val shouldBeNoMessageExpired: Option[Message] = LocalHornetQMom.receive(queue, 1 second).get
       assert(shouldBeNoMessageExpired.isEmpty)
