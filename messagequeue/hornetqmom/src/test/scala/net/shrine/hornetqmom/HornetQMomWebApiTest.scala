@@ -1,6 +1,8 @@
 package net.shrine.hornetqmom
 import java.util.UUID
+
 import akka.actor.ActorRefFactory
+import net.shrine.hornetqmom.LocalHornetQMom.SimpleMessage
 import net.shrine.messagequeueservice.Queue
 import net.shrine.source.ConfigSource
 import org.json4s.NoTypeHints
@@ -14,6 +16,7 @@ import spray.http.StatusCodes._
 import spray.testkit.ScalatestRouteTest
 
 import scala.collection.immutable.Seq
+import scala.collection.mutable.ArrayBuffer
 /**
   * Test basic functions of HornetQMomWebApi
   * Created by yifan on 7/27/17.
@@ -24,14 +27,18 @@ import scala.collection.immutable.Seq
 class HornetQMomWebApiTest extends FlatSpec with ScalatestRouteTest with HornetQMomWebApi {
   override def actorRefFactory: ActorRefFactory = system
 
-  private val proposedQueueName = "test Queue"
+  private val proposedQueueName = "test QueueInWebApi"
   private val queue: Queue = Queue(proposedQueueName)
   private val queueName: String = queue.name // "testQueue"
   private val messageContent = "test Content"
 
   "HornetQMomWebApi" should "create/delete the given queue, send/receive message, get queues" in {
+    val configMap: Map[String, String] = Map( "shrine.messagequeue.blockingqWebApi.enabled" -> "true",
+      "shrine.messagequeue.blockingq.messageTimeToLive" -> "2 days",
+      "shrine.messagequeue.blockingq.messageRedeliveryDelay" -> "1 day",
+      "shrine.messagequeue.blockingq.messageMaxDeliveryAttempts" -> "2")
 
-    ConfigSource.atomicConfig.configForBlock("shrine.messagequeue.blockingqWebApi.enabled", "true", "HornetQMomWebApiTest") {
+    ConfigSource.atomicConfig.configForBlock(configMap, "HornetQMomWebApiTest") {
 
       Put(s"/mom/createQueue/$queueName") ~> momRoute ~> check {
         val response = new String(body.data.toByteArray)
@@ -65,16 +72,24 @@ class HornetQMomWebApiTest extends FlatSpec with ScalatestRouteTest with HornetQ
         assertResult(queueName)(jsonToSeq.head.name)
       }
 
-      var messageUUID: String = ""
+      val messageUUIDList: ArrayBuffer[String] = ArrayBuffer[String]()
       // given timeout is 2 seconds
       Get(s"/mom/receiveMessage/$queueName?timeOutSeconds=2") ~> momRoute ~> check {
         val response = new String(body.data.toByteArray)
         assertResult(OK)(status)
-        val responseMsg = MessageContainer.fromJson(response)
-        messageUUID = responseMsg.id
+        val responseMsg: SimpleMessage = SimpleMessage.fromJson(response)
+        messageUUIDList += responseMsg.deliveryAttemptID
         assertResult(responseMsg.contents)(messageContent)
       }
 
+      // receive immediately again, should have no message
+      Get(s"/mom/receiveMessage/$queueName?timeOutSeconds=2") ~> momRoute ~> check {
+        val response = new String(body.data.toByteArray)
+        assertResult(NoContent)(status)
+        assertResult(s"No current Message available in queue $queueName!")(response)
+      }
+
+      val messageUUID = messageUUIDList(0)
       Put("/mom/acknowledge", HttpEntity(s"$messageUUID")) ~> momRoute ~> check {
         assertResult(ResetContent)(status)
       }
@@ -83,7 +98,7 @@ class HornetQMomWebApiTest extends FlatSpec with ScalatestRouteTest with HornetQ
       Put("/mom/acknowledge", HttpEntity(s"$nonExistingUUID")) ~> momRoute ~> check {
         val response = new String(body.data.toByteArray)
         assertResult(NotFound)(status)
-        assertResult(MessageDoesNotExistInMapProblem(nonExistingUUID).description)(response)
+        assertResult(MessageDoesNotExistAndCannotBeCompletedException(nonExistingUUID).getMessage)(response)
       }
 
       Put(s"/mom/deleteQueue/$queueName") ~> momRoute ~> check {
@@ -97,20 +112,18 @@ class HornetQMomWebApiTest extends FlatSpec with ScalatestRouteTest with HornetQ
 
     ConfigSource.atomicConfig.configForBlock("shrine.messagequeue.blockingqWebApi.enabled", "true", "HornetQMomWebApiTest") {
 
-      //todo Not a problem. The system is in the state you want. SHRINE-2208
+      //todo Not a problem. The system is in the state you want. SHRINE-2308
       Put(s"/mom/deleteQueue/$queueName") ~> momRoute ~> check {
-        assertResult(InternalServerError)(status)
+        assertResult(NotFound)(status)
       }
 
-      //todo I don't think this one rates more than a 404 SHRINE-2208
       Put(s"/mom/sendMessage/$queueName", HttpEntity(s"$messageContent")) ~> momRoute ~> check {
-        assertResult(InternalServerError)(status)
+        assertResult(NotFound)(status)
       }
 
-      //todo I don't think this one rates more than a 404 SHRINE-2208
       // given timeout is 1 seconds
       Get(s"/mom/receiveMessage/$queueName?timeOutSeconds=1") ~> momRoute ~> check {
-        assertResult(InternalServerError)(status)
+        assertResult(NotFound)(status)
       }
     }
   }
