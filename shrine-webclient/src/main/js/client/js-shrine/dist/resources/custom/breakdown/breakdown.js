@@ -1,3 +1,5 @@
+'use strict';
+
 System.register(['aurelia-framework'], function (_export, _context) {
     "use strict";
 

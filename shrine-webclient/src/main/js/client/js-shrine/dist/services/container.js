@@ -1,3 +1,5 @@
+'use strict';
+
 System.register(['ramda'], function (_export, _context) {
     "use strict";
 

@@ -1,3 +1,5 @@
+'use strict';
+
 System.register(['aurelia-fetch-client', 'fetch'], function (_export, _context) {
     "use strict";
 

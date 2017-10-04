@@ -1,14 +1,7 @@
+//TODO: migrating to webpack, gulp-run is a temporary workaround, want to handle all tasks in package.json!
 var gulp = require('gulp');
-var Karma = require('karma').Server;
+var run = require('gulp-run');
 
-/**
- * Run test once and exit
- */
 gulp.task('test', () => {
-  new Karma({
-    configFile: __dirname + '/../../karma.conf.js',
-    singleRun: true
-  }, () => {
-    console.log('done test log.');
-  }).start();
+ return run('npm t').exec() 
 });

@@ -1,3 +1,5 @@
+'use strict';
+
 System.register(['./pub-sub'], function (_export, _context) {
     "use strict";
 
