@@ -117,6 +117,9 @@
 
     // ES5 :(
     function getDialogHTML(data) {
+
+        var wikiBaseUrl = (i2b2.hive.cfg.wikiBaseUrl || 'https://open.med.harvard.edu/wiki/display/SHRINE/');
+        var codec = data.problemDigest && data.problemDigest.codec? data.problemDigest.codec : '';
         var html = '<div id="pluginErrorDetail" style="display:none;">' +
             '<div class="hd" style="background:#6677AA;">Query Error Detail</div>' +
             '<div class="bd">' +
@@ -130,7 +133,11 @@
             '<div><p>' + data.statusMessage + '</p></div><br/>' +
             '<span id="pluginMoreDetail">' + 
                 '<div><b>Codec:</b></div>' +
-                '<div>' + (data.problemDigest && data.problemDigest.codec? data.problemDigest.codec : 'not available') + '</div><br/>' +
+                '<div>' + (data.problemDigest && data.problemDigest.codec? data.problemDigest.codec : 'not available') + '</div>' +
+                '<div><i>For information on troubleshooting and resolution, check' +
+                ' <a href="' + wikiBaseUrl + codec +'" target="_blank">the SHRINE Error' +
+                ' Codex</a>.</i>' +
+                '</div><br/>' +
                 '<div><b>Stamp:</b></div>' +
                 '<div>' + (data.problemDigest && data.problemDigest.stampText? data.problemDigest.stampText : 'not available') + '</div><br/>' +
                 '<div><b>Stack Trace Name:</b></div>' +
