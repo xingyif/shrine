@@ -211,10 +211,8 @@ object LocalHornetQMom extends MessageQueueService {
           throw QueueDoesNotExistException(messageToBeRemoved.toQueue))
         while (!blockingQueue.isEmpty) {
           val internalMessage: InternalMessage = blockingQueue.element()
-          println(s"internalMSg: $internalMessage")
           if (System.currentTimeMillis() - internalMessage.createdTime >= messageTimeToLiveInMillis) {
             val removed = blockingQueue.remove(internalMessage)
-            println(s"internalMsg removed: $removed")
            Log.debug(s"$removed: Removed internalMessage from it's queue ${messageToBeRemoved.toQueue}" +
                       s" because it exceeds expiration time $messageTimeToLiveInMillis millis")
           }
@@ -225,6 +223,12 @@ object LocalHornetQMom extends MessageQueueService {
 
   object MessageScheduler {
     private val scheduler: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
+
+    Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler {
+      override def uncaughtException(t: Thread, e: Throwable): Unit = {
+        Log.error(s"Thread ${t.getName} terminated because of: $e. Exception message: ${e.getMessage}", e)
+      }
+    })
 
     def scheduleMessageRedelivery(deliveryAttemptID: UUID, deliveryAttempt: DeliveryAttempt, messageRedeliveryDelay: Long, messageMaxDeliveryAttempts: Int) = {
       val messageRedeliveryRunner: MessageRedeliveryRunner = MessageRedeliveryRunner(deliveryAttemptID, deliveryAttempt, messageRedeliveryDelay, messageMaxDeliveryAttempts)
