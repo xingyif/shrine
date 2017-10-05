@@ -23,7 +23,7 @@ import net.shrine.qep.querydb.QepDatabaseProblem
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.{FlatSpec, Matchers}
-import slick.driver.H2Driver.api._
+import slick.jdbc.H2Profile.api._
 
 import scala.concurrent.duration.FiniteDuration
 import scala.xml.{NodeSeq, SAXParseException}
