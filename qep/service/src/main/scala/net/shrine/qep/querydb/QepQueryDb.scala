@@ -12,7 +12,7 @@ import net.shrine.protocol.{DefaultBreakdownResultOutputTypes, DeleteQueryReques
 import net.shrine.slick.{CouldNotRunDbIoActionException, TestableDataSourceCreator, TimeoutInDbIoActionException}
 import net.shrine.source.ConfigSource
 import net.shrine.util.XmlDateHelper
-import slick.driver.JdbcProfile
+import slick.jdbc.JdbcProfile
 
 import scala.collection.immutable.Iterable
 import scala.concurrent.duration.{Duration, DurationInt}
@@ -32,7 +32,7 @@ case class QepQueryDb(schemaDef:QepQuerySchema,dataSource: DataSource,timeout:Du
   import schemaDef._
   import jdbcProfile.api._
 
-  val database = Database.forDataSource(dataSource)
+  val database = Database.forDataSource(dataSource, None)
 
   def createTables() = schemaDef.createTables(database)
 

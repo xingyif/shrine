@@ -7,8 +7,7 @@
         'ui.bootstrap',
         'ui.bootstrap.modal',
         'angular-loading-bar',
-        'shrine.common'/*,
-        'shrine.common.authentication'*/
+        'shrine.common'
     ];
 
     // -- create module -- //

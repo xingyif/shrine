@@ -7,7 +7,7 @@ import com.typesafe.config.Config
 import net.shrine.slick.{CouldNotRunDbIoActionException, NeedsWarmUp, TestableDataSourceCreator, TimeoutInDbIoActionException}
 import net.shrine.source.ConfigSource
 import slick.dbio.SuccessAction
-import slick.driver.JdbcProfile
+import slick.jdbc.JdbcProfile
 import slick.jdbc.meta.MTable
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -32,7 +32,7 @@ object Problems extends NeedsWarmUp {
   val dataSource: DataSource = TestableDataSourceCreator.dataSource(config)
 
   lazy val db = {
-    val db = Database.forDataSource(dataSource)
+    val db = Database.forDataSource(dataSource, None)
     val createTables: String = "createTablesOnStart"
     if (config.hasPath(createTables) && config.getBoolean(createTables)) {
       val duration = FiniteDuration(3, SECONDS)
