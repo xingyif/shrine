@@ -12,7 +12,7 @@ import net.shrine.problem.{AbstractProblem, ProblemSources}
 import net.shrine.protocol.{AggregatedReadInstanceResultsResponse, AggregatedRunQueryResponse, AuthenticationInfo, BaseShrineRequest, BaseShrineResponse, Credential, DeleteQueryRequest, FlagQueryRequest, NodeId, QueryInstance, QueryResult, ReadApprovedQueryTopicsRequest, ReadInstanceResultsRequest, ReadPreviousQueriesRequest, ReadPreviousQueriesResponse, ReadQueryDefinitionRequest, ReadQueryInstancesRequest, ReadQueryInstancesResponse, ReadResultOutputTypesRequest, ReadResultOutputTypesResponse, RenameQueryRequest, ResultOutputType, RunQueryRequest, UnFlagQueryRequest}
 import net.shrine.qep.audit.QepAuditDb
 import net.shrine.qep.dao.AuditDao
-import net.shrine.qep.querydb.QepQueryDb
+import net.shrine.qep.querydb.{QepQuery, QepQueryDb}
 import net.shrine.util.XmlDateHelper
 
 import scala.concurrent.duration.Duration
@@ -87,15 +87,25 @@ trait AbstractQepService[BaseResp <: BaseShrineResponse] extends Loggable {
       val networkId = request.shrineNetworkQueryId
 
       //read from the QEP database code here. Only broadcast if some result is in some sketchy state
+      val queryFromDb: Option[QepQuery] = QepQueryDb.db.selectQueryById(networkId)
       val resultsFromDb: Seq[QueryResult] = QepQueryDb.db.selectMostRecentQepResultsFor(networkId)
 
       debug(s"result states are ${resultsFromDb.map(_.statusType).mkString(" ")}")
 
       def shouldAskAdapters:Boolean = {
-        if (resultsFromDb.isEmpty) false //Don't ask if no results exist.
-        else
-          resultsFromDb.forall(_.statusType.isCrcCallCompleted) && //Be sure every CRC has replied to its adapter - hack to deal with this request going to all adapters
-            resultsFromDb.exists(_.statusType.crcPromisedToFinishAfterReply)
+        queryFromDb.fold(
+          true //the QEP doesn't know about the query. Maybe the adapter will know
+        ){ q:QepQuery =>
+
+          //todo remove this ball of logic (and most of this class) when all communication between the QEP and Hub is via messaging
+          val now = System.currentTimeMillis()
+          val deadline = q.dateCreated + queryTimeout.toMillis
+          if (now > deadline) resultsFromDb.isEmpty || resultsFromDb.exists(!_.statusType.isDone) //If the QEP should have given up waiting on the hub and some result is not done
+          else if (resultsFromDb.isEmpty) false //Don't ask if no results exist. There's still time
+          else
+            resultsFromDb.forall(_.statusType.isCrcCallCompleted) && //Be sure every CRC has replied to its adapter
+              resultsFromDb.exists(_.statusType.crcPromisedToFinishAfterReply) //And that some CRC said to ask later
+        }
       }
 
       val response = if (!shouldAskAdapters) {
