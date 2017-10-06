@@ -179,9 +179,6 @@ object LocalHornetQMom extends MessageQueueService {
           s"DAMap size: ${messageDeliveryAttemptMap.size}")
       } catch {
         case NonFatal(x) => CleaningUpDeliveryAttemptProblem(queue, messageTimeToLiveInMillis, x)
-        //pass-through to blow up the thread, receive no more results, do something dramatic in UncaughtExceptionHandler.
-        case x => Log.error("Fatal exception while cleaning up outstanding messages", x)
-          throw x
       }
     }
   }
@@ -226,7 +223,8 @@ object LocalHornetQMom extends MessageQueueService {
 
     Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler {
       override def uncaughtException(t: Thread, e: Throwable): Unit = {
-        Log.error(s"Thread ${t.getName} terminated because of: $e. Exception message: ${e.getMessage}", e)
+        Log.error(s"Fatal Exception: Thread ${t.getName} terminated because of: $e. Exception message: ${e.getMessage}", e)
+        throw e
       }
     })
 
@@ -243,9 +241,6 @@ object LocalHornetQMom extends MessageQueueService {
         }
       } catch {
         case NonFatal(x) => SchedulingMessageRedeliverySentinelProblem(messageRedeliveryDelay, x)
-        //pass-through to blow up the thread, receive no more results, do something dramatic in UncaughtExceptionHandler.
-        case x => Log.error("Fatal exception while scheduling a sentinel for cleaning up outstanding messages", x)
-          throw x
       }
     }
 
@@ -259,9 +254,6 @@ object LocalHornetQMom extends MessageQueueService {
         scheduler.schedule(cleanDeliveryAttemptRunner, messageTimeToLiveInMillis, TimeUnit.MILLISECONDS)
       } catch {
         case NonFatal(x) => SchedulingCleanUpSentinelProblem(queue, messageTimeToLiveInMillis, x)
-        //pass-through to blow up the thread, receive no more results, do something dramatic in UncaughtExceptionHandler.
-        case x => Log.error("Fatal exception while scheduling a sentinel for cleaning up outstanding messages", x)
-          throw x
       }
     }
 
@@ -273,9 +265,6 @@ object LocalHornetQMom extends MessageQueueService {
         scheduler.schedule(cleanInternalMessageInDequeRunner, messageTimeToLiveInMillis, TimeUnit.MILLISECONDS)
       } catch {
         case NonFatal(x) => SchedulingCleanUpSentinelProblem(queue, messageTimeToLiveInMillis, x)
-        //pass-through to blow up the thread, receive no more results, do something dramatic in UncaughtExceptionHandler.
-        case x => Log.error("Fatal exception while scheduling a sentinel for cleaning up outstanding messages", x)
-          throw x
       }
     }
 
