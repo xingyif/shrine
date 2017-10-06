@@ -1,3 +1,5 @@
+'use strict';
+
 System.register(['aurelia-framework', 'services/query-status.model', 'services/pub-sub'], function (_export, _context) {
     "use strict";
 

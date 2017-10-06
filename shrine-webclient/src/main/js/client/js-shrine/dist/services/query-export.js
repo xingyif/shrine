@@ -1,3 +1,5 @@
+'use strict';
+
 System.register(['./pub-sub'], function (_export, _context) {
     "use strict";
 
@@ -62,7 +64,6 @@ System.register(['./pub-sub'], function (_export, _context) {
 
             convertObjectToCSV = function convertObjectToCSV(d) {
                 var nodes = d.nodes.sort();
-                var m = new Map();
                 var desc = function desc(_ref) {
                     var description = _ref.resultType.i2b2Options.description;
                     return description;
@@ -70,6 +71,7 @@ System.register(['./pub-sub'], function (_export, _context) {
                 var brdSort = function brdSort(a, b) {
                     return desc(a) <= desc(b) ? -1 : 1;
                 };
+                var m = new Map();
                 nodes.forEach(function (_ref2) {
                     var _ref2$breakdowns = _ref2.breakdowns,
                         breakdowns = _ref2$breakdowns === undefined ? [] : _ref2$breakdowns;
@@ -77,9 +79,13 @@ System.register(['./pub-sub'], function (_export, _context) {
                     breakdowns.sort(brdSort).forEach(function (_ref3) {
                         var _m$get;
 
-                        var description = _ref3.resultType.i2b2Options.description,
-                            results = _ref3.results;
-                        return m.has(description) ? (_m$get = m.get(description)).add.apply(_m$get, results.map(function (r) {
+                        var _ref3$resultType$i2b = _ref3.resultType.i2b2Options.description,
+                            description = _ref3$resultType$i2b === undefined ? null : _ref3$resultType$i2b,
+                            _ref3$results = _ref3.results,
+                            results = _ref3$results === undefined ? [] : _ref3$results;
+
+                        if (!description === null || results.length === 0) return;
+                        m.has(description) ? (_m$get = m.get(description)).add.apply(_m$get, results.map(function (r) {
                             return r.dataKey;
                         }).sort()) : m.set(description, new Set(results.map(function (r) {
                             return r.dataKey;

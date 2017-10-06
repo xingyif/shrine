@@ -1,3 +1,5 @@
+'use strict';
+
 System.register(['moment'], function (_export, _context) {
   "use strict";
 

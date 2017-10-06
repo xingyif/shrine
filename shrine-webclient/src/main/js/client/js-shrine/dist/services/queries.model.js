@@ -1,3 +1,5 @@
+'use strict';
+
 System.register(['aurelia-event-aggregator', 'repository/qep.repository', './shrine.messages'], function (_export, _context) {
     "use strict";
 

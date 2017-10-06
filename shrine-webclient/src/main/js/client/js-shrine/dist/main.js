@@ -1,3 +1,5 @@
+'use strict';
+
 System.register(['./includes-polyfill'], function (_export, _context) {
     "use strict";
 

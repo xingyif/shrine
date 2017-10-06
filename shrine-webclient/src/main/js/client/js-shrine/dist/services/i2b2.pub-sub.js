@@ -1,3 +1,5 @@
+'use strict';
+
 System.register(['./pub-sub', './i2b2.service'], function (_export, _context) {
     "use strict";
 

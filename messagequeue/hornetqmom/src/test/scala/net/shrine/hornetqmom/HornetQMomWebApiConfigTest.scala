@@ -21,7 +21,6 @@ class HornetQMomWebApiConfigTest extends FlatSpec with ScalatestRouteTest with H
   private val queueName = "testQueue"
 
   "HornetQMomWebApi" should "block user from using the API and return a 404 response" in {
-//todo shouldn't need to set the config to the default value
     ConfigSource.atomicConfig.configForBlock("shrine.messagequeue.blockingqWebApi.enabled", "false", "HornetQMomWebApiConfigTest") {
       Put(s"/mom/createQueue/$queueName") ~> momRoute ~> check {
         val response = new String(body.data.toByteArray)
