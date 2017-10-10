@@ -224,7 +224,6 @@ object LocalHornetQMom extends MessageQueueService {
     Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler {
       override def uncaughtException(t: Thread, e: Throwable): Unit = {
         Log.error(s"Fatal Exception: Thread ${t.getName} terminated because of: $e. Exception message: ${e.getMessage}", e)
-        throw e
       }
     })
 
