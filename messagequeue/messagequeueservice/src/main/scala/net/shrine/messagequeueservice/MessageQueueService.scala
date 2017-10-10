@@ -5,6 +5,7 @@ import net.shrine.spray.DefaultJsonSupport
 import spray.http.StatusCode
 
 import scala.collection.immutable.Seq
+import scala.collection.mutable.FlatHashTable.Contents
 import scala.concurrent.duration.Duration
 import scala.util.Try
 /**
@@ -50,3 +51,7 @@ case class Queue(var name:String) extends DefaultJsonSupport {
 case class CouldNotCompleteMomTaskButOKToRetryException(task:String,
                                                         status:Option[StatusCode] = None,
                                                         contents:Option[String] = None) extends Exception(s"Could not $task due to status code $status with message '$contents'")
+
+case class CouldNotCompleteMomTaskException(task:String,
+                                            status:Option[StatusCode] = None,
+                                            contents:Option[String] = None) extends Exception(s"Could not $task due to status code $status with message '$contents'")
