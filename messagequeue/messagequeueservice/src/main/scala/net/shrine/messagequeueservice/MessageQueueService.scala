@@ -5,7 +5,6 @@ import net.shrine.spray.DefaultJsonSupport
 import spray.http.StatusCode
 
 import scala.collection.immutable.Seq
-import scala.collection.mutable.FlatHashTable.Contents
 import scala.concurrent.duration.Duration
 import scala.util.Try
 /**
