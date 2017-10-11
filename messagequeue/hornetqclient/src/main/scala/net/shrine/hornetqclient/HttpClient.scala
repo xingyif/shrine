@@ -2,21 +2,23 @@ package net.shrine.hornetqclient
 
 import java.security.cert.X509Certificate
 import javax.net.ssl.{SSLContext, X509TrustManager}
+
 import akka.actor.{ActorRef, ActorSystem}
 import akka.io.IO
 import akka.pattern.ask
+import net.shrine.config.ConfigExtensions
 import net.shrine.log.Loggable
 import net.shrine.source.ConfigSource
-import net.shrine.config.ConfigExtensions
 import spray.can.Http
 import spray.can.Http.{ConnectionAttemptFailedException, HostConnectorSetup}
-import spray.http.{HttpEntity, HttpRequest, HttpResponse, StatusCodes}
+import spray.http.{HttpRequest, HttpResponse}
 import spray.io.ClientSSLEngineProvider
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.duration.{Duration, DurationInt, DurationLong}
+import scala.concurrent.duration.{Duration, DurationLong}
 import scala.concurrent.{Await, Future, TimeoutException}
 import scala.language.postfixOps
+import scala.util.Try
 import scala.util.control.NonFatal
 
 /**
@@ -24,11 +26,9 @@ import scala.util.control.NonFatal
   */
 object HttpClient extends Loggable {
 
-  //todo hand back a Try, Failures with custom exceptions instead of a crappy response
-  //todo Really a Future would be even better
-  def webApiCall(request:HttpRequest,
-                 timeout:Duration = ConfigSource.config.get("shrine.messagequeue.httpClient.defaultTimeOut", Duration(_)))
-                (implicit system: ActorSystem): HttpResponse = {
+  def webApiFuture(request:HttpRequest,
+                   timeout:Duration = ConfigSource.config.get("shrine.messagequeue.httpClient.defaultTimeOut", Duration(_))) //todo do I want this default around??
+                  (implicit system: ActorSystem):Future[HttpResponse] = {
 
     val deadline = System.currentTimeMillis() + timeout.toMillis
 
@@ -39,30 +39,35 @@ object HttpClient extends Loggable {
       Http.HostConnectorInfo(connector, _) <- transport.ask(createConnector(request))(deadline - System.currentTimeMillis() milliseconds)
       response <- connector.ask(request)(deadline - System.currentTimeMillis() milliseconds).mapTo[HttpResponse]
     } yield response
-    try {
-      //wait a second longer than the deadline before timing out the Await, to let the actors timeout
-      val timeOutWaitGap = ConfigSource.config.get("shrine.messagequeue.httpClient.timeOutWaitGap", Duration(_)).toMillis
-      Await.result(future, deadline + timeOutWaitGap - System.currentTimeMillis() milliseconds)
-    }
-    catch {
-      //todo definitely need the Try instead of this sloppy replacement of the HttpResponse.
-      case x: TimeoutException => {
-        debug(s"${request.uri} failed with ${x.getMessage}", x)
-        HttpResponse(status = StatusCodes.RequestTimeout, entity = HttpEntity(s"${request.uri} timed out after ${timeout}. ${x.getMessage}"))
+
+    future.transform({s => s}, {
+      case NonFatal(x) =>
+        debug(s"${request.uri} failed with ${x.getMessage}",x)
+        x match {
+            //Keeping these bits here to track common things that might go wrong. Too low-level to generate a full problem
+        case tx: TimeoutException => tx //something timed out
+        case cafx: ConnectionAttemptFailedException => cafx //no web service was there to respond
+        case nonFatal => nonFatal //something else went wrong
       }
-      //todo is there a better message? What comes up in real life?
-      case x: ConnectionAttemptFailedException => {
-        //no web service is there to respond
-        debug(s"${request.uri} failed with ${x.getMessage}", x)
-        HttpResponse(status = StatusCodes.NotFound, entity = HttpEntity(s"${request.uri} failed with ${x.getMessage}"))
-      }
-      case NonFatal(x) => {
-        debug(s"${request.uri} failed with ${x.getMessage}", x)
-        HttpResponse(status = StatusCodes.InternalServerError, entity = HttpEntity(s"${request.uri} failed with ${x.getMessage}"))
-      }
-    }
+      case fatal => fatal //don't touch fatal exceptions
+    })
   }
 
+  def webApiTry(request:HttpRequest,
+                timeout:Duration = ConfigSource.config.get("shrine.messagequeue.httpClient.defaultTimeOut", Duration(_)))
+               (implicit system: ActorSystem):Try[HttpResponse] = Try {
+    webApiCall(request,timeout)(system)
+  }
+
+  private def webApiCall(request:HttpRequest,
+                         timeout:Duration = ConfigSource.config.get("shrine.messagequeue.httpClient.defaultTimeOut", Duration(_)))
+                        (implicit system: ActorSystem):HttpResponse = {
+    val deadline = System.currentTimeMillis() + timeout.toMillis
+    //wait just a little longer than the deadline to let the other timeouts happen first
+    val timeOutWaitGap = ConfigSource.config.get("shrine.messagequeue.httpClient.timeOutWaitGap", Duration(_)).toMillis
+    Await.result(webApiFuture(request,timeout)(system),deadline + timeOutWaitGap - System.currentTimeMillis() milliseconds)
+  }
+  
   //from https://github.com/TimothyKlim/spray-ssl-poc/blob/master/src/main/scala/Main.scala
   //trust all SSL contexts. We just want encrypted comms.
   implicit val trustfulSslContext: SSLContext = {

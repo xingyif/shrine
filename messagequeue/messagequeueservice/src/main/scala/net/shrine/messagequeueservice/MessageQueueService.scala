@@ -47,6 +47,15 @@ case class Queue(var name:String) extends DefaultJsonSupport {
   }
 }
 
+
 case class CouldNotCompleteMomTaskButOKToRetryException(task:String,
                                                         status:Option[StatusCode] = None,
-                                                        contents:Option[String] = None) extends Exception(s"Could not $task due to status code $status with message '$contents'")
+                                                        contents:Option[String] = None,
+                                                        cause:Option[Throwable] = None
+                                                       ) extends Exception(s"Could not $task due to status code $status with message '$contents'",cause.orNull)
+
+case class CouldNotCompleteMomTaskDoNotRetryException(task:String,
+                                                        status:Option[StatusCode] = None,
+                                                        contents:Option[String] = None,
+                                                        cause:Option[Throwable] = None
+                                                       ) extends Exception(s"Could not $task due to status code $status with message '$contents'",cause.orNull)
