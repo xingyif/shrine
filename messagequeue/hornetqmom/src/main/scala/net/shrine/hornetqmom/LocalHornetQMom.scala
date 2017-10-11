@@ -180,7 +180,7 @@ object LocalHornetQMom extends MessageQueueService {
         case NonFatal(x) => CleaningUpDeliveryAttemptProblem(queue, messageTimeToLiveInMillis, x)
         case i: InterruptedException => Log.error("Scheduled expired message cleanup was interrupted", i)
         case t: TimeoutException => Log.error(s"Expired Messages can't be cleaned due to timeout", t)
-        case e: ExecutionException => Log.error(s"Expired Messages can't be cleaned due to ${e.getCause}", e)
+        case e: ExecutionException => Log.error(s"""${e.getClass.getSimpleName} "${e.getMessage}" caught by exception handler""", e)
       }
     }
   }
@@ -202,7 +202,7 @@ object LocalHornetQMom extends MessageQueueService {
       } catch {
         case i: InterruptedException => Log.error("Scheduled message redelivery was interrupted", i)
         case t: TimeoutException => Log.error(s"Messages can't be redelivered due to timeout", t)
-        case e: ExecutionException => Log.error(s"Messages can't be redelivered due to ${e.getCause}", e)
+        case e: ExecutionException => Log.error(s"""${e.getClass.getSimpleName} "${e.getMessage}" caught by exception handler""", e)
       }
     }
   }
@@ -223,7 +223,7 @@ object LocalHornetQMom extends MessageQueueService {
       } catch {
         case i: InterruptedException => Log.error("Scheduled execution was interrupted", i)
         case t: TimeoutException => Log.error(s"Expired Messages can't be cleaned due to timeout", t)
-        case e: ExecutionException => Log.error(s"Expired Messages can't be cleaned due to ${e.getCause}", e)
+        case e: ExecutionException => Log.error(s"""${e.getClass.getSimpleName} "${e.getMessage}" caught by exception handler""", e)
       }
     }
   }
