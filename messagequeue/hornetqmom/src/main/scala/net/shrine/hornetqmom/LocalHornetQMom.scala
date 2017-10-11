@@ -180,7 +180,7 @@ object LocalHornetQMom extends MessageQueueService {
         case NonFatal(x) => CleaningUpDeliveryAttemptProblem(queue, messageTimeToLiveInMillis, x)
         case i: InterruptedException => Log.error("Scheduled expired message cleanup was interrupted", i)
         case t: TimeoutException => Log.error(s"Expired Messages can't be cleaned due to timeout", t)
-        case e: ExecutionException => Log.error(s"""${e.getClass.getSimpleName} "${e.getMessage}" caught by exception handler""", e)
+        case e: Throwable => Log.error(s"""${e.getClass.getSimpleName} "${e.getMessage}" caught by exception handler""", e)
       }
     }
   }
@@ -189,7 +189,7 @@ object LocalHornetQMom extends MessageQueueService {
     override def run(): Unit = {
       try {
         messageDeliveryAttemptMap.get(deliveryAttemptID).fold(
-        Log.debug(s"Could not find deliveryAttempt for message ${deliveryAttempt.message.contents} from queue ${deliveryAttempt.fromQueue}")
+                  Log.debug(s"Could not find deliveryAttempt for message ${deliveryAttempt.message.contents} from queue ${deliveryAttempt.fromQueue}")
         ) { (deliveryAttemptAndFutureTask: (DeliveryAttempt, ScheduledFuture[_]))  =>
           // get the queue that the message was from, and push message back to the head of the deque
           val blockingQueue = blockingQueuePool.getOrElse(deliveryAttemptAndFutureTask._1.fromQueue.name,
@@ -202,7 +202,7 @@ object LocalHornetQMom extends MessageQueueService {
       } catch {
         case i: InterruptedException => Log.error("Scheduled message redelivery was interrupted", i)
         case t: TimeoutException => Log.error(s"Messages can't be redelivered due to timeout", t)
-        case e: ExecutionException => Log.error(s"""${e.getClass.getSimpleName} "${e.getMessage}" caught by exception handler""", e)
+        case e: Throwable => Log.error(s"""${e.getClass.getSimpleName} "${e.getMessage}" caught by exception handler""", e)
       }
     }
   }
@@ -221,9 +221,9 @@ object LocalHornetQMom extends MessageQueueService {
           }
         }
       } catch {
-        case i: InterruptedException => Log.error("Scheduled execution was interrupted", i)
+        case i: InterruptedException => Log.error("Scheduled expired message cleanup was interrupted", i)
         case t: TimeoutException => Log.error(s"Expired Messages can't be cleaned due to timeout", t)
-        case e: ExecutionException => Log.error(s"""${e.getClass.getSimpleName} "${e.getMessage}" caught by exception handler""", e)
+        case e: Throwable => Log.error(s"""${e.getClass.getSimpleName} "${e.getMessage}" caught by exception handler""", e)
       }
     }
   }
