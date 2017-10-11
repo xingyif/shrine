@@ -53,4 +53,5 @@ case class CouldNotCompleteMomTaskButOKToRetryException(task:String,
 
 case class CouldNotCompleteMomTaskException(task:String,
                                             status:Option[StatusCode] = None,
-                                            contents:Option[String] = None) extends Exception(s"Could not $task due to status code $status with message '$contents'")
+                                            queueName: String,
+                                            contents:Option[String] = None) extends Exception(s"Could not $task from queue $queueName due to status code $status with message '$contents'")
