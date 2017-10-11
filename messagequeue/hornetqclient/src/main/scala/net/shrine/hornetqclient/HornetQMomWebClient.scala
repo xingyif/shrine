@@ -6,7 +6,8 @@ import akka.actor.ActorSystem
 import net.shrine.config.ConfigExtensions
 import net.shrine.hornetqmom.LocalHornetQMom.SimpleMessage
 import net.shrine.log.Loggable
-import net.shrine.messagequeueservice.{CouldNotCompleteMomTaskButOKToRetryException, Message, MessageQueueService, Queue}
+import net.shrine.messagequeueservice.{CouldNotCompleteMomTaskButOKToRetryException, CouldNotCompleteMomTaskException, Message, MessageQueueService, Queue}
+import net.shrine.problem.{AbstractProblem, ProblemSources}
 import net.shrine.source.ConfigSource
 import org.json4s.NoTypeHints
 import org.json4s.native.Serialization
@@ -92,18 +93,17 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
       read[Queue](queueString)(formats, manifest[Queue])
     } else {
       if ((response.status == StatusCodes.NotFound) ||
-        (response.status == StatusCodes.RequestTimeout)) throw new CouldNotCompleteMomTaskButOKToRetryException(s"create a queue named $queueName", Some(response.status), Some(response.entity.asString))
-      else throw new IllegalStateException(s"Response status is ${response.status}, not Created. Cannot make a queue from this response: ${response.entity.asString}") //todo more specific custom exception SHRINE-2213
+        (response.status == StatusCodes.RequestTimeout)) throw CouldNotCompleteMomTaskButOKToRetryException(s"create a queue named $queueName", Some(response.status), Some(response.entity.asString))
+      else throw CouldNotCompleteMomTaskException(s"create a queue named $queueName", Some(response.status), queueName, Some(response.entity.asString))
     }
   }.transform({ s =>
     Success(s)
   }, { throwable =>
     throwable match {
-      case NonFatal(x) => error(s"Unable to create a Queue from '${response.entity.asString}' due to exception", throwable) //todo probably want to wrap more information into a new Throwable here SHRINE-2213
+      case NonFatal(x) => CouldNotInterpretHTTPResponseProblem(x, "create a Queue", queueName, response.entity.asString)
       case _ =>
     }
     Failure(throwable)
-
   })
 
   override def deleteQueue(queueName: String): Try[Unit] = {
@@ -163,14 +163,14 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
     } else if ((response.status == StatusCodes.NotFound) || (response.status == StatusCodes.RequestTimeout) || (response.status == StatusCodes.InternalServerError)) {
       throw CouldNotCompleteMomTaskButOKToRetryException(s"receive a message from ${from.name}", Some(response.status), Some(response.entity.asString))
     } else {
-      throw new IllegalStateException(s"Response status is ${response.status}, not OK or NotFound. Cannot make a Message from this response: ${response.entity.asString}")
+      throw CouldNotCompleteMomTaskException(s"make a Message from response ${response.entity.asString}", Some(response.status), from.name, Some(response.entity.asString))
     }
   }.transform({ s =>
     val hornetQMessage = s.map(msg => HornetQClientMessage(UUID.fromString(msg.deliveryAttemptID), msg.contents))
     Success(hornetQMessage)
   }, { throwable =>
     throwable match {
-      case NonFatal(x) => error(s"Unable to create a Message from '${response.entity.asString}' due to exception", throwable) //todo probably want to report a Problem here SHRINE-2216
+      case NonFatal(x) => CouldNotInterpretHTTPResponseProblem(x, "create a Message", from.name, response.entity.asString)
       case _ =>
     }
     Failure(throwable)
@@ -195,6 +195,13 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
       } yield response
     }
   }
+}
+
+case class CouldNotInterpretHTTPResponseProblem(x: Throwable, task: String, queueName: String, httpResponseString: String) extends AbstractProblem(ProblemSources.Hub) {
+
+  override val throwable = Some(x)
+  override val summary: String = s"Unable to $task due to exception"
+  override val description: String = s"Unable to $task from queue $queueName due to exception $x, http response: $httpResponseString"
 }
 
 // TODO in SHRINE-2167: Extract and share a SHRINE actor system
