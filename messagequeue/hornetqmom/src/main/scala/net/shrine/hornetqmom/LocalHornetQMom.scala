@@ -2,8 +2,7 @@ package net.shrine.hornetqmom
 
 import java.util
 import java.util.UUID
-import java.util.concurrent.atomic.AtomicInteger
-import java.util.concurrent.{BlockingDeque, CancellationException, ExecutionException, Executors, LinkedBlockingDeque, ScheduledExecutorService, ScheduledFuture, ThreadPoolExecutor, TimeUnit}
+import java.util.concurrent.{BlockingDeque, ExecutionException, Executors, LinkedBlockingDeque, ScheduledFuture, TimeUnit, TimeoutException}
 
 import net.shrine.config.ConfigExtensions
 import net.shrine.log.Log
@@ -179,6 +178,9 @@ object LocalHornetQMom extends MessageQueueService {
           s"DAMap size: ${messageDeliveryAttemptMap.size}")
       } catch {
         case NonFatal(x) => CleaningUpDeliveryAttemptProblem(queue, messageTimeToLiveInMillis, x)
+        case i: InterruptedException => Log.error("Scheduled expired message cleanup was interrupted", i)
+        case t: TimeoutException => Log.error(s"Expired Messages can't be cleaned due to timeout", t)
+        case e: ExecutionException => Log.error(s"Expired Messages can't be cleaned due to ${e.getCause}", e)
       }
     }
   }
@@ -197,10 +199,11 @@ object LocalHornetQMom extends MessageQueueService {
           val message = deliveryAttemptAndFutureTask._1.message.copy(currentAttemptCount = deliveryAttemptAndFutureTask._1.message.currentAttemptCount + 1)
           blocking(blockingQueue.putFirst(message))
         }
+      } catch {
+        case i: InterruptedException => Log.error("Scheduled message redelivery was interrupted", i)
+        case t: TimeoutException => Log.error(s"Messages can't be redelivered due to timeout", t)
+        case e: ExecutionException => Log.error(s"Messages can't be redelivered due to ${e.getCause}", e)
       }
-      println("about to throw exception in redelivery")
-      throw new RuntimeException("MessageRedeliveryRunner")
-
     }
   }
 
@@ -216,13 +219,12 @@ object LocalHornetQMom extends MessageQueueService {
            Log.debug(s"$removed: Removed internalMessage from it's queue ${messageToBeRemoved.toQueue}" +
                       s" because it exceeds expiration time $messageTimeToLiveInMillis millis")
           }
-          println("about to throw exception in clean")
-          throw new RuntimeException("CleanInternalMessageInDequeRunner")
         }
+      } catch {
+        case i: InterruptedException => Log.error("Scheduled execution was interrupted", i)
+        case t: TimeoutException => Log.error(s"Expired Messages can't be cleaned due to timeout", t)
+        case e: ExecutionException => Log.error(s"Expired Messages can't be cleaned due to ${e.getCause}", e)
       }
-      println("about to throw exception in clean")
-      throw new RuntimeException("CleanInternalMessageInDequeRunner")
-
     }
   }
 
@@ -231,16 +233,12 @@ object LocalHornetQMom extends MessageQueueService {
     import java.util.concurrent.ThreadFactory
 
     private object CustomizedUncaughtExceptionHandler extends Thread.UncaughtExceptionHandler {
-      val errors = new util.ArrayList[String]()
       override def uncaughtException(t: Thread, e: Throwable): Unit = {
-        println(s"""Thread $t terminated due to ${e.getClass.getSimpleName}, "${e.getMessage}" caught by the default exception handler""")
-        errors.add(s"""Thread $t terminated due to ${e.getClass.getSimpleName}, "${e.getMessage}" caught by the default exception handler""")
         Log.error(s"""Thread $t terminated due to ${e.getClass.getSimpleName}, "${e.getMessage}" caught by the default exception handler""", e)
       }
     }
 
     private class CaughtExceptionsThreadFactory extends ThreadFactory {
-//      private val customizedUncaughtExceptionHandler: CustomizedUncaughtExceptionHandler = new CustomizedUncaughtExceptionHandler
 
       override def newThread(r: Runnable): Thread = {
         val t = new Thread(r)
@@ -260,10 +258,6 @@ object LocalHornetQMom extends MessageQueueService {
           Log.debug(s"Scheduling message redelivery attempt $currentAttemptCount, redeliver message in $messageRedeliveryDelay milliseconds.")
           val futureTask: ScheduledFuture[_] = scheduler.schedule(messageRedeliveryRunner, messageRedeliveryDelay, TimeUnit.MILLISECONDS)
           messageDeliveryAttemptMap.update(deliveryAttemptID, (deliveryAttempt, futureTask))
-          println(s"size ${CustomizedUncaughtExceptionHandler.errors.size()}")
-          for (i <- 1 to CustomizedUncaughtExceptionHandler.errors.size()) {
-            println(CustomizedUncaughtExceptionHandler.errors.get(i))
-          }
         } else {
           Log.debug(s"Not scheduling message redelivery because currentAttemptCount $currentAttemptCount reached max attempt number $messageMaxDeliveryAttempts.")
         }
