@@ -2,7 +2,7 @@ package net.shrine.hornetqmom
 
 import java.util
 import java.util.UUID
-import java.util.concurrent.{BlockingDeque, ExecutionException, Executors, LinkedBlockingDeque, ScheduledFuture, TimeUnit, TimeoutException}
+import java.util.concurrent.{BlockingDeque, Executors, LinkedBlockingDeque, ScheduledFuture, TimeUnit, TimeoutException}
 
 import net.shrine.config.ConfigExtensions
 import net.shrine.log.Log
