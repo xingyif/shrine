@@ -3,7 +3,7 @@ package net.shrine.hornetqmom
 import java.util
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicInteger
-import java.util.concurrent.{BlockingDeque, Executors, LinkedBlockingDeque, ScheduledExecutorService, ScheduledFuture, TimeUnit}
+import java.util.concurrent.{BlockingDeque, CancellationException, ExecutionException, Executors, LinkedBlockingDeque, ScheduledExecutorService, ScheduledFuture, ThreadPoolExecutor, TimeUnit}
 
 import net.shrine.config.ConfigExtensions
 import net.shrine.log.Log
@@ -198,6 +198,9 @@ object LocalHornetQMom extends MessageQueueService {
           blocking(blockingQueue.putFirst(message))
         }
       }
+      println("about to throw exception in redelivery")
+      throw new RuntimeException("MessageRedeliveryRunner")
+
     }
   }
 
@@ -213,19 +216,41 @@ object LocalHornetQMom extends MessageQueueService {
            Log.debug(s"$removed: Removed internalMessage from it's queue ${messageToBeRemoved.toQueue}" +
                       s" because it exceeds expiration time $messageTimeToLiveInMillis millis")
           }
+          println("about to throw exception in clean")
+          throw new RuntimeException("CleanInternalMessageInDequeRunner")
         }
       }
+      println("about to throw exception in clean")
+      throw new RuntimeException("CleanInternalMessageInDequeRunner")
+
     }
   }
 
   object MessageScheduler {
-    private val scheduler: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
 
-    Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler {
+    import java.util.concurrent.ThreadFactory
+
+    private object CustomizedUncaughtExceptionHandler extends Thread.UncaughtExceptionHandler {
+      val errors = new util.ArrayList[String]()
       override def uncaughtException(t: Thread, e: Throwable): Unit = {
-        Log.error(s"Fatal Exception: Thread ${t.getName} terminated because of: $e. Exception message: ${e.getMessage}", e)
+        println(s"""Thread $t terminated due to ${e.getClass.getSimpleName}, "${e.getMessage}" caught by the default exception handler""")
+        errors.add(s"""Thread $t terminated due to ${e.getClass.getSimpleName}, "${e.getMessage}" caught by the default exception handler""")
+        Log.error(s"""Thread $t terminated due to ${e.getClass.getSimpleName}, "${e.getMessage}" caught by the default exception handler""", e)
       }
-    })
+    }
+
+    private class CaughtExceptionsThreadFactory extends ThreadFactory {
+//      private val customizedUncaughtExceptionHandler: CustomizedUncaughtExceptionHandler = new CustomizedUncaughtExceptionHandler
+
+      override def newThread(r: Runnable): Thread = {
+        val t = new Thread(r)
+        t.setUncaughtExceptionHandler(CustomizedUncaughtExceptionHandler)
+        t
+      }
+    }
+
+    private val caughtExceptionsThreadFactory: CaughtExceptionsThreadFactory = new CaughtExceptionsThreadFactory
+    private val scheduler = Executors.newSingleThreadScheduledExecutor(caughtExceptionsThreadFactory)
 
     def scheduleMessageRedelivery(deliveryAttemptID: UUID, deliveryAttempt: DeliveryAttempt, messageRedeliveryDelay: Long, messageMaxDeliveryAttempts: Int) = {
       val messageRedeliveryRunner: MessageRedeliveryRunner = MessageRedeliveryRunner(deliveryAttemptID, deliveryAttempt, messageRedeliveryDelay, messageMaxDeliveryAttempts)
@@ -235,6 +260,10 @@ object LocalHornetQMom extends MessageQueueService {
           Log.debug(s"Scheduling message redelivery attempt $currentAttemptCount, redeliver message in $messageRedeliveryDelay milliseconds.")
           val futureTask: ScheduledFuture[_] = scheduler.schedule(messageRedeliveryRunner, messageRedeliveryDelay, TimeUnit.MILLISECONDS)
           messageDeliveryAttemptMap.update(deliveryAttemptID, (deliveryAttempt, futureTask))
+          println(s"size ${CustomizedUncaughtExceptionHandler.errors.size()}")
+          for (i <- 1 to CustomizedUncaughtExceptionHandler.errors.size()) {
+            println(CustomizedUncaughtExceptionHandler.errors.get(i))
+          }
         } else {
           Log.debug(s"Not scheduling message redelivery because currentAttemptCount $currentAttemptCount reached max attempt number $messageMaxDeliveryAttempts.")
         }
