@@ -185,10 +185,6 @@ $.noConflict();
 <!-- other auxiliary javascript source files -->
 <script type="text/javascript" src="js-i2b2/hive/hive.ui.js"></script>
 
-<!-- SHRINE Enhanced Error -->
-<script src="js-i2b2/cells/SHRINE/EnhancedError.js"></script>
-
-
 <!-- include test helper until tests can be externalized via phantom.js -->
 <!-- script type="text/javascript" src="test/jasmine/src/labValueTestHelper.js"></script -->
 <script type="text/javascript">
@@ -903,13 +899,6 @@ $.noConflict();
 		<div class="tabBox tabDownloadData" onClick="i2b2.CRC.view.status.selectTab('downloadData')"> 
 			<div>Download Results</div>
 		</div>
-        <!-- todo:  bootstrap this section from the shrine cell -->
-        <div class="tabBox mailto" onClick="i2b2.SHRINE.plugin.navigateTo('mailto')"> 
-			<div>Contact</div>
-		</div>
-        <!--div class="tabBox query-viewer" onClick="i2b2.SHRINE.plugin.navigateTo('query-viewer')"> 
-			<div>Query Viewer</div>
-		</div-->
     </div>
     <div class="StatusBox">
         <div id="infoQueryStatusText" class="StatusBoxText" oncontextmenu="return false">
@@ -917,9 +906,6 @@ $.noConflict();
 		<div id="infoQueryStatusChart" class="StatusBoxChart" oncontextmenu="return false" style="display:none"></div>
 		<div id="infoQueryStatusReport" class="StatusBoxReport" oncontextmenu="return false" style="display:none"></div>
         <div id="infoDownloadStatusData" class="StatusBoxDownload" oncontextmenu="return false" style="display:none"></div>
-        <!-- todo:  bootstrap this section from the shrine  cell -->
-        <!--div id="shrinePlugin" class="shrinePluginContent" oncontextmenu="return false" style="display:none;">
-        </div-->
     </div>
 </div>
 

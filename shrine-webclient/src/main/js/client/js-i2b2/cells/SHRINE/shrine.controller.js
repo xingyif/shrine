@@ -128,6 +128,7 @@
 	}
 
 	function overrideI2B2($, i2b2, YAHOO) {
+		
 		//-- plugin communication --//
 		i2b2.events.networkIdReceived = new YAHOO.util.CustomEvent("networkIdReceived", i2b2);
 		i2b2.events.afterQueryInit = new YAHOO.util.CustomEvent("afterQueryInit", i2b2);

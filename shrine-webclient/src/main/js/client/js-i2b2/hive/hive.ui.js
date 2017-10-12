@@ -136,11 +136,11 @@ YAHOO.extend(Splitter, YAHOO.util.DD,
 	},
 
 	onMouseDown: function(e) {
-		jQuery('#shrine-plugin').css('display', 'none');
+		jQuery('#shrine-iframe').css('display', 'none');
 	},
 
 	onMouseUp: function(e) {
-		jQuery('#shrine-plugin').css('display', 'inline');
+		jQuery('#shrine-iframe').css('display', 'inline');
 	}
 
 
