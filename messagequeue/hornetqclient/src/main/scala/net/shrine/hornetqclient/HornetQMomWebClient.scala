@@ -8,6 +8,7 @@ import net.shrine.config.ConfigExtensions
 import net.shrine.hornetqmom.LocalHornetQMom.SimpleMessage
 import net.shrine.log.Loggable
 import net.shrine.messagequeueservice.{CouldNotCompleteMomTaskButOKToRetryException, CouldNotCompleteMomTaskDoNotRetryException, Message, MessageQueueService, Queue}
+import net.shrine.problem.{AbstractProblem, ProblemSources}
 import net.shrine.source.ConfigSource
 import org.json4s.NoTypeHints
 import org.json4s.native.Serialization
@@ -36,7 +37,6 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
 
   def webClientConfig = ConfigSource.config.getConfig("shrine.messagequeue.blockingq")
 
-  //todo Yifan's work changes the name to webClientTimeOut
   val webClientTimeOut: Duration = webClientConfig.get("webClientTimeOut", Duration(_))
   // TODO in SHRINE-2167: Extract and share a SHRINE actor system
   // the service actor replies to incoming HttpRequests
@@ -111,13 +111,13 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
     } else {
       if ((response.status == StatusCodes.NotFound) ||
         (response.status == StatusCodes.RequestTimeout)) throw CouldNotCompleteMomTaskButOKToRetryException(s"create a queue named $queueName", Some(response.status), Some(response.entity.asString))
-      else throw new IllegalStateException(s"Response status is ${response.status}, not Created. Cannot make a queue from this response: ${response.entity.asString}") //todo more specific custom exception SHRINE-2213
+      else throw new CouldNotCompleteMomTaskDoNotRetryException(s"Response status is ${response.status}, not Created. Cannot make queue $queueName from this response: ${response.entity.asString}", Some(response.status), Some(response.entity.asString))
     }
   }.transform({ s =>
     Success(s)
   }, { throwable =>
     throwable match {
-      case NonFatal(x) => error(s"Unable to create a Queue from '${response.entity.asString}' due to exception", throwable) //todo probably want to wrap more information into a new Throwable here SHRINE-2213
+      case NonFatal(x) => CouldNotInterpretHTTPResponseProblem(x, "create a Queue", queueName, response.entity.asString)
       case _ =>
     }
     Failure(throwable)
@@ -128,7 +128,7 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
     val proposedQueue: Queue = Queue(queueName)
     val deleteQueueUrl = momUrl + s"/deleteQueue/${proposedQueue.name}"
     val request: HttpRequest = HttpRequest(HttpMethods.PUT, deleteQueueUrl)
-    HttpClient.webApiTry(request, webClientTimeOut).map(r => unit) // todo StatusCodes.OK
+    webApiTry(request, s"delete $queueName").map(r => unit) // todo StatusCodes.OK
   }
 
   override def queues: Try[Seq[Queue]] = {
@@ -181,16 +181,15 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
     } else if ((response.status == StatusCodes.NotFound) || (response.status == StatusCodes.RequestTimeout) || (response.status == StatusCodes.InternalServerError)) {
       throw CouldNotCompleteMomTaskButOKToRetryException(s"receive a message from ${from.name}", Some(response.status), Some(response.entity.asString))
     } else {
-      throw new IllegalStateException(s"Response status is ${response.status}, not OK or NotFound. Cannot make a Message from this response: ${response.entity.asString}")
+      throw CouldNotCompleteMomTaskDoNotRetryException(s"make a Message from response ${response.entity.asString} for ${from.name}", Some(response.status), Some(response.entity.asString))
     }
   }.transform({ s =>
     val hornetQMessage = s.map(msg => HornetQClientMessage(UUID.fromString(msg.deliveryAttemptID), msg.contents))
     Success(hornetQMessage)
   }, { throwable =>
     throwable match {
-      case tx:TimeoutException => //todo fix here
-      case NonFatal(x) => error(s"Unable to create a Message from '${response.entity.asString}' due to exception", throwable) //todo probably want to report a Problem here SHRINE-2216
-      case _ =>
+      case NonFatal(x) => CouldNotInterpretHTTPResponseProblem(x, "create a Message", from.name, response.entity.asString)
+      case _ => //Don't touch
     }
     Failure(throwable)
   })
@@ -208,12 +207,19 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
           info(s"Message ${this.messageID} completed with ${r.status}")
           Success(r)
         }, { throwable =>
-          debug(s"Message ${this.messageID} failed in its complete process due to ${throwable.getMessage}")
+          info(s"Message ${this.messageID} failed in its complete process due to ${throwable.getMessage}")
           Failure(throwable)
         })
       } yield response
     }
   }
+}
+
+case class CouldNotInterpretHTTPResponseProblem(x: Throwable, task: String, queueName: String, httpResponseString: String) extends AbstractProblem(ProblemSources.Hub) {
+
+  override val throwable = Some(x)
+  override val summary: String = s"Unable to $task due to exception"
+  override val description: String = s"Unable to $task from queue $queueName due to exception $x, http response: $httpResponseString"
 }
 
 // TODO in SHRINE-2167: Extract and share a SHRINE actor system
