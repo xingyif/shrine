@@ -2,8 +2,7 @@
 // every file in this list will be loaded after the cell's Init function is called
 {
   files: [
-    "shrine.bundle.js",
-    "i2b2_msgs.js"
+    "dist/shrine.bundle.js"
   ],
   css: [],
   config: {

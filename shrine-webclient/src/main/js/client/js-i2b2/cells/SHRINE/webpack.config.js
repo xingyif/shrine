@@ -2,12 +2,13 @@
 const webpack = require('webpack');
 const path = require('path');
 const loaders = require('./webpack.loaders');
-const DIR = './'
+const DIR = './dist/'
 
 module.exports = {
   entry: [
     './src/shrine.plugin.js',
-    './src/shrine.controller.js', // your app's entry point
+    './src/shrine.controller.js',
+    './src/i2b2_msgs.js'
   ],
   devtool: process.env.WEBPACK_DEVTOOL || 'eval-source-map',
   output: {
