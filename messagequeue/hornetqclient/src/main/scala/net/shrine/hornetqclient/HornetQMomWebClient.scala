@@ -1,12 +1,13 @@
 package net.shrine.hornetqclient
 
 import java.util.UUID
+import java.util.concurrent.TimeoutException
 
 import akka.actor.ActorSystem
 import net.shrine.config.ConfigExtensions
 import net.shrine.hornetqmom.LocalHornetQMom.SimpleMessage
 import net.shrine.log.Loggable
-import net.shrine.messagequeueservice.{CouldNotCompleteMomTaskButOKToRetryException, CouldNotCompleteMomTaskException, Message, MessageQueueService, Queue}
+import net.shrine.messagequeueservice.{CouldNotCompleteMomTaskButOKToRetryException, CouldNotCompleteMomTaskDoNotRetryException, Message, MessageQueueService, Queue}
 import net.shrine.problem.{AbstractProblem, ProblemSources}
 import net.shrine.source.ConfigSource
 import org.json4s.NoTypeHints
@@ -36,7 +37,6 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
 
   def webClientConfig = ConfigSource.config.getConfig("shrine.messagequeue.blockingq")
 
-  //todo Yifan's work changes the name to webClientTimeOut
   val webClientTimeOut: Duration = webClientConfig.get("webClientTimeOut", Duration(_))
   // TODO in SHRINE-2167: Extract and share a SHRINE actor system
   // the service actor replies to incoming HttpRequests
@@ -81,9 +81,26 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
     val createQueueUrl = momUrl + s"/createQueue/${proposedQueue.name}"
     val request: HttpRequest = HttpRequest(HttpMethods.PUT, createQueueUrl)
     for {
-      response: HttpResponse <- Try(HttpClient.webApiCall(request, webClientTimeOut))
+      response: HttpResponse <- webApiTry(request,s"create queue $queueName")
       queue: Queue <- queueFromResponse(response, queueName)
     } yield queue
+  }
+
+  def webApiTry(request:HttpRequest,operation:String,timeLimit:Duration = webClientTimeOut):Try[HttpResponse] = {
+    HttpClient.webApiTry(request,timeLimit).transform({ response =>
+      if(response.status.isSuccess) Success(response)
+      else Try {
+        response.status match {
+          case x if x == StatusCodes.RequestTimeout => throw CouldNotCompleteMomTaskButOKToRetryException(operation, Some(response.status), Some(response.entity.asString))
+          case x if x == StatusCodes.NetworkConnectTimeout => throw CouldNotCompleteMomTaskButOKToRetryException(operation, Some(response.status), Some(response.entity.asString))
+          case x if x == StatusCodes.NetworkReadTimeout => throw CouldNotCompleteMomTaskButOKToRetryException(operation, Some(response.status), Some(response.entity.asString))
+          case _ => throw CouldNotCompleteMomTaskDoNotRetryException(operation, Some(response.status), Some(response.entity.asString))
+        }
+      }
+    }, {
+      case tx: TimeoutException => Failure(CouldNotCompleteMomTaskButOKToRetryException(operation, None, None, Some(tx)))
+      case t => Failure(t)
+    })
   }
 
   def queueFromResponse(response: HttpResponse, queueName: String): Try[Queue] = Try {
@@ -94,7 +111,7 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
     } else {
       if ((response.status == StatusCodes.NotFound) ||
         (response.status == StatusCodes.RequestTimeout)) throw CouldNotCompleteMomTaskButOKToRetryException(s"create a queue named $queueName", Some(response.status), Some(response.entity.asString))
-      else throw CouldNotCompleteMomTaskException(s"create a queue named $queueName", Some(response.status), queueName, Some(response.entity.asString))
+      else throw new CouldNotCompleteMomTaskDoNotRetryException(s"Response status is ${response.status}, not Created. Cannot make queue $queueName from this response: ${response.entity.asString}", Some(response.status), Some(response.entity.asString))
     }
   }.transform({ s =>
     Success(s)
@@ -106,18 +123,19 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
     Failure(throwable)
   })
 
+  val unit = ()
   override def deleteQueue(queueName: String): Try[Unit] = {
     val proposedQueue: Queue = Queue(queueName)
     val deleteQueueUrl = momUrl + s"/deleteQueue/${proposedQueue.name}"
     val request: HttpRequest = HttpRequest(HttpMethods.PUT, deleteQueueUrl)
-    Try(HttpClient.webApiCall(request, webClientTimeOut)) // StatusCodes.OK
+    webApiTry(request, s"delete $queueName").map(r => unit) // todo StatusCodes.OK
   }
 
   override def queues: Try[Seq[Queue]] = {
     val getQueuesUrl = momUrl + s"/getQueues"
     val request: HttpRequest = HttpRequest(HttpMethods.GET, getQueuesUrl)
     for {
-      response: HttpResponse <- Try(HttpClient.webApiCall(request, webClientTimeOut))
+      response: HttpResponse <- webApiTry(request, "getQueues")
       allQueues: Seq[Queue] <- Try {
         val allQueues: String = response.entity.asString
         implicit val formats = Serialization.formats(NoTypeHints)
@@ -137,7 +155,7 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
       entity = HttpEntity(contents) //todo set contents as XML or json SHRINE-2215
     )
     for {
-      response: HttpResponse <- Try(HttpClient.webApiCall(request, webClientTimeOut))
+      response: HttpResponse <- webApiTry(request, s"send to ${to.name}")
     } yield response
   }
 
@@ -149,7 +167,7 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
 
     for {
     //use the time to make the API call plus the timeout for the long poll
-      response: HttpResponse <- Try(HttpClient.webApiCall(request, webClientTimeOut + timeout))
+      response: HttpResponse <- webApiTry(request, s"receive from ${from.name}", webClientTimeOut + timeout)
       messageResponse: Option[Message] <- messageOptionFromResponse(response, from)
     } yield messageResponse
   }
@@ -163,7 +181,7 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
     } else if ((response.status == StatusCodes.NotFound) || (response.status == StatusCodes.RequestTimeout) || (response.status == StatusCodes.InternalServerError)) {
       throw CouldNotCompleteMomTaskButOKToRetryException(s"receive a message from ${from.name}", Some(response.status), Some(response.entity.asString))
     } else {
-      throw CouldNotCompleteMomTaskException(s"make a Message from response ${response.entity.asString}", Some(response.status), from.name, Some(response.entity.asString))
+      throw CouldNotCompleteMomTaskDoNotRetryException(s"make a Message from response ${response.entity.asString} for ${from.name}", Some(response.status), Some(response.entity.asString))
     }
   }.transform({ s =>
     val hornetQMessage = s.map(msg => HornetQClientMessage(UUID.fromString(msg.deliveryAttemptID), msg.contents))
@@ -171,7 +189,7 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
   }, { throwable =>
     throwable match {
       case NonFatal(x) => CouldNotInterpretHTTPResponseProblem(x, "create a Message", from.name, response.entity.asString)
-      case _ =>
+      case _ => //Don't touch
     }
     Failure(throwable)
   })
@@ -185,11 +203,11 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
       val completeMessageUrl: String = s"$momUrl/acknowledge"
       val request: HttpRequest = HttpRequest(HttpMethods.PUT, completeMessageUrl).withEntity(entity)
       for {
-        response: HttpResponse <- Try(HttpClient.webApiCall(request)).transform({r =>
+        response: HttpResponse <- webApiTry(request,s"complete message $messageID").transform({r =>
           info(s"Message ${this.messageID} completed with ${r.status}")
           Success(r)
         }, { throwable =>
-          debug(s"Message ${this.messageID} failed in its complete process due to ${throwable.getMessage}")
+          info(s"Message ${this.messageID} failed in its complete process due to ${throwable.getMessage}")
           Failure(throwable)
         })
       } yield response
