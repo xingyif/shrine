@@ -232,7 +232,7 @@ object LocalHornetQMom extends MessageQueueService {
 
     import java.util.concurrent.ThreadFactory
 
-    private object CustomizedUncaughtExceptionHandler extends Thread.UncaughtExceptionHandler {
+    private object LoggingUncaughtExceptionHandler extends Thread.UncaughtExceptionHandler {
       override def uncaughtException(t: Thread, e: Throwable): Unit = {
         Log.error(s"""Thread $t terminated due to ${e.getClass.getSimpleName}, "${e.getMessage}" caught by the default exception handler""", e)
       }
@@ -242,7 +242,7 @@ object LocalHornetQMom extends MessageQueueService {
 
       override def newThread(r: Runnable): Thread = {
         val t = new Thread(r)
-        t.setUncaughtExceptionHandler(CustomizedUncaughtExceptionHandler)
+        t.setUncaughtExceptionHandler(LoggingUncaughtExceptionHandler)
         t
       }
     }
