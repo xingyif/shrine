@@ -25,4 +25,4 @@ val receivedMsg: Option[Message] = HornetQMomWebClient.receive(firstQueue, first
 val msg: Message = receivedMsg.get
 val allQueues: Seq[Queue] = HornetQMomWebClient.queues.get
 msg.complete()
-HornetQMomWebClient.deleteQueue("q1")
+HornetQMomWebClient.deleteQueue("firstQueue")

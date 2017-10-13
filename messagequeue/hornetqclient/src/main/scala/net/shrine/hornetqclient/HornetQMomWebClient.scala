@@ -109,9 +109,8 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
       implicit val formats = Serialization.formats(NoTypeHints)
       read[Queue](queueString)(formats, manifest[Queue])
     } else {
-      if ((response.status == StatusCodes.NotFound) ||
-        (response.status == StatusCodes.RequestTimeout)) throw CouldNotCompleteMomTaskButOKToRetryException(s"create a queue named $queueName", Some(response.status), Some(response.entity.asString))
-      else throw new CouldNotCompleteMomTaskDoNotRetryException(s"Response status is ${response.status}, not Created. Cannot make queue $queueName from this response: ${response.entity.asString}", Some(response.status), Some(response.entity.asString))
+      if (response.status == StatusCodes.NotFound) throw CouldNotCompleteMomTaskButOKToRetryException(s"create a queue named $queueName", Some(response.status), Some(response.entity.asString))
+      else throw CouldNotCompleteMomTaskDoNotRetryException(s"Response status is ${response.status}, not Created. Cannot make queue $queueName from this response: ${response.entity.asString}", Some(response.status), Some(response.entity.asString))
     }
   }.transform({ s =>
     Success(s)
@@ -134,29 +133,21 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
   override def queues: Try[Seq[Queue]] = {
     val getQueuesUrl = momUrl + s"/getQueues"
     val request: HttpRequest = HttpRequest(HttpMethods.GET, getQueuesUrl)
-    for {
-      response: HttpResponse <- webApiTry(request, "getQueues")
-      allQueues: Seq[Queue] <- Try {
+    webApiTry(request, "getQueues").map({ response: HttpResponse =>
         val allQueues: String = response.entity.asString
         implicit val formats = Serialization.formats(NoTypeHints)
         read[Seq[Queue]](allQueues)(formats, manifest[Seq[Queue]])
-      }
-    } yield allQueues
+    })
   }
 
   override def send(contents: String, to: Queue): Try[Unit] = {
-
-    debug(s"send to $to '$contents'")
-
     val sendMessageUrl = momUrl + s"/sendMessage/${to.name}"
     val request: HttpRequest = HttpRequest(
       method = HttpMethods.PUT,
       uri = sendMessageUrl,
       entity = HttpEntity(contents) //todo set contents as XML or json SHRINE-2215
     )
-    for {
-      response: HttpResponse <- webApiTry(request, s"send to ${to.name}")
-    } yield response
+    webApiTry(request, s"send to ${to.name}").map(r => unit)
   }
 
   //todo test receiving no message SHRINE-2213
@@ -178,8 +169,6 @@ object HornetQMomWebClient extends MessageQueueService with Loggable {
     } else if (response.status == StatusCodes.OK) Some {
       val responseString = response.entity.asString
       SimpleMessage.fromJson(responseString)
-    } else if ((response.status == StatusCodes.NotFound) || (response.status == StatusCodes.RequestTimeout) || (response.status == StatusCodes.InternalServerError)) {
-      throw CouldNotCompleteMomTaskButOKToRetryException(s"receive a message from ${from.name}", Some(response.status), Some(response.entity.asString))
     } else {
       throw CouldNotCompleteMomTaskDoNotRetryException(s"make a Message from response ${response.entity.asString} for ${from.name}", Some(response.status), Some(response.entity.asString))
     }
