@@ -2,8 +2,7 @@ package net.shrine.hornetqmom
 
 import java.util
 import java.util.UUID
-import java.util.concurrent.atomic.AtomicInteger
-import java.util.concurrent.{BlockingDeque, Executors, LinkedBlockingDeque, ScheduledExecutorService, ScheduledFuture, TimeUnit}
+import java.util.concurrent.{BlockingDeque, Executors, LinkedBlockingDeque, ScheduledFuture, TimeUnit, TimeoutException}
 
 import net.shrine.config.ConfigExtensions
 import net.shrine.log.Log
@@ -179,9 +178,9 @@ object LocalHornetQMom extends MessageQueueService {
           s"DAMap size: ${messageDeliveryAttemptMap.size}")
       } catch {
         case NonFatal(x) => CleaningUpDeliveryAttemptProblem(queue, messageTimeToLiveInMillis, x)
-        //pass-through to blow up the thread, receive no more results, do something dramatic in UncaughtExceptionHandler.
-        case x => Log.error("Fatal exception while cleaning up outstanding messages", x)
-          throw x
+        case i: InterruptedException => Log.error("Scheduled expired message cleanup was interrupted", i)
+        case t: TimeoutException => Log.error(s"Expired Messages can't be cleaned due to timeout", t)
+        case e: Throwable => Log.error(s"""${e.getClass.getSimpleName} "${e.getMessage}" caught by exception handler""", e)
       }
     }
   }
@@ -190,7 +189,7 @@ object LocalHornetQMom extends MessageQueueService {
     override def run(): Unit = {
       try {
         messageDeliveryAttemptMap.get(deliveryAttemptID).fold(
-        Log.debug(s"Could not find deliveryAttempt for message ${deliveryAttempt.message.contents} from queue ${deliveryAttempt.fromQueue}")
+                  Log.debug(s"Could not find deliveryAttempt for message ${deliveryAttempt.message.contents} from queue ${deliveryAttempt.fromQueue}")
         ) { (deliveryAttemptAndFutureTask: (DeliveryAttempt, ScheduledFuture[_]))  =>
           // get the queue that the message was from, and push message back to the head of the deque
           val blockingQueue = blockingQueuePool.getOrElse(deliveryAttemptAndFutureTask._1.fromQueue.name,
@@ -200,6 +199,10 @@ object LocalHornetQMom extends MessageQueueService {
           val message = deliveryAttemptAndFutureTask._1.message.copy(currentAttemptCount = deliveryAttemptAndFutureTask._1.message.currentAttemptCount + 1)
           blocking(blockingQueue.putFirst(message))
         }
+      } catch {
+        case i: InterruptedException => Log.error("Scheduled message redelivery was interrupted", i)
+        case t: TimeoutException => Log.error(s"Messages can't be redelivered due to timeout", t)
+        case e: Throwable => Log.error(s"""${e.getClass.getSimpleName} "${e.getMessage}" caught by exception handler""", e)
       }
     }
   }
@@ -211,20 +214,41 @@ object LocalHornetQMom extends MessageQueueService {
           throw QueueDoesNotExistException(messageToBeRemoved.toQueue))
         while (!blockingQueue.isEmpty) {
           val internalMessage: InternalMessage = blockingQueue.element()
-          println(s"internalMSg: $internalMessage")
           if (System.currentTimeMillis() - internalMessage.createdTime >= messageTimeToLiveInMillis) {
             val removed = blockingQueue.remove(internalMessage)
-            println(s"internalMsg removed: $removed")
            Log.debug(s"$removed: Removed internalMessage from it's queue ${messageToBeRemoved.toQueue}" +
                       s" because it exceeds expiration time $messageTimeToLiveInMillis millis")
           }
         }
+      } catch {
+        case i: InterruptedException => Log.error("Scheduled expired message cleanup was interrupted", i)
+        case t: TimeoutException => Log.error(s"Expired Messages can't be cleaned due to timeout", t)
+        case e: Throwable => Log.error(s"""${e.getClass.getSimpleName} "${e.getMessage}" caught by exception handler""", e)
       }
     }
   }
 
   object MessageScheduler {
-    private val scheduler: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
+
+    import java.util.concurrent.ThreadFactory
+
+    private object LoggingUncaughtExceptionHandler extends Thread.UncaughtExceptionHandler {
+      override def uncaughtException(t: Thread, e: Throwable): Unit = {
+        Log.error(s"""Thread $t terminated due to ${e.getClass.getSimpleName}, "${e.getMessage}" caught by the default exception handler""", e)
+      }
+    }
+
+    private class CaughtExceptionsThreadFactory extends ThreadFactory {
+
+      override def newThread(r: Runnable): Thread = {
+        val t = new Thread(r)
+        t.setUncaughtExceptionHandler(LoggingUncaughtExceptionHandler)
+        t
+      }
+    }
+
+    private val caughtExceptionsThreadFactory: CaughtExceptionsThreadFactory = new CaughtExceptionsThreadFactory
+    private val scheduler = Executors.newSingleThreadScheduledExecutor(caughtExceptionsThreadFactory)
 
     def scheduleMessageRedelivery(deliveryAttemptID: UUID, deliveryAttempt: DeliveryAttempt, messageRedeliveryDelay: Long, messageMaxDeliveryAttempts: Int) = {
       val messageRedeliveryRunner: MessageRedeliveryRunner = MessageRedeliveryRunner(deliveryAttemptID, deliveryAttempt, messageRedeliveryDelay, messageMaxDeliveryAttempts)
@@ -239,9 +263,6 @@ object LocalHornetQMom extends MessageQueueService {
         }
       } catch {
         case NonFatal(x) => SchedulingMessageRedeliverySentinelProblem(messageRedeliveryDelay, x)
-        //pass-through to blow up the thread, receive no more results, do something dramatic in UncaughtExceptionHandler.
-        case x => Log.error("Fatal exception while scheduling a sentinel for cleaning up outstanding messages", x)
-          throw x
       }
     }
 
@@ -255,9 +276,6 @@ object LocalHornetQMom extends MessageQueueService {
         scheduler.schedule(cleanDeliveryAttemptRunner, messageTimeToLiveInMillis, TimeUnit.MILLISECONDS)
       } catch {
         case NonFatal(x) => SchedulingCleanUpSentinelProblem(queue, messageTimeToLiveInMillis, x)
-        //pass-through to blow up the thread, receive no more results, do something dramatic in UncaughtExceptionHandler.
-        case x => Log.error("Fatal exception while scheduling a sentinel for cleaning up outstanding messages", x)
-          throw x
       }
     }
 
@@ -269,9 +287,6 @@ object LocalHornetQMom extends MessageQueueService {
         scheduler.schedule(cleanInternalMessageInDequeRunner, messageTimeToLiveInMillis, TimeUnit.MILLISECONDS)
       } catch {
         case NonFatal(x) => SchedulingCleanUpSentinelProblem(queue, messageTimeToLiveInMillis, x)
-        //pass-through to blow up the thread, receive no more results, do something dramatic in UncaughtExceptionHandler.
-        case x => Log.error("Fatal exception while scheduling a sentinel for cleaning up outstanding messages", x)
-          throw x
       }
     }
 
