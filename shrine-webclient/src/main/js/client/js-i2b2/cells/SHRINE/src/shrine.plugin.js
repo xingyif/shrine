@@ -2,7 +2,7 @@
  * @todo: This logic could be designed to handle all views.
  */
 
-(function () {
+export default function shrinePlugin() {
     'use strict';
     var pluginId = 'shrinePlugin';
     i2b2.SHRINE.plugin = new i2b2Base_cellViewController(i2b2.SHRINE, pluginId);
@@ -91,4 +91,4 @@
     function enableRunQueryButton() {
         jQuery('#runBoxText').parent().unbind('click');
     }
-})();
+}

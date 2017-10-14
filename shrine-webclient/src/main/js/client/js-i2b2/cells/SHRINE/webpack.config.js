@@ -6,9 +6,7 @@ const DIR = './dist/'
 
 module.exports = {
   entry: [
-    './src/shrine.plugin.js',
-    './src/shrine.controller.js',
-    './src/i2b2_msgs.js'
+    './src/index.js'
   ],
   devtool: process.env.WEBPACK_DEVTOOL || 'eval-source-map',
   output: {
