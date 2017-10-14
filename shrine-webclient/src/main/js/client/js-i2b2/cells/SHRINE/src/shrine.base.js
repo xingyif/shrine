@@ -1,4 +1,4 @@
-import $ from 'jquery';
+import jQuery from 'jquery';
 export default class ShrineBase {
   get global() {
     return window;
@@ -13,7 +13,7 @@ export default class ShrineBase {
   }
 
   get $() {
-    return $;
+    return jQuery;
   }
 
   get prototype$() {
