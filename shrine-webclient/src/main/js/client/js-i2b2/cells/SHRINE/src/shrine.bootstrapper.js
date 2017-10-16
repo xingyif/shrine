@@ -1,8 +1,8 @@
-import ShrineDecorator from './shrine.decorator';
-import ShrineDom from './shrine-dom';
-import ShrineSnippets from './shrine-snippets';
+import I2B2Decorator from './i2b2.decorator';
+import dom from './shrine-dom';
+import snippets from './shrine-snippets';
 
-class ShrineBootstrapper extends ShrineDecorator {
+class ShrineBootstrapper extends I2B2Decorator {
   
   bootstrap() {
     this.polyfill();
@@ -25,14 +25,14 @@ class ShrineBootstrapper extends ShrineDecorator {
     }
 
     this.i2b2.events.queryResultAvailable.subscribe(() => {
-      ShrineDom.shrineCSVExport()
+      dom.shrineCSVExport()
         .css({ opacity: 1 })
         .on('click', fireExportMsg)
       this.i2b2.SHRINE.plugin.enableRunQueryButton();
     });
 
     this.i2b2.events.queryResultUnavailable.subscribe(() =>{
-      ShrineDom.shrineCSVExport()
+      dom.shrineCSVExport()
         .css({ opacity: 0.25 })
         .off('click', fireExportMsg);
     });
@@ -57,15 +57,15 @@ class ShrineBootstrapper extends ShrineDecorator {
 
 
   polyfill() {
-    ShrineDom
+    dom
       .hideI2B2Tabs()
       .hideI2B2Panels()
       .removeI2B2PrintIcon()
       .removeI2B2PrintQueryBox()
-      .addExportIcon(ShrineSnippets.shrineCSVExport)
-      .addShrineTab(ShrineSnippets.shrineTab)
-      .addShrinePanel(ShrineSnippets.shrinePanel)
-      .shrineCSVExport(ShrineSnippets.shrineCSVExport)
+      .addExportIcon(snippets.shrineCSVExport)
+      .addShrineTab(snippets.shrineTab)
+      .addShrinePanel(snippets.shrinePanel)
+      .shrineCSVExport(snippets.shrineCSVExport)
       .css({ opacity: 0.25 });
   }
 

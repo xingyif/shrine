@@ -1,13 +1,13 @@
-import ShrineDecorator from './shrine.decorator';
+import I2B2Decorator from './i2b2.decorator';
 import APPROVED_ENTRY_XML from './shrine-xml';
-class ShrineMessenger extends ShrineDecorator {
+class ShrineMessenger extends I2B2Decorator {
 	
 	constructor () {
     super();
 	}
 
 	decorate() {
-		this.shrine.ajax = i2b2.hive.communicatorFactory("SHRINE");
+		this.shrine.ajax = this.i2b2.hive.communicatorFactory("SHRINE");
 		this.shrine.cfg.msgs = {readApprovedEntries: APPROVED_ENTRY_XML};
 		this.shrine.cfg.parsers = {readApprovedEntries}
 		this.shrine.ajax._addFunctionCall(
@@ -20,6 +20,7 @@ class ShrineMessenger extends ShrineDecorator {
 	}
 }
 
+// -- method will be altered by i2b2 i.e. this.model, this.error will be added properties ---//
 function readApprovedEntries() {
 	if (!this.error) {
 		this.model = [];
