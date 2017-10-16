@@ -3,4 +3,4 @@ import controller from './shrine.controller';
 import shrinePlugin from './shrine.plugin';
 messenger.decorate();
 controller.decorate();
-shrinePlugin();
+shrinePlugin.decorate();

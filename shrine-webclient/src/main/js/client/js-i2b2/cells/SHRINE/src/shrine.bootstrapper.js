@@ -1,6 +1,6 @@
-import I2B2Decorator from './i2b2.decorator';
-import dom from './shrine-dom';
-import snippets from './shrine-snippets';
+import I2B2Decorator from './common/i2b2.decorator';
+import dom from './common/shrine-dom';
+import snippets from './common/shrine-snippets';
 
 class ShrineBootstrapper extends I2B2Decorator {
   

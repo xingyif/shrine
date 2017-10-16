@@ -1,4 +1,4 @@
-import I2B2Decorator from './i2b2.decorator';
+import I2B2Decorator from './common/i2b2.decorator';
 import bootstrapper from './shrine.bootstrapper';
 class ShrineController extends I2B2Decorator {
   constructor() {
@@ -6,24 +6,24 @@ class ShrineController extends I2B2Decorator {
   }
 
   decorate() {
-    this.shrine.RequestTopic = this.requestTopic();
-    this.shrine.TopicInfo = this.showTopicInfo();
-    this.shrine.view.modal.topicInfoDialog = this.getTopicInfoDialog();
-    
-    this.i2b2.events.afterLogin.subscribe(((type, args) => {
-      const me = this;
-      return (type, args) => {
-        if (me.i2b2.hive.cfg.lstCells.SHRINE.serverLoaded) {
-          me.i2b2.PM.model.shrine_domain = true;
-        }
-    
-        if (me.i2b2.h.isSHRINE()) {
-          me.loadTopics(type, args);
-          me.renderTopics();
-          bootstrapper.bootstrap();
-        }
-      } 
-    })())
+    this.shrine.RequestTopic = this.requestTopic(this);
+    this.shrine.TopicInfo = this.showTopicInfo(this);
+    this.shrine.view.modal.topicInfoDialog = this.getTopicInfoDialog(this);
+    this.i2b2.events.afterLogin.subscribe(this.afterLogin(this))
+  }
+
+  afterLogin(me) {
+    return (type, args) => {
+      if (me.i2b2.hive.cfg.lstCells.SHRINE.serverLoaded) {
+        me.i2b2.PM.model.shrine_domain = true;
+      }
+  
+      if (me.i2b2.h.isSHRINE()) {
+        me.loadTopics(type, args);
+        me.renderTopics();
+        bootstrapper.bootstrap();
+      }
+    } 
   }
 
   loadTopics(type, args) {
@@ -72,8 +72,7 @@ class ShrineController extends I2B2Decorator {
     this.prototype$('crcDlgResultOutputPRS').hide();
   }
 
-  requestTopic() {
-    const me = this;
+  requestTopic(me) {
     return () => {
       me.global.open(
         me.shrine.cfg.config.newTopicURL, 
@@ -82,8 +81,7 @@ class ShrineController extends I2B2Decorator {
     }
   }
 
-  showTopicInfo() {
-    const me = this;
+  showTopicInfo(me) {
     return () => {
       var s = me.prototype$('queryTopicSelect');
       if (s.selectedIndex == null || s.selectedIndex == 0) {
@@ -95,8 +93,7 @@ class ShrineController extends I2B2Decorator {
     }
   }
 
-  getTopicInfoDialog() {
-    const me = this;
+  getTopicInfoDialog(me) {
     return () => {
       return {
         showInfo: function (id) {

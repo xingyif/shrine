@@ -9,3 +9,4 @@ class I2B2Decorator extends ShrineBase {
   }
 }
 export default I2B2Decorator;
+  

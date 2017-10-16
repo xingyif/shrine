@@ -1,4 +1,4 @@
-import I2B2Decorator from './i2b2.decorator';
+import I2B2Decorator from './common/i2b2.decorator';
 import APPROVED_ENTRY_XML from './shrine-xml';
 class ShrineMessenger extends I2B2Decorator {
 	
