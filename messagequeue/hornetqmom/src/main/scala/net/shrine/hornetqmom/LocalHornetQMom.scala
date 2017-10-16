@@ -2,7 +2,7 @@ package net.shrine.hornetqmom
 
 import java.util
 import java.util.UUID
-import java.util.concurrent.{BlockingDeque, Executors, LinkedBlockingDeque, ScheduledFuture, TimeUnit, TimeoutException}
+import java.util.concurrent.{BlockingDeque, Executors, LinkedBlockingDeque, ScheduledFuture, TimeUnit}
 
 import net.shrine.config.ConfigExtensions
 import net.shrine.log.Log
@@ -16,8 +16,8 @@ import scala.collection.concurrent.{TrieMap, Map => ConcurrentMap}
 import scala.collection.immutable.Seq
 import scala.concurrent.blocking
 import scala.concurrent.duration.Duration
-import scala.util.Try
 import scala.util.control.NonFatal
+import scala.util.{Success, Try}
 /**
   * This object is the local version of the Message-Oriented Middleware API, which uses HornetQ service
   *
@@ -132,7 +132,7 @@ object LocalHornetQMom extends MessageQueueService {
       val blockingQueue = blockingQueuePool.getOrElse(queue.name, throw QueueDoesNotExistException(queue))
       blockingQueue.remove(internalToBeSentMessage)
       Log.debug(s"Message from ${deliveryAttemptAndFutureTask._1.fromQueue} is completed and its redelivery was canceled!")
-      deliveryAttemptAndFutureTask._1
+      Success(deliveryAttemptAndFutureTask._1)
     }
   }
 

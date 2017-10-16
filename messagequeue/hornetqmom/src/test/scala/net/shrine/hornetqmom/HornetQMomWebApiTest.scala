@@ -91,7 +91,7 @@ class HornetQMomWebApiTest extends FlatSpec with ScalatestRouteTest with HornetQ
 
       val messageUUID = messageUUIDList(0)
       Put("/mom/acknowledge", HttpEntity(s"$messageUUID")) ~> momRoute ~> check {
-        assertResult(ResetContent)(status)
+        assertResult(OK)(status)
       }
 
       val nonExistingUUID = UUID.randomUUID()
