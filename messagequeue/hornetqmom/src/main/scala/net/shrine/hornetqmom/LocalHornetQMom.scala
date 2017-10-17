@@ -2,7 +2,7 @@ package net.shrine.hornetqmom
 
 import java.util
 import java.util.UUID
-import java.util.concurrent.{BlockingDeque, Executors, LinkedBlockingDeque, ScheduledFuture, TimeUnit}
+import java.util.concurrent.{BlockingDeque, Executors, LinkedBlockingDeque, ScheduledFuture, TimeUnit, TimeoutException}
 
 import net.shrine.config.ConfigExtensions
 import net.shrine.log.Log
@@ -120,6 +120,7 @@ object LocalHornetQMom extends MessageQueueService {
       val queue: Queue = internalToBeSentMessage.toQueue
       // removes all deliveryAttempts of the message from the map and cancels all the scheduled redelivers
       for ((uuid: UUID, eachDAandTask: (DeliveryAttempt, ScheduledFuture[_])) <- messageDeliveryAttemptMap) {
+        // internalMessage changes when it is redelivered, but id remains the same
         if (eachDAandTask._1.message.id == internalToBeSentMessage.id) {
           messageDeliveryAttemptMap.remove(uuid)
           // cancel message redelivery scheduled task
@@ -309,6 +310,8 @@ object LocalHornetQMom extends MessageQueueService {
 }
 
 case class InternalMessage(id: UUID, contents: String, createdTime: Long, toQueue: Queue, currentAttemptCount: Int) {
+  // internalMessage changes when it is redelivered
+  // because we no longer use atomicInteger and each time we create a new InternalMessage to increment currentAttemptCount
   override def equals(obj: scala.Any): Boolean = {
     obj match {
       case other: InternalMessage =>
