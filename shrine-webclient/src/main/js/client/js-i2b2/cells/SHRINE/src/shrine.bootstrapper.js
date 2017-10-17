@@ -1,6 +1,8 @@
 import I2B2Decorator from './common/i2b2.decorator';
 import dom from './common/shrine-dom';
 import snippets from './common/shrine-snippets';
+import startQueryMixin from './mixins/CRC.ctrlr.QueryStatus';
+import queryRunMixin from './mixins/CRC.ctrlr.QryTool';
 
 class ShrineBootstrapper extends I2B2Decorator {
   
@@ -38,10 +40,8 @@ class ShrineBootstrapper extends I2B2Decorator {
     });
 
     // -- i2b2 overrides -- //
-    const queryRun = this.i2b2.CRC.ctrlr.QT._queryRun;
+    const queryRun = queryRunMixin(this);
     this.i2b2.CRC.ctrlr.QT._queryRun = (name, options) => {
-      this.shrine.plugin.disableRunQueryButton();
-      this.i2b2.events.afterQueryInit.fire({ name: name, data: options });
       return queryRun.apply(this.i2b2.CRC.ctrlr.QT, [name, options]);
     }
 
@@ -52,7 +52,12 @@ class ShrineBootstrapper extends I2B2Decorator {
     this.i2b2.CRC.ctrlr.QT.doQueryClear = clearStatus => {
       doQueryClear.apply(this.i2b2.CRC.ctrlr.QT, []);
       if (clearStatus === true) this.i2b2.events.clearQuery.fire();
-    }    
+    }
+    
+    // -- start query --//
+    const startQuery = startQueryMixin(this);
+    this.i2b2.CRC.ctrlr.QueryStatus.prototype.startQuery = (queryName, ajaxParams) => 
+      startQuery.apply(i2b2.CRC.ctrlr.QueryStatus.prototype, [queryName, ajaxParams]);
   }
 
 

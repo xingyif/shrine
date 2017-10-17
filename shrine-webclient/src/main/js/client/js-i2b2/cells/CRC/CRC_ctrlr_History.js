@@ -17,7 +17,6 @@ i2b2.CRC.ctrlr.history = {
 	
 // ================================================================================================== //
 	Refresh: function() {
-		console.info("CALLED i2b2.CRC.ctrlr.history.Refresh()");
 		// THIS FUNCTION DOES THE FOLLOWING:
 		//	1) fires a call to ajax.getCategories(), 
 		//	2) interprets the XML / populates the ONT data model, 
@@ -166,7 +165,6 @@ i2b2.CRC.ctrlr.history = {
     },
 // ================================================================================================== //
     SyncRefresh: function() {
-        console.info("CALLED i2b2.CRC.ctrlr.history.Refresh()");
         // THIS FUNCTION DOES THE FOLLOWING:
         //      1) fires a call to ajax.getCategories(),
         //      2) interprets the XML / populates the ONT data model,

@@ -6,7 +6,61 @@
 this code can be alternatively accesssed via: i2b2.CRC.view.history.ContextMenu
 
 - CRC_ctrlr_QryStatus.js: line 337
-this code can be accessed via: i2b2.CRC.ctrlr.QueryStatus.prototype.StartQuery, copy the code from private_startquery()
+this code can be accessed via: i2b2.CRC.ctrlr.QueryStatus.prototype.startQuery, copy the code from private_startquery()
+```javascript
+	function private_startQuery() {
+		var self = i2b2.CRC.ctrlr.currentQueryStatus;
+		var resultString = ""; //BG
+
+		if (private_singleton_isRunning) {
+			return false;
+		}
+
+		private_singleton_isRunning = true;
+		//BG
+		var downloadDataTab = $('infoDownloadStatusData');
+		if (downloadDataTab)
+			downloadDataTab.innerHTML = "";
+		i2b2.CRC.ctrlr.currentQueryResults = new i2b2.CRC.ctrlr.QueryResults(resultString);
+		//BG
+		self.dispDIV.innerHTML = '<b>Processing Query: "' + this.name + '"</b>';
+		self.QM.name = this.name;
+		self.QRS = [];
+		self.QI = {};
+
+		// callback processor to run the query from definition
+		this.callbackQueryDef = new i2b2_scopedCallback();
+		this.callbackQueryDef.scope = this;
+
+		this.callbackQueryDef.callback = function (results) {
+			if(!i2b2.CRC.ctrlr.currentQueryStatus) return;
+			var networkId = results.refXML.getElementsByTagName('query_master_id')[0].firstChild.nodeValue;
+			i2b2.events.networkIdReceived.fire({networkId: networkId});
+			i2b2.CRC.ctrlr.history.Refresh();
+			clearQuery();
+		}
+
+		function clearQuery() {
+			clearInterval(private_refreshInterrupt);
+			private_refreshInterrupt = false;
+			private_singleton_isRunning = false;
+			$('runBoxText').innerHTML = "Run Query";
+			i2b2.CRC.ctrlr.currentQueryStatus = false;
+			jQuery('#dialogQryRunResultType input[type="checkbox"]')
+				.each(function(a, b) { b.checked = b.disabled });
+		}
+
+		// switch to status tab
+		i2b2.CRC.view.status.showDisplay();
+
+		// timer and display refresh stuff
+		private_startTime = new Date();
+		private_refreshInterrupt = setInterval("i2b2.CRC.ctrlr.currentQueryStatus.refreshStatus()", 100);
+
+		// AJAX call
+		i2b2.CRC.ajax.runQueryInstance_fromQueryDefinition("CRC:QueryTool", this.params, this.callbackQueryDef);
+  }
+  ```
 
 ### i2b2.SHRINE.plugin 
 - CRC_ctrlr_QryStatus.js: line 151, line 303
