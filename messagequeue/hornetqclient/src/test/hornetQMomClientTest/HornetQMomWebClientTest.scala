@@ -22,7 +22,12 @@ HornetQMomWebClient.send("firstMessage", firstQueue)
 import scala.concurrent.duration.Duration
 val firstDuration: Duration = Duration.create(1, "seconds")
 val receivedMsg: Option[Message] = HornetQMomWebClient.receive(firstQueue, firstDuration).get
+assert(receivedMsg.isDefined)
 val msg: Message = receivedMsg.get
 val allQueues: Seq[Queue] = HornetQMomWebClient.queues.get
+val receivedMsg2: Option[Message] = HornetQMomWebClient.receive(firstQueue, firstDuration).get
+assert(receivedMsg2.isEmpty)
 msg.complete()
-HornetQMomWebClient.deleteQueue("q1")
+val receivedMsg3: Option[Message] = HornetQMomWebClient.receive(firstQueue, firstDuration).get
+assert(receivedMsg3.isEmpty)
+HornetQMomWebClient.deleteQueue("firstQueue")
