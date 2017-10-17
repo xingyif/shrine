@@ -6,7 +6,7 @@ export const contextMenuValidateMixin = context => {
     const itemData = context.i2b2.CRC.view.history.ContextMenu.itemData;
     if(needsDisplayQuery(context.i2b2.CRC.view.history.ContextMenu.itemData)){
       itemData.unshift({ 
-        text: "Display", 
+        text: ITEM_TEXT, 
         onClick: {
           fn: () => {
             const cr = context.i2b2.CRC.view.history.contextRecord;
