@@ -1,4 +1,4 @@
-const startQuery = (context) => 
+export const startQueryMixin = (context) => 
   function (queryName, ajaxParams) {
     const self = context.i2b2.CRC.ctrlr.currentQueryStatus;
     self.name = queryName; // for consistency with i2b2.
@@ -28,4 +28,3 @@ const startQuery = (context) =>
     context.i2b2.CRC.ajax.runQueryInstance_fromQueryDefinition("CRC:QueryTool", ajaxParams, this.callbackQueryDef);
   }
 
-  export default startQuery;
