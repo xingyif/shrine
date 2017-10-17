@@ -1,10 +1,12 @@
 package net.shrine.hornetqmom
 import java.util.UUID
+import java.util.concurrent.TimeUnit
 
 import akka.actor.ActorRefFactory
 import net.shrine.hornetqmom.LocalHornetQMom.SimpleMessage
 import net.shrine.messagequeueservice.Queue
 import net.shrine.source.ConfigSource
+import net.shrine.config.ConfigExtensions
 import org.json4s.NoTypeHints
 import org.json4s.native.Serialization
 import org.json4s.native.Serialization.read
@@ -17,6 +19,7 @@ import spray.testkit.ScalatestRouteTest
 
 import scala.collection.immutable.Seq
 import scala.collection.mutable.ArrayBuffer
+import scala.concurrent.duration.Duration
 /**
   * Test basic functions of HornetQMomWebApi
   * Created by yifan on 7/27/17.
@@ -35,10 +38,12 @@ class HornetQMomWebApiTest extends FlatSpec with ScalatestRouteTest with HornetQ
   "HornetQMomWebApi" should "create/delete the given queue, send/receive message, get queues" in {
     val configMap: Map[String, String] = Map( "shrine.messagequeue.blockingqWebApi.enabled" -> "true",
       "shrine.messagequeue.blockingq.messageTimeToLive" -> "2 days",
-      "shrine.messagequeue.blockingq.messageRedeliveryDelay" -> "1 day",
+      "shrine.messagequeue.blockingq.messageRedeliveryDelay" -> "3 seconds",
       "shrine.messagequeue.blockingq.messageMaxDeliveryAttempts" -> "2")
 
     ConfigSource.atomicConfig.configForBlock(configMap, "HornetQMomWebApiTest") {
+
+      val messageRedeliveryDelay = ConfigSource.config.get("shrine.messagequeue.blockingq.messageRedeliveryDelay", Duration(_)).toMillis
 
       Put(s"/mom/createQueue/$queueName") ~> momRoute ~> check {
         val response = new String(body.data.toByteArray)
@@ -89,6 +94,16 @@ class HornetQMomWebApiTest extends FlatSpec with ScalatestRouteTest with HornetQ
         assertResult(s"No current Message available in queue $queueName!")(response)
       }
 
+      TimeUnit.MILLISECONDS.sleep(messageRedeliveryDelay + 1000)
+      // receive after redelivery, should have one message
+      Get(s"/mom/receiveMessage/$queueName?timeOutSeconds=2") ~> momRoute ~> check {
+        val response = new String(body.data.toByteArray)
+        assertResult(OK)(status)
+        val responseMsg: SimpleMessage = SimpleMessage.fromJson(response)
+        messageUUIDList += responseMsg.deliveryAttemptID
+        assertResult(responseMsg.contents)(messageContent)
+      }
+
       val messageUUID = messageUUIDList(0)
       Put("/mom/acknowledge", HttpEntity(s"$messageUUID")) ~> momRoute ~> check {
         assertResult(OK)(status)
@@ -99,6 +114,14 @@ class HornetQMomWebApiTest extends FlatSpec with ScalatestRouteTest with HornetQ
         val response = new String(body.data.toByteArray)
         assertResult(NotFound)(status)
         assertResult(MessageDoesNotExistAndCannotBeCompletedException(nonExistingUUID).getMessage)(response)
+      }
+
+      TimeUnit.MILLISECONDS.sleep(messageRedeliveryDelay + 1000)
+      // receive after complete, should have no message
+      Get(s"/mom/receiveMessage/$queueName?timeOutSeconds=2") ~> momRoute ~> check {
+        val response = new String(body.data.toByteArray)
+        assertResult(NoContent)(status)
+        assertResult(s"No current Message available in queue $queueName!")(response)
       }
 
       Put(s"/mom/deleteQueue/$queueName") ~> momRoute ~> check {

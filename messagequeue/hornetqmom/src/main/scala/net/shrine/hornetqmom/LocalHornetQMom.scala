@@ -120,7 +120,7 @@ object LocalHornetQMom extends MessageQueueService {
       val queue: Queue = internalToBeSentMessage.toQueue
       // removes all deliveryAttempts of the message from the map and cancels all the scheduled redelivers
       for ((uuid: UUID, eachDAandTask: (DeliveryAttempt, ScheduledFuture[_])) <- messageDeliveryAttemptMap) {
-        if (eachDAandTask._1.message == internalToBeSentMessage) {
+        if (eachDAandTask._1.message.id == internalToBeSentMessage.id) {
           messageDeliveryAttemptMap.remove(uuid)
           // cancel message redelivery scheduled task
           MessageScheduler.cancelScheduledMessageRedelivery(eachDAandTask._2)
@@ -308,7 +308,15 @@ object LocalHornetQMom extends MessageQueueService {
   }
 }
 
-case class InternalMessage(id: UUID, contents: String, createdTime: Long, toQueue: Queue, currentAttemptCount: Int)
+case class InternalMessage(id: UUID, contents: String, createdTime: Long, toQueue: Queue, currentAttemptCount: Int) {
+  override def equals(obj: scala.Any): Boolean = {
+    obj match {
+      case other: InternalMessage =>
+        other.canEqual(this) && other.id == this.id
+      case _ => false
+    }
+  }
+}
 
 case class DeliveryAttempt(message: InternalMessage, createdTime: Long, fromQueue: Queue)
 
