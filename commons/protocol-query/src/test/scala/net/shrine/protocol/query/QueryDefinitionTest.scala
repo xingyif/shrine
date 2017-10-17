@@ -113,7 +113,7 @@ final class QueryDefinitionTest extends ShouldMatchersForJUnit {
     queryDef.toXmlString should equal(expected.toString)
   }
 
-  def now = QueryDefinition.truncateDate(XmlDateHelper.now)
+  def now = XmlDateHelper.now
 
   @Test
   def testFromXml {
@@ -516,29 +516,6 @@ final class QueryDefinitionTest extends ShouldMatchersForJUnit {
 
     unmarshalled.name should equal("foo")
     unmarshalled.expr.get should equal(exprConstrainedTerm)
-  }
-
-  @Test
-  def testTruncateDate {
-    val time = XmlDateHelper.parseXmlTime("2012-01-26T12:39:45.123Z").get
-
-    val truncated = QueryDefinition.truncateDate(time)
-
-    truncated should not be (null)
-    truncated should be(time)
-
-    def isDefined(field: Int) = field != DatatypeConstants.FIELD_UNDEFINED
-
-    isDefined(truncated.getHour) should be(false)
-    isDefined(truncated.getMinute) should be(false)
-    isDefined(truncated.getSecond) should be(false)
-    isDefined(truncated.getMillisecond) should be(false)
-
-    isDefined(truncated.getDay) should be(true)
-    isDefined(truncated.getMonth) should be(true)
-    isDefined(truncated.getYear) should be(true)
-
-    truncated.toString should equal("2012-01-26Z")
   }
 
   @Test

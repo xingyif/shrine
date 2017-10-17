@@ -189,18 +189,6 @@ object QueryDefinition extends XmlUnmarshaller[Try[QueryDefinition]] with Loggab
 
   private[query] def isAllTerms(exprs: Seq[Expression]) = !exprs.isEmpty && exprs.forall(_.isTerm)
 
-  //NB: Chop off hour, minute, and second parts from dates by unsetting those fields. 
-  //I don't know if this is right, but it is what the existing webclient seems to do.
-  //NB: Mutates passed-in XmlGC
-  private[query] def truncateDate(date: XMLGregorianCalendar): XMLGregorianCalendar = {
-    date.setHour(DatatypeConstants.FIELD_UNDEFINED)
-    date.setMinute(DatatypeConstants.FIELD_UNDEFINED)
-    date.setSecond(DatatypeConstants.FIELD_UNDEFINED)
-    date.setMillisecond(DatatypeConstants.FIELD_UNDEFINED)
-
-    date
-  }
-
   def toPanels(expr: Expression): Seq[Panel] = {
     //NB: Revisit default PanelTiming here
 
@@ -227,10 +215,7 @@ object QueryDefinition extends XmlUnmarshaller[Try[QueryDefinition]] with Loggab
         }
       }
       case DateBounded(start, end, e) => {
-        val truncatedStart = start.map(truncateDate)
-        val truncatedEnd = end.map(truncateDate)
-
-        toPanels(e).map(_.withStart(truncatedStart)).map(_.withEnd(truncatedEnd))
+        toPanels(e).map(_.withStart(start)).map(_.withEnd(end))
       }
       case OccuranceLimited(min, e) => toPanels(e).map(_.withMinOccurrences(min))
       case q: Query => {

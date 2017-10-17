@@ -540,18 +540,12 @@ final case class DateBounded(start: Option[XMLGregorianCalendar], end: Option[XM
     ("end" -> end.map(_.toString)) ~
     ("expression" -> expr.toJson))
 
-  override def normalize = {
-    def normalize(date: Option[XMLGregorianCalendar]) = date.map(_.normalize)
+  override def normalize: Expression = {
 
     if (start.isEmpty && end.isEmpty) {
       expr.normalize
     } else {
-      //NB: Dates are normalized to UTC.  I don't know if this is right, but it's what the existing webclient seems to do.
-      val normalizedSubExpr = expr.normalize
-      val normalizedStart = normalize(start)
-      val normalizedEnd = normalize(end)
-
-      DateBounded(normalizedStart, normalizedEnd, normalizedSubExpr)
+      copy(expr = expr.normalize)
     }
   }
 
