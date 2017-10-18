@@ -1,7 +1,7 @@
 import I2B2Decorator from './common/i2b2.decorator';
 import dom from './common/shrine-dom';
 import snippets from './common/shrine-snippets';
-import { startQueryMixin } from './mixins/CRC.ctrlr.QueryStatus';
+import { startQueryMixin, isQueryRunningMixin, refreshStatusMixin } from './mixins/CRC.ctrlr.QueryStatus';
 import * as QTMixins from './mixins/CRC.ctrlr.QryTool';
 import { contextMenuValidateMixin } from './mixins/CRC.view.History';
 
@@ -41,9 +41,11 @@ class ShrineBootstrapper extends I2B2Decorator {
     });
 
     this.i2b2.CRC.ctrlr.QT._queryRun = QTMixins.queryRunMixin(this)
-    this.i2b2.CRC.view.status.showDisplay = () => { /*empty method*/ };
+    this.i2b2.CRC.view.status.showDisplay = () => { /*empty method to not break referenes from i2b2*/ };
     this.i2b2.CRC.ctrlr.QT.doQueryClear = QTMixins.queryClearMixin(this);
     this.i2b2.CRC.ctrlr.QueryStatus.prototype.startQuery = startQueryMixin(this);
+    this.i2b2.CRC.ctrlr.QueryStatus.prototype.isQueryRunning = isQueryRunningMixin();
+    this.i2b2.CRC.ctrlr.QueryStatus.prototype.refreshStatus = refreshStatusMixin();
     this.i2b2.CRC.view.history.ContextMenuValidate = contextMenuValidateMixin(this);
   }
 

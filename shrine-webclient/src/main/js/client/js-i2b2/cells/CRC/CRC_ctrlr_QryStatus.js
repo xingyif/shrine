@@ -149,7 +149,7 @@ i2b2.CRC.ctrlr.QueryStatus.prototype = function () {
 			self.dispDIV.innerHTML = '<div style="clear:both;"><div style="float:left; font-weight:bold">Finished Query: "' + self.QM.name + '"</div>';
 			self.dispDIV.innerHTML += '<div style="float:right">[' + s + ' secs]</div>';
 			$('runBoxText').innerHTML = "Run Query";
-			i2b2.SHRINE.plugin.enableRunQueryButton();
+			//i2b2.SHRINE.plugin.enableRunQueryButton();
 		}
 		self.dispDIV.innerHTML += '</div>';
 		if ((!private_singleton_isRunning) && (undefined != self.QI.end_date)) {
