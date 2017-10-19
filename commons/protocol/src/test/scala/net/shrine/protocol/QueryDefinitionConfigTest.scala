@@ -62,6 +62,8 @@ final class QueryDefinitionConfigTest extends ShouldMatchersForJUnit {
       }
     ]}""", startDate, endDate)
     val actual = QueryDefinitionConfig.parseQueryDefinition(parse(queryDefJson))
+    actual.name should equal("query definition")
+
     val actualExpr = actual.expr.get
     val panels = QueryDefinition.toPanels(actualExpr)
 
