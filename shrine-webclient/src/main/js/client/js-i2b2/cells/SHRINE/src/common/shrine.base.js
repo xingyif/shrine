@@ -6,6 +6,41 @@ export default class ShrineBase {
     this.i2b2.events.afterCellInit.subscribe(function(en,co) {
       console.log('after cell init!');
     });
+
+    this.i2b2.events.afterAllCellsLoaded.subscribe(function(en,co) {
+      console.log('after cell init!');
+    });
+
+    this.i2b2.events.afterFrameworkInit.subscribe(function(en,co) {
+      console.log('after cell init!');
+    });
+
+    this.i2b2.events.afterHiveInit.subscribe(function(en,co) {
+      console.log('after cell init!');
+    });
+
+    this.i2b2.events.afterLogin.subscribe(function(en,co) {
+      console.log('after cell init!');
+    });
+
+    this.i2b2.events.changedViewMode.subscribe(function(en,co) {
+      console.log('after cell init!');
+    });
+
+    this.i2b2.events.changedZoomWindows.subscribe(function(en,co) {
+      console.log('after cell init!');
+    });
+
+    this.i2b2.events.initView.subscribe(function(en,co) {
+      console.log('after cell init!');
+    });
+
+    this.i2b2.events._privRemoveInitFuncs.subscribe(function(en,co) {
+      console.log('after cell init!');
+    });
+    this.i2b2.events._privLoadCells.subscribe(function(en,co) {
+      console.log('after cell init!');
+    });
   }
 
   get global() {
