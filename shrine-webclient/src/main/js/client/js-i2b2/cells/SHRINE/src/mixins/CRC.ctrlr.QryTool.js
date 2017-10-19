@@ -45,7 +45,7 @@ export const queryRunMixin = (context) =>
 
   export const queryClearMixin = (context) => {
     const doQueryClear = context.i2b2.CRC.ctrlr.QT.doQueryClear;
-    clearStatus => {
+    return clearStatus => {
       doQueryClear.apply(context.i2b2.CRC.ctrlr.QT, []);
       if (clearStatus === true) context.i2b2.events.clearQuery.fire();
     } 

@@ -28,16 +28,18 @@ class ShrineBootstrapper extends I2B2Decorator {
     }
 
     this.i2b2.events.queryResultAvailable.subscribe(() => {
-      dom.shrineCSVExport()
+      const csvExport = dom.shrineCSVExport();
+      csvExport[0].onclick = fireExportMsg;
+      csvExport
         .css({ opacity: 1 })
-        .on('click', fireExportMsg)
       this.i2b2.SHRINE.plugin.enableRunQueryButton();
     });
 
     this.i2b2.events.queryResultUnavailable.subscribe(() => {
-      dom.shrineCSVExport()
-        .css({ opacity: 0.25 })
-        .off('click', fireExportMsg);
+      const csvExport = dom.shrineCSVExport()
+      csvExport[0].onclick = null;
+      csvExport
+        .css({ opacity: 0.25 });
     });
 
     this.i2b2.CRC.ctrlr.QT._queryRun = QTMixins.queryRunMixin(this)

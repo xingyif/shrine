@@ -17,7 +17,7 @@ export const contextMenuValidateMixin = context => {
           }
         }
       })
+      ContextMenuValidate(event);
     }
-    ContextMenuValidate(event);
   };
 }
