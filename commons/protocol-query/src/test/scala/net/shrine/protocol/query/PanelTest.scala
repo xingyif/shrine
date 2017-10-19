@@ -26,7 +26,7 @@ final class PanelTest extends ShouldMatchersForJUnit {
 
   private val p2 = Panel(1, false, 1, None, None, PanelTiming.Any, Seq(t1))
 
-  private def now = QueryDefinition.truncateDate(XmlDateHelper.now)
+  private def now = XmlDateHelper.now
 
   private val startDate = Some(now)
   private val endDate = Some(now)

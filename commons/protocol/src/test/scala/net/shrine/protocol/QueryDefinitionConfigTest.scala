@@ -42,20 +42,10 @@ final class QueryDefinitionConfigTest extends ShouldMatchersForJUnit {
     actual.terms.contains(Term("term2")) should be(true)
   }
 
-  def clearTime(date: XMLGregorianCalendar): XMLGregorianCalendar = {
-    date.setHour(DatatypeConstants.FIELD_UNDEFINED)
-    date.setMinute(DatatypeConstants.FIELD_UNDEFINED)
-    date.setSecond(DatatypeConstants.FIELD_UNDEFINED)
-    date.setMillisecond(DatatypeConstants.FIELD_UNDEFINED)
-    date.setTimezone(DatatypeConstants.FIELD_UNDEFINED)
-
-    date
-  }
-
   @Test
   def testParseQueryDefinition {
-    val startCal = clearTime(XmlDateHelper.now)
-    val endCal = clearTime(XmlDateHelper.now)
+    val startCal = XmlDateHelper.now
+    val endCal = XmlDateHelper.now
     val startDate = startCal.toString
     val endDate = endCal.toString
     val queryDefJson = String.format("""{"name": "query definition",
@@ -71,19 +61,17 @@ final class QueryDefinitionConfigTest extends ShouldMatchersForJUnit {
         "terms" : [{"value" : "term2"}]
       }
     ]}""", startDate, endDate)
-    
     val actual = QueryDefinitionConfig.parseQueryDefinition(parse(queryDefJson))
-    
     actual.name should equal("query definition")
-    
+
     val actualExpr = actual.expr.get
-    
     val panels = QueryDefinition.toPanels(actualExpr)
-    
+
     panels.size should equal(2)
     panels(0).number should equal(1)
     panels(0).inverted should be(false)
     panels(0).minOccurrences should equal(1)
+
     panels(0).start.get.toString should equal(startDate)
     panels(0).end.get.toString should equal(endDate)
     panels(0).terms.contains(Term("term1")) should be(true)

@@ -416,25 +416,6 @@ final class ExpressionTest extends ShouldMatchersForJUnit {
   }
 
   @Test
-  def testDateBoundedTimeZonesAreNormalized {
-    val db = DateBounded(Some(now), Some(now), And(And(t1))).normalize.asInstanceOf[DateBounded]
-
-    def isUTC(date: Option[XMLGregorianCalendar]): Boolean = date.map(_.getTimeZone(0).getRawOffset == 0).getOrElse(false)
-
-    db.expr should equal(t1)
-
-    isUTC(db.start) should be(true)
-
-    isUTC(db.end) should be(true)
-
-    val db2 = DateBounded(None, Some(now), And(And(t1))).normalize.asInstanceOf[DateBounded]
-
-    isUTC(db2.start) should be(false)
-
-    isUTC(db2.end) should be(true)
-  }
-
-  @Test
   def testNormalizeDateBounded {
 
     t1 should equal(DateBounded(None, None, t1).normalize)
