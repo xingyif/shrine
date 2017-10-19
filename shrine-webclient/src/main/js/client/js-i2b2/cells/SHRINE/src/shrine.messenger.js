@@ -1,16 +1,16 @@
 import I2B2Decorator from './common/i2b2.decorator';
 import APPROVED_ENTRY_XML from './shrine-xml';
 class ShrineMessenger extends I2B2Decorator {
-	
-	constructor () {
-    super();
+
+	constructor() {
+		super();
 	}
 
 	decorate() {
 		this.shrine.ajax = this.i2b2.hive.communicatorFactory("SHRINE");
-		this.shrine.cfg.msgs = {readApprovedEntries: APPROVED_ENTRY_XML};
-		let readApprovedEntries = this.readApprovedEntries(this);
-		this.shrine.cfg.parsers = {readApprovedEntries};
+		this.shrine.cfg.msgs = { readApprovedEntries: APPROVED_ENTRY_XML };
+		let readApprovedEntries = functions.readApprovedEntries(this);
+		this.shrine.cfg.parsers = { readApprovedEntries };
 		this.shrine.ajax._addFunctionCall(
 			"readApprovedEntries",
 			this.shrine.cfg.config.readApprovedURL,
@@ -19,9 +19,11 @@ class ShrineMessenger extends I2B2Decorator {
 			this.shrine.cfg.parsers.readApprovedEntries
 		);
 	}
-	//return 'function instead of =>' because i2b2 treats this as both an ES5 scope and a method.
-	readApprovedEntries(context) {
-		return function() {
+}
+
+const functions = {
+	readApprovedEntries: (context) =>
+		function () {
 			if (!this.error) {
 				this.model = [];
 				var qm = this.refXML.getElementsByTagName('sheriffEntry');
@@ -39,7 +41,6 @@ class ShrineMessenger extends I2B2Decorator {
 			}
 			return this;
 		}
-	}
 }
 
 // -- singleton --//

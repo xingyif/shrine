@@ -4,7 +4,7 @@
   "description": "SHRINE I2B2 Webclient Cell",
   "main": "cell_config_data.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "babel-tape-runner src/**/*.spec.js",
     "build": "webpack -p -d",
     "clean": "rimraf dist"
   },
@@ -22,11 +22,12 @@
     "babel-runtime": "^6.26.0",
     "jquery": "^3.2.1",
     "prototype": "0.0.5",
-    "tape": "^4.8.0",
     "webpack": "^3.7.1",
     "webpack-cleanup-plugin": "^0.5.1"
   },
   "devDependencies": {
-    "rimraf": "^2.6.2"
+    "babel-tape-runner": "^2.0.1",
+    "rimraf": "^2.6.2",
+    "tape": "^4.8.0"
   }
 }

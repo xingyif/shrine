@@ -6,24 +6,14 @@ class ShrineController extends I2B2Decorator {
   }
 
   decorate() {
-    this.shrine.RequestTopic = this.requestTopic(this);
-    this.shrine.TopicInfo = this.showTopicInfo(this);
-    this.shrine.view.modal.topicInfoDialog = this.getTopicInfoDialog(this);
-    this.i2b2.events.afterLogin.subscribe(this.afterLogin(this))
+    this.shrine.RequestTopic = functions.RequestTopic(this);
+    this.shrine.TopicInfo = functions.TopicInfo(this);
+    this.shrine.view.modal.topicInfoDialog = functions.topicInfoDialog(this);
+    this.i2b2.events.afterLogin.subscribe(functions.afterLogin(this))
   }
 
-  afterLogin(me) {
-    return (type, args) => {
-      if (me.i2b2.hive.cfg.lstCells.SHRINE.serverLoaded) {
-        me.i2b2.PM.model.shrine_domain = true;
-      }
-  
-      if (me.i2b2.h.isSHRINE()) {
-        me.loadTopics(type, args);
-        me.renderTopics();
-        bootstrapper.bootstrap();
-      }
-    } 
+  startBootstrapper() {
+    bootstrapper.bootstrap();
   }
 
   loadTopics(type, args) {
@@ -45,7 +35,7 @@ class ShrineController extends I2B2Decorator {
       }
     }
   }
-  
+
   renderTopics() {
     var dropdown = this.prototype$('queryTopicSelect');
 
@@ -71,60 +61,68 @@ class ShrineController extends I2B2Decorator {
     this.prototype$$('#crcDlgResultOutputPRC input')[0].disabled = true;
     this.prototype$('crcDlgResultOutputPRS').hide();
   }
+}
 
-  requestTopic(me) {
-    return () => {
-      me.global.open(
-        me.shrine.cfg.config.newTopicURL, 
-        'RequestTopic', 'toolbar=1,scrollbars=1,location=1,statusbar=1,menubar=1,resizable=1,width=800,height=600'
-      );
+// -- these closure functions have their scope altered by i2b2 -- //
+const functions = {
+  RequestTopic: (context) => () => {
+    context.global.open(
+      context.shrine.cfg.config.newTopicURL,
+      'RequestTopic', 'toolbar=1,scrollbars=1,location=1,statusbar=1,menubar=1,resizable=1,width=800,height=600'
+    );
+  },
+
+  TopicInfo: (context) => () => {
+    var s = context.prototype$('queryTopicSelect');
+    if (s.selectedIndex == null || s.selectedIndex == 0) {
+      return true;
     }
-  }
+    var topicID = s.options[s.selectedIndex].value;
+    if (topicID == "") { return; }
+    context.shrine.view.modal.topicInfoDialog.showInfo(topicID);
+  },
 
-  showTopicInfo(me) {
-    return () => {
-      var s = me.prototype$('queryTopicSelect');
-      if (s.selectedIndex == null || s.selectedIndex == 0) {
-        return true;
-      }
-      var topicID = s.options[s.selectedIndex].value;
-      if (topicID == "") { return; }
-      me.shrine.view.modal.topicInfoDialog.showInfo(topicID);
-    }
-  }
-
-  getTopicInfoDialog(me) {
-    return () => {
-      return {
-        showInfo: function (id) {
-          const thisRef = me.shrine.view.modal.topicInfoDialog;
-          //TODO: encapsulate this reference better.
-          const SimpleDialog = me.YAHOO.widget.SimpleDialog;
-          if (!thisRef.yuiDialog) {
-            thisRef.yuiDialog = new SimpleDialog("SHRINE-info-panel", {
-              zindex: 700,
-              width: "400px",
-              fixedcenter: true,
-              constraintoviewport: true
-            });
-            thisRef.yuiDialog.render(me.context.document.body);
-            // show the form
-            thisRef.yuiDialog.show();
-          }
+  topicInfoDialog: (context) => () => ({
+      showInfo: function (id) {
+        const thisRef = context.shrine.view.modal.topicInfoDialog;
+        //TODO: encapsulate this reference better.
+        const SimpleDialog = context.YAHOO.widget.SimpleDialog;
+        if (!thisRef.yuiDialog) {
+          thisRef.yuiDialog = new SimpleDialog("SHRINE-info-panel", {
+            zindex: 700,
+            width: "400px",
+            fixedcenter: true,
+            constraintoviewport: true
+          });
+          thisRef.yuiDialog.render(context.global.document.body);
           // show the form
-          me.prototype$('SHRINE-info-panel').show();
           thisRef.yuiDialog.show();
-          thisRef.yuiDialog.center();
-          // display the topic info
-          var rec = i2b2.SHRINE.model.topics[id];
-          if (undefined == rec) { thisRef.yuiDialog.hide(); }	// bad id == bail out here
-          me.prototype$('SHRINE-info-title').innerHTML = rec.Name;
-          me.prototype$('SHRINE-info-body').innerHTML = rec.Intent;
         }
-      };
+        // show the form
+        context.prototype$('SHRINE-info-panel').show();
+        thisRef.yuiDialog.show();
+        thisRef.yuiDialog.center();
+        // display the topic info
+        var rec = i2b2.SHRINE.model.topics[id];
+        if (undefined == rec) { thisRef.yuiDialog.hide(); }	// bad id == bail out here
+        context.prototype$('SHRINE-info-title').innerHTML = rec.Name;
+        context.prototype$('SHRINE-info-body').innerHTML = rec.Intent;
+      }
+    }),
+  
+  afterLogin: (context) => (type, args) => {
+    if (context.i2b2.hive.cfg.lstCells.SHRINE.serverLoaded) {
+      context.i2b2.PM.model.shrine_domain = true;
+    }
+
+    if (context.i2b2.h.isSHRINE()) {
+      context.loadTopics(type, args);
+      context.renderTopics();
+      bootstrapper.bootstrap();
     }
   }
 }
 
 // -- singleton -- //
 export default new ShrineController();
+
