@@ -16,8 +16,8 @@ import scala.collection.concurrent.{TrieMap, Map => ConcurrentMap}
 import scala.collection.immutable.Seq
 import scala.concurrent.blocking
 import scala.concurrent.duration.Duration
-import scala.util.Try
 import scala.util.control.NonFatal
+import scala.util.{Success, Try}
 /**
   * This object is the local version of the Message-Oriented Middleware API, which uses HornetQ service
   *
@@ -120,7 +120,8 @@ object LocalHornetQMom extends MessageQueueService {
       val queue: Queue = internalToBeSentMessage.toQueue
       // removes all deliveryAttempts of the message from the map and cancels all the scheduled redelivers
       for ((uuid: UUID, eachDAandTask: (DeliveryAttempt, ScheduledFuture[_])) <- messageDeliveryAttemptMap) {
-        if (eachDAandTask._1.message == internalToBeSentMessage) {
+        // internalMessage changes when it is redelivered, but id remains the same
+        if (eachDAandTask._1.message.id == internalToBeSentMessage.id) {
           messageDeliveryAttemptMap.remove(uuid)
           // cancel message redelivery scheduled task
           MessageScheduler.cancelScheduledMessageRedelivery(eachDAandTask._2)
@@ -132,7 +133,7 @@ object LocalHornetQMom extends MessageQueueService {
       val blockingQueue = blockingQueuePool.getOrElse(queue.name, throw QueueDoesNotExistException(queue))
       blockingQueue.remove(internalToBeSentMessage)
       Log.debug(s"Message from ${deliveryAttemptAndFutureTask._1.fromQueue} is completed and its redelivery was canceled!")
-      deliveryAttemptAndFutureTask._1
+      Success(deliveryAttemptAndFutureTask._1)
     }
   }
 
@@ -308,7 +309,17 @@ object LocalHornetQMom extends MessageQueueService {
   }
 }
 
-case class InternalMessage(id: UUID, contents: String, createdTime: Long, toQueue: Queue, currentAttemptCount: Int)
+case class InternalMessage(id: UUID, contents: String, createdTime: Long, toQueue: Queue, currentAttemptCount: Int) {
+  // internalMessage changes when it is redelivered
+  // because we no longer use atomicInteger and each time we create a new InternalMessage to increment currentAttemptCount
+  override def equals(obj: scala.Any): Boolean = {
+    obj match {
+      case other: InternalMessage =>
+        other.canEqual(this) && other.id == this.id
+      case _ => false
+    }
+  }
+}
 
 case class DeliveryAttempt(message: InternalMessage, createdTime: Long, fromQueue: Queue)
 

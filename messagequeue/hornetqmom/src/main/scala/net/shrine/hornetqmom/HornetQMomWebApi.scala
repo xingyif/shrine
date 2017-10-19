@@ -181,13 +181,14 @@ trait HornetQMomWebApi extends HttpService
 
   // SQS has DeleteMessageResult deleteMessage(String queueUrl, String receiptHandle)
   def acknowledge: Route = path("acknowledge") {
-    entity(as[String]) { deliveryAttemptID =>
+    requestInstance { request =>
+      val deliveryAttemptID = request.entity.asString
+      val id: UUID = UUID.fromString(deliveryAttemptID)
       detach() {
-        val id: UUID = UUID.fromString(deliveryAttemptID)
         val completeTry: Try[Unit] = LocalHornetQMom.completeMessage(id)
         completeTry match {
           case Success(s) => {
-            complete(StatusCodes.ResetContent)
+            complete(StatusCodes.OK) // ResetContent causes connection timeout
           }
           case Failure(x) => {
             x match {

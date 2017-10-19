@@ -2,22 +2,25 @@
 # SHRINE References in I2B2 CODE:
 
 ### 	i2b2.events.networkIdReceived
-- CRC_view_History.js: line 499
+- CRC_view_History.js: line 499 (complete)
 this code can be alternatively accesssed via: i2b2.CRC.view.history.ContextMenu
 
-- CRC_ctrlr_QryStatus.js: line 337
-this code can be accessed via: i2b2.CRC.ctrlr.QueryStatus.prototype.StartQuery, copy the code from private_startquery()
+- CRC_ctrlr_QryStatus.js: line 337 (complete)
+this code can be accessed via: i2b2.CRC.ctrlr.QueryStatus.prototype.startQuery, copy the code from private_startquery()
+
 
 ### i2b2.SHRINE.plugin 
 - CRC_ctrlr_QryStatus.js: line 151, line 303
 this code can be accessed via i2b2.CRC.ctrlr.QueryStatus.prototype.refreshStatus (you can copy existing code and override it.)
 
+(might want to consider rewriting the entire class)
+
 - CRC_ctrlr_QryTool.js: line 64
-this code can be accessed by making a copy of i2b2.CRC.ctrlr.QT.doQueryClear and calling it after or before referencing the plugin.
+this code can be accessed by making a copy of i2b2.CRC.ctrlr.QT.doQueryClear and calling it after or before referencing the plugin. (this will work!)
 
 # Overridden I2B2 Methods
-- i2b2.CRC.ctrlr.QT.doQueryClear
-- i2b2.CRC.ctrlr.QT._queryRun;
+- i2b2.CRC.ctrlr.QT.doQueryClear (complete)
+- i2b2.CRC.ctrlr.QT._queryRun; (complete)
 
 # shrinePlugin refrences:
 - CRC_view_Status.js: line 158, line 166, line 179, line 187
