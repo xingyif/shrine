@@ -1,6 +1,8 @@
  
 # SHRINE References in I2B2 CODE:
 
+(Work in progress...will have instructions for building and running tests..e.t.c.)
+
 ### 	i2b2.events.networkIdReceived
 - CRC_view_History.js: line 499 (complete)
 this code can be alternatively accesssed via: i2b2.CRC.view.history.ContextMenu

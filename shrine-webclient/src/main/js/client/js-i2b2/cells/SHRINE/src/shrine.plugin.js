@@ -1,5 +1,9 @@
+/**
+ * This Module is for all plugin related functionality that is exposed to the i2b2 framework.
+ */
 import I2B2Decorator from './common/i2b2.decorator';
 import snippets from './common/shrine-snippets';
+import dom from './common/shrine-dom';
 
 export class ShrinePlugin extends I2B2Decorator {
     constructor() {
@@ -13,6 +17,21 @@ export class ShrinePlugin extends I2B2Decorator {
         this.i2b2.SHRINE.plugin.enableRunQueryButton = functions.enableRunQueryButton(this);
         this.i2b2.SHRINE.plugin.disableRunQueryButton = functions.disableRunQueryButton(this);
         this.i2b2.SHRINE.plugin.errorDetail = functions.errorDetail(this, this.YAHOO.widget.SimpleDialog);
+
+        const CustomEvent = this.YAHOO.util.CustomEvent;
+        this.i2b2.events.networkIdReceived = new CustomEvent("networkIdReceived", this.i2b2);
+        this.i2b2.events.afterQueryInit = new CustomEvent("afterQueryInit", this.i2b2);
+        this.i2b2.events.queryResultAvailable = new CustomEvent("queryResultAvailable", this.i2b2);
+        this.i2b2.events.queryResultUnavailable = new CustomEvent("queryResultUnvailable", this.i2b2);
+        this.i2b2.events.exportQueryResult = new CustomEvent("exportQueryResult", this.i2b2);
+        this.i2b2.events.clearQuery = new CustomEvent("clearQuery", this.i2b2);
+        this.i2b2.events.queryResultAvailable.subscribe(functions.queryResultAvailable(this));
+        this.i2b2.events.queryResultUnavailable.subscribe(() => {
+          const csvExport = dom.shrineCSVExport()
+          csvExport[0].onclick = null;
+          csvExport
+            .css({ opacity: 0.25 });
+        });
     }
 }
 
@@ -20,6 +39,16 @@ export class ShrinePlugin extends I2B2Decorator {
 const functions = {
     enableRunQueryButton: context => () => context.$('#runBoxText').parent().unbind('click'),
     disableRunQueryButton: context => () => context.$('#runBoxText').parent().bind('click', e => e.preventDefault()),
+    queryResultAvailable: context => () => {
+        const csvExport = dom.shrineCSVExport();
+        csvExport[0].onclick = e => {
+            e.stopPropagation();
+            context.i2b2.events.exportQueryResult.fire();
+        }
+        csvExport
+          .css({ opacity: 1 })
+        context.i2b2.SHRINE.plugin.enableRunQueryButton();
+    },
     errorDetail: context => data => {
         context.$('#pluginErrorDetail').remove();
         context.$('body').append(context.$(snippets.dialogHTML(context.i2b2, data)));

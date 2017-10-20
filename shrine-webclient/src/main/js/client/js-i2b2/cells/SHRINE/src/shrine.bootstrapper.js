@@ -1,3 +1,6 @@
+/**
+ * This Module is altering/bootstrapping the i2b2 UI to accomodate Shrine.
+ */
 import I2B2Decorator from './common/i2b2.decorator';
 import dom from './common/shrine-dom';
 import snippets from './common/shrine-snippets';
@@ -14,34 +17,6 @@ class ShrineBootstrapper extends I2B2Decorator {
   }
 
   decorate() {
-    const CustomEvent = this.YAHOO.util.CustomEvent;
-    this.i2b2.events.networkIdReceived = new CustomEvent("networkIdReceived", this.i2b2);
-    this.i2b2.events.afterQueryInit = new CustomEvent("afterQueryInit", this.i2b2);
-    this.i2b2.events.queryResultAvailable = new CustomEvent("queryResultAvailable", this.i2b2);
-    this.i2b2.events.queryResultUnavailable = new CustomEvent("queryResultUnvailable", this.i2b2);
-    this.i2b2.events.exportQueryResult = new CustomEvent("exportQueryResult", this.i2b2);
-    this.i2b2.events.clearQuery = new CustomEvent("clearQuery", this.i2b2);
-
-    const fireExportMsg = e => {
-      e.stopPropagation();
-      this.i2b2.events.exportQueryResult.fire();
-    }
-
-    this.i2b2.events.queryResultAvailable.subscribe(() => {
-      const csvExport = dom.shrineCSVExport();
-      csvExport[0].onclick = fireExportMsg;
-      csvExport
-        .css({ opacity: 1 })
-      this.i2b2.SHRINE.plugin.enableRunQueryButton();
-    });
-
-    this.i2b2.events.queryResultUnavailable.subscribe(() => {
-      const csvExport = dom.shrineCSVExport()
-      csvExport[0].onclick = null;
-      csvExport
-        .css({ opacity: 0.25 });
-    });
-
     this.i2b2.CRC.ctrlr.QT._queryRun = QTMixins.queryRunMixin(this)
     this.i2b2.CRC.view.status.showDisplay = () => { /*empty method to not break referenes from i2b2*/ };
     this.i2b2.CRC.ctrlr.QT.doQueryClear = QTMixins.queryClearMixin(this);

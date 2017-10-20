@@ -1,3 +1,6 @@
+/**
+ * This module is the psuedo-refactored legacy (SHRINE_cell_ctrlr.js?) logic into ES2015+.
+ */
 import I2B2Decorator from './common/i2b2.decorator';
 import bootstrapper from './shrine.bootstrapper';
 class ShrineController extends I2B2Decorator {
