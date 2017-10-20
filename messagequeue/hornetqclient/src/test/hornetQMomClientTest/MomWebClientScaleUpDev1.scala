@@ -72,7 +72,7 @@ ConfigSource.atomicConfig.configForBlock(configMap, "HornetQMomClientDev1") {
   for (i <- 1 to scale) {
     val receivedOpt: Option[Message] = HornetQMomWebClient.receive(dev1Queue, firstDuration).get
     listOfMessages += receivedOpt
-    println(s"Should have no Message (all completed), Receiving messages from dev1, attempt: $i, $receivedOpt")
+    println(s"Receiving messages from dev1, attempt: $i, $receivedOpt")
   }
 
   //  val deleteTry = HornetQMomWebClient.deleteQueue(queueNameDev2)
