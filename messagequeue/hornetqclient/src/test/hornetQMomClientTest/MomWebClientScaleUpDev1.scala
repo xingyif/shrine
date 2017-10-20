@@ -26,7 +26,7 @@ import scala.concurrent.duration.Duration
 val configMap: Map[String, String] = Map( "shrine.messagequeue.blockingq.serverUrl" -> "https://shrine-dev1.catalyst:6443/shrine-metadata/mom")
 
 ConfigSource.atomicConfig.configForBlock(configMap, "HornetQMomClientDev1") {
-  val scale: Int = 120
+  val scale: Int = 60
   val multiplier: Int = 2
   println(s"Running tests on ${HornetQMomWebClient.momUrl}")
 
