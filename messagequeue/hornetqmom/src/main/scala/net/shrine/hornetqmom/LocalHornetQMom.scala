@@ -1,7 +1,7 @@
 package net.shrine.hornetqmom
 
 import java.util
-import java.util.UUID
+import java.util.{Objects, UUID}
 import java.util.concurrent.{BlockingDeque, Executors, LinkedBlockingDeque, ScheduledFuture, TimeUnit, TimeoutException}
 
 import net.shrine.config.ConfigExtensions
@@ -318,6 +318,10 @@ case class InternalMessage(id: UUID, contents: String, createdTime: Long, toQueu
         other.canEqual(this) && other.id == this.id
       case _ => false
     }
+  }
+
+  override def hashCode(): Int = {
+    Objects.hash(id, contents, createdTime.toString, toQueue)
   }
 }
 
