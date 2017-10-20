@@ -188,7 +188,7 @@ trait HornetQMomWebApi extends HttpService
         val completeTry: Try[Unit] = LocalHornetQMom.completeMessage(id)
         completeTry match {
           case Success(s) => {
-            complete(StatusCodes.OK) // ResetContent causes connection timeout
+            complete(StatusCodes.Accepted) // ResetContent causes connection timeout
           }
           case Failure(x) => {
             x match {

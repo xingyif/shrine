@@ -310,7 +310,7 @@ object LocalHornetQMom extends MessageQueueService {
 }
 
 case class InternalMessage(id: UUID, contents: String, createdTime: Long, toQueue: Queue, currentAttemptCount: Int) {
-  // internalMessage changes when it is redelivered
+  // internalMessage changes when it is redelivered, InternalMessage s with different currentAttemptCounts can be equal.
   // because we no longer use atomicInteger and each time we create a new InternalMessage to increment currentAttemptCount
   override def equals(obj: scala.Any): Boolean = {
     obj match {
