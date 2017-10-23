@@ -32,7 +32,6 @@ export class I2B2Service {
         I2B2Service.prototype.unflagQuery = id => crc(ctx).map(v => v.ctrlr.history.Unflag({ queryId: id}));
         I2B2Service.prototype.publishQueryUnavailable = () => events(ctx).map(v => v.queryResultUnavailable.fire());
         I2B2Service.prototype.publishQueryAvailable = () => events(ctx).map(v => v.queryResultAvailable.fire()); 
-        I2B2Service.prototype.publishRefreshAllHistory = () => events(ctx).map(v => v.refreshAllHistory.fire());    
     }
 }
 
