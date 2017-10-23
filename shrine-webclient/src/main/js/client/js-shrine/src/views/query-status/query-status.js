@@ -48,7 +48,7 @@ export class QueryStatus extends PubSub {
             this.status =  initialState().status;
         })
         this.subscribe(this.notifications.shrine.queryReceived, data => {
-            const {query, nodes, dataVersion = DEFAULT_VERSION,query:{networkId}} = data; 
+            const {query, nodes, dataVersion = DEFAULT_VERSION,query: {networkId = null}} = data; 
             const {complete = false} = query; 
             const timeoutSeconds = TIMEOUT_SECONDS;
             if(networkId !== this.status.query.networkId) return;
@@ -57,7 +57,10 @@ export class QueryStatus extends PubSub {
             this.nodes = nodes;
             if (!complete) {
                 this.publish(this.commands.shrine.fetchQuery, {networkId, dataVersion, timeoutSeconds});
+                return;
             }
+
+            this.publish(this.notifications.shrine.refreshAllHistory);
         });
 
         if (me.get(this).isDevEnv) {

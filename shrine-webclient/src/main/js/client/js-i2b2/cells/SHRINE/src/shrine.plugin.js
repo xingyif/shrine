@@ -17,7 +17,6 @@ export class ShrinePlugin extends I2B2Decorator {
         this.i2b2.SHRINE.plugin.enableRunQueryButton = functions.enableRunQueryButton(this);
         this.i2b2.SHRINE.plugin.disableRunQueryButton = functions.disableRunQueryButton(this);
         this.i2b2.SHRINE.plugin.errorDetail = functions.errorDetail(this, this.YAHOO.widget.SimpleDialog);
-
         const CustomEvent = this.YAHOO.util.CustomEvent;
         this.i2b2.events.networkIdReceived = new CustomEvent("networkIdReceived", this.i2b2);
         this.i2b2.events.afterQueryInit = new CustomEvent("afterQueryInit", this.i2b2);
@@ -25,7 +24,9 @@ export class ShrinePlugin extends I2B2Decorator {
         this.i2b2.events.queryResultUnavailable = new CustomEvent("queryResultUnvailable", this.i2b2);
         this.i2b2.events.exportQueryResult = new CustomEvent("exportQueryResult", this.i2b2);
         this.i2b2.events.clearQuery = new CustomEvent("clearQuery", this.i2b2);
+        this.i2b2.events.refreshAllHistory = new CustomEvent("refreshAllHistory", this.i2b2);
         this.i2b2.events.queryResultAvailable.subscribe(functions.queryResultAvailable(this));
+        this.i2b2.events.refreshAllHistory.subscribe(functions.refreshAllHistory(this));
         this.i2b2.events.queryResultUnavailable.subscribe(() => {
           const csvExport = dom.shrineCSVExport()
           csvExport[0].onclick = null;
@@ -48,6 +49,9 @@ const functions = {
         csvExport
           .css({ opacity: 1 })
         context.i2b2.SHRINE.plugin.enableRunQueryButton();
+    },
+    refreshAllHistory: context => () => {
+        context.i2b2.CRC.view.history.doRefreshAll();
     },
     errorDetail: context => data => {
         context.$('#pluginErrorDetail').remove();

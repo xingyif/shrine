@@ -152,7 +152,8 @@ System.register(['aurelia-framework', 'services/query-status.model', 'services/p
                             nodes = data.nodes,
                             _data$dataVersion = data.dataVersion,
                             dataVersion = _data$dataVersion === undefined ? DEFAULT_VERSION : _data$dataVersion,
-                            networkId = data.query.networkId;
+                            _data$query$networkId = data.query.networkId,
+                            networkId = _data$query$networkId === undefined ? null : _data$query$networkId;
                         var _query$complete = query.complete,
                             complete = _query$complete === undefined ? false : _query$complete;
 
@@ -163,7 +164,10 @@ System.register(['aurelia-framework', 'services/query-status.model', 'services/p
                         _this2.nodes = nodes;
                         if (!complete) {
                             _this2.publish(_this2.commands.shrine.fetchQuery, { networkId: networkId, dataVersion: dataVersion, timeoutSeconds: timeoutSeconds });
+                            return;
                         }
+
+                        _this2.publish(_this2.notifications.shrine.refreshAllHistory);
                     });
 
                     if (me.get(this).isDevEnv) {

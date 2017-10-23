@@ -24,6 +24,7 @@ export class I2B2PubSub extends PubSub{
             this.subscribe(this.commands.i2b2.unflagQuery, d => i2b2Svc.unflagQuery(d));
             this.subscribe(this.notifications.shrine.queryUnavailable, () => i2b2Svc.publishQueryUnavailable());
             this.subscribe(this.notifications.shrine.queryAvailable, () => i2b2Svc.publishQueryAvailable());
+            this.subscribe(this.notifications.shrine.refreshAllHistory, () => i2b2Svc.publishRefreshAllHistory());
         }
     }
 }

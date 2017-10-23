@@ -15,7 +15,8 @@ export const notifications = {
         queriesReceived: 'notification.from.shrine.queries.received',
         queryReceived: 'notification.from.shrine.query.recieved',
         queryUnavailable: 'notification.from.shrine.query.unavailable',
-        queryAvailable: 'notification.from.shrine.query.available'
+        queryAvailable: 'notification.from.shrine.query.available',
+        refreshAllHistory: 'notification.from.shrine.refresh.all.history'
         
     }
 }

@@ -103,6 +103,11 @@ System.register(['ramda', './container'], function (_export, _context) {
                         return v.queryResultAvailable.fire();
                     });
                 };
+                I2B2Service.prototype.publishRefreshAllHistory = function () {
+                    return events(ctx).map(function (v) {
+                        return v.refreshAllHistory.fire();
+                    });
+                };
             }, _class.inject = [window], _temp));
 
             _export('I2B2Service', I2B2Service);

@@ -103,6 +103,9 @@ System.register(['./pub-sub', './i2b2.service'], function (_export, _context) {
                         _this.subscribe(_this.notifications.shrine.queryAvailable, function () {
                             return i2b2Svc.publishQueryAvailable();
                         });
+                        _this.subscribe(_this.notifications.shrine.refreshAllHistory, function () {
+                            return i2b2Svc.publishRefreshAllHistory();
+                        });
                     };
                     return _this;
                 }
