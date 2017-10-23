@@ -1,7 +1,7 @@
 package net.shrine.hornetqmom
 
 import java.util
-import java.util.UUID
+import java.util.{Objects, UUID}
 import java.util.concurrent.{BlockingDeque, Executors, LinkedBlockingDeque, ScheduledFuture, TimeUnit, TimeoutException}
 
 import net.shrine.config.ConfigExtensions
@@ -310,7 +310,7 @@ object LocalHornetQMom extends MessageQueueService {
 }
 
 case class InternalMessage(id: UUID, contents: String, createdTime: Long, toQueue: Queue, currentAttemptCount: Int) {
-  // internalMessage changes when it is redelivered
+  // internalMessage changes when it is redelivered, InternalMessage s with different currentAttemptCounts can be equal.
   // because we no longer use atomicInteger and each time we create a new InternalMessage to increment currentAttemptCount
   override def equals(obj: scala.Any): Boolean = {
     obj match {
@@ -318,6 +318,10 @@ case class InternalMessage(id: UUID, contents: String, createdTime: Long, toQueu
         other.canEqual(this) && other.id == this.id
       case _ => false
     }
+  }
+
+  override def hashCode(): Int = {
+    Objects.hash(id, contents, createdTime.toString, toQueue)
   }
 }
 
