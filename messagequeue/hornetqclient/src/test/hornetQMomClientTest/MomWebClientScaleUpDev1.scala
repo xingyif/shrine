@@ -26,55 +26,49 @@ import scala.concurrent.duration.Duration
 val configMap: Map[String, String] = Map( "shrine.messagequeue.blockingq.serverUrl" -> "https://shrine-dev1.catalyst:6443/shrine-metadata/mom")
 
 ConfigSource.atomicConfig.configForBlock(configMap, "HornetQMomClientDev1") {
-  val scale: Int = 60
-  val multiplier: Int = 2
+  println(s"spray.can.host-connector.max-retries: ${ConfigSource.config.getNumber("spray.can.host-connector.max-connections")}")
+  val numberOfQEPs: Int = 6
+  val numberOfMessages: Int = 1
   println(s"Running tests on ${HornetQMomWebClient.momUrl}")
 
+  val allQueues1: Seq[Queue] = HornetQMomWebClient.queues.get
+  println(s"All Existing Queues: $allQueues1")
 
-  //  val queueNameDev1: String = "dev1Queue"
-  //  val dev1Queue: Queue = HornetQMomWebClient.createQueueIfAbsent(queueNameDev1).get
-  val queueNameDev1: String = "dev1Queue"
-  val dev1Queue: Queue = HornetQMomWebClient.createQueueIfAbsent(queueNameDev1).get
+  // create all queues and send messages each queue
+  for (i <- 1 to numberOfQEPs) {
+    val queueName: String = s"QEPQueue$i"
+    val deleteTry = HornetQMomWebClient.deleteQueue(queueName)
+    println(s"Deleted queue: $queueName, $deleteTry")
+
+    val queue: Queue = HornetQMomWebClient.createQueueIfAbsent(queueName).get
+    println(s"Created queue $queueName on QEP $i")
+    for (i <- 1 to numberOfMessages) {
+      val sendTry = HornetQMomWebClient.send(s"Message$i sent to $queueName", queue)
+      println(s"Sending messages to dev1, attempt: $i, $sendTry")
+    }
+  }
 
   val allQueues: Seq[Queue] = HornetQMomWebClient.queues.get
   println(s"All Existing Queues: $allQueues")
 
-  for (i <- 1 to scale) {
-    val sendTry = HornetQMomWebClient.send(s"Message$i sent to $queueNameDev1", dev1Queue)
-    println(s"Sending messages to dev1, attempt: $i, $sendTry")
-  }
-
-  val firstDuration: Duration = Duration.create(15, "seconds")
+  val firstDuration: Duration = Duration.create(26, "seconds")
   val listOfMessages: ArrayBuffer[Option[Message]] = ArrayBuffer()
-  val executor = Executors.newFixedThreadPool(scale*multiplier)
+  val executor = Executors.newFixedThreadPool(numberOfQEPs)
 
-  val worker: Runnable = new Runnable {
-    override def run(): Unit = {
-      val receivedOpt: Option[Message] = HornetQMomWebClient.receive(dev1Queue, firstDuration).get
-      listOfMessages += receivedOpt
-      println(s"Receiving messages from dev1, $receivedOpt, thread: ${Thread.currentThread().getId}")
+  allQueues.map(queue => {
+    new Runnable {
+      override def run(): Unit = {
+        while (true) {
+          val receivedOpt: Option[Message] = HornetQMomWebClient.receive(queue, firstDuration).get
+//          listOfMessages += receivedOpt
+          println(s"Receiving messages from the HUB, $receivedOpt, thread: ${Thread.currentThread().getId}")
+//          Thread.sleep(1000)
+          receivedOpt.map(msg => {
+            val completeTry = msg.complete()
+            println(s"Completed Message $msg, status: $completeTry")
+          })
+        }
+      }
     }
-  }
-
-  for (i <- 1 to scale * multiplier) {
-    //    println(s"Receiving messages from dev1, attempt: $i")
-    executor.execute(worker)
-  }
-
-  listOfMessages.foreach(msgOpt => msgOpt.map({
-    m => {
-      m.complete()
-      println(s"Completed Message $m")
-    }
-  }))
-
-  //  TimeUnit.SECONDS.wait(5)
-  for (i <- 1 to scale) {
-    val receivedOpt: Option[Message] = HornetQMomWebClient.receive(dev1Queue, firstDuration).get
-    listOfMessages += receivedOpt
-    println(s"Receiving messages from dev1, attempt: $i, $receivedOpt")
-  }
-
-  //  val deleteTry = HornetQMomWebClient.deleteQueue(queueNameDev2)
-  //  println(s"Deleted queue: $queueNameDev2, $deleteTry")
+  }).par.foreach(worker => executor.execute(worker))
 }
