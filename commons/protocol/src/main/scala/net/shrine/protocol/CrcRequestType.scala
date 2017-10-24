@@ -23,7 +23,8 @@ final case class CrcRequestType private (name: String, i2b2RequestType: String) 
 
 object CrcRequestType extends SEnum[CrcRequestType] {
   val GetPDOFromInputListRequestType = CrcRequestType("GetPDOFromInputListRequestType", "getPDO_fromInputList")
-  
+
+  //this might be the right one
   val InstanceRequestType = CrcRequestType("InstanceRequestType", "CRC_QRY_getQueryResultInstanceList_fromQueryInstanceId")
   
   val MasterRequestType = CrcRequestType("MasterRequestType", "CRC_QRY_getQueryInstanceList_fromQueryMasterId")
@@ -31,7 +32,8 @@ object CrcRequestType extends SEnum[CrcRequestType] {
   val QueryDefinitionRequestType = CrcRequestType("QueryDefinitionRequestType", "CRC_QRY_runQueryInstance_fromQueryDefinition")
   
   val UserRequestType = CrcRequestType("UserRequestType", "CRC_QRY_getQueryMasterList_fromUserId")
-  
+
+  //if no results are available, the CRC reports that it does not know anything about the query, in plain text. See SHRINE-2115
   val ResultRequestType = CrcRequestType("ResultRequestType", "CRC_QRY_getResultDocument_fromResultInstanceId")
   
   val MasterDeleteRequestType = CrcRequestType("MasterDeleteRequestType", "CRC_QRY_deleteQueryMaster")
