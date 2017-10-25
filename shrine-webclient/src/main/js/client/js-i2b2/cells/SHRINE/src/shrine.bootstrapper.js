@@ -7,6 +7,7 @@ import snippets from './common/shrine-snippets';
 import { startQueryMixin, isQueryRunningMixin, refreshStatusMixin } from './mixins/CRC.ctrlr.QueryStatus';
 import * as QTMixins from './mixins/CRC.ctrlr.QryTool';
 import { contextMenuValidateMixin } from './mixins/CRC.view.History';
+import ResizeHeightMixin from './mixins/CRC.view.Status';
 
 class ShrineBootstrapper extends I2B2Decorator {
 
@@ -24,6 +25,8 @@ class ShrineBootstrapper extends I2B2Decorator {
     this.i2b2.CRC.ctrlr.QueryStatus.prototype.isQueryRunning = isQueryRunningMixin();
     this.i2b2.CRC.ctrlr.QueryStatus.prototype.refreshStatus = refreshStatusMixin();
     this.i2b2.CRC.view.history.ContextMenuValidate = contextMenuValidateMixin(this);
+    this.i2b2.CRC.view.status.ResizeHeight  = ResizeHeightMixin(this);
+
   }
 
 
@@ -39,6 +42,17 @@ class ShrineBootstrapper extends I2B2Decorator {
       .addShrinePanel(snippets.shrinePanel)
       .shrineCSVExport(snippets.shrineCSVExport)
       .css({ opacity: 0.25 });
+
+      this.i2b2.hive.mySplitter.onMouseDown  = this.onMouseDown.bind(this);
+      this.i2b2.hive.mySplitter.onMouseUp = this.onMouseUp.bind(this);
+  }
+
+  onMouseDown(e) {
+    this.$('#shrine-iframe').css('display', 'none')
+  }
+
+  onMouseUp(e) {
+    this.$('#shrine-iframe').css('display', 'inline')
   }
 
   loadShrineWrapper() {
@@ -47,6 +61,8 @@ class ShrineBootstrapper extends I2B2Decorator {
     });
   }
 }
+
+
 
 // -- singleton --//
 export default new ShrineBootstrapper();

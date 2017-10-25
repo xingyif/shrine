@@ -1,0 +1,9 @@
+div.shrinePluginContent{
+  background: #FFFFFF none repeat scroll 0%;
+  border: 1px solid #667788;
+  height: 144px;
+  width: auto;
+  overflow: hidden;
+  padding: 1px 5px;
+  overflow: auto;
+}

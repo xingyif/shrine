@@ -9,10 +9,10 @@ class ShrineController extends I2B2Decorator {
   }
 
   decorate() {
-    this.shrine.RequestTopic = functions.RequestTopic(this);
-    this.shrine.TopicInfo = functions.TopicInfo(this);
-    this.shrine.view.modal.topicInfoDialog = functions.topicInfoDialog(this);
-    this.i2b2.events.afterLogin.subscribe(functions.afterLogin(this))
+    this.shrine.RequestTopic = bind.RequestTopic(this);
+    this.shrine.TopicInfo = bind.TopicInfo(this);
+    this.shrine.view.modal.topicInfoDialog = bind.topicInfoDialog(this);
+    this.i2b2.events.afterLogin.subscribe(bind.afterLogin(this))
   }
 
   startBootstrapper() {
@@ -66,8 +66,9 @@ class ShrineController extends I2B2Decorator {
   }
 }
 
-// -- these closure functions have their scope altered by i2b2 -- //
-const functions = {
+//TODO: refactor this to use function.bind if possible.
+// -- these closure bind have their scope altered by i2b2 -- //
+const bind = {
   RequestTopic: (context) => () => {
     context.global.open(
       context.shrine.cfg.config.newTopicURL,

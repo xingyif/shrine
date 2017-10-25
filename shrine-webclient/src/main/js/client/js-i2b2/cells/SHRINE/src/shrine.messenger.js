@@ -9,7 +9,7 @@ class ShrineMessenger extends I2B2Decorator {
 	decorate() {
 		this.shrine.ajax = this.i2b2.hive.communicatorFactory("SHRINE");
 		this.shrine.cfg.msgs = { readApprovedEntries: APPROVED_ENTRY_XML };
-		let readApprovedEntries = functions.readApprovedEntries(this);
+		let readApprovedEntries = bind.readApprovedEntries(this);
 		this.shrine.cfg.parsers = { readApprovedEntries };
 		this.shrine.ajax._addFunctionCall(
 			"readApprovedEntries",
@@ -21,7 +21,8 @@ class ShrineMessenger extends I2B2Decorator {
 	}
 }
 
-const functions = {
+//TODO: refactor this to use function.bind if possible.
+const bind = {
 	readApprovedEntries: (context) =>
 		function () {
 			if (!this.error) {

@@ -47,6 +47,7 @@ export const queryRunMixin = (context) =>
     const doQueryClear = context.i2b2.CRC.ctrlr.QT.doQueryClear;
     return clearStatus => {
       doQueryClear.apply(context.i2b2.CRC.ctrlr.QT, []);
+      context.shrine.plugin.enableRunQueryButton();
       if (clearStatus === true) context.i2b2.events.clearQuery.fire();
     } 
   }
