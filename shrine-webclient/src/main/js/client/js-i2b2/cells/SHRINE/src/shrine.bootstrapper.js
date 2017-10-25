@@ -26,10 +26,7 @@ class ShrineBootstrapper extends I2B2Decorator {
     this.i2b2.CRC.ctrlr.QueryStatus.prototype.refreshStatus = refreshStatusMixin();
     this.i2b2.CRC.view.history.ContextMenuValidate = contextMenuValidateMixin(this);
     this.i2b2.CRC.view.status.ResizeHeight  = ResizeHeightMixin(this);
-
   }
-
-
 
   polyfill() {
     dom
@@ -61,8 +58,6 @@ class ShrineBootstrapper extends I2B2Decorator {
     });
   }
 }
-
-
 
 // -- singleton --//
 export default new ShrineBootstrapper();

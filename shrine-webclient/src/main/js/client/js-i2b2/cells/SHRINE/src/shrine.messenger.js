@@ -21,7 +21,7 @@ class ShrineMessenger extends I2B2Decorator {
 	}
 }
 
-//TODO: refactor this to use function.bind if possible.
+// -- this is bound to context somewhere in i2b2.
 const bind = {
 	readApprovedEntries: (context) =>
 		function () {

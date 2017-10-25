@@ -14,9 +14,9 @@ export class ShrinePlugin extends I2B2Decorator {
         const PLUGIN_ID = 'shrinePlugin';
         const CellViewController = this.global.i2b2Base_cellViewController;
         this.i2b2.SHRINE.plugin = new CellViewController(this.i2b2.SHRINE, PLUGIN_ID);
-        this.i2b2.SHRINE.plugin.enableRunQueryButton = bind.enableRunQueryButton(this);
-        this.i2b2.SHRINE.plugin.disableRunQueryButton = bind.disableRunQueryButton(this);
-        this.i2b2.SHRINE.plugin.errorDetail = bind.errorDetail(this, this.YAHOO.widget.SimpleDialog);
+        this.i2b2.SHRINE.plugin.enableRunQueryButton = this.enableRunQueryButton.bind(this);
+        this.i2b2.SHRINE.plugin.disableRunQueryButton = this.disableRunQueryButton.bind(this);
+        this.i2b2.SHRINE.plugin.errorDetail = this.errorDetail.bind(this);
         const CustomEvent = this.YAHOO.util.CustomEvent;
         this.i2b2.events.networkIdReceived = new CustomEvent("networkIdReceived", this.i2b2);
         this.i2b2.events.afterQueryInit = new CustomEvent("afterQueryInit", this.i2b2);
@@ -24,35 +24,22 @@ export class ShrinePlugin extends I2B2Decorator {
         this.i2b2.events.queryResultUnavailable = new CustomEvent("queryResultUnvailable", this.i2b2);
         this.i2b2.events.exportQueryResult = new CustomEvent("exportQueryResult", this.i2b2);
         this.i2b2.events.clearQuery = new CustomEvent("clearQuery", this.i2b2);
-        this.i2b2.events.queryResultAvailable.subscribe(bind.queryResultAvailable(this));
-        this.i2b2.events.queryResultUnavailable.subscribe(() => {
-          const csvExport = dom.shrineCSVExport()
-          csvExport[0].onclick = null;
-          csvExport
-            .css({ opacity: 0.25 });
-        });
+        this.i2b2.events.queryResultAvailable.subscribe(this.queryResultAvailable.bind(this));
+        this.i2b2.events.queryResultUnavailable.subscribe(this.queryResultUnavailable.bind(this));
     }
-}
 
-//TODO: refeact this to use function.bind if possible.
-// -- closure functions have their scope altered by i2b2 -- //
-const bind = {
-    enableRunQueryButton: context => () => context.$('#runBoxText').parent().unbind('click'),
-    disableRunQueryButton: context => () => context.$('#runBoxText').parent().bind('click', e => e.preventDefault()),
-    queryResultAvailable: context => () => {
-        const csvExport = dom.shrineCSVExport();
-        csvExport[0].onclick = e => {
-            e.stopPropagation();
-            context.i2b2.events.exportQueryResult.fire();
-        }
-        csvExport
-          .css({ opacity: 1 })
-        context.i2b2.SHRINE.plugin.enableRunQueryButton();
-    },
-    errorDetail: context => data => {
-        context.$('#pluginErrorDetail').remove();
-        context.$('body').append(context.$(snippets.dialogHTML(context.i2b2, data)));
-        const SimpleDialog = context.YAHOO.widget.SimpleDialog;
+    enableRunQueryButton() {
+        this.$('#runBoxText').parent().unbind('click');
+    }
+
+    disableRunQueryButton() {
+        this.$('#runBoxText').parent().bind('click', e => e.preventDefault())
+    }
+
+    errorDetail(data) {
+        this.$('#pluginErrorDetail').remove();
+        this.$('body').append(this.$(snippets.dialogHTML(this.i2b2, data)));
+        const SimpleDialog = this.YAHOO.widget.SimpleDialog;
         const pluginErrorDetail = new SimpleDialog("pluginErrorDetail", {
             width: "820px",
             fixedcenter: true,
@@ -69,11 +56,29 @@ const bind = {
             }],
             validate: () => true
         });
-        context.prototype$('pluginErrorDetail').show();
+        this.prototype$('pluginErrorDetail').show();
         pluginErrorDetail.render(document.body);
         pluginErrorDetail.center();
         pluginErrorDetail.show();
     }
-}
 
+    queryResultAvailable() {
+        const csvExport = dom.shrineCSVExport();
+        csvExport[0].onclick = e => {
+            e.stopPropagation();
+            this.i2b2.events.exportQueryResult.fire();
+        }
+        csvExport
+          .css({ opacity: 1 })
+        this.i2b2.SHRINE.plugin.enableRunQueryButton();
+    }
+
+    queryResultUnavailable() {
+        const csvExport = dom.shrineCSVExport()
+        csvExport[0].onclick = null;
+        csvExport
+          .css({ opacity: 0.25 });
+    }
+}
+ // -- singleton -- //
 export default new ShrinePlugin();
