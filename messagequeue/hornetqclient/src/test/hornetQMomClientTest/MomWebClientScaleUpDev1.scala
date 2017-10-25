@@ -27,8 +27,8 @@ val configMap: Map[String, String] = Map( "shrine.messagequeue.blockingq.serverU
 
 ConfigSource.atomicConfig.configForBlock(configMap, "HornetQMomClientDev1") {
   println(s"spray.can.host-connector.max-retries: ${ConfigSource.config.getNumber("spray.can.host-connector.max-connections")}")
-  val numberOfQEPs: Int = 6
-  val numberOfMessages: Int = 1
+  val numberOfQEPs: Int = 30
+  val numberOfMessages: Int = 5
   println(s"Running tests on ${HornetQMomWebClient.momUrl}")
 
   val allQueues1: Seq[Queue] = HornetQMomWebClient.queues.get
@@ -61,7 +61,8 @@ ConfigSource.atomicConfig.configForBlock(configMap, "HornetQMomClientDev1") {
         while (true) {
           val receivedOpt: Option[Message] = HornetQMomWebClient.receive(queue, firstDuration).get
 //          listOfMessages += receivedOpt
-          println(s"Receiving messages from the HUB, $receivedOpt, thread: ${Thread.currentThread().getId}")
+          Thread.currentThread().setName(s"QEPQueue${queue.name}")
+          println(s"Receiving messages from the HUB, $receivedOpt, thread: ${Thread.currentThread().getName}, id: ${Thread.currentThread().getId}")
 //          Thread.sleep(1000)
           receivedOpt.map(msg => {
             val completeTry = msg.complete()
