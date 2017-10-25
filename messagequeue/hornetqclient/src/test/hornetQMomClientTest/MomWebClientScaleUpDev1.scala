@@ -26,8 +26,7 @@ import scala.concurrent.duration.Duration
 val configMap: Map[String, String] = Map( "shrine.messagequeue.blockingq.serverUrl" -> "https://shrine-dev1.catalyst:6443/shrine-metadata/mom")
 
 ConfigSource.atomicConfig.configForBlock(configMap, "HornetQMomClientDev1") {
-  println(s"spray.can.host-connector.max-retries: ${ConfigSource.config.getNumber("spray.can.host-connector.max-connections")}")
-  val numberOfQEPs: Int = 30
+  val numberOfQEPs: Int = 60
   val numberOfMessages: Int = 5
   println(s"Running tests on ${HornetQMomWebClient.momUrl}")
 
@@ -48,11 +47,12 @@ ConfigSource.atomicConfig.configForBlock(configMap, "HornetQMomClientDev1") {
     }
   }
 
-  val allQueues: Seq[Queue] = HornetQMomWebClient.queues.get
+  val allQueues: Seq[Queue] = HornetQMomWebClient.queues.get.filter(queue => {
+    (queue.name != "shrinedev1") || (queue.name != "shrinedev2")
+  })
   println(s"All Existing Queues: $allQueues")
 
-  val firstDuration: Duration = Duration.create(26, "seconds")
-  val listOfMessages: ArrayBuffer[Option[Message]] = ArrayBuffer()
+  val firstDuration: Duration = Duration.create(15, "seconds")
   val executor = Executors.newFixedThreadPool(numberOfQEPs)
 
   allQueues.map(queue => {
@@ -60,10 +60,8 @@ ConfigSource.atomicConfig.configForBlock(configMap, "HornetQMomClientDev1") {
       override def run(): Unit = {
         while (true) {
           val receivedOpt: Option[Message] = HornetQMomWebClient.receive(queue, firstDuration).get
-//          listOfMessages += receivedOpt
           Thread.currentThread().setName(s"QEPQueue${queue.name}")
           println(s"Receiving messages from the HUB, $receivedOpt, thread: ${Thread.currentThread().getName}, id: ${Thread.currentThread().getId}")
-//          Thread.sleep(1000)
           receivedOpt.map(msg => {
             val completeTry = msg.complete()
             println(s"Completed Message $msg, status: $completeTry")
