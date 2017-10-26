@@ -1,6 +1,6 @@
 var appRoot = 'src/';
 var outputRoot = 'dist/';
-var exportSrvRoot = 'export/';
+var exportSrvRoot = '../i2b2/js-shrine/dist/';
 var assetRoot = 'assets/'
 
 module.exports = {
