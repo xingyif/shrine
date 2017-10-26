@@ -99,7 +99,7 @@ object QepReceiver {
       },{x =>
         x match {
           case cncmtbotrx:CouldNotCompleteMomTaskButOKToRetryException => {
-            Log.debug(s"Last attempt to receive resulted in ${cncmtbotrx.getMessage}. Sleeping $pollDuration before next attempt")
+            Log.debug(s"Last attempt to receive resulted in ${cncmtbotrx.getMessage}. Sleeping $pollDuration before next attempt",cncmtbotrx)
             Thread.sleep(pollDuration.toMillis)
           }
           case NonFatal(nfx) => ExceptionWhileReceivingMessage(queue,x)

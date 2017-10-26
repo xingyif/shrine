@@ -117,10 +117,10 @@ abstract class AbstractReadQueryResultAdapter[Req <: BaseShrineRequest, Rsp <: S
                 case rirr:ReadInstanceResultsRequest => rirr.projectId
               }
 
-              val readQueryInstancesRequest = ReadQueryInstancesRequest(projectId,req.waitTime,req.authn,queryId)
+              val readQueryInstancesRequest = ReadQueryInstancesRequest(projectId,req.waitTime,message.networkAuthn,queryId)
 
-//todo start here for SHRINE-2115              val readQueryInstancesResponse = poster.post(readQueryInstancesRequest.toI2b2String)
-//              debug(s"ReadQueryInstancesResponse for $queryId is $readQueryInstancesResponse")
+              val readQueryInstancesResponse = poster.post(readQueryInstancesRequest.toI2b2String)
+              debug(s"ReadQueryInstancesResponse for $queryId is $readQueryInstancesResponse")
 
               val result: ShrineResponse = retrieveQueryResults(queryId, req, shrineQueryResult, message)
               if (collectAdapterAudit) AdapterAuditDb.db.insertResultSent(queryId,result)
