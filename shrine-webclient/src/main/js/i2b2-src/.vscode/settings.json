@@ -1,0 +1,5 @@
+// Place your settings in this file to overwrite default and user settings.
+{
+     // The JSCS preset to use. Possible values: "airbnb", "crockford", "google", "grunt", "idiomatic", "jquery", "mdcs", "node-style-guide", "wikimedia", "wordpress", "yandex"
+  "jscs.preset": "crockford"
+}
