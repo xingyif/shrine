@@ -20,18 +20,14 @@ import net.shrine.messagequeueservice.{Message, Queue}
 import net.shrine.source.ConfigSource
 
 import scala.collection.immutable.Seq
-import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.duration.Duration
 
 val configMap: Map[String, String] = Map( "shrine.messagequeue.blockingq.serverUrl" -> "https://shrine-dev1.catalyst:6443/shrine-metadata/mom")
 
 ConfigSource.atomicConfig.configForBlock(configMap, "HornetQMomClientDev1") {
-  val numberOfQEPs: Int = 60
+  val numberOfQEPs: Int = 126
   val numberOfMessages: Int = 5
   println(s"Running tests on ${HornetQMomWebClient.momUrl}")
-
-  val allQueues1: Seq[Queue] = HornetQMomWebClient.queues.get
-  println(s"All Existing Queues: $allQueues1")
 
   // create all queues and send messages each queue
   for (i <- 1 to numberOfQEPs) {
@@ -48,7 +44,7 @@ ConfigSource.atomicConfig.configForBlock(configMap, "HornetQMomClientDev1") {
   }
 
   val allQueues: Seq[Queue] = HornetQMomWebClient.queues.get.filter(queue => {
-    (queue.name != "shrinedev1") || (queue.name != "shrinedev2")
+    (queue.name != "shrinedev1") && (queue.name != "shrinedev2")
   })
   println(s"All Existing Queues: $allQueues")
 
