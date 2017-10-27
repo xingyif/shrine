@@ -30,7 +30,7 @@ target/
 **/node_modules/
 **/jspm_packages
 **/bower_components/
-**/build/
+# **/build/
 **/*.tmp
 **/npm-debug.log
 
