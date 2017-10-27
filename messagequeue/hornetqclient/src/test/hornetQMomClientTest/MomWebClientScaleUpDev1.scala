@@ -21,32 +21,37 @@ import net.shrine.source.ConfigSource
 
 import scala.collection.immutable.Seq
 import scala.concurrent.duration.Duration
+import java.io.{BufferedOutputStream, FileOutputStream, PrintStream}
 
+val printStream: PrintStream = new PrintStream(new BufferedOutputStream(new FileOutputStream("ScaleUpTestOnDev1.txt")))
+System.setOut(printStream)
+System.setErr(printStream)
 val configMap: Map[String, String] = Map( "shrine.messagequeue.blockingq.serverUrl" -> "https://shrine-dev1.catalyst:6443/shrine-metadata/mom")
 
 ConfigSource.atomicConfig.configForBlock(configMap, "HornetQMomClientDev1") {
-  val numberOfQEPs: Int = 126
+
+  val numberOfQEPs: Int = 62
   val numberOfMessages: Int = 5
-  println(s"Running tests on ${HornetQMomWebClient.momUrl}")
+  System.out.println(s"Running tests on ${HornetQMomWebClient.momUrl}")
 
   // create all queues and send messages each queue
   for (i <- 1 to numberOfQEPs) {
     val queueName: String = s"QEPQueue$i"
     val deleteTry = HornetQMomWebClient.deleteQueue(queueName)
-    println(s"Deleted queue: $queueName, $deleteTry")
+    System.out.println(s"Deleted queue: $queueName, $deleteTry")
 
     val queue: Queue = HornetQMomWebClient.createQueueIfAbsent(queueName).get
-    println(s"Created queue $queueName on QEP $i")
+    System.out.println(s"Created queue $queueName on QEP $i")
     for (i <- 1 to numberOfMessages) {
       val sendTry = HornetQMomWebClient.send(s"Message$i sent to $queueName", queue)
-      println(s"Sending messages to dev1, attempt: $i, $sendTry")
+      System.out.println(s"Sending messages to dev1, attempt: $i, $sendTry")
     }
   }
 
   val allQueues: Seq[Queue] = HornetQMomWebClient.queues.get.filter(queue => {
     (queue.name != "shrinedev1") && (queue.name != "shrinedev2")
   })
-  println(s"All Existing Queues: $allQueues")
+  System.out.println(s"All Existing Queues: $allQueues")
 
   val firstDuration: Duration = Duration.create(15, "seconds")
   val executor = Executors.newFixedThreadPool(numberOfQEPs)
@@ -57,10 +62,10 @@ ConfigSource.atomicConfig.configForBlock(configMap, "HornetQMomClientDev1") {
         while (true) {
           val receivedOpt: Option[Message] = HornetQMomWebClient.receive(queue, firstDuration).get
           Thread.currentThread().setName(s"QEPQueue${queue.name}")
-          println(s"Receiving messages from the HUB, $receivedOpt, thread: ${Thread.currentThread().getName}, id: ${Thread.currentThread().getId}")
+          System.out.println(s"Receiving messages from the HUB, $receivedOpt, thread: ${Thread.currentThread().getName}, id: ${Thread.currentThread().getId}")
           receivedOpt.map(msg => {
             val completeTry = msg.complete()
-            println(s"Completed Message $msg, status: $completeTry")
+            System.out.println(s"Completed Message $msg, status: $completeTry")
           })
         }
       }
