@@ -38,7 +38,7 @@ class HornetQMomWebApiTest extends FlatSpec with ScalatestRouteTest with HornetQ
   "HornetQMomWebApi" should "create/delete the given queue, send/receive message, get queues" in {
     val configMap: Map[String, String] = Map( "shrine.messagequeue.blockingqWebApi.enabled" -> "true",
       "shrine.messagequeue.blockingq.messageTimeToLive" -> "2 days",
-      "shrine.messagequeue.blockingq.messageRedeliveryDelay" -> "3 seconds",
+      "shrine.messagequeue.blockingq.messageRedeliveryDelay" -> "4 seconds",
       "shrine.messagequeue.blockingq.messageMaxDeliveryAttempts" -> "2")
 
     ConfigSource.atomicConfig.configForBlock(configMap, "HornetQMomWebApiTest") {
@@ -87,21 +87,21 @@ class HornetQMomWebApiTest extends FlatSpec with ScalatestRouteTest with HornetQ
         assertResult(responseMsg.contents)(messageContent)
       }
 
-      // receive immediately again, should have no message
-      Get(s"/mom/receiveMessage/$queueName?timeOutSeconds=2") ~> momRoute ~> check {
-        val response = new String(body.data.toByteArray)
-        assertResult(NoContent)(status)
-        assertResult(s"No current Message available in queue $queueName!")(response)
-      }
-
       TimeUnit.MILLISECONDS.sleep(messageRedeliveryDelay + 1000)
       // receive after redelivery, should have one message
-      Get(s"/mom/receiveMessage/$queueName?timeOutSeconds=10") ~> momRoute ~> check {
+      Get(s"/mom/receiveMessage/$queueName?timeOutSeconds=15") ~> momRoute ~> check {
         val response = new String(body.data.toByteArray)
         assertResult(OK)(status)
         val responseMsg: SimpleMessage = SimpleMessage.fromJson(response)
         messageUUIDList += responseMsg.deliveryAttemptID
         assertResult(responseMsg.contents)(messageContent)
+      }
+
+      // receive immediately again, should have no message
+      Get(s"/mom/receiveMessage/$queueName?timeOutSeconds=2") ~> momRoute ~> check {
+        val response = new String(body.data.toByteArray)
+        assertResult(NoContent)(status)
+        assertResult(s"No current Message available in queue $queueName!")(response)
       }
 
       val messageUUID = messageUUIDList(0)
