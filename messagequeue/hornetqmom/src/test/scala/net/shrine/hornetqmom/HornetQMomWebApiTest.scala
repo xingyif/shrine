@@ -130,22 +130,22 @@ class HornetQMomWebApiTest extends FlatSpec with ScalatestRouteTest with HornetQ
     }
   }
 
-  "HornetQMomWebApi" should "respond InternalServerError with the corresponding error message when " +
-    "failures occur while creating/deleting the given queue, sending/receiving message, getting queues" in {
+  "HornetQMomWebApi" should "respond 404 NotFound when " +
+    "failures occur while creating/deleting a non-exiting queue, sending/receiving messages to a non-existing queue" in {
 
     ConfigSource.atomicConfig.configForBlock("shrine.messagequeue.blockingqWebApi.enabled", "true", "HornetQMomWebApiTest") {
-
+      val doesNotExistQueue: String = "DoesNotExist"
       //todo Not a problem. The system is in the state you want. SHRINE-2308
-      Put(s"/mom/deleteQueue/$queueName") ~> momRoute ~> check {
+      Put(s"/mom/deleteQueue/$doesNotExistQueue") ~> momRoute ~> check {
         assertResult(NotFound)(status)
       }
 
-      Put(s"/mom/sendMessage/$queueName", HttpEntity(s"$messageContent")) ~> momRoute ~> check {
+      Put(s"/mom/sendMessage/$doesNotExistQueue", HttpEntity(s"$messageContent")) ~> momRoute ~> check {
         assertResult(NotFound)(status)
       }
 
       // given timeout is 1 seconds
-      Get(s"/mom/receiveMessage/$queueName?timeOutSeconds=1") ~> momRoute ~> check {
+      Get(s"/mom/receiveMessage/$doesNotExistQueue?timeOutSeconds=1") ~> momRoute ~> check {
         assertResult(NotFound)(status)
       }
     }
