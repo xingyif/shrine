@@ -96,7 +96,7 @@ class HornetQMomWebApiTest extends FlatSpec with ScalatestRouteTest with HornetQ
 
       TimeUnit.MILLISECONDS.sleep(messageRedeliveryDelay + 1000)
       // receive after redelivery, should have one message
-      Get(s"/mom/receiveMessage/$queueName?timeOutSeconds=2") ~> momRoute ~> check {
+      Get(s"/mom/receiveMessage/$queueName?timeOutSeconds=10") ~> momRoute ~> check {
         val response = new String(body.data.toByteArray)
         assertResult(OK)(status)
         val responseMsg: SimpleMessage = SimpleMessage.fromJson(response)
