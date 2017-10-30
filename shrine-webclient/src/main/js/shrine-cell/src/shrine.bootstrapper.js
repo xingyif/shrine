@@ -9,15 +9,16 @@ import * as QTMixins from './mixins/CRC.ctrlr.QryTool';
 import { contextMenuValidateMixin } from './mixins/CRC.view.History';
 import ResizeHeightMixin from './mixins/CRC.view.Status';
 
-class ShrineBootstrapper extends I2B2Decorator {
-
-  bootstrap() {
+class ShrineBootstrapper {
+  i2b2;
+  bootstrap(i2b2) {
+    this.i2b2 = i2b2;
     this.polyfill();
-    this.decorate();
+    this.mixins();
     this.loadShrineWrapper();
   }
 
-  decorate() {
+  mixins() {
     this.i2b2.CRC.ctrlr.QT._queryRun = QTMixins.queryRunMixin(this)
     this.i2b2.CRC.view.status.showDisplay = () => { /*empty method to not break referenes from i2b2*/ };
     this.i2b2.CRC.ctrlr.QT.doQueryClear = QTMixins.queryClearMixin(this);
@@ -40,8 +41,8 @@ class ShrineBootstrapper extends I2B2Decorator {
       .shrineCSVExport(snippets.shrineCSVExport)
       .css({ opacity: 0.25 });
 
-      this.i2b2.hive.mySplitter.onMouseDown  = this.onMouseDown.bind(this);
-      this.i2b2.hive.mySplitter.onMouseUp = this.onMouseUp.bind(this);
+    this.i2b2.hive.mySplitter.onMouseDown  = this.onMouseDown.bind(this);
+    this.i2b2.hive.mySplitter.onMouseUp = this.onMouseUp.bind(this);
   }
 
   onMouseDown(e) {
@@ -53,7 +54,7 @@ class ShrineBootstrapper extends I2B2Decorator {
   }
 
   loadShrineWrapper() {
-    return this.$(`#${this.i2b2.SHRINE.plugin.viewName}`).load(this.shrine.cfg.config.wrapperHtmlFile, (response, status, xhr) => {
+    return this.$(`#${this.i2b2.SHRINE.plugin.viewName}`).load(this.i2b2.SHRINE.cfg.config.wrapperHtmlFile, (response, status, xhr) => {
       // -- callback implementation here --//
     });
   }

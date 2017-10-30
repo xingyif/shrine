@@ -2,11 +2,8 @@ import I2B2Decorator from './common/i2b2.decorator';
 import APPROVED_ENTRY_XML from './shrine-xml';
 class ShrineMessenger extends I2B2Decorator {
 
-	constructor() {
-		super();
-	}
-
-	decorate() {
+	decorate(...rest) {
+		super.decorate(...rest);
 		this.shrine.ajax = this.i2b2.hive.communicatorFactory("SHRINE");
 		this.shrine.cfg.msgs = { readApprovedEntries: APPROVED_ENTRY_XML };
 		let readApprovedEntries = bind.readApprovedEntries(this);

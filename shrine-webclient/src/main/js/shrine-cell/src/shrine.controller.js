@@ -4,19 +4,13 @@
 import I2B2Decorator from './common/i2b2.decorator';
 import bootstrapper from './shrine.bootstrapper';
 class ShrineController extends I2B2Decorator {
-  constructor() {
-    super();
-  }
 
-  decorate() {
+  decorate(...rest) {
+    super.decorate(...rest);
     this.shrine.RequestTopic = this.RequestTopic.bind(this);
     this.shrine.TopicInfo = this.TopicInfo.bind(this);
     this.shrine.view.modal.topicInfoDialog = this.topicInfoDialog.bind(this);
     this.i2b2.events.afterLogin.subscribe(this.afterLogin.bind(this));
-  }
-
-  startBootstrapper() {
-    bootstrapper.bootstrap();
   }
 
   loadTopics(type, args) {
@@ -73,7 +67,7 @@ class ShrineController extends I2B2Decorator {
     if (this.i2b2.h.isSHRINE()) {
       this.loadTopics(type, args);
       this.renderTopics();
-      bootstrapper.bootstrap();
+      bootstrapper.bootstrap(this.i2b2);
     }
   }
 

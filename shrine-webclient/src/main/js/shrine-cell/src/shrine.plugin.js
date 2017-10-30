@@ -6,11 +6,9 @@ import snippets from './common/shrine-snippets';
 import dom from './common/shrine-dom';
 
 export class ShrinePlugin extends I2B2Decorator {
-    constructor() {
-        super();
-    }
 
-    decorate() {
+    decorate(...rest) {
+        super.decorate(...rest);
         const PLUGIN_ID = 'shrinePlugin';
         const CellViewController = this.global.i2b2Base_cellViewController;
         this.i2b2.SHRINE.plugin = new CellViewController(this.i2b2.SHRINE, PLUGIN_ID);

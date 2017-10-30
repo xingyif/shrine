@@ -1,11 +1,16 @@
 import jQuery from 'jquery';
 export default class ShrineBase {
 
+  window;
   constructor() {
+  }
+  
+  decorate(rootContext) {
+    this.window = rootContext;
   }
 
   get global() {
-    return window;
+    return this.window;
   }
 
   get shrine() {
