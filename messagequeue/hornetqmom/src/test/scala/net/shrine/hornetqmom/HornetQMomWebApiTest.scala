@@ -30,20 +30,28 @@ import scala.concurrent.duration.Duration
 class HornetQMomWebApiTest extends FlatSpec with ScalatestRouteTest with HornetQMomWebApi {
   override def actorRefFactory: ActorRefFactory = system
 
-  private val proposedQueueName = "test QueueInWebApi"
-  private val queue: Queue = Queue(proposedQueueName)
-  private val queueName: String = queue.name // "testQueue"
+  private val queue: Queue = Queue("test QueueInWebApi")
+  private val queueName: String = queue.name // "testQueueInWebApi"
   private val messageContent = "test Content"
 
   "HornetQMomWebApi" should "create/delete the given queue, send/receive message, get queues" in {
     val configMap: Map[String, String] = Map( "shrine.messagequeue.blockingqWebApi.enabled" -> "true",
-      "shrine.messagequeue.blockingq.messageTimeToLive" -> "2 days",
-      "shrine.messagequeue.blockingq.messageRedeliveryDelay" -> "4 seconds",
+      "shrine.messagequeue.blockingq.messageTimeToLive" -> "4 days",
+      "shrine.messagequeue.blockingq.messageRedeliveryDelay" -> "3 seconds",
       "shrine.messagequeue.blockingq.messageMaxDeliveryAttempts" -> "2")
 
     ConfigSource.atomicConfig.configForBlock(configMap, "HornetQMomWebApiTest") {
 
       val messageRedeliveryDelay = ConfigSource.config.get("shrine.messagequeue.blockingq.messageRedeliveryDelay", Duration(_)).toMillis
+
+      Get(s"/mom/getQueues") ~> momRoute ~> check {
+        val response: String = new String(body.data.toByteArray)
+        implicit val formats = Serialization.formats(NoTypeHints)
+        val jsonToSeq: Seq[Queue] = read[Seq[Queue]](response)(formats, manifest[Seq[Queue]])
+
+        assertResult(OK)(status)
+        assert(jsonToSeq.isEmpty)
+      }
 
       Put(s"/mom/createQueue/$queueName") ~> momRoute ~> check {
         val response = new String(body.data.toByteArray)
@@ -116,7 +124,6 @@ class HornetQMomWebApiTest extends FlatSpec with ScalatestRouteTest with HornetQ
         assertResult(MessageDoesNotExistAndCannotBeCompletedException(nonExistingUUID).getMessage)(response)
       }
 
-      TimeUnit.MILLISECONDS.sleep(messageRedeliveryDelay + 1000)
       // receive after complete, should have no message
       Get(s"/mom/receiveMessage/$queueName?timeOutSeconds=2") ~> momRoute ~> check {
         val response = new String(body.data.toByteArray)
