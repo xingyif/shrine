@@ -41,7 +41,7 @@ class Boot extends WebBoot {
     }
     try {
       // the service actor replies to incoming HttpRequests
-      system.actorOf(RoundRobinPool(200).props(Props[MetaDataActor]), "MetaDataActors")
+      system.actorOf(RoundRobinPool(100).props(Props[MetaDataActor]), "MetaDataActors")
     }
     catch {
       case NonFatal(x) => CannotStartMetaData(x); throw x

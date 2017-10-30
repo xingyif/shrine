@@ -44,4 +44,6 @@ target/
 *.iws
 # osx cruft
 .DS_Store
-/messagequeue/hornetqclient/src/test/hornetQMomClientTest/ScaleUpTestOnDev1.txt
+.gitignore
+src/test/hornetQMomClientTest/ScaleUpTestOnDev1.txt
+src/test/hornetQMomClientTest/ScaleUpTestOnDev1_1509394154.txt
