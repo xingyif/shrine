@@ -23,7 +23,8 @@ import scala.collection.immutable.Seq
 import scala.concurrent.duration.Duration
 import java.io.{BufferedOutputStream, FileOutputStream, PrintStream}
 
-val printStream: PrintStream = new PrintStream(new BufferedOutputStream(new FileOutputStream("ScaleUpTestOnDev1.txt")))
+val timestamp: Long = System.currentTimeMillis / 1000
+val printStream: PrintStream = new PrintStream(new BufferedOutputStream(new FileOutputStream(s"ScaleUpTestOnDev1_$timestamp.txt")))
 System.setOut(printStream)
 System.setErr(printStream)
 val configMap: Map[String, String] = Map( "shrine.messagequeue.blockingq.serverUrl" -> "https://shrine-dev1.catalyst:6443/shrine-metadata/mom")
