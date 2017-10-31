@@ -9,7 +9,7 @@
     "clean": "rimraf i2b2/js-i2b2/cells/SHRINE/dist && rimraf i2b2/js-shrine/dist",
     "build-plugin": "cd shrine-plugin && npm install && jspm install && gulp export",
     "build": "npm run build-i2b2 && npm run build-cell && npm run build-plugin",
-    "start": "npm run maven-build && gulp serve",
+    "start": "npm run build-prod && gulp serve",
     "build-prod": "npm run clean && npm run build",
     "maven-build": "cd ../../../ && mvn clean install"
   },

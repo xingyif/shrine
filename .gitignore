@@ -28,7 +28,8 @@ target/
 # Ignore Node & Bower regardless of context
 ###################
 **/node_modules/
-**/jspm_packages
+# Only shrine webclient plugin uses jspm so ignore those.
+**/src/main/js/shrine-plugin/jspm_packages/
 **/bower_components/
 # **/build/
 **/*.tmp
