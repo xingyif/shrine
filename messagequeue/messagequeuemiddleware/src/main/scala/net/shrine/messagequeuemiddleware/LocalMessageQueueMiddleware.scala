@@ -86,11 +86,12 @@ object LocalMessageQueueMiddleware extends MessageQueueService {
     * @return Some message before the timeout, or None
     */
   def receive(from: Queue, timeout: Duration): Try[Option[Message]] = Try {
+    val deadline: Long = System.currentTimeMillis() + timeout.toMillis
     // poll the first message from the blocking deque
     val blockingQueue = blockingQueuePool.getOrElse(from.name, throw QueueDoesNotExistException(from))
     Log.debug(s"Before receive from ${from.name} - blockingQueue ${blockingQueue.size} ${blockingQueue.toString}")
     val internalMessage: Option[InternalMessage] = blocking{
-      Option(blockingQueue.pollFirst(timeout.toMillis, TimeUnit.MILLISECONDS))
+      Option(blockingQueue.pollFirst(deadline - System.currentTimeMillis(), TimeUnit.MILLISECONDS))
     }
     //todo tuck all this delivery attempt logic into one set of {}s which finally returns simpleMessage
     val deliveryAttemptID = UUID.randomUUID()
@@ -189,7 +190,7 @@ object LocalMessageQueueMiddleware extends MessageQueueService {
     }
   }
 
-  case class MessageRedeliveryRunner(deliveryAttemptID: UUID, deliveryAttempt: DeliveryAttempt, messageRedeliveryDelay: Long, messageMaxDeliveryAttempts: Long) extends Runnable {
+  case class MessageRedeliveryRunner(deliveryAttemptID: UUID, deliveryAttempt: DeliveryAttempt, messageMaxDeliveryAttempts: Long) extends Runnable {
     override def run(): Unit = {
       try {
         messageDeliveryAttemptMap.get(deliveryAttemptID).fold(
@@ -213,12 +214,13 @@ object LocalMessageQueueMiddleware extends MessageQueueService {
 
   case class CleanInternalMessageInDequeRunner(messageToBeRemoved: InternalMessage, messageTimeToLiveInMillis: Long) extends Runnable {
     override def run(): Unit = {
+      val currentTime: Long = System.currentTimeMillis()
       try {
         val blockingQueue = blockingQueuePool.getOrElse(messageToBeRemoved.toQueue.name,
           throw QueueDoesNotExistException(messageToBeRemoved.toQueue))
         while (!blockingQueue.isEmpty) {
           val internalMessage: InternalMessage = blockingQueue.element()
-          if (System.currentTimeMillis() - internalMessage.createdTime >= messageTimeToLiveInMillis) {
+          if (currentTime - internalMessage.createdTime >= messageTimeToLiveInMillis) {
             val removed = blockingQueue.remove(internalMessage)
            Log.debug(s"$removed: Removed internalMessage from it's queue ${messageToBeRemoved.toQueue}" +
                       s" because it exceeds expiration time $messageTimeToLiveInMillis millis")
@@ -255,7 +257,7 @@ object LocalMessageQueueMiddleware extends MessageQueueService {
     private val scheduler = Executors.newSingleThreadScheduledExecutor(caughtExceptionsThreadFactory)
 
     def scheduleMessageRedelivery(deliveryAttemptID: UUID, deliveryAttempt: DeliveryAttempt, messageRedeliveryDelay: Long, messageMaxDeliveryAttempts: Int) = {
-      val messageRedeliveryRunner: MessageRedeliveryRunner = MessageRedeliveryRunner(deliveryAttemptID, deliveryAttempt, messageRedeliveryDelay, messageMaxDeliveryAttempts)
+      val messageRedeliveryRunner: MessageRedeliveryRunner = MessageRedeliveryRunner(deliveryAttemptID, deliveryAttempt, messageMaxDeliveryAttempts)
       try {
         val currentAttemptCount = deliveryAttempt.message.currentAttemptCount
         if (currentAttemptCount < messageMaxDeliveryAttempts) {
@@ -295,10 +297,11 @@ object LocalMessageQueueMiddleware extends MessageQueueService {
     }
 
     def scheduleMessageExpiry(to: Queue, internalMessage: InternalMessage, messageTimeToLiveInMillis: Long) = {
+      val deadline = System.currentTimeMillis() + messageTimeToLiveInMillis
       // schedule future cleanup of deliveryAttempts when the message expires
-      MessageScheduler.scheduleCleanupExpiredDeliveryAttemptInMap(to, messageTimeToLiveInMillis)
+      MessageScheduler.scheduleCleanupExpiredDeliveryAttemptInMap(to, deadline - System.currentTimeMillis())
       // schedule future cleanup of this message in blockingQueue if client never call receive
-      MessageScheduler.scheduleCleanupExpiredMessageInDeque(to, internalMessage, messageTimeToLiveInMillis)
+      MessageScheduler.scheduleCleanupExpiredMessageInDeque(to, internalMessage, deadline - System.currentTimeMillis())
     }
 
     def cancelScheduledMessageRedelivery(futureTask: ScheduledFuture[_]): Unit = {
