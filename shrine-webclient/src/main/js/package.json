@@ -9,9 +9,9 @@
     "clean": "rimraf i2b2/js-i2b2/cells/SHRINE/dist && rimraf i2b2/js-shrine/dist",
     "build-plugin": "cd shrine-plugin && gulp export",
     "build": "npm run build-i2b2 && npm run build-cell && npm run build-plugin",
-    "build-production": "npm run clean && npm run build-i2b2 && npm run build-cell && npm run build-plugin",
-    "start": "npm run clean && npm run build && gulp serve"
-  
+    "start": "npm run maven-build && gulp serve",
+    "build-prod": "npm run clean && npm run build",
+    "maven-build": "cd ../../../ && mvn clean install"
   },
   "repository": {
     "type": "git",
@@ -38,6 +38,7 @@
     "express": "^4.14.0",
     "gulp": "^3.9.1",
     "gulp-server-livereload": "^1.9.2",
+    "maven": "^4.2.0",
     "webpack": "^3.4.1"
   },
   "dependencies": {

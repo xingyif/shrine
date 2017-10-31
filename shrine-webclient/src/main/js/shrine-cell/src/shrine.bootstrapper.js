@@ -9,10 +9,10 @@ import * as QTMixins from './mixins/CRC.ctrlr.QryTool';
 import { contextMenuValidateMixin } from './mixins/CRC.view.History';
 import ResizeHeightMixin from './mixins/CRC.view.Status';
 
-class ShrineBootstrapper {
-  i2b2;
-  bootstrap(i2b2) {
-    this.i2b2 = i2b2;
+class ShrineBootstrapper extends I2B2Decorator{
+
+  decorate(...rest) {
+    super.decorate(...rest);
     this.polyfill();
     this.mixins();
     this.loadShrineWrapper();

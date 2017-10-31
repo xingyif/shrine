@@ -4,19 +4,19 @@ class I2B2Decorator {
   window;
   
   decorate(rootContext) {
-    this.window = rootContext;
+    this.__global = rootContext;
   }
 
   get global() {
-    return this.window;
-  }
-
-  get shrine() {
-    return this.i2b2.SHRINE;
+    return this.__global;
   }
 
   get i2b2() {
     return this.global.i2b2;
+  }
+
+  get shrine() {
+    return this.i2b2.SHRINE;
   }
 
   get $() {
