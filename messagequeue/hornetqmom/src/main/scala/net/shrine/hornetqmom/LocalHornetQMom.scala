@@ -1,7 +1,7 @@
 package net.shrine.hornetqmom
 
 import java.util
-import java.util.UUID
+import java.util.{Objects, UUID}
 import java.util.concurrent.{BlockingDeque, Executors, LinkedBlockingDeque, ScheduledFuture, TimeUnit, TimeoutException}
 
 import net.shrine.config.ConfigExtensions
@@ -89,7 +89,10 @@ object LocalHornetQMom extends MessageQueueService {
     // poll the first message from the blocking deque
     val blockingQueue = blockingQueuePool.getOrElse(from.name, throw QueueDoesNotExistException(from))
     Log.debug(s"Before receive from ${from.name} - blockingQueue ${blockingQueue.size} ${blockingQueue.toString}")
-    val internalMessage: Option[InternalMessage] = Option(blockingQueue.pollFirst(timeout.toMillis, TimeUnit.MILLISECONDS))
+    val internalMessage: Option[InternalMessage] = blocking{
+      Option(blockingQueue.pollFirst(timeout.toMillis, TimeUnit.MILLISECONDS))
+    }
+    //todo tuck all this delivery attempt logic into one set of {}s which finally returns simpleMessage
     val deliveryAttemptID = UUID.randomUUID()
     val deliveryAttemptOpt: Option[DeliveryAttempt] = internalMessage.map { internalToBeSentMessage: InternalMessage =>
       DeliveryAttempt(internalToBeSentMessage, internalToBeSentMessage.createdTime, from)
@@ -97,7 +100,7 @@ object LocalHornetQMom extends MessageQueueService {
     // add a deliveryAttempt in the DAmap with an unique UUID
     deliveryAttemptOpt.fold(
       // No message available from the queue
-      Log.debug(s"No message available from the queue ${from.name}")
+      Log.debug(s"No message available from the queue ${from.name}") //todo after waiting how long?
     ) { deliveryAttempt: DeliveryAttempt =>
       MessageScheduler.scheduleMessageRedelivery(deliveryAttemptID, deliveryAttempt, messageRedeliveryDelay, messageMaxDeliveryAttempts)
     }
@@ -310,7 +313,7 @@ object LocalHornetQMom extends MessageQueueService {
 }
 
 case class InternalMessage(id: UUID, contents: String, createdTime: Long, toQueue: Queue, currentAttemptCount: Int) {
-  // internalMessage changes when it is redelivered
+  // internalMessage changes when it is redelivered, InternalMessage s with different currentAttemptCounts can be equal.
   // because we no longer use atomicInteger and each time we create a new InternalMessage to increment currentAttemptCount
   override def equals(obj: scala.Any): Boolean = {
     obj match {
@@ -318,6 +321,10 @@ case class InternalMessage(id: UUID, contents: String, createdTime: Long, toQueu
         other.canEqual(this) && other.id == this.id
       case _ => false
     }
+  }
+
+  override def hashCode(): Int = {
+    Objects.hash(id, contents, createdTime.toString, toQueue)
   }
 }
 

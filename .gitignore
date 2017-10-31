@@ -30,7 +30,7 @@ target/
 **/node_modules/
 **/jspm_packages
 **/bower_components/
-**/build/
+# **/build/
 **/*.tmp
 **/npm-debug.log
 
@@ -44,3 +44,6 @@ target/
 *.iws
 # osx cruft
 .DS_Store
+.gitignore
+src/test/hornetQMomClientTest/ScaleUpTestOnDev1.txt
+src/test/hornetQMomClientTest/ScaleUpTestOnDev1_1509394154.txt

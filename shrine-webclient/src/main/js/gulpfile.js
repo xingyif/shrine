@@ -2,7 +2,7 @@
 const gulp = require('gulp');
 const server = require('gulp-server-livereload');
 const pmMock = require('./server/pm-mock');
-const indexDir = './client/';
+const indexDir = './i2b2/';
 
 gulp.task('serve', ['pm'], function () { 
 

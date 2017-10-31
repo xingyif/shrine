@@ -1,6 +1,8 @@
 package net.shrine.hornetqmom
 
+import java.util.UUID
 import java.util.concurrent.TimeUnit
+
 import net.shrine.config.ConfigExtensions
 import net.shrine.messagequeueservice.{Message, Queue}
 import net.shrine.source.ConfigSource
@@ -23,7 +25,7 @@ class LocalHornetQMomTest extends FlatSpec with BeforeAndAfterAll with ScalaFutu
 
     val configMap: Map[String, String] = Map("shrine.messagequeue.blockingq.messageTimeToLive" -> "5 seconds",
       "shrine.messagequeue.blockingq.messageRedeliveryDelay" -> "2 seconds",
-      "shrine.messagequeue.blockingq.messageMaxDeliveryAttempts" -> "2")
+      "shrine.messagequeue.blockingq.messageMaxDeliveryAttempts" -> "1")
 
     ConfigSource.atomicConfig.configForBlock(configMap, "LocalHornetQMomTest") {
       val queueName = "receiveOneMessage"
@@ -66,25 +68,28 @@ class LocalHornetQMomTest extends FlatSpec with BeforeAndAfterAll with ScalaFutu
       assert(completeTry.isSuccess)
       // receive after message is completed, should be no message
       val shouldBeNoMessage: Option[Message] = LocalHornetQMom.receive(queue, 1 second).get
-
       assert(shouldBeNoMessage.isEmpty)
 
+      val queueName_ExpiredMessage = "QueueExpiredMessage"
+      val queue_expiredMessage: Try[Queue] = LocalHornetQMom.createQueueIfAbsent(queueName_ExpiredMessage)
       // message should expire
       val testContents2 = "Test message_MessageShouldExpire"
-      val sendTry2 = LocalHornetQMom.send(testContents2, queue)
+      val sendTry2 = LocalHornetQMom.send(testContents2, queue_expiredMessage.get)
       assert(sendTry2.isSuccess)
 
       // first time receive
-      val messageExpire: Option[Message] = LocalHornetQMom.receive(queue, 1 second).get
+      val messageExpire: Option[Message] = LocalHornetQMom.receive(queue_expiredMessage.get, 1 second).get
       assert(messageExpire.isDefined)
       assert(messageExpire.get.contents == testContents2)
 
       TimeUnit.MILLISECONDS.sleep(messageTimeToLive + 1000)
-      val shouldBeNoMessageExpired: Option[Message] = LocalHornetQMom.receive(queue, 1 second).get
+      val shouldBeNoMessageExpired: Option[Message] = LocalHornetQMom.receive(queue_expiredMessage.get, 1 second).get
       assert(shouldBeNoMessageExpired.isEmpty)
 
       val deleteTry = LocalHornetQMom.deleteQueue(queueName)
+      val deleteExpiredMessageQueueTry = LocalHornetQMom.deleteQueue(queueName_ExpiredMessage)
       assert(deleteTry.isSuccess)
+      assert(deleteExpiredMessageQueueTry.isSuccess)
       assert(LocalHornetQMom.queues.get.isEmpty)
     }
   }
@@ -167,6 +172,7 @@ class LocalHornetQMomTest extends FlatSpec with BeforeAndAfterAll with ScalaFutu
     val queueName = "DeletingNonExistingQueue"
     val deleteQueue = LocalHornetQMom.deleteQueue(queueName)
     assert(deleteQueue.isFailure)
+    assert(LocalHornetQMom.queues.get.isEmpty)
   }
 
   "BlockingQueue" should "return a failure if sending message to a non-existing queue" in {
@@ -174,6 +180,7 @@ class LocalHornetQMomTest extends FlatSpec with BeforeAndAfterAll with ScalaFutu
     val queueName = "SendToNonExistingQueue"
     val sendTry = LocalHornetQMom.send("testContent", Queue(queueName))
     assert(sendTry.isFailure)
+    assert(LocalHornetQMom.queues.get.isEmpty)
   }
 
   "BlockingQueue" should "return a failure if receiving a message to a non-existing queue" in {
@@ -181,6 +188,7 @@ class LocalHornetQMomTest extends FlatSpec with BeforeAndAfterAll with ScalaFutu
     val queueName = "ReceiveFromNonExistingQueue"
     val receiveTry = LocalHornetQMom.receive(Queue(queueName), Duration(1, "second"))
     assert(receiveTry.isFailure)
+    assert(LocalHornetQMom.queues.get.isEmpty)
   }
 
   "BlockingQueue" should "be able to filter the special characters in queue name" in {
@@ -190,5 +198,13 @@ class LocalHornetQMomTest extends FlatSpec with BeforeAndAfterAll with ScalaFutu
     assert(Queue(queueName).name == "testQueueFilter")
   }
 
-  override def afterAll() = LocalHornetQMomStopper.stop()
+  "BlockingQueue" should "make sure if two InternalMessages are equal, then they have the same hashCode" in {
+    val id: UUID = UUID.randomUUID()
+    val createdTime = System.currentTimeMillis()
+    val message1: InternalMessage = InternalMessage(id, "message1", createdTime, Queue("to"), 0)
+    val message2: InternalMessage = InternalMessage(id, "message1", createdTime, Queue("to"), 1)
+    assert(message1 == message2)
+    val message3: InternalMessage = InternalMessage(UUID.randomUUID(), "message3", createdTime, Queue("to"), 0)
+    assert(message1 != message3)
+  }
 }
