@@ -18,7 +18,7 @@ import spray.testkit.ScalatestRouteTest
 class HornetQMomWebApiConfigTest extends FlatSpec with ScalatestRouteTest with HornetQMomWebApi {
   override def actorRefFactory: ActorRefFactory = system
 
-  private val queueName = "testQueue"
+  private val queueName = "testQueueInConfig"
 
   "HornetQMomWebApi" should "block user from using the API and return a 404 response" in {
     ConfigSource.atomicConfig.configForBlock("shrine.messagequeue.blockingqWebApi.enabled", "false", "HornetQMomWebApiConfigTest") {
