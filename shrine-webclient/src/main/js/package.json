@@ -4,10 +4,10 @@
   "description": "SHRINE fork of the i2b2 Webclient",
   "main": "index.js",
   "scripts": {
-    "build-cell": "cd shrine-cell && npm install && npm run build",
+    "build-cell": "cd shrine-cell && npm run build",
     "build-i2b2": "ncp i2b2-src i2b2",
     "clean": "rimraf i2b2/js-i2b2/cells/SHRINE/dist && rimraf i2b2/js-shrine/dist",
-    "build-plugin": "cd shrine-plugin && npm install && jspm install && gulp export",
+    "build-plugin": "cd shrine-plugin && gulp export",
     "build": "npm run build-i2b2 && npm run build-cell && npm run build-plugin",
     "start": "npm run build-prod && gulp serve",
     "build-prod": "npm run clean && npm run build",
