@@ -3,7 +3,7 @@ package net.shrine.messagequeueservice
 import scala.util.Try
 
 /**
-  * A Message Trait that is implemented by LocalHornetQMessage and HornetQClientMessage
+  * A Message Trait that is implemented by SimpleMessage and MessageQueueClientMessage
   * Created by yifan on 9/8/17.
   */
 
