@@ -14,8 +14,7 @@ import scala.util.Success
 import scala.util.Try
 import scala.xml.NodeSeq
 import net.shrine.adapter.dao.AdapterDao
-import net.shrine.adapter.dao.model.Breakdown
-import net.shrine.adapter.dao.model.ShrineQueryResult
+import net.shrine.adapter.dao.model.{Breakdown, ShrineQuery, ShrineQueryResult}
 import net.shrine.protocol.{AuthenticationInfo, BaseShrineRequest, BroadcastMessage, ErrorResponse, HasQueryResults, HiveCredentials, QueryResult, ReadInstanceResultsRequest, ReadQueryInstancesRequest, ReadQueryResultRequest, ReadResultRequest, ReadResultResponse, ResultOutputType, ShrineRequest, ShrineResponse}
 import net.shrine.protocol.query.QueryDefinition
 import net.shrine.util.Tries.sequence
@@ -74,13 +73,14 @@ abstract class AbstractReadQueryResultAdapter[Req <: BaseShrineRequest, Rsp <: S
   override protected[adapter] def processRequest(message: BroadcastMessage): ShrineResponse = {
     val req = message.request.asInstanceOf[Req]
 
-    val queryId = getQueryId(req)
+    val queryId: Long = getQueryId(req)
 
-    def findShrineQueryRow = dao.findQueryByNetworkId(queryId)
+    def maybeShrineQueryRow: Option[ShrineQuery] = dao.findQueryByNetworkId(queryId)
 
-    def findShrineQueryResults = dao.findResultsFor(queryId)
+    def maybeShrineQueryResults: Option[ShrineQueryResult] = dao.findResultsFor(queryId)
 
-    findShrineQueryRow match {
+    //todo a pair of getOrElse would be better than the match/case
+    maybeShrineQueryRow match {
       case None => {
         debug(s"Query $queryId not found in the Shrine DB")
 
@@ -88,7 +88,7 @@ abstract class AbstractReadQueryResultAdapter[Req <: BaseShrineRequest, Rsp <: S
       }
       case Some(shrineQueryRow) => {
 
-        findShrineQueryResults match {
+        maybeShrineQueryResults match {
           case None => {
             debug(s"Query $queryId found but its results are not available")
 
@@ -104,24 +104,19 @@ abstract class AbstractReadQueryResultAdapter[Req <: BaseShrineRequest, Rsp <: S
             } else {
               debug(s"Query $queryId is incomplete, asking CRC for results")
 
-              //todo start here. This is asking for results, which is not safe yet. First ask to see if the wait is over.
-              //todo next step is to figure out what question to ask.
-
-              //todo asking the question is going to get messy as well. This architecture is set up to have one web API call propagate all the way from the QEP to the adapter and back. I'll have to build the new right request to ask here.
-              debug(s"req is ${req.requestType} ${req.getClass.getSimpleName} $req")
-
-              //ReadQueryInstancesRequest looks likely the right answer.
-              ////Req is either  a ReadQueryResultRequest or a ReadInstanceResultsRequest. Both have the project id
+              //Req is either  a ReadQueryResultRequest or a ReadInstanceResultsRequest. Both have the project id
               val projectId = req match {
                 case rqrr:ReadQueryResultRequest => rqrr.projectId
                 case rirr:ReadInstanceResultsRequest => rirr.projectId
               }
 
-              val readQueryInstancesRequest = ReadQueryInstancesRequest(projectId,req.waitTime,message.networkAuthn,queryId)
+              //Use a ReadQueryInstancesRequest to find out if it is safe to ask for the results
+              val readQueryInstancesRequest = ReadQueryInstancesRequest(hiveCredentials.projectId,req.waitTime,hiveCredentials.toAuthenticationInfo,shrineQueryRow.localId.toLong)
 
               val readQueryInstancesResponse = poster.post(readQueryInstancesRequest.toI2b2String)
               debug(s"ReadQueryInstancesResponse for $queryId is $readQueryInstancesResponse")
 
+              //todo start here. This is asking for results, which is not safe yet. First ask to see if the wait is over.
               val result: ShrineResponse = retrieveQueryResults(queryId, req, shrineQueryResult, message)
               if (collectAdapterAudit) AdapterAuditDb.db.insertResultSent(queryId,result)
 
