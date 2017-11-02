@@ -4,21 +4,31 @@ import javax.xml.datatype.XMLGregorianCalendar
 
 /**
  * @author Bill Simons
- * @date 4/2/12
- * @link http://cbmi.med.harvard.edu
- * @link http://chip.org
+ * @since 4/2/12
+ * @see http://cbmi.med.harvard.edu
+ * @see http://chip.org
  *       <p/>
  *       NOTICE: This software comes with NO guarantees whatsoever and is
  *       licensed as Lgpl Open Source
- * @link http://www.gnu.org/licenses/lgpl.html
+ * @see http://www.gnu.org/licenses/lgpl.html
  */
+
+/**
+  *
+  * @param queryInstanceId
+  * @param queryMasterId
+  * @param userId
+  * @param groupId
+  * @param startDate
+  * @param endDate - will be None if the query has not yet finished in a ReadQueryInstanceResponse .
+  */
 final case class QueryInstance (
-    val queryInstanceId: String,
-    val queryMasterId: String,
-    val userId: String,
-    val groupId: String,
-    val startDate: XMLGregorianCalendar,
-    val endDate: XMLGregorianCalendar) {
+                                  queryInstanceId: String,
+                                  queryMasterId: String,
+                                  userId: String,
+                                  groupId: String,
+                                  startDate: XMLGregorianCalendar,
+                                  endDate: Option[XMLGregorianCalendar]) {
  
   def withId(newId: String): QueryInstance = this.copy(queryInstanceId = newId)
 
@@ -32,4 +42,14 @@ final case class QueryInstance (
       case _ => false
     }
   }
+}
+
+object QueryInstance {
+  def apply(
+             queryInstanceId: String,
+             queryMasterId: String,
+             userId: String,
+             groupId: String,
+             startDate: XMLGregorianCalendar,
+             endDate: XMLGregorianCalendar): QueryInstance = new QueryInstance(queryInstanceId, queryMasterId, userId, groupId, startDate, Some(endDate))
 }

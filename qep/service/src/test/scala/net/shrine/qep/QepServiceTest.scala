@@ -59,7 +59,7 @@ final class QepServiceTest extends AbstractAuditDaoTest with EasyMockSugar {
 
     instance.startDate should not be (null)
     instance.endDate should not be (null)
-    instance.startDate should equal(instance.endDate)
+    instance.startDate should equal(instance.endDate.get)
     instance.groupId should equal(projectId)
     instance.queryInstanceId should equal(queryId.toString)
     instance.queryMasterId should equal(queryId.toString)

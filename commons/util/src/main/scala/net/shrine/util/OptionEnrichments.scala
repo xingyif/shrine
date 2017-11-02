@@ -7,7 +7,7 @@ import scala.xml.Text
 
 /**
  * @author clint
- * @date Sep 30, 2014
+ * @since Sep 30, 2014
  *
  * Helper methods for Options
  */
