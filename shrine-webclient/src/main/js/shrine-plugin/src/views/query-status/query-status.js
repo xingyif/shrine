@@ -25,7 +25,9 @@ export class QueryStatus extends PubSub {
         // -- subscribers -- //
         this.subscribe(this.notifications.i2b2.queryStarted, (n) => {
             this.status = initialState().status;
+            this.status.updated = Number(new Date());
             this.nodes = initialState().nodes;
+            this.hubMsg = initialState().hubMsg;
             this.status.query.queryName = n;
         });
 
@@ -34,7 +36,9 @@ export class QueryStatus extends PubSub {
             if(runningPreviousQuery) this.status = initialState().status;
             const {networkId} = d;
             this.status.query.networkId = networkId;
+            this.status.updated = Number(new Date());
             this.nodes = initialState().nodes;
+            this.hubMsg = hubMsgTypes.RESPONSE_RECEIVED;
             this.publish(this.notifications.shrine.refreshAllHistory);
             this.publish(this.commands.shrine.fetchQuery, {networkId, timeoutSeconds: TIMEOUT_SECONDS, dataVersion: DEFAULT_VERSION})
         });
@@ -72,4 +76,8 @@ export class QueryStatus extends PubSub {
 const TIMEOUT_SECONDS = 15;
 const DEFAULT_VERSION = -1;
 const me = new WeakMap();
-const initialState = (n) => ({status: { query: { networkId: null, queryName: null, updated: null, complete: false}}, nodes: [] });
+const hubMsgTypes = {
+    WAITING_ON_RESPONSE: 'Waiting on response from network',
+    RESPONSE_RECEIVED: 'Response received from network.  Waiting on results'
+}
+const initialState = (n) => ({status: { query: { networkId: null, queryName: null, updated: null, complete: false}}, nodes: [], hubMsg: hubMsgTypes.WAITING_ON_RESPONSE});
