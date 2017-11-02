@@ -15,12 +15,12 @@ import scala.util.Try
 import scala.xml.NodeSeq
 import net.shrine.adapter.dao.AdapterDao
 import net.shrine.adapter.dao.model.{Breakdown, ShrineQuery, ShrineQueryResult}
-import net.shrine.protocol.{AuthenticationInfo, BaseShrineRequest, BroadcastMessage, ErrorResponse, HasQueryResults, HiveCredentials, QueryResult, ReadInstanceResultsRequest, ReadQueryInstancesRequest, ReadQueryResultRequest, ReadResultRequest, ReadResultResponse, ResultOutputType, ShrineRequest, ShrineResponse}
+import net.shrine.protocol.{AuthenticationInfo, BaseShrineRequest, BroadcastMessage, ErrorResponse, HasQueryResults, HiveCredentials, QueryResult, ReadInstanceResultsRequest, ReadQueryInstancesRequest, ReadQueryInstancesResponse, ReadQueryResultRequest, ReadResultRequest, ReadResultResponse, ResultOutputType, ShrineRequest, ShrineResponse}
 import net.shrine.protocol.query.QueryDefinition
 import net.shrine.util.Tries.sequence
 
 import scala.concurrent.duration.Duration
-import net.shrine.client.Poster
+import net.shrine.client.{HttpResponse, Poster}
 import net.shrine.problem.{AbstractProblem, ProblemSources}
 
 /**
@@ -113,8 +113,25 @@ abstract class AbstractReadQueryResultAdapter[Req <: BaseShrineRequest, Rsp <: S
               //Use a ReadQueryInstancesRequest to find out if it is safe to ask for the results
               val readQueryInstancesRequest = ReadQueryInstancesRequest(hiveCredentials.projectId,req.waitTime,hiveCredentials.toAuthenticationInfo,shrineQueryRow.localId.toLong)
 
-              val readQueryInstancesResponse = poster.post(readQueryInstancesRequest.toI2b2String)
-              debug(s"ReadQueryInstancesResponse for $queryId is $readQueryInstancesResponse")
+              val httpResponse: HttpResponse = poster.post(readQueryInstancesRequest.toI2b2String)
+              debug(s"ReadQueryInstancesResponse httpResponse for $queryId is $httpResponse")
+
+              if(httpResponse.statusCode != 200){
+                //todo something useful before sending incomplete status again
+                error(s"Got status code ${httpResponse.statusCode} from the CRC, expected 200 OK. $httpResponse")
+              } else {
+                val maybeReadQueryInstanceResponse: Try[ReadQueryInstancesResponse] = Try{
+                  ReadQueryInstancesResponse.fromI2b2(httpResponse.body)
+                }
+                maybeReadQueryInstanceResponse.transform({ rqiResponse =>
+                  //todo get status into the response if(rqiResponse.)
+                  Success(rqiResponse)
+                },{ x =>
+                  //todo how to distinguish "this will never work" from "try again later" ?
+                  Failure(x)
+                })
+                maybeReadQueryInstanceResponse.get
+              }
 
               //todo start here. This is asking for results, which is not safe yet. First ask to see if the wait is over.
               val result: ShrineResponse = retrieveQueryResults(queryId, req, shrineQueryResult, message)
