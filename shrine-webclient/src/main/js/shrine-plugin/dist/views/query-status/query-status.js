@@ -135,6 +135,7 @@ System.register(['aurelia-framework', 'services/query-status.model', 'services/p
 
                         _this2.status.query.networkId = networkId;
                         _this2.nodes = initialState().nodes;
+                        _this2.publish(_this2.notifications.shrine.refreshAllHistory);
                         _this2.publish(_this2.commands.shrine.fetchQuery, { networkId: networkId, timeoutSeconds: TIMEOUT_SECONDS, dataVersion: DEFAULT_VERSION });
                     });
 

@@ -35,6 +35,7 @@ export class QueryStatus extends PubSub {
             const {networkId} = d;
             this.status.query.networkId = networkId;
             this.nodes = initialState().nodes;
+            this.publish(this.notifications.shrine.refreshAllHistory);
             this.publish(this.commands.shrine.fetchQuery, {networkId, timeoutSeconds: TIMEOUT_SECONDS, dataVersion: DEFAULT_VERSION})
         });
 
