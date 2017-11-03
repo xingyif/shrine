@@ -60,10 +60,13 @@ export class QueryStatus extends PubSub {
             const updated = Number(new Date());
             Object.assign(this.status, {query, updated});
             this.nodes = nodes;
-            this.publish(this.notifications.shrine.refreshAllHistory);
             if (!complete) {
                 this.publish(this.commands.shrine.fetchQuery, {networkId, dataVersion, timeoutSeconds});
             }
+            else {
+                this.publish(this.notifications.shrine.refreshAllHistory);
+            }
+
         });
 
         if (me.get(this).isDevEnv) {

@@ -167,9 +167,10 @@ System.register(['aurelia-framework', 'services/query-status.model', 'services/p
                         var updated = Number(new Date());
                         Object.assign(_this2.status, { query: query, updated: updated });
                         _this2.nodes = nodes;
-                        _this2.publish(_this2.notifications.shrine.refreshAllHistory);
                         if (!complete) {
                             _this2.publish(_this2.commands.shrine.fetchQuery, { networkId: networkId, dataVersion: dataVersion, timeoutSeconds: timeoutSeconds });
+                        } else {
+                            _this2.publish(_this2.notifications.shrine.refreshAllHistory);
                         }
                     });
 
