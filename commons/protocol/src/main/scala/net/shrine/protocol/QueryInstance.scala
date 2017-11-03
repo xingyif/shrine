@@ -28,7 +28,9 @@ final case class QueryInstance (
                                   userId: String,
                                   groupId: String,
                                   startDate: XMLGregorianCalendar,
-                                  endDate: Option[XMLGregorianCalendar]) {
+                                  endDate: Option[XMLGregorianCalendar],
+                                  queryStatus:QueryResult.StatusType = QueryResult.StatusType.Finished //todo make this required, no default
+                               ){
  
   def withId(newId: String): QueryInstance = this.copy(queryInstanceId = newId)
 

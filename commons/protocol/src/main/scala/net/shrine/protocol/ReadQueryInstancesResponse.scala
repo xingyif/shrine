@@ -2,6 +2,8 @@ package net.shrine.protocol
 
 import javax.xml.datatype.XMLGregorianCalendar
 
+import net.shrine.protocol.QueryResult.StatusType
+
 import xml.NodeSeq
 import net.shrine.util.XmlUtil
 import net.shrine.serialization.{I2b2Unmarshaller, XmlUnmarshaller}
@@ -24,7 +26,8 @@ final case class ReadQueryInstancesResponse(
                                              queryMasterId: Long,
                                              userId: String,
                                              groupId: String,
-                                             queryInstances: Seq[QueryInstance]) extends ShrineResponse {
+                                             queryInstances: Seq[QueryInstance]
+                                           ) extends ShrineResponse {
 
   override protected def i2b2MessageBody = XmlUtil.stripWhitespace {
     <ns5:response xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="ns5:instance_responseType">
@@ -42,9 +45,9 @@ final case class ReadQueryInstancesResponse(
               <start_date>{ queryInstance.startDate }</start_date>
               {queryInstance.endDate.toXml(<end_date/>)}
               <query_status_type>
-                <status_type_id>6</status_type_id>
-                <name>COMPLETED</name>
-                <description>COMPLETED</description>
+                <status_type_id>{queryInstance.queryStatus.i2b2Id.get}</status_type_id>
+                <name>{queryInstance.queryStatus.name}</name>
+                <description>{queryInstance.queryStatus.name}</description>
               </query_status_type>
             </query_instance>
           }
@@ -65,6 +68,7 @@ final case class ReadQueryInstancesResponse(
               <instanceId>{ queryInstance.queryInstanceId }</instanceId>
               <startDate>{ queryInstance.startDate }</startDate>
               {queryInstance.endDate.toXml(<endDate/>)}
+              <queryStatusType>{ queryInstance.queryStatus.name }</queryStatusType>
             </queryInstance>
           }
         }
@@ -86,8 +90,8 @@ object ReadQueryInstancesResponse extends I2b2Unmarshaller[ReadQueryInstancesRes
       val groupId = (x \ "group_id").text
       val startDate = XmlDateHelper.parseXmlTime((x \ "start_date").text).get //NB: Preserve old exception-throwing behavior for now
       val endDate = extractDate(x,"end_date") //NB: Preserve old exception-throwing behavior for now
-
-      QueryInstance(queryInstanceId, queryMasterId, userId, groupId, startDate, endDate)
+      val queryStatus: StatusType = QueryResult.StatusType.valueOf(asText("query_status_type", "name")(x)).get //TODO: Avoid fragile .get call
+      QueryInstance(queryInstanceId, queryMasterId, userId, groupId, startDate, endDate, queryStatus)
     }
 
     val firstInstance = queryInstances.head //TODO - parsing error if no masters - need to deal with "no result" cases
@@ -103,9 +107,10 @@ object ReadQueryInstancesResponse extends I2b2Unmarshaller[ReadQueryInstancesRes
     val queryInstances = (nodeSeq \ "queryInstance").map { x =>
       val queryInstanceId = (x \ "instanceId").text
       val startDate = XmlDateHelper.parseXmlTime((x \ "startDate").text).get //NB: Preserve old exception-throwing behavior for now
-      val endDate = extractDate(x,"end_date") //NB: Preserve old exception-throwing behavior for now
+      val endDate = extractDate(x,"endDate") //NB: Preserve old exception-throwing behavior for now
+      val statusType = QueryResult.StatusType.valueOf(asText("queryStatusType")(x)).get //TODO: Avoid fragile .get call
 
-      QueryInstance(queryInstanceId, masterId.toString, userId, groupId, startDate, endDate)
+      QueryInstance(queryInstanceId, masterId.toString, userId, groupId, startDate, endDate, statusType)
     }
 
     ReadQueryInstancesResponse(masterId, userId, groupId, queryInstances)
@@ -113,4 +118,8 @@ object ReadQueryInstancesResponse extends I2b2Unmarshaller[ReadQueryInstancesRes
 
   def extractDate(xml: NodeSeq,elemName: String): Option[XMLGregorianCalendar] = extract(xml,elemName).map(XmlDateHelper.parseXmlTime).map(_.get)
   def extract(xml: NodeSeq,elemName: String): Option[String] = { Option((xml \ elemName).text.trim).filter(!_.isEmpty) }
+
+  def elemAt(path: String*)(xml: NodeSeq): NodeSeq = path.foldLeft(xml)(_ \ _)
+  def asText(path: String*)(xml: NodeSeq): String = elemAt(path: _*)(xml).text.trim
+
 }

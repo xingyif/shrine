@@ -49,9 +49,9 @@ final class ReadQueryInstancesResponseTest extends ShrineResponseI2b2Serializabl
           <start_date>{ startDate1 }</start_date>
           <end_date>{ endDate1 }</end_date>
           <query_status_type>
-            <status_type_id>6</status_type_id>
-            <name>COMPLETED</name>
-            <description>COMPLETED</description>
+            <status_type_id>3</status_type_id>
+            <name>FINISHED</name>
+            <description>FINISHED</description>
           </query_status_type>
         </query_instance>
         <query_instance>
@@ -62,9 +62,9 @@ final class ReadQueryInstancesResponseTest extends ShrineResponseI2b2Serializabl
           <start_date>{ startDate2 }</start_date>
           <end_date>{ endDate2 }</end_date>
           <query_status_type>
-            <status_type_id>6</status_type_id>
-            <name>COMPLETED</name>
-            <description>COMPLETED</description>
+            <status_type_id>3</status_type_id>
+            <name>FINISHED</name>
+            <description>FINISHED</description>
           </query_status_type>
         </query_instance>
       </ns5:response>
@@ -80,11 +80,13 @@ final class ReadQueryInstancesResponseTest extends ShrineResponseI2b2Serializabl
         <instanceId>{ queryInstanceId1 }</instanceId>
         <startDate>{ startDate1 }</startDate>
         <endDate>{ endDate1 }</endDate>
+        <queryStatusType>FINISHED</queryStatusType>
       </queryInstance>
       <queryInstance>
         <instanceId>{ queryInstanceId2 }</instanceId>
         <startDate>{ startDate2 }</startDate>
         <endDate>{ endDate2 }</endDate>
+        <queryStatusType>FINISHED</queryStatusType>
       </queryInstance>
     </readQueryInstancesResponse>
   }
