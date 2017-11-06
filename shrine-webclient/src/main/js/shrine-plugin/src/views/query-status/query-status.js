@@ -64,7 +64,7 @@ export class QueryStatus extends PubSub {
                 this.publish(this.commands.shrine.fetchQuery, {networkId, dataVersion, timeoutSeconds});
             }
             else {
-                // TODO: call might not be necessary: this.publish(this.notifications.shrine.refreshAllHistory);
+                this.publish(this.notifications.shrine.refreshAllHistory);
             }
 
         });

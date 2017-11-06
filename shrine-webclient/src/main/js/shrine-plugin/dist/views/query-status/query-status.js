@@ -169,7 +169,9 @@ System.register(['aurelia-framework', 'services/query-status.model', 'services/p
                         _this2.nodes = nodes;
                         if (!complete) {
                             _this2.publish(_this2.commands.shrine.fetchQuery, { networkId: networkId, dataVersion: dataVersion, timeoutSeconds: timeoutSeconds });
-                        } else {}
+                        } else {
+                            _this2.publish(_this2.notifications.shrine.refreshAllHistory);
+                        }
                     });
 
                     if (me.get(this).isDevEnv) {
