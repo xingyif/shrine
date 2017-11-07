@@ -34,4 +34,8 @@ final case class ReadInstanceResultsResponse(
   override def results = Seq(singleNodeResult)
 }
 
-object ReadInstanceResultsResponse extends AbstractReadInstanceResultsResponse.Companion[ReadInstanceResultsResponse]
+object ReadInstanceResultsResponse extends AbstractReadInstanceResultsResponse.Companion[ReadInstanceResultsResponse] {
+
+  //todo start here
+  def apply(rqir:ReadQueryInstancesResponse):ReadInstanceResultsResponse = ???
+}

@@ -120,13 +120,15 @@ abstract class AbstractReadQueryResultAdapter[Req <: BaseShrineRequest, Rsp <: S
 
                 maybeReadQueryInstanceResponse.transform({ rqiResponse =>
                   if(rqiResponse.queryInstances.forall(_.queryStatus.isDone)) {
-                    //todo start here. This is asking for results, which is not safe yet. First ask to see if the wait is over.
+                    //First ask to see if the wait is over.
                     val result: ShrineResponse = retrieveQueryResults(queryId, req, shrineQueryResult, message)
                     if (collectAdapterAudit) AdapterAuditDb.db.insertResultSent(queryId,result)
                     Success(result)
                   } else {
                     debug(s"Query is in an incomplete state. Replying with $rqiResponse ")
                     //todo any reason to log this or store it in a database?
+                    //todo need to convert the ReadInstanceResultsResponse into a ReadInstanceResultsResponse
+
                     Success(rqiResponse)
                   }
                 },{ x =>
