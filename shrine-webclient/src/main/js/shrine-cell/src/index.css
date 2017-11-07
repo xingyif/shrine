@@ -7,3 +7,14 @@ div.shrinePluginContent{
   padding: 1px 5px;
   overflow: auto;
 }
+
+.ygtvloading,
+.ygtvtm,
+.ygtvtphh,
+.ygtvtph,
+.ygtvtp {
+	display: none;
+}
+
+
+

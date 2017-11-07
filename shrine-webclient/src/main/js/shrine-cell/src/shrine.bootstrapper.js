@@ -8,6 +8,7 @@ import { startQueryMixin, isQueryRunningMixin, refreshStatusMixin } from './mixi
 import * as QTMixins from './mixins/CRC.ctrlr.QryTool';
 import { contextMenuValidateMixin } from './mixins/CRC.view.History';
 import ResizeHeightMixin from './mixins/CRC.view.Status';
+import getChildRecordsMixin from './mixins/CRC.sdx.QM';
 
 class ShrineBootstrapper extends I2B2Decorator{
 
@@ -27,6 +28,7 @@ class ShrineBootstrapper extends I2B2Decorator{
     this.i2b2.CRC.ctrlr.QueryStatus.prototype.refreshStatus = refreshStatusMixin();
     this.i2b2.CRC.view.history.ContextMenuValidate = contextMenuValidateMixin(this);
     this.i2b2.CRC.view.status.ResizeHeight  = ResizeHeightMixin(this);
+    this.i2b2.sdx.TypeControllers.QM.getChildRecords = getChildRecordsMixin(this);
   }
 
   polyfill() {
