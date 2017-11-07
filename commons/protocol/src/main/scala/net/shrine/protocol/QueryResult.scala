@@ -223,6 +223,11 @@ object QueryResult {
     val LargeQueue = StatusType("LARGE_QUEUE", isDone = false)
     val NoMoreQueue = StatusType("NO_MORE_QUEUE", isDone = false)
 
+    //three new states from i2b2 1.07.8.b
+    val SmallQueueRunning = StatusType("SMALL_QUEUE_RUNNING", isDone = false)
+    val MediumQueueRunning = StatusType("MEDIUM_QUEUE_RUNNING", isDone = false)
+    val LargeQueueRunning = StatusType("LARGE_QUEUE_RUNNING", isDone = false)
+
     //SHRINE's internal states as reported by the hub
     val HubWillSubmit = StatusType("HUB_WILL_SUBMIT",isDone = false,isCrcCallCompleted = false)
   }

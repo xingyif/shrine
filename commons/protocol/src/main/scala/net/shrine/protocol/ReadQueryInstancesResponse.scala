@@ -42,6 +42,7 @@ final case class ReadQueryInstancesResponse(
               <query_master_id>{ queryMasterId }</query_master_id>
               <user_id>{ userId }</user_id>
               <group_id>{ groupId }</group_id>
+              <batch_mode>{ queryInstance.queryStatus.name }</batch_mode>
               <start_date>{ queryInstance.startDate }</start_date>
               {queryInstance.endDate.toXml(<end_date/>)}
               <query_status_type>
@@ -88,9 +89,9 @@ object ReadQueryInstancesResponse extends I2b2Unmarshaller[ReadQueryInstancesRes
       val queryMasterId = (x \ "query_master_id").text
       val userId = (x \ "user_id").text
       val groupId = (x \ "group_id").text
+      val queryStatus: StatusType = QueryResult.StatusType.valueOf((x \ "batch_mode").text).get //TODO: Avoid fragile .get call
       val startDate = XmlDateHelper.parseXmlTime((x \ "start_date").text).get //NB: Preserve old exception-throwing behavior for now
       val endDate = extractDate(x,"end_date") //NB: Preserve old exception-throwing behavior for now
-      val queryStatus: StatusType = QueryResult.StatusType.valueOf(asText("query_status_type", "name")(x)).get //TODO: Avoid fragile .get call
       QueryInstance(queryInstanceId, queryMasterId, userId, groupId, startDate, endDate, queryStatus)
     }
 

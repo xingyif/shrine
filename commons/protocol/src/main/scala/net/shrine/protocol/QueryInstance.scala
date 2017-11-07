@@ -29,7 +29,7 @@ final case class QueryInstance (
                                   groupId: String,
                                   startDate: XMLGregorianCalendar,
                                   endDate: Option[XMLGregorianCalendar],
-                                  queryStatus:QueryResult.StatusType //todo not safe to use - should be removed for now
+                                  queryStatus:QueryResult.StatusType //todo not safe to use - should be removed for now. It is always INCOMPLETE
                                ){
  
   def withId(newId: String): QueryInstance = this.copy(queryInstanceId = newId)

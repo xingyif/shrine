@@ -46,6 +46,7 @@ final class ReadQueryInstancesResponseTest extends ShrineResponseI2b2Serializabl
           <query_master_id>{ queryMasterId }</query_master_id>
           <user_id>{ userId }</user_id>
           <group_id>{ groupId }</group_id>
+          <batch_mode>FINISHED</batch_mode>
           <start_date>{ startDate1 }</start_date>
           <end_date>{ endDate1 }</end_date>
           <query_status_type>
@@ -59,6 +60,7 @@ final class ReadQueryInstancesResponseTest extends ShrineResponseI2b2Serializabl
           <query_master_id>{ queryMasterId }</query_master_id>
           <user_id>{ userId }</user_id>
           <group_id>{ groupId }</group_id>
+          <batch_mode>FINISHED</batch_mode>
           <start_date>{ startDate2 }</start_date>
           <end_date>{ endDate2 }</end_date>
           <query_status_type>

@@ -112,6 +112,7 @@ abstract class AbstractReadQueryResultAdapter[Req <: BaseShrineRequest, Rsp <: S
               debug(s"ReadQueryInstancesResponse httpResponse for $queryId is $httpResponse")
 
               val tryResult = if(httpResponse.statusCode == 200){
+
                 val maybeReadQueryInstanceResponse: Try[ReadQueryInstancesResponse] = Try{
                   ReadQueryInstancesResponse.fromI2b2(httpResponse.body)
                 }
