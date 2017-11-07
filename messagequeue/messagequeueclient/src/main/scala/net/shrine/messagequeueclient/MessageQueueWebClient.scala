@@ -6,6 +6,7 @@ import akka.actor.ActorSystem
 import net.shrine.config.ConfigExtensions
 import net.shrine.log.Loggable
 import net.shrine.messagequeuemiddleware.LocalMessageQueueMiddleware.SimpleMessage
+import net.shrine.messagequeuemiddleware.QueueDoesNotExistException
 import net.shrine.messagequeueservice.{CouldNotCompleteMomTaskButOKToRetryException, CouldNotCompleteMomTaskDoNotRetryException, Message, MessageQueueService, Queue}
 import net.shrine.problem.{AbstractProblem, ProblemSources}
 import net.shrine.source.ConfigSource
@@ -169,6 +170,8 @@ object MessageQueueWebClient extends MessageQueueService with Loggable {
     } else if (response.status == StatusCodes.OK) Some {
       val responseString = response.entity.asString
       SimpleMessage.fromJson(responseString)
+    } else if (response.status == StatusCodes.NotFound) Some {
+      throw CouldNotCompleteMomTaskButOKToRetryException(s"make a Message from response ${response.entity.asString} for ${from.name}", Some(response.status), Some(response.entity.asString))
     } else {
       throw CouldNotCompleteMomTaskDoNotRetryException(s"make a Message from response ${response.entity.asString} for ${from.name}", Some(response.status), Some(response.entity.asString))
     }
