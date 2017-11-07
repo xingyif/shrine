@@ -138,7 +138,8 @@ trait AbstractQepService[BaseResp <: BaseShrineResponse] extends Loggable {
       //NB: Return a dummy response, with a dummy QueryInstance containing the network (Shrine) id of the query we'd like
       //to get "instances" for.  This allows the legacy web client to formulate a request for query results that Shrine
       //can understand, while meeting the conversational requirements of the legacy web client.
-      val instance = QueryInstance(networkQueryId.toString, networkQueryId.toString, username, groupId, now, now)
+      //todo maybe add a "Made up" state to avoid any doubt about where this came from. Processing maybe isn't harmless
+      val instance = QueryInstance(networkQueryId.toString, networkQueryId.toString, username, groupId, now, now, QueryResult.StatusType.Processing)
 
       //TODO: XXX: HACK: Would like to remove the cast
       //NB: Munge in username from authentication result

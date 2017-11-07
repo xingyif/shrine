@@ -15,7 +15,7 @@ import scala.util.Try
 import scala.xml.NodeSeq
 import net.shrine.adapter.dao.AdapterDao
 import net.shrine.adapter.dao.model.{Breakdown, ShrineQuery, ShrineQueryResult}
-import net.shrine.protocol.{AuthenticationInfo, BaseShrineRequest, BroadcastMessage, ErrorResponse, HasQueryResults, HiveCredentials, QueryResult, ReadInstanceResultsRequest, ReadQueryInstancesRequest, ReadQueryInstancesResponse, ReadQueryResultRequest, ReadResultRequest, ReadResultResponse, ResultOutputType, ShrineRequest, ShrineResponse}
+import net.shrine.protocol.{AuthenticationInfo, BaseShrineRequest, BroadcastMessage, ErrorResponse, HasQueryResults, HiveCredentials, QueryResult, ReadQueryInstancesRequest, ReadQueryInstancesResponse, ReadResultRequest, ReadResultResponse, ResultOutputType, ShrineRequest, ShrineResponse}
 import net.shrine.protocol.query.QueryDefinition
 import net.shrine.util.Tries.sequence
 
@@ -71,6 +71,7 @@ abstract class AbstractReadQueryResultAdapter[Req <: BaseShrineRequest, Rsp <: S
   import AbstractReadQueryResultAdapter._
 
   override protected[adapter] def processRequest(message: BroadcastMessage): ShrineResponse = {
+    //Req is either  a ReadQueryResultRequest or a ReadInstanceResultsRequest. Both have the project id
     val req = message.request.asInstanceOf[Req]
 
     val queryId: Long = getQueryId(req)
@@ -104,40 +105,44 @@ abstract class AbstractReadQueryResultAdapter[Req <: BaseShrineRequest, Rsp <: S
             } else {
               debug(s"Query $queryId is incomplete, asking CRC for results")
 
-              //Req is either  a ReadQueryResultRequest or a ReadInstanceResultsRequest. Both have the project id
-              val projectId = req match {
-                case rqrr:ReadQueryResultRequest => rqrr.projectId
-                case rirr:ReadInstanceResultsRequest => rirr.projectId
-              }
-
               //Use a ReadQueryInstancesRequest to find out if it is safe to ask for the results
               val readQueryInstancesRequest = ReadQueryInstancesRequest(hiveCredentials.projectId,req.waitTime,hiveCredentials.toAuthenticationInfo,shrineQueryRow.localId.toLong)
 
               val httpResponse: HttpResponse = poster.post(readQueryInstancesRequest.toI2b2String)
               debug(s"ReadQueryInstancesResponse httpResponse for $queryId is $httpResponse")
 
-              if(httpResponse.statusCode != 200){
-                //todo something useful before sending incomplete status again
-                error(s"Got status code ${httpResponse.statusCode} from the CRC, expected 200 OK. $httpResponse")
-              } else {
+              val tryResult = if(httpResponse.statusCode == 200){
                 val maybeReadQueryInstanceResponse: Try[ReadQueryInstancesResponse] = Try{
                   ReadQueryInstancesResponse.fromI2b2(httpResponse.body)
                 }
+                debug(s"maybeReadQueryInstanceResponse.get is ${maybeReadQueryInstanceResponse.get}")
+
                 maybeReadQueryInstanceResponse.transform({ rqiResponse =>
                   //todo get status into the response if(rqiResponse.)
-                  Success(rqiResponse)
+                  //if any
+                  if(rqiResponse.queryInstances.forall(_.queryStatus.isDone)) {
+                    //todo start here. This is asking for results, which is not safe yet. First ask to see if the wait is over.
+                    val result: ShrineResponse = retrieveQueryResults(queryId, req, shrineQueryResult, message)
+                    if (collectAdapterAudit) AdapterAuditDb.db.insertResultSent(queryId,result)
+                    Success(result)
+                  } else {
+                    //todo Failure(new IllegalStateException("Query is still in an incomplete state"))//todo send back "Still queued" response Success(rqiResponse)
+                    debug(s"Query is still in an incomplete state. Try the experiment anyway. $rqiResponse ")
+
+                    //todo try anyway for the current experiment
+                    val result: ShrineResponse = retrieveQueryResults(queryId, req, shrineQueryResult, message)
+                    if (collectAdapterAudit) AdapterAuditDb.db.insertResultSent(queryId,result)
+                    Success(result)
+                  }
                 },{ x =>
-                  //todo how to distinguish "this will never work" from "try again later" ?
                   Failure(x)
                 })
-                maybeReadQueryInstanceResponse.get
+              } else {
+                //todo report problem before sending incomplete status again
+                error(s"Got status code ${httpResponse.statusCode} from the CRC, expected 200 OK. $httpResponse")
+                Failure(new IllegalStateException(s"Got status code ${httpResponse.statusCode} from the CRC, expected 200 OK. $httpResponse"))
               }
-
-              //todo start here. This is asking for results, which is not safe yet. First ask to see if the wait is over.
-              val result: ShrineResponse = retrieveQueryResults(queryId, req, shrineQueryResult, message)
-              if (collectAdapterAudit) AdapterAuditDb.db.insertResultSent(queryId,result)
-
-              result
+              tryResult.get
             }
           }
         }

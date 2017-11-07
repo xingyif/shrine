@@ -32,7 +32,7 @@ final class ReadQueryInstancesResponseTest extends ShrineResponseI2b2Serializabl
 
   def makeQueryInstance(queryMasterId: Long, queryInstanceId: Long, userId: String, groupId: String, startDate: XMLGregorianCalendar, endDate: XMLGregorianCalendar) = {
 
-    QueryInstance(String.valueOf(queryInstanceId), String.valueOf(queryMasterId), userId, groupId, startDate, endDate)
+    QueryInstance(String.valueOf(queryInstanceId), String.valueOf(queryMasterId), userId, groupId, startDate, endDate, QueryResult.StatusType.Finished)
   }
 
   override def messageBody = {

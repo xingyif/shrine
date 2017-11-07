@@ -29,7 +29,7 @@ final case class QueryInstance (
                                   groupId: String,
                                   startDate: XMLGregorianCalendar,
                                   endDate: Option[XMLGregorianCalendar],
-                                  queryStatus:QueryResult.StatusType = QueryResult.StatusType.Finished //todo make this required, no default
+                                  queryStatus:QueryResult.StatusType //todo not safe to use - should be removed for now
                                ){
  
   def withId(newId: String): QueryInstance = this.copy(queryInstanceId = newId)
@@ -53,5 +53,7 @@ object QueryInstance {
              userId: String,
              groupId: String,
              startDate: XMLGregorianCalendar,
-             endDate: XMLGregorianCalendar): QueryInstance = new QueryInstance(queryInstanceId, queryMasterId, userId, groupId, startDate, Some(endDate))
+             endDate: XMLGregorianCalendar,
+             queryStatus:QueryResult.StatusType
+           ): QueryInstance = new QueryInstance(queryInstanceId, queryMasterId, userId, groupId, startDate, Some(endDate),queryStatus:QueryResult.StatusType)
 }
