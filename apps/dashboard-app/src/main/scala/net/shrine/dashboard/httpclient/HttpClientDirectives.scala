@@ -3,7 +3,7 @@ package net.shrine.dashboard.httpclient
 import java.io.InputStream
 
 import akka.actor.ActorSystem
-import net.shrine.hornetqclient.HttpClient
+import net.shrine.messagequeueclient.HttpClient
 import net.shrine.log.Loggable
 import net.shrine.source.ConfigSource
 import spray.can.Http.ConnectionAttemptFailedException

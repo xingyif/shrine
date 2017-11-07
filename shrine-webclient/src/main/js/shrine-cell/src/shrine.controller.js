@@ -67,7 +67,7 @@ class ShrineController extends I2B2Decorator {
     if (this.i2b2.h.isSHRINE()) {
       this.loadTopics(type, args);
       this.renderTopics();
-      bootstrapper.bootstrap(this.i2b2);
+      bootstrapper.decorate(this.global);
     }
   }
 

@@ -3,7 +3,7 @@
 System.register(['aurelia-framework', 'services/query-status.model', 'services/pub-sub'], function (_export, _context) {
     "use strict";
 
-    var customElement, observable, QueryStatusModel, PubSub, _dec, _class, _desc, _value, _class2, _descriptor, _class3, _temp, QueryStatus, TIMEOUT_SECONDS, DEFAULT_VERSION, me, initialState;
+    var customElement, observable, QueryStatusModel, PubSub, _dec, _class, _desc, _value, _class2, _descriptor, _class3, _temp, QueryStatus, TIMEOUT_SECONDS, DEFAULT_VERSION, me, hubMsgTypes, initialState;
 
     function _initDefineProp(target, property, descriptor, context) {
         if (!descriptor) return;
@@ -124,7 +124,9 @@ System.register(['aurelia-framework', 'services/query-status.model', 'services/p
 
                     this.subscribe(this.notifications.i2b2.queryStarted, function (n) {
                         _this2.status = initialState().status;
+                        _this2.status.updated = Number(new Date());
                         _this2.nodes = initialState().nodes;
+                        _this2.hubMsg = initialState().hubMsg;
                         _this2.status.query.queryName = n;
                     });
 
@@ -134,7 +136,10 @@ System.register(['aurelia-framework', 'services/query-status.model', 'services/p
                         var networkId = d.networkId;
 
                         _this2.status.query.networkId = networkId;
+                        _this2.status.updated = Number(new Date());
                         _this2.nodes = initialState().nodes;
+                        _this2.hubMsg = hubMsgTypes.RESPONSE_RECEIVED;
+                        _this2.publish(_this2.notifications.shrine.refreshAllHistory);
                         _this2.publish(_this2.commands.shrine.fetchQuery, { networkId: networkId, timeoutSeconds: TIMEOUT_SECONDS, dataVersion: DEFAULT_VERSION });
                     });
 
@@ -164,10 +169,9 @@ System.register(['aurelia-framework', 'services/query-status.model', 'services/p
                         _this2.nodes = nodes;
                         if (!complete) {
                             _this2.publish(_this2.commands.shrine.fetchQuery, { networkId: networkId, dataVersion: dataVersion, timeoutSeconds: timeoutSeconds });
-                            return;
+                        } else if (_this2.nodes.length) {
+                            _this2.publish(_this2.notifications.shrine.refreshAllHistory);
                         }
-
-                        _this2.publish(_this2.notifications.shrine.refreshAllHistory);
                     });
 
                     if (me.get(this).isDevEnv) {
@@ -189,9 +193,13 @@ System.register(['aurelia-framework', 'services/query-status.model', 'services/p
             TIMEOUT_SECONDS = 15;
             DEFAULT_VERSION = -1;
             me = new WeakMap();
+            hubMsgTypes = {
+                WAITING_ON_RESPONSE: 'Waiting on response from network',
+                RESPONSE_RECEIVED: 'Response received from network.  Waiting on results'
+            };
 
             initialState = function initialState(n) {
-                return { status: { query: { networkId: null, queryName: null, updated: null, complete: false } }, nodes: [] };
+                return { status: { query: { networkId: null, queryName: null, updated: null, complete: false } }, nodes: [], hubMsg: hubMsgTypes.WAITING_ON_RESPONSE };
             };
         }
     };

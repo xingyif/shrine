@@ -4,7 +4,7 @@ import akka.event.Logging
 import net.shrine.authentication.UserAuthenticator
 import net.shrine.i2b2.protocol.pm.User
 import net.shrine.log.Loggable
-import net.shrine.hornetqmom.HornetQMomWebApi
+import net.shrine.messagequeuemiddleware.MessageQueueWebApi
 import net.shrine.source.ConfigSource
 import spray.http.{HttpRequest, HttpResponse}
 import spray.routing.directives.LogEntry
@@ -18,13 +18,13 @@ import scala.concurrent.ExecutionContext
 trait MetaDataService extends HttpService
   with StaticDataService
   with QepService
-  with HornetQMomWebApi
+  with MessageQueueWebApi
   with Loggable {
 
   lazy val route: Route = logRequestResponse(logEntryForRequestResponse _) {
     //logging is controlled by Akka's config, slf4j, and log4j config
     metaDataRoute ~
-      hornetQMomRoute ~
+      messageQueueRoute ~
       staticDataRoute ~
       authenticatedRoute
   }
@@ -62,7 +62,7 @@ trait MetaDataService extends HttpService
     qepRoute(user)
   }
 
-  lazy val hornetQMomRoute: Route = momRoute
+  lazy val messageQueueRoute: Route = momRoute
 
   lazy val userAuthenticator = UserAuthenticator(ConfigSource.config)
 
