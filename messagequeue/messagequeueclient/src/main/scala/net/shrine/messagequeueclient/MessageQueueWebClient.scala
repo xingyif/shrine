@@ -6,7 +6,6 @@ import akka.actor.ActorSystem
 import net.shrine.config.ConfigExtensions
 import net.shrine.log.Loggable
 import net.shrine.messagequeuemiddleware.LocalMessageQueueMiddleware.SimpleMessage
-import net.shrine.messagequeuemiddleware.QueueDoesNotExistException
 import net.shrine.messagequeueservice.{CouldNotCompleteMomTaskButOKToRetryException, CouldNotCompleteMomTaskDoNotRetryException, Message, MessageQueueService, Queue}
 import net.shrine.problem.{AbstractProblem, ProblemSources}
 import net.shrine.source.ConfigSource
@@ -94,7 +93,7 @@ object MessageQueueWebClient extends MessageQueueService with Loggable {
           case x if x == StatusCodes.RequestTimeout => throw CouldNotCompleteMomTaskButOKToRetryException(operation, Some(response.status), Some(response.entity.asString))
           case x if x == StatusCodes.NetworkConnectTimeout => throw CouldNotCompleteMomTaskButOKToRetryException(operation, Some(response.status), Some(response.entity.asString))
           case x if x == StatusCodes.NetworkReadTimeout => throw CouldNotCompleteMomTaskButOKToRetryException(operation, Some(response.status), Some(response.entity.asString))
-          case _ => throw CouldNotCompleteMomTaskDoNotRetryException(operation, Some(response.status), Some(response.entity.asString))
+          case _ => response
         }
       }
     }, {
@@ -157,8 +156,8 @@ object MessageQueueWebClient extends MessageQueueService with Loggable {
     val receiveMessageUrl = s"$momUrl/receiveMessage/${from.name}?timeOutSeconds=$seconds"
     val request: HttpRequest = HttpRequest(HttpMethods.GET, receiveMessageUrl)
 
-    for {
     //use the time to make the API call plus the timeout for the long poll
+    for {
       response: HttpResponse <- webApiTry(request, s"receive from ${from.name}", webClientTimeOut + timeout)
       messageResponse: Option[Message] <- messageOptionFromResponse(response, from)
     } yield messageResponse
