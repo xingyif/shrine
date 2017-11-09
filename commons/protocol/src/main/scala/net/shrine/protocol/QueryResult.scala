@@ -211,9 +211,11 @@ object QueryResult {
       }
     })
 
+    //at least all of the states from https://github.com/i2b2/i2b2-core-server/blob/6925c2602440d1d58768ace2da18ba62003e950e/edu.harvard.i2b2.crc/src/server/edu/harvard/i2b2/crc/ejb/QueryManagerBeanUtil.java
     val Finished = StatusType("FINISHED", isDone = true, Some(3))
     //TODO: Can we use the same <status_type_id> for Queued, Processing, and Incomplete?
     val Processing = StatusType("PROCESSING", isDone = false, Some(2))  //todo only used in tests
+    val Running = StatusType("RUNNING", isDone = false, Some(2))
     val Queued = StatusType("QUEUED", isDone = false, Some(2))
     val Incomplete = StatusType("INCOMPLETE", isDone = false, Some(2))
     //TODO: What <status_type_id>s should these have?  Does anyone care?
@@ -224,7 +226,6 @@ object QueryResult {
     val NoMoreQueue = StatusType("NO_MORE_QUEUE", isDone = false)
 
     //three new states from i2b2 1.07.8.b
-    val SmallQueueRunning = StatusType("SMALL_QUEUE_RUNNING", isDone = false)
     val MediumQueueRunning = StatusType("MEDIUM_QUEUE_RUNNING", isDone = false)
     val LargeQueueRunning = StatusType("LARGE_QUEUE_RUNNING", isDone = false)
 

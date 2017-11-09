@@ -1,5 +1,7 @@
 package net.shrine.protocol
 
+import net.shrine.audit.NetworkQueryId
+
 /**
  * @author Bill Simons
  * @since 4/13/11
@@ -36,6 +38,22 @@ final case class ReadInstanceResultsResponse(
 
 object ReadInstanceResultsResponse extends AbstractReadInstanceResultsResponse.Companion[ReadInstanceResultsResponse] {
 
-  //todo start here
-  def apply(rqir:ReadQueryInstancesResponse):ReadInstanceResultsResponse = ???
+  def apply(
+             networkQueryId: NetworkQueryId,
+             resultId:Long,
+             rqir:ReadQueryInstancesResponse):ReadInstanceResultsResponse = {
+    val singleNodeResult:QueryResult = QueryResult(
+      resultId = resultId,
+      instanceId = rqir.queryInstances.head.queryInstanceId.toLong,
+      resultType = None, //maybe PATIENT_COUNT_XML, probably doesn't matter
+      setSize = -1L, //no result available
+      startDate = Some(rqir.queryInstances.head.startDate),
+      endDate = rqir.queryInstances.head.endDate,
+      description = None,
+      statusType = rqir.queryInstances.head.queryStatus,
+      statusMessage = None
+    )
+
+    ReadInstanceResultsResponse(networkQueryId,singleNodeResult)
+  }
 }

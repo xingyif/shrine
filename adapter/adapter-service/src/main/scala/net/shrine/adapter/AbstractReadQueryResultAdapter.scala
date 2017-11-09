@@ -15,7 +15,7 @@ import scala.util.Try
 import scala.xml.NodeSeq
 import net.shrine.adapter.dao.AdapterDao
 import net.shrine.adapter.dao.model.{Breakdown, ShrineQuery, ShrineQueryResult}
-import net.shrine.protocol.{AuthenticationInfo, BaseShrineRequest, BroadcastMessage, ErrorResponse, HasQueryResults, HiveCredentials, QueryResult, ReadQueryInstancesRequest, ReadQueryInstancesResponse, ReadResultRequest, ReadResultResponse, ResultOutputType, ShrineRequest, ShrineResponse}
+import net.shrine.protocol.{AuthenticationInfo, BaseShrineRequest, BroadcastMessage, ErrorResponse, HasQueryResults, HiveCredentials, QueryResult, ReadInstanceResultsResponse, ReadQueryInstancesRequest, ReadQueryInstancesResponse, ReadResultRequest, ReadResultResponse, ResultOutputType, ShrineRequest, ShrineResponse}
 import net.shrine.protocol.query.QueryDefinition
 import net.shrine.util.Tries.sequence
 
@@ -80,7 +80,7 @@ abstract class AbstractReadQueryResultAdapter[Req <: BaseShrineRequest, Rsp <: S
 
     def maybeShrineQueryResults: Option[ShrineQueryResult] = dao.findResultsFor(queryId)
 
-    //todo a pair of getOrElse would be better than the match/case
+    //todo a pair of map.getOrElse would be better than the match/case
     maybeShrineQueryRow match {
       case None => {
         debug(s"Query $queryId not found in the Shrine DB")
@@ -92,8 +92,6 @@ abstract class AbstractReadQueryResultAdapter[Req <: BaseShrineRequest, Rsp <: S
         maybeShrineQueryResults match {
           case None => {
             debug(s"Query $queryId found but its results are not available")
-
-            //TODO: When precisely can this happen?  Should we go back to the CRC here?
 
             ErrorResponse(QueryResultNotAvailable(queryId))
           }
@@ -127,9 +125,8 @@ abstract class AbstractReadQueryResultAdapter[Req <: BaseShrineRequest, Rsp <: S
                   } else {
                     debug(s"Query is in an incomplete state. Replying with $rqiResponse ")
                     //todo any reason to log this or store it in a database?
-                    //todo need to convert the ReadInstanceResultsResponse into a ReadInstanceResultsResponse
-
-                    Success(rqiResponse)
+                    val result = ReadInstanceResultsResponse(queryId,shrineQueryResult.count.localId,rqiResponse)
+                    Success(result)
                   }
                 },{ x =>
                   Failure(x)
