@@ -311,7 +311,7 @@ object QueryResult {
     val statusMessage: Option[String] = asTextOption("query_status_type", "description")
     val encodedProblemDigest = extractProblemDigest(xml \ "query_status_type")
     val problemDigest = if (encodedProblemDigest.isDefined) encodedProblemDigest
-                        else if (statusType.isError) Some(ErrorStatusFromCrc(statusMessage,xml.text).toDigest)
+                        else if (statusType.isError) Some(ErrorStatusFromCrc(statusMessage,xml.toString()).toDigest)
                         else None
 
     case class Filling(
