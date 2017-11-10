@@ -12,10 +12,10 @@ import scala.concurrent.Future
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
-import scala.xml.NodeSeq
+import scala.xml.{NodeSeq, XML}
 import net.shrine.adapter.dao.AdapterDao
 import net.shrine.adapter.dao.model.{Breakdown, ShrineQuery, ShrineQueryResult}
-import net.shrine.protocol.{AuthenticationInfo, BaseShrineRequest, BroadcastMessage, ErrorResponse, HasQueryResults, HiveCredentials, QueryResult, ReadInstanceResultsResponse, ReadQueryInstancesRequest, ReadQueryInstancesResponse, ReadResultRequest, ReadResultResponse, ResultOutputType, ShrineRequest, ShrineResponse}
+import net.shrine.protocol.{AuthenticationInfo, BaseShrineRequest, BroadcastMessage, ErrorResponse, HasQueryResults, HiveCredentials, QueryResult, ReadInstanceResultsRequest, ReadInstanceResultsResponse, ReadQueryInstancesRequest, ReadQueryInstancesResponse, ReadResultRequest, ReadResultResponse, ResultOutputType, ShrineRequest, ShrineResponse}
 import net.shrine.protocol.query.QueryDefinition
 import net.shrine.util.Tries.sequence
 
@@ -101,29 +101,47 @@ abstract class AbstractReadQueryResultAdapter[Req <: BaseShrineRequest, Rsp <: S
 
               makeResponseFrom(queryId, shrineQueryResult)
             } else {
-              debug(s"Query $queryId is incomplete, asking CRC for results")
+              debug(s"Query $queryId is incomplete in the adapter's database - will ask CRC for results")
 
               //Use a ReadQueryInstancesRequest to find out if it is safe to ask for the results
               val readQueryInstancesRequest = ReadQueryInstancesRequest(hiveCredentials.projectId,req.waitTime,hiveCredentials.toAuthenticationInfo,shrineQueryRow.localId.toLong)
 
-              val httpResponse: HttpResponse = poster.post(readQueryInstancesRequest.toI2b2String)
-              debug(s"ReadQueryInstancesResponse httpResponse for $queryId is $httpResponse")
+              val readQueryInstanceHttpResponse: HttpResponse = poster.post(readQueryInstancesRequest.toI2b2String)
+              debug(s"ReadQueryInstancesResponse httpResponse for $queryId is $readQueryInstanceHttpResponse")
 
-              val tryResult = if(httpResponse.statusCode == 200){
+              val tryResult = if(readQueryInstanceHttpResponse.statusCode == 200){
 
                 val maybeReadQueryInstanceResponse: Try[ReadQueryInstancesResponse] = Try{
-                  ReadQueryInstancesResponse.fromI2b2(httpResponse.body)
+                  ReadQueryInstancesResponse.fromI2b2(readQueryInstanceHttpResponse.body)
                 }
                 debug(s"maybeReadQueryInstanceResponse.get is ${maybeReadQueryInstanceResponse.get}")
 
                 maybeReadQueryInstanceResponse.transform({ rqiResponse =>
-                  if(rqiResponse.queryInstances.forall(_.queryStatus.isDone)) {
-                    //First ask to see if the wait is over.
-                    val result: ShrineResponse = retrieveQueryResults(queryId, req, shrineQueryResult, message)
-                    if (collectAdapterAudit) AdapterAuditDb.db.insertResultSent(queryId,result)
-                    Success(result)
+                  if(rqiResponse.queryInstances.forall(_.queryStatus.isDone) && !rqiResponse.queryInstances.exists(_.queryStatus.isError)) {
+                    //Now try a ReadInstanceResultsRequest to see if the query is actually completed.
+                    val readInstanceResultsRequest = ReadInstanceResultsRequest(hiveCredentials.projectId,req.waitTime,hiveCredentials.toAuthenticationInfo,shrineQueryRow.localId.toLong)
+                    val readInstanceResultsHttpResponse: HttpResponse = poster.post(readInstanceResultsRequest.toI2b2String)
+                    debug(s"readInstanceResultsHttpResponse for $queryId is $readInstanceResultsHttpResponse")
+
+                    if (readInstanceResultsHttpResponse.statusCode == 200) {
+                      Try{
+                        val rirr = ReadInstanceResultsResponse.fromI2b2(breakdownTypes)(XML.loadString(readInstanceResultsHttpResponse.body))
+                        if(rirr.singleNodeResult.statusType.isDone && !rirr.singleNodeResult.statusType.isError){
+                          debug(s"ReadInstanceResultsResponse is $rirr")
+
+                          //Finally ask to see if the wait is over.
+                          debug(s"OK to ask the CRC for the results for $queryId")
+                          val result: ShrineResponse = retrieveQueryResults(queryId, req, shrineQueryResult, message)
+                          if (collectAdapterAudit) AdapterAuditDb.db.insertResultSent(queryId,result)
+                          result
+                        } else {
+                          rirr.copy(shrineNetworkQueryId = queryId) //need to copy with the network query id
+                        }
+                      }
+                    } else Failure(new IllegalArgumentException(s"readInstanceResultsHttpResponse.statusCode is ${readInstanceResultsHttpResponse.statusCode}, not 200"))
+
                   } else {
-                    debug(s"Query is in an incomplete state. Replying with $rqiResponse ")
+                    debug(s"Query is in an incomplete state or has an error. Replying with $rqiResponse ")
                     //todo any reason to log this or store it in a database?
                     val result = ReadInstanceResultsResponse(queryId,shrineQueryResult.count.localId,rqiResponse)
                     Success(result)
@@ -133,8 +151,8 @@ abstract class AbstractReadQueryResultAdapter[Req <: BaseShrineRequest, Rsp <: S
                 })
               } else {
                 //todo report problem before sending incomplete status again
-                error(s"Got status code ${httpResponse.statusCode} from the CRC, expected 200 OK. $httpResponse")
-                Failure(new IllegalStateException(s"Got status code ${httpResponse.statusCode} from the CRC, expected 200 OK. $httpResponse"))
+                error(s"Got status code ${readQueryInstanceHttpResponse.statusCode} from the CRC, expected 200 OK. $readQueryInstanceHttpResponse")
+                Failure(new IllegalStateException(s"Got status code ${readQueryInstanceHttpResponse.statusCode} from the CRC, expected 200 OK. $readQueryInstanceHttpResponse"))
               }
               tryResult.get
             }

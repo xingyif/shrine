@@ -38,6 +38,8 @@ final case class ReadInstanceResultsRequest(
    * id of a query, which is used to obtain results previously obtained from the 
    * CRC from Shrine's datastore.
    * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   *
+   * But of course if you're using it to make a call to the CRC you need to use the query instant id from the CRC, not the network id.
    */
   shrineNetworkQueryId: Long) extends ShrineRequest(projectId, waitTime, authn) with CrcRequest with HandleableShrineRequest with HandleableI2b2Request {
 
