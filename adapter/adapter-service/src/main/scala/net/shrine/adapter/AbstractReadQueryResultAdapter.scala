@@ -14,7 +14,7 @@ import scala.util.Success
 import scala.util.Try
 import scala.xml.{NodeSeq, XML}
 import net.shrine.adapter.dao.AdapterDao
-import net.shrine.adapter.dao.model.{Breakdown, ShrineQuery, ShrineQueryResult}
+import net.shrine.adapter.dao.model.{Breakdown, ShrineQueryResult}
 import net.shrine.protocol.{AuthenticationInfo, BaseShrineRequest, BroadcastMessage, ErrorResponse, HasQueryResults, HiveCredentials, QueryResult, ReadInstanceResultsRequest, ReadInstanceResultsResponse, ReadQueryInstancesRequest, ReadQueryInstancesResponse, ReadResultRequest, ReadResultResponse, ResultOutputType, ShrineRequest, ShrineResponse}
 import net.shrine.protocol.query.QueryDefinition
 import net.shrine.util.Tries.sequence
@@ -76,89 +76,71 @@ abstract class AbstractReadQueryResultAdapter[Req <: BaseShrineRequest, Rsp <: S
 
     val queryId: Long = getQueryId(req)
 
-    def maybeShrineQueryRow: Option[ShrineQuery] = dao.findQueryByNetworkId(queryId)
-
-    def maybeShrineQueryResults: Option[ShrineQueryResult] = dao.findResultsFor(queryId)
-
-    //todo a pair of map.getOrElse would be better than the match/case
-    maybeShrineQueryRow match {
-      case None => {
-        debug(s"Query $queryId not found in the Shrine DB")
-
-        ErrorResponse(QueryNotFound(queryId))
-      }
-      case Some(shrineQueryRow) => {
-
-        maybeShrineQueryResults match {
-          case None => {
-            debug(s"Query $queryId found but its results are not available")
-
-            ErrorResponse(QueryResultNotAvailable(queryId))
-          }
-          case Some(shrineQueryResult) => {
-            if (shrineQueryResult.isDone) {
-              debug(s"Query $queryId is done and already stored, returning stored results")
-
-              makeResponseFrom(queryId, shrineQueryResult)
-            } else {
-              debug(s"Query $queryId is incomplete in the adapter's database - will ask CRC for results")
-
-              //Use a ReadQueryInstancesRequest to find out if it is safe to ask for the results
-              val readQueryInstancesRequest = ReadQueryInstancesRequest(hiveCredentials.projectId,req.waitTime,hiveCredentials.toAuthenticationInfo,shrineQueryRow.localId.toLong)
-
-              val readQueryInstanceHttpResponse: HttpResponse = poster.post(readQueryInstancesRequest.toI2b2String)
-              debug(s"ReadQueryInstancesResponse httpResponse for $queryId is $readQueryInstanceHttpResponse")
-
-              val tryResult = if(readQueryInstanceHttpResponse.statusCode == 200){
-
-                val maybeReadQueryInstanceResponse: Try[ReadQueryInstancesResponse] = Try{
-                  ReadQueryInstancesResponse.fromI2b2(readQueryInstanceHttpResponse.body)
-                }
-                debug(s"maybeReadQueryInstanceResponse.get is ${maybeReadQueryInstanceResponse.get}")
-
-                maybeReadQueryInstanceResponse.transform({ rqiResponse =>
-                  if(rqiResponse.queryInstances.forall(_.queryStatus.isDone) && !rqiResponse.queryInstances.exists(_.queryStatus.isError)) {
-                    //Now try a ReadInstanceResultsRequest to see if the query is actually completed.
-                    val readInstanceResultsRequest = ReadInstanceResultsRequest(hiveCredentials.projectId,req.waitTime,hiveCredentials.toAuthenticationInfo,shrineQueryRow.localId.toLong)
-                    val readInstanceResultsHttpResponse: HttpResponse = poster.post(readInstanceResultsRequest.toI2b2String)
-                    debug(s"readInstanceResultsHttpResponse for $queryId is $readInstanceResultsHttpResponse")
-
-                    if (readInstanceResultsHttpResponse.statusCode == 200) {
-                      Try{
-                        val rirr = ReadInstanceResultsResponse.fromI2b2(breakdownTypes)(XML.loadString(readInstanceResultsHttpResponse.body))
-                        if(rirr.singleNodeResult.statusType.isDone && !rirr.singleNodeResult.statusType.isError){
-                          debug(s"ReadInstanceResultsResponse is $rirr")
-
-                          //Finally ask to see if the wait is over.
-                          debug(s"OK to ask the CRC for the results for $queryId")
-                          val result: ShrineResponse = retrieveQueryResults(queryId, req, shrineQueryResult, message)
-                          if (collectAdapterAudit) AdapterAuditDb.db.insertResultSent(queryId,result)
-                          result
-                        } else {
-                          rirr.copy(shrineNetworkQueryId = queryId) //need to copy with the network query id
-                        }
-                      }
-                    } else Failure(new IllegalArgumentException(s"readInstanceResultsHttpResponse.statusCode is ${readInstanceResultsHttpResponse.statusCode}, not 200"))
-
-                  } else {
-                    debug(s"Query is in an incomplete state or has an error. Replying with $rqiResponse ")
-                    //todo any reason to log this or store it in a database?
-                    val result = ReadInstanceResultsResponse(queryId,shrineQueryResult.count.localId,rqiResponse)
-                    Success(result)
-                  }
-                },{ x =>
-                  Failure(x)
-                })
-              } else {
-                //todo report problem before sending incomplete status again
-                error(s"Got status code ${readQueryInstanceHttpResponse.statusCode} from the CRC, expected 200 OK. $readQueryInstanceHttpResponse")
-                Failure(new IllegalStateException(s"Got status code ${readQueryInstanceHttpResponse.statusCode} from the CRC, expected 200 OK. $readQueryInstanceHttpResponse"))
-              }
-              tryResult.get
-            }
-          }
+    dao.findQueryByNetworkId(queryId).map{shrineQueryRow =>
+      dao.findResultsFor(queryId).map{ (shrineQueryResult: ShrineQueryResult) =>
+        if (shrineQueryResult.isDone) {
+          debug(s"Query $queryId is done and already stored, returning stored results")
+          makeResponseFrom(queryId, shrineQueryResult)
+        } else {
+          debug(s"Query $queryId is incomplete in the adapter's database - will ask CRC for results")
+         requestQueuedResultFromCrc(queryId,shrineQueryRow.localId.toLong,req.waitTime,message.networkAuthn,shrineQueryResult).get
         }
+      }.getOrElse{
+        debug(s"Query $queryId found but not the results of the original call to the CRC. That call may not have returned yet")
+        ErrorResponse(QueryResultNotAvailable(queryId))
       }
+
+    }.getOrElse{
+      debug(s"Query $queryId not found in the Shrine DB")
+      ErrorResponse(QueryNotFound(queryId))
+    }
+  }
+
+  private def requestQueuedResultFromCrc(queryId:Long,localQueryId:Long,waitTime: Duration,researcherAuthn: AuthenticationInfo,shrineQueryResult: ShrineQueryResult): Try[ShrineResponse] = {
+    debug(s"Query $queryId is incomplete in the adapter's database - will ask CRC for results")
+
+    //Use a ReadQueryInstancesRequest to find out if it is safe to ask for the results
+    val readQueryInstancesRequest = ReadQueryInstancesRequest(hiveCredentials.projectId,waitTime,hiveCredentials.toAuthenticationInfo,localQueryId)
+
+    val readQueryInstanceHttpResponse: HttpResponse = poster.post(readQueryInstancesRequest.toI2b2String)
+    debug(s"ReadQueryInstancesResponse httpResponse for $queryId is $readQueryInstanceHttpResponse")
+
+    if(readQueryInstanceHttpResponse.statusCode == 200){
+      val rqiResponse = ReadQueryInstancesResponse.fromI2b2(readQueryInstanceHttpResponse.body)
+      debug(s"rqiResponse is  $rqiResponse")
+
+      if(rqiResponse.queryInstances.forall(_.queryStatus.isDone) && !rqiResponse.queryInstances.exists(_.queryStatus.isError)) {
+        //Now try a ReadInstanceResultsRequest to see if the query is actually completed.
+        val readInstanceResultsRequest = ReadInstanceResultsRequest(hiveCredentials.projectId,waitTime,hiveCredentials.toAuthenticationInfo,localQueryId)
+        val readInstanceResultsHttpResponse: HttpResponse = poster.post(readInstanceResultsRequest.toI2b2String)
+        debug(s"readInstanceResultsHttpResponse for $queryId is $readInstanceResultsHttpResponse")
+
+        if (readInstanceResultsHttpResponse.statusCode == 200) {
+          Try{
+            val rirr = ReadInstanceResultsResponse.fromI2b2(breakdownTypes)(XML.loadString(readInstanceResultsHttpResponse.body))
+            if(rirr.singleNodeResult.statusType.isDone && !rirr.singleNodeResult.statusType.isError){
+              debug(s"ReadInstanceResultsResponse is $rirr")
+
+              //Finally ask for the results.
+              debug(s"OK to ask the CRC for the results for $queryId")
+              val result: ShrineResponse = retrieveQueryResults(queryId, waitTime, researcherAuthn, shrineQueryResult)
+              if (collectAdapterAudit) AdapterAuditDb.db.insertResultSent(queryId,result)
+
+              result
+            } else rirr.copy(shrineNetworkQueryId = queryId) //need to copy with the network query id
+          }
+        } else Failure(new IllegalArgumentException(s"readInstanceResultsHttpResponse.statusCode is ${readInstanceResultsHttpResponse.statusCode}, not 200"))
+
+      } else {
+        debug(s"Query is in an incomplete state or has an error. Replying with $rqiResponse ")
+        val result = ReadInstanceResultsResponse(queryId,shrineQueryResult.count.localId,rqiResponse)
+        Success(result)
+      }
+
+    } else {
+      //todo report problem before sending incomplete status again
+      error(s"Got status code ${readQueryInstanceHttpResponse.statusCode} from the CRC, expected 200 OK. $readQueryInstanceHttpResponse")
+      Failure(new IllegalStateException(s"Got status code ${readQueryInstanceHttpResponse.statusCode} from the CRC, expected 200 OK. $readQueryInstanceHttpResponse"))
     }
   }
 
@@ -166,17 +148,17 @@ abstract class AbstractReadQueryResultAdapter[Req <: BaseShrineRequest, Rsp <: S
     shrineQueryResult.toQueryResults(doObfuscation).map(toResponse(queryId, _)).getOrElse(ErrorResponse(QueryNotFound(queryId)))
   }
 
-  private def retrieveQueryResults(queryId: Long, req: Req, shrineQueryResult: ShrineQueryResult, message: BroadcastMessage): ShrineResponse = {
+  private def retrieveQueryResults(queryId: Long, waitTime:Duration, researcherAuthn:AuthenticationInfo, shrineQueryResult: ShrineQueryResult): ShrineResponse = {
     //NB: If the requested query was not finished executing on the i2b2 side when Shrine recorded it, attempt to
     //retrieve it and all its sub-components (breakdown results, if any) in parallel.  Asking for the results in
     //parallel is quite possibly too clever, but may be faster than asking for them serially.
     //TODO: Review this.
 
     //Make requests for results in parallel
-    val futureResponses = scatter(message.networkAuthn, req, shrineQueryResult)
+    val futureResponses = scatter(researcherAuthn, waitTime, shrineQueryResult)
 
     //Gather all the results (block until they're all returned)
-    val SpecificResponseAttempts(countResponseAttempt, breakdownResponseAttempts) = gather(queryId, futureResponses, req.waitTime)
+    val SpecificResponseAttempts(countResponseAttempt, breakdownResponseAttempts) = gather(queryId, futureResponses, waitTime)
 
     countResponseAttempt match {
       //If we successfully received the parent response (the one with query type PATIENT_COUNT_XML), re-store it along
@@ -184,7 +166,7 @@ abstract class AbstractReadQueryResultAdapter[Req <: BaseShrineRequest, Rsp <: S
       case Success(countResponse) => {
         //NB: Only store the result if needed, that is, if all results are done
         //TODO: REVIEW THIS
-        storeResultIfNecessary(shrineQueryResult, countResponse, req.authn, queryId, getFailedBreakdownTypes(breakdownResponseAttempts))
+        storeResultIfNecessary(shrineQueryResult, countResponse, researcherAuthn, queryId, getFailedBreakdownTypes(breakdownResponseAttempts))
 
         countResponse
       }
@@ -192,12 +174,12 @@ abstract class AbstractReadQueryResultAdapter[Req <: BaseShrineRequest, Rsp <: S
     }
   }
 
-  private def scatter(authn: AuthenticationInfo, req: Req, shrineQueryResult: ShrineQueryResult): Future[RawResponseAttempts] = {
+  private def scatter(researcherAuthn: AuthenticationInfo,waitTime: Duration, shrineQueryResult: ShrineQueryResult): Future[RawResponseAttempts] = {
 
-    def makeRequest(localResultId: Long) = ReadResultRequest(hiveCredentials.projectId, req.waitTime, hiveCredentials.toAuthenticationInfo, localResultId.toString)
+    def makeRequest(localResultId: Long) = ReadResultRequest(hiveCredentials.projectId, waitTime, hiveCredentials.toAuthenticationInfo, localResultId.toString)
 
     def process(localResultId: Long): ShrineResponse = {
-      delegateResultRetrievingAdapter.process(authn, makeRequest(localResultId))
+      delegateResultRetrievingAdapter.process(researcherAuthn, makeRequest(localResultId))
     }
 
     implicit val executionContext = this.executionContext
@@ -333,8 +315,8 @@ case class QueryNotFound(queryId:Long) extends AbstractProblem(ProblemSources.Ad
 }
 
 case class QueryResultNotAvailable(queryId:Long) extends AbstractProblem(ProblemSources.Adapter) {
-  override def summary: String = s"Query $queryId found but its results are not available yet"
-  override def description:String = s"Query $queryId found but its results are not available yet on ${stamp.host.getHostName}"
+  override def summary: String = s"Query $queryId found but its results are not available yet."
+  override def description:String = s"Query $queryId found but its results are not available yet on ${stamp.host.getHostName} The call to the CRC may not have completed."
 }
 
 case class CouldNotRetrieveQueryFromCrc(queryId:Long,x: Throwable) extends AbstractProblem(ProblemSources.Adapter) {
