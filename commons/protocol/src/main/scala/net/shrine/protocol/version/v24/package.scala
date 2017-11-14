@@ -1,4 +1,4 @@
-package net.shrine.messagequeueservice
+package net.shrine.protocol.version
 
 /**
   * This package contains a general JSON protocol envelope for SHRINE's messages.
@@ -6,6 +6,6 @@ package net.shrine.messagequeueservice
   * @author david 
   * @since 9/7/17
   */
-package object protocol {
+package object v24 {
 
 }

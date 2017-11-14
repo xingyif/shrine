@@ -1,5 +1,6 @@
 package net.shrine.protocol
 
+import net.shrine.protocol.version.v24.AggregatedRunQueryResponse
 import net.shrine.serialization.XmlMarshaller
 import net.shrine.serialization.XmlUnmarshaller
 import scala.xml.{Elem, NodeSeq}

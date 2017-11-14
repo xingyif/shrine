@@ -1,23 +1,13 @@
 package net.shrine.utilities.batchquerier.commands
 
+import net.shrine.protocol.{QueryResult, ResultOutputType}
+import net.shrine.protocol.query.{QueryDefinition, Term}
+import net.shrine.protocol.version.v24.AggregatedRunQueryResponse
+import net.shrine.util.{ShouldMatchersForJUnit, XmlDateHelper, XmlGcEnrichments}
+import net.shrine.utilities.batchquerier.{BatchQuerier, BatchQueryResult, QueryAttempt}
 import org.junit.Test
-import net.shrine.utilities.batchquerier.BatchQuerier
-import net.shrine.protocol.query.QueryDefinition
-import net.shrine.protocol.AggregatedRunQueryResponse
-import net.shrine.protocol.query.QueryDefinition
-import net.shrine.protocol.query.QueryDefinition
-import net.shrine.protocol.AggregatedRunQueryResponse
-import net.shrine.util.XmlDateHelper
-import net.shrine.util.XmlGcEnrichments
-import net.shrine.protocol.ResultOutputType
-import net.shrine.protocol.QueryResult
-import net.shrine.protocol.query.Term
-import net.shrine.utilities.batchquerier.BatchQueryResult
-import net.shrine.utilities.batchquerier.BatchQuerierConfig
-import scala.util.Try
-import scala.util.Failure
-import net.shrine.utilities.batchquerier.QueryAttempt
-import net.shrine.util.ShouldMatchersForJUnit
+
+import scala.util.{Failure, Try}
 
 /**
  * @author clint
@@ -50,7 +40,8 @@ final class QueryWithTest extends ShouldMatchersForJUnit {
           val start = XmlDateHelper.now
           val end = {
             import XmlGcEnrichments._
-            import scala.concurrent.duration._  
+
+            import scala.concurrent.duration._
             
             start + elapsedMillis.milliseconds
           }
@@ -89,7 +80,7 @@ final class QueryWithTest extends ShouldMatchersForJUnit {
     
     val Seq(queryDef1, queryDef2, queryDef3) = queryDefs
     
-    import scala.concurrent.duration._  
+    import scala.concurrent.duration._
     
     val expectedElapsed = 50.milliseconds
     

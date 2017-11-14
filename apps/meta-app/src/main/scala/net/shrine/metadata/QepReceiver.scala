@@ -7,13 +7,12 @@ import com.typesafe.config.Config
 import net.shrine.broadcaster.{IdAndUrl, NodeListParser}
 import net.shrine.config.ConfigExtensions
 import net.shrine.log.Log
-import net.shrine.messagequeueservice.protocol.Envelope
 import net.shrine.messagequeueservice.{CouldNotCompleteMomTaskButOKToRetryException, Message, MessageQueueService, Queue}
 import net.shrine.problem.{AbstractProblem, ProblemSources}
-import net.shrine.protocol.{AggregatedRunQueryResponse, QueryResult, ResultOutputType, ResultOutputTypes}
+import net.shrine.protocol.version.v24.{AggregatedRunQueryResponse, Envelope, IncrementalQueryResult}
+import net.shrine.protocol.{QueryResult, ResultOutputType, ResultOutputTypes}
 import net.shrine.qep.querydb.{QepQueryDb, QepQueryDbChangeNotifier, QueryResultRow}
 import net.shrine.source.ConfigSource
-import net.shrine.status.protocol.IncrementalQueryResult
 
 import scala.concurrent.duration.Duration
 import scala.util.control.NonFatal

@@ -5,7 +5,6 @@ import net.shrine.util.ShouldMatchersForJUnit
 import net.shrine.crypto.TrustParam.AcceptAllCerts
 import net.shrine.protocol.AggregatedReadInstanceResultsResponse
 import net.shrine.protocol.AggregatedReadQueryResultResponse
-import net.shrine.protocol.AggregatedRunQueryResponse
 import net.shrine.protocol.ApprovedTopic
 import net.shrine.protocol.AuthenticationInfo
 import net.shrine.protocol.Credential
@@ -28,6 +27,7 @@ import net.shrine.protocol.query.Term
 import net.shrine.util.XmlDateHelper
 import net.shrine.protocol.QueryMaster
 import net.shrine.protocol.DefaultBreakdownResultOutputTypes
+import net.shrine.protocol.version.v24.AggregatedRunQueryResponse
 
 import scala.util.Success
 import scala.util.Try

@@ -4,7 +4,8 @@ import net.shrine.log.Loggable
 import net.shrine.protocol.RunQueryResponse
 import net.shrine.protocol.ResultOutputType
 import net.shrine.protocol.query.QueryDefinition
-import net.shrine.protocol.AggregatedRunQueryResponse
+import net.shrine.protocol.version.v24.AggregatedRunQueryResponse
+
 import scala.util.Try
 import scala.util.Failure
 

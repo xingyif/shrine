@@ -1,10 +1,12 @@
 package net.shrine.utilities.batchquerier
 
-import net.shrine.protocol.AggregatedRunQueryResponse
 import net.shrine.protocol.QueryResult.StatusType.Error
+
 import scala.concurrent.duration.Duration
 import javax.xml.datatype.XMLGregorianCalendar
+
 import net.shrine.protocol.query.QueryDefinition
+import net.shrine.protocol.version.v24.AggregatedRunQueryResponse
 
 /**
  * @author clint

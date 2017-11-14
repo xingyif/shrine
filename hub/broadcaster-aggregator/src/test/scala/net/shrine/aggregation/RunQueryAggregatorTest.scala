@@ -5,7 +5,6 @@ import net.shrine.problem.TestProblem
 import scala.concurrent.duration.DurationInt
 import org.junit.Test
 import net.shrine.util.ShouldMatchersForJUnit
-import net.shrine.protocol.AggregatedRunQueryResponse
 import net.shrine.protocol.ErrorResponse
 import net.shrine.protocol.I2b2ResultEnvelope
 import net.shrine.protocol.NodeId
@@ -17,6 +16,7 @@ import net.shrine.protocol.query.QueryDefinition
 import net.shrine.protocol.query.Term
 import net.shrine.util.XmlDateHelper
 import net.shrine.protocol.DefaultBreakdownResultOutputTypes
+import net.shrine.protocol.version.v24.AggregatedRunQueryResponse
 
 /**
  *

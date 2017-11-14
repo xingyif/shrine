@@ -6,10 +6,9 @@ import net.shrine.broadcaster.dao.HubDao
 import net.shrine.client.TimeoutException
 import net.shrine.log.{Log, Loggable}
 import net.shrine.messagequeueservice.{CouldNotCompleteMomTaskButOKToRetryException, MessageQueueService, Queue}
-import net.shrine.messagequeueservice.protocol.Envelope
 import net.shrine.problem.{AbstractProblem, ProblemSources}
-import net.shrine.protocol.{AggregatedRunQueryResponse, BaseShrineResponse, BroadcastMessage, FailureResult, QueryResult, RunQueryRequest, SingleNodeResult, Timeout}
-import net.shrine.status.protocol.IncrementalQueryResult
+import net.shrine.protocol.version.v24.{AggregatedRunQueryResponse, Envelope, IncrementalQueryResult}
+import net.shrine.protocol.{BaseShrineResponse, BroadcastMessage, FailureResult, QueryResult, RunQueryRequest, SingleNodeResult, Timeout}
 
 import scala.collection.concurrent.TrieMap
 import scala.concurrent.Future

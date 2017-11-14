@@ -14,7 +14,6 @@ import net.shrine.protocol.ReadPdoResponse
 import net.shrine.protocol.RenameQueryResponse
 import net.shrine.protocol.ReadQueryInstancesResponse
 import net.shrine.protocol.query.QueryDefinition
-import net.shrine.protocol.AggregatedRunQueryResponse
 import net.shrine.protocol.FlagQueryResponse
 import net.shrine.protocol.DeleteQueryResponse
 import net.shrine.protocol.ReadPreviousQueriesResponse
@@ -30,6 +29,7 @@ import net.shrine.protocol.UnFlagQueryRequest
 import net.shrine.protocol.RunQueryRequest
 import net.shrine.protocol.RunQueryResponse
 import net.shrine.protocol.DefaultBreakdownResultOutputTypes
+import net.shrine.protocol.version.v24.AggregatedRunQueryResponse
 
 import scala.xml.Node
 import scala.xml.XML

@@ -1,4 +1,4 @@
-package net.shrine.status.protocol
+package net.shrine.protocol.version.v24
 
 import net.shrine.audit.NetworkQueryId
 import org.json4s.ShortTypeHints
