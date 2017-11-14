@@ -37,7 +37,7 @@ object QepReceiver {
   val runner = QepReceiverRunner(nodeName,pollDuration)
 
   val pollingThread = new Thread(runner,s"${getClass.getSimpleName} poller")
-//  pollingThread.setDaemon(true)
+  pollingThread.setDaemon(true)
   pollingThread.setUncaughtExceptionHandler(QepReceiverUncaughtExceptionHandler)
 
   def start(): Unit = {
@@ -79,7 +79,6 @@ object QepReceiver {
         //forever
         try {
           Log.debug("About to call receive.")
-          println("About to call receive.")
           receiveAMessage(queue)
           Log.debug("Called receive.")
         } catch {
@@ -94,8 +93,7 @@ object QepReceiver {
     }
 
     def receiveAMessage(queue:Queue): Unit = {
-      println(s"in QEPReceiver, receive")
-      val maybeMessage: Try[Option[Message]] = MessageQueueService.service.receive(Queue("notexist"), pollDuration)
+      val maybeMessage: Try[Option[Message]] = MessageQueueService.service.receive(queue, pollDuration)
 
       maybeMessage.transform({m =>
         m.map(interpretAMessage(_,queue)).getOrElse(Success()) //todo rework this in SHRINE-2327
@@ -104,12 +102,6 @@ object QepReceiver {
           case cncmtbotrx:CouldNotCompleteMomTaskButOKToRetryException => {
             Log.debug(s"Last attempt to receive resulted in ${cncmtbotrx.getMessage}. Sleeping $pollDuration before next attempt")
             Thread.sleep(pollDuration.toMillis)
-          }
-          case retry: CouldNotCompleteMomTaskDoNotRetryException => {
-            retry.status.foreach(x =>
-            if (x == StatusCodes.NotFound) {
-              Thread.sleep(pollDuration.toMillis)
-            })
           }
           case NonFatal(nfx) => ExceptionWhileReceivingMessage(queue,x)
           case fatal => throw fatal
