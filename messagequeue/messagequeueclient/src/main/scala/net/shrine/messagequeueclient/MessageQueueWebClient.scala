@@ -158,7 +158,7 @@ object MessageQueueWebClient extends MessageQueueService with Loggable {
 
     for {
     //use the time to make the API call plus the timeout for the long poll
-      response: HttpResponse <- webApiTry(request, s"receive from ${from.name}", webClientTimeOut + timeout) // todo this is currently 25s
+      response: HttpResponse <- webApiTry(request, s"receive from ${from.name}", webClientTimeOut + timeout)
       messageResponse: Option[Message] <- messageOptionFromResponse(response, from)
     } yield messageResponse
   }
