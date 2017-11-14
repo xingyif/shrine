@@ -90,7 +90,7 @@ trait MessageQueueWebApi extends HttpService
           case Failure(x) => {
             x match {
               case q: QueueDoesNotExistException => {
-                respondWithStatus(StatusCodes.NotFound) {
+                respondWithStatus(StatusCodes.UnprocessableEntity) { // todo no content
                   complete(s"${q.getMessage}")
                 }
               }
@@ -123,7 +123,7 @@ trait MessageQueueWebApi extends HttpService
           case Failure(x) => {
             x match {
               case q: QueueDoesNotExistException => {
-                respondWithStatus(StatusCodes.NotFound) {
+                respondWithStatus(StatusCodes.UnprocessableEntity) {
                   complete(s"${q.getMessage}")
                 }
               }
@@ -161,7 +161,7 @@ trait MessageQueueWebApi extends HttpService
               case Failure(x) => {
                 x match {
                   case q: QueueDoesNotExistException => {
-                    respondWithStatus(StatusCodes.NotFound) {
+                    respondWithStatus(StatusCodes.UnprocessableEntity) {
                       complete(s"${q.getMessage}")
                     }
                   }
@@ -193,7 +193,7 @@ trait MessageQueueWebApi extends HttpService
           case Failure(x) => {
             x match {
               case m: MessageDoesNotExistAndCannotBeCompletedException => {
-                respondWithStatus(StatusCodes.NotFound) {
+                respondWithStatus(StatusCodes.UnprocessableEntity) { // todo should completeMessage return a success if message is already gone
                   complete(m.getMessage)
                 }
               }

@@ -8,12 +8,13 @@ import net.shrine.broadcaster.{IdAndUrl, NodeListParser}
 import net.shrine.config.ConfigExtensions
 import net.shrine.log.Log
 import net.shrine.messagequeueservice.protocol.Envelope
-import net.shrine.messagequeueservice.{CouldNotCompleteMomTaskButOKToRetryException, Message, MessageQueueService, Queue}
+import net.shrine.messagequeueservice.{CouldNotCompleteMomTaskButOKToRetryException, CouldNotCompleteMomTaskDoNotRetryException, Message, MessageQueueService, Queue}
 import net.shrine.problem.{AbstractProblem, ProblemSources}
 import net.shrine.protocol.{AggregatedRunQueryResponse, QueryResult, ResultOutputType, ResultOutputTypes}
 import net.shrine.qep.querydb.{QepQueryDb, QepQueryDbChangeNotifier, QueryResultRow}
 import net.shrine.source.ConfigSource
 import net.shrine.status.protocol.IncrementalQueryResult
+import spray.http.StatusCodes
 
 import scala.concurrent.duration.Duration
 import scala.util.control.NonFatal
@@ -36,7 +37,7 @@ object QepReceiver {
   val runner = QepReceiverRunner(nodeName,pollDuration)
 
   val pollingThread = new Thread(runner,s"${getClass.getSimpleName} poller")
-  pollingThread.setDaemon(true)
+//  pollingThread.setDaemon(true)
   pollingThread.setUncaughtExceptionHandler(QepReceiverUncaughtExceptionHandler)
 
   def start(): Unit = {
@@ -78,6 +79,7 @@ object QepReceiver {
         //forever
         try {
           Log.debug("About to call receive.")
+          println("About to call receive.")
           receiveAMessage(queue)
           Log.debug("Called receive.")
         } catch {
@@ -92,7 +94,8 @@ object QepReceiver {
     }
 
     def receiveAMessage(queue:Queue): Unit = {
-      val maybeMessage: Try[Option[Message]] = MessageQueueService.service.receive(queue, pollDuration)
+      println(s"in QEPReceiver, receive")
+      val maybeMessage: Try[Option[Message]] = MessageQueueService.service.receive(Queue("notexist"), pollDuration)
 
       maybeMessage.transform({m =>
         m.map(interpretAMessage(_,queue)).getOrElse(Success()) //todo rework this in SHRINE-2327
@@ -101,6 +104,12 @@ object QepReceiver {
           case cncmtbotrx:CouldNotCompleteMomTaskButOKToRetryException => {
             Log.debug(s"Last attempt to receive resulted in ${cncmtbotrx.getMessage}. Sleeping $pollDuration before next attempt")
             Thread.sleep(pollDuration.toMillis)
+          }
+          case retry: CouldNotCompleteMomTaskDoNotRetryException => {
+            retry.status.foreach(x =>
+            if (x == StatusCodes.NotFound) {
+              Thread.sleep(pollDuration.toMillis)
+            })
           }
           case NonFatal(nfx) => ExceptionWhileReceivingMessage(queue,x)
           case fatal => throw fatal

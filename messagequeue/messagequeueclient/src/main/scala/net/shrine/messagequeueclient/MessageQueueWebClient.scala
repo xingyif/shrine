@@ -93,7 +93,10 @@ object MessageQueueWebClient extends MessageQueueService with Loggable {
           case x if x == StatusCodes.RequestTimeout => throw CouldNotCompleteMomTaskButOKToRetryException(operation, Some(response.status), Some(response.entity.asString))
           case x if x == StatusCodes.NetworkConnectTimeout => throw CouldNotCompleteMomTaskButOKToRetryException(operation, Some(response.status), Some(response.entity.asString))
           case x if x == StatusCodes.NetworkReadTimeout => throw CouldNotCompleteMomTaskButOKToRetryException(operation, Some(response.status), Some(response.entity.asString))
-          case _ => response
+          case x if x == StatusCodes.NotFound => throw CouldNotCompleteMomTaskDoNotRetryException(operation, Some(response.status), Some(response.entity.asString))
+          case _ => {
+            response
+          }
         }
       }
     }, {
@@ -108,7 +111,7 @@ object MessageQueueWebClient extends MessageQueueService with Loggable {
       implicit val formats = Serialization.formats(NoTypeHints)
       read[Queue](queueString)(formats, manifest[Queue])
     } else {
-      if (response.status == StatusCodes.NotFound) throw CouldNotCompleteMomTaskButOKToRetryException(s"create a queue named $queueName", Some(response.status), Some(response.entity.asString))
+      if (response.status == StatusCodes.UnprocessableEntity) throw CouldNotCompleteMomTaskButOKToRetryException(s"create a queue named $queueName", Some(response.status), Some(response.entity.asString))
       else throw CouldNotCompleteMomTaskDoNotRetryException(s"Response status is ${response.status}, not Created. Cannot make queue $queueName from this response: ${response.entity.asString}", Some(response.status), Some(response.entity.asString))
     }
   }.transform({ s =>
@@ -159,7 +162,9 @@ object MessageQueueWebClient extends MessageQueueService with Loggable {
     //use the time to make the API call plus the timeout for the long poll
     for {
       response: HttpResponse <- webApiTry(request, s"receive from ${from.name}", webClientTimeOut + timeout)
-      messageResponse: Option[Message] <- messageOptionFromResponse(response, from)
+      messageResponse: Option[Message] <- {
+        messageOptionFromResponse(response, from)
+      }
     } yield messageResponse
   }
 
@@ -169,7 +174,7 @@ object MessageQueueWebClient extends MessageQueueService with Loggable {
     } else if (response.status == StatusCodes.OK) Some {
       val responseString = response.entity.asString
       SimpleMessage.fromJson(responseString)
-    } else if (response.status == StatusCodes.NotFound) Some {
+    } else if (response.status == StatusCodes.UnprocessableEntity) Some {
       throw CouldNotCompleteMomTaskButOKToRetryException(s"make a Message from response ${response.entity.asString} for ${from.name}", Some(response.status), Some(response.entity.asString))
     } else {
       throw CouldNotCompleteMomTaskDoNotRetryException(s"make a Message from response ${response.entity.asString} for ${from.name}", Some(response.status), Some(response.entity.asString))
