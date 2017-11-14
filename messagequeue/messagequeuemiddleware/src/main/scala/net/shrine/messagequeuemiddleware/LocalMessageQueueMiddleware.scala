@@ -72,7 +72,7 @@ object LocalMessageQueueMiddleware extends MessageQueueService {
     val msgID: UUID = UUID.randomUUID()
     val internalMessage: InternalMessage = InternalMessage(msgID, contents, System.currentTimeMillis(), to, 0)
     // schedule future cleanup when the message expires
-    MessageScheduler.scheduleMessageExpiry(to, internalMessage, messageTimeToLiveInMillis)
+    MessageScheduler.scheduleExpiredMessageCleanup(to, internalMessage, messageTimeToLiveInMillis)
     // waiting if necessary for space to become available
     blocking(queue.putLast(internalMessage))
     Log.debug(s"After send to ${to.name} - blockingQueue ${queue.size} $queue")
@@ -86,11 +86,12 @@ object LocalMessageQueueMiddleware extends MessageQueueService {
     * @return Some message before the timeout, or None
     */
   def receive(from: Queue, timeout: Duration): Try[Option[Message]] = Try {
+    val deadline: Long = System.currentTimeMillis() + timeout.toMillis
     // poll the first message from the blocking deque
     val blockingQueue = blockingQueuePool.getOrElse(from.name, throw QueueDoesNotExistException(from))
     Log.debug(s"Before receive from ${from.name} - blockingQueue ${blockingQueue.size} ${blockingQueue.toString}")
     val internalMessage: Option[InternalMessage] = blocking{
-      Option(blockingQueue.pollFirst(timeout.toMillis, TimeUnit.MILLISECONDS))
+      Option(blockingQueue.pollFirst(deadline - System.currentTimeMillis(), TimeUnit.MILLISECONDS))
     }
     //todo tuck all this delivery attempt logic into one set of {}s which finally returns simpleMessage
     val deliveryAttemptID = UUID.randomUUID()
@@ -164,32 +165,7 @@ object LocalMessageQueueMiddleware extends MessageQueueService {
     }
   }
 
-  case class CleanExpiredDeliveryAttemptRunner(queue: Queue, messageTimeToLiveInMillis: Long) extends Runnable {
-    // watches the map
-    override def run(): Unit = {
-      try {
-        val currentTimeInMillis: Long = System.currentTimeMillis()
-        Log.debug(s"About to clean up outstanding messages. DAMap size: ${messageDeliveryAttemptMap.size}")
-        // cleans up deliveryAttempt map
-        for ((uuid: UUID, deliveryAttemptAndFutureTask: (DeliveryAttempt, ScheduledFuture[_])) <- messageDeliveryAttemptMap){
-          if ((currentTimeInMillis - deliveryAttemptAndFutureTask._1.message.createdTime) >= messageTimeToLiveInMillis) {
-            messageDeliveryAttemptMap.remove(uuid, deliveryAttemptAndFutureTask)
-            // cancels its future message redelivery task
-            MessageScheduler.cancelScheduledMessageRedelivery(deliveryAttemptAndFutureTask._2)
-          }
-        }
-        Log.debug(s"Outstanding deliveryAttempts that exceed $messageTimeToLiveInMillis milliseconds have been cleaned from the map. " +
-          s"DAMap size: ${messageDeliveryAttemptMap.size}")
-      } catch {
-        case NonFatal(x) => CleaningUpDeliveryAttemptProblem(queue, messageTimeToLiveInMillis, x)
-        case i: InterruptedException => Log.error("Scheduled expired message cleanup was interrupted", i)
-        case t: TimeoutException => Log.error(s"Expired Messages can't be cleaned due to timeout", t)
-        case e: Throwable => Log.error(s"""${e.getClass.getSimpleName} "${e.getMessage}" caught by exception handler""", e)
-      }
-    }
-  }
-
-  case class MessageRedeliveryRunner(deliveryAttemptID: UUID, deliveryAttempt: DeliveryAttempt, messageRedeliveryDelay: Long, messageMaxDeliveryAttempts: Long) extends Runnable {
+  case class MessageRedeliveryRunner(deliveryAttemptID: UUID, deliveryAttempt: DeliveryAttempt, messageMaxDeliveryAttempts: Long) extends Runnable {
     override def run(): Unit = {
       try {
         messageDeliveryAttemptMap.get(deliveryAttemptID).fold(
@@ -211,20 +187,34 @@ object LocalMessageQueueMiddleware extends MessageQueueService {
     }
   }
 
-  case class CleanInternalMessageInDequeRunner(messageToBeRemoved: InternalMessage, messageTimeToLiveInMillis: Long) extends Runnable {
+  case class CleanDeliveryAttemptandInternalMessageRunner(queue: Queue, messageToBeRemoved: InternalMessage, messageTimeToLiveInMillis: Long) extends Runnable {
     override def run(): Unit = {
+      val currentTime: Long = System.currentTimeMillis()
       try {
+        Log.debug(s"About to clean up outstanding messages. DAMap size: ${messageDeliveryAttemptMap.size}")
+        // cleans up deliveryAttempt map
+        for ((uuid: UUID, deliveryAttemptAndFutureTask: (DeliveryAttempt, ScheduledFuture[_])) <- messageDeliveryAttemptMap){
+          if ((currentTime - deliveryAttemptAndFutureTask._1.message.createdTime) >= messageTimeToLiveInMillis) {
+            messageDeliveryAttemptMap.remove(uuid, deliveryAttemptAndFutureTask)
+            // cancels its future message redelivery task
+            MessageScheduler.cancelScheduledMessageRedelivery(deliveryAttemptAndFutureTask._2)
+          }
+        }
+        Log.debug(s"Outstanding deliveryAttempts that exceed $messageTimeToLiveInMillis milliseconds have been cleaned from the map. " +
+          s"DAMap size: ${messageDeliveryAttemptMap.size}")
+
         val blockingQueue = blockingQueuePool.getOrElse(messageToBeRemoved.toQueue.name,
           throw QueueDoesNotExistException(messageToBeRemoved.toQueue))
         while (!blockingQueue.isEmpty) {
           val internalMessage: InternalMessage = blockingQueue.element()
-          if (System.currentTimeMillis() - internalMessage.createdTime >= messageTimeToLiveInMillis) {
+          if (currentTime - internalMessage.createdTime >= messageTimeToLiveInMillis) {
             val removed = blockingQueue.remove(internalMessage)
            Log.debug(s"$removed: Removed internalMessage from it's queue ${messageToBeRemoved.toQueue}" +
                       s" because it exceeds expiration time $messageTimeToLiveInMillis millis")
           }
         }
       } catch {
+        case NonFatal(x) => CleaningUpDeliveryAttemptandInternalMessageProblem(queue, messageTimeToLiveInMillis, x)
         case i: InterruptedException => Log.error("Scheduled expired message cleanup was interrupted", i)
         case t: TimeoutException => Log.error(s"Expired Messages can't be cleaned due to timeout", t)
         case e: Throwable => Log.error(s"""${e.getClass.getSimpleName} "${e.getMessage}" caught by exception handler""", e)
@@ -255,7 +245,7 @@ object LocalMessageQueueMiddleware extends MessageQueueService {
     private val scheduler = Executors.newSingleThreadScheduledExecutor(caughtExceptionsThreadFactory)
 
     def scheduleMessageRedelivery(deliveryAttemptID: UUID, deliveryAttempt: DeliveryAttempt, messageRedeliveryDelay: Long, messageMaxDeliveryAttempts: Int) = {
-      val messageRedeliveryRunner: MessageRedeliveryRunner = MessageRedeliveryRunner(deliveryAttemptID, deliveryAttempt, messageRedeliveryDelay, messageMaxDeliveryAttempts)
+      val messageRedeliveryRunner: MessageRedeliveryRunner = MessageRedeliveryRunner(deliveryAttemptID, deliveryAttempt, messageMaxDeliveryAttempts)
       try {
         val currentAttemptCount = deliveryAttempt.message.currentAttemptCount
         if (currentAttemptCount < messageMaxDeliveryAttempts) {
@@ -270,35 +260,16 @@ object LocalMessageQueueMiddleware extends MessageQueueService {
       }
     }
 
-    def scheduleCleanupExpiredDeliveryAttemptInMap(queue: Queue, messageTimeToLiveInMillis: Long) = {
-
-      // a sentinel that monitors the hashmap of messageDeliveryAttemptMap, any message that has been outstanding will be permanently removed
-      // time-to-live need to get cleaned out of this map
-      val cleanDeliveryAttemptRunner: CleanExpiredDeliveryAttemptRunner = CleanExpiredDeliveryAttemptRunner(queue, messageTimeToLiveInMillis)
-      try {
-        Log.debug(s"Starting the sentinel scheduler that cleans outstanding deliveryAttempt exceeds message expiration time: $messageTimeToLiveInMillis")
-        scheduler.schedule(cleanDeliveryAttemptRunner, messageTimeToLiveInMillis, TimeUnit.MILLISECONDS)
-      } catch {
-        case NonFatal(x) => SchedulingCleanUpSentinelProblem(queue, messageTimeToLiveInMillis, x)
-      }
-    }
-
-    def scheduleCleanupExpiredMessageInDeque(queue: Queue, messageToBeRemoved: InternalMessage, messageTimeToLiveInMillis: Long) = {
-      val cleanInternalMessageInDequeRunner: CleanInternalMessageInDequeRunner = CleanInternalMessageInDequeRunner(messageToBeRemoved, messageTimeToLiveInMillis)
+    def scheduleExpiredMessageCleanup(queue: Queue, messageToBeRemoved: InternalMessage, messageTimeToLiveInMillis: Long) = {
+      val deadline = System.currentTimeMillis() + messageTimeToLiveInMillis
+      val cleanDeliveryAttemptandInternalMessageRunner: CleanDeliveryAttemptandInternalMessageRunner = CleanDeliveryAttemptandInternalMessageRunner(queue, messageToBeRemoved, deadline - System.currentTimeMillis())
       try {
         Log.debug(s"Starting the sentinel scheduler that cleans outstanding internal message in" +
           s" queue ${messageToBeRemoved.toQueue} exceeds message expiration time: $messageTimeToLiveInMillis")
-        scheduler.schedule(cleanInternalMessageInDequeRunner, messageTimeToLiveInMillis, TimeUnit.MILLISECONDS)
+        scheduler.schedule(cleanDeliveryAttemptandInternalMessageRunner, deadline - System.currentTimeMillis(), TimeUnit.MILLISECONDS)
       } catch {
         case NonFatal(x) => SchedulingCleanUpSentinelProblem(queue, messageTimeToLiveInMillis, x)
       }
-    }
-
-    def scheduleMessageExpiry(to: Queue, internalMessage: InternalMessage, messageTimeToLiveInMillis: Long) = {
-      // schedule future cleanup of deliveryAttempts when the message expires
-      MessageScheduler.scheduleCleanupExpiredDeliveryAttemptInMap(to, messageTimeToLiveInMillis)
-      // schedule future cleanup of this message in blockingQueue if client never call receive
-      MessageScheduler.scheduleCleanupExpiredMessageInDeque(to, internalMessage, messageTimeToLiveInMillis)
     }
 
     def cancelScheduledMessageRedelivery(futureTask: ScheduledFuture[_]): Unit = {
@@ -342,7 +313,7 @@ object LocalMessageQueueStopper {
 
 }
 
-case class CleaningUpDeliveryAttemptProblem(queue: Queue, timeOutInMillis: Long, x:Throwable) extends AbstractProblem(ProblemSources.Hub) {
+case class CleaningUpDeliveryAttemptandInternalMessageProblem(queue: Queue, timeOutInMillis: Long, x:Throwable) extends AbstractProblem(ProblemSources.Hub) {
 
   override val throwable = Some(x)
 
