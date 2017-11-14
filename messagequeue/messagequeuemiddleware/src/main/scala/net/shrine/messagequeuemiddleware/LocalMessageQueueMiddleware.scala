@@ -214,7 +214,7 @@ object LocalMessageQueueMiddleware extends MessageQueueService {
           }
         }
       } catch {
-        case NonFatal(x) => CleaningUpDeliveryAttemptProblem(queue, messageTimeToLiveInMillis, x)
+        case NonFatal(x) => CleaningUpDeliveryAttemptandInternalMessageProblem(queue, messageTimeToLiveInMillis, x)
         case i: InterruptedException => Log.error("Scheduled expired message cleanup was interrupted", i)
         case t: TimeoutException => Log.error(s"Expired Messages can't be cleaned due to timeout", t)
         case e: Throwable => Log.error(s"""${e.getClass.getSimpleName} "${e.getMessage}" caught by exception handler""", e)
@@ -313,7 +313,7 @@ object LocalMessageQueueStopper {
 
 }
 
-case class CleaningUpDeliveryAttemptProblem(queue: Queue, timeOutInMillis: Long, x:Throwable) extends AbstractProblem(ProblemSources.Hub) {
+case class CleaningUpDeliveryAttemptandInternalMessageProblem(queue: Queue, timeOutInMillis: Long, x:Throwable) extends AbstractProblem(ProblemSources.Hub) {
 
   override val throwable = Some(x)
 
