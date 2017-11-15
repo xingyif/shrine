@@ -1,23 +1,10 @@
 package net.shrine.utilities.scanner
 
 import net.shrine.client.ShrineClient
-import net.shrine.protocol.ResultOutputType
+import net.shrine.protocol.{AggregatedReadInstanceResultsResponse, AggregatedReadQueryResultResponse, AggregatedReadTranslatedQueryDefinitionResponse, AggregatedRunQueryResponse, DeleteQueryResponse, FlagQueryResponse, ReadApprovedQueryTopicsResponse, ReadPdoResponse, ReadPreviousQueriesResponse, ReadQueryDefinitionResponse, ReadQueryInstancesResponse, RenameQueryResponse, ResultOutputType, UnFlagQueryResponse}
 
 import scala.xml.NodeSeq
-import net.shrine.protocol.ReadApprovedQueryTopicsResponse
-import net.shrine.protocol.ReadPreviousQueriesResponse
-import net.shrine.protocol.ReadQueryInstancesResponse
-import net.shrine.protocol.AggregatedReadInstanceResultsResponse
-import net.shrine.protocol.ReadPdoResponse
-import net.shrine.protocol.ReadQueryDefinitionResponse
-import net.shrine.protocol.DeleteQueryResponse
-import net.shrine.protocol.RenameQueryResponse
-import net.shrine.protocol.AggregatedReadQueryResultResponse
 import net.shrine.protocol.query.QueryDefinition
-import net.shrine.protocol.AggregatedReadTranslatedQueryDefinitionResponse
-import net.shrine.protocol.FlagQueryResponse
-import net.shrine.protocol.UnFlagQueryResponse
-import net.shrine.protocol.version.v24.AggregatedRunQueryResponse
 
 /**
  * @author clint

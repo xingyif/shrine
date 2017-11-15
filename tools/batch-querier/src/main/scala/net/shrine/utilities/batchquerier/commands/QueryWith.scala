@@ -1,7 +1,7 @@
 package net.shrine.utilities.batchquerier.commands
 
+import net.shrine.protocol.AggregatedRunQueryResponse
 import net.shrine.protocol.query.QueryDefinition
-import net.shrine.protocol.version.v24.AggregatedRunQueryResponse
 import net.shrine.utilities.batchquerier.BatchQuerier
 import net.shrine.utilities.batchquerier.BatchQueryResult
 import net.shrine.utilities.batchquerier.BatchQueryResults

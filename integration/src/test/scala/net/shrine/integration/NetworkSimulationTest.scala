@@ -15,7 +15,7 @@ import net.shrine.adapter.service.AdapterRequestHandler
 import net.shrine.adapter.service.AdapterService
 import net.shrine.broadcaster.AdapterClientBroadcaster
 import net.shrine.broadcaster.NodeHandle
-import net.shrine.protocol.{AuthenticationInfo, BroadcastMessage, CertId, Credential, DefaultBreakdownResultOutputTypes, DeleteQueryRequest, DeleteQueryResponse, FlagQueryRequest, FlagQueryResponse, HiveCredentials, NodeId, QueryResult, RawCrcRunQueryResponse, RequestType, Result, ResultOutputType, RunQueryRequest, RunQueryResponse, UnFlagQueryRequest, UnFlagQueryResponse}
+import net.shrine.protocol.{AggregatedRunQueryResponse, AuthenticationInfo, BroadcastMessage, CertId, Credential, DefaultBreakdownResultOutputTypes, DeleteQueryRequest, DeleteQueryResponse, FlagQueryRequest, FlagQueryResponse, HiveCredentials, NodeId, QueryResult, RawCrcRunQueryResponse, RequestType, Result, ResultOutputType, RunQueryRequest, RunQueryResponse, UnFlagQueryRequest, UnFlagQueryResponse}
 import net.shrine.qep.QepService
 import net.shrine.broadcaster.SigningBroadcastAndAggregationService
 import net.shrine.broadcaster.InJvmBroadcasterClient
@@ -28,7 +28,6 @@ import net.shrine.adapter.translators.ExpressionTranslator
 import net.shrine.util.XmlDateHelper
 import net.shrine.protocol.query.QueryDefinition
 import net.shrine.crypto.{CertCollectionAdapter, NewTestKeyStore, SignerVerifierAdapter, SigningCertStrategy}
-import net.shrine.protocol.version.v24.AggregatedRunQueryResponse
 
 /**
  * @author clint

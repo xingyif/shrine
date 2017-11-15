@@ -6,7 +6,6 @@ import scala.xml.NodeSeq
 import org.junit.Test
 import net.shrine.protocol.query.QueryDefinition
 import net.shrine.protocol.query.Term
-import net.shrine.protocol.version.v24.AggregatedRunQueryResponse
 import net.shrine.util.XmlDateHelper
 import net.shrine.util.XmlUtil
 

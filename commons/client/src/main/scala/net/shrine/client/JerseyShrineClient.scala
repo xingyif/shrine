@@ -12,27 +12,12 @@ import JerseyHttpClient.createJerseyClient
 import javax.ws.rs.core.MediaType
 
 import net.shrine.crypto.TrustParam
-import net.shrine.protocol.AggregatedReadInstanceResultsResponse
-import net.shrine.protocol.AggregatedReadQueryResultResponse
-import net.shrine.protocol.AuthenticationInfo
-import net.shrine.protocol.DeleteQueryResponse
-import net.shrine.protocol.OutputTypeSet
-import net.shrine.protocol.ReadApprovedQueryTopicsResponse
-import net.shrine.protocol.ReadPdoResponse
-import net.shrine.protocol.ReadPreviousQueriesResponse
-import net.shrine.protocol.ReadQueryDefinitionResponse
-import net.shrine.protocol.ReadQueryInstancesResponse
-import net.shrine.protocol.RenameQueryResponse
-import net.shrine.protocol.ResultOutputType
+import net.shrine.protocol.{AggregatedReadInstanceResultsResponse, AggregatedReadQueryResultResponse, AggregatedReadTranslatedQueryDefinitionResponse, AggregatedRunQueryResponse, AuthenticationInfo, DeleteQueryResponse, FlagQueryResponse, OutputTypeSet, ReadApprovedQueryTopicsResponse, ReadPdoResponse, ReadPreviousQueriesResponse, ReadQueryDefinitionResponse, ReadQueryInstancesResponse, RenameQueryResponse, ResultOutputType, UnFlagQueryResponse}
 import net.shrine.protocol.query.QueryDefinition
 import net.shrine.util.UrlCheck
-import net.shrine.protocol.AggregatedReadTranslatedQueryDefinitionResponse
 import net.shrine.serialization.XmlUnmarshaller
 
 import scala.util.Try
-import net.shrine.protocol.FlagQueryResponse
-import net.shrine.protocol.UnFlagQueryResponse
-import net.shrine.protocol.version.v24.AggregatedRunQueryResponse
 
 /**
  *

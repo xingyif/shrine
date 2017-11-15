@@ -7,17 +7,14 @@ import scala.concurrent.Future
 import scala.concurrent.blocking
 import scala.concurrent.ExecutionContext
 import net.shrine.protocol.query.Term
-import net.shrine.protocol.QueryResult
+import net.shrine.protocol.{AggregatedRunQueryResponse, AuthenticationInfo, Credential, QueryResult}
 import net.shrine.protocol.query.QueryDefinition
 import java.util.concurrent.Executors
 
 import ScannerClient._
 import net.shrine.authentication.NotAuthenticatedException
 import net.shrine.authentication.Authenticator
-import net.shrine.protocol.AuthenticationInfo
-import net.shrine.protocol.Credential
 import net.shrine.authentication.AuthenticationResult
-import net.shrine.protocol.version.v24.AggregatedRunQueryResponse
 
 /**
  * @author clint

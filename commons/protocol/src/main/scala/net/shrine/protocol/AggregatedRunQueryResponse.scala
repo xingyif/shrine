@@ -1,9 +1,8 @@
-package net.shrine.protocol.version.v24
+package net.shrine.protocol
 
 import javax.xml.datatype.XMLGregorianCalendar
 
 import net.shrine.protocol.query.QueryDefinition
-import net.shrine.protocol.{AbstractRunQueryResponse, QueryResult}
 
 /**
  * @author clint

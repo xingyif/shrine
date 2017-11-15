@@ -6,7 +6,6 @@ import scala.xml.NodeSeq
 import javax.xml.datatype.XMLGregorianCalendar
 
 import net.shrine.protocol.query.QueryDefinition
-import net.shrine.protocol.version.v24.AggregatedRunQueryResponse
 import net.shrine.util.XmlUtil
 
 import scala.util.Try

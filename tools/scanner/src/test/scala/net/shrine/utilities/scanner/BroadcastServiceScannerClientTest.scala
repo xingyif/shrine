@@ -2,28 +2,20 @@ package net.shrine.utilities.scanner
 
 import net.shrine.util.ShouldMatchersForJUnit
 import org.junit.Test
-import net.shrine.protocol.AuthenticationInfo
-import net.shrine.protocol.Credential
+import net.shrine.protocol.{AggregatedReadQueryResultResponse, AggregatedRunQueryResponse, AuthenticationInfo, BroadcastMessage, Credential, DeleteQueryResponse, QueryResult, ResultOutputType, ShrineResponse}
 import net.shrine.broadcaster.BroadcastAndAggregationService
-import net.shrine.protocol.BroadcastMessage
 import net.shrine.aggregation.Aggregator
 
 import scala.concurrent.Future
-import net.shrine.protocol.ShrineResponse
 import net.shrine.authentication.Authenticator
 import net.shrine.authentication.AuthenticationResult
-import net.shrine.protocol.DeleteQueryResponse
 import net.shrine.util.XmlDateHelper
 import net.shrine.protocol.query.Term
 import net.shrine.protocol.query.QueryDefinition
-import net.shrine.protocol.QueryResult
-import net.shrine.protocol.ResultOutputType
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 import net.shrine.authentication.NotAuthenticatedException
-import net.shrine.protocol.AggregatedReadQueryResultResponse
-import net.shrine.protocol.version.v24.AggregatedRunQueryResponse
 
 /**
   * @author clint

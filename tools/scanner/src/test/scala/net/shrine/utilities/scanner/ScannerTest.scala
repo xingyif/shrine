@@ -3,9 +3,7 @@ package net.shrine.utilities.scanner
 import net.shrine.util.ShouldMatchersForJUnit
 import org.junit.Test
 import net.shrine.client.ShrineClient
-import net.shrine.protocol.ResultOutputType
-import net.shrine.protocol.AggregatedReadQueryResultResponse
-import net.shrine.protocol.QueryResult
+import net.shrine.protocol.{AggregatedReadQueryResultResponse, AggregatedRunQueryResponse, AuthenticationInfo, Credential, QueryResult, ResultOutputType}
 import net.shrine.protocol.query.QueryDefinition
 import net.shrine.protocol.query.Term
 
@@ -22,9 +20,6 @@ import scala.concurrent.Future
 import scala.util.Try
 import scala.util.Success
 import net.shrine.authentication.Authenticator
-import net.shrine.protocol.AuthenticationInfo
-import net.shrine.protocol.Credential
-import net.shrine.protocol.version.v24.AggregatedRunQueryResponse
 
 /**
  * @author clint

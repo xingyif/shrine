@@ -1,8 +1,7 @@
 package net.shrine.utilities.batchquerier.commands
 
-import net.shrine.protocol.{QueryResult, ResultOutputType}
+import net.shrine.protocol.{AggregatedRunQueryResponse, QueryResult, ResultOutputType}
 import net.shrine.protocol.query.{QueryDefinition, Term}
-import net.shrine.protocol.version.v24.AggregatedRunQueryResponse
 import net.shrine.util.{ShouldMatchersForJUnit, XmlDateHelper, XmlGcEnrichments}
 import net.shrine.utilities.batchquerier.{BatchQuerier, BatchQueryResult, QueryAttempt}
 import org.junit.Test

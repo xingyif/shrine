@@ -10,7 +10,6 @@ import net.shrine.util.XmlDateHelper
 import java.math.BigInteger
 
 import net.shrine.problem.TestProblem
-import net.shrine.protocol.version.v24.AggregatedRunQueryResponse
 
 /**
  * @author clint
