@@ -9,7 +9,7 @@ import net.shrine.protocol.query.Term
 import net.shrine.util.XmlDateHelper
 import java.math.BigInteger
 
-import net.shrine.problem.{TestProblem}
+import net.shrine.problem.TestProblem
 
 /**
  * @author clint

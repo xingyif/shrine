@@ -1,12 +1,13 @@
 package net.shrine.utilities.batchquerier.commands
 
+import net.shrine.protocol.AggregatedRunQueryResponse
 import net.shrine.protocol.query.QueryDefinition
 import net.shrine.utilities.batchquerier.BatchQuerier
 import net.shrine.utilities.batchquerier.BatchQueryResult
 import net.shrine.utilities.batchquerier.BatchQueryResults
 import net.shrine.utilities.commands.>>>
+
 import scala.util.Failure
-import net.shrine.protocol.AggregatedRunQueryResponse
 import scala.util.Success
 import net.shrine.utilities.batchquerier.QueryAttempt
 

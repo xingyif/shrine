@@ -2,6 +2,7 @@ package net.shrine.utilities.batchquerier
 
 import net.shrine.protocol.AggregatedRunQueryResponse
 import net.shrine.protocol.query.QueryDefinition
+
 import scala.util.Try
 
 /**

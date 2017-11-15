@@ -1,11 +1,7 @@
 package net.shrine.aggregation
 
 import net.shrine.aggregation.BasicAggregator.Valid
-import net.shrine.protocol.AggregatedRunQueryResponse
-import net.shrine.protocol.QueryResult
-import net.shrine.protocol.ResultOutputType
-import net.shrine.protocol.RunQueryResponse
-import net.shrine.protocol.ShrineResponse
+import net.shrine.protocol.{AggregatedRunQueryResponse, QueryResult, ResultOutputType, RunQueryResponse, ShrineResponse}
 import net.shrine.protocol.query.QueryDefinition
 import net.shrine.util.XmlDateHelper
 

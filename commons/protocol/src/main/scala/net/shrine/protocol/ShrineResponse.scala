@@ -2,9 +2,11 @@ package net.shrine.protocol
 
 import net.shrine.serialization.XmlMarshaller
 import net.shrine.serialization.XmlUnmarshaller
+
 import scala.xml.{Elem, NodeSeq}
 import net.shrine.serialization.I2b2Marshaller
 import net.shrine.util.XmlUtil
+
 import scala.util.Try
 
 /**

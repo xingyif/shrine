@@ -1,35 +1,15 @@
 package net.shrine.integration
 
 import net.shrine.client.ShrineClient
-import net.shrine.protocol.AuthenticationInfo
+import net.shrine.protocol.{AggregatedReadInstanceResultsResponse, AggregatedReadQueryResultResponse, AggregatedReadTranslatedQueryDefinitionResponse, AggregatedRunQueryResponse, AuthenticationInfo, DefaultBreakdownResultOutputTypes, DeleteQueryRequest, DeleteQueryResponse, FlagQueryRequest, FlagQueryResponse, ReadApprovedQueryTopicsResponse, ReadPdoResponse, ReadPreviousQueriesResponse, ReadQueryDefinitionResponse, ReadQueryInstancesResponse, RenameQueryResponse, ResultOutputType, RunQueryRequest, RunQueryResponse, UnFlagQueryRequest, UnFlagQueryResponse}
 import net.shrine.util.XmlDateHelper
 import net.shrine.client.Poster
-import net.shrine.protocol.ResultOutputType
 
 import scala.xml.NodeSeq
-import net.shrine.protocol.AggregatedReadTranslatedQueryDefinitionResponse
-import net.shrine.protocol.ReadQueryDefinitionResponse
-import net.shrine.protocol.UnFlagQueryResponse
-import net.shrine.protocol.ReadPdoResponse
-import net.shrine.protocol.RenameQueryResponse
-import net.shrine.protocol.ReadQueryInstancesResponse
 import net.shrine.protocol.query.QueryDefinition
-import net.shrine.protocol.AggregatedRunQueryResponse
-import net.shrine.protocol.FlagQueryResponse
-import net.shrine.protocol.DeleteQueryResponse
-import net.shrine.protocol.ReadPreviousQueriesResponse
-import net.shrine.protocol.ReadApprovedQueryTopicsResponse
-import net.shrine.protocol.AggregatedReadInstanceResultsResponse
-import net.shrine.protocol.AggregatedReadQueryResultResponse
-import net.shrine.protocol.DeleteQueryRequest
 import net.shrine.client.HttpResponse
 import net.shrine.crypto.TrustParam
-import net.shrine.protocol.FlagQueryRequest
 import net.shrine.serialization.I2b2Marshaller
-import net.shrine.protocol.UnFlagQueryRequest
-import net.shrine.protocol.RunQueryRequest
-import net.shrine.protocol.RunQueryResponse
-import net.shrine.protocol.DefaultBreakdownResultOutputTypes
 
 import scala.xml.Node
 import scala.xml.XML

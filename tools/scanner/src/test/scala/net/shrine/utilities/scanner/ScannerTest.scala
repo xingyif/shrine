@@ -3,26 +3,23 @@ package net.shrine.utilities.scanner
 import net.shrine.util.ShouldMatchersForJUnit
 import org.junit.Test
 import net.shrine.client.ShrineClient
-import net.shrine.protocol.ResultOutputType
-import net.shrine.protocol.AggregatedRunQueryResponse
-import net.shrine.protocol.AggregatedReadQueryResultResponse
-import net.shrine.protocol.QueryResult
+import net.shrine.protocol.{AggregatedReadQueryResultResponse, AggregatedRunQueryResponse, AuthenticationInfo, Credential, QueryResult, ResultOutputType}
 import net.shrine.protocol.query.QueryDefinition
 import net.shrine.protocol.query.Term
+
 import scala.util.Random
 import net.shrine.util.XmlDateHelper
 import net.shrine.config.mappings.AdapterMappings
 import net.shrine.config.mappings.AdapterMappingsSource
 import net.shrine.ont.data.OntologyDao
 import net.shrine.ont.messaging.Concept
+
 import scala.concurrent.Await
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.util.Try
 import scala.util.Success
 import net.shrine.authentication.Authenticator
-import net.shrine.protocol.AuthenticationInfo
-import net.shrine.protocol.Credential
 
 /**
  * @author clint

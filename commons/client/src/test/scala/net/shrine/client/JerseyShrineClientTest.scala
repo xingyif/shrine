@@ -3,31 +3,10 @@ package net.shrine.client
 import net.shrine.crypto.NewTestKeyStore
 import net.shrine.util.ShouldMatchersForJUnit
 import net.shrine.crypto.TrustParam.AcceptAllCerts
-import net.shrine.protocol.AggregatedReadInstanceResultsResponse
-import net.shrine.protocol.AggregatedReadQueryResultResponse
-import net.shrine.protocol.AggregatedRunQueryResponse
-import net.shrine.protocol.ApprovedTopic
-import net.shrine.protocol.AuthenticationInfo
-import net.shrine.protocol.Credential
-import net.shrine.protocol.DeleteQueryResponse
-import net.shrine.protocol.EventResponse
-import net.shrine.protocol.ObservationResponse
-import net.shrine.protocol.ParamResponse
-import net.shrine.protocol.PatientResponse
-import net.shrine.protocol.QueryResult
-import net.shrine.protocol.ReadApprovedQueryTopicsResponse
-import net.shrine.protocol.ReadPdoResponse
-import net.shrine.protocol.ReadPreviousQueriesResponse
-import net.shrine.protocol.ReadQueryDefinitionResponse
-import net.shrine.protocol.ReadQueryInstancesResponse
-import net.shrine.protocol.RenameQueryResponse
-import net.shrine.protocol.ResultOutputType
-import net.shrine.protocol.ShrineResponse
+import net.shrine.protocol.{AggregatedReadInstanceResultsResponse, AggregatedReadQueryResultResponse, AggregatedRunQueryResponse, ApprovedTopic, AuthenticationInfo, Credential, DefaultBreakdownResultOutputTypes, DeleteQueryResponse, EventResponse, ObservationResponse, ParamResponse, PatientResponse, QueryMaster, QueryResult, ReadApprovedQueryTopicsResponse, ReadPdoResponse, ReadPreviousQueriesResponse, ReadQueryDefinitionResponse, ReadQueryInstancesResponse, RenameQueryResponse, ResultOutputType, ShrineResponse}
 import net.shrine.protocol.query.QueryDefinition
 import net.shrine.protocol.query.Term
 import net.shrine.util.XmlDateHelper
-import net.shrine.protocol.QueryMaster
-import net.shrine.protocol.DefaultBreakdownResultOutputTypes
 
 import scala.util.Success
 import scala.util.Try

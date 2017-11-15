@@ -1,4 +1,4 @@
-package net.shrine.messagequeueservice.protocol
+package net.shrine.protocol.version.v24
 
 import net.shrine.util.Versions
 import org.json4s.ShortTypeHints

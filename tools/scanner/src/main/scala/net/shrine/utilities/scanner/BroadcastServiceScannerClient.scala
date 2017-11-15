@@ -11,14 +11,10 @@ import ScannerClient.toQueryDef
 import net.shrine.aggregation.Aggregators
 import net.shrine.aggregation.ReadQueryResultAggregator
 import net.shrine.broadcaster.BroadcastAndAggregationService
-import net.shrine.protocol.AggregatedReadQueryResultResponse
-import net.shrine.protocol.AggregatedRunQueryResponse
-import net.shrine.protocol.AuthenticationInfo
-import net.shrine.protocol.ReadQueryResultRequest
-import net.shrine.protocol.RunQueryRequest
+import net.shrine.protocol.{AggregatedReadQueryResultResponse, AggregatedRunQueryResponse, AuthenticationInfo, Credential, ReadQueryResultRequest, RunQueryRequest}
+
 import scala.concurrent.duration.Duration
 import net.shrine.authentication.AuthenticationResult
-import net.shrine.protocol.Credential
 import net.shrine.authentication.Authenticator
 import net.shrine.authentication.NotAuthenticatedException
 

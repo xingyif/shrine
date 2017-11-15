@@ -5,18 +5,11 @@ import net.shrine.problem.TestProblem
 import scala.concurrent.duration.DurationInt
 import org.junit.Test
 import net.shrine.util.ShouldMatchersForJUnit
-import net.shrine.protocol.AggregatedRunQueryResponse
-import net.shrine.protocol.ErrorResponse
-import net.shrine.protocol.I2b2ResultEnvelope
-import net.shrine.protocol.NodeId
-import net.shrine.protocol.QueryResult
-import net.shrine.protocol.Result
+import net.shrine.protocol.{AggregatedRunQueryResponse, DefaultBreakdownResultOutputTypes, ErrorResponse, I2b2ResultEnvelope, NodeId, QueryResult, Result, RunQueryResponse}
 import net.shrine.protocol.ResultOutputType.PATIENT_COUNT_XML
-import net.shrine.protocol.RunQueryResponse
 import net.shrine.protocol.query.QueryDefinition
 import net.shrine.protocol.query.Term
 import net.shrine.util.XmlDateHelper
-import net.shrine.protocol.DefaultBreakdownResultOutputTypes
 
 /**
  *
