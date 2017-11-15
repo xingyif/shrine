@@ -90,7 +90,7 @@ trait MessageQueueWebApi extends HttpService
           case Failure(x) => {
             x match {
               case q: QueueDoesNotExistException => {
-                respondWithStatus(StatusCodes.UnprocessableEntity) { // todo no content
+                respondWithStatus(StatusCodes.UnprocessableEntity) {
                   complete(s"${q.getMessage}")
                 }
               }
