@@ -61,8 +61,8 @@ final class ShrineMessageTest extends ShouldMatchersForJUnit {
     val param1 = ParamResponse("foo", "bar", "baz")
     val queryMaster1 = QueryMaster("kjasdh", 12345L, "name1", userId, groupId, start.get)
     val queryMaster2 = QueryMaster("skdjlhlasf", 873563L, "name2", userId, groupId, end.get)
-    val queryInstance1 = QueryInstance("asd", "42", userId, groupId, start.get, end.get)
-    val queryInstance2 = QueryInstance("asdasd", "99", userId, groupId, start.get, end.get)
+    val queryInstance1 = QueryInstance("asd", "42", userId, groupId, start.get, end.get, QueryResult.StatusType.Finished)
+    val queryInstance2 = QueryInstance("asdasd", "99", userId, groupId, start.get, end.get, QueryResult.StatusType.Finished)
     val envelope = I2b2ResultEnvelope(DefaultBreakdownResultOutputTypes.PATIENT_AGE_COUNT_XML, Map("x" -> 1, "y" -> 2))
 
     //BroadcastMessage

@@ -28,7 +28,8 @@ object RequestType extends SEnum[RequestType] {
   val RunHeldQueryRequest = RequestType("RunHeldQueryRequest", None)
   
   val ReadI2b2AdminQueryingUsers = RequestType("ReadI2b2AdminQueryingUsers", None)
-  
+
+  //todo only used in AdapterMapTest.testShutdown.
   val GetPDOFromInputListRequest = RequestType(CrcRequestType.GetPDOFromInputListRequestType)
   
   val InstanceRequest = RequestType(CrcRequestType.InstanceRequestType)

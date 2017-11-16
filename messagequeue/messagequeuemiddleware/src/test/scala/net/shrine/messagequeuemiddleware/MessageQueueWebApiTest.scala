@@ -120,7 +120,7 @@ class MessageQueueWebApiTest extends FlatSpec with ScalatestRouteTest with Messa
       val nonExistingUUID = UUID.randomUUID()
       Put("/mom/acknowledge", HttpEntity(s"$nonExistingUUID")) ~> momRoute ~> check {
         val response = new String(body.data.toByteArray)
-        assertResult(NotFound)(status)
+        assertResult(UnprocessableEntity)(status)
         assertResult(MessageDoesNotExistAndCannotBeCompletedException(nonExistingUUID).getMessage)(response)
       }
 
@@ -144,16 +144,16 @@ class MessageQueueWebApiTest extends FlatSpec with ScalatestRouteTest with Messa
       val doesNotExistQueue: String = "DoesNotExist"
       //todo Not a problem. The system is in the state you want. SHRINE-2308
       Put(s"/mom/deleteQueue/$doesNotExistQueue") ~> momRoute ~> check {
-        assertResult(NotFound)(status)
+        assertResult(UnprocessableEntity)(status)
       }
 
       Put(s"/mom/sendMessage/$doesNotExistQueue", HttpEntity(s"$messageContent")) ~> momRoute ~> check {
-        assertResult(NotFound)(status)
+        assertResult(UnprocessableEntity)(status)
       }
 
       // given timeout is 1 seconds
       Get(s"/mom/receiveMessage/$doesNotExistQueue?timeOutSeconds=1") ~> momRoute ~> check {
-        assertResult(NotFound)(status)
+        assertResult(UnprocessableEntity)(status)
       }
     }
   }

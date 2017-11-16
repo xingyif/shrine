@@ -90,7 +90,7 @@ object ErrorResponse extends XmlUnmarshaller[ErrorResponse] with I2b2Unmarshalle
         conditionXml <- xml withChild "message_body" withChild "response" withChild "status" withChild "condition"
         typeText <- conditionXml attribute "type" if typeText == "ERROR"
                                                     statusMessage = XmlUtil.trim(conditionXml)
-                                                    problemDigest = ErrorStatusFromCrc(Option(statusMessage),xml.text).toDigest//here's another place where an ERROR can have no ProblemDigest
+                                                    problemDigest = ErrorStatusFromCrc(Option(conditionXml.toString()),xml.toString).toDigest//here's another place where an ERROR can have no ProblemDigest
 
       } yield {
         ErrorResponse(statusMessage,problemDigest)
@@ -98,7 +98,7 @@ object ErrorResponse extends XmlUnmarshaller[ErrorResponse] with I2b2Unmarshalle
     }
 
     parseFormatA.recoverWith { case NonFatal(e) =>
-      warn(s"Encountered a problem while parsing an error from I2B2 with 'format A', trying 'format B' ${xml.text}",e)
+      warn(s"Encountered a problem while parsing an error from I2B2 with 'format A', trying 'format B' ${xml.toString()}",e)
       parseFormatB
     }.get
   }
