@@ -17,6 +17,7 @@ trait FormatDetectingAdapterMappingsSource extends AdapterMappingsSource with Lo
 
     def tryAsCsv: Try[AdapterMappings] = AdapterMappings.fromCsv(mappingFileName,reader).ifSuccessful("Detected CSV adapter mappings format")
 
+    //todo trap this exception SHRINE-2366
     time("Loading adapter mappings")(debug(_)) {
       tryAsXml.orElse(tryAsCsv).ifFailure(s"Couldn't load adapter mappings from $mappingFileName")
     }
