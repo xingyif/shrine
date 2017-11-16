@@ -127,7 +127,7 @@ final case class AdapterClientBroadcaster(destinations: Set[NodeHandle], dao: Hu
 
     def createThisQueue() = createQueue(queueName)
 
-    val queue = namesToQueues.getOrElseUpdate(queueName,createThisQueue)
+    val queue = namesToQueues.getOrElseUpdate(queueName,createThisQueue())
 
     MessageQueueService.service.send(envelope.toJson, queue).transform({itWorked =>
       debug(s"$logDescription sent to queue")
