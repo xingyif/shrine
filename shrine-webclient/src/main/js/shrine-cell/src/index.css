@@ -8,11 +8,11 @@ div.shrinePluginContent{
   overflow: auto;
 }
 
-.ygtvloading,
-.ygtvtm,
-.ygtvtphh,
-.ygtvtph,
-.ygtvtp {
+#crcHistoryData .ygtvloading,
+#crcHistoryData .ygtvtm,
+#crcHistoryData .ygtvtphh,
+#crcHistoryData .ygtvtph,
+#crcHistoryData .ygtvtp {
   display: none;
 }
 
