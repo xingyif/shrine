@@ -2,9 +2,11 @@ package net.shrine.config.mappings
 
 import net.shrine.log.Loggable
 
-import scala.util.Try
+import scala.util.{Failure, Try}
 import scala.xml.XML
 import net.shrine.util.XmlDateHelper.time
+
+import scala.util.control.NonFatal
 
 trait FormatDetectingAdapterMappingsSource extends AdapterMappingsSource with Loggable { self: ReaderAdapterMappingsSource =>
   override def load(ignored:String): Try[AdapterMappings] = {
@@ -17,9 +19,12 @@ trait FormatDetectingAdapterMappingsSource extends AdapterMappingsSource with Lo
 
     def tryAsCsv: Try[AdapterMappings] = AdapterMappings.fromCsv(mappingFileName,reader).ifSuccessful("Detected CSV adapter mappings format")
 
-    //todo trap this exception SHRINE-2366
     time("Loading adapter mappings")(debug(_)) {
-      tryAsXml.orElse(tryAsCsv).ifFailure(s"Couldn't load adapter mappings from $mappingFileName")
+      tryAsXml.orElse(tryAsCsv).recoverWith{
+          case NonFatal(x) =>
+            error(s"Failed to load $mappingFileName as XML and as a CSV due to $x",x)
+            Failure(x)
+      }
     }
   }
 }
