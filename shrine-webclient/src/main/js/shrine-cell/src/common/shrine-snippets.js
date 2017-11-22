@@ -50,7 +50,7 @@ class ShrineSnippets {
                 ${data.problemDigest && data.problemDigest.codec ? data.problemDigest.codec : 'not available'}
               </div> 
               <div>
-                <i>For information on troubleshooting and resolution, check <a href="${wikiBaseUrl}${codec}" target="_blank">the SHRINE Error Codex</a>.</i> 
+                <i>For information on troubleshooting and resolution, check <a href="${wikiBaseUrl}/${codec}" target="_blank">the SHRINE Error Codex</a>.</i>
               </div>
               <br/> 
               <div>
