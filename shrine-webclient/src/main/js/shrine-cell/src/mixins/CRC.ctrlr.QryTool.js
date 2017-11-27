@@ -52,4 +52,14 @@ export const queryRunMixin = (context) =>
     } 
   }
 
+  export const queryLoadMixin = (context) => {
+    const doQueryLoad = context.i2b2.CRC.ctrlr.QT.doQueryLoad;
+    const showMask = i2b2.h.LoadingMask.show;
+    return qmId => {
+      i2b2.h.LoadingMask.show = () => {};
+      doQueryLoad.apply(context.i2b2.CRC.ctrlr.QT, qmId);
+      i2b2.h.LoadingMask.show = showMask;
+    }
+  }
+
 
