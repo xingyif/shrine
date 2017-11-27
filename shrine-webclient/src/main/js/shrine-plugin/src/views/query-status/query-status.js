@@ -39,7 +39,6 @@ export class QueryStatus extends PubSub {
             this.status.updated = Number(new Date());
             this.nodes = initialState().nodes;
             this.hubMsg = hubMsgTypes.RESPONSE_RECEIVED;
-            this.publish(this.notifications.shrine.refreshAllHistory);
             this.publish(this.commands.shrine.fetchQuery, {networkId, timeoutSeconds: TIMEOUT_SECONDS, dataVersion: DEFAULT_VERSION})
         });
 

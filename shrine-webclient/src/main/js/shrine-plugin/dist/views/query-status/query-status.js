@@ -139,7 +139,6 @@ System.register(['aurelia-framework', 'services/query-status.model', 'services/p
                         _this2.status.updated = Number(new Date());
                         _this2.nodes = initialState().nodes;
                         _this2.hubMsg = hubMsgTypes.RESPONSE_RECEIVED;
-                        _this2.publish(_this2.notifications.shrine.refreshAllHistory);
                         _this2.publish(_this2.commands.shrine.fetchQuery, { networkId: networkId, timeoutSeconds: TIMEOUT_SECONDS, dataVersion: DEFAULT_VERSION });
                     });
 
