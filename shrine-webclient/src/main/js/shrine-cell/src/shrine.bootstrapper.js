@@ -22,7 +22,7 @@ class ShrineBootstrapper extends I2B2Decorator{
     this.i2b2.CRC.ctrlr.QT._queryRun = QTMixins.queryRunMixin(this)
     this.i2b2.CRC.view.status.showDisplay = () => { /*empty method to not break referenes from i2b2*/ };
     this.i2b2.CRC.ctrlr.QT.doQueryClear = QTMixins.queryClearMixin(this);
-    //this.i2b2.CRC.ctrlr.QT.doQueryLoad = QTMixins.queryLoadMixin(this);
+    this.i2b2.h.LoadingMask.show = () => { /* empty emthod to not break references from i2b2*/ };
     this.i2b2.CRC.ctrlr.QueryStatus.prototype.startQuery = startQueryMixin(this);
     this.i2b2.CRC.ctrlr.QueryStatus.prototype.isQueryRunning = isQueryRunningMixin();
     this.i2b2.CRC.ctrlr.QueryStatus.prototype.refreshStatus = refreshStatusMixin();
