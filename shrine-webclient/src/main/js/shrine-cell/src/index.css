@@ -12,7 +12,10 @@ div.shrinePluginContent{
 #crcHistoryData .ygtvtm,
 #crcHistoryData .ygtvtphh,
 #crcHistoryData .ygtvtph,
-#crcHistoryData .ygtvlp, 
+#crcHistoryData .ygtvlp,
+#crcHistoryData .ygtvlph,
+#crcHistoryData .ygtvlphh,
+#crcHistoryData .ygtvtph,
 #crcHistoryData .ygtvtp {
   display: none;
 }
