@@ -62,10 +62,6 @@ export class QueryStatus extends PubSub {
             if (!complete) {
                 this.publish(this.commands.shrine.fetchQuery, {networkId, dataVersion, timeoutSeconds});
             }
-            else if (this.nodes.length) {
-                this.publish(this.notifications.shrine.refreshAllHistory);
-            }
-
         });
 
         if (me.get(this).isDevEnv) {
