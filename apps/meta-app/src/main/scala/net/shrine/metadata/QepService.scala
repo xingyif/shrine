@@ -279,7 +279,7 @@ object ResultsRow {
              query: QueryCell,
              results: Seq[Result]
            ): ResultsRow = {
-
+//todo for SHRINE-2408, consider if the "hub will send" state has been observed yet, and report that it is incomplete until otherwise known.
     val isComplete = if (results.isEmpty) false
                       else results.forall(_.isComplete)
     val dataVersion = (Seq(query.changeDate) ++ results.map(_.changeDate)).max //the latest change date
