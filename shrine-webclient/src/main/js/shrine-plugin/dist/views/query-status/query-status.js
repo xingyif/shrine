@@ -133,9 +133,12 @@ System.register(['aurelia-framework', 'services/query-status.model', 'services/p
                     this.subscribe(this.notifications.i2b2.networkIdReceived, function (d) {
                         var runningPreviousQuery = _this2.status === undefined;
                         if (runningPreviousQuery) _this2.status = initialState().status;
-                        var networkId = d.networkId;
+                        var networkId = d.networkId,
+                            _d$name = d.name,
+                            name = _d$name === undefined ? _this2.status.queryName : _d$name;
 
                         _this2.status.query.networkId = networkId;
+                        _this2.status.query.queryName = name;
                         _this2.status.updated = Number(new Date());
                         _this2.nodes = initialState().nodes;
                         _this2.hubMsg = hubMsgTypes.RESPONSE_RECEIVED;

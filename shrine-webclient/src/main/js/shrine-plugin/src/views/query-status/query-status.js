@@ -34,8 +34,9 @@ export class QueryStatus extends PubSub {
         this.subscribe(this.notifications.i2b2.networkIdReceived, d => {
             const runningPreviousQuery = this.status === undefined;
             if(runningPreviousQuery) this.status = initialState().status;
-            const {networkId} = d;
+            const {networkId, name = this.status.queryName} = d;
             this.status.query.networkId = networkId;
+            this.status.query.queryName = name;
             this.status.updated = Number(new Date());
             this.nodes = initialState().nodes;
             this.hubMsg = hubMsgTypes.RESPONSE_RECEIVED;
