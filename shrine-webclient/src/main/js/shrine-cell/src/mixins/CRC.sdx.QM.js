@@ -7,11 +7,8 @@ const getChildRecordsMixin = context => (sdxParentNode, onCompleteCallback) => {
   context.i2b2.CRC.ctrlr.QT.doQueryLoad(networkId);
   context.i2b2.CRC.view.history.yuiTree.locked = false;
   context.i2b2.CRC.view.history.yuiTree._nodes.map(n => n.isLoading = false);
-  context.$('#crcHistoryData .ygtvitem td div').css({background:'white'});
-  context.$('#' + sdxParentNode.renderData.htmlID).css({background:'red'});
+  context.$('.sdxDefaultQM').css('background-color', 'white');
+  context.$(`#${sdxParentNode.renderData.htmlID} .sdxDefaultQM`).css('background-color', '#c0e0e0');
 }
 
 export default getChildRecordsMixin;
-
-//sdxParentNode.renderData.htmlID
-//#crcHistoryData .ygtvitem td div
