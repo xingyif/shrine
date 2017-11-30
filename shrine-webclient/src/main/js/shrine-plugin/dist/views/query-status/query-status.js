@@ -122,23 +122,20 @@ System.register(['aurelia-framework', 'services/query-status.model', 'services/p
                 QueryStatus.prototype.attached = function attached() {
                     var _this2 = this;
 
+                    this.status = initialState().status;
+                    this.nodes = initialState().nodes;
+                    this.hubMsg = initialState().hubMsg;
                     this.subscribe(this.notifications.i2b2.queryStarted, function (n) {
-                        _this2.status = initialState().status;
                         _this2.status.updated = Number(new Date());
-                        _this2.nodes = initialState().nodes;
-                        _this2.hubMsg = initialState().hubMsg;
                         _this2.status.query.queryName = n;
                     });
 
                     this.subscribe(this.notifications.i2b2.networkIdReceived, function (d) {
-                        var runningPreviousQuery = _this2.status === undefined;
                         var networkId = d.networkId,
-                            _d$name = d.name,
-                            name = _d$name === undefined ? _this2.status.queryName || '' : _d$name;
+                            name = d.name;
 
-                        if (runningPreviousQuery) _this2.status = initialState().status;
                         _this2.status.query.networkId = networkId;
-                        _this2.status.query.queryName = name;
+                        if (name) _this2.status.query.queryName = name;
                         _this2.status.updated = Number(new Date());
                         _this2.nodes = initialState().nodes;
                         _this2.hubMsg = hubMsgTypes.RESPONSE_RECEIVED;

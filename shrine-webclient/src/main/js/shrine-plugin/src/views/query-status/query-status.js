@@ -23,20 +23,18 @@ export class QueryStatus extends PubSub {
     }
     attached() {
         // -- subscribers -- //
+        this.status = initialState().status;
+        this.nodes = initialState().nodes;
+        this.hubMsg = initialState().hubMsg;
         this.subscribe(this.notifications.i2b2.queryStarted, (n) => {
-            this.status = initialState().status;
             this.status.updated = Number(new Date());
-            this.nodes = initialState().nodes;
-            this.hubMsg = initialState().hubMsg;
             this.status.query.queryName = n;
         });
 
         this.subscribe(this.notifications.i2b2.networkIdReceived, d => {
-            const runningPreviousQuery = this.status === undefined;
-            const {networkId, name = this.status.queryName || ''} = d;
-            if(runningPreviousQuery) this.status = initialState().status;
+            const {networkId, name} = d;
             this.status.query.networkId = networkId;
-            this.status.query.queryName = name;
+            if(name) this.status.query.queryName = name;
             this.status.updated = Number(new Date());
             this.nodes = initialState().nodes;
             this.hubMsg = hubMsgTypes.RESPONSE_RECEIVED;
