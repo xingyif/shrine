@@ -102,7 +102,12 @@ object MessageQueueWebClient extends MessageQueueService with Loggable {
     webApiTry(request,s"create queue $queueName").transform({ response =>
       queueFromResponse(response, queueName)
     }, { throwable =>
-      error(s"Failed to create queue $queueName due to $throwable")
+      throwable match {
+        case NonFatal(x) => {
+          error(s"Failed to create queue $queueName due to $x")
+        }
+        case _ => //Don't touch
+      }
       Failure(throwable)
     })
   }
@@ -196,7 +201,7 @@ object MessageQueueWebClient extends MessageQueueService with Loggable {
       throwable match {
         case CouldNotCompleteMomTaskDoNotRetryException(task, status, content, cause) => {
           if (status.get == StatusCodes.UnprocessableEntity) {
-            Failure(CouldNotCompleteMomTaskButOKToRetryException(s"send a Message to ${to.name}", status, content, cause))
+            throw CouldNotCompleteMomTaskButOKToRetryException(s"send a Message to ${to.name}", status, content, cause)
           }
         }
         case _ => //Don't touch
@@ -219,7 +224,7 @@ object MessageQueueWebClient extends MessageQueueService with Loggable {
         throwable match {
           case CouldNotCompleteMomTaskDoNotRetryException(task, status, contents, cause) => {
             if (status.get == StatusCodes.UnprocessableEntity) {
-              Failure(CouldNotCompleteMomTaskButOKToRetryException(s"make a Message from response $cause for ${from.name}", status, contents, cause))
+              throw CouldNotCompleteMomTaskButOKToRetryException(s"make a Message from response $cause for ${from.name}", status, contents, cause)
             }
           }
           case _ => //Don't touch
@@ -280,7 +285,6 @@ object MessageQueueWebClient extends MessageQueueService with Loggable {
           case CouldNotCompleteMomTaskDoNotRetryException(task, status, contents, cause) => {
             if (status.get == StatusCodes.UnprocessableEntity) {
               info(s"Try to completeMessage $messageContent, but message no longer exists, $contents")
-              return Success(unit)
             }
           }
           case _ => //Don't touch
