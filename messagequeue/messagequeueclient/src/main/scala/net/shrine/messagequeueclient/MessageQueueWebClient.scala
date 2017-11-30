@@ -84,9 +84,7 @@ object MessageQueueWebClient extends MessageQueueService with Loggable {
           case x if x == StatusCodes.NetworkConnectTimeout => throw CouldNotCompleteMomTaskButOKToRetryException(operation, Some(response.status), Some(response.entity.asString))
           case x if x == StatusCodes.NetworkReadTimeout => throw CouldNotCompleteMomTaskButOKToRetryException(operation, Some(response.status), Some(response.entity.asString))
           case x if x == StatusCodes.NotFound => throw CouldNotCompleteMomTaskDoNotRetryException(operation, Some(response.status), Some(response.entity.asString))
-          case _ => {
-            throw CouldNotCompleteMomTaskDoNotRetryException(operation, Some(response.status), Some(response.entity.asString))
-          }
+          case _ => throw CouldNotCompleteMomTaskDoNotRetryException(operation, Some(response.status), Some(response.entity.asString))
         }
       }
     }, {
@@ -211,7 +209,6 @@ object MessageQueueWebClient extends MessageQueueService with Loggable {
     })
   }
 
-  //todo test receiving no message SHRINE-2213
   override def receive(from: Queue, timeout: Duration): Try[Option[Message]] = {
     val seconds = timeout.toSeconds
     val receiveMessageUrl = s"$momUrl/receiveMessage/${from.name}?timeOutSeconds=$seconds"
