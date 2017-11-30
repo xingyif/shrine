@@ -135,13 +135,18 @@ object MessageQueueWebClient extends MessageQueueService with Loggable {
         info(s"Successfully deleted queue $queueName")
         Success(r)
       } else {
-        debug(s"Try to delete queue, HTTPResponse is a success but it does not contain an expected StatusCode, response: $r")
+        debug(
+          s"""Try to delete queue, HTTPResponse is a success but it does not contain an expected StatusCode
+             |Expected StatusCodes: StatusCodes.OK, Actual StatusCodes: ${r.status}
+             |Response: $r
+           """.stripMargin)
         // todo Failure(DoNotRetryException)?
         Success(r)
       }
     }, { t =>
       error(s"Failed to deleteQueue $queueName due to $t")
-      // Not interpreting UnprocessableEntity because we don't want client to retry if the queue does not exist
+      // Not interpreting UnprocessableEntity, because the client is
+      // trying to delete a non-existing queue, which indicates that we're already at the desired state
       Failure(t)
     })
   }
@@ -155,7 +160,11 @@ object MessageQueueWebClient extends MessageQueueService with Loggable {
         implicit val formats = Serialization.formats(NoTypeHints)
         Success(read[Seq[Queue]](allQueues)(formats, manifest[Seq[Queue]]))
       } else {
-        debug("Try to get all queues, HTTPResponse is a success but it does not contain an expected StatusCode")
+        debug(
+          s"""Try to get all queues, HTTPResponse is a success but it does not contain an expected StatusCode
+             |Expected StatusCodes: StatusCodes.OK, Actual StatusCodes: ${response.status}
+             |HTTP Response: $response
+           """.stripMargin)
         Failure(CouldNotCompleteMomTaskDoNotRetryException("get all queues", Some(response.status), Some(response.entity.asString)))
       }
     }, { t =>
@@ -177,15 +186,17 @@ object MessageQueueWebClient extends MessageQueueService with Loggable {
         info(s"Successfully sent Message $contents to Queue $to")
         Success(s)
       } else {
-        debug(s"Try to sendMessage $contents, HTTPResponse is a success but it does not contain an expected StatusCode, response: $s")
-        // todo Failure(DoNotRetryException)?
-        Success(s)
+        debug(
+          s"""Try to sendMessage $contents, HTTPResponse is a success but it does not contain an expected StatusCode
+             |Expected StatusCodes: StatusCodes.Accepted, Actual StatusCodes: ${s.status}
+             |Response: $s""".stripMargin)
+        Failure(CouldNotCompleteMomTaskDoNotRetryException(s"send a Message to ${to.name}", Some(s.status), Some(s.entity.asString)))
       }
     }, { throwable =>
       throwable match {
         case CouldNotCompleteMomTaskDoNotRetryException(task, status, content, cause) => {
-          if (status.get == StatusCodes.UnprocessableEntity) Some {
-            throw CouldNotCompleteMomTaskButOKToRetryException(s"make a Message from response $cause for ${to.name}", status, content, cause)
+          if (status.get == StatusCodes.UnprocessableEntity) {
+            Failure(CouldNotCompleteMomTaskButOKToRetryException(s"send a Message to ${to.name}", status, content, cause))
           }
         }
         case _ => //Don't touch
@@ -207,8 +218,8 @@ object MessageQueueWebClient extends MessageQueueService with Loggable {
       }, { throwable: Throwable =>
         throwable match {
           case CouldNotCompleteMomTaskDoNotRetryException(task, status, contents, cause) => {
-            if (status.get == StatusCodes.UnprocessableEntity) Some {
-              throw CouldNotCompleteMomTaskButOKToRetryException(s"make a Message from response $cause for ${from.name}", status, contents, cause)
+            if (status.get == StatusCodes.UnprocessableEntity) {
+              Failure(CouldNotCompleteMomTaskButOKToRetryException(s"make a Message from response $cause for ${from.name}", status, contents, cause))
             }
           }
           case _ => //Don't touch
@@ -257,16 +268,19 @@ object MessageQueueWebClient extends MessageQueueService with Loggable {
           info(s"Message ${this.messageID} completed with ${r.status}")
           Success(r)
         } else {
-          debug(s"Try to completeMessage $messageContent, HTTPResponse is a success but it does not contain an expected StatusCode, response: $r")
+          debug(
+            s"""Try to completeMessage $messageContent, HTTPResponse is a success but it does not contain an expected StatusCode
+               | Expected StatusCodes: StatusCodes.OK, Actual StatusCodes: ${r.status}
+               | Response: $r""".stripMargin)
           // todo Failure(DoNotRetryException)?
           Success(r)
         }
       }, { throwable =>
         throwable match {
           case CouldNotCompleteMomTaskDoNotRetryException(task, status, contents, cause) => {
-            if (status.get == StatusCodes.UnprocessableEntity) Some {
+            if (status.get == StatusCodes.UnprocessableEntity) {
               info(s"Try to completeMessage $messageContent, but message no longer exists, $contents")
-              Success(unit)
+              return Success(unit)
             }
           }
           case _ => //Don't touch
