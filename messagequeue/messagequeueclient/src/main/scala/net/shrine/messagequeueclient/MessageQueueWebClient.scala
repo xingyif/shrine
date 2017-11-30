@@ -75,16 +75,6 @@ object MessageQueueWebClient extends MessageQueueService with Loggable {
 
   val momUrl: String = webClientConfig.getString("serverUrl")
 
-  override def createQueueIfAbsent(queueName: String): Try[Queue] = {
-    val proposedQueue: Queue = Queue(queueName)
-    val createQueueUrl = s"$momUrl/createQueue/${proposedQueue.name}"
-    val request: HttpRequest = HttpRequest(HttpMethods.PUT, createQueueUrl)
-    for {
-      response: HttpResponse <- webApiTry(request,s"create queue $queueName")
-      queue: Queue <- queueFromResponse(response, queueName)
-    } yield queue
-  }
-
   def webApiTry(request:HttpRequest,operation:String,timeLimit:Duration = webClientTimeOut):Try[HttpResponse] = {
     HttpClient.webApiTry(request,timeLimit).transform({ response =>
       if(response.status.isSuccess) Success(response)
@@ -95,7 +85,7 @@ object MessageQueueWebClient extends MessageQueueService with Loggable {
           case x if x == StatusCodes.NetworkReadTimeout => throw CouldNotCompleteMomTaskButOKToRetryException(operation, Some(response.status), Some(response.entity.asString))
           case x if x == StatusCodes.NotFound => throw CouldNotCompleteMomTaskDoNotRetryException(operation, Some(response.status), Some(response.entity.asString))
           case _ => {
-            response
+            throw CouldNotCompleteMomTaskDoNotRetryException(operation, Some(response.status), Some(response.entity.asString))
           }
         }
       }
@@ -105,14 +95,25 @@ object MessageQueueWebClient extends MessageQueueService with Loggable {
     })
   }
 
+  override def createQueueIfAbsent(queueName: String): Try[Queue] = {
+    val proposedQueue: Queue = Queue(queueName)
+    val createQueueUrl = s"$momUrl/createQueue/${proposedQueue.name}"
+    val request: HttpRequest = HttpRequest(HttpMethods.PUT, createQueueUrl)
+    webApiTry(request,s"create queue $queueName").transform({ response =>
+      queueFromResponse(response, queueName)
+    }, { throwable =>
+      error(s"Failed to create queue $queueName due to $throwable")
+      Failure(throwable)
+    })
+  }
+
   def queueFromResponse(response: HttpResponse, queueName: String): Try[Queue] = Try {
     if (response.status == StatusCodes.Created) {
       val queueString = response.entity.asString
       implicit val formats = Serialization.formats(NoTypeHints)
       read[Queue](queueString)(formats, manifest[Queue])
     } else {
-      if (response.status == StatusCodes.UnprocessableEntity) throw CouldNotCompleteMomTaskButOKToRetryException(s"create a queue named $queueName", Some(response.status), Some(response.entity.asString))
-      else throw CouldNotCompleteMomTaskDoNotRetryException(s"Response status is ${response.status}, not Created. Cannot make queue $queueName from this response: ${response.entity.asString}", Some(response.status), Some(response.entity.asString))
+      throw CouldNotCompleteMomTaskDoNotRetryException(s"Response status is ${response.status}, not Created. Cannot make queue $queueName from this response: ${response.entity.asString}", Some(response.status), Some(response.entity.asString))
     }
   }.transform({ s =>
     Success(s)
@@ -129,16 +130,37 @@ object MessageQueueWebClient extends MessageQueueService with Loggable {
     val proposedQueue: Queue = Queue(queueName)
     val deleteQueueUrl = s"$momUrl/deleteQueue/${proposedQueue.name}"
     val request: HttpRequest = HttpRequest(HttpMethods.PUT, deleteQueueUrl)
-    webApiTry(request, s"delete $queueName").map(r => unit) // todo StatusCodes.OK
+    webApiTry(request, s"delete $queueName").transform({ r =>
+      if (r.status == StatusCodes.OK) {
+        info(s"Successfully deleted queue $queueName")
+        Success(r)
+      } else {
+        debug(s"Try to delete queue, HTTPResponse is a success but it does not contain an expected StatusCode, response: $r")
+        // todo Failure(DoNotRetryException)?
+        Success(r)
+      }
+    }, { t =>
+      error(s"Failed to deleteQueue $queueName due to $t")
+      // Not interpreting UnprocessableEntity because we don't want client to retry if the queue does not exist
+      Failure(t)
+    })
   }
 
   override def queues: Try[Seq[Queue]] = {
     val getQueuesUrl = s"$momUrl/getQueues"
     val request: HttpRequest = HttpRequest(HttpMethods.GET, getQueuesUrl)
-    webApiTry(request, "getQueues").map({ response: HttpResponse =>
+    webApiTry(request, "getQueues").transform({ response: HttpResponse =>
+      if (response.status == StatusCodes.OK) {
         val allQueues: String = response.entity.asString
         implicit val formats = Serialization.formats(NoTypeHints)
-        read[Seq[Queue]](allQueues)(formats, manifest[Seq[Queue]])
+        Success(read[Seq[Queue]](allQueues)(formats, manifest[Seq[Queue]]))
+      } else {
+        debug("Try to get all queues, HTTPResponse is a success but it does not contain an expected StatusCode")
+        Failure(CouldNotCompleteMomTaskDoNotRetryException("get all queues", Some(response.status), Some(response.entity.asString)))
+      }
+    }, { t =>
+      error(s"Failed to get all queues due to $t")
+      Failure(t)
     })
   }
 
@@ -150,7 +172,27 @@ object MessageQueueWebClient extends MessageQueueService with Loggable {
       uri = sendMessageUrl,
       entity = HttpEntity(contents) //todo set contents as XML or json SHRINE-2215
     )
-    webApiTry(request, s"send to ${to.name}").map(r => unit)
+    webApiTry(request, s"send to ${to.name}").transform({s =>
+      if (s.status == StatusCodes.Accepted) {
+        info(s"Successfully sent Message $contents to Queue $to")
+        Success(s)
+      } else {
+        debug(s"Try to sendMessage $contents, HTTPResponse is a success but it does not contain an expected StatusCode, response: $s")
+        // todo Failure(DoNotRetryException)?
+        Success(s)
+      }
+    }, { throwable =>
+      throwable match {
+        case CouldNotCompleteMomTaskDoNotRetryException(task, status, content, cause) => {
+          if (status.get == StatusCodes.UnprocessableEntity) Some {
+            throw CouldNotCompleteMomTaskButOKToRetryException(s"make a Message from response $cause for ${to.name}", status, content, cause)
+          }
+        }
+        case _ => //Don't touch
+      }
+      error(s"Failed to send Message $contents to Queue $to due to Error: $throwable", throwable)
+      Failure(throwable)
+    })
   }
 
   //todo test receiving no message SHRINE-2213
@@ -160,18 +202,27 @@ object MessageQueueWebClient extends MessageQueueService with Loggable {
     val request: HttpRequest = HttpRequest(HttpMethods.GET, receiveMessageUrl)
 
     //use the time to make the API call plus the timeout for the long poll
-    for {
-      response: HttpResponse <- webApiTry(request, s"receive from ${from.name}", webClientTimeOut + timeout)
-      messageResponse: Option[Message] <- {
-        messageOptionFromResponse(response, from)
-      }
-    } yield messageResponse
+      webApiTry(request, s"receive from ${from.name}", webClientTimeOut + timeout).transform({ response =>
+          messageOptionFromResponse(response, from)
+      }, { throwable: Throwable =>
+        throwable match {
+          case CouldNotCompleteMomTaskDoNotRetryException(task, status, contents, cause) => {
+            if (status.get == StatusCodes.UnprocessableEntity) Some {
+              throw CouldNotCompleteMomTaskButOKToRetryException(s"make a Message from response $cause for ${from.name}", status, contents, cause)
+            }
+          }
+          case _ => //Don't touch
+        }
+        Failure(throwable)
+      })
   }
 
   def messageOptionFromResponse(response: HttpResponse, from: Queue): Try[Option[Message]] = Try {
     if (response.status == StatusCodes.NoContent) {
+      info(s"No message received from Queue $from, HTTP Response $response")
       None
     } else if (response.status == StatusCodes.OK) Some {
+      info(s"Non-empty Message received from Queue $from")
       val responseString = response.entity.asString
       SimpleMessage.fromJson(responseString)
     } else if (response.status == StatusCodes.UnprocessableEntity) Some {
@@ -201,15 +252,28 @@ object MessageQueueWebClient extends MessageQueueService with Loggable {
         uri = completeMessageUrl,
         entity = HttpEntity(this.messageID)
       )
-      for {
-        response: HttpResponse <- webApiTry(request,s"complete message $messageID").transform({r =>
+      webApiTry(request,s"complete message $messageID").transform({r =>
+        if (r.status == StatusCodes.OK) {
           info(s"Message ${this.messageID} completed with ${r.status}")
           Success(r)
-        }, { throwable =>
-          info(s"Message ${this.messageID} failed in its complete process due to ${throwable.getMessage}")
-          Failure(throwable)
-        })
-      } yield response
+        } else {
+          debug(s"Try to completeMessage $messageContent, HTTPResponse is a success but it does not contain an expected StatusCode, response: $r")
+          // todo Failure(DoNotRetryException)?
+          Success(r)
+        }
+      }, { throwable =>
+        throwable match {
+          case CouldNotCompleteMomTaskDoNotRetryException(task, status, contents, cause) => {
+            if (status.get == StatusCodes.UnprocessableEntity) Some {
+              info(s"Try to completeMessage $messageContent, but message no longer exists, $contents")
+              Success(unit)
+            }
+          }
+          case _ => //Don't touch
+        }
+        info(s"Message ${this.messageID} failed in its complete process due to ${throwable.getMessage}")
+        Failure(throwable)
+      })
     }
   }
 }
