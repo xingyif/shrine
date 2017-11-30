@@ -2,6 +2,7 @@ const getChildRecordsMixin = context => (sdxParentNode, onCompleteCallback) => {
   //TODO: destructure this!!!
   const networkId = sdxParentNode.origData.id
   const name = sdxParentNode.origData.realname;
+  context.i2b2.CRC.ctrlr.currentQueryStatus = false;
   context.i2b2.events.clearQuery.fire();
   context.i2b2.events.networkIdReceived.fire({networkId, name});
   context.i2b2.CRC.ctrlr.QT.doQueryLoad(networkId);
