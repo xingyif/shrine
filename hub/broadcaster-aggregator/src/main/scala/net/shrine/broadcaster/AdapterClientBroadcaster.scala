@@ -129,6 +129,7 @@ final case class AdapterClientBroadcaster(destinations: Set[NodeHandle], dao: Hu
 
     val queue = namesToQueues.getOrElseUpdate(queueName,createThisQueue())
 
+    //todo for SHRINE-2378 really send the message no matter what.
     MessageQueueService.service.send(envelope.toJson, queue).transform({itWorked =>
       debug(s"$logDescription sent to queue")
       Success(itWorked)
