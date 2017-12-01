@@ -177,36 +177,58 @@ object MessageQueueWebClient extends MessageQueueService with Loggable {
   }
 
   override def send(contents: String, to: Queue): Try[Unit] = {
-    debug(s"send to $to '$contents'")
-    val sendMessageUrl = s"$momUrl/sendMessage/${to.name}"
-    val request: HttpRequest = HttpRequest(
-      method = HttpMethods.PUT,
-      uri = sendMessageUrl,
-      entity = HttpEntity(contents) //todo set contents as XML or json SHRINE-2215
-    )
-    webApiTry(request, s"send to ${to.name}").transform({s =>
-      if (s.status == StatusCodes.Accepted) {
-        info(s"Successfully sent Message $contents to Queue $to")
-        Success(s)
-      } else {
-        debug(
-          s"""Try to sendMessage $contents, HTTPResponse is a success but it does not contain an expected StatusCode
-             |Expected StatusCodes: StatusCodes.Accepted, Actual StatusCodes: ${s.status}
-             |Response: $s""".stripMargin)
-        Failure(CouldNotCompleteMomTaskDoNotRetryException(s"send a Message to ${to.name}", Some(s.status), Some(s.entity.asString)))
-      }
-    }, { throwable =>
-      throwable match {
-        case CouldNotCompleteMomTaskDoNotRetryException(task, status, content, cause) => {
-          if (status.get == StatusCodes.UnprocessableEntity) {
-            throw CouldNotCompleteMomTaskButOKToRetryException(s"send a Message to ${to.name}", status, content, cause)
-          }
+    val waitTimeBeforeResent = webClientConfig.get("waitTimeBeforeResent", Duration(_))
+
+    def sendMessageOnce(): Try[Unit] = {
+      debug(s"send to $to '$contents'")
+      val sendMessageUrl = s"$momUrl/sendMessage/${to.name}"
+      val request: HttpRequest = HttpRequest(
+        method = HttpMethods.PUT,
+        uri = sendMessageUrl,
+        entity = HttpEntity(contents) //todo set contents as XML or json SHRINE-2215
+      )
+      webApiTry(request, s"send to ${to.name}").transform({s =>
+        if (s.status == StatusCodes.Accepted) {
+          info(s"Successfully sent Message $contents to Queue $to")
+          Success(s)
+        } else {
+          debug(
+            s"""Try to sendMessage $contents, HTTPResponse is a success but it does not contain an expected StatusCode
+               |Expected StatusCodes: StatusCodes.Accepted, Actual StatusCodes: ${s.status}
+               |Response: $s""".stripMargin)
+          throw CouldNotCompleteMomTaskDoNotRetryException(s"send a Message to ${to.name}", Some(s.status), Some(s.entity.asString))
         }
-        case _ => //Don't touch
-      }
-      error(s"Failed to send Message $contents to Queue $to due to Error: $throwable", throwable)
-      Failure(throwable)
-    })
+      }, { throwable =>
+        throwable match {
+          case CouldNotCompleteMomTaskDoNotRetryException(task, status, content, cause) => {
+            if (status.get == StatusCodes.UnprocessableEntity) {
+              throw CouldNotCompleteMomTaskButOKToRetryException(s"send a Message to ${to.name}", status, content, cause)
+            }
+          }
+          case _ => //Don't touch
+        }
+        error(s"Failed to send Message $contents to Queue $to due to Error: $throwable", throwable)
+        Failure(throwable)
+      })
+    }
+
+    def keepGoing(lastAttempt: Try[Unit]): Try[Boolean] = {
+      lastAttempt.transform({s =>
+        Success(false)
+      }, {
+        case okToRetry: CouldNotCompleteMomTaskButOKToRetryException => Success(true)
+        case t => Failure(t)
+      })
+    }
+
+    var retrySendResult: Try[Unit] = sendMessageOnce()
+    while (keepGoing(retrySendResult).get) {
+      debug(s"Last attempt to send $contents to queue $to resulted in $retrySendResult. Sleeping $waitTimeBeforeResent before next attempt ")
+      Thread.sleep(waitTimeBeforeResent.toMillis)
+      retrySendResult = sendMessageOnce()
+    }
+    info(s"Finishing send with result $retrySendResult")
+    retrySendResult
   }
 
   override def receive(from: Queue, timeout: Duration): Try[Option[Message]] = {
