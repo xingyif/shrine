@@ -15,6 +15,7 @@ export class ShrinePlugin extends I2B2Decorator {
         this.i2b2.SHRINE.plugin.enableRunQueryButton = this.enableRunQueryButton.bind(this);
         this.i2b2.SHRINE.plugin.disableRunQueryButton = this.disableRunQueryButton.bind(this);
         this.i2b2.SHRINE.plugin.errorDetail = this.errorDetail.bind(this);
+        this.i2b2.SHRINE.plugin.loader = Object.assign({}, this.i2b2.h.LoadingMask);
         const CustomEvent = this.YAHOO.util.CustomEvent;
         this.i2b2.events.networkIdReceived = new CustomEvent("networkIdReceived", this.i2b2);
         this.i2b2.events.afterQueryInit = new CustomEvent("afterQueryInit", this.i2b2);

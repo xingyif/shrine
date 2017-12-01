@@ -42,10 +42,10 @@ export const queryRunMixin = (context) =>
     context.i2b2.CRC.ctrlr.currentQueryStatus.startQuery(inQueryName, params);
   }
 
-
   export const queryClearMixin = (context) => {
     const doQueryClear = context.i2b2.CRC.ctrlr.QT.doQueryClear;
     return clearStatus => {
+      context.i2b2.SHRINE.plugin.loader.hide();
       doQueryClear.apply(context.i2b2.CRC.ctrlr.QT, []);
       context.shrine.plugin.enableRunQueryButton();
       if (clearStatus === true) context.i2b2.events.clearQuery.fire();
@@ -54,11 +54,9 @@ export const queryRunMixin = (context) =>
 
   export const queryLoadMixin = (context) => {
     const doQueryLoad = context.i2b2.CRC.ctrlr.QT.doQueryLoad;
-    const showMask = i2b2.h.LoadingMask.show;
     return qmId => {
-      i2b2.h.LoadingMask.show = () => {};
+      context.i2b2.SHRINE.plugin.loader.show();
       doQueryLoad.apply(context.i2b2.CRC.ctrlr.QT, qmId);
-      i2b2.h.LoadingMask.show = showMask;
     }
   }
 
