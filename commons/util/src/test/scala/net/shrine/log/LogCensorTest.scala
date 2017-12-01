@@ -4,7 +4,7 @@ import net.shrine.util.ShouldMatchersForJUnit
 import org.junit.Test
 
 /**
- * @author david 
+ * @author david
  * @since 7/24/15
  */
 class LogCensorTest extends ShouldMatchersForJUnit {
@@ -36,6 +36,25 @@ class LogCensorTest extends ShouldMatchersForJUnit {
     val result = LogCensor.censor(basicAuthLine)
     result should be(expectedBasicAuthLine)
   }
+  
+  //"password" : "flarf",
+  @Test
+  def testCensorTypesafeConfigPassword() = {
+    val typesafeConfigLine = "\"password\" : \"flarf\","
+    val expectedTypesafeConfigLine = "\"password\" : \"REDACTED\","
 
+    val result = LogCensor.censor(typesafeConfigLine)
+    result should be(expectedTypesafeConfigLine)
+  }
+
+  //"qepPassword" : "flarf",
+  @Test
+  def testCensorTypesafeConfigQepPassword() = {
+    val typesafeConfigLine = "\"qepPassword\" : \"flarf\","
+    val expectedTypesafeConfigLine = "\"qepPassword\" : \"REDACTED\","
+
+    val result = LogCensor.censor(typesafeConfigLine)
+    result should be(expectedTypesafeConfigLine)
+  }
 }
 
