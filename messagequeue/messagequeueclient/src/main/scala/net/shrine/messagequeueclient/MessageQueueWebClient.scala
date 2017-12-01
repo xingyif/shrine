@@ -179,7 +179,7 @@ object MessageQueueWebClient extends MessageQueueService with Loggable {
   override def send(contents: String, to: Queue): Try[Unit] = {
     val waitTimeBeforeResent = webClientConfig.get("waitTimeBeforeResent", Duration(_))
 
-    def sendMessageThroughApi(): Try[Unit] = {
+    def sendMessageOnce(): Try[Unit] = {
       debug(s"send to $to '$contents'")
       val sendMessageUrl = s"$momUrl/sendMessage/${to.name}"
       val request: HttpRequest = HttpRequest(
@@ -221,11 +221,11 @@ object MessageQueueWebClient extends MessageQueueService with Loggable {
       })
     }
 
-    var retrySendResult: Try[Unit] = sendMessageThroughApi()
+    var retrySendResult: Try[Unit] = sendMessageOnce()
     while (keepGoing(retrySendResult).get) {
       debug(s"Last attempt to send $contents to queue $to resulted in $retrySendResult. Sleeping $waitTimeBeforeResent before next attempt ")
       Thread.sleep(waitTimeBeforeResent.toMillis)
-      retrySendResult = sendMessageThroughApi()
+      retrySendResult = sendMessageOnce()
     }
     info(s"Finishing send with result $retrySendResult")
     retrySendResult
