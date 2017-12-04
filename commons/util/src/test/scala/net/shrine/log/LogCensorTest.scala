@@ -36,7 +36,7 @@ class LogCensorTest extends ShouldMatchersForJUnit {
     val result = LogCensor.censor(basicAuthLine)
     result should be(expectedBasicAuthLine)
   }
-  
+
   //"password" : "flarf",
   @Test
   def testCensorTypesafeConfigPassword() = {
