@@ -24,7 +24,6 @@ export const startQueryMixin = (context) =>
       self.isQueryRunning(false);
       context.prototype$('runBoxText').innerHTML = "Run Query";
       self.currentQueryStatus = false;
-      context.$('.sdxDefaultQM').css('background-color', 'white');
       context.$('#dialogQryRunResultType input[type="checkbox"]')
         .each(function (a, b) { b.checked = b.disabled });
       context.i2b2.SHRINE.plugin.enableRunQueryButton();
