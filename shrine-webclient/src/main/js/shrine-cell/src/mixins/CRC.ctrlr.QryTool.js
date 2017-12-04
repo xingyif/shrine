@@ -46,10 +46,12 @@ export const queryRunMixin = (context) =>
     const doQueryClear = context.i2b2.CRC.ctrlr.QT.doQueryClear;
     return clearStatus => {
       //context.i2b2.SHRINE.plugin.loader.hide();
-      context.$('.sdxDefaultQM').css('background-color', 'white');
       doQueryClear.apply(context.i2b2.CRC.ctrlr.QT, []);
       context.shrine.plugin.enableRunQueryButton();
-      if (clearStatus === true) context.i2b2.events.clearQuery.fire();
+      if (clearStatus === true) {
+        context.$('.sdxDefaultQM').css('background-color', 'white');
+        context.i2b2.events.clearQuery.fire();
+      }
     } 
   }
 
