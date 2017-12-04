@@ -48,6 +48,7 @@ export const queryRunMixin = (context) =>
       //context.i2b2.SHRINE.plugin.loader.hide();
       doQueryClear.apply(context.i2b2.CRC.ctrlr.QT, []);
       context.shrine.plugin.enableRunQueryButton();
+      context.$('.sdxDefaultQM').css('background-color', 'white');
       if (clearStatus === true) context.i2b2.events.clearQuery.fire();
     } 
   }
