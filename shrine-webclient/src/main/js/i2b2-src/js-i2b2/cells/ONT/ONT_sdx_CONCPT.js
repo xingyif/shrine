@@ -731,7 +731,7 @@ i2b2.sdx.TypeControllers.CONCPT.DragDrop.prototype.alignElWithMouse = function(e
 		var posY = (oCoord.y + this.deltaSetXY[1]);
 		//var scrSize = document.viewport.getDimensions();
 		var w =  window.innerWidth || (window.document.documentElement.clientWidth || window.document.body.clientWidth);
-	    var h =  window.innerHeight || (window.document.documentElement.clientHeight || window.document.body.clientHeight);
+	  var h =  window.innerHeight || (window.document.documentElement.clientHeight || window.document.body.clientHeight);
 
 		var maxX = parseInt(w-25-160);
 		var maxY = parseInt(h-25);
