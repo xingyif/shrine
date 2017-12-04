@@ -17,6 +17,7 @@ export const startQueryMixin = (context) =>
       var networkId = results.refXML.getElementsByTagName('query_master_id')[0].firstChild.nodeValue;
       context.i2b2.events.networkIdReceived.fire({ networkId: networkId });
       clearQuery();
+      context.i2b2.CRC.view.history.doRefreshAll();
     }
 
     const clearQuery = () => {

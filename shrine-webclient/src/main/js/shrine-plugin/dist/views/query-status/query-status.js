@@ -122,24 +122,23 @@ System.register(['aurelia-framework', 'services/query-status.model', 'services/p
                 QueryStatus.prototype.attached = function attached() {
                     var _this2 = this;
 
+                    this.status = initialState().status;
+                    this.nodes = initialState().nodes;
+                    this.hubMsg = initialState().hubMsg;
                     this.subscribe(this.notifications.i2b2.queryStarted, function (n) {
-                        _this2.status = initialState().status;
                         _this2.status.updated = Number(new Date());
-                        _this2.nodes = initialState().nodes;
-                        _this2.hubMsg = initialState().hubMsg;
                         _this2.status.query.queryName = n;
                     });
 
                     this.subscribe(this.notifications.i2b2.networkIdReceived, function (d) {
-                        var runningPreviousQuery = _this2.status === undefined;
-                        if (runningPreviousQuery) _this2.status = initialState().status;
-                        var networkId = d.networkId;
+                        var networkId = d.networkId,
+                            name = d.name;
 
                         _this2.status.query.networkId = networkId;
+                        if (name) _this2.status.query.queryName = name;
                         _this2.status.updated = Number(new Date());
                         _this2.nodes = initialState().nodes;
                         _this2.hubMsg = hubMsgTypes.RESPONSE_RECEIVED;
-                        _this2.publish(_this2.notifications.shrine.refreshAllHistory);
                         _this2.publish(_this2.commands.shrine.fetchQuery, { networkId: networkId, timeoutSeconds: TIMEOUT_SECONDS, dataVersion: DEFAULT_VERSION });
                     });
 
@@ -169,8 +168,6 @@ System.register(['aurelia-framework', 'services/query-status.model', 'services/p
                         _this2.nodes = nodes;
                         if (!complete) {
                             _this2.publish(_this2.commands.shrine.fetchQuery, { networkId: networkId, dataVersion: dataVersion, timeoutSeconds: timeoutSeconds });
-                        } else if (_this2.nodes.length) {
-                            _this2.publish(_this2.notifications.shrine.refreshAllHistory);
                         }
                     });
 

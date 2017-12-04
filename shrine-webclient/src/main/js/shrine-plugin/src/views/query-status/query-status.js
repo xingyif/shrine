@@ -23,23 +23,21 @@ export class QueryStatus extends PubSub {
     }
     attached() {
         // -- subscribers -- //
+        this.status = initialState().status;
+        this.nodes = initialState().nodes;
+        this.hubMsg = initialState().hubMsg;
         this.subscribe(this.notifications.i2b2.queryStarted, (n) => {
-            this.status = initialState().status;
             this.status.updated = Number(new Date());
-            this.nodes = initialState().nodes;
-            this.hubMsg = initialState().hubMsg;
             this.status.query.queryName = n;
         });
 
         this.subscribe(this.notifications.i2b2.networkIdReceived, d => {
-            const runningPreviousQuery = this.status === undefined;
-            if(runningPreviousQuery) this.status = initialState().status;
-            const {networkId} = d;
+            const {networkId, name} = d;
             this.status.query.networkId = networkId;
+            if(name) this.status.query.queryName = name;
             this.status.updated = Number(new Date());
             this.nodes = initialState().nodes;
             this.hubMsg = hubMsgTypes.RESPONSE_RECEIVED;
-            this.publish(this.notifications.shrine.refreshAllHistory);
             this.publish(this.commands.shrine.fetchQuery, {networkId, timeoutSeconds: TIMEOUT_SECONDS, dataVersion: DEFAULT_VERSION})
         });
 
@@ -63,10 +61,6 @@ export class QueryStatus extends PubSub {
             if (!complete) {
                 this.publish(this.commands.shrine.fetchQuery, {networkId, dataVersion, timeoutSeconds});
             }
-            else if (this.nodes.length) {
-                this.publish(this.notifications.shrine.refreshAllHistory);
-            }
-
         });
 
         if (me.get(this).isDevEnv) {

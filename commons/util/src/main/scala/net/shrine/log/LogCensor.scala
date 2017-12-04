@@ -27,11 +27,23 @@ object LogCensor {
    */
   val basicAuthRegex = s"""(Authorization: Basic )$base64String([,)].*)""".r
 
+  /**
+    * Matches for json-ish strings from Typsesafe Config like
+    *
+    * "password" : "demouser",
+    *
+    * and
+    *
+    * "qepPassword" : "demouser",
+    */
+  val typesafeConfigRegex = """((?i)password" : ").*(",)""".r
 
-  //todo match and replace basic auth in headers
   def censor(target:String):String = {
-    val noIb2Passwords = i2b2PasswordRegex.replaceAllIn(target,"$1REDACTED$2")
-    basicAuthRegex.replaceAllIn(noIb2Passwords,"$1REDACTED$2")
+    val magicRedactedReplacement = "$1REDACTED$2"
+
+    val noIb2Passwords = i2b2PasswordRegex.replaceAllIn(target,magicRedactedReplacement)
+    val noBasicAuth = basicAuthRegex.replaceAllIn(noIb2Passwords,magicRedactedReplacement)
+    typesafeConfigRegex.replaceAllIn(noBasicAuth,magicRedactedReplacement)
   }
 }
 

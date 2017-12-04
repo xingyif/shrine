@@ -17,7 +17,7 @@ class ShrineSnippets {
 
 
   static dialogHTML = (i2b2, data) => {
-    const wikiBaseUrl = (i2b2.hive.cfg.wikiBaseUrl || 'https://open.med.harvard.edu/wiki/display/SHRINE/');
+    const wikiBaseUrl = `${i2b2.hive.cfg.wikiBaseUrl}/`;
     const codec = data.problemDigest && data.problemDigest.codec ? data.problemDigest.codec : '';
 
     return `

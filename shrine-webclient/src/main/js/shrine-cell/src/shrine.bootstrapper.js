@@ -6,7 +6,6 @@ import dom from './common/shrine-dom';
 import snippets from './common/shrine-snippets';
 import { startQueryMixin, isQueryRunningMixin, refreshStatusMixin } from './mixins/CRC.ctrlr.QueryStatus';
 import * as QTMixins from './mixins/CRC.ctrlr.QryTool';
-//import { contextMenuValidateMixin } from './mixins/CRC.view.History';
 import ResizeHeightMixin from './mixins/CRC.view.Status';
 import getChildRecordsMixin from './mixins/CRC.sdx.QM';
 
@@ -23,10 +22,10 @@ class ShrineBootstrapper extends I2B2Decorator{
     this.i2b2.CRC.ctrlr.QT._queryRun = QTMixins.queryRunMixin(this)
     this.i2b2.CRC.view.status.showDisplay = () => { /*empty method to not break referenes from i2b2*/ };
     this.i2b2.CRC.ctrlr.QT.doQueryClear = QTMixins.queryClearMixin(this);
+    this.i2b2.h.LoadingMask.show = () => { /* empty emthod to not break references from i2b2*/ };
     this.i2b2.CRC.ctrlr.QueryStatus.prototype.startQuery = startQueryMixin(this);
     this.i2b2.CRC.ctrlr.QueryStatus.prototype.isQueryRunning = isQueryRunningMixin();
     this.i2b2.CRC.ctrlr.QueryStatus.prototype.refreshStatus = refreshStatusMixin();
-    //this.i2b2.CRC.view.history.ContextMenuValidate = contextMenuValidateMixin(this);
     this.i2b2.CRC.view.status.ResizeHeight  = ResizeHeightMixin(this);
     this.i2b2.sdx.TypeControllers.QM.getChildRecords = getChildRecordsMixin(this);
   }
