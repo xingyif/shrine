@@ -4,7 +4,7 @@ const getChildRecordsMixin = context => (sdxParentNode, onCompleteCallback) => {
   const name = sdxParentNode.origData.realname;
   context.i2b2.CRC.ctrlr.currentQueryStatus = false;
   //context.i2b2.SHRINE.plugin.loader.hide();
-  context.i2b2.events.clearQuery.fire(true);
+  context.i2b2.events.clearQuery.fire();
   context.i2b2.events.networkIdReceived.fire({networkId, name});
   context.i2b2.CRC.ctrlr.QT.doQueryLoad(networkId);
   context.i2b2.CRC.view.history.yuiTree.locked = false;
