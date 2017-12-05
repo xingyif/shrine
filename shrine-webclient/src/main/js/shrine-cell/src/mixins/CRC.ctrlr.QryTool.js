@@ -2,6 +2,7 @@ export const queryRunMixin = (context) =>
   (inQueryName, options) => {
 
     context.shrine.plugin.disableRunQueryButton();
+    context.$('.sdxDefaultQM').css('background-color', 'white');
     context.i2b2.events.afterQueryInit.fire({ name: inQueryName, data: options });
     
     // make sure name is not blank
@@ -48,7 +49,10 @@ export const queryRunMixin = (context) =>
       //context.i2b2.SHRINE.plugin.loader.hide();
       doQueryClear.apply(context.i2b2.CRC.ctrlr.QT, []);
       context.shrine.plugin.enableRunQueryButton();
-      if (clearStatus === true) context.i2b2.events.clearQuery.fire();
+      if (clearStatus === true) {
+        context.$('.sdxDefaultQM').css('background-color', 'white');
+        context.i2b2.events.clearQuery.fire();
+      }
     } 
   }
 

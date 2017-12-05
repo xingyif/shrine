@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 System.register([], function (_export, _context) {
     "use strict";
@@ -14,19 +14,20 @@ System.register([], function (_export, _context) {
     return {
         setters: [],
         execute: function () {
-            _export("CountValueConverter", CountValueConverter = function () {
+            _export('CountValueConverter', CountValueConverter = function () {
                 function CountValueConverter() {
                     _classCallCheck(this, CountValueConverter);
                 }
 
                 CountValueConverter.prototype.toView = function toView(value) {
-                    return value < 0 ? "10 patients or fewer" : value + " +-10 patients";
+                    var PLUS_MINUS_CHAR = '\xB1';
+                    return value < 0 ? '10 patients or fewer' : value + ' ' + PLUS_MINUS_CHAR + ' 10 patients';
                 };
 
                 return CountValueConverter;
             }());
 
-            _export("CountValueConverter", CountValueConverter);
+            _export('CountValueConverter', CountValueConverter);
         }
     };
 });

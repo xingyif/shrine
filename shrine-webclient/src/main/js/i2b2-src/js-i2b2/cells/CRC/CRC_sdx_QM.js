@@ -437,15 +437,20 @@ i2b2.sdx.TypeControllers.QM.DragDrop.prototype.alignElWithMouse = function(el, i
 	} else {
 		var posX = (oCoord.x + this.deltaSetXY[0]);
 		var posY = (oCoord.y + this.deltaSetXY[1]);
-		var scrSize = document.viewport.getDimensions();
-		var maxX = parseInt(scrSize.width-25-160);
-		var maxY = parseInt(scrSize.height-25);
-		if (posX > maxX) {posX = maxX;}
-		if (posX < 6) {posX = 6;}
-		if (posY > maxY) {posY = maxY;}
-		if (posY < 6) {posY = 6;}
-		YAHOO.util.Dom.setStyle(el, "left", posX + "px");
-		YAHOO.util.Dom.setStyle(el, "top",  posY + "px");
+		// -- ben: copied from ONT_sdx_CONCPT.js -- //
+		// -- @todo: use mixin pattern instead of altering i2b2 src -- //
+			//var scrSize = document.viewport.getDimensions();
+			var w =  window.innerWidth || (window.document.documentElement.clientWidth || window.document.body.clientWidth);
+			var h =  window.innerHeight || (window.document.documentElement.clientHeight || window.document.body.clientHeight);
+	
+			var maxX = parseInt(w-25-160);
+			var maxY = parseInt(h-25);
+			if (posX > maxX) {posX = maxX;}
+			if (posX < 6) {posX = 6;}
+			if (posY > maxY) {posY = maxY;}
+			if (posY < 6) {posY = 6;}
+			YAHOO.util.Dom.setStyle(el, "left", posX + "px");
+			YAHOO.util.Dom.setStyle(el, "top",  posY + "px");
 	}
 	this.cachePosition(oCoord.x, oCoord.y);
 	this.autoScroll(oCoord.x, oCoord.y, el.offsetHeight, el.offsetWidth);
