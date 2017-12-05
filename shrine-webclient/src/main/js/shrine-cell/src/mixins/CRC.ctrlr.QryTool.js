@@ -1,8 +1,8 @@
 export const queryRunMixin = (context) => 
   (inQueryName, options) => {
-
-    context.shrine.plugin.disableRunQueryButton();
     context.$('.sdxDefaultQM').css('background-color', 'white');
+    context.i2b2.events.clearQuery.fire();
+    context.shrine.plugin.disableRunQueryButton();
     context.i2b2.events.afterQueryInit.fire({ name: inQueryName, data: options });
     
     // make sure name is not blank
