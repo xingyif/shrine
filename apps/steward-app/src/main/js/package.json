@@ -38,7 +38,8 @@
   },
   "scripts": {
     "test": "gulp build",
-    "start": "node ./app/server/steward-api"
+    "start": "gulp build && gulp serve && npm run mock",
+    "start-mock": "cd ./app/server && npm start"
   },
   "repository": {
     "type": "git",

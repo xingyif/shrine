@@ -1,6 +1,6 @@
 export const queryRunMixin = (context) => 
   (inQueryName, options) => {
-    i2b2.CRC.ctrlr.QT.doQueryClear();
+    i2b2.CRC.ctrlr.QT.doQueryClear(true);
     context.shrine.plugin.disableRunQueryButton();
     context.i2b2.events.afterQueryInit.fire({ name: inQueryName, data: options });
     
