@@ -11,7 +11,8 @@
     "build": "npm run build-i2b2 && npm run build-cell && npm run build-plugin",
     "start": "npm run build-prod && gulp serve",
     "build-prod": "npm run clean && npm run build",
-    "maven-build": "cd ../../../ && mvn clean install"
+    "maven-build": "cd ../../../ && mvn clean install",
+    "start-mock": "cd server && gulp pm"
   },
   "repository": {
     "type": "git",
