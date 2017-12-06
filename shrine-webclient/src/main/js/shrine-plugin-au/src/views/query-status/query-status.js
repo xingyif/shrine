@@ -9,7 +9,7 @@ export default class QueryStatus extends PubSub {
   constructor(queryStatus, ...rest) {
     super(...rest);
     me.set(this, {
-      isDevEnv: document.location.href.includes('http://localhost:8080/'),
+      isDevEnv: document.location.href.includes('http://localhost:8000/'),
       exportAvailable: false
     });
   }

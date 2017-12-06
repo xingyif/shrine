@@ -1,6 +1,6 @@
 import { PLATFORM } from 'aurelia-pal';
 
-export default async function configure(aurelia) {
+export async function configure(aurelia) {
   aurelia.use
     .standardConfiguration()
     .developmentLogging()

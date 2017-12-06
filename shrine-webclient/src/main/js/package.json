@@ -4,15 +4,21 @@
   "description": "SHRINE fork of the i2b2 Webclient",
   "main": "index.js",
   "scripts": {
+    "copy-i2b2": "ncp i2b2-src i2b2",
+    "clean-i2b2": "rimraf i2b2",
     "build-cell": "cd shrine-cell && npm run build",
-    "build-i2b2": "ncp i2b2-src i2b2",
-    "clean": "rimraf i2b2/js-i2b2/cells/SHRINE/dist && rimraf i2b2/js-shrine/dist",
-    "build-plugin": "cd shrine-plugin && gulp export",
-    "build": "npm run build-i2b2 && npm run build-cell && npm run build-plugin",
+    "clean-cell": "rimraf shrine-cell/dist",
+    "copy-cell": "ncp shrine-cell/dist i2b2/js-i2b2/cells/SHRINE/dist",
+    "build-plugin": "cd shrine-plugin-au && npm run build",
+    "clean-plugin": "rimraf shrine-plugin-au/dist",
+    "copy-plugin": "ncp shrine-plugin-au/dist i2b2/js-shrine/dist",
+    "build": "npm run build-cell && npm run build-plugin",
+    "clean": "npm run clean-i2b2 && npm run clean-cell && npm run clean-plugin",
+    "copy": "npm run copy-i2b2 && npm run copy-cell && npm run copy-plugin",
     "start": "npm run build-prod && gulp serve",
-    "build-prod": "npm run clean && npm run build",
-    "maven-build": "cd ../../../ && mvn clean install",
-    "start-mock": "cd server && gulp pm"
+    "build-prod": "npm run clean && npm run build && npm run copy",
+    "start-express": "cd server && gulp pm",
+    "local-webclient": "npm run build-prod && gulp serve"
   },
   "repository": {
     "type": "git",

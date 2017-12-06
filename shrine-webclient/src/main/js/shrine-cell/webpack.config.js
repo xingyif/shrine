@@ -2,7 +2,7 @@
 const webpack = require('webpack');
 const path = require('path');
 const loaders = require('./webpack.loaders');
-const DIR = '../i2b2/js-i2b2/cells/SHRINE/dist/';
+const DIR = './dist/';
 
 module.exports = {
   entry: [

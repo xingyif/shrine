@@ -11,7 +11,7 @@ const when = (condition, config, negativeConfig) =>
   condition ? ensureArray(config) : ensureArray(negativeConfig)
 
 // primary config:
-const title = 'Aurelia Navigation Skeleton';
+const title = 'Shrine Webclient Plugin';
 const outDir = path.resolve(__dirname, 'dist');
 const srcDir = path.resolve(__dirname, 'src');
 const nodeModulesDir = path.resolve(__dirname, 'node_modules');
@@ -36,11 +36,9 @@ module.exports = ({production, server, extractCss, coverage} = {}) => ({
     vendor: ['bluebird']
   },
   output: {
-    path: outDir,
-    publicPath: baseUrl,
-    filename: production ? '[name].[chunkhash].bundle.js' : '[name].[hash].bundle.js',
-    sourceMapFilename: production ? '[name].[chunkhash].bundle.map' : '[name].[hash].bundle.map',
-    chunkFilename: production ? '[name].[chunkhash].chunk.js' : '[name].[hash].chunk.js',
+    path: path.resolve(__dirname, 'dist'),
+    filename: '[name].js',
+    chunkFilename: '[name].js'
   },
   devServer: {
     contentBase: outDir,
@@ -87,7 +85,7 @@ module.exports = ({production, server, extractCss, coverage} = {}) => ({
         'Promise': 'bluebird', // because Edge browser has slow native Promise object
     }),
     new HtmlWebpackPlugin({
-      template: 'index.ejs',
+      template: 'index.html',
       minify: production ? {
         removeComments: true,
         collapseWhitespace: true
@@ -106,3 +104,4 @@ module.exports = ({production, server, extractCss, coverage} = {}) => ({
     }))
   ],
 })
+

@@ -1,5 +1,4 @@
 {
-  "extends": "airbnb",
   "root": true,
   "parser": "babel-eslint",          // https://github.com/babel/babel-eslint
   "env": {                           // http://eslint.org/docs/user-guide/configuring.html#specifying-environments
@@ -25,6 +24,9 @@
     "jsx": false
   },
   "rules": {
+
+"prefer-default-export": 0,
+
 /**
  * Strict mode
  */
