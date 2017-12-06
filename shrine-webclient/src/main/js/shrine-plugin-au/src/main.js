@@ -7,7 +7,13 @@ export async function configure(aurelia) {
     .feature(PLATFORM.moduleName('resources/index'))
     .feature(PLATFORM.moduleName('views/index'));
 
+  await webpackIncludes();
   await aurelia.start();
   await aurelia.setRoot(PLATFORM.moduleName('shell'));
 }
+
+const webpackIncludes = () => {
+  require('./views/query-status/query-status.scss');
+};
+
 

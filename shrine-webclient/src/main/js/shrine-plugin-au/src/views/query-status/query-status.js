@@ -1,10 +1,9 @@
 import { customElement, observable } from 'aurelia-framework';
 import { QueryStatusModel } from 'services/query-status.model';
 import { PubSub } from 'services/pub-sub';
-
+@observable('nodes')
 @customElement('query-status')
 export default class QueryStatus extends PubSub {
-  @observable nodes
   static inject = [QueryStatusModel];
   constructor(queryStatus, ...rest) {
     super(...rest);
