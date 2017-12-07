@@ -9,7 +9,7 @@ export default class QueryStatus extends PubSub {
   constructor(queryStatus, ...rest) {
     super(...rest);
     me.set(this, { // -- TODO:  this is a lame way to figure out local dev...ports change
-      isDevEnv: document.location.href.includes(`http://localhost:${devConfig.PORT}/`),
+      isDevEnv: document.location.href.includes(`http://localhost:${devConfig.CLIENT_PORT}/`),
       exportAvailable: false
     });
   }

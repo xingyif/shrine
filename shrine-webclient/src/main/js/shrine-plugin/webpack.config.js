@@ -43,7 +43,7 @@ module.exports = ({production, server, extractCss, coverage} = {}) => ({
   },
   devServer: {
     inline: true,
-    port: devConfig.PORT,
+    port: devConfig.CLIENT_PORT,
     contentBase: outDir,
     // serve index.html for all 404 (required for push-state)
     historyApiFallback: true,

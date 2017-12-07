@@ -10,7 +10,7 @@ gulp.task('serve', ['pm'], function () {
         .pipe(server({
             livereload: true,
             open: true,
-            port: devConfig.PORT
+            port: devConfig.CLIENT_PORT
         }));
 });
 

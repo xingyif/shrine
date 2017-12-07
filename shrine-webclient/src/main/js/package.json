@@ -9,9 +9,9 @@
     "build-cell": "cd shrine-cell && npm run build",
     "clean-cell": "rimraf shrine-cell/dist",
     "copy-cell": "ncp shrine-cell/dist i2b2/js-i2b2/cells/SHRINE/dist",
-    "build-plugin": "cd shrine-plugin-au && npm run build",
-    "clean-plugin": "rimraf shrine-plugin-au/dist",
-    "copy-plugin": "ncp shrine-plugin-au/dist i2b2/js-shrine/dist",
+    "build-plugin": "cd shrine-plugin && npm run build",
+    "clean-plugin": "rimraf shrine-plugin/dist",
+    "copy-plugin": "ncp shrine-plugin/dist i2b2/js-shrine/dist",
     "build": "npm run build-cell && npm run build-plugin",
     "clean": "npm run clean-i2b2 && npm run clean-cell && npm run clean-plugin",
     "copy": "npm run copy-i2b2 && npm run copy-cell && npm run copy-plugin",
@@ -19,7 +19,7 @@
     "build-prod": "npm run clean && npm run build && npm run copy",
     "start-express": "cd server && gulp pm",
     "local-webclient": "npm run build-prod && gulp serve && npm run watch-plugin",
-    "watch-plugin": "watch-run -p shrine-plugin-au/src/**/*.js npm run clean-plugin && npm run build-plugin && npm run copy-plugin"
+    "watch-plugin": "watch-run -p shrine-plugin/src/**/*.js npm run clean-plugin && npm run build-plugin && npm run copy-plugin"
   },
   "repository": {
     "type": "git",

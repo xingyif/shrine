@@ -1,4 +1,5 @@
 module.exports = {
-  PORT: '8888'
+  CLIENT_PORT: '8888',
+  SERVICE_PORT: '6443'
 }
 
