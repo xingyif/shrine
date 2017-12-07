@@ -1,13 +1,19 @@
-import {stringIncludesPolyfill} from './includes-polyfill';
-export function configure(aurelia) {
-    aurelia.use
-        .standardConfiguration()
-        .developmentLogging()
-        .feature('resources')
-        .feature('views');
+import { PLATFORM } from 'aurelia-pal';
 
-    aurelia.start()
-        .then(stringIncludesPolyfill)
-        .then(() => aurelia.setRoot('shell'));
+export async function configure(aurelia) {
+  aurelia.use
+    .standardConfiguration()
+    .developmentLogging()
+    .feature(PLATFORM.moduleName('resources/index'))
+    .feature(PLATFORM.moduleName('views/index'));
+
+  await webpackIncludes();
+  await aurelia.start();
+  await aurelia.setRoot(PLATFORM.moduleName('shell'));
 }
+
+const webpackIncludes = () => {
+  require('./views/query-status/query-status.scss');
+};
+
 

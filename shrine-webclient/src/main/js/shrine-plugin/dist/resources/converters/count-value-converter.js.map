@@ -1,1 +1,0 @@
-{"version":3,"sources":["resources/converters/count-value-converter.js"],"names":["CountValueConverter","toView","value","PLUS_MINUS_CHAR"],"mappings":";;;;;;;;;;;;;;;;2CAAaA,mB;;;;;8CACTC,M,mBAAOC,K,EAAO;AACV,wBAAMC,kBAAkB,MAAxB;AACA,2BAAOD,QAAQ,CAAR,4BAAuCA,KAAvC,SAAgDC,eAAhD,iBAAP;AACH,iB","file":"count-value-converter.js","sourceRoot":"/src"}

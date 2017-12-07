@@ -4,7 +4,7 @@ http://foreverframe.net/using-interceptors-with-aurelia-fetch-client/
 */
 
 import { HttpClient } from 'aurelia-fetch-client';
-import 'fetch';
+import 'isomorphic-fetch';
 export class QEPRepository {
     static inject = [HttpClient]
     constructor(http) {

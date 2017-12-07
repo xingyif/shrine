@@ -1,1 +1,0 @@
-{"version":3,"sources":["resources/converters/box-style.converter.js"],"names":["BoxStyleValueConverter","toView","value","String"],"mappings":";;;;;;;;;;;;;;;;8CAAaA,sB;;;;;iDACTC,M,mBAAOC,K,EAAO;AACV,2BAAO,0BAA0BC,OAAO,CAAC,GAAD,GAAOD,KAAd,CAA1B,GAAiD,KAAxD;AACH,iB","file":"box-style.converter.js","sourceRoot":"/src"}

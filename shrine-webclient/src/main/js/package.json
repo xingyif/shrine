@@ -18,7 +18,8 @@
     "start": "npm run build-prod && gulp serve",
     "build-prod": "npm run clean && npm run build && npm run copy",
     "start-express": "cd server && gulp pm",
-    "local-webclient": "npm run build-prod && gulp serve"
+    "local-webclient": "npm run build-prod && gulp serve && npm run watch-plugin",
+    "watch-plugin": "watch-run -p shrine-plugin-au/src/**/*.js npm run clean-plugin && npm run build-plugin && npm run copy-plugin"
   },
   "repository": {
     "type": "git",
@@ -47,6 +48,7 @@
     "gulp": "^3.9.1",
     "gulp-server-livereload": "^1.9.2",
     "maven": "^4.2.0",
+    "watch-run": "^1.2.5",
     "webpack": "^3.4.1"
   },
   "dependencies": {

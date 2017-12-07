@@ -1,7 +1,6 @@
+import { PLATFORM } from 'aurelia-pal';
 export function configure(aurelia) {
-
-    const views = [
-        'views/query-status/query-status'
-    ];
-    aurelia.globalResources(...views);
+  aurelia.globalResources(
+    PLATFORM.moduleName('./query-status/query-status')
+  );
 }

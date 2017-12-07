@@ -1,21 +1,13 @@
+import { PLATFORM } from 'aurelia-pal';
 export function configure(aurelia) {
+  aurelia.globalResources(
+    PLATFORM.moduleName('./converters/count.converter'),
+    PLATFORM.moduleName('./converters/datetime.converter'),
+    PLATFORM.moduleName('./converters/truncate.converter')
+  );
 
-    const converterPrefix = 'converters';
-    const converters = [
-        'box-style.converter',
-        'count-value-converter',
-        'datetime.value.converter',
-        'result-style.converter',
-        'result-value.converter',
-        'truncate.converter'
-    ];
-    aurelia.globalResources(...converters.map(c => `./${converterPrefix}/${c}`));
-
-    const customPrefix = 'custom';
-    const custom = [
-        'breakdown/breakdown',
-        'node-result/node-result',
-        'node-status/node-status'
-    ];
-    aurelia.globalResources(...custom.map(c => `./${customPrefix}/${c}`));
+  aurelia.globalResources(
+    PLATFORM.moduleName('./custom/breakdown/breakdown'),
+    PLATFORM.moduleName('./custom/node-result/node-result'),
+    PLATFORM.moduleName('./custom/node-status/node-status'));
 }
