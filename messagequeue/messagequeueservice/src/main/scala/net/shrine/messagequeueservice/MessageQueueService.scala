@@ -5,6 +5,7 @@ import net.shrine.spray.DefaultJsonSupport
 import spray.http.StatusCode
 
 import scala.collection.immutable.Seq
+import scala.concurrent.Future
 import scala.concurrent.duration.Duration
 import scala.util.Try
 /**
@@ -20,8 +21,8 @@ trait MessageQueueService {
   def createQueueIfAbsent(queueName:String): Try[Queue]
   def deleteQueue(queueName:String): Try[Unit]
   def queues: Try[Seq[Queue]]
-  def send(contents:String,to:Queue): Try[Unit]
-  def receive(from:Queue,timeout:Duration): Try[Option[Message]]
+  def send(contents:String,to:Queue): Future[Unit]
+  def receive(from:Queue,timeout:Duration): Future[Option[Message]]
 }
 
 object MessageQueueService {

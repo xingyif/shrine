@@ -8,10 +8,13 @@ import net.shrine.messagequeueservice.{Message, Queue}
 import net.shrine.source.ConfigSource
 import org.junit.runner.RunWith
 import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.concurrent.AsyncAssertions
 import org.scalatest.junit.JUnitRunner
+import org.scalatest.time.{Millis, Seconds, Span}
 import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers}
 
 import scala.collection.immutable.Seq
+import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
 import scala.language.postfixOps
 import scala.util.Try
@@ -20,6 +23,9 @@ import scala.util.Try
   */
 @RunWith(classOf[JUnitRunner])
 class LocalMessageQueueMiddlewareTest extends FlatSpec with BeforeAndAfterAll with ScalaFutures with Matchers {
+
+  val waitForFutureToComplete = Duration("1 second")
+  implicit val defaultPatience = PatienceConfig(timeout = Span(5, Seconds), interval = Span(500, Millis))
 
   "BlockingQueue" should "be able to send and receive just one message" in {
 
@@ -40,52 +46,57 @@ class LocalMessageQueueMiddlewareTest extends FlatSpec with BeforeAndAfterAll wi
       assert(LocalMessageQueueMiddleware.queues.get == Seq(queue))
 
       val testContents = "Test message_receiveOneMessage"
-      val sendTry = LocalMessageQueueMiddleware.send(testContents, queue)
-      assert(sendTry.isSuccess)
+      Await.result(LocalMessageQueueMiddleware.send(testContents, queue), waitForFutureToComplete)
 
       // first time receive
-      val message: Option[Message] = LocalMessageQueueMiddleware.receive(queue, 1 second).get
+      val message: Option[Message] = whenReady(LocalMessageQueueMiddleware.receive(queue, 1 second)) { messageOpt =>
+        assert(messageOpt.isDefined)
+        assert(messageOpt.get.contents == testContents)
+        messageOpt
+      }
 
-      assert(message.isDefined)
-      assert(message.get.contents == testContents)
 
       // receive immediately again, should be no message redelivered yet
-      val sameMessage1: Option[Message] = LocalMessageQueueMiddleware.receive(queue, 1 second).get
-      assert(sameMessage1.isEmpty)
+      whenReady(LocalMessageQueueMiddleware.receive(queue, 1 second)) { noMessage =>
+        assert(noMessage.isEmpty)
+      }
 
       // receive after the redelivery delay, should have the redelivered message
       TimeUnit.MILLISECONDS.sleep(messageRedeliveryDelay + 1000)
-      val sameMessage2: Option[Message] = LocalMessageQueueMiddleware.receive(queue, 1 second).get
-      assert(sameMessage2.isDefined)
-      assert(sameMessage2.get.contents == testContents)
+      whenReady(LocalMessageQueueMiddleware.receive(queue, 1 second)) { sameMessage =>
+        assert(sameMessage.isDefined)
+        assert(sameMessage.get.contents == testContents)
+      }
+
 
       // receive after the redelivery delay again, reached maxRedelivery attempt, should be no message
       TimeUnit.MILLISECONDS.sleep(messageRedeliveryDelay + 1000)
-      val sameMessage3: Option[Message] = LocalMessageQueueMiddleware.receive(queue, 1 second).get
-      assert(sameMessage3.isEmpty)
+      whenReady(LocalMessageQueueMiddleware.receive(queue, 1 second)) { noMessage =>
+        assert(noMessage.isEmpty)
+      }
 
-      // call complete on the last Message
-      val completeTry: Try[Unit] = sameMessage2.get.complete()
-      assert(completeTry.isSuccess)
+      Await.result(message.get.complete(), waitForFutureToComplete)
       // receive after message is completed, should be no message
-      val shouldBeNoMessage: Option[Message] = LocalMessageQueueMiddleware.receive(queue, 1 second).get
-      assert(shouldBeNoMessage.isEmpty)
+      whenReady(LocalMessageQueueMiddleware.receive(queue, 1 second)) { noMessage =>
+        assert(noMessage.isEmpty)
+      }
 
       val queueName_ExpiredMessage = "QueueExpiredMessage"
       val queue_expiredMessage: Try[Queue] = LocalMessageQueueMiddleware.createQueueIfAbsent(queueName_ExpiredMessage)
       // message should expire
       val testContents2 = "Test message_MessageShouldExpire"
-      val sendTry2 = LocalMessageQueueMiddleware.send(testContents2, queue_expiredMessage.get)
-      assert(sendTry2.isSuccess)
+      Await.result(LocalMessageQueueMiddleware.send(testContents2, queue_expiredMessage.get), waitForFutureToComplete)
 
       // first time receive
-      val messageExpire: Option[Message] = LocalMessageQueueMiddleware.receive(queue_expiredMessage.get, 1 second).get
-      assert(messageExpire.isDefined)
-      assert(messageExpire.get.contents == testContents2)
+      whenReady(LocalMessageQueueMiddleware.receive(queue_expiredMessage.get, 1 second)) { messageExpire =>
+        assert(messageExpire.isDefined)
+        assert(messageExpire.get.contents == testContents2)
+      }
 
       TimeUnit.MILLISECONDS.sleep(messageTimeToLive + 1000)
-      val shouldBeNoMessageExpired: Option[Message] = LocalMessageQueueMiddleware.receive(queue_expiredMessage.get, 1 second).get
-      assert(shouldBeNoMessageExpired.isEmpty)
+      whenReady(LocalMessageQueueMiddleware.receive(queue_expiredMessage.get, 1 second)) { shouldBeNoMessageExpired =>
+        assert(shouldBeNoMessageExpired.isEmpty)
+      }
 
       val deleteTry = LocalMessageQueueMiddleware.deleteQueue(queueName)
       val deleteExpiredMessageQueueTry = LocalMessageQueueMiddleware.deleteQueue(queueName_ExpiredMessage)
@@ -106,48 +117,45 @@ class LocalMessageQueueMiddlewareTest extends FlatSpec with BeforeAndAfterAll wi
     assert(LocalMessageQueueMiddleware.queues.get == Seq(queue))
 
     val testContents1 = "First test message_receiveAFewMessages"
-    val sendTry = LocalMessageQueueMiddleware.send(testContents1, queue)
-    assert(sendTry.isSuccess)
+    Await.result(LocalMessageQueueMiddleware.send(testContents1, queue), waitForFutureToComplete)
+    val message: Option[Message] = whenReady(LocalMessageQueueMiddleware.receive(queue, 1 second)) { message =>
+      assert(message.isDefined)
+      assert(message.get.contents == testContents1)
+      message
+    }
 
-    val message1: Option[Message] = LocalMessageQueueMiddleware.receive(queue, 1 second).get
+    Await.result(message.get.complete(), waitForFutureToComplete)
 
-    assert(message1.isDefined)
-    assert(message1.get.contents == testContents1)
+    whenReady(LocalMessageQueueMiddleware.receive(queue, 1 second)) { shouldBeNoMessage =>
+      assert(shouldBeNoMessage.isEmpty)
+    }
 
-    val completeTry = message1.get.complete()
-    assert(completeTry.isSuccess)
-
-    val shouldBeNoMessage1: Option[Message] = LocalMessageQueueMiddleware.receive(queue, 1 second).get
-
-    assert(shouldBeNoMessage1.isEmpty)
 
     val testContents2 = "Second test message_receiveAFewMessages"
-    val sendTry2 = LocalMessageQueueMiddleware.send(testContents2, queue)
-    assert(sendTry2.isSuccess)
+    Await.result(LocalMessageQueueMiddleware.send(testContents2, queue), waitForFutureToComplete)
 
     val testContents3 = "Third test message_receiveAFewMessages"
-    val sendTry3 = LocalMessageQueueMiddleware.send(testContents3, queue)
-    assert(sendTry3.isSuccess)
+    Await.result(LocalMessageQueueMiddleware.send(testContents3, queue), waitForFutureToComplete)
 
-    val message2: Option[Message] = LocalMessageQueueMiddleware.receive(queue, 1 second).get
+    val message2: Option[Message] = whenReady(LocalMessageQueueMiddleware.receive(queue, 1 second)) {message2 =>
+      assert(message2.isDefined)
+      assert(message2.get.contents == testContents2)
+      message2
+    }
 
-    assert(message2.isDefined)
-    assert(message2.get.contents == testContents2)
+    Await.result(message2.get.complete(), waitForFutureToComplete)
 
-    val completeTry2 = message2.get.complete()
-    assert(completeTry2.isSuccess)
+    val message3: Option[Message] = whenReady(LocalMessageQueueMiddleware.receive(queue, 1 second)) { message3 =>
+      assert(message3.isDefined)
+      assert(message3.get.contents == testContents3)
+      message3
+    }
 
-    val message3: Option[Message] = LocalMessageQueueMiddleware.receive(queue, 1 second).get
+    Await.result(message3.get.complete(), waitForFutureToComplete)
 
-    assert(message3.isDefined)
-    assert(message3.get.contents == testContents3)
-
-    val completeTry3 = message3.get.complete()
-    assert(completeTry3.isSuccess)
-
-    val shouldBeNoMessage4: Option[Message] = LocalMessageQueueMiddleware.receive(queue, 1 second).get
-
-    assert(shouldBeNoMessage4.isEmpty)
+    whenReady(LocalMessageQueueMiddleware.receive(queue, 1 second)) { shouldBeNoMessage4 =>
+      assert(shouldBeNoMessage4.isEmpty)
+    }
 
     val deleteTry = LocalMessageQueueMiddleware.deleteQueue(queueName)
     assert(deleteTry.isSuccess)
@@ -179,16 +187,16 @@ class LocalMessageQueueMiddlewareTest extends FlatSpec with BeforeAndAfterAll wi
   "BlockingQueue" should "return a failure if sending message to a non-existing queue" in {
 
     val queueName = "SendToNonExistingQueue"
-    val sendTry = LocalMessageQueueMiddleware.send("testContent", Queue(queueName))
-    assert(sendTry.isFailure)
+    an [QueueDoesNotExistException] should be thrownBy Await.result(LocalMessageQueueMiddleware.send("testContent", Queue(queueName)), waitForFutureToComplete)
+
     assert(LocalMessageQueueMiddleware.queues.get.isEmpty)
   }
 
   "BlockingQueue" should "return a failure if receiving a message to a non-existing queue" in {
 
     val queueName = "ReceiveFromNonExistingQueue"
-    val receiveTry = LocalMessageQueueMiddleware.receive(Queue(queueName), Duration(1, "second"))
-    assert(receiveTry.isFailure)
+    an [QueueDoesNotExistException] should be thrownBy Await.result(LocalMessageQueueMiddleware.receive(Queue(queueName), Duration(1, "second")), waitForFutureToComplete)
+
     assert(LocalMessageQueueMiddleware.queues.get.isEmpty)
   }
 

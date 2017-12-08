@@ -11,11 +11,12 @@ import net.shrine.problem.{AbstractProblem, ProblemSources}
 import net.shrine.source.ConfigSource
 import org.json4s.ShortTypeHints
 import org.json4s.native.Serialization
-
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.collection.concurrent.{TrieMap, Map => ConcurrentMap}
 import scala.collection.immutable.Seq
-import scala.concurrent.blocking
+import scala.concurrent.{ExecutionException, Future, blocking}
 import scala.concurrent.duration.Duration
+import scala.runtime.NonLocalReturnControl
 import scala.util.control.NonFatal
 import scala.util.{Success, Try}
 /**
@@ -66,7 +67,7 @@ object LocalMessageQueueMiddleware extends MessageQueueService {
   }
 
   //send a message
-  def send(contents: String, to: Queue): Try[Unit] = Try {
+  def send(contents: String, to: Queue): Future[Unit] = Future {
     val queue = blockingQueuePool.getOrElse(to.name, throw QueueDoesNotExistException(to))
     // creates a message
     val msgID: UUID = UUID.randomUUID()
@@ -74,7 +75,7 @@ object LocalMessageQueueMiddleware extends MessageQueueService {
     // schedule future cleanup when the message expires
     MessageScheduler.scheduleExpiredMessageCleanup(to, internalMessage, messageTimeToLiveInMillis)
     // waiting if necessary for space to become available
-    blocking(queue.putLast(internalMessage))
+    val send = queue.putLast(internalMessage)
     Log.debug(s"After send to ${to.name} - blockingQueue ${queue.size} $queue")
   }
 
@@ -85,35 +86,28 @@ object LocalMessageQueueMiddleware extends MessageQueueService {
     *
     * @return Some message before the timeout, or None
     */
-  def receive(from: Queue, timeout: Duration): Try[Option[Message]] = Try {
+  def receive(from: Queue, timeout: Duration): Future[Option[Message]] = Future {
     val deadline: Long = System.currentTimeMillis() + timeout.toMillis
     // poll the first message from the blocking deque
     val blockingQueue = blockingQueuePool.getOrElse(from.name, throw QueueDoesNotExistException(from))
     Log.debug(s"Before receive from ${from.name} - blockingQueue ${blockingQueue.size} ${blockingQueue.toString}")
-    val internalMessage: Option[InternalMessage] = blocking{
-      Option(blockingQueue.pollFirst(deadline - System.currentTimeMillis(), TimeUnit.MILLISECONDS))
-    }
-    //todo tuck all this delivery attempt logic into one set of {}s which finally returns simpleMessage
+    val internalMessageOpt: Option[InternalMessage] = Option(blockingQueue.pollFirst(deadline - System.currentTimeMillis(), TimeUnit.MILLISECONDS))
     val deliveryAttemptID = UUID.randomUUID()
-    val deliveryAttemptOpt: Option[DeliveryAttempt] = internalMessage.map { internalToBeSentMessage: InternalMessage =>
-      DeliveryAttempt(internalToBeSentMessage, internalToBeSentMessage.createdTime, from)
-    }
-    // add a deliveryAttempt in the DAmap with an unique UUID
-    deliveryAttemptOpt.fold(
-      // No message available from the queue
-      Log.debug(s"No message available from the queue ${from.name}") //todo after waiting how long?
-    ) { deliveryAttempt: DeliveryAttempt =>
-      MessageScheduler.scheduleMessageRedelivery(deliveryAttemptID, deliveryAttempt, messageRedeliveryDelay, messageMaxDeliveryAttempts)
-    }
-    val messageOpt: Option[Message] = internalMessage.map { internalToBeSentMessage: InternalMessage =>
-      val simpleMessage: SimpleMessage = SimpleMessage(deliveryAttemptID.toString, internalToBeSentMessage.contents)
-      simpleMessage
-    }
-    messageOpt
+      internalMessageOpt.fold({
+        // No message available from the queue
+        Log.debug(s"No message available from the queue ${from.name}") //todo after waiting how long?
+      })({ internalMessage: InternalMessage =>
+        val deliveryAttempt: DeliveryAttempt = DeliveryAttempt(internalMessage, internalMessage.createdTime, from)
+        MessageScheduler.scheduleMessageRedelivery(deliveryAttemptID, deliveryAttempt, messageRedeliveryDelay, messageMaxDeliveryAttempts)
+      })
+      internalMessageOpt.map { internalMessage: InternalMessage =>
+        SimpleMessage(deliveryAttemptID.toString, internalMessage.contents)
+      }
   }
 
   def completeMessage(deliveryAttemptID: UUID): Try[Unit] = Try {
     val deliveryAttemptAndFutureTaskOpt: Option[(DeliveryAttempt, Option[ScheduledFuture[_]])] = messageDeliveryAttemptMap.get(deliveryAttemptID)
+
     deliveryAttemptAndFutureTaskOpt.fold(
       // if message delivery attempt does not exist in the map, then it might be in the queue or expired
       throw MessageDoesNotExistAndCannotBeCompletedException(deliveryAttemptID)
@@ -137,7 +131,6 @@ object LocalMessageQueueMiddleware extends MessageQueueService {
       val blockingQueue = blockingQueuePool.getOrElse(queue.name, throw QueueDoesNotExistException(queue))
       blockingQueue.remove(internalToBeSentMessage)
       Log.debug(s"Message from ${deliveryAttemptAndFutureTask._1.fromQueue} is completed and its redelivery was canceled!")
-      Success(deliveryAttemptAndFutureTask._1)
     }
   }
 
@@ -148,7 +141,7 @@ object LocalMessageQueueMiddleware extends MessageQueueService {
       Serialization.write(this)(SimpleMessage.messageFormats)
     }
 
-    override def complete(): Try[Unit] = Try {
+    override def complete(): Future[Unit] = Future {
       val uuid: UUID = UUID.fromString(deliveryAttemptID)
       LocalMessageQueueMiddleware.completeMessage(uuid)
     }
@@ -244,7 +237,7 @@ object LocalMessageQueueMiddleware extends MessageQueueService {
     private val caughtExceptionsThreadFactory: CaughtExceptionsThreadFactory = new CaughtExceptionsThreadFactory
     private val scheduler = Executors.newSingleThreadScheduledExecutor(caughtExceptionsThreadFactory)
 
-    def scheduleMessageRedelivery(deliveryAttemptID: UUID, deliveryAttempt: DeliveryAttempt, messageRedeliveryDelay: Long, messageMaxDeliveryAttempts: Int) = {
+    def scheduleMessageRedelivery(deliveryAttemptID: UUID, deliveryAttempt: DeliveryAttempt, messageRedeliveryDelay: Long, messageMaxDeliveryAttempts: Int): Unit = {
       val messageRedeliveryRunner: MessageRedeliveryRunner = MessageRedeliveryRunner(deliveryAttemptID, deliveryAttempt, messageMaxDeliveryAttempts)
       try {
         val currentAttemptCount = deliveryAttempt.message.currentAttemptCount
@@ -263,7 +256,7 @@ object LocalMessageQueueMiddleware extends MessageQueueService {
       }
     }
 
-    def scheduleExpiredMessageCleanup(queue: Queue, messageToBeRemoved: InternalMessage, messageTimeToLiveInMillis: Long) = {
+    def scheduleExpiredMessageCleanup(queue: Queue, messageToBeRemoved: InternalMessage, messageTimeToLiveInMillis: Long): Unit = {
       val deadline = System.currentTimeMillis() + messageTimeToLiveInMillis
       val cleanDeliveryAttemptandInternalMessageRunner: CleanDeliveryAttemptandInternalMessageRunner = CleanDeliveryAttemptandInternalMessageRunner(queue, messageToBeRemoved, deadline - System.currentTimeMillis())
       try {

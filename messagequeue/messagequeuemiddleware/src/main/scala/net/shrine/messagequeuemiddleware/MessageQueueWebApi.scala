@@ -11,9 +11,11 @@ import org.json4s.NoTypeHints
 import org.json4s.native.Serialization
 import org.json4s.native.Serialization.write
 import spray.http.StatusCodes
-import spray.routing.{HttpService, Route}
+import spray.routing.{Directive, HttpService, Route}
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.collection.immutable.Seq
+import scala.concurrent.Future
 import scala.concurrent.duration.Duration
 import scala.util.control.NonFatal
 import scala.util.{Failure, Success, Try}
@@ -84,9 +86,7 @@ trait MessageQueueWebApi extends HttpService
       detach() {
         val deleteQueueTry: Try[Unit] = LocalMessageQueueMiddleware.deleteQueue(queueName)
         deleteQueueTry match {
-          case Success(v) => {
-            complete(StatusCodes.OK)
-          }
+          case Success(v) => complete(StatusCodes.OK)
           case Failure(x) => {
             x match {
               case q: QueueDoesNotExistException => {
@@ -114,26 +114,19 @@ trait MessageQueueWebApi extends HttpService
 
       debug(s"sendMessage to $toQueue '$messageContent'")
 
-      detach() {
-        val sendTry: Try[Unit] = LocalMessageQueueMiddleware.send(messageContent, Queue(toQueue))
-        sendTry match {
-          case Success(v) => {
-            complete(StatusCodes.Accepted)
-          }
-          case Failure(x) => {
-            x match {
-              case q: QueueDoesNotExistException => {
-                respondWithStatus(StatusCodes.UnprocessableEntity) {
-                  complete(s"${q.getMessage}")
-                }
-              }
-              case NonFatal(nf) => {
-                complete(s"Unable to send a Message to '$toQueue' due to exception $nf")
-              }
-              case _ => {
-                throw x
+      onComplete(LocalMessageQueueMiddleware.send(messageContent, Queue(toQueue))) {
+        case Success(v) => complete(StatusCodes.Accepted)
+        case Failure(x) => {
+          x match {
+            case q: QueueDoesNotExistException => {
+              respondWithStatus(StatusCodes.UnprocessableEntity) {
+                complete(s"${q.getMessage}")
               }
             }
+            case NonFatal(nf) => {
+              complete(s"Unable to send a Message to '$toQueue' due to exception $nf")
+            }
+            case _ => throw x
           }
         }
       }
@@ -146,32 +139,27 @@ trait MessageQueueWebApi extends HttpService
       path("receiveMessage" / Segment) { fromQueue =>
         parameter('timeOutSeconds ? 20) { timeOutSeconds =>
           val timeout: Duration = Duration.create(timeOutSeconds, "seconds")
-          detach() {
-            val receiveTry: Try[Option[Message]] = LocalMessageQueueMiddleware.receive(Queue(fromQueue), timeout)
-            receiveTry match {
-              case Success(optionMessage) => {
-                optionMessage.fold(
-                  respondWithStatus(StatusCodes.NoContent){
+          onComplete(LocalMessageQueueMiddleware.receive(Queue(fromQueue), timeout)) {
+            case Success(optionMessage) => {
+              optionMessage.fold(
+                respondWithStatus(StatusCodes.NoContent) {
                   complete(s"No current Message available in queue $fromQueue!")
-                }){ localMessage =>
-                  val simpleMessage: SimpleMessage = localMessage.asInstanceOf[SimpleMessage]
-                  complete(simpleMessage.toJson)
-                }
+                }) { localMessage =>
+                val simpleMessage: SimpleMessage = localMessage.asInstanceOf[SimpleMessage]
+                complete(simpleMessage.toJson)
               }
-              case Failure(x) => {
-                x match {
-                  case q: QueueDoesNotExistException => {
-                    respondWithStatus(StatusCodes.UnprocessableEntity) {
-                      complete(s"${q.getMessage}")
-                    }
-                  }
-                  case NonFatal(nf) => {
-                    complete(s"Unable to receive a Message from '$fromQueue' due to exception $nf")
-                  }
-                  case _ => {
-                    throw x
+            }
+            case Failure(x) => {
+              x match {
+                case q: QueueDoesNotExistException => {
+                  respondWithStatus(StatusCodes.UnprocessableEntity) {
+                    complete(s"${q.getMessage}")
                   }
                 }
+                case NonFatal(nf) => {
+                  complete(s"Unable to receive a Message from '$fromQueue' due to exception $nf")
+                }
+                case _ => throw x
               }
             }
           }
@@ -184,21 +172,16 @@ trait MessageQueueWebApi extends HttpService
     requestInstance { request =>
       val deliveryAttemptID = request.entity.asString
       val id: UUID = UUID.fromString(deliveryAttemptID)
-      detach() {
-        val completeTry: Try[Unit] = LocalMessageQueueMiddleware.completeMessage(id)
-        completeTry match {
-          case Success(s) => {
-            complete(StatusCodes.OK) // ResetContent causes connection timeout
-          }
-          case Failure(x) => {
-            x match {
-              case m: MessageDoesNotExistAndCannotBeCompletedException => {
-                respondWithStatus(StatusCodes.UnprocessableEntity) { // todo should completeMessage return a success if message is already gone
-                  complete(m.getMessage)
-                }
+      onComplete(LocalMessageQueueMiddleware.completeMessage(id)) {
+        case Success(s) => complete(StatusCodes.OK) // ResetContent causes connection timeout
+        case Failure(x) => {
+          x match {
+            case m: MessageDoesNotExistAndCannotBeCompletedException => {
+              respondWithStatus(StatusCodes.UnprocessableEntity) { // todo should completeMessage return a success if message is already gone
+                complete(m.getMessage)
               }
-              case _ => internalServerErrorOccured(x, "acknowledge")
             }
+            case _ => internalServerErrorOccured(x, "acknowledge")
           }
         }
       }
