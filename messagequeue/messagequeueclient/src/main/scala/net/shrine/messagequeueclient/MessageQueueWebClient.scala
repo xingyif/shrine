@@ -15,6 +15,7 @@ import org.json4s.native.Serialization.read
 import spray.http.{HttpEntity, HttpMethods, HttpRequest, HttpResponse, StatusCodes}
 
 import scala.collection.immutable.Seq
+import scala.concurrent.{Await, Future}
 import scala.concurrent.duration.Duration
 import scala.language.postfixOps
 import scala.util.control.NonFatal
@@ -176,7 +177,7 @@ object MessageQueueWebClient extends MessageQueueService with Loggable {
     })
   }
 
-  override def send(contents: String, to: Queue): Try[Unit] = {
+  override def send(contents: String, to: Queue): Future[Unit] = {
     val waitTimeBeforeResent = webClientConfig.get("waitTimeBeforeResent", Duration(_))
 
     def sendMessageOnce(): Try[Unit] = {
@@ -213,7 +214,7 @@ object MessageQueueWebClient extends MessageQueueService with Loggable {
     }
 
     def keepGoing(lastAttempt: Try[Unit]): Try[Boolean] = {
-      lastAttempt.transform({s =>
+      lastAttempt.transform({ s =>
         Success(false)
       }, {
         case okToRetry: CouldNotCompleteMomTaskButOKToRetryException => Success(true)
@@ -228,16 +229,16 @@ object MessageQueueWebClient extends MessageQueueService with Loggable {
       retrySendResult = sendMessageOnce()
     }
     info(s"Finishing send with result $retrySendResult")
-    retrySendResult
+    Future.fromTry(retrySendResult)
   }
 
-  override def receive(from: Queue, timeout: Duration): Try[Option[Message]] = {
+  override def receive(from: Queue, timeout: Duration): Future[Option[Message]] = {
     val seconds = timeout.toSeconds
     val receiveMessageUrl = s"$momUrl/receiveMessage/${from.name}?timeOutSeconds=$seconds"
     val request: HttpRequest = HttpRequest(HttpMethods.GET, receiveMessageUrl)
 
     //use the time to make the API call plus the timeout for the long poll
-      webApiTry(request, s"receive from ${from.name}", webClientTimeOut + timeout).transform({ response =>
+      val result: Try[Option[Message]] = webApiTry(request, s"receive from ${from.name}", webClientTimeOut + timeout).transform({ response =>
           messageOptionFromResponse(response, from)
       }, { throwable: Throwable =>
         throwable match {
@@ -250,6 +251,7 @@ object MessageQueueWebClient extends MessageQueueService with Loggable {
         }
         Failure(throwable)
       })
+    Future.fromTry(result)
   }
 
   def messageOptionFromResponse(response: HttpResponse, from: Queue): Try[Option[Message]] = Try {
@@ -280,14 +282,14 @@ object MessageQueueWebClient extends MessageQueueService with Loggable {
 
     override def contents: String = messageContent
 
-    override def complete(): Try[Unit] = {
+    override def complete(): Future[Unit] = {
       val completeMessageUrl: String = s"$momUrl/acknowledge"
       val request: HttpRequest = HttpRequest(
         method = HttpMethods.PUT,
         uri = completeMessageUrl,
         entity = HttpEntity(this.messageID)
       )
-      webApiTry(request,s"complete message $messageID").transform({r =>
+      val result: Try[Unit] = webApiTry(request,s"complete message $messageID").transform({r =>
         if (r.status == StatusCodes.OK) {
           info(s"Message ${this.messageID} completed with ${r.status}")
           Success(r)
@@ -311,6 +313,7 @@ object MessageQueueWebClient extends MessageQueueService with Loggable {
         info(s"Message ${this.messageID} failed in its complete process due to ${throwable.getMessage}")
         Failure(throwable)
       })
+      Future.fromTry(result)
     }
   }
 }
