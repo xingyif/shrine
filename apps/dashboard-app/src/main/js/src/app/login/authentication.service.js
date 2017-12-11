@@ -106,14 +106,9 @@
          * Remove the credentials of the current user.
          */
         function clearCredentials () {
-            if($app.globals.currentUser !== undefined) {
-                $app.globals.currentUser.isLoggedIn = false;
-            }
-
             $app.utils.deleteAppUser();
             $http.defaults.headers.common.Authorization = ' Basic ';
         }
-
 
         /**
          * Parse out authentication data.
