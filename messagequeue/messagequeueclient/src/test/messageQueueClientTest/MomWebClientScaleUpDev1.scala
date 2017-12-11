@@ -23,6 +23,8 @@ import scala.collection.immutable.Seq
 import scala.concurrent.duration.Duration
 import java.io.{BufferedOutputStream, FileOutputStream, PrintStream}
 
+import scala.concurrent.Await
+
 val timestamp: Long = System.currentTimeMillis / 1000
 val printStream: PrintStream = new PrintStream(new BufferedOutputStream(new FileOutputStream(s"ScaleUpTestOnDev1_$timestamp.txt")))
 System.setOut(printStream)
@@ -44,8 +46,8 @@ ConfigSource.atomicConfig.configForBlock(configMap, "MessageQueueClientDev1") {
     val queue: Queue = MessageQueueWebClient.createQueueIfAbsent(queueName).get
     System.out.println(s"Created queue $queueName on QEP $i")
     for (i <- 1 to numberOfMessages) {
-      val sendTry = MessageQueueWebClient.send(s"Message$i sent to $queueName", queue)
-      System.out.println(s"Sending messages to dev1, attempt: $i, $sendTry")
+      val sendFuture = MessageQueueWebClient.send(s"Message$i sent to $queueName", queue)
+      System.out.println(s"Sending messages to dev1, attempt: $i, $sendFuture")
     }
   }
 
@@ -61,10 +63,10 @@ ConfigSource.atomicConfig.configForBlock(configMap, "MessageQueueClientDev1") {
     new Runnable {
       override def run(): Unit = {
         while (true) {
-          val receivedOpt: Option[Message] = MessageQueueWebClient.receive(queue, firstDuration).get
+          val receivedOpt: Option[Message] = Await.result(MessageQueueWebClient.receive(queue, firstDuration), firstDuration)
           Thread.currentThread().setName(s"QEPQueue${queue.name}")
           System.out.println(s"Receiving messages from the HUB, $receivedOpt, thread: ${Thread.currentThread().getName}, id: ${Thread.currentThread().getId}")
-          receivedOpt.map(msg => {
+          receivedOpt.foreach(msg => {
             val completeTry = msg.complete()
             System.out.println(s"Completed Message $msg, status: $completeTry")
           })

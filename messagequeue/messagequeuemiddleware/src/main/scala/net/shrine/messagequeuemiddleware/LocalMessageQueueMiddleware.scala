@@ -1,8 +1,8 @@
 package net.shrine.messagequeuemiddleware
 
 import java.util
-import java.util.{Objects, UUID}
 import java.util.concurrent.{BlockingDeque, Executors, LinkedBlockingDeque, ScheduledFuture, TimeUnit, TimeoutException}
+import java.util.{Objects, UUID}
 
 import net.shrine.config.ConfigExtensions
 import net.shrine.log.Log
@@ -11,14 +11,14 @@ import net.shrine.problem.{AbstractProblem, ProblemSources}
 import net.shrine.source.ConfigSource
 import org.json4s.ShortTypeHints
 import org.json4s.native.Serialization
-import scala.concurrent.ExecutionContext.Implicits.global
+
 import scala.collection.concurrent.{TrieMap, Map => ConcurrentMap}
 import scala.collection.immutable.Seq
-import scala.concurrent.{ExecutionException, Future, blocking}
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
-import scala.runtime.NonLocalReturnControl
+import scala.concurrent.{Future, blocking}
+import scala.util.Try
 import scala.util.control.NonFatal
-import scala.util.{Success, Try}
 /**
   * This object is the local version of the Message-Oriented Middleware API, which uses MessageQueue service
   *
