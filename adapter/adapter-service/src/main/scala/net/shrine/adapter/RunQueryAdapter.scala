@@ -85,6 +85,7 @@ final case class RunQueryAdapter(
     } else {
       debug(s"Performing query from user ${message.networkAuthn.domain}:${message.networkAuthn.username} (delayResponse $delayResponse)")
 
+      //todo needs blocking
       if(delayResponse.toMillis > 0) Thread.sleep(delayResponse.toMillis)
 
       val result: ShrineResponse = runQuery(authnToUse, message.copy(request = runQueryReq.withAuthn(authnToUse)), runQueryReq.withAuthn(authnToUse))
