@@ -64,7 +64,8 @@ class LocalMessageQueueMiddlewareTest extends FlatSpec with BeforeAndAfterAll wi
       val sameMessage3: Option[Message] = LocalMessageQueueMiddleware.receive(queue, 1 second).get
       assert(sameMessage3.isEmpty)
 
-      val completeTry: Try[Unit] = message.get.complete()
+      // call complete on the last Message
+      val completeTry: Try[Unit] = sameMessage2.get.complete()
       assert(completeTry.isSuccess)
       // receive after message is completed, should be no message
       val shouldBeNoMessage: Option[Message] = LocalMessageQueueMiddleware.receive(queue, 1 second).get
