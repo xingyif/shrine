@@ -75,7 +75,7 @@ object LocalMessageQueueMiddleware extends MessageQueueService {
     // schedule future cleanup when the message expires
     MessageScheduler.scheduleExpiredMessageCleanup(to, internalMessage, messageTimeToLiveInMillis)
     // waiting if necessary for space to become available
-    val send = queue.putLast(internalMessage)
+    blocking(queue.putLast(internalMessage))
     Log.debug(s"After send to ${to.name} - blockingQueue ${queue.size} $queue")
   }
 
@@ -91,7 +91,7 @@ object LocalMessageQueueMiddleware extends MessageQueueService {
     // poll the first message from the blocking deque
     val blockingQueue = blockingQueuePool.getOrElse(from.name, throw QueueDoesNotExistException(from))
     Log.debug(s"Before receive from ${from.name} - blockingQueue ${blockingQueue.size} ${blockingQueue.toString}")
-    val internalMessageOpt: Option[InternalMessage] = Option(blockingQueue.pollFirst(deadline - System.currentTimeMillis(), TimeUnit.MILLISECONDS))
+    val internalMessageOpt: Option[InternalMessage] = blocking(Option(blockingQueue.pollFirst(deadline - System.currentTimeMillis(), TimeUnit.MILLISECONDS)))
     val deliveryAttemptID = UUID.randomUUID()
       internalMessageOpt.fold({
         // No message available from the queue
