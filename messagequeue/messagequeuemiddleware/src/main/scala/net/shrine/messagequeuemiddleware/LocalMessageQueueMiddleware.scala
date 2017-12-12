@@ -105,7 +105,7 @@ object LocalMessageQueueMiddleware extends MessageQueueService {
       }
   }
 
-  def completeMessage(deliveryAttemptID: UUID): Try[Unit] = Try {
+  def completeMessage(deliveryAttemptID: UUID): Future[Unit] = Future {
     val deliveryAttemptAndFutureTaskOpt: Option[(DeliveryAttempt, Option[ScheduledFuture[_]])] = messageDeliveryAttemptMap.get(deliveryAttemptID)
 
     deliveryAttemptAndFutureTaskOpt.fold(
