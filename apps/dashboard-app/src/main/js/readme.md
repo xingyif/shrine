@@ -1,6 +1,6 @@
 ### Getting Up and Running From Scratch
 
-From command line run: __npm run run-start__
+From command line run: __npm run build-start__
 
 This will install all dependencies and boot up a mocked local instance of the app.
 
