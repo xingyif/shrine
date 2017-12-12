@@ -1,4 +1,18 @@
 <div>
+    <div ng-hide="vm.summary">
+        <div ng-hide="vm.loading" style="display:flex;justify-content: center;flex-direction:column">
+            <div ng-show="vm.summaryError">
+                <h4 class="error">Summary Error: {{vm.summaryError.statusText}}</h4>
+                <span>Error message:</span>
+                <pre>{{vm.summaryError.data}}</pre>
+            </div>
+            <div ng-show="vm.i2b2Error">
+                <h4 class="error">i2b2 Error: {{vm.i2b2Error.statusText}}</h4>
+                <span>Error Message:</span>
+                <span>{{vm.i2b2Error.data}}</span>
+            </div>
+        </div>
+    </div>
     <div>
         <table class="table table-striped" ng-show="vm.summary">
             <thead>
@@ -31,7 +45,17 @@
 
         </table>
 
-        <table class="table table-striped" ng-show="vm.summary">
+        <div ng-hide="vm.networkHealth">
+            <div ng-hide="vm.loading" style="display:flex;justify-content: center;flex-direction:column">
+                <div ng-show="vm.networkHealthError">
+                    <h4 class="error">System Health Error: {{vm.networkHealthError.statusText}}</h4>
+                    <span>Error message:</span>
+                    <pre>{{vm.networkHealthError.data}}</pre>
+                </div>
+            </div>
+        </div>
+
+        <table class="table table-striped" ng-show="vm.networkHealth">
             <thead>
             <tr>
                 <td colspan="2">
@@ -52,11 +76,11 @@
                 <td>
                     <label>Keystore:</label>
                 </td>
-                <td ng-if="vm.summary.keystoreOk !== true" class="error">
+                <td ng-if="vm.networkHealth.keystoreOk !== true" class="error">
                     Error: <a ui-sref="diagnostic.keystore">click
                     here for more details.</a>
                 </td>
-                <td ng-if="vm.summary.keystoreOk === true" class="ok">
+                <td ng-if="vm.networkHealth.keystoreOk === true" class="ok">
                     OK
                 </td>
             </tr>
@@ -64,23 +88,23 @@
                 <td>
                     <label>QEP:</label>
                 </td>
-                <td ng-if="vm.summary.qepOk !== true" class="error">
+                <td ng-if="vm.networkHealth.qepOk !== true" class="error">
                     Error: <a ui-sref="diagnostic.qep">click
                     here for more details.</a>
                 </td>
-                <td ng-if="vm.summary.qepOk === true" class="ok">
+                <td ng-if="vm.networkHealth.qepOk === true" class="ok">
                     OK
                 </td>
             </tr>
-            <tr ng-if="vm.summary.isHub">
+            <tr ng-if="vm.networkHealth.isHub">
                 <td>
                     <label>Hub:</label>
                 </td>
-                <td ng-if="vm.summary.hubOk !== true" class="error">
+                <td ng-if="vm.networkHealth.hubOk !== true" class="error">
                     Error: <a ui-sref="diagnostic.hub">click
                     here for more details.</a>
                 </td>
-                <td ng-if="vm.summary.hubOk === true" class="ok">
+                <td ng-if="vm.networkHealth.hubOk === true" class="ok">
                     OK
                 </td>
             </tr>
@@ -88,11 +112,11 @@
                 <td>
                     <label>Adapter:</label>
                 </td>
-                <td ng-if="vm.summary.adapterOk !== true" class="error">
+                <td ng-if="vm.networkHealth.adapterOk !== true" class="error">
                     Error: <a ui-sref="diagnostic.adapter">click
                     here for more details.</a>
                 </td>
-                <td ng-if="vm.summary.adapterOk === true" class="ok">
+                <td ng-if="vm.networkHealth.adapterOk === true" class="ok">
                     OK
                 </td>
             </tr>
@@ -117,19 +141,5 @@
             </tr>
             </tbody>
         </table>
-    </div>
-    <div ng-hide="vm.summary">
-        <div ng-hide="vm.loading" style="display:flex;justify-content: center;flex-direction:column">
-            <div ng-show="vm.summaryError">
-                <h4 class="error">Summary Error: {{vm.summaryError.statusText}}</h4>
-                <span>Error message:</span>
-                <pre>{{vm.summaryError.data}}</pre>
-            </div>
-            <div ng-show="vm.i2b2Error">
-                <h4 class="error">i2b2 Error: {{vm.i2b2Error.statusText}}</h4>
-                <span>Error Message:</span>
-                <span>{{vm.i2b2Error.data}}</span>
-            </div>
-        </div>
     </div>
 </div>

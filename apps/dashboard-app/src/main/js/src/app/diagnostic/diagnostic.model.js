@@ -28,7 +28,8 @@
             OptionsEndpoint:  'admin/status/optionalParts',
             ProblemEndpoint:  'admin/status/problems',
             QepEndpoint:      'admin/status/qep',
-            SummaryEndpoint:  'admin/status/summary'
+            SummaryEndpoint:  'admin/status/summary',
+            NetworkHealthEndpoint:  'admin/status/networkHealth'
         };
 
 
@@ -43,6 +44,7 @@
             getProblems:       getProblemsMaker(),
             getQep:            getJsonMaker(Config.QepEndpoint, 'qep'),
             getSummary:        getJsonMaker(Config.SummaryEndpoint, 'summary'),
+            getNetworkHealth:  getJsonMaker(Config.NetworkHealthEndpoint, 'networkHealth'),
             safeLogout:        safeLogout,
             clearCache:        clearCache,
             map:               map,

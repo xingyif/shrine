@@ -15,7 +15,8 @@
     SidebarService.$inject = ['SidebarModel']
     function SidebarService (m) {
         return {
-            getSummary: getSummary
+            getSummary: getSummary,
+            getNetworkHealth: getNetworkHealth
         }
 
         /**
@@ -24,6 +25,17 @@
          */
         function getSummary() {
            return m.getSummary()
+                .then(function (data) {
+                    return data
+                });
+        }
+
+        /**
+        *
+        * @returns {*}
+        */
+        function getNetworkHealth() {
+            return m.getNetworkHealth()
                 .then(function (data) {
                     return data
                 });

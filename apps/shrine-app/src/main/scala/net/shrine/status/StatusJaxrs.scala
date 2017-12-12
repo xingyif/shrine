@@ -74,6 +74,13 @@ case class StatusJaxrs(shrineConfig: TsConfig) extends Loggable {
   }
 
   @GET
+  @Path("networkHealth")
+  def networkHealth: String = {
+    val networkHealth = NetworkHealth()
+    Serialization.write(networkHealth)
+  }
+
+  @GET
   @Path("i2b2")
   def i2b2: String = {
     val i2b2 = I2b2()
@@ -335,22 +342,55 @@ object OptionalParts {
 }
 
 case class Summary(
-                    isHub: Boolean,
                     shrineVersion: String,
                     shrineBuildDate: String,
                     ontologyVersion: String,
                     ontologyVersionTerm: String,
                     ontologyTerm: String,
-                    queryResult: Option[SingleNodeResult],
                     adapterMappingsFileName: Option[String],
-                    adapterMappingsDate: Option[Long],
-                    adapterOk: Boolean,
-                    keystoreOk: Boolean,
-                    hubOk: Boolean,
-                    qepOk: Boolean
+                    adapterMappingsDate: Option[Long]
                   )
 
 object Summary {
+
+  val term = Term(ShrineOrchestrator.shrineConfig.getString("networkStatusQuery"))
+
+  def apply(): Summary = {
+    //Thread.sleep(45000)
+    val adapterMappingInfo = Adapter.mappingFileInfo
+
+    val ontologyVersion = try {
+      ShrineOrchestrator.ontologyMetadata.ontologyVersion
+    }
+    catch {
+      case NonFatal(x) =>
+        Log.info("Problem while getting ontology version", x)
+        s"Unavailable due to: ${x.getMessage}"
+      // TODO: Investigate whether a Fatal exception is being thrown
+    }
+
+    Summary(
+      shrineVersion = Versions.version,
+      shrineBuildDate = Versions.buildDate,
+      //todo in scala 2.12, do better
+      ontologyVersion = ontologyVersion,
+      ontologyVersionTerm = OntClientOntologyMetadata.versionContainerTerm,
+      ontologyTerm = term.value,
+      adapterMappingsFileName = adapterMappingInfo.map(_._1),
+      adapterMappingsDate = adapterMappingInfo.map(_._2)
+    )
+  }
+}
+
+
+case class NetworkHealth (isHub: Boolean,
+                          queryResult: Option[SingleNodeResult],
+                          adapterOk: Boolean,
+                          keystoreOk: Boolean,
+                          hubOk: Boolean,
+                          qepOk: Boolean)
+
+object NetworkHealth {
 
   val term = Term(ShrineOrchestrator.shrineConfig.getString("networkStatusQuery"))
 
@@ -371,12 +411,10 @@ object Summary {
       Set(ResultOutputType.PATIENT_COUNT_XML),
       queryDefinition)
 
-
     ShrineOrchestrator.signerVerifier.sign(BroadcastMessage(req.networkQueryId, networkAuthn, req), SigningCertStrategy.Attach)
   }
 
-  def apply(): Summary = {
-
+  def apply(): NetworkHealth = {
     val message = runQueryRequest
 
     val queryResult: Option[SingleNodeResult] = ShrineOrchestrator.adapterService.map { adapterService =>
@@ -400,9 +438,9 @@ object Summary {
     }
 
     val hubOk = ShrineOrchestrator.hubComponents.fold(true) { hubComponents =>
+      Thread.sleep(45000)
       val maxQueryWaitTime = hubComponents.broadcasterMultiplexerService.maxQueryWaitTime
       val broadcaster: Broadcaster = hubComponents.broadcasterMultiplexerService.broadcaster
-      val message = runQueryRequest
       val triedMultiplexer = Try(broadcaster.broadcast(message))
       //todo just use fold()() in scala 2.12
       triedMultiplexer.toOption.fold(false) { multiplexer =>
@@ -427,17 +465,10 @@ object Summary {
       // TODO: Investigate whether a Fatal exception is being thrown
     }
 
-    Summary(
+    NetworkHealth(
       isHub = ShrineOrchestrator.hubComponents.isDefined,
-      shrineVersion = Versions.version,
-      shrineBuildDate = Versions.buildDate,
       //todo in scala 2.12, do better
-      ontologyVersion = ontologyVersion,
-      ontologyVersionTerm = OntClientOntologyMetadata.versionContainerTerm,
-      ontologyTerm = term.value,
       queryResult = queryResult,
-      adapterMappingsFileName = adapterMappingInfo.map(_._1),
-      adapterMappingsDate = adapterMappingInfo.map(_._2),
       adapterOk = adapterOk,
       keystoreOk = true, //todo something for this
       hubOk = hubOk,

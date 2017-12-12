@@ -4,7 +4,7 @@ import com.typesafe.config.ConfigFactory
 import net.shrine.util.{ShouldMatchersForJUnit, SingleHubModel}
 import org.json4s.native.Serialization
 import org.json4s.{DefaultFormats, Formats}
-import org.junit.Test
+import org.junit.{Ignore, Test}
 
 import scala.collection.immutable.Map
 
@@ -47,14 +47,21 @@ class StatusJaxrsTest extends ShouldMatchersForJUnit {
     val summaryString = statusJaxrs.summary
     val summary = Serialization.read[Summary](summaryString)
 
-    summary.isHub should be (true)
     summary.adapterMappingsFileName.isDefined should be (true)
     summary.adapterMappingsDate.isEmpty should be (false)
-    summary.adapterOk should be (true)
-    summary.keystoreOk should be (true)
-    summary.hubOk should be (false)
-    summary.qepOk should be (true)
+  }
 
+  //@Test
+  def testNetworkHealth() = {
+
+    val networkHealthString = statusJaxrs.networkHealth
+    val networkHealth = Serialization.read[NetworkHealth](networkHealthString)
+
+    networkHealth.isHub should be (true)
+    networkHealth.adapterOk should be (true)
+    networkHealth.keystoreOk should be (true)
+    networkHealth.hubOk should be (false)
+    networkHealth.qepOk should be (true)
   }
 
   @Test
