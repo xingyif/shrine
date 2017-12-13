@@ -1,3 +1,8 @@
+### Installing the latest version of Node and NPM
+npm cache clean -f
+npm install -g n
+n stable
+
 ### Getting Up and Running From Scratch
 
 From command line run: __npm run build-start__
