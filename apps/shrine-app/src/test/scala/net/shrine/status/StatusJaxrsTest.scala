@@ -83,7 +83,7 @@ class StatusJaxrsTest extends ShouldMatchersForJUnit {
     actual.isHub should be (true)
     actual.stewardEnabled should be (true)
     actual.shouldQuerySelf should be (false)
-    actual.downstreamNodes.size should be (4)
+    actual.downstreamNodes.size should be (3)
   }
 
   @Test
@@ -95,7 +95,7 @@ class StatusJaxrsTest extends ShouldMatchersForJUnit {
 
     actual.create should be (true)
     actual.shouldQuerySelf should be (false)
-    actual.downstreamNodes.size should be (4)
+    actual.downstreamNodes.size should be (3)
   }
 
   @Test

@@ -11,6 +11,8 @@ import net.shrine.adapter.service.AdapterRequestHandler
  * @author clint
  * @date Jan 7, 2014
  */
+
+//todo I think this is only used in shouldQuerySelf, not in the mocks!
 final case class InJvmAdapterClient(adapterService: AdapterRequestHandler) extends AdapterClient {
   override def query(message: BroadcastMessage): Future[Result] = {
     //TODO: REVISIT THIS!

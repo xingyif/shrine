@@ -38,7 +38,7 @@ object LocalMessageQueueMiddleware extends MessageQueueService {
   private def messageMaxDeliveryAttempts: Int = config.getInt("messageMaxDeliveryAttempts")
 
   // keep a map of messages and ids
-  private val messageDeliveryAttemptMap: TrieMap[UUID, (DeliveryAttempt, ScheduledFuture[_])] = TrieMap.empty
+  private val messageDeliveryAttemptMap: TrieMap[UUID, (DeliveryAttempt, Option[ScheduledFuture[_]])] = TrieMap.empty
 
   /**
     * Use LocalMessageQueueStopper to stop the MessageQueueMiddleware without unintentionally starting it
@@ -113,17 +113,17 @@ object LocalMessageQueueMiddleware extends MessageQueueService {
   }
 
   def completeMessage(deliveryAttemptID: UUID): Try[Unit] = Try {
-    val deliveryAttemptAndFutureTaskOpt: Option[(DeliveryAttempt, ScheduledFuture[_])] = messageDeliveryAttemptMap.get(deliveryAttemptID)
+    val deliveryAttemptAndFutureTaskOpt: Option[(DeliveryAttempt, Option[ScheduledFuture[_]])] = messageDeliveryAttemptMap.get(deliveryAttemptID)
     deliveryAttemptAndFutureTaskOpt.fold(
       // if message delivery attempt does not exist in the map, then it might be in the queue or expired
       throw MessageDoesNotExistAndCannotBeCompletedException(deliveryAttemptID)
     )
-    { (deliveryAttemptAndFutureTask: (DeliveryAttempt, ScheduledFuture[_])) =>
+    { (deliveryAttemptAndFutureTask: (DeliveryAttempt, Option[ScheduledFuture[_]])) =>
       val deliveryAttempt: DeliveryAttempt = deliveryAttemptAndFutureTask._1
       val internalToBeSentMessage: InternalMessage = deliveryAttempt.message
       val queue: Queue = internalToBeSentMessage.toQueue
       // removes all deliveryAttempts of the message from the map and cancels all the scheduled redelivers
-      for ((uuid: UUID, eachDAandTask: (DeliveryAttempt, ScheduledFuture[_])) <- messageDeliveryAttemptMap) {
+      for ((uuid: UUID, eachDAandTask: (DeliveryAttempt, Option[ScheduledFuture[_]])) <- messageDeliveryAttemptMap) {
         // internalMessage changes when it is redelivered, but id remains the same
         if (eachDAandTask._1.message.id == internalToBeSentMessage.id) {
           messageDeliveryAttemptMap.remove(uuid)
@@ -170,7 +170,7 @@ object LocalMessageQueueMiddleware extends MessageQueueService {
       try {
         messageDeliveryAttemptMap.get(deliveryAttemptID).fold(
                   Log.debug(s"Could not find deliveryAttempt for message ${deliveryAttempt.message.contents} from queue ${deliveryAttempt.fromQueue}")
-        ) { (deliveryAttemptAndFutureTask: (DeliveryAttempt, ScheduledFuture[_]))  =>
+        ) { (deliveryAttemptAndFutureTask: (DeliveryAttempt, Option[ScheduledFuture[_]]))  =>
           // get the queue that the message was from, and push message back to the head of the deque
           val blockingQueue = blockingQueuePool.getOrElse(deliveryAttemptAndFutureTask._1.fromQueue.name,
             throw QueueDoesNotExistException(deliveryAttemptAndFutureTask._1.fromQueue))
@@ -193,7 +193,7 @@ object LocalMessageQueueMiddleware extends MessageQueueService {
       try {
         Log.debug(s"About to clean up outstanding messages. DAMap size: ${messageDeliveryAttemptMap.size}")
         // cleans up deliveryAttempt map
-        for ((uuid: UUID, deliveryAttemptAndFutureTask: (DeliveryAttempt, ScheduledFuture[_])) <- messageDeliveryAttemptMap){
+        for ((uuid: UUID, deliveryAttemptAndFutureTask: (DeliveryAttempt, Option[ScheduledFuture[_]])) <- messageDeliveryAttemptMap){
           if ((currentTime - deliveryAttemptAndFutureTask._1.message.createdTime) >= messageTimeToLiveInMillis) {
             messageDeliveryAttemptMap.remove(uuid, deliveryAttemptAndFutureTask)
             // cancels its future message redelivery task
@@ -251,9 +251,12 @@ object LocalMessageQueueMiddleware extends MessageQueueService {
         if (currentAttemptCount < messageMaxDeliveryAttempts) {
           Log.debug(s"Scheduling message redelivery attempt $currentAttemptCount, redeliver message in $messageRedeliveryDelay milliseconds.")
           val futureTask: ScheduledFuture[_] = scheduler.schedule(messageRedeliveryRunner, messageRedeliveryDelay, TimeUnit.MILLISECONDS)
-          messageDeliveryAttemptMap.update(deliveryAttemptID, (deliveryAttempt, futureTask))
+          // update the DAMap with new DAID, DA, and scheduled future redelivery task
+          messageDeliveryAttemptMap.update(deliveryAttemptID, (deliveryAttempt, Some(futureTask)))
         } else {
           Log.debug(s"Not scheduling message redelivery because currentAttemptCount $currentAttemptCount reached max attempt number $messageMaxDeliveryAttempts.")
+          // update the DAMap with new DAID, DA, and None (no scheduled future redelivery task)
+          messageDeliveryAttemptMap.update(deliveryAttemptID, (deliveryAttempt, None))
         }
       } catch {
         case NonFatal(x) => SchedulingMessageRedeliverySentinelProblem(messageRedeliveryDelay, x)
@@ -272,9 +275,9 @@ object LocalMessageQueueMiddleware extends MessageQueueService {
       }
     }
 
-    def cancelScheduledMessageRedelivery(futureTask: ScheduledFuture[_]): Unit = {
+    def cancelScheduledMessageRedelivery(futureTask: Option[ScheduledFuture[_]]): Unit = {
       // returns false if the task could not be cancelled, typically because it has already completed normally;
-      futureTask.cancel(true)
+      futureTask.fold(Log.info("No scheduled future task to cancel"))(f => f.cancel(true))
     }
 
     def shutDown(): util.List[Runnable] = {

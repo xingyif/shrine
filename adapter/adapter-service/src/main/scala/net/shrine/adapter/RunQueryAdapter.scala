@@ -16,6 +16,7 @@ import scala.util.control.NonFatal
 import net.shrine.util.XmlDateHelper
 
 import scala.concurrent.duration.Duration
+import scala.concurrent.blocking
 import scala.xml.XML
 
 /**
@@ -85,7 +86,7 @@ final case class RunQueryAdapter(
     } else {
       debug(s"Performing query from user ${message.networkAuthn.domain}:${message.networkAuthn.username} (delayResponse $delayResponse)")
 
-      if(delayResponse.toMillis > 0) Thread.sleep(delayResponse.toMillis)
+      if(delayResponse.toMillis > 0) blocking{ Thread.sleep(delayResponse.toMillis) }
 
       val result: ShrineResponse = runQuery(authnToUse, message.copy(request = runQueryReq.withAuthn(authnToUse)), runQueryReq.withAuthn(authnToUse))
       if (collectAdapterAudit) AdapterAuditDb.db.insertResultSent(runQueryReq.networkQueryId,result)

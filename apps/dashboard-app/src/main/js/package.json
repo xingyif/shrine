@@ -24,7 +24,13 @@
     "phantomjs": "^1.9.17"
   },
   "scripts": {
-    "test": "grunt:karma"
+    "test": "grunt:karma",
+    "start-mock": "cd server && npm start",
+    "build-start": "npm run install-all && npm run start",
+    "start": "grunt && node | gulp serve | npm run start-mock",
+    "install-server": "cd server && npm install",
+    "install-client": "npm install && bower install",
+    "install-all": "npm run install-client | npm run install-server"
   },
   "keywords": [
     "hms",
