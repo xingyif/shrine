@@ -356,7 +356,6 @@ object Summary {
   val term = Term(ShrineOrchestrator.shrineConfig.getString("networkStatusQuery"))
 
   def apply(): Summary = {
-    //Thread.sleep(45000)
     val adapterMappingInfo = Adapter.mappingFileInfo
 
     val ontologyVersion = try {
@@ -438,7 +437,6 @@ object NetworkHealth {
     }
 
     val hubOk = ShrineOrchestrator.hubComponents.fold(true) { hubComponents =>
-      Thread.sleep(45000)
       val maxQueryWaitTime = hubComponents.broadcasterMultiplexerService.maxQueryWaitTime
       val broadcaster: Broadcaster = hubComponents.broadcasterMultiplexerService.broadcaster
       val triedMultiplexer = Try(broadcaster.broadcast(message))
