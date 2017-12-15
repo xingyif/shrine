@@ -15,7 +15,7 @@ import org.json4s.native.Serialization.read
 import spray.http.{HttpEntity, HttpMethods, HttpRequest, HttpResponse, StatusCodes}
 
 import scala.collection.immutable.Seq
-import scala.concurrent.{Await, Future}
+import scala.concurrent.Future
 import scala.concurrent.duration.Duration
 import scala.language.postfixOps
 import scala.util.control.NonFatal
