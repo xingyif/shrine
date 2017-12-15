@@ -24,7 +24,7 @@ import scala.util.Try
 @RunWith(classOf[JUnitRunner])
 class LocalMessageQueueMiddlewareTest extends FlatSpec with BeforeAndAfterAll with ScalaFutures with Matchers {
 
-  val waitForFutureToComplete = Duration("1 second")
+  val waitForFutureToComplete = Duration("1 minute")
   implicit val defaultPatience = PatienceConfig(timeout = Span(5, Seconds), interval = Span(500, Millis))
 
   "BlockingQueue" should "be able to send and receive just one message" in {
@@ -195,7 +195,7 @@ class LocalMessageQueueMiddlewareTest extends FlatSpec with BeforeAndAfterAll wi
   "BlockingQueue" should "return a failure if receiving a message to a non-existing queue" in {
 
     val queueName = "ReceiveFromNonExistingQueue"
-    an [QueueDoesNotExistException] should be thrownBy Await.result(LocalMessageQueueMiddleware.receive(Queue(queueName), Duration(1, "second")), waitForFutureToComplete)
+    a [QueueDoesNotExistException] should be thrownBy Await.result(LocalMessageQueueMiddleware.receive(Queue(queueName), Duration(1, "second")), waitForFutureToComplete)
 
     assert(LocalMessageQueueMiddleware.queues.get.isEmpty)
   }
