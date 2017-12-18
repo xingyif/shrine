@@ -15,7 +15,7 @@
         vm.adapterError = false;
         vm.i2b2Error = false;
         vm.summaryError = false;
-        vm.networkHealthError = false;
+        vm.queryAdapterTestError = false;
         vm.adapter = {};
         init();
 
@@ -28,8 +28,8 @@
             $app.model.getSummary()
                 .then(setSummary, handleSummaryError);
 
-            $app.model.getNetworkHealth()
-                .then(setNetworkHealth, handleNetworkHealthError);
+            $app.model.getQueryAdapterTest()
+                .then(setQueryAdapterTest, handleQueryAdapterTestError);
         }
 
         function handleAdapterError(failure) {
@@ -48,21 +48,21 @@
             vm.adapter.term = summary.ontologyTerm; //config.networkStatusQuery,
         }
 
-        function handleNetworkHealthError(failure) {
-            vm.networkHealthError = failure;
+        function handleQueryAdapterTestError(failure) {
+            vm.queryAdapterTestError = failure;
         }
 
-        function setNetworkHealth (networkHealth) {
-            vm.adapter.success = networkHealth.queryResult.response.problemDigest === undefined;
+        function setQueryAdapterTest (queryAdapterTest) {
+            vm.adapter.success = queryAdapterTest.queryResult.response.problemDigest === undefined;
 
-            if (networkHealth.queryResult.response.problemDigest !== undefined) {
-                vm.adapter.errorData = networkHealth.queryResult.response.problemDigest;
+            if (queryAdapterTest.queryResult.response.problemDigest !== undefined) {
+                vm.adapter.errorData = queryAdapterTest.queryResult.response.problemDigest;
             }
             else {
                 //TODO FIGURE OUT THE CORRECT FIELDS FOR SUCCESSFUL QUERY RESULT
-                vm.adapter.description =  networkHealth.queryResult.response.singleNodeResult.setSize;
+                vm.adapter.description =  queryAdapterTest.queryResult.response.singleNodeResult.setSize;
                 vm.adapter.description += ' ';
-                vm.adapter.description += networkHealth.queryResult.response.singleNodeResult.resultType
+                vm.adapter.description += queryAdapterTest.queryResult.response.singleNodeResult.resultType
                                             .i2b2Options.description;
             }
         }

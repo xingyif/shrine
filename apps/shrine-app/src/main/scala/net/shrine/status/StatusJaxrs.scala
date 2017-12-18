@@ -74,10 +74,10 @@ case class StatusJaxrs(shrineConfig: TsConfig) extends Loggable {
   }
 
   @GET
-  @Path("networkHealth")
-  def networkHealth: String = {
-    val networkHealth = NetworkHealth()
-    Serialization.write(networkHealth)
+  @Path("queryAdapterTest")
+  def queryAdapterTest : String = {
+    val queryAdapterTest = QueryAdapterTest ()
+    Serialization.write(queryAdapterTest)
   }
 
   @GET
@@ -382,14 +382,14 @@ object Summary {
 }
 
 
-case class NetworkHealth (isHub: Boolean,
+case class QueryAdapterTest (isHub: Boolean,
                           queryResult: Option[SingleNodeResult],
                           adapterOk: Boolean,
                           keystoreOk: Boolean,
                           hubOk: Boolean,
                           qepOk: Boolean)
 
-object NetworkHealth {
+object QueryAdapterTest {
 
   val term = Term(ShrineOrchestrator.shrineConfig.getString("networkStatusQuery"))
 
@@ -413,7 +413,7 @@ object NetworkHealth {
     ShrineOrchestrator.signerVerifier.sign(BroadcastMessage(req.networkQueryId, networkAuthn, req), SigningCertStrategy.Attach)
   }
 
-  def apply(): NetworkHealth = {
+  def apply(): QueryAdapterTest = {
     val message = runQueryRequest
 
     val queryResult: Option[SingleNodeResult] = ShrineOrchestrator.adapterService.map { adapterService =>
@@ -463,7 +463,7 @@ object NetworkHealth {
       // TODO: Investigate whether a Fatal exception is being thrown
     }
 
-    NetworkHealth(
+    QueryAdapterTest(
       isHub = ShrineOrchestrator.hubComponents.isDefined,
       //todo in scala 2.12, do better
       queryResult = queryResult,

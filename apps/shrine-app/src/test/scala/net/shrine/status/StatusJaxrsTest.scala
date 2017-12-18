@@ -52,16 +52,16 @@ class StatusJaxrsTest extends ShouldMatchersForJUnit {
   }
 
   //@Test
-  def testNetworkHealth() = {
+  def testQueryAdapterTest() = {
 
-    val networkHealthString = statusJaxrs.networkHealth
-    val networkHealth = Serialization.read[NetworkHealth](networkHealthString)
+    val queryAdapterTestString = statusJaxrs.queryAdapterTest
+    val queryAdapterTest = Serialization.read[QueryAdapterTest](queryAdapterTestString)
 
-    networkHealth.isHub should be (true)
-    networkHealth.adapterOk should be (true)
-    networkHealth.keystoreOk should be (true)
-    networkHealth.hubOk should be (false)
-    networkHealth.qepOk should be (true)
+    queryAdapterTest.isHub should be (true)
+    queryAdapterTest.adapterOk should be (true)
+    queryAdapterTest.keystoreOk should be (true)
+    queryAdapterTest.hubOk should be (false)
+    queryAdapterTest.qepOk should be (true)
   }
 
   @Test

@@ -29,7 +29,7 @@
             ProblemEndpoint:  'admin/status/problems',
             QepEndpoint:      'admin/status/qep',
             SummaryEndpoint:  'admin/status/summary',
-            NetworkHealthEndpoint:  'admin/status/networkHealth'
+            QueryAdapterTestEndpoint:  'admin/status/queryAdapterTest'
         };
 
 
@@ -44,7 +44,7 @@
             getProblems:       getProblemsMaker(),
             getQep:            getJsonMaker(Config.QepEndpoint, 'qep'),
             getSummary:        getJsonMaker(Config.SummaryEndpoint, 'summary'),
-            getNetworkHealth:  getJsonMaker(Config.NetworkHealthEndpoint, 'networkHealth'),
+            getQueryAdapterTest:  getJsonMaker(Config.QueryAdapterTestEndpoint, 'queryAdapterTest'),
             safeLogout:        safeLogout,
             clearCache:        clearCache,
             map:               map,

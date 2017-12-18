@@ -232,8 +232,8 @@ trait DashboardService extends HttpService with Loggable {
   }
 
   def statusRoute(user:User):Route = get {
-    val( adapter ,  hub ,  i2b2 ,  keystore ,  optionalParts ,  qep ,  summary, networkHealth ) =
-       ("adapter", "hub", "i2b2", "keystore", "optionalParts", "qep", "summary", "networkHealth")
+    val( adapter ,  hub ,  i2b2 ,  keystore ,  optionalParts ,  qep ,  summary, queryAdapterTest ) =
+       ("adapter", "hub", "i2b2", "keystore", "optionalParts", "qep", "summary", "queryAdapterTest")
     pathPrefix("classpath")   { getClasspath }~
     pathPrefix("config")      { getConfig }~
     pathPrefix("problems")    { getProblems }~
@@ -244,7 +244,7 @@ trait DashboardService extends HttpService with Loggable {
     pathPrefix(optionalParts) { getFromSubService(optionalParts) }~
     pathPrefix(qep)           { getFromSubService(qep) }~
     pathPrefix(summary)       { getFromSubService(summary) }~
-    pathPrefix(networkHealth) { getFromSubService(networkHealth) }
+    pathPrefix(queryAdapterTest ) { getFromSubService(queryAdapterTest ) }
   }
 
   val statusBaseUrl = ConfigSource.config.getString("shrine.dashboard.statusBaseUrl")

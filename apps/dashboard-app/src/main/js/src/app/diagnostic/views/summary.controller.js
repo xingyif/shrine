@@ -15,9 +15,9 @@
         var vm                  = this;
         var unknown             = 'UNKNOWN';
         vm.summary              = false;
-        vm.networkHealth        = false;
+        vm.queryAdapterTest       = false;
         vm.summaryError         = false;
-        vm.networkHealthError   = false;
+        vm.queryAdapterTestError   = false;
         vm.i2b2Error            = false;
         vm.loading              = true;
         $app.model.reloadSummary = init;
@@ -30,8 +30,8 @@
             vm.loading = true;
             $app.model.getSummary()
                 .then(setSummary, handleSummaryFailure);
-            $app.model.getNetworkHealth()
-                .then(setNetworkHealth, handleNetworkHealthFailure);
+            $app.model.getQueryAdapterTest()
+                .then(setQueryAdapterTest, handleQueryAdapterTestFailure);
 
             $app.model.getI2B2()
                 .then(setI2B2, handleI2B2Failure);
@@ -42,8 +42,8 @@
             vm.loading = false
         }
 
-        function handleNetworkHealthFailure(failure) {
-            vm.networkHealthError = failure;
+        function handleQueryAdapterTestFailure(failure) {
+            vm.queryAdapterTestError = failure;
             vm.loading = false
         }
 
@@ -81,11 +81,11 @@
 
         /**
          *
-         * @param network health
+         * @param queryAdapterTest
          */
-        function setNetworkHealth(networkHealth) {
+        function setQueryAdapterTest(queryAdapterTest) {
             vm.loading = false;
-            vm.networkHealth = networkHealth;
+            vm.queryAdapterTest = queryAdapterTest;
 
             return this;
         }
