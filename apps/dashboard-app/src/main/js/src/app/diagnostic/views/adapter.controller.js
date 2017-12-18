@@ -59,7 +59,6 @@
                 vm.adapter.errorData = queryAdapterTest.queryResult.response.problemDigest;
             }
             else {
-                //TODO FIGURE OUT THE CORRECT FIELDS FOR SUCCESSFUL QUERY RESULT
                 vm.adapter.description =  queryAdapterTest.queryResult.response.singleNodeResult.setSize;
                 vm.adapter.description += ' ';
                 vm.adapter.description += queryAdapterTest.queryResult.response.singleNodeResult.resultType
