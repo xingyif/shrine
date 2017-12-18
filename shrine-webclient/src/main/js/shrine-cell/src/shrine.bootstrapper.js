@@ -8,6 +8,7 @@ import { startQueryMixin, isQueryRunningMixin, refreshStatusMixin } from './mixi
 import * as QTMixins from './mixins/CRC.ctrlr.QryTool';
 import ResizeHeightMixin from './mixins/CRC.view.Status';
 import getChildRecordsMixin from './mixins/CRC.sdx.QM';
+import { MixinNoSynonymTermInfo } from './mixins/i2b2.messages';
 
 class ShrineBootstrapper extends I2B2Decorator{
 
@@ -28,6 +29,7 @@ class ShrineBootstrapper extends I2B2Decorator{
     this.i2b2.CRC.ctrlr.QueryStatus.prototype.refreshStatus = refreshStatusMixin();
     this.i2b2.CRC.view.status.ResizeHeight  = ResizeHeightMixin(this);
     this.i2b2.sdx.TypeControllers.QM.getChildRecords = getChildRecordsMixin(this);
+    MixinNoSynonymTermInfo(this)(false);
   }
 
   polyfill() {
@@ -44,6 +46,8 @@ class ShrineBootstrapper extends I2B2Decorator{
 
     this.i2b2.hive.mySplitter.onMouseDown  = this.onMouseDown.bind(this);
     this.i2b2.hive.mySplitter.onMouseUp = this.onMouseUp.bind(this);
+    const roles = this.i2b2.PM.model.userRoles.filter(r => r !== 'MANAGER');
+    this.i2b2.PM.model.userRoles = roles;
   }
 
   onMouseDown(e) {
