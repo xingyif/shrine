@@ -4,7 +4,7 @@ import com.typesafe.config.ConfigFactory
 import net.shrine.util.{ShouldMatchersForJUnit, SingleHubModel}
 import org.json4s.native.Serialization
 import org.json4s.{DefaultFormats, Formats}
-import org.junit.{Test}
+import org.junit.Test
 
 import scala.collection.immutable.Map
 
