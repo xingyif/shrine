@@ -204,7 +204,7 @@ trait SQSMessageQueueMiddleware extends MessageQueueService {
     }
 
     /**
-      * 
+      *
       * @return The message's body (not URL-encoded)
       */
     override def contents: String = {
