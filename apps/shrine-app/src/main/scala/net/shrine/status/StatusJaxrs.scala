@@ -365,7 +365,6 @@ object Summary {
       case NonFatal(x) =>
         Log.info("Problem while getting ontology version", x)
         s"Unavailable due to: ${x.getMessage}"
-      // TODO: Investigate whether a Fatal exception is being thrown
     }
 
     Summary(
