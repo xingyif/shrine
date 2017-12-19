@@ -16,7 +16,7 @@
     function SidebarService (m) {
         return {
             getSummary: getSummary,
-            getNetworkHealth: getNetworkHealth
+            getAdapterQueryTest: getAdapterQueryTest
         }
 
         /**
@@ -34,8 +34,8 @@
         *
         * @returns {*}
         */
-        function getNetworkHealth() {
-            return m.getNetworkHealth()
+        function getAdapterQueryTest() {
+            return m.getAdapterQueryTest()
                 .then(function (data) {
                     return data
                 });
