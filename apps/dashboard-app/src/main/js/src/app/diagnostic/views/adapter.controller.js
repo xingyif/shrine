@@ -15,7 +15,8 @@
         vm.adapterError = false;
         vm.i2b2Error = false;
         vm.summaryError = false;
-
+        vm.queryAdapterTestError = false;
+        vm.adapter = {};
         init();
 
         function init () {
@@ -26,6 +27,9 @@
 
             $app.model.getSummary()
                 .then(setSummary, handleSummaryError);
+
+            $app.model.getQueryAdapterTest()
+                .then(setQueryAdapterTest, handleQueryAdapterTestError);
         }
 
         function handleAdapterError(failure) {
@@ -40,25 +44,27 @@
             vm.summaryError = failure;
         }
 
+        function setSummary(summary){
+            vm.adapter.term = summary.ontologyTerm; //config.networkStatusQuery,
+        }
 
-        function setSummary (summary) {
-            vm.adapter  = {
-                term:           summary.ontologyTerm, //config.networkStatusQuery,
-                success:        summary.queryResult.response.problemDigest === undefined
-            };
+        function handleQueryAdapterTestError(failure) {
+            vm.queryAdapterTestError = failure;
+        }
 
-            if (summary.queryResult.response.problemDigest !== undefined) {
-                vm.adapter.errorData = summary.queryResult.response.problemDigest;
+        function setQueryAdapterTest (queryAdapterTest) {
+            vm.adapter.success = queryAdapterTest.queryResult.response.problemDigest === undefined;
+
+            if (queryAdapterTest.queryResult.response.problemDigest !== undefined) {
+                vm.adapter.errorData = queryAdapterTest.queryResult.response.problemDigest;
             }
             else {
-                //TODO FIGURE OUT THE CORRECT FIELDS FOR SUCCESSFUL QUERY RESULT
-                vm.adapter.description =  summary.queryResult.response.singleNodeResult.setSize;
+                vm.adapter.description =  queryAdapterTest.queryResult.response.singleNodeResult.setSize;
                 vm.adapter.description += ' ';
-                vm.adapter.description += summary.queryResult.response.singleNodeResult.resultType
+                vm.adapter.description += queryAdapterTest.queryResult.response.singleNodeResult.resultType
                                             .i2b2Options.description;
             }
         }
-
 
         function formatDate(maybeEpoch) {
             if (!(maybeEpoch && isFinite(maybeEpoch))) {

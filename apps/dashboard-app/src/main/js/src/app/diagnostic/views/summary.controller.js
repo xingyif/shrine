@@ -12,12 +12,14 @@
      */
     SummaryController.$inject = ['$app', '$sce', '$log', '$timeout'];
     function SummaryController ($app, $sce, $log, $timeout) {
-        var vm          = this;
-        var unknown     = 'UNKNOWN';
-        vm.summary      = false;
-        vm.summaryError = false;
-        vm.i2b2Error    = false;
-        vm.loading      = true;
+        var vm                  = this;
+        var unknown             = 'UNKNOWN';
+        vm.summary              = false;
+        vm.queryAdapterTest       = false;
+        vm.summaryError         = false;
+        vm.queryAdapterTestError   = false;
+        vm.i2b2Error            = false;
+        vm.loading              = true;
         $app.model.reloadSummary = init;
         init();
 
@@ -28,6 +30,8 @@
             vm.loading = true;
             $app.model.getSummary()
                 .then(setSummary, handleSummaryFailure);
+            $app.model.getQueryAdapterTest()
+                .then(setQueryAdapterTest, handleQueryAdapterTestFailure);
 
             $app.model.getI2B2()
                 .then(setI2B2, handleI2B2Failure);
@@ -35,6 +39,11 @@
 
         function handleSummaryFailure(failure) {
             vm.summaryError = failure;
+            vm.loading = false
+        }
+
+        function handleQueryAdapterTestFailure(failure) {
+            vm.queryAdapterTestError = failure;
             vm.loading = false
         }
 
@@ -67,6 +76,17 @@
             } else {
                 vm.adapterMappingsDate = formatDate(vm.summary.adapterMappingsDate);
             }
+            return this;
+        }
+
+        /**
+         *
+         * @param queryAdapterTest
+         */
+        function setQueryAdapterTest(queryAdapterTest) {
+            vm.loading = false;
+            vm.queryAdapterTest = queryAdapterTest;
+
             return this;
         }
 

@@ -28,7 +28,8 @@
             OptionsEndpoint:  'admin/status/optionalParts',
             ProblemEndpoint:  'admin/status/problems',
             QepEndpoint:      'admin/status/qep',
-            SummaryEndpoint:  'admin/status/summary'
+            SummaryEndpoint:  'admin/status/summary',
+            QueryAdapterTestEndpoint:  'admin/status/queryAdapterTest'
         };
 
 
@@ -43,6 +44,7 @@
             getProblems:       getProblemsMaker(),
             getQep:            getJsonMaker(Config.QepEndpoint, 'qep'),
             getSummary:        getJsonMaker(Config.SummaryEndpoint, 'summary'),
+            getQueryAdapterTest:  getJsonMaker(Config.QueryAdapterTestEndpoint, 'queryAdapterTest'),
             safeLogout:        safeLogout,
             clearCache:        clearCache,
             map:               map,

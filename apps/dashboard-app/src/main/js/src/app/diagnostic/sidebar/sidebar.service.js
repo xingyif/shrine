@@ -15,7 +15,8 @@
     SidebarService.$inject = ['SidebarModel']
     function SidebarService (m) {
         return {
-            getSummary: getSummary
+            getSummary: getSummary,
+            getAdapterQueryTest: getAdapterQueryTest
         }
 
         /**
@@ -24,6 +25,17 @@
          */
         function getSummary() {
            return m.getSummary()
+                .then(function (data) {
+                    return data
+                });
+        }
+
+        /**
+        *
+        * @returns {*}
+        */
+        function getAdapterQueryTest() {
+            return m.getAdapterQueryTest()
                 .then(function (data) {
                     return data
                 });

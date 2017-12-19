@@ -47,14 +47,21 @@ class StatusJaxrsTest extends ShouldMatchersForJUnit {
     val summaryString = statusJaxrs.summary
     val summary = Serialization.read[Summary](summaryString)
 
-    summary.isHub should be (true)
     summary.adapterMappingsFileName.isDefined should be (true)
     summary.adapterMappingsDate.isEmpty should be (false)
-    summary.adapterOk should be (true)
-    summary.keystoreOk should be (true)
-    summary.hubOk should be (false)
-    summary.qepOk should be (true)
+  }
 
+  //@Test
+  def testQueryAdapterTest() = {
+
+    val queryAdapterTestString = statusJaxrs.queryAdapterTest
+    val queryAdapterTestResult = Serialization.read[QueryAdapterTestResult](queryAdapterTestString)
+
+    queryAdapterTestResult.isHub should be (true)
+    queryAdapterTestResult.adapterOk should be (true)
+    queryAdapterTestResult.keystoreOk should be (true)
+    queryAdapterTestResult.hubOk should be (false)
+    queryAdapterTestResult.qepOk should be (true)
   }
 
   @Test
