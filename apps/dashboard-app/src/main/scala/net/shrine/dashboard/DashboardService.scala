@@ -228,7 +228,7 @@ trait DashboardService extends HttpService with Loggable {
 
     override def summary: String = s"Encountered a malformatted url `$malformattedURL` while parsing urls from downstream nodes"
 
-    override def description: String = description
+    override def description: String = "description"
   }
 
   def statusRoute(user:User):Route = get {
