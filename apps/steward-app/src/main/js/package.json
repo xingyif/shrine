@@ -38,7 +38,7 @@
   },
   "scripts": {
     "test": "gulp build",
-    "start": "gulp build && gulp serve && npm run mock",
+    "start": "gulp build && gulp serve | npm run start-mock",
     "start-mock": "cd ./app/server && npm start"
   },
   "repository": {

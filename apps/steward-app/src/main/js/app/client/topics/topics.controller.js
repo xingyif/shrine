@@ -177,14 +177,20 @@
         // -- public --//
         newTopic.ok = ok;
         newTopic.cancel = cancel;
+        newTopic.isFetching = false;
 
         // -- private -- //
         function ok() {
+            if(newTopic.isFetching) return;
+            newTopic.isFetching = true;
             var name = newTopic.name;
             var description = newTopic.description;
 
             makeRequest()
-                .then(finish);
+                .then(finish)
+                .catch(function (error) {
+                  newTopic.isFetching = false;
+                });
         }
 
         function makeRequest() {
@@ -195,11 +201,13 @@
         }
 
         function finish() {
+            newTopic.isFetching = false;
             onClose();
             $uibModalInstance.close();
         }
 
         function cancel() {
+            newTopic.isFetching = false;
             $uibModalInstance.dismiss('cancel');
         }
     }
