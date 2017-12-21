@@ -2,7 +2,7 @@ package net.shrine.messagequeuemiddleware
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 
-import akka.actor.ActorRefFactory
+import akka.actor.{ActorRefFactory, ActorSystem}
 import net.shrine.messagequeuemiddleware.LocalMessageQueueMiddleware.SimpleMessage
 import net.shrine.messagequeueservice.Queue
 import net.shrine.source.ConfigSource
@@ -16,10 +16,11 @@ import org.scalatest.junit.JUnitRunner
 import spray.http.HttpEntity
 import spray.http.StatusCodes._
 import spray.testkit.ScalatestRouteTest
+import scala.concurrent.duration._
 
 import scala.collection.immutable.Seq
 import scala.collection.mutable.ArrayBuffer
-import scala.concurrent.duration.Duration
+import scala.concurrent.duration.{Duration, DurationInt}
 /**
   * Test basic functions of MessageQueueWebApi
   * Created by yifan on 7/27/17.
@@ -33,6 +34,7 @@ class MessageQueueWebApiTest extends FlatSpec with ScalatestRouteTest with Messa
   private val queue: Queue = Queue("test QueueInWebApi")
   private val queueName: String = queue.name // "testQueueInWebApi"
   private val messageContent = "test Content"
+  implicit def default(implicit system: ActorSystem) = RouteTestTimeout(5.seconds)
 
   "MessageQueueWebApi" should "create/delete the given queue, send/receive message, get queues" in {
     val configMap: Map[String, String] = Map( "shrine.messagequeue.blockingqWebApi.enabled" -> "true",

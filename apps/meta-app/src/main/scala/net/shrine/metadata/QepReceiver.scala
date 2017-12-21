@@ -14,6 +14,8 @@ import net.shrine.protocol.{AggregatedRunQueryResponse, QueryResult, ResultOutpu
 import net.shrine.qep.querydb.{QepQueryDb, QepQueryDbChangeNotifier, QueryResultRow}
 import net.shrine.source.ConfigSource
 
+import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
 import scala.util.control.NonFatal
 import scala.util.{Failure, Success, Try}
@@ -91,9 +93,9 @@ object QepReceiver {
     }
 
     def receiveAMessage(queue:Queue): Unit = {
-      val maybeMessage: Try[Option[Message]] = MessageQueueService.service.receive(queue, pollDuration)
+      val messageFuture: Future[Option[Message]] = MessageQueueService.service.receive(queue, pollDuration)
 
-      maybeMessage.transform({m =>
+      messageFuture.transform({m =>
         m.map(interpretAMessage(_,queue)).getOrElse(Success()) //todo rework this in SHRINE-2327
       },{x =>
         x match {
@@ -104,7 +106,7 @@ object QepReceiver {
           case NonFatal(nfx) => ExceptionWhileReceivingMessage(queue,x)
           case fatal => throw fatal
         }
-        Failure(x)
+        x
       })
     }
 

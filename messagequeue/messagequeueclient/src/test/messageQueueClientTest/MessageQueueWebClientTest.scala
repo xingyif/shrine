@@ -17,17 +17,19 @@
 import net.shrine.messagequeueclient.MessageQueueWebClient
 import net.shrine.messagequeueservice.{Message, Queue}
 import scala.collection.immutable.Seq
+import scala.concurrent.Await
+
 val firstQueue: Queue = MessageQueueWebClient.createQueueIfAbsent("firstQueue").get
 MessageQueueWebClient.send("firstMessage", firstQueue)
 import scala.concurrent.duration.Duration
 val firstDuration: Duration = Duration.create(1, "seconds")
-val receivedMsg: Option[Message] = MessageQueueWebClient.receive(firstQueue, firstDuration).get
+val receivedMsg: Option[Message] = Await.result(MessageQueueWebClient.receive(firstQueue, firstDuration), firstDuration)
 assert(receivedMsg.isDefined)
 val msg: Message = receivedMsg.get
 val allQueues: Seq[Queue] = MessageQueueWebClient.queues.get
-val receivedMsg2: Option[Message] = MessageQueueWebClient.receive(firstQueue, firstDuration).get
+val receivedMsg2: Option[Message] = Await.result(MessageQueueWebClient.receive(firstQueue, firstDuration), firstDuration)
 assert(receivedMsg2.isEmpty)
 msg.complete()
-val receivedMsg3: Option[Message] = MessageQueueWebClient.receive(firstQueue, firstDuration).get
+val receivedMsg3: Option[Message] = Await.result(MessageQueueWebClient.receive(firstQueue, firstDuration), firstDuration)
 assert(receivedMsg3.isEmpty)
 MessageQueueWebClient.deleteQueue("firstQueue")

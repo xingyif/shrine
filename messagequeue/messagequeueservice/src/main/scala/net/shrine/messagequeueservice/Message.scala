@@ -1,6 +1,6 @@
 package net.shrine.messagequeueservice
 
-import scala.util.Try
+import scala.concurrent.Future
 
 /**
   * A Message Trait that is implemented by SimpleMessage and MessageQueueClientMessage
@@ -8,7 +8,7 @@ import scala.util.Try
   */
 
 trait Message {
-  def complete(): Try[Unit]
+  def complete(): Future[Unit]
   def contents: String
 }
 
