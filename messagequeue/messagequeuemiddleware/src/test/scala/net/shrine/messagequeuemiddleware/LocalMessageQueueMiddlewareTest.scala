@@ -29,7 +29,7 @@ class LocalMessageQueueMiddlewareTest extends FlatSpec with BeforeAndAfterAll wi
 
   "BlockingQueue" should "be able to send and receive just one message" in {
 
-    val configMap: Map[String, String] = Map("shrine.messagequeue.blockingq.messageTimeToLive" -> "5 seconds",
+    val configMap: Map[String, String] = Map("shrine.messagequeue.blockingq.messageTimeToLive" -> "7 seconds",
       "shrine.messagequeue.blockingq.messageRedeliveryDelay" -> "2 seconds",
       "shrine.messagequeue.blockingq.messageMaxDeliveryAttempts" -> "1")
 
@@ -63,7 +63,7 @@ class LocalMessageQueueMiddlewareTest extends FlatSpec with BeforeAndAfterAll wi
 
       // receive after the redelivery delay, should have the redelivered message
       TimeUnit.MILLISECONDS.sleep(messageRedeliveryDelay + 1000)
-      whenReady(LocalMessageQueueMiddleware.receive(queue, 1 second)) { sameMessage =>
+      whenReady(LocalMessageQueueMiddleware.receive(queue, 2 second)) { sameMessage =>
         assert(sameMessage.isDefined)
         assert(sameMessage.get.contents == testContents)
       }
@@ -99,14 +99,17 @@ class LocalMessageQueueMiddlewareTest extends FlatSpec with BeforeAndAfterAll wi
       }
 
       val deleteTry = LocalMessageQueueMiddleware.deleteQueue(queueName)
-      val deleteExpiredMessageQueueTry = LocalMessageQueueMiddleware.deleteQueue(queueName_ExpiredMessage)
       assert(deleteTry.isSuccess)
+      val deleteExpiredMessageQueueTry = LocalMessageQueueMiddleware.deleteQueue(queueName_ExpiredMessage)
       assert(deleteExpiredMessageQueueTry.isSuccess)
       assert(LocalMessageQueueMiddleware.queues.get.isEmpty)
     }
   }
 
   "BlockingQueue" should "be able to send and receive a few messages" in {
+
+    val queues: Seq[Queue] = LocalMessageQueueMiddleware.queues.get
+    queues.foreach({queue: Queue => LocalMessageQueueMiddleware.deleteQueue(queue.name)})
 
     val queueName = "receiveAFewMessages"
 
@@ -164,6 +167,9 @@ class LocalMessageQueueMiddlewareTest extends FlatSpec with BeforeAndAfterAll wi
 
   "BlockingQueue" should "be OK if asked to create the same queue twice " in {
 
+    val queues: Seq[Queue] = LocalMessageQueueMiddleware.queues.get
+    queues.foreach({queue: Queue => LocalMessageQueueMiddleware.deleteQueue(queue.name)})
+
     val queueName = "createSameQueueTwice"
     val queue = LocalMessageQueueMiddleware.createQueueIfAbsent(queueName)
     assert(queue.isSuccess)
@@ -178,6 +184,9 @@ class LocalMessageQueueMiddlewareTest extends FlatSpec with BeforeAndAfterAll wi
 
   "BlockingQueue" should "return a failure if deleting a non-existing queue" in {
 
+    val queues: Seq[Queue] = LocalMessageQueueMiddleware.queues.get
+    queues.foreach({queue: Queue => LocalMessageQueueMiddleware.deleteQueue(queue.name)})
+
     val queueName = "DeletingNonExistingQueue"
     val deleteQueue = LocalMessageQueueMiddleware.deleteQueue(queueName)
     assert(deleteQueue.isFailure)
@@ -185,6 +194,9 @@ class LocalMessageQueueMiddlewareTest extends FlatSpec with BeforeAndAfterAll wi
   }
 
   "BlockingQueue" should "return a failure if sending message to a non-existing queue" in {
+
+    val queues: Seq[Queue] = LocalMessageQueueMiddleware.queues.get
+    queues.foreach({queue: Queue => LocalMessageQueueMiddleware.deleteQueue(queue.name)})
 
     val queueName = "SendToNonExistingQueue"
     an [QueueDoesNotExistException] should be thrownBy Await.result(LocalMessageQueueMiddleware.send("testContent", Queue(queueName)), waitForFutureToComplete)
@@ -194,6 +206,9 @@ class LocalMessageQueueMiddlewareTest extends FlatSpec with BeforeAndAfterAll wi
 
   "BlockingQueue" should "return a failure if receiving a message to a non-existing queue" in {
 
+    val queues: Seq[Queue] = LocalMessageQueueMiddleware.queues.get
+    queues.foreach({queue: Queue => LocalMessageQueueMiddleware.deleteQueue(queue.name)})
+
     val queueName = "ReceiveFromNonExistingQueue"
     a [QueueDoesNotExistException] should be thrownBy Await.result(LocalMessageQueueMiddleware.receive(Queue(queueName), Duration(1, "second")), waitForFutureToComplete)
 
@@ -201,6 +216,8 @@ class LocalMessageQueueMiddlewareTest extends FlatSpec with BeforeAndAfterAll wi
   }
 
   "BlockingQueue" should "be able to filter the special characters in queue name" in {
+    val queues: Seq[Queue] = LocalMessageQueueMiddleware.queues.get
+    queues.foreach({queue: Queue => LocalMessageQueueMiddleware.deleteQueue(queue.name)})
 
     val queueName = "test# Qu%eueFilter"
 
@@ -208,6 +225,10 @@ class LocalMessageQueueMiddlewareTest extends FlatSpec with BeforeAndAfterAll wi
   }
 
   "BlockingQueue" should "make sure if two InternalMessages are equal, then they have the same hashCode" in {
+
+    val queues: Seq[Queue] = LocalMessageQueueMiddleware.queues.get
+    queues.foreach({queue: Queue => LocalMessageQueueMiddleware.deleteQueue(queue.name)})
+
     val id: UUID = UUID.randomUUID()
     val createdTime = System.currentTimeMillis()
     val message1: InternalMessage = InternalMessage(id, "message1", createdTime, Queue("to"), 0)
