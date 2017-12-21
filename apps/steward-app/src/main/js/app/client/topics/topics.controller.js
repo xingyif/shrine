@@ -201,14 +201,14 @@
         }
 
         function finish() {
-            newTopic.isFetching = false;
             onClose();
             $uibModalInstance.close();
+            newTopic.isFetching = false;
         }
 
         function cancel() {
-            newTopic.isFetching = false;
             $uibModalInstance.dismiss('cancel');
+            newTopic.isFetching = false;
         }
     }
 
