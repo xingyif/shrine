@@ -17,8 +17,6 @@
             'diagnostic': {
                 name:'diagnostic',
                 files:[
-                    'src/app/diagnostic/sidebar/sidebar.model.js',
-                    'src/app/diagnostic/sidebar/sidebar.service.js',
                     'src/app/diagnostic/sidebar/node-menu.js',
                     'src/app/diagnostic/sidebar/downstream-node.js',
                     'src/app/diagnostic/sidebar/sidebar.js'
