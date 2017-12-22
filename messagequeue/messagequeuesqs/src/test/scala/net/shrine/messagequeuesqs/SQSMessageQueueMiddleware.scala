@@ -1,9 +1,9 @@
-package net.shrine.messagequeuemiddleware
+package net.shrine.messagequeuesqs
 
 import org.junit.runner.RunWith
-import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.junit.JUnitRunner
+import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers}
 
 /**
   * Test create, delete queue, send, and receive message, getQueueNames, and completeMessage using SQS service

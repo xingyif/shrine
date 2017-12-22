@@ -1,27 +1,22 @@
-package net.shrine.messagequeuemiddleware
+package net.shrine.messagequeuesqs
 
 import java.util
 
 import com.typesafe.config.Config
-import net.shrine.config.ConfigExtensions
-import net.shrine.log.Log
-import net.shrine.messagequeuemiddleware.LocalMessageQueueMiddleware.SimpleMessage
 import net.shrine.messagequeueservice.{Message, MessageQueueService, Queue}
-import net.shrine.source.ConfigSource
 import software.amazon.awssdk.core.auth.ProfileCredentialsProvider
 import software.amazon.awssdk.core.exception.{SdkClientException, SdkException, SdkServiceException}
 import software.amazon.awssdk.core.regions.Region
+import software.amazon.awssdk.services.sqs.model.{CreateQueueRequest, DeleteMessageRequest, DeleteQueueRequest, DeleteQueueResponse, GetQueueUrlRequest, GetQueueUrlResponse, ListQueuesResponse, QueueDeletedRecentlyException, QueueDoesNotExistException, QueueNameExistsException, ReceiveMessageRequest, SQSException, SendMessageRequest}
 import software.amazon.awssdk.services.sqs.{SQSClient, model}
-import software.amazon.awssdk.services.sqs.model.{CreateQueueRequest, DeleteQueueRequest, DeleteQueueResponse, GetQueueUrlRequest, GetQueueUrlResponse, ListQueuesRequest, ListQueuesResponse, QueueDeletedRecentlyException, QueueNameExistsException, SQSException, SendMessageRequest}
-import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest
-import software.amazon.awssdk.services.sqs.model.DeleteMessageRequest
 
-import scala.None
 import scala.collection.JavaConversions._
 import scala.collection.immutable.Seq
 import scala.concurrent.duration.Duration
 import scala.util.{Failure, Success, Try}
-
+import net.shrine.source.ConfigSource
+import net.shrine.config.ConfigExtensions
+import net.shrine.log.Log
 
 /**
   * A web API that provides access to AWS SimpleQueueService.
@@ -29,20 +24,21 @@ import scala.util.{Failure, Success, Try}
   *
   * Created by yifan on 12/18/17.
   */
-trait SQSMessageQueueMiddleware extends MessageQueueService {
+object SQSMessageQueueMiddleware extends MessageQueueService {
 
-  val credentialsProvider: ProfileCredentialsProvider = new ProfileCredentialsProvider
-    try {
-      credentialsProvider.getCredentials
-    }
-    catch {
-      case e: Exception =>
-        throw new Nothing("Cannot load the credentials from the credential profiles file. "
-          + "Please make sure that your credentials file is at the correct "
-          + "location (~/.aws/credentials), and is in valid format.", e)
-    }
+//  val credentialsProvider: ProfileCredentialsProvider = new ProfileCredentialsProvider
+//    try {
+//      credentialsProvider.getCredentials
+//    }
+//    catch {
+//      case e: Exception =>
+//        throw new Nothing("Cannot load the credentials from the credential profiles file. "
+//          + "Please make sure that your credentials file is at the correct "
+//          + "location (~/.aws/credentials), and is in valid format.", e)
+//    }
 
-  val sqsClient: SQSClient = SQSClient.builder.credentialsProvider(credentialsProvider).region(Region.US_EAST_1).build
+  // .credentialsProvider(credentialsProvider)
+  val sqsClient: SQSClient = SQSClient.builder.region(Region.US_EAST_1).build
 
   val configPath = "shrine.messagequeue.blockingq" // todo change the name in config file to "messageq"?
 
