@@ -10,6 +10,7 @@ import software.amazon.awssdk.core.regions.Region
 import software.amazon.awssdk.services.sqs.model.{CreateQueueRequest, DeleteMessageRequest, DeleteQueueRequest, DeleteQueueResponse, GetQueueUrlRequest, GetQueueUrlResponse, ListQueuesResponse, QueueDeletedRecentlyException, QueueDoesNotExistException, QueueNameExistsException, ReceiveMessageRequest, SQSException, SendMessageRequest}
 import software.amazon.awssdk.services.sqs.{SQSClient, model}
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.collection.JavaConversions._
 import scala.collection.immutable.Seq
 import scala.concurrent.duration.Duration
@@ -17,6 +18,8 @@ import scala.util.{Failure, Success, Try}
 import net.shrine.source.ConfigSource
 import net.shrine.config.ConfigExtensions
 import net.shrine.log.Log
+
+import scala.concurrent.Future
 
 /**
   * A web API that provides access to AWS SimpleQueueService.
@@ -150,14 +153,14 @@ object SQSMessageQueueMiddleware extends MessageQueueService {
     * @param to
     * @return Result of the SendMessage operation returned by the service.
     */
-  def send(contents:String,to:Queue): Try[Unit] = {
-    getQueueUrl(to.name).transform({queueUrl: String =>
+  def send(contents:String,to:Queue): Future[Unit] = Future {
+    Future.fromTry(getQueueUrl(to.name)).transform({queueUrl: String =>
       // user can set delay seconds for send
       val sendMessageRequest: SendMessageRequest = SendMessageRequest.builder().queueUrl(queueUrl).messageBody(contents).build()
-      Success(sqsClient.sendMessage(sendMessageRequest))
+      sqsClient.sendMessage(sendMessageRequest)
     }, {throwable: Throwable =>
       Log.debug(s"Cannot find the queueUrl of the given queue ${to.name}")
-      Failure(throwable)
+      throwable
     })
   }
 
@@ -170,15 +173,15 @@ object SQSMessageQueueMiddleware extends MessageQueueService {
     * @param timeout
     * @return One Message or None from the given queue
     */
-  def receive(from:Queue,timeout:Duration): Try[Option[Message]] = {
-    getQueueUrl(from.name).transform({ queueUrl: String =>
+  def receive(from:Queue,timeout:Duration): Future[Option[Message]] = {
+    Future.fromTry(getQueueUrl(from.name)).transform({ queueUrl: String =>
       val receiveMessageRequest: ReceiveMessageRequest = ReceiveMessageRequest.builder.queueUrl(queueUrl).waitTimeSeconds(timeout.toSeconds.toInt).build
       val messages: util.List[model.Message] = sqsClient.receiveMessage(receiveMessageRequest).messages
       if (messages.isEmpty) Log.info(s"No message available from the queue ${from.name} within timeout $timeout")
-      Success(messages.headOption.map(m => SQSMessage(m, from)))
+      messages.headOption.map(m => SQSMessage(m, from))
     }, { throwable: Throwable =>
       Log.debug(s"Cannot find the queueUrl of the given queue ${from.name}")
-      Failure(throwable)
+      throwable
     })
   }
 
@@ -189,13 +192,13 @@ object SQSMessageQueueMiddleware extends MessageQueueService {
       * deletes the message from its queue
       * @return Result of the DeleteMessage operation returned by the service.
       */
-    override def complete(): Try[Unit] = {
-      getQueueUrl(belongsToQueue.name).transform({ queueUrl: String =>
+    override def complete(): Future[Unit] = {
+      Future.fromTry(getQueueUrl(belongsToQueue.name)).transform({ queueUrl: String =>
         val deleteMessageRequest = DeleteMessageRequest.builder.queueUrl(queueUrl).receiptHandle(message.receiptHandle()).build
-        Success(sqsClient.deleteMessage(deleteMessageRequest))
+        sqsClient.deleteMessage(deleteMessageRequest)
       }, { throwable: Throwable =>
         Log.debug(s"Cannot find the queueUrl of the given queue ${belongsToQueue.name}")
-        Failure(throwable)
+        throwable
       })
     }
 
