@@ -124,7 +124,9 @@ trait MessageQueueWebApi extends HttpService
               }
             }
             case NonFatal(nf) => {
-              complete(s"Unable to send a Message to '$toQueue' due to exception $nf")
+              respondWithStatus(StatusCodes.InternalServerError) {
+                complete(s"Unable to send a Message to '$toQueue' due to exception $nf")
+              }
             }
             case _ => throw x
           }
