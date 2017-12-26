@@ -114,7 +114,7 @@ object SQSMessageQueueMiddleware extends MessageQueueService {
   }, {throwable: Throwable =>
     throwable match {
       case qdnee: QueueDoesNotExistException => {
-        Log.error(s"Error: Queue $queueName does not exist!", qdnee)
+        Log.error(s"ERROR: Queue $queueName does not exist!", qdnee)
         throw qdnee
       }
       case NonFatal(nf) => {
@@ -144,7 +144,7 @@ object SQSMessageQueueMiddleware extends MessageQueueService {
       println(deleteQueueResponse)
       Success(deleteQueueResponse) // todo interpret the response
     }, { throwable: Throwable =>
-      Log.error(s"Cannot find the queueUrl of the given queue $queueName due to exception $throwable")
+      Log.error(s"ERROR: Cannot find the queueUrl of the given queue $queueName due to exception $throwable")
       Failure(throwable)
     })
   }.transform({deleteQueueResponse: DeleteQueueResponse => // deal with exceptions while deleting
@@ -152,7 +152,7 @@ object SQSMessageQueueMiddleware extends MessageQueueService {
   }, {throwable: Throwable =>
     throwable match {
       case NonFatal(nf) => {
-        Log.error(s"Cannot delete Queue $queueName due to exception $throwable", throwable)
+        Log.error(s"ERROR: Cannot delete Queue $queueName due to exception $throwable", throwable)
         throw nf
       }
     }
@@ -184,7 +184,7 @@ object SQSMessageQueueMiddleware extends MessageQueueService {
   }, { throwable: Throwable => // deal with exceptions while getting all the queues
     throwable match {
       case NonFatal(nf) => {
-        Log.error(s"Cannot get all the queues due to exception $throwable", throwable)
+        Log.error(s"ERROR: Cannot get all the queues due to exception $throwable", throwable)
         throw nf
       }
     }
@@ -219,7 +219,7 @@ object SQSMessageQueueMiddleware extends MessageQueueService {
   }, { throwable: Throwable => // deal with exceptions while getting all the queues with the given specific prefix
     throwable match {
       case NonFatal(nf) => {
-        Log.error(s"Cannot get the queues with prefix $prefix due to exception $throwable", throwable)
+        Log.error(s"ERROR: Cannot get the queues with prefix $prefix due to exception $throwable", throwable)
         throw nf
       }
     }
@@ -250,7 +250,7 @@ object SQSMessageQueueMiddleware extends MessageQueueService {
       val sendResponse = sqsClient.sendMessage(sendMessageRequest)
       println(sendResponse)
     }, {throwable: Throwable =>
-      Log.error(s"Cannot find the queueUrl of the given queue ${to.name} due to exception $throwable", throwable)
+      Log.error(s"ERROR: Cannot find the queueUrl of the given queue ${to.name} due to exception $throwable", throwable)
       throwable
     })
   }.transform({ s: Unit =>
@@ -258,7 +258,7 @@ object SQSMessageQueueMiddleware extends MessageQueueService {
   }, { throwable: Throwable => // deal with exceptions while sending the message
     throwable match {
       case imce: InvalidMessageContentsException => {
-        Log.error(s"ERROR: Cannot send message to Queue $to, because the message contains characters outside the allowed set. Message content $contents", throwable)
+        Log.error(s"ERROR: Cannot send message to Queue $to, because the message contains characters outside the allowed set. Message content $contents", imce)
         throw imce
       }
       case uoe: UnsupportedOperationException => {
@@ -266,7 +266,7 @@ object SQSMessageQueueMiddleware extends MessageQueueService {
         throw uoe
       }
       case NonFatal(nf) => {
-        Log.error(s"Cannot get all the queues due to exception $throwable", throwable)
+        Log.error(s"ERROR: Cannot get all the queues due to exception $throwable", throwable)
         throw nf
       }
     }
@@ -312,7 +312,7 @@ object SQSMessageQueueMiddleware extends MessageQueueService {
           .queueUrl(queueUrl).entries(listOfSendMessageBatchRequestEntry).build()
         sqsClient.sendMessageBatch(sendMessageBatchRequest)
     }, {throwable: Throwable =>
-      Log.error(s"Cannot find the queueUrl of the given queue ${to.name} due to exception $throwable", throwable)
+      Log.error(s"ERROR: Cannot find the queueUrl of the given queue ${to.name} due to exception $throwable", throwable)
       throwable
     })
   }.transform({ s: SendMessageBatchResponse =>
@@ -348,7 +348,7 @@ object SQSMessageQueueMiddleware extends MessageQueueService {
         throw uoe
       }
       case NonFatal(nf) => {
-        Log.error(s"Cannot get all the queues due to exception $throwable", throwable)
+        Log.error(s"ERROR: Cannot get all the queues due to exception $throwable", throwable)
         throw nf
       }
     }
@@ -378,7 +378,7 @@ object SQSMessageQueueMiddleware extends MessageQueueService {
       println(m)
       m
     }, { throwable: Throwable =>
-      Log.error(s"Cannot find the queueUrl of the given queue ${from.name} due to exception $throwable")
+      Log.error(s"ERROR: Cannot find the queueUrl of the given queue ${from.name} due to exception $throwable")
       throwable
     })
   }.transform({message: Option[Message] =>
@@ -386,8 +386,8 @@ object SQSMessageQueueMiddleware extends MessageQueueService {
   }, {throwable: Throwable =>
     throwable match {
       case NonFatal(nf) => {
-        Log.error(s"ERROR: Cannot receive message from Queue $from within Timeout $timeout due to $throwable", throwable)
-        throw throwable
+        Log.error(s"ERROR: Cannot receive message from Queue $from within Timeout $timeout due to $throwable", nf)
+        throw nf
       }
     }
   })
@@ -398,7 +398,7 @@ object SQSMessageQueueMiddleware extends MessageQueueService {
     *
     * @param from
     * @param timeout
-    * @return One Message or None from the given queue
+    * @return Message(s) or None from the given queue
     * @throws OverLimitException
     * The action that you requested would violate a limit. If the maximum number of messages is reached
     * @throws SdkException
@@ -420,7 +420,7 @@ object SQSMessageQueueMiddleware extends MessageQueueService {
       if (messages.isEmpty) Log.info(s"No message available from the queue ${from.name} within timeout $timeout")
       messages.toList.map(m => SQSMessage(m, from))
     }, { throwable: Throwable =>
-      Log.error(s"Cannot find the queueUrl of the given queue ${from.name}", throwable)
+      Log.error(s"ERROR: Cannot find the queueUrl of the given queue ${from.name}", throwable)
       throwable
     })
   }.transform({messages: List[Message] =>
@@ -442,7 +442,7 @@ object SQSMessageQueueMiddleware extends MessageQueueService {
   case class SQSMessage(message: model.Message, belongsToQueue: Queue) extends Message {
 
     /**
-      * AKA DeleteMessage
+      * AKA DeleteMessage in AWS SQS
       * deletes the message from its queue
       *
       * @return Result of the DeleteMessage operation returned by the service.
@@ -464,7 +464,7 @@ object SQSMessageQueueMiddleware extends MessageQueueService {
         val response = sqsClient.deleteMessage(deleteMessageRequest)
         println(response)
       }, { throwable: Throwable =>
-        Log.error(s"Cannot find the queueUrl of the given queue ${belongsToQueue.name} due to $throwable", throwable)
+        Log.error(s"ERROR: Cannot find the queueUrl of the given queue ${belongsToQueue.name} due to $throwable", throwable)
         throwable
       })
     }.transform({s: Unit =>

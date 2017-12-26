@@ -6,6 +6,7 @@ import org.junit.runner.RunWith
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers}
+import software.amazon.awssdk.services.sqs.model.{BatchEntryIdsNotDistinctException, EmptyBatchRequestException, OverLimitException, QueueDoesNotExistException}
 
 import scala.collection.immutable.Seq
 import scala.concurrent.{Await, Future}
@@ -33,13 +34,21 @@ class SQSMessageQueueMiddlewareTest extends FlatSpec with BeforeAndAfterAll with
     assert(sqsQueueTry.isSuccess)
     assert(sqsQueue.name == queueName)
 
+    val createSameQueue: Try[Queue] = SQSMessageQueueMiddleware.createQueueIfAbsent(queueName)
+    assert(createSameQueue.isSuccess)
+    assert(createSameQueue.get.name == queueName)
+
     // get all queues
     val oneQueue: Try[Seq[Queue]] = SQSMessageQueueMiddleware.queues
     assert(oneQueue.isSuccess)
     assert(oneQueue.get == Seq(sqsQueue))
 
     // get queues with specific prefix
-    val queueWithPrefix: Try[Seq[Queue]] = SQSMessageQueueMiddleware.queuesWithPrefix("sqs")
+    val queueWithSQSPrefix: Try[Seq[Queue]] = SQSMessageQueueMiddleware.queuesWithPrefix("sqs")
+    assert(queueWithSQSPrefix.isSuccess)
+    assert(queueWithSQSPrefix.get == Seq(sqsQueue))
+
+    val queueWithPrefix: Try[Seq[Queue]] = SQSMessageQueueMiddleware.queuesWithPrefix("")
     assert(queueWithPrefix.isSuccess)
     assert(queueWithPrefix.get == Seq(sqsQueue))
 
@@ -91,4 +100,77 @@ class SQSMessageQueueMiddlewareTest extends FlatSpec with BeforeAndAfterAll with
     assert(deleteQueueTry.isSuccess)
 
   }
-}
+
+  "SQSMessageQueue" should "throw an exception if deleting a non-existing queue" in {
+
+    val queues: Seq[Queue] = SQSMessageQueueMiddleware.queues.get
+    queues.foreach({queue: Queue => SQSMessageQueueMiddleware.deleteQueue(queue.name)})
+
+    val queueName = "GetNonExistingQueueUrl"
+    val deleteQueue = SQSMessageQueueMiddleware.deleteQueue(queueName)
+    assert(deleteQueue.isFailure)
+    intercept[QueueDoesNotExistException] {
+      SQSMessageQueueMiddleware.deleteQueue(queueName)
+    }
+
+    assert(SQSMessageQueueMiddleware.queues.get.isEmpty)
+  }
+
+  "SQSMessageQueue" should "throw an exception if sending or receiving message to a non-existing queue" in {
+    val queues: Seq[Queue] = SQSMessageQueueMiddleware.queues.get
+    queues.foreach({queue: Queue => SQSMessageQueueMiddleware.deleteQueue(queue.name)})
+
+    val queueName = "GetNonExistingQueueUrl"
+    an [QueueDoesNotExistException] should be thrownBy Await.result(SQSMessageQueueMiddleware.send("testContent", Queue(queueName)), waitForFutureToComplete)
+    an [QueueDoesNotExistException] should be thrownBy Await.result(SQSMessageQueueMiddleware.receive(Queue(queueName), 2 second), waitForFutureToComplete)
+
+    assert(SQSMessageQueueMiddleware.queues.get.isEmpty)
+  }
+
+  "SQSMessageQueue" should "receive no message or throw an exception if sending empty message to an existing queue" in {
+    val queues: Seq[Queue] = SQSMessageQueueMiddleware.queues.get
+    queues.foreach({queue: Queue => SQSMessageQueueMiddleware.deleteQueue(queue.name)})
+
+    val queueName = "queueSendEmptyMessageBatch"
+    val createQueue = SQSMessageQueueMiddleware.createQueueIfAbsent(queueName)
+    assert(createQueue.isSuccess)
+    val messageOpt: Option[Message] = Await.result(SQSMessageQueueMiddleware.receive(createQueue.get, 2 second), waitForFutureToComplete)
+    assert(messageOpt.isEmpty)
+
+    an [EmptyBatchRequestException] should be thrownBy Await.result(SQSMessageQueueMiddleware.sendMultipleMessages(Map.empty, createQueue.get), waitForFutureToComplete)
+
+    val map: Map[String, String] = Map("id" -> "content1", "id" -> "content2")
+    an [BatchEntryIdsNotDistinctException] should be thrownBy Await.result(SQSMessageQueueMiddleware.sendMultipleMessages(map, createQueue.get), waitForFutureToComplete)
+
+    assert(SQSMessageQueueMiddleware.queues.get.isEmpty)
+  }
+
+  "SQSMessageQueue" should "receive no message from the queue" in {
+    val queues: Seq[Queue] = SQSMessageQueueMiddleware.queues.get
+    queues.foreach({queue: Queue => SQSMessageQueueMiddleware.deleteQueue(queue.name)})
+
+    val queueName = "GetNonExistingQueueUrl"
+    an [QueueDoesNotExistException] should be thrownBy Await.result(SQSMessageQueueMiddleware.send("testContent", Queue(queueName)), waitForFutureToComplete)
+
+    assert(SQSMessageQueueMiddleware.queues.get.isEmpty)
+  }
+
+  "SQSMessageQueue" should "throw exception when maxNumberOfMessage is exceeds limit" in {
+    val queues: Seq[Queue] = SQSMessageQueueMiddleware.queues.get
+    queues.foreach({queue: Queue => SQSMessageQueueMiddleware.deleteQueue(queue.name)})
+
+    val queueName = "receiveMultipleMessages"
+    an [QueueDoesNotExistException] should be thrownBy Await.result(SQSMessageQueueMiddleware.receiveMultipleMessages(Queue(queueName), 1 second, 1), waitForFutureToComplete)
+
+    val createQueue = SQSMessageQueueMiddleware.createQueueIfAbsent(queueName)
+    assert(createQueue.isSuccess)
+
+    val listOfMessages = Await.result(SQSMessageQueueMiddleware.receiveMultipleMessages(createQueue.get, 1 second), waitForFutureToComplete)
+    assert(listOfMessages.isEmpty)
+
+    an [OverLimitException] should be thrownBy Await.result(SQSMessageQueueMiddleware.receiveMultipleMessages(createQueue.get, 1 second, 11), waitForFutureToComplete)
+
+    assert(SQSMessageQueueMiddleware.queues.get.isEmpty)
+  }
+
+  }
