@@ -10,7 +10,7 @@ import net.shrine.source.ConfigSource
 import software.amazon.awssdk.core.auth.ProfileCredentialsProvider
 import software.amazon.awssdk.core.exception.{SdkClientException, SdkException, SdkServiceException}
 import software.amazon.awssdk.core.regions.Region
-import software.amazon.awssdk.services.sqs.model.{BatchEntryIdsNotDistinctException, BatchRequestTooLongException, CreateQueueRequest, DeleteMessageRequest, DeleteQueueRequest, DeleteQueueResponse, EmptyBatchRequestException, GetQueueUrlRequest, GetQueueUrlResponse, InvalidBatchEntryIdException, InvalidMessageContentsException, ListQueuesRequest, ListQueuesResponse, QueueDeletedRecentlyException, QueueDoesNotExistException, QueueNameExistsException, ReceiveMessageRequest, SQSException, SendMessageBatchRequest, SendMessageBatchRequestEntry, SendMessageRequest, TooManyEntriesInBatchRequestException}
+import software.amazon.awssdk.services.sqs.model.{BatchEntryIdsNotDistinctException, BatchRequestTooLongException, CreateQueueRequest, CreateQueueResponse, DeleteMessageRequest, DeleteQueueRequest, DeleteQueueResponse, EmptyBatchRequestException, GetQueueUrlRequest, GetQueueUrlResponse, InvalidBatchEntryIdException, InvalidIdFormatException, InvalidMessageContentsException, ListQueuesRequest, ListQueuesResponse, OverLimitException, QueueDeletedRecentlyException, QueueDoesNotExistException, QueueNameExistsException, ReceiptHandleIsInvalidException, ReceiveMessageRequest, SQSException, SendMessageBatchRequest, SendMessageBatchRequestEntry, SendMessageBatchResponse, SendMessageRequest, TooManyEntriesInBatchRequestException}
 import software.amazon.awssdk.services.sqs.{SQSClient, model}
 
 import scala.collection.JavaConversions._
@@ -20,6 +20,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.duration.Duration
 import scala.concurrent.duration._
+import scala.util.control.NonFatal
 import scala.util.{Failure, Success, Try}
 
 /**
@@ -68,13 +69,28 @@ object SQSMessageQueueMiddleware extends MessageQueueService {
               If any client side error occurs such as an IO related failure, failure to get credentials, etc.
       @throws SQSException
               Base class for all service exceptions. Unknown exceptions will be thrown as an instance of this type.
-      @throws SdkServiceException
     */
   def createQueueIfAbsent(queueName: String): Try[Queue] = Try {
     val createQueueRequest: CreateQueueRequest = CreateQueueRequest.builder().queueName(queueName).build
     sqsClient.createQueue(createQueueRequest)
-    Queue(queueName)
-  }
+  }.transform({response: CreateQueueResponse =>
+    Success(Queue(queueName))
+  }, { throwable: Throwable =>
+    throwable match {
+      case qnee: QueueNameExistsException => {
+        Log.info(s"Queue $queueName already exists, not creating a queue.")
+        Success(Queue(queueName))
+      }
+      case qdre: QueueDeletedRecentlyException => {
+        Log.error(s"ERROR: Failed to create Queue $queueName You must wait 60 seconds after deleting a queue before you can create another one with the same name.")
+        throw qdre
+      }
+      case NonFatal(nf) => {
+        Log.error(s"ERROR: exception $nf", nf)
+        throw nf
+      }
+    }
+  })
 
   /**
     * gets a queueUrl of an existing queue using the given queueName
@@ -92,9 +108,21 @@ object SQSMessageQueueMiddleware extends MessageQueueService {
     */
   private def getQueueUrl(queueName: String): Try[String] = Try {
     val getQueueUrlRequest: GetQueueUrlRequest = GetQueueUrlRequest.builder().queueName(queueName).build()
-    val getQueueUrlResponse: GetQueueUrlResponse = sqsClient.getQueueUrl(getQueueUrlRequest)
-    getQueueUrlResponse.queueUrl
-  }
+    sqsClient.getQueueUrl(getQueueUrlRequest)
+  }.transform({getQueueUrlResponse: GetQueueUrlResponse =>
+    Success(getQueueUrlResponse.queueUrl)
+  }, {throwable: Throwable =>
+    throwable match {
+      case qdnee: QueueDoesNotExistException => {
+        Log.error(s"Error: Queue $queueName does not exist!", qdnee)
+        throw qdnee
+      }
+      case NonFatal(nf) => {
+        Log.error(s"ERROR: exception $nf", nf)
+        throw nf
+      }
+    }
+  })
 
 
   /**
@@ -108,19 +136,27 @@ object SQSMessageQueueMiddleware extends MessageQueueService {
               If any client side error occurs such as an IO related failure, failure to get credentials, etc.
       @throws SQSException
               Base class for all service exceptions. Unknown exceptions will be thrown as an instance of this type.
-      @throws SdkServiceException
     */
   def deleteQueue(queueName: String): Try[Unit] = {
-    getQueueUrl(queueName).transform({ queueUrl: String =>
+    getQueueUrl(queueName).transform({ queueUrl: String =>  // deal with exceptions while getting the queueUrl
       val deleteQueueRequest: DeleteQueueRequest = DeleteQueueRequest.builder().queueUrl(queueUrl).build()
       val deleteQueueResponse: DeleteQueueResponse = sqsClient.deleteQueue(deleteQueueRequest)
       println(deleteQueueResponse)
       Success(deleteQueueResponse) // todo interpret the response
     }, { throwable: Throwable =>
-      Log.debug(s"Cannot find the queueUrl of the given queue $queueName")
+      Log.error(s"Cannot find the queueUrl of the given queue $queueName due to exception $throwable")
       Failure(throwable)
     })
-  }
+  }.transform({deleteQueueResponse: DeleteQueueResponse => // deal with exceptions while deleting
+    Success(deleteQueueResponse)
+  }, {throwable: Throwable =>
+    throwable match {
+      case NonFatal(nf) => {
+        Log.error(s"Cannot delete Queue $queueName due to exception $throwable", throwable)
+        throw nf
+      }
+    }
+  })
 
   /**
     * queueUrl format: https://{REGION_ENDPOINT}/queue.|api-domain|/{YOUR_ACCOUNT_NUMBER}/{YOUR_QUEUE_NAME}
@@ -132,7 +168,6 @@ object SQSMessageQueueMiddleware extends MessageQueueService {
               If any client side error occurs such as an IO related failure, failure to get credentials, etc.
       @throws SQSException
               Base class for all service exceptions. Unknown exceptions will be thrown as an instance of this type.
-      @throws SdkServiceException
     */
   def queues: Try[Seq[Queue]] = Try {
     val listQueuesResponse: ListQueuesResponse = sqsClient.listQueues()
@@ -144,7 +179,16 @@ object SQSMessageQueueMiddleware extends MessageQueueService {
       Queue(urlArray.apply(urlArrayLength - 1))
     })
     result
-  }
+  }.transform({seqOfQueues: Seq[Queue] =>
+    Success(seqOfQueues)
+  }, { throwable: Throwable => // deal with exceptions while getting all the queues
+    throwable match {
+      case NonFatal(nf) => {
+        Log.error(s"Cannot get all the queues due to exception $throwable", throwable)
+        throw nf
+      }
+    }
+  })
 
   /**
     *
@@ -170,7 +214,16 @@ object SQSMessageQueueMiddleware extends MessageQueueService {
       Queue(urlArray.apply(urlArrayLength - 1))
     })
     result
-  }
+  }.transform({seqOfQueues: Seq[Queue] =>
+    Success(seqOfQueues)
+  }, { throwable: Throwable => // deal with exceptions while getting all the queues with the given specific prefix
+    throwable match {
+      case NonFatal(nf) => {
+        Log.error(s"Cannot get the queues with prefix $prefix due to exception $throwable", throwable)
+        throw nf
+      }
+    }
+  })
 
   /**
     * Sends the given message to a given Queue
@@ -191,16 +244,33 @@ object SQSMessageQueueMiddleware extends MessageQueueService {
     *         Base class for all service exceptions. Unknown exceptions will be thrown as an instance of this type.
     */
   def send(contents:String, to:Queue): Future[Unit] = {
-    Future.fromTry(getQueueUrl(to.name)).transform({queueUrl: String =>
+    Future.fromTry(getQueueUrl(to.name)).transform({queueUrl: String =>  // deal with exceptions while getting the queueUrl
       // user can set delay seconds for send
       val sendMessageRequest: SendMessageRequest = SendMessageRequest.builder().queueUrl(queueUrl).messageBody(contents).build()
       val sendResponse = sqsClient.sendMessage(sendMessageRequest)
       println(sendResponse)
     }, {throwable: Throwable =>
-      Log.debug(s"Cannot find the queueUrl of the given queue ${to.name}")
+      Log.error(s"Cannot find the queueUrl of the given queue ${to.name} due to exception $throwable", throwable)
       throwable
     })
-  }
+  }.transform({ s: Unit =>
+    s
+  }, { throwable: Throwable => // deal with exceptions while sending the message
+    throwable match {
+      case imce: InvalidMessageContentsException => {
+        Log.error(s"ERROR: Cannot send message to Queue $to, because the message contains characters outside the allowed set. Message content $contents", throwable)
+        throw imce
+      }
+      case uoe: UnsupportedOperationException => {
+        Log.error(s"ERROR: Cannot send message to Queue $to, because the operation is not supported by SQS", uoe)
+        throw uoe
+      }
+      case NonFatal(nf) => {
+        Log.error(s"Cannot get all the queues due to exception $throwable", throwable)
+        throw nf
+      }
+    }
+  })
 
   /**
     * Send multiple messages at once
@@ -230,8 +300,8 @@ object SQSMessageQueueMiddleware extends MessageQueueService {
     * @throws SQSException
     *         Base class for all service exceptions. Unknown exceptions will be thrown as an instance of this type
     */
-  def sendMultipleMessages(messagesMap: Map[String, String], to: Queue, delaySecond: Duration = 0 second) = {
-    Future.fromTry(getQueueUrl(to.name)).transform({ queueUrl: String =>
+  def sendMultipleMessages(messagesMap: Map[String, String], to: Queue, delaySecond: Duration = 0 second): Future[Unit] = {
+    Future.fromTry(getQueueUrl(to.name)).transform({ queueUrl: String => // deal with exceptions thrown while getting the queueUrl
       val listOfSendMessageBatchRequestEntry: List[SendMessageBatchRequestEntry] = messagesMap.map{ idAndContent: (String, String) =>
         SendMessageBatchRequestEntry.builder
           .id(idAndContent._1)
@@ -242,17 +312,62 @@ object SQSMessageQueueMiddleware extends MessageQueueService {
           .queueUrl(queueUrl).entries(listOfSendMessageBatchRequestEntry).build()
         sqsClient.sendMessageBatch(sendMessageBatchRequest)
     }, {throwable: Throwable =>
-      Log.debug(s"Cannot find the queueUrl of the given queue ${to.name}")
+      Log.error(s"Cannot find the queueUrl of the given queue ${to.name} due to exception $throwable", throwable)
       throwable
     })
-  }
+  }.transform({ s: SendMessageBatchResponse =>
+    s
+  }, { throwable: Throwable => // deal with exceptions while sending multiple messages
+    throwable match {
+      case tmeibre: TooManyEntriesInBatchRequestException => {
+        Log.error(s"ERROR: Cannot send multiple messages to Queue $to, because the batch request contains more entries than permissible", tmeibre)
+        throw tmeibre
+      }
+      case ebre: EmptyBatchRequestException => {
+        Log.error(s"ERROR: Cannot send multiple messages to Queue $to, because the batch was empty", ebre)
+        throw ebre
+      }
+      case imce: InvalidMessageContentsException => {
+        Log.error(s"ERROR: Cannot send message to Queue $to, because the message contains characters outside the allowed set.", imce)
+        throw imce
+      }
+      case beinde: BatchEntryIdsNotDistinctException => {
+        Log.error(s"ERROR: Cannot send multiple messages to Queue $to, because two or more batch entries in the request have the same", beinde)
+        throw beinde
+      }
+      case brtle: BatchRequestTooLongException => {
+        Log.error(s"ERROR: Cannot send multiple messages to Queue $to, because the length of all the messages put together is more than the limit.", brtle)
+        throw brtle
+      }
+      case ibeie: InvalidBatchEntryIdException => {
+        Log.error(s"ERROR: Cannot send multiple messages to Queue $to, because the id of a batch entry in a batch request doesn't abide by the specification", ibeie)
+        throw ibeie
+      }
+      case uoe: UnsupportedOperationException => {
+        Log.error(s"ERROR: Cannot send message to Queue $to, because the operation is not supported by SQS", uoe)
+        throw uoe
+      }
+      case NonFatal(nf) => {
+        Log.error(s"Cannot get all the queues due to exception $throwable", throwable)
+        throw nf
+      }
+    }
+  })
 
 
   /**
     * Receives message from the given queue within the given timeout
+    *
     * @param from
     * @param timeout
     * @return One Message or None from the given queue
+    * @throws SdkException
+    * Base class for all exceptions that can be thrown by the SDK (both service and client). Can be used for
+    * catch all scenarios.
+    * @throws SdkClientException
+    * If any client side error occurs such as an IO related failure, failure to get credentials, etc.
+    * @throws SQSException
+    * Base class for all service exceptions. Unknown exceptions will be thrown as an instance of this type.
     */
   def receive(from:Queue,timeout:Duration): Future[Option[Message]] = {
     Future.fromTry(getQueueUrl(from.name)).transform({ queueUrl: String =>
@@ -263,10 +378,19 @@ object SQSMessageQueueMiddleware extends MessageQueueService {
       println(m)
       m
     }, { throwable: Throwable =>
-      Log.debug(s"Cannot find the queueUrl of the given queue ${from.name}")
+      Log.error(s"Cannot find the queueUrl of the given queue ${from.name} due to exception $throwable")
       throwable
     })
-  }
+  }.transform({message: Option[Message] =>
+    message
+  }, {throwable: Throwable =>
+    throwable match {
+      case NonFatal(nf) => {
+        Log.error(s"ERROR: Cannot receive message from Queue $from within Timeout $timeout due to $throwable", throwable)
+        throw throwable
+      }
+    }
+  })
 
   /**
     * Receives messages from the given queue within the given timeout
@@ -275,6 +399,15 @@ object SQSMessageQueueMiddleware extends MessageQueueService {
     * @param from
     * @param timeout
     * @return One Message or None from the given queue
+    * @throws OverLimitException
+    * The action that you requested would violate a limit. If the maximum number of messages is reached
+    * @throws SdkException
+    * Base class for all exceptions that can be thrown by the SDK (both service and client). Can be used for
+    * catch all scenarios.
+    * @throws SdkClientException
+    * If any client side error occurs such as an IO related failure, failure to get credentials, etc.
+    * @throws SQSException
+    * Base class for all service exceptions. Unknown exceptions will be thrown as an instance of this type.
     */
   def receiveMultipleMessages(from:Queue, timeout:Duration, maxNumberOfMessages: Int = 1): Future[List[Message]] = {
     Future.fromTry(getQueueUrl(from.name)).transform({ queueUrl: String =>
@@ -287,17 +420,43 @@ object SQSMessageQueueMiddleware extends MessageQueueService {
       if (messages.isEmpty) Log.info(s"No message available from the queue ${from.name} within timeout $timeout")
       messages.toList.map(m => SQSMessage(m, from))
     }, { throwable: Throwable =>
-      Log.debug(s"Cannot find the queueUrl of the given queue ${from.name}")
+      Log.error(s"Cannot find the queueUrl of the given queue ${from.name}", throwable)
       throwable
     })
-  }
+  }.transform({messages: List[Message] =>
+    messages
+  }, {throwable: Throwable =>
+    throwable match {
+      case ole: OverLimitException => {
+        Log.error(s"ERROR: Cannot receive multiple messages from Queue $from within Timeout $timeout," +
+          s" because the given maxNumberOfMessages is invalid. Valid value is from 1 to 10.", ole)
+        throw ole
+      }
+      case NonFatal(nf) => {
+        Log.error(s"ERROR: Cannot receive multiple messages from Queue $from within Timeout $timeout due to $throwable", nf)
+        throw nf
+      }
+    }
+  })
 
   case class SQSMessage(message: model.Message, belongsToQueue: Queue) extends Message {
 
     /**
       * AKA DeleteMessage
       * deletes the message from its queue
+      *
       * @return Result of the DeleteMessage operation returned by the service.
+      * @throws InvalidIdFormatException
+      * The receipt handle isn't valid for the current version.
+      * @throws ReceiptHandleIsInvalidException
+      * The receipt handle provided isn't valid.
+      * @throws SdkException
+      * Base class for all exceptions that can be thrown by the SDK (both service and client). Can be used for
+      * catch all scenarios.
+      * @throws SdkClientException
+      * If any client side error occurs such as an IO related failure, failure to get credentials, etc.
+      * @throws SQSException
+      * Base class for all service exceptions. Unknown exceptions will be thrown as an instance of this type.
       */
     override def complete(): Future[Unit] = {
       Future.fromTry(getQueueUrl(belongsToQueue.name)).transform({ queueUrl: String =>
@@ -305,10 +464,27 @@ object SQSMessageQueueMiddleware extends MessageQueueService {
         val response = sqsClient.deleteMessage(deleteMessageRequest)
         println(response)
       }, { throwable: Throwable =>
-        Log.debug(s"Cannot find the queueUrl of the given queue ${belongsToQueue.name}")
+        Log.error(s"Cannot find the queueUrl of the given queue ${belongsToQueue.name} due to $throwable", throwable)
         throwable
       })
-    }
+    }.transform({s: Unit =>
+      s
+    }, { throwable: Throwable =>
+      throwable match {
+        case iife: InvalidIdFormatException => {
+          Log.error(s"ERROR: Cannot complete message that belongs to Queue ${belongsToQueue.name} because the receipt handle isn't valid for the current version", iife)
+          throw iife
+        }
+        case rhiie: ReceiptHandleIsInvalidException => {
+          Log.error(s"ERROR: Cannot complete message that belongs to Queue ${belongsToQueue.name} because the receipt handle provided isn't valid", rhiie)
+          throw rhiie
+        }
+        case NonFatal(nf) => {
+          Log.error(s"ERROR: Cannot complete message that belongs to Queue ${belongsToQueue.name} due to $nf", nf)
+          throw nf
+        }
+      }
+    })
 
     /**
       *
