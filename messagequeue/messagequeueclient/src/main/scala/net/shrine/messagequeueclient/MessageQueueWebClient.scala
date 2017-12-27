@@ -5,6 +5,7 @@ import java.util.concurrent.TimeoutException
 import akka.actor.ActorSystem
 import net.shrine.config.ConfigExtensions
 import net.shrine.log.Loggable
+import net.shrine.messagequeueclient.HttpClient.webApiFuture
 import net.shrine.messagequeuemiddleware.LocalMessageQueueMiddleware.SimpleMessage
 import net.shrine.messagequeueservice.{CouldNotCompleteMomTaskButOKToRetryException, CouldNotCompleteMomTaskDoNotRetryException, Message, MessageQueueService, Queue}
 import net.shrine.problem.{AbstractProblem, ProblemSources}
@@ -18,6 +19,9 @@ import scala.collection.immutable.Seq
 import scala.concurrent.Future
 import scala.concurrent.duration.Duration
 import scala.language.postfixOps
+import scala.concurrent.duration.{Duration, DurationLong}
+import scala.concurrent.{Await, Future}
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.control.NonFatal
 import scala.util.{Failure, Success, Try}
 
@@ -76,10 +80,17 @@ object MessageQueueWebClient extends MessageQueueService with Loggable {
 
   val momUrl: String = webClientConfig.getString("serverUrl")
 
-  def webApiTry(request:HttpRequest,operation:String,timeLimit:Duration = webClientTimeOut):Try[HttpResponse] = {
-    HttpClient.webApiTry(request,timeLimit).transform({ response =>
-      if(response.status.isSuccess) Success(response)
-      else Try {
+  def webApiTry(request:HttpRequest, operation:String, timeLimit:Duration = webClientTimeOut): Try[HttpResponse] = Try {
+    val deadline = System.currentTimeMillis() + timeLimit.toMillis
+    //wait just a little longer than the deadline to let the other timeouts happen first
+    val timeOutWaitGap = ConfigSource.config.get("shrine.messagequeue.httpClient.timeOutWaitGap", Duration(_)).toMillis
+    Await.result(webApiFutureWithMOMErrorHandling(request, operation, timeLimit), deadline + timeOutWaitGap - System.currentTimeMillis() milliseconds)
+  }
+
+  def webApiFutureWithMOMErrorHandling(request:HttpRequest, operation:String, timeLimit:Duration = webClientTimeOut): Future[HttpResponse] = {
+    webApiFuture(request,timeLimit)(system).transform({ (response: HttpResponse) =>
+      if(response.status.isSuccess) response
+      else {
         response.status match {
           case x if x == StatusCodes.RequestTimeout => throw CouldNotCompleteMomTaskButOKToRetryException(operation, Some(response.status), Some(response.entity.asString))
           case x if x == StatusCodes.NetworkConnectTimeout => throw CouldNotCompleteMomTaskButOKToRetryException(operation, Some(response.status), Some(response.entity.asString))
@@ -89,8 +100,8 @@ object MessageQueueWebClient extends MessageQueueService with Loggable {
         }
       }
     }, {
-      case tx: TimeoutException => Failure(CouldNotCompleteMomTaskButOKToRetryException(operation, None, None, Some(tx)))
-      case t => Failure(t)
+      case tx: TimeoutException => CouldNotCompleteMomTaskButOKToRetryException(operation, None, None, Some(tx)) // todo should this be thrown?
+      case t => t // todo should this be thrown?
     })
   }
 
