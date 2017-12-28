@@ -31,19 +31,19 @@ import scala.util.{Failure, Success, Try}
   */
 object SQSMessageQueueMiddleware extends MessageQueueService {
 
-//  val credentialsProvider: ProfileCredentialsProvider = new ProfileCredentialsProvider
-//    try {
-//      credentialsProvider.getCredentials
-//    }
-//    catch {
-//      case e: NonFatal =>
-//        throw new Nothing("Cannot load the credentials from the credential profiles file. "
-//          + "Please make sure that your credentials file is at the correct "
-//          + "location (~/.aws/credentials), and is in valid format.", e)
-//    }
+  val credentialsProvider: ProfileCredentialsProvider = ProfileCredentialsProvider.create()
+    try {
+      credentialsProvider.getCredentials
+    }
+    catch {
+      case NonFatal(nf) =>
+        throw new IllegalArgumentException("Cannot load the credentials from the credential profiles file. "
+          + "Please make sure that your credentials file is at the correct "
+          + "location (~/.aws/credentials), and is in valid format.", nf)
+    }
 
   // .credentialsProvider(credentialsProvider)
-  val sqsClient: SQSClient = SQSClient.builder.region(Region.US_EAST_1).build
+  val sqsClient: SQSClient = SQSClient.builder.credentialsProvider(credentialsProvider).region(Region.US_EAST_1).build
 
   val configPath = "shrine.messagequeue.blockingq" // todo change the name in config file to "messageq"?
 
