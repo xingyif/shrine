@@ -33,7 +33,7 @@ object SQSMessageQueueMiddleware extends MessageQueueService {
 
   val credentialsProvider: ProfileCredentialsProvider = ProfileCredentialsProvider.create()
     try {
-      credentialsProvider.getCredentials
+      println(credentialsProvider.getCredentials)
     }
     catch {
       case NonFatal(nf) =>
