@@ -98,8 +98,8 @@ object MessageQueueWebClient extends MessageQueueService with Loggable {
         }
       }
     }, {
-      case tx: TimeoutException => CouldNotCompleteMomTaskButOKToRetryException(operation, None, None, Some(tx)) // todo should this be thrown?
-      case t: Throwable => t // todo should this be thrown?
+      case tx: TimeoutException => throw CouldNotCompleteMomTaskButOKToRetryException(operation, None, None, Some(tx))
+      case t: Throwable => throw t
     })
   }
 
