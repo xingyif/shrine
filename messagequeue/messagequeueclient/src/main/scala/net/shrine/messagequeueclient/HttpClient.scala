@@ -55,13 +55,7 @@ object HttpClient extends Loggable {
 
   def webApiTry(request:HttpRequest,
                 timeout:Duration = ConfigSource.config.get("shrine.messagequeue.httpClient.defaultTimeOut", Duration(_)))
-               (implicit system: ActorSystem):Try[HttpResponse] = Try {
-    webApiCall(request,timeout)(system)
-  }
-
-  private def webApiCall(request:HttpRequest,
-                         timeout:Duration = ConfigSource.config.get("shrine.messagequeue.httpClient.defaultTimeOut", Duration(_)))
-                        (implicit system: ActorSystem):HttpResponse = {
+               (implicit system: ActorSystem): Try[HttpResponse] = Try {
     val deadline = System.currentTimeMillis() + timeout.toMillis
     //wait just a little longer than the deadline to let the other timeouts happen first
     val timeOutWaitGap = ConfigSource.config.get("shrine.messagequeue.httpClient.timeOutWaitGap", Duration(_)).toMillis

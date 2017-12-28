@@ -5,6 +5,7 @@ import java.util.concurrent.TimeoutException
 import akka.actor.ActorSystem
 import net.shrine.config.ConfigExtensions
 import net.shrine.log.Loggable
+import net.shrine.messagequeueclient.HttpClient.webApiFuture
 import net.shrine.messagequeuemiddleware.LocalMessageQueueMiddleware.SimpleMessage
 import net.shrine.messagequeueservice.{CouldNotCompleteMomTaskButOKToRetryException, CouldNotCompleteMomTaskDoNotRetryException, Message, MessageQueueService, Queue}
 import net.shrine.problem.{AbstractProblem, ProblemSources}
@@ -15,8 +16,9 @@ import org.json4s.native.Serialization.read
 import spray.http.{HttpEntity, HttpMethods, HttpRequest, HttpResponse, StatusCodes}
 
 import scala.collection.immutable.Seq
-import scala.concurrent.Future
-import scala.concurrent.duration.Duration
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration.{Duration, DurationLong}
+import scala.concurrent.{Await, Future}
 import scala.language.postfixOps
 import scala.util.control.NonFatal
 import scala.util.{Failure, Success, Try}
@@ -75,11 +77,18 @@ object MessageQueueWebClient extends MessageQueueService with Loggable {
   //  }
 
   val momUrl: String = webClientConfig.getString("serverUrl")
+  val timeOutWaitGap: Long = ConfigSource.config.get("shrine.messagequeue.httpClient.timeOutWaitGap", Duration(_)).toMillis
 
-  def webApiTry(request:HttpRequest,operation:String,timeLimit:Duration = webClientTimeOut):Try[HttpResponse] = {
-    HttpClient.webApiTry(request,timeLimit).transform({ response =>
-      if(response.status.isSuccess) Success(response)
-      else Try {
+  def webApiTry(request:HttpRequest, operation:String, timeLimit:Duration = webClientTimeOut): Try[HttpResponse] = Try {
+    val deadline = System.currentTimeMillis() + timeLimit.toMillis
+    //wait just a little longer than the deadline to let the other timeouts happen first
+    Await.result(webApiFutureWithMOMErrorHandling(request, operation, timeLimit), deadline + timeOutWaitGap - System.currentTimeMillis() milliseconds)
+  }
+
+  def webApiFutureWithMOMErrorHandling(request:HttpRequest, operation:String, timeLimit:Duration = webClientTimeOut): Future[HttpResponse] = {
+    webApiFuture(request,timeLimit)(system).transform({ (response: HttpResponse) =>
+      if(response.status.isSuccess) response
+      else {
         response.status match {
           case x if x == StatusCodes.RequestTimeout => throw CouldNotCompleteMomTaskButOKToRetryException(operation, Some(response.status), Some(response.entity.asString))
           case x if x == StatusCodes.NetworkConnectTimeout => throw CouldNotCompleteMomTaskButOKToRetryException(operation, Some(response.status), Some(response.entity.asString))
@@ -89,8 +98,8 @@ object MessageQueueWebClient extends MessageQueueService with Loggable {
         }
       }
     }, {
-      case tx: TimeoutException => Failure(CouldNotCompleteMomTaskButOKToRetryException(operation, None, None, Some(tx)))
-      case t => Failure(t)
+      case tx: TimeoutException => throw CouldNotCompleteMomTaskButOKToRetryException(operation, None, None, Some(tx))
+      case t: Throwable => throw t
     })
   }
 
@@ -180,7 +189,7 @@ object MessageQueueWebClient extends MessageQueueService with Loggable {
   override def send(contents: String, to: Queue): Future[Unit] = {
     val waitTimeBeforeResent = webClientConfig.get("waitTimeBeforeResent", Duration(_))
 
-    def sendMessageOnce(): Try[Unit] = {
+    def sendMessageOnce(): Future[Unit] = {
       debug(s"send to $to '$contents'")
       val sendMessageUrl = s"$momUrl/sendMessage/${to.name}"
       val request: HttpRequest = HttpRequest(
@@ -188,10 +197,10 @@ object MessageQueueWebClient extends MessageQueueService with Loggable {
         uri = sendMessageUrl,
         entity = HttpEntity(contents) //todo set contents as XML or json SHRINE-2215
       )
-      webApiTry(request, s"send to ${to.name}").transform({s =>
+      webApiFutureWithMOMErrorHandling(request, s"send to ${to.name}").transform({ s: HttpResponse =>
         if (s.status == StatusCodes.Accepted) {
           info(s"Successfully sent Message $contents to Queue $to")
-          Success(s)
+          s
         } else {
           debug(
             s"""Try to sendMessage $contents, HTTPResponse is a success but it does not contain an expected StatusCode
@@ -199,7 +208,7 @@ object MessageQueueWebClient extends MessageQueueService with Loggable {
                |Response: $s""".stripMargin)
           throw CouldNotCompleteMomTaskDoNotRetryException(s"send a Message to ${to.name}", Some(s.status), Some(s.entity.asString))
         }
-      }, { throwable =>
+      }, { throwable: Throwable =>
         throwable match {
           case CouldNotCompleteMomTaskDoNotRetryException(task, status, content, cause) => {
             if (status.get == StatusCodes.UnprocessableEntity) {
@@ -209,27 +218,29 @@ object MessageQueueWebClient extends MessageQueueService with Loggable {
           case _ => //Don't touch
         }
         error(s"Failed to send Message $contents to Queue $to due to Error: $throwable", throwable)
-        Failure(throwable)
+        throwable
       })
     }
 
-    def keepGoing(lastAttempt: Try[Unit]): Try[Boolean] = {
-      lastAttempt.transform({ s =>
+    def keepGoing(lastAttempt: Future[Unit]): Try[Boolean] = {
+      Try{ Await.result(lastAttempt, waitTimeBeforeResent) }.transform({ s: Unit =>
         Success(false)
-      }, {
-        case okToRetry: CouldNotCompleteMomTaskButOKToRetryException => Success(true)
-        case t => Failure(t)
+      }, { throwable: Throwable =>
+        throwable match {
+          case okToRetry: CouldNotCompleteMomTaskButOKToRetryException => Success(true)
+          case t: Throwable => Failure(t)
+        }
       })
     }
 
-    var retrySendResult: Try[Unit] = sendMessageOnce()
+    var retrySendResult: Future[Unit] = sendMessageOnce()
     while (keepGoing(retrySendResult).get) {
       debug(s"Last attempt to send $contents to queue $to resulted in $retrySendResult. Sleeping $waitTimeBeforeResent before next attempt ")
       Thread.sleep(waitTimeBeforeResent.toMillis)
       retrySendResult = sendMessageOnce()
     }
     info(s"Finishing send with result $retrySendResult")
-    Future.fromTry(retrySendResult)
+    retrySendResult
   }
 
   override def receive(from: Queue, timeout: Duration): Future[Option[Message]] = {
@@ -238,8 +249,8 @@ object MessageQueueWebClient extends MessageQueueService with Loggable {
     val request: HttpRequest = HttpRequest(HttpMethods.GET, receiveMessageUrl)
 
     //use the time to make the API call plus the timeout for the long poll
-      val result: Try[Option[Message]] = webApiTry(request, s"receive from ${from.name}", webClientTimeOut + timeout).transform({ response =>
-          messageOptionFromResponse(response, from)
+      val result: Future[Option[Message]] = webApiFutureWithMOMErrorHandling(request, s"receive from ${from.name}", webClientTimeOut + timeout).transform({ response =>
+        messageOptionFromResponse(response, from).get
       }, { throwable: Throwable =>
         throwable match {
           case CouldNotCompleteMomTaskDoNotRetryException(task, status, contents, cause) => {
@@ -249,9 +260,9 @@ object MessageQueueWebClient extends MessageQueueService with Loggable {
           }
           case _ => //Don't touch
         }
-        Failure(throwable)
+        throwable
       })
-    Future.fromTry(result)
+    result
   }
 
   def messageOptionFromResponse(response: HttpResponse, from: Queue): Try[Option[Message]] = Try {
