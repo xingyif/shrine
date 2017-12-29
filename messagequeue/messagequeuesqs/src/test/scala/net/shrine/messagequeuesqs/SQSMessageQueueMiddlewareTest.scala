@@ -1,7 +1,6 @@
 package net.shrine.messagequeuesqs
 
 import net.shrine.messagequeueservice.{Message, Queue}
-import net.shrine.messagequeuesqs.SQSMessageQueueMiddleware.SQSMessage
 import org.junit.runner.RunWith
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.junit.JUnitRunner
@@ -9,9 +8,9 @@ import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers}
 import software.amazon.awssdk.services.sqs.model.{BatchEntryIdsNotDistinctException, EmptyBatchRequestException, OverLimitException, QueueDoesNotExistException}
 
 import scala.collection.immutable.Seq
-import scala.concurrent.{Await, Future}
-import scala.util.Try
+import scala.concurrent.Await
 import scala.concurrent.duration._
+import scala.util.Try
 
 /**
   * Test create, delete queue, send, and receive message, getQueueNames, and completeMessage using SQS service
@@ -24,6 +23,7 @@ class SQSMessageQueueMiddlewareTest extends FlatSpec with BeforeAndAfterAll with
   val waitForFutureToComplete = Duration("1 minute")
 
   "SQSMessageQueue" should "create queue, send and receive message, complete message and delete queue" in {
+    import scala.collection.mutable
 
     val queues: Try[Seq[Queue]] = SQSMessageQueueMiddleware.queues
     assert(queues.get.isEmpty)
@@ -78,7 +78,7 @@ class SQSMessageQueueMiddlewareTest extends FlatSpec with BeforeAndAfterAll with
     val message0Content: String = "batch msg 0"
     val message1ID: String = "1"
     val message1Content: String = "batch msg 1"
-    val mapOfMessages: Map[String, String] = Map( message0ID -> message0Content, message1ID -> message1Content)
+    val mapOfMessages: mutable.LinkedHashMap[String, String] = mutable.LinkedHashMap( message0ID -> message0Content, message1ID -> message1Content)
     Await.result(SQSMessageQueueMiddleware.sendMultipleMessages(mapOfMessages, sqsQueue, 2 second), waitForFutureToComplete)
 
     // receive multiple messages at once
@@ -128,6 +128,7 @@ class SQSMessageQueueMiddlewareTest extends FlatSpec with BeforeAndAfterAll with
   }
 
   "SQSMessageQueue" should "receive no message or throw an exception if sending empty message to an existing queue" in {
+    import scala.collection.mutable
     val queues: Seq[Queue] = SQSMessageQueueMiddleware.queues.get
     queues.foreach({queue: Queue => SQSMessageQueueMiddleware.deleteQueue(queue.name)})
 
@@ -137,9 +138,9 @@ class SQSMessageQueueMiddlewareTest extends FlatSpec with BeforeAndAfterAll with
     val messageOpt: Option[Message] = Await.result(SQSMessageQueueMiddleware.receive(createQueue.get, 2 second), waitForFutureToComplete)
     assert(messageOpt.isEmpty)
 
-    an [EmptyBatchRequestException] should be thrownBy Await.result(SQSMessageQueueMiddleware.sendMultipleMessages(Map.empty, createQueue.get), waitForFutureToComplete)
+    an [EmptyBatchRequestException] should be thrownBy Await.result(SQSMessageQueueMiddleware.sendMultipleMessages(mutable.LinkedHashMap.empty, createQueue.get), waitForFutureToComplete)
 
-    val map: Map[String, String] = Map("id" -> "content1", "id" -> "content2")
+    val map: mutable.LinkedHashMap[String, String] = mutable.LinkedHashMap("id" -> "content1", "id" -> "content2")
     an [BatchEntryIdsNotDistinctException] should be thrownBy Await.result(SQSMessageQueueMiddleware.sendMultipleMessages(map, createQueue.get), waitForFutureToComplete)
 
     assert(SQSMessageQueueMiddleware.queues.get.isEmpty)

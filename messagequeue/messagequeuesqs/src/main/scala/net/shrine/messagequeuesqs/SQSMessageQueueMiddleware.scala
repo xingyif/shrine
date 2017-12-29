@@ -8,7 +8,7 @@ import net.shrine.log.Log
 import net.shrine.messagequeueservice.{Message, MessageQueueService, Queue}
 import net.shrine.source.ConfigSource
 import software.amazon.awssdk.core.auth.ProfileCredentialsProvider
-import software.amazon.awssdk.core.exception.{SdkClientException, SdkException, SdkServiceException}
+import software.amazon.awssdk.core.exception.{SdkClientException, SdkException}
 import software.amazon.awssdk.core.regions.Region
 import software.amazon.awssdk.services.sqs.model.{BatchEntryIdsNotDistinctException, BatchRequestTooLongException, CreateQueueRequest, CreateQueueResponse, DeleteMessageRequest, DeleteQueueRequest, DeleteQueueResponse, EmptyBatchRequestException, GetQueueUrlRequest, GetQueueUrlResponse, InvalidBatchEntryIdException, InvalidIdFormatException, InvalidMessageContentsException, ListQueuesRequest, ListQueuesResponse, OverLimitException, QueueDeletedRecentlyException, QueueDoesNotExistException, QueueNameExistsException, ReceiptHandleIsInvalidException, ReceiveMessageRequest, SQSException, SendMessageBatchRequest, SendMessageBatchRequestEntry, SendMessageBatchResponse, SendMessageRequest, TooManyEntriesInBatchRequestException}
 import software.amazon.awssdk.services.sqs.{SQSClient, model}
@@ -16,10 +16,10 @@ import software.amazon.awssdk.services.sqs.{SQSClient, model}
 import scala.collection.JavaConversions._
 import scala.collection.JavaConverters
 import scala.collection.immutable.Seq
+import scala.collection.mutable.LinkedHashMap
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.concurrent.duration.Duration
-import scala.concurrent.duration._
+import scala.concurrent.duration.{Duration, _}
 import scala.util.control.NonFatal
 import scala.util.{Failure, Success, Try}
 
@@ -103,8 +103,6 @@ object SQSMessageQueueMiddleware extends MessageQueueService {
               If any client side error occurs such as an IO related failure, failure to get credentials, etc.
       @throws SQSException
               Base class for all service exceptions. Unknown exceptions will be thrown as an instance of this type.
-      @throws SdkServiceException
-
     */
   private def getQueueUrl(queueName: String): Try[String] = Try {
     val getQueueUrlRequest: GetQueueUrlRequest = GetQueueUrlRequest.builder().queueName(queueName).build()
@@ -201,7 +199,6 @@ object SQSMessageQueueMiddleware extends MessageQueueService {
               If any client side error occurs such as an IO related failure, failure to get credentials, etc.
       @throws SQSException
               Base class for all service exceptions. Unknown exceptions will be thrown as an instance of this type.
-      @throws SdkServiceException
     */
   def queuesWithPrefix(prefix: String): Try[Seq[Queue]] = Try {
     val listQueuesRequest = ListQueuesRequest.builder.queueNamePrefix(prefix).build
@@ -233,6 +230,12 @@ object SQSMessageQueueMiddleware extends MessageQueueService {
     * @return Result of the SendMessage operation returned by the service.'
     * @throws InvalidMessageContentsException
     *         The message contains characters outside the allowed set.
+    *         A message can include only XML, JSON, and unformatted text.
+    *         The following list shows the characters (in Unicode) allowed in your message,
+    *         according to the W3C XML specification
+    *         (for more information, go to http://www.w3.org/TR/REC-xml/#charsets).
+    *         If you send any characters not included in the list, your request will be rejected.
+    *         #x9 | #xA | #xD | [#x20 to #xD7FF] | [#xE000 to #xFFFD] | [#x10000 to #x10FFFF]
     * @throws UnsupportedOperationException
     *         Error code 400. Unsupported operation.
     * @throws SdkException
@@ -273,21 +276,23 @@ object SQSMessageQueueMiddleware extends MessageQueueService {
   })
 
   /**
-    * Send multiple messages at once
+    * Send multiple messages (up to 10) at once
     *
     * @param messagesMap hashMap of entries of [messageId, messageContent]
     * @param to which queue to send to
-    * @param delaySecond seconds to wait before sending the messages
+    * @param delaySecond seconds to wait before sending each the messages, including the first message
     * @return
     * *
     * @throws TooManyEntriesInBatchRequestException
-    *         The batch request contains more entries than permissible.
+    *         The batch request contains more than 10 entries.
     * @throws EmptyBatchRequestException
     *         The batch request doesn't contain any entries.
     * @throws BatchEntryIdsNotDistinctException
     *         Two or more batch entries in the request have the same <code>Id</code>.
     * @throws BatchRequestTooLongException
     *         The length of all the messages put together is more than the limit.
+    *         The maximum allowed individual message size and the maximum total payload size
+    *         (the sum of the individual lengths of all of the batched messages) are both 256 KB (262,144 bytes).
     * @throws InvalidBatchEntryIdException
     *         The id of a batch entry in a batch request doesn't abide by the specification.
     * @throws UnsupportedOperationException
@@ -300,7 +305,7 @@ object SQSMessageQueueMiddleware extends MessageQueueService {
     * @throws SQSException
     *         Base class for all service exceptions. Unknown exceptions will be thrown as an instance of this type
     */
-  def sendMultipleMessages(messagesMap: Map[String, String], to: Queue, delaySecond: Duration = 0 second): Future[Unit] = {
+  def sendMultipleMessages(messagesMap: LinkedHashMap[String, String], to: Queue, delaySecond: Duration = 0 second): Future[Unit] = {
     Future.fromTry(getQueueUrl(to.name)).transform({ queueUrl: String => // deal with exceptions thrown while getting the queueUrl
       val listOfSendMessageBatchRequestEntry: List[SendMessageBatchRequestEntry] = messagesMap.map{ idAndContent: (String, String) =>
         SendMessageBatchRequestEntry.builder
@@ -320,7 +325,7 @@ object SQSMessageQueueMiddleware extends MessageQueueService {
   }, { throwable: Throwable => // deal with exceptions while sending multiple messages
     throwable match {
       case tmeibre: TooManyEntriesInBatchRequestException => {
-        Log.error(s"ERROR: Cannot send multiple messages to Queue $to, because the batch request contains more entries than permissible", tmeibre)
+        Log.error(s"ERROR: Cannot send multiple messages to Queue $to, because the batch request contains more than 10 entries", tmeibre)
         throw tmeibre
       }
       case ebre: EmptyBatchRequestException => {
