@@ -12,7 +12,7 @@ import net.shrine.problem.{AbstractProblem, ProblemDigest, ProblemSources}
 import net.shrine.protocol.{QueryResult, ResultOutputType}
 import net.shrine.qep.querydb.{FullQueryResult, QepQuery, QepQueryBreakdownResultsRow, QepQueryDb, QepQueryDbChangeNotifier, QepQueryFlag}
 import net.shrine.source.ConfigSource
-import rapture.json._
+import rapture.json.Json
 import rapture.json.formatters.humanReadable
 import rapture.json.jsonBackends.jawn._
 import spray.http.{StatusCode, StatusCodes}
