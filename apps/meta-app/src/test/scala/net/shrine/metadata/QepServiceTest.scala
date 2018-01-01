@@ -13,6 +13,9 @@ import org.junit.runner.RunWith
 import org.scalatest.FlatSpec
 import org.scalatest.junit.JUnitRunner
 import spray.testkit.ScalatestRouteTest
+import rapture.json.formatters.humanReadable
+import rapture.json.Json
+import rapture.json.jsonBackends.jawn._
 
 /**
   * @author david 
@@ -129,8 +132,15 @@ class QepServiceTest extends FlatSpec with ScalatestRouteTest with QepService wi
       val result = body.data.asString
 
       assertResult(OK)(status)
-
-      //todo check json result after format is pinned down assertResult(qepInfo)(result)
+      val queryAndResults = selectResultsRow(qepQuery.networkId, researcherUser)
+      val queryResults = queryAndResults.fold({status =>
+        "Failed to get results"
+      }, {results =>
+        val json: Json = Json(results)
+        val formattedJson: String = Json.format(json)(humanReadable())
+        formattedJson
+      })
+      assertResult(queryResults)(result)
     }
   }
 
@@ -149,8 +159,15 @@ class QepServiceTest extends FlatSpec with ScalatestRouteTest with QepService wi
       val result = body.data.asString
 
       assertResult(OK)(status)
-
-      //todo check json result after format is pinned down assertResult(qepInfo)(result)
+      val queryAndResults = selectResultsRow(qepQuery.networkId, researcherUser)
+      val queryResults = queryAndResults.fold({status =>
+        "Failed to get results"
+      }, {results =>
+        val json: Json = Json(results)
+        val formattedJson: String = Json.format(json)(humanReadable())
+        formattedJson
+      })
+      assertResult(queryResults)(result)
     }
   }
 
@@ -209,7 +226,16 @@ class QepServiceTest extends FlatSpec with ScalatestRouteTest with QepService wi
 
       assert(end - start >= timeout * 1000,s"The call took ${end - start} but should have taken at least ${timeout*1000}")
 
-      //todo check json result after format is pinned down assertResult(qepInfo)(result)
+
+      val queryAndResults = selectResultsRow(qepQuery.networkId, researcherUser)
+      val queryResults = queryAndResults.fold({status =>
+        "Failed to get results"
+      }, {results =>
+        val json: Json = Json(results)
+        val formattedJson: String = Json.format(json)(humanReadable())
+        formattedJson
+      })
+      assertResult(queryResults)(result)
     }
   }
 
@@ -246,7 +272,16 @@ class QepServiceTest extends FlatSpec with ScalatestRouteTest with QepService wi
       assert(end - start >= delay,s"The call took ${end - start} but should have taken at least $delay")
       assert(end - start < timeout * 1000,s"The call took ${end - start} but should have taken less than $timeout")
 
-      //todo check json result after format is pinned down assertResult(qepInfo)(result)
+
+      val queryAndResults = selectResultsRow(qepQuery.networkId, researcherUser)
+      val queryResults = queryAndResults.fold({status =>
+        "Failed to get results"
+      }, {results =>
+        val json: Json = Json(results)
+        val formattedJson: String = Json.format(json)(humanReadable())
+        formattedJson
+      })
+      assertResult(queryResults)(result)
     }
   }
 
@@ -262,27 +297,66 @@ class QepServiceTest extends FlatSpec with ScalatestRouteTest with QepService wi
       implicit val formats = DefaultFormats
       val result = body.data.asString
 
-      assertResult(OK)(status)
+      val queryRowCount: Int = QepQueryDb.db.countPreviousQueriesByUserAndDomain(
+        userName = researcherUser.username,
+        domain = researcherUser.domain
+      )
 
-/*
-      println("************")
-      println(result)
-      println("************")
-*/
-      //todo check json result      assertResult(qepInfo)(result)
+      val queries: Seq[QepQuery] = QepQueryDb.db.selectPreviousQueriesByUserAndDomain(
+        userName = researcherUser.username,
+        domain = researcherUser.domain
+      )
+      val adapters: Seq[String] = QepQueryDb.db.selectDistinctAdaptersWithResults
+
+      val flags = QepQueryDb.db.selectMostRecentQepQueryFlagsFor(queries.map(q => q.networkId).to[Set])
+        .map(q => q._1 -> QueryFlag(q._2))
+
+      val queryResults: Seq[ResultsRow] = queries.map(q => ResultsRow(
+        query = QueryCell(q, flags.get(q.networkId)),
+        results = QepQueryDb.db.selectMostRecentFullQueryResultsFor(q.networkId).map(Result(_))))
+
+      val table: ResultsTable = ResultsTable(queryRowCount, 0, adapters, queryResults)
+
+      val jsonTable: Json = Json(table)
+      val formattedTable: String = Json.format(jsonTable)(humanReadable())
+      assertResult(OK)(status)
+      assertResult(formattedTable)(result)
     }
   }
-/* todo
+
   "QepService" should "return an OK and a table of data for a queryResultsTable request with different skip and limit values" in {
     Get(s"/qep/queryResultsTable?skip=2&limit=2") ~> qepRoute(researcherUser) ~> check {
       implicit val formats = DefaultFormats
       val result = body.data.asString
 
+      val queryRowCount: Int = QepQueryDb.db.countPreviousQueriesByUserAndDomain(
+        userName = researcherUser.username,
+        domain = researcherUser.domain
+      )
+
+      val queries: Seq[QepQuery] = QepQueryDb.db.selectPreviousQueriesByUserAndDomain(
+        userName = researcherUser.username,
+        domain = researcherUser.domain,
+        skip = Some(2),
+        limit = Some(2)
+      )
+      val adapters: Seq[String] = QepQueryDb.db.selectDistinctAdaptersWithResults
+
+      val flags = QepQueryDb.db.selectMostRecentQepQueryFlagsFor(queries.map(q => q.networkId).to[Set])
+        .map(q => q._1 -> QueryFlag(q._2))
+
+      val queryResults: Seq[ResultsRow] = queries.map(q => ResultsRow(
+        query = QueryCell(q, flags.get(q.networkId)),
+        results = QepQueryDb.db.selectMostRecentFullQueryResultsFor(q.networkId).map(Result(_))))
+
+      val table: ResultsTable = ResultsTable(queryRowCount, 2, adapters, queryResults)
+
+      val jsonTable: Json = Json(table)
+      val formattedTable: String = Json.format(jsonTable)(humanReadable())
       assertResult(OK)(status)
-      //todo check json result      assertResult(qepInfo)(result)
+      assertResult(formattedTable)(result)
     }
   }
-*/
 
   val researcherUserName = "ben"
   val researcherFullName = researcherUserName
