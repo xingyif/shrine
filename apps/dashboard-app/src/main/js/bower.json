@@ -1,5 +1,5 @@
 {
-  "name": "SHRINE Dashboard ",
+  "name": "SHRINE Dashboard",
   "version": 1,
   "authors": [
     "Ben Carmen <benjamin_carmen@hms.harvard.edu>"
@@ -17,7 +17,8 @@
     "node_modules",
     "bower_components",
     "test",
-    "tests"
+    "tests",
+    "src/vendor"
   ],
   "dependencies": {
     "angular": "^1.3.15",
@@ -61,5 +62,6 @@
     "bootstrap": "~3.3.5",
     "Chart.js": "~1.0.2",
     "x2js": "~1.1.7"
-  }
+  },
+  "homepage": "https://github.com/xingyif/shrine"
 }

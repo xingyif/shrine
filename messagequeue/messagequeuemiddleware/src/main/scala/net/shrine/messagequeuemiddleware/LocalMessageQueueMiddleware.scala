@@ -7,8 +7,6 @@ import java.util.{Objects, UUID}
 import net.shrine.config.ConfigExtensions
 import net.shrine.log.Log
 import net.shrine.messagequeueservice.{Message, MessageQueueService, Queue}
-
-import scala.concurrent.duration._
 import net.shrine.problem.{AbstractProblem, ProblemSources}
 import net.shrine.source.ConfigSource
 import org.json4s.ShortTypeHints
@@ -18,7 +16,7 @@ import scala.collection.concurrent.{TrieMap, Map => ConcurrentMap}
 import scala.collection.immutable.Seq
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
-import scala.concurrent.{Await, Future, Promise, blocking}
+import scala.concurrent.{Future, Promise, blocking}
 import scala.util.Try
 import scala.util.control.NonFatal
 /**
@@ -94,14 +92,21 @@ object LocalMessageQueueMiddleware extends MessageQueueService {
     * @return Some(message) before the timeout, or None
     *
     */
-  def receive(from: Queue, timeout: Duration): Future[Option[Message]] = Future {
+  def receive(from: Queue, timeout: Duration): Future[Option[Message]] = {
     val deadline: Long = System.currentTimeMillis() + timeout.toMillis
     // poll the first message from the blocking deque
     val blockingQueue = blockingQueuePool.getOrElse(from.name, throw QueueDoesNotExistException(from))
     Log.debug(s"Before receive from ${from.name} - blockingQueue ${blockingQueue.size} ${blockingQueue.toString}")
     val deliveryAttemptID = UUID.randomUUID()
-    // message available when first call receive
-    val simpleMessageOpt: Option[SimpleMessage] = Option(blockingQueue.poll()).fold({
+    Option(blockingQueue.poll()).map({ internalMessage: InternalMessage =>
+      // message available when first call receive
+      val deliveryAttempt: DeliveryAttempt = DeliveryAttempt(internalMessage, internalMessage.createdTime, from)
+      MessageScheduler.scheduleMessageRedelivery(deliveryAttemptID, deliveryAttempt, messageRedeliveryDelay, messageMaxDeliveryAttempts)
+      Future {
+        Some(SimpleMessage(deliveryAttemptID.toString, internalMessage.contents))
+      }
+    }).getOrElse({
+      //      val simpleMessageOptFuture: Future[Option[SimpleMessage]] = Option(blockingQueue.poll()).fold({
 
       // ues Promises if no message available at first
       val promiseResponse: Promise[Option[InternalMessage]] = Promise[Option[InternalMessage]]()
@@ -109,57 +114,126 @@ object LocalMessageQueueMiddleware extends MessageQueueService {
       // schedule time out if no message received after timeout
       val promiseTimeout: Promise[Unit] = Promise[Unit]
       promiseTimeout.future.transform({ unit: Unit =>
-        promiseResponse.tryComplete(Try{Option(blockingQueue.poll())})
+        promiseResponse.tryComplete(Try {
+          Option(blockingQueue.poll())
+        })
       }, { throwable: Throwable =>
-        throwable match {case NonFatal(t) => ExceptionWhilePreparingTimeoutResponse("receiving message", from, timeout, t)}
+        throwable match {
+          case NonFatal(t) => ExceptionWhilePreparingTimeoutResponse("receiving message", from, timeout, t)
+        }
         throwable
       })
 
       val timeLeft: Long = deadline - System.currentTimeMillis()
       case class FulfillPromiseRunner(promise: Promise[Unit]) extends Runnable {
-        val unit:Unit = ()
+        val unit: Unit = ()
+
         override def run(): Unit = promise.trySuccess(unit)
       }
-      val scheduledTaskToFulfillPromiseWithNone = MessageScheduler.scheduleOnce(timeLeft,FulfillPromiseRunner(promiseTimeout))
+      val scheduledTaskToFulfillPromiseWithNone: ScheduledFuture[_] = MessageScheduler.scheduleOnce(timeLeft, FulfillPromiseRunner(promiseTimeout))
 
       // message comes back within timeout
       val receiveMessageWithinTimeOut = Promise[Unit]()
-      receiveMessageWithinTimeOut.future.transform({unit =>
+      receiveMessageWithinTimeOut.future.transform({ unit =>
         Log.debug(s"Checking for new message from Queue $from")
 
-        // todo seems still need blocking here
-        val messageOpt: Option[InternalMessage] = blocking(Option(blockingQueue.pollFirst(deadline - System.currentTimeMillis(), TimeUnit.MILLISECONDS)))
-
-        messageOpt.map({ internalMessage: InternalMessage =>
+        val messageOpt: Option[InternalMessage] = Option(blockingQueue.poll()).map({ internalMessage: InternalMessage =>
           Log.debug(s"Received a new message from Queue $from, within timeout $timeout")
-            promiseResponse.trySuccess(messageOpt)
+          scheduledTaskToFulfillPromiseWithNone.cancel(true)
+          promiseResponse.trySuccess(Some(internalMessage))
+          internalMessage
         })
-      },{throwable: Throwable =>
+        messageOpt
+      }, { throwable: Throwable =>
         throwable match {
           case NonFatal(t) => ExceptionWhilePreparingTriggeredResponse("receiving message", from, timeout, t)
         }
         throwable
       })
 
-      val internalMessageOpt: Option[InternalMessage] = Await.result(promiseResponse.future, 1 minute)
-        internalMessageOpt.fold({
-          // No message available from the queue
-          Log.debug(s"No message available from the queue ${from.name} after waiting for $timeout")
-        })({ internalMessage: InternalMessage =>
+      //      val internalMessageOpt: Option[InternalMessage] = Await.result(promiseResponse.future, 1 minute)
+      val messageFuture: Future[Option[SimpleMessage]] = promiseResponse.future.map({ internalMessageOpt: Option[InternalMessage] =>
+        internalMessageOpt.map({ internalMessage: InternalMessage =>
           val deliveryAttempt: DeliveryAttempt = DeliveryAttempt(internalMessage, internalMessage.createdTime, from)
           scheduledTaskToFulfillPromiseWithNone.cancel(true)
           MessageScheduler.scheduleMessageRedelivery(deliveryAttemptID, deliveryAttempt, messageRedeliveryDelay, messageMaxDeliveryAttempts)
+          Some(SimpleMessage(deliveryAttemptID.toString, internalMessage.contents))
+        }).getOrElse({
+          // No message available from the queue
+          Log.debug(s"No message available from the queue ${from.name} after waiting for $timeout")
+          None
         })
-        internalMessageOpt.map { internalMessage: InternalMessage =>
-          SimpleMessage(deliveryAttemptID.toString, internalMessage.contents)
-        }
-    })({ internalMessage: InternalMessage =>
-      val deliveryAttempt: DeliveryAttempt = DeliveryAttempt(internalMessage, internalMessage.createdTime, from)
-      MessageScheduler.scheduleMessageRedelivery(deliveryAttemptID, deliveryAttempt, messageRedeliveryDelay, messageMaxDeliveryAttempts)
-      Some(SimpleMessage(deliveryAttemptID.toString, internalMessage.contents))
+      })
+      messageFuture
     })
-    simpleMessageOpt
-  }
+  }// message available when first call receive
+//    val simpleMessageOptFuture: Future[Option[SimpleMessage]] = Option(blockingQueue.poll()).fold({
+//
+//      // ues Promises if no message available at first
+//      val promiseResponse: Promise[Option[InternalMessage]] = Promise[Option[InternalMessage]]()
+//
+//      // schedule time out if no message received after timeout
+//      val promiseTimeout: Promise[Unit] = Promise[Unit]
+//      promiseTimeout.future.transform({ unit: Unit =>
+//        promiseResponse.tryComplete(Try{Option(blockingQueue.poll())})
+//      }, { throwable: Throwable =>
+//        throwable match {case NonFatal(t) => ExceptionWhilePreparingTimeoutResponse("receiving message", from, timeout, t)}
+//        throwable
+//      })
+//
+//      val timeLeft: Long = deadline - System.currentTimeMillis()
+//      case class FulfillPromiseRunner(promise: Promise[Unit]) extends Runnable {
+//        val unit:Unit = ()
+//        override def run(): Unit = promise.trySuccess(unit)
+//      }
+//      val scheduledTaskToFulfillPromiseWithNone: ScheduledFuture[_] = MessageScheduler.scheduleOnce(timeLeft,FulfillPromiseRunner(promiseTimeout))
+//
+//      // message comes back within timeout
+//      val receiveMessageWithinTimeOut = Promise[Unit]()
+//      receiveMessageWithinTimeOut.future.transform({unit =>
+//        Log.debug(s"Checking for new message from Queue $from")
+//
+//        val messageOpt: Option[InternalMessage] = Option(blockingQueue.poll())
+//        if (messageOpt.isDefined) {
+//          messageOpt.map({ internalMessage: InternalMessage =>
+//            Log.debug(s"Received a new message from Queue $from, within timeout $timeout")
+//            promiseResponse.trySuccess(messageOpt)
+//          })
+//        }
+//      },{throwable: Throwable =>
+//        throwable match {
+//          case NonFatal(t) => ExceptionWhilePreparingTriggeredResponse("receiving message", from, timeout, t)
+//        }
+//        throwable
+//      })
+//
+////      val internalMessageOpt: Option[InternalMessage] = Await.result(promiseResponse.future, 1 minute)
+//      val messageFuture: Future[Option[SimpleMessage]] = promiseResponse.future.map({ internalMessageOpt: Option[InternalMessage] =>
+//        internalMessageOpt.fold({
+//          // No message available from the queue
+//          Log.debug(s"No message available from the queue ${from.name} after waiting for $timeout")
+//          None
+//        })
+//
+////        ({ internalMessage: InternalMessage =>
+////          val deliveryAttempt: DeliveryAttempt = DeliveryAttempt(internalMessage, internalMessage.createdTime, from)
+////          scheduledTaskToFulfillPromiseWithNone.cancel(true)
+////          MessageScheduler.scheduleMessageRedelivery(deliveryAttemptID, deliveryAttempt, messageRedeliveryDelay, messageMaxDeliveryAttempts)
+////          Some(SimpleMessage(deliveryAttemptID.toString, internalMessage.contents))
+////        })
+//      })
+//
+//      messageFuture
+////        internalMessageOpt.map { internalMessage: InternalMessage =>
+////          SimpleMessage(deliveryAttemptID.toString, internalMessage.contents)
+////        }
+//    })({ internalMessage: InternalMessage =>
+//      val deliveryAttempt: DeliveryAttempt = DeliveryAttempt(internalMessage, internalMessage.createdTime, from)
+//      MessageScheduler.scheduleMessageRedelivery(deliveryAttemptID, deliveryAttempt, messageRedeliveryDelay, messageMaxDeliveryAttempts)
+//      Some(SimpleMessage(deliveryAttemptID.toString, internalMessage.contents))
+//    })
+//    simpleMessageOptFuture
+//  }
 
   def completeMessage(deliveryAttemptID: UUID): Future[Unit] = Future {
     val deliveryAttemptAndFutureTaskOpt: Option[(DeliveryAttempt, Option[ScheduledFuture[_]])] = messageDeliveryAttemptMap.get(deliveryAttemptID)
