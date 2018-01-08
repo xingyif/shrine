@@ -11,6 +11,8 @@ import net.shrine.problem.{AbstractProblem, ProblemSources}
 import net.shrine.source.ConfigSource
 import org.json4s.ShortTypeHints
 import org.json4s.native.Serialization
+import scala.util.Success
+import scala.util.Failure
 
 import scala.collection.concurrent.{TrieMap, Map => ConcurrentMap}
 import scala.collection.immutable.Seq
@@ -19,10 +21,11 @@ import scala.concurrent.duration.Duration
 import scala.concurrent.{Future, Promise, blocking}
 import scala.util.Try
 import scala.util.control.NonFatal
+
 /**
   * This object is the local version of the Message-Oriented Middleware API, which uses MessageQueue service
   *
-  * @author david
+  * @author david, Yifan
   * @since 7/18/17
   */
 
@@ -52,6 +55,8 @@ object LocalMessageQueueMiddleware extends MessageQueueService {
   //todo rename
   val blockingQueuePool: ConcurrentMap[String, BlockingDeque[InternalMessage]] = TrieMap.empty
 
+  val receiveMessagePromisesMap: ConcurrentMap[Queue, BlockingDeque[(Promise[Unit], Long)]] = TrieMap.empty
+
   //queue lifecycle
   def createQueueIfAbsent(queueName: String): Try[Queue] = Try {
     blockingQueuePool.getOrElseUpdate(queueName, new LinkedBlockingDeque[InternalMessage]())
@@ -76,6 +81,17 @@ object LocalMessageQueueMiddleware extends MessageQueueService {
     MessageScheduler.scheduleExpiredMessageCleanup(to, internalMessage, messageTimeToLiveInMillis)
     // waiting if necessary for space to become available
     blocking(queue.putLast(internalMessage))
+    // complete the receive promise of the message, if client is currently waiting
+    receiveMessagePromisesMap.get(to).fold(Log.debug(s"No receiveMessage promise to fulfill for $to"))({ blockingDeque: BlockingDeque[(Promise[Unit], Long)] =>
+      Option(blockingDeque.poll()).fold(Log.debug(s"No receiveMessage promise to fulfill for $to"))({ promiseAndDeadline: (Promise[Unit], Long) =>
+        if (promiseAndDeadline._2 > System.currentTimeMillis()) {
+          // promise is not expired yet
+          if (promiseAndDeadline._1.trySuccess(Unit)) Log.debug(s"Successfully completed one receiveMessage promise for $to")
+        } else {
+          Log.debug(s"One receiveMessage promise for $to found. No receiveMessage promise completed, because the promise exceeds receiveMessage deadline ${promiseAndDeadline._2}. Deleted the expired promise.")
+        }
+      })
+    })
     Log.debug(s"After send to ${to.name} - blockingQueue ${queue.size} $queue")
   }
 
@@ -94,146 +110,95 @@ object LocalMessageQueueMiddleware extends MessageQueueService {
     */
   def receive(from: Queue, timeout: Duration): Future[Option[Message]] = {
     val deadline: Long = System.currentTimeMillis() + timeout.toMillis
-    // poll the first message from the blocking deque
-    val blockingQueue = blockingQueuePool.getOrElse(from.name, throw QueueDoesNotExistException(from))
-    Log.debug(s"Before receive from ${from.name} - blockingQueue ${blockingQueue.size} ${blockingQueue.toString}")
-    val deliveryAttemptID = UUID.randomUUID()
-    Option(blockingQueue.poll()).map({ internalMessage: InternalMessage =>
+
+    // ues Promises if no message available at first
+    val promiseResponse: Promise[Option[SimpleMessage]] = Promise[Option[SimpleMessage]]()
+    val blockingQueueTry: Try[BlockingDeque[InternalMessage]] = Try {
+      blockingQueuePool.getOrElse(from.name, throw QueueDoesNotExistException(from))
+    }.transform({ blockingQueue: BlockingDeque[InternalMessage] =>
+      Log.debug(s"Before receive from ${from.name} - blockingQueue ${blockingQueue.size} ${blockingQueue.toString}")
+      Success(blockingQueue)
+    }, { throwable: Throwable =>
+      throwable match {
+        case NonFatal(t) => {
+          // complete the promise with a failure if queue not found or other exceptions
+          Log.error(s"Failed to receive from $from due to $t")
+          promiseResponse.tryFailure(throwable) // QueueDoesNotExistException
+          Failure(t)
+        }
+      }
+    })
+
+    def internalMessageToSimpleMessageAndRedeliver(internalMessage: InternalMessage): SimpleMessage = {
+      val deliveryAttemptID = UUID.randomUUID()
       // message available when first call receive
       val deliveryAttempt: DeliveryAttempt = DeliveryAttempt(internalMessage, internalMessage.createdTime, from)
       MessageScheduler.scheduleMessageRedelivery(deliveryAttemptID, deliveryAttempt, messageRedeliveryDelay, messageMaxDeliveryAttempts)
-      Future {
-        Some(SimpleMessage(deliveryAttemptID.toString, internalMessage.contents))
-      }
-    }).getOrElse({
-      //      val simpleMessageOptFuture: Future[Option[SimpleMessage]] = Option(blockingQueue.poll()).fold({
+      SimpleMessage(deliveryAttemptID.toString, internalMessage.contents)
+    }
 
-      // ues Promises if no message available at first
-      val promiseResponse: Promise[Option[InternalMessage]] = Promise[Option[InternalMessage]]()
-
-      // schedule time out if no message received after timeout
-      val promiseTimeout: Promise[Unit] = Promise[Unit]
-      promiseTimeout.future.transform({ unit: Unit =>
-        promiseResponse.tryComplete(Try {
-          Option(blockingQueue.poll())
+    ///////////////// try to poll the first message from the blocking deque /////////////////////////////
+    blockingQueueTry.map({ blockingQueue: BlockingDeque[InternalMessage] =>
+      Option(blockingQueue.poll()).map({ internalMessage: InternalMessage =>
+        promiseResponse.trySuccess(Some(internalMessageToSimpleMessageAndRedeliver(internalMessage)))
+      }).getOrElse({
+        ////////////// not able to receive message on the first receive try ////////////////////////
+        ///////////// schedule time out if no message received after timeout //////////////////////
+        val promiseTimeout: Promise[Unit] = Promise[Unit]()
+        promiseTimeout.future.transform({ unit: Unit =>
+          // try receive again before time out
+          promiseResponse.tryComplete(Try {
+            Option(blockingQueue.poll()).map({ internalMessage: InternalMessage =>
+              Some(internalMessageToSimpleMessageAndRedeliver(internalMessage))
+            }).getOrElse({
+              // No message available from the queue
+              Log.debug(s"No message available from the queue ${from.name} after waiting for $timeout")
+              None
+            })
+          })
+        }, { throwable: Throwable =>
+          throwable match {
+            case NonFatal(t) => ExceptionWhilePreparingTimeoutResponse("receiving message", from, timeout, t)
+          }
+          throwable
         })
-      }, { throwable: Throwable =>
-        throwable match {
-          case NonFatal(t) => ExceptionWhilePreparingTimeoutResponse("receiving message", from, timeout, t)
+
+        val timeLeft: Long = deadline - System.currentTimeMillis()
+        case class FulfillPromiseRunner(promise: Promise[Unit]) extends Runnable {
+          val unit: Unit = ()
+
+          override def run(): Unit = promise.trySuccess(unit)
         }
-        throwable
-      })
+        val scheduledTaskToFulfillPromiseWithNone: ScheduledFuture[_] = MessageScheduler.scheduleOnce(timeLeft, FulfillPromiseRunner(promiseTimeout))
 
-      val timeLeft: Long = deadline - System.currentTimeMillis()
-      case class FulfillPromiseRunner(promise: Promise[Unit]) extends Runnable {
-        val unit: Unit = ()
+        //////////////////////// message comes back within timeout /////////////////////////
+        val receiveMessagePromiseWithinTimeOut = Promise[Unit]()
+        // put promise in map, complete when send
+        val dequeOfPromiseAndTimeleft = new LinkedBlockingDeque[(Promise[Unit], Long)]()
+        dequeOfPromiseAndTimeleft.addFirst(receiveMessagePromiseWithinTimeOut, deadline)
+        receiveMessagePromisesMap.getOrElseUpdate(from, dequeOfPromiseAndTimeleft).putLast((receiveMessagePromiseWithinTimeOut, timeLeft))
 
-        override def run(): Unit = promise.trySuccess(unit)
-      }
-      val scheduledTaskToFulfillPromiseWithNone: ScheduledFuture[_] = MessageScheduler.scheduleOnce(timeLeft, FulfillPromiseRunner(promiseTimeout))
+        // when the promise is completed (received message before time out), complete the original promise
+        receiveMessagePromiseWithinTimeOut.future.transform({ unit =>
+          Log.debug(s"Checking for new message from Queue $from")
 
-      // message comes back within timeout
-      val receiveMessageWithinTimeOut = Promise[Unit]()
-      receiveMessageWithinTimeOut.future.transform({ unit =>
-        Log.debug(s"Checking for new message from Queue $from")
+          Option(blockingQueue.poll()).map({ internalMessage: InternalMessage =>
+            Log.debug(s"Received a new message from Queue $from, within timeout $timeout")
+            scheduledTaskToFulfillPromiseWithNone.cancel(true)
+            promiseResponse.trySuccess(Some(internalMessageToSimpleMessageAndRedeliver(internalMessage)))
+          })
 
-        val messageOpt: Option[InternalMessage] = Option(blockingQueue.poll()).map({ internalMessage: InternalMessage =>
-          Log.debug(s"Received a new message from Queue $from, within timeout $timeout")
-          scheduledTaskToFulfillPromiseWithNone.cancel(true)
-          promiseResponse.trySuccess(Some(internalMessage))
-          internalMessage
-        })
-        messageOpt
-      }, { throwable: Throwable =>
-        throwable match {
-          case NonFatal(t) => ExceptionWhilePreparingTriggeredResponse("receiving message", from, timeout, t)
-        }
-        throwable
-      })
-
-      //      val internalMessageOpt: Option[InternalMessage] = Await.result(promiseResponse.future, 1 minute)
-      val messageFuture: Future[Option[SimpleMessage]] = promiseResponse.future.map({ internalMessageOpt: Option[InternalMessage] =>
-        internalMessageOpt.map({ internalMessage: InternalMessage =>
-          val deliveryAttempt: DeliveryAttempt = DeliveryAttempt(internalMessage, internalMessage.createdTime, from)
-          scheduledTaskToFulfillPromiseWithNone.cancel(true)
-          MessageScheduler.scheduleMessageRedelivery(deliveryAttemptID, deliveryAttempt, messageRedeliveryDelay, messageMaxDeliveryAttempts)
-          Some(SimpleMessage(deliveryAttemptID.toString, internalMessage.contents))
-        }).getOrElse({
-          // No message available from the queue
-          Log.debug(s"No message available from the queue ${from.name} after waiting for $timeout")
-          None
+        }, { throwable: Throwable =>
+          throwable match {
+            case NonFatal(t) => ExceptionWhilePreparingTriggeredResponse("receiving message", from, timeout, t)
+          }
+          throwable
         })
       })
-      messageFuture
     })
-  }// message available when first call receive
-//    val simpleMessageOptFuture: Future[Option[SimpleMessage]] = Option(blockingQueue.poll()).fold({
-//
-//      // ues Promises if no message available at first
-//      val promiseResponse: Promise[Option[InternalMessage]] = Promise[Option[InternalMessage]]()
-//
-//      // schedule time out if no message received after timeout
-//      val promiseTimeout: Promise[Unit] = Promise[Unit]
-//      promiseTimeout.future.transform({ unit: Unit =>
-//        promiseResponse.tryComplete(Try{Option(blockingQueue.poll())})
-//      }, { throwable: Throwable =>
-//        throwable match {case NonFatal(t) => ExceptionWhilePreparingTimeoutResponse("receiving message", from, timeout, t)}
-//        throwable
-//      })
-//
-//      val timeLeft: Long = deadline - System.currentTimeMillis()
-//      case class FulfillPromiseRunner(promise: Promise[Unit]) extends Runnable {
-//        val unit:Unit = ()
-//        override def run(): Unit = promise.trySuccess(unit)
-//      }
-//      val scheduledTaskToFulfillPromiseWithNone: ScheduledFuture[_] = MessageScheduler.scheduleOnce(timeLeft,FulfillPromiseRunner(promiseTimeout))
-//
-//      // message comes back within timeout
-//      val receiveMessageWithinTimeOut = Promise[Unit]()
-//      receiveMessageWithinTimeOut.future.transform({unit =>
-//        Log.debug(s"Checking for new message from Queue $from")
-//
-//        val messageOpt: Option[InternalMessage] = Option(blockingQueue.poll())
-//        if (messageOpt.isDefined) {
-//          messageOpt.map({ internalMessage: InternalMessage =>
-//            Log.debug(s"Received a new message from Queue $from, within timeout $timeout")
-//            promiseResponse.trySuccess(messageOpt)
-//          })
-//        }
-//      },{throwable: Throwable =>
-//        throwable match {
-//          case NonFatal(t) => ExceptionWhilePreparingTriggeredResponse("receiving message", from, timeout, t)
-//        }
-//        throwable
-//      })
-//
-////      val internalMessageOpt: Option[InternalMessage] = Await.result(promiseResponse.future, 1 minute)
-//      val messageFuture: Future[Option[SimpleMessage]] = promiseResponse.future.map({ internalMessageOpt: Option[InternalMessage] =>
-//        internalMessageOpt.fold({
-//          // No message available from the queue
-//          Log.debug(s"No message available from the queue ${from.name} after waiting for $timeout")
-//          None
-//        })
-//
-////        ({ internalMessage: InternalMessage =>
-////          val deliveryAttempt: DeliveryAttempt = DeliveryAttempt(internalMessage, internalMessage.createdTime, from)
-////          scheduledTaskToFulfillPromiseWithNone.cancel(true)
-////          MessageScheduler.scheduleMessageRedelivery(deliveryAttemptID, deliveryAttempt, messageRedeliveryDelay, messageMaxDeliveryAttempts)
-////          Some(SimpleMessage(deliveryAttemptID.toString, internalMessage.contents))
-////        })
-//      })
-//
-//      messageFuture
-////        internalMessageOpt.map { internalMessage: InternalMessage =>
-////          SimpleMessage(deliveryAttemptID.toString, internalMessage.contents)
-////        }
-//    })({ internalMessage: InternalMessage =>
-//      val deliveryAttempt: DeliveryAttempt = DeliveryAttempt(internalMessage, internalMessage.createdTime, from)
-//      MessageScheduler.scheduleMessageRedelivery(deliveryAttemptID, deliveryAttempt, messageRedeliveryDelay, messageMaxDeliveryAttempts)
-//      Some(SimpleMessage(deliveryAttemptID.toString, internalMessage.contents))
-//    })
-//    simpleMessageOptFuture
-//  }
+    promiseResponse.future
+  }
+
 
   def completeMessage(deliveryAttemptID: UUID): Future[Unit] = Future {
     val deliveryAttemptAndFutureTaskOpt: Option[(DeliveryAttempt, Option[ScheduledFuture[_]])] = messageDeliveryAttemptMap.get(deliveryAttemptID)
@@ -241,8 +206,7 @@ object LocalMessageQueueMiddleware extends MessageQueueService {
     deliveryAttemptAndFutureTaskOpt.fold(
       // if message delivery attempt does not exist in the map, then it might be in the queue or expired
       throw MessageDoesNotExistAndCannotBeCompletedException(deliveryAttemptID)
-    )
-    { (deliveryAttemptAndFutureTask: (DeliveryAttempt, Option[ScheduledFuture[_]])) =>
+    ) { (deliveryAttemptAndFutureTask: (DeliveryAttempt, Option[ScheduledFuture[_]])) =>
       val deliveryAttempt: DeliveryAttempt = deliveryAttemptAndFutureTask._1
       val internalToBeSentMessage: InternalMessage = deliveryAttempt.message
       val queue: Queue = internalToBeSentMessage.toQueue
@@ -292,8 +256,8 @@ object LocalMessageQueueMiddleware extends MessageQueueService {
     override def run(): Unit = {
       try {
         messageDeliveryAttemptMap.get(deliveryAttemptID).fold(
-                  Log.debug(s"Could not find deliveryAttempt for message ${deliveryAttempt.message.contents} from queue ${deliveryAttempt.fromQueue}")
-        ) { (deliveryAttemptAndFutureTask: (DeliveryAttempt, Option[ScheduledFuture[_]]))  =>
+          Log.debug(s"Could not find deliveryAttempt for message ${deliveryAttempt.message.contents} from queue ${deliveryAttempt.fromQueue}")
+        ) { (deliveryAttemptAndFutureTask: (DeliveryAttempt, Option[ScheduledFuture[_]])) =>
           // get the queue that the message was from, and push message back to the head of the deque
           val blockingQueue = blockingQueuePool.getOrElse(deliveryAttemptAndFutureTask._1.fromQueue.name,
             throw QueueDoesNotExistException(deliveryAttemptAndFutureTask._1.fromQueue))
@@ -316,7 +280,7 @@ object LocalMessageQueueMiddleware extends MessageQueueService {
       try {
         Log.debug(s"About to clean up outstanding messages. DAMap size: ${messageDeliveryAttemptMap.size}")
         // cleans up deliveryAttempt map
-        for ((uuid: UUID, deliveryAttemptAndFutureTask: (DeliveryAttempt, Option[ScheduledFuture[_]])) <- messageDeliveryAttemptMap){
+        for ((uuid: UUID, deliveryAttemptAndFutureTask: (DeliveryAttempt, Option[ScheduledFuture[_]])) <- messageDeliveryAttemptMap) {
           if ((currentTime - deliveryAttemptAndFutureTask._1.message.createdTime) >= messageTimeToLiveInMillis) {
             messageDeliveryAttemptMap.remove(uuid, deliveryAttemptAndFutureTask)
             // cancels its future message redelivery task
@@ -332,8 +296,8 @@ object LocalMessageQueueMiddleware extends MessageQueueService {
           val internalMessage: InternalMessage = blockingQueue.element()
           if (currentTime - internalMessage.createdTime >= messageTimeToLiveInMillis) {
             val removed = blockingQueue.remove(internalMessage)
-           Log.debug(s"$removed: Removed internalMessage from it's queue ${messageToBeRemoved.toQueue}" +
-                      s" because it exceeds expiration time $messageTimeToLiveInMillis millis")
+            Log.debug(s"$removed: Removed internalMessage from it's queue ${messageToBeRemoved.toQueue}" +
+              s" because it exceeds expiration time $messageTimeToLiveInMillis millis")
           }
         }
       } catch {
@@ -412,6 +376,7 @@ object LocalMessageQueueMiddleware extends MessageQueueService {
       scheduler.shutdownNow()
     }
   }
+
 }
 
 case class InternalMessage(id: UUID, contents: String, createdTime: Long, toQueue: Queue, currentAttemptCount: Int) {
@@ -444,53 +409,59 @@ object LocalMessageQueueStopper {
 
 }
 
-case class CleaningUpDeliveryAttemptandInternalMessageProblem(queue: Queue, timeOutInMillis: Long, x:Throwable) extends AbstractProblem(ProblemSources.Hub) {
+case class CleaningUpDeliveryAttemptandInternalMessageProblem(queue: Queue, timeOutInMillis: Long, x: Throwable) extends AbstractProblem(ProblemSources.Hub) {
 
   override val throwable = Some(x)
 
-  override def summary: String = s"""The Hub encountered an exception while trying to
-                                    |cleanup messages that has been outstanding for more
-                                    |than $timeOutInMillis milliseconds in queue ${queue.name}. """.stripMargin
+  override def summary: String =
+    s"""The Hub encountered an exception while trying to
+        |cleanup messages that has been outstanding for more
+        |than $timeOutInMillis milliseconds in queue ${queue.name}. """.stripMargin
 
-  override def description: String = s"""The Hub encountered an exception while trying
-                                        |to cleanup messages that has been outstanding
-                                        |for more than $timeOutInMillis milliseconds in queue ${queue.name}
-                                        |on Thread ${Thread.currentThread().getName}: ${x.getMessage}""".stripMargin
+  override def description: String =
+    s"""The Hub encountered an exception while trying
+        |to cleanup messages that has been outstanding
+        |for more than $timeOutInMillis milliseconds in queue ${queue.name}
+        |on Thread ${Thread.currentThread().getName}: ${x.getMessage}""".stripMargin
 }
 
-case class SchedulingCleanUpSentinelProblem(queue: Queue, timeOutInMillis: Long, x:Throwable) extends AbstractProblem(ProblemSources.Hub) {
+case class SchedulingCleanUpSentinelProblem(queue: Queue, timeOutInMillis: Long, x: Throwable) extends AbstractProblem(ProblemSources.Hub) {
   override val throwable = Some(x)
 
-  override def summary: String = s"""The Hub encountered an exception while trying to
-                                    |schedule a sentinel that cleans up outstanding messages
-                                    |exceed $timeOutInMillis milliseconds in queue ${queue.name}.""".stripMargin
+  override def summary: String =
+    s"""The Hub encountered an exception while trying to
+        |schedule a sentinel that cleans up outstanding messages
+        |exceed $timeOutInMillis milliseconds in queue ${queue.name}.""".stripMargin
 
-  override def description: String = s"""The Hub encountered an exception while trying to
-                                        |schedule a sentinel that cleans up outstanding messages
-                                        |exceed $timeOutInMillis milliseconds  in queue ${queue.name}
-                                        |on Thread ${Thread.currentThread().getName}: ${x.getMessage}""".stripMargin
+  override def description: String =
+    s"""The Hub encountered an exception while trying to
+        |schedule a sentinel that cleans up outstanding messages
+        |exceed $timeOutInMillis milliseconds  in queue ${queue.name}
+        |on Thread ${Thread.currentThread().getName}: ${x.getMessage}""".stripMargin
 }
 
-case class SchedulingMessageRedeliverySentinelProblem(messageRedeliveryDelay: Long, x:Throwable) extends AbstractProblem(ProblemSources.Hub) {
+case class SchedulingMessageRedeliverySentinelProblem(messageRedeliveryDelay: Long, x: Throwable) extends AbstractProblem(ProblemSources.Hub) {
   override val throwable = Some(x)
 
-  override def summary: String = s"""The Hub encountered an exception while trying to
-                                    |schedule a sentinel that redelivers an incomplete message after $messageRedeliveryDelay milliseconds""".stripMargin
+  override def summary: String =
+    s"""The Hub encountered an exception while trying to
+        |schedule a sentinel that redelivers an incomplete message after $messageRedeliveryDelay milliseconds""".stripMargin
 
-  override def description: String = s"""The Hub encountered an exception while trying to
-                                        |schedule a sentinel that redelivers an incomplete message after $messageRedeliveryDelay
-                                        |milliseconds on Thread ${Thread.currentThread().getName}: ${x.getMessage}""".stripMargin
+  override def description: String =
+    s"""The Hub encountered an exception while trying to
+        |schedule a sentinel that redelivers an incomplete message after $messageRedeliveryDelay
+        |milliseconds on Thread ${Thread.currentThread().getName}: ${x.getMessage}""".stripMargin
 }
 
 case class QueueDoesNotExistException(queueName: Queue) extends Exception(
   s"""Cannot match given ${queueName.name} to any Queue in the server!
-     |Queue does not exist!""".stripMargin)
+      |Queue does not exist!""".stripMargin)
 
 case class MessageDoesNotExistAndCannotBeCompletedException(id: UUID) extends Exception(
   s"""Message does not exist and cannot be completed!
-     |Message might have already been completed or expired!""".stripMargin)
+      |Message might have already been completed or expired!""".stripMargin)
 
-case class ExceptionWhilePreparingTimeoutResponse(task: String, queue: Queue, timeout: Duration, t:Throwable) extends AbstractProblem(ProblemSources.Hub) {
+case class ExceptionWhilePreparingTimeoutResponse(task: String, queue: Queue, timeout: Duration, t: Throwable) extends AbstractProblem(ProblemSources.Hub) {
 
   override def throwable = Some(t)
 
@@ -499,7 +470,7 @@ case class ExceptionWhilePreparingTimeoutResponse(task: String, queue: Queue, ti
   override def description: String = s"Unable to prepare a promised response for $task to Queue $queue within timeout $timeout due to a ${t.getClass.getSimpleName}"
 }
 
-case class ExceptionWhilePreparingTriggeredResponse(task: String, queue: Queue, timeout: Duration, t:Throwable) extends AbstractProblem(ProblemSources.Hub) {
+case class ExceptionWhilePreparingTriggeredResponse(task: String, queue: Queue, timeout: Duration, t: Throwable) extends AbstractProblem(ProblemSources.Hub) {
 
   override def throwable = Some(t)
 
