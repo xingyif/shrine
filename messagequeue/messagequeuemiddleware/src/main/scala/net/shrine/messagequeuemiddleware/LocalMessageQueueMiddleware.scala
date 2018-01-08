@@ -177,6 +177,8 @@ object LocalMessageQueueMiddleware extends MessageQueueService {
         val dequeOfPromiseAndTimeleft = new LinkedBlockingDeque[(Promise[Unit], Long)]()
         dequeOfPromiseAndTimeleft.addFirst(receiveMessagePromiseWithinTimeOut, deadline)
         receiveMessagePromisesMap.getOrElseUpdate(from, dequeOfPromiseAndTimeleft).putLast((receiveMessagePromiseWithinTimeOut, timeLeft))
+        // schedule cleaning up the expired promises after deadline
+        MessageScheduler.scheduleExpiredPromisesCleanUp(from, timeLeft)
 
         // when the promise is completed (received message before time out), complete the original promise
         receiveMessagePromiseWithinTimeOut.future.transform({ unit =>
@@ -309,8 +311,31 @@ object LocalMessageQueueMiddleware extends MessageQueueService {
     }
   }
 
-  object MessageScheduler {
+  case class CleanExpiredPromisesRunner(queue: Queue, timeToCleanUp: Long) extends Runnable {
+    override def run(): Unit = {
+      try {
+        receiveMessagePromisesMap.values.foreach({ blockingDeque: BlockingDeque[(Promise[Unit], Long)] =>
+          val iterator = blockingDeque.iterator()
+          while (iterator.hasNext) {
+            val next: (Promise[Unit], Long) = iterator.next()
+            val promise: Promise[Unit] = next._1 // we don't need to fulfill an expired promise
+            val promiseDeadline: Long = next._2
+            if (promiseDeadline < timeToCleanUp) {
+              // promise expired, remove from map
+              blockingDeque.remove(next)
+              Log.debug(s"Removed expired promise for $queue, deadline $timeToCleanUp exceeded.")
+            }
+          }
+        })
+      } catch {
+        case i: InterruptedException => Log.error("Scheduled expired promise clean up was interrupted", i)
+        case t: TimeoutException => Log.error(s"Expired promise can't be removed due to timeout", t)
+        case e: Throwable => Log.error(s"""${e.getClass.getSimpleName} "${e.getMessage}" caught by exception handler""", e)
+      }
+    }
+  }
 
+  object MessageScheduler {
     import java.util.concurrent.ThreadFactory
 
     private object LoggingUncaughtExceptionHandler extends Thread.UncaughtExceptionHandler {
@@ -358,9 +383,24 @@ object LocalMessageQueueMiddleware extends MessageQueueService {
           s" queue ${messageToBeRemoved.toQueue} exceeds message expiration time: $messageTimeToLiveInMillis")
         scheduler.schedule(cleanDeliveryAttemptandInternalMessageRunner, deadline - System.currentTimeMillis(), TimeUnit.MILLISECONDS)
       } catch {
-        case NonFatal(x) => SchedulingCleanUpSentinelProblem(queue, messageTimeToLiveInMillis, x)
+        case NonFatal(x) => SchedulingCleanUpSentinelProblem(queue, "messages", messageTimeToLiveInMillis, x)
       }
     }
+
+
+    def scheduleExpiredPromisesCleanUp(queue: Queue, timeLeft: Long): Unit = {
+      val timeToCleanUp = System.currentTimeMillis() + timeLeft
+      val cleanExpiredPromisesRunner: CleanExpiredPromisesRunner = CleanExpiredPromisesRunner(queue, timeToCleanUp)
+      try {
+        Log.debug(s"Starting the sentinel scheduler that cleans expired promises for $queue, exceeds deadline: $timeLeft")
+        scheduler.schedule(cleanExpiredPromisesRunner, timeToCleanUp - System.currentTimeMillis(), TimeUnit.MILLISECONDS)
+      } catch {
+        case NonFatal(x) => SchedulingCleanUpSentinelProblem(queue, "promises", timeLeft, x)
+      }
+
+    }
+
+
 
     def scheduleOnce(timeLeft: Long, runnable: Runnable) = {
       scheduler.schedule(runnable, timeLeft, TimeUnit.MILLISECONDS)
@@ -425,17 +465,17 @@ case class CleaningUpDeliveryAttemptandInternalMessageProblem(queue: Queue, time
         |on Thread ${Thread.currentThread().getName}: ${x.getMessage}""".stripMargin
 }
 
-case class SchedulingCleanUpSentinelProblem(queue: Queue, timeOutInMillis: Long, x: Throwable) extends AbstractProblem(ProblemSources.Hub) {
+case class SchedulingCleanUpSentinelProblem(queue: Queue, toBeCleaned: String, timeOutInMillis: Long, x: Throwable) extends AbstractProblem(ProblemSources.Hub) {
   override val throwable = Some(x)
 
   override def summary: String =
     s"""The Hub encountered an exception while trying to
-        |schedule a sentinel that cleans up outstanding messages
+        |schedule a sentinel that cleans up outstanding $toBeCleaned
         |exceed $timeOutInMillis milliseconds in queue ${queue.name}.""".stripMargin
 
   override def description: String =
     s"""The Hub encountered an exception while trying to
-        |schedule a sentinel that cleans up outstanding messages
+        |schedule a sentinel that cleans up outstanding $toBeCleaned
         |exceed $timeOutInMillis milliseconds  in queue ${queue.name}
         |on Thread ${Thread.currentThread().getName}: ${x.getMessage}""".stripMargin
 }
