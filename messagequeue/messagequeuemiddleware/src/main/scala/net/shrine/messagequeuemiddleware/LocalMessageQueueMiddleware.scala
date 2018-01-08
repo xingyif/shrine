@@ -192,7 +192,7 @@ object LocalMessageQueueMiddleware extends MessageQueueService {
 
         }, { throwable: Throwable =>
           throwable match {
-            case NonFatal(t) => ExceptionWhilePreparingTriggeredResponse("receiving message", from, timeout, t)
+            case NonFatal(t) => ExceptionWhilePreparingTimeoutResponse("receiving message", from, timeout, t)
           }
           throwable
         })
@@ -502,15 +502,6 @@ case class MessageDoesNotExistAndCannotBeCompletedException(id: UUID) extends Ex
       |Message might have already been completed or expired!""".stripMargin)
 
 case class ExceptionWhilePreparingTimeoutResponse(task: String, queue: Queue, timeout: Duration, t: Throwable) extends AbstractProblem(ProblemSources.Hub) {
-
-  override def throwable = Some(t)
-
-  override def summary: String = "Unable to prepare a triggered response due to an exception."
-
-  override def description: String = s"Unable to prepare a promised response for $task to Queue $queue within timeout $timeout due to a ${t.getClass.getSimpleName}"
-}
-
-case class ExceptionWhilePreparingTriggeredResponse(task: String, queue: Queue, timeout: Duration, t: Throwable) extends AbstractProblem(ProblemSources.Hub) {
 
   override def throwable = Some(t)
 
