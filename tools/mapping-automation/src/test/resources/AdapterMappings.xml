@@ -1,3 +1,28 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:e4447e7b087ec11ff0d4751ff50f132005fb8a787b6b9534b4b94dcec5e494b8
-size 904
+<AdapterMappings>
+	<hostname>Unknown</hostname>
+	<timestamp>2014-07-17T19:26:00.833-04:00</timestamp>
+	<version>Unknown</version>
+	<mappings>
+		<entry>
+			<key>\\i2b2\i2b2\Demographics\Age\0-9 years old\</key>
+			<value>
+				<local_key>\\i2b2\LOCAL\DEM|AGE:3</local_key>
+				<local_key>\\i2b2\LOCAL\DEM|AGE:6</local_key>
+				<local_key>\\i2b2\LOCAL\DEM|AGE:0</local_key>
+				<local_key>\\i2b2\LOCAL\DEM|AGE:1</local_key>
+				<local_key>\\i2b2\LOCAL\DEM|AGE:8</local_key>
+				<local_key>\\i2b2\LOCAL\DEM|AGE:7</local_key>
+				<local_key>\\i2b2\LOCAL\DEM|AGE:2</local_key>
+				<local_key>\\i2b2\LOCAL\DEM|AGE:5</local_key>
+				<local_key>\\i2b2\LOCAL\DEM|AGE:4</local_key>
+				<local_key>\\i2b2\LOCAL\DEM|AGE:9</local_key>
+			</value>
+		</entry>
+		<entry>
+			<key>\\i2b2\i2b2\Demographics\</key>
+			<value>
+				<local_key>\\i2b2\LOCAL\DEM</local_key>
+			</value>
+		</entry>
+	</mappings>
+</AdapterMappings>

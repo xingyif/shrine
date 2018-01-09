@@ -1,3 +1,41 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:de6f8eeabb54e18db333598b079308c48df1c593f6214a20ae30b01df10f6105
-size 1561
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <name>Jersey Http Client Tool</name>
+    <artifactId>jersey-http-client-test</artifactId>
+    <packaging>jar</packaging>
+
+    <parent>
+        <groupId>net.shrine</groupId>
+        <artifactId>shrine-tools</artifactId>
+        <version>1.23.7-SNAPSHOT-SNAPSHOT</version>
+    </parent>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.typesafe</groupId>
+            <artifactId>config</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>net.shrine</groupId>
+            <artifactId>shrine-client</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+    </dependencies>
+    <build>
+        <sourceDirectory>src/main/scala</sourceDirectory>
+        <testSourceDirectory>src/test/scala</testSourceDirectory>
+        <plugins>
+            <plugin>
+                <groupId>net.alchim31.maven</groupId>
+                <artifactId>scala-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <configuration>
+                    <finalName>jersey-http-client-tool-${project.version}</finalName>
+                    <appendAssemblyId>false</appendAssemblyId>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>

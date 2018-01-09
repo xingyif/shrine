@@ -1,3 +1,186 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:c0cd7630036942474cd2697dd15b0a6fba1bc7a1fda78b352790cc43f4eb56f7
-size 7392
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>shrine-base</artifactId>
+        <groupId>net.shrine</groupId>
+        <version>1.25.1.1-SNAPSHOT</version>
+        <relativePath>../../pom.xml</relativePath>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+    <artifactId>steward-app</artifactId>
+    <name>Steward App</name>
+    <packaging>jar</packaging>
+    <build>
+        <sourceDirectory>src/main/scala</sourceDirectory>
+        <testSourceDirectory>src/test/scala</testSourceDirectory>
+        <plugins>
+            <plugin>
+                <groupId>net.alchim31.maven</groupId>
+                <artifactId>scala-maven-plugin</artifactId>
+            </plugin>
+           <plugin>
+                <!-- https://github.com/eirslett/frontend-maven-plugin -->
+                <groupId>com.github.eirslett</groupId>
+                <artifactId>frontend-maven-plugin</artifactId>
+                <!-- NB! Set <version> to the latest released version of frontend-maven-plugin, like in README.md -->
+                <version>1.0</version>
+
+                <!-- point it to JS -->
+                <configuration>
+                    <workingDirectory>src/main/js</workingDirectory>
+                </configuration>
+
+                <executions>
+
+                    <execution>
+                        <id>install node and npm</id>
+                        <goals>
+                            <goal>install-node-and-npm</goal>
+                        </goals>
+                        <configuration>
+                            <nodeVersion>v6.10.3</nodeVersion>
+                            <npmVersion>4.1.2</npmVersion>
+                        </configuration>
+                    </execution>
+
+                    <execution>
+                        <id>npm install</id>
+                        <goals>
+                            <goal>npm</goal>
+                        </goals>
+
+                        <!-- optional: default phase is "generate-resources" -->
+                        <phase>generate-resources</phase>
+                        <configuration>
+                            <!-- optional: The default argument is actually
+                            "install", so unless you need to run some other npm command,
+                            you can remove this whole <configuration> section.
+                            -->
+                            <arguments>install -s</arguments>
+                        </configuration>
+                    </execution>
+
+                    <execution>
+                        <id>bower install</id>
+                        <goals>
+                            <goal>bower</goal>
+                        </goals>
+                        <configuration>
+                            <!-- optional: The default argument is actually
+                            "install", so unless you need to run some other npm command,
+                            you can remove this whole <configuration> section.
+                            -->
+                            <arguments>install -s</arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>gulp test and build</id>
+                        <goals>
+                            <goal>gulp</goal>
+                        </goals>
+                        <configuration>
+                            <arguments>--no-color</arguments>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+    <dependencies>
+        <dependency>
+            <groupId>io.spray</groupId>
+            <artifactId>spray-routing_2.11</artifactId>
+            <version>${spray-version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.spray</groupId>
+            <artifactId>spray-servlet_2.11</artifactId>
+            <version>${spray-version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.spray</groupId>
+            <artifactId>spray-util_2.11</artifactId>
+            <version>${spray-version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.spray</groupId>
+            <artifactId>spray-testkit_2.11</artifactId>
+            <version>${spray-version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.typesafe.akka</groupId>
+            <artifactId>akka-actor_2.11</artifactId>
+            <version>${akka-version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.typesafe.akka</groupId>
+            <artifactId>akka-slf4j_2.11</artifactId>
+            <version>${akka-version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.typesafe.akka</groupId>
+            <artifactId>akka-testkit_2.11</artifactId>
+            <version>${akka-testkit-version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.json4s</groupId>
+            <artifactId>json4s-native_2.11</artifactId>
+            <version>${json4s-version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.typesafe.slick</groupId>
+            <artifactId>slick_2.11</artifactId>
+            <version>${slick-version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+            <version>${slf4j-version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <version>${h2-version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>net.shrine</groupId>
+            <artifactId>shrine-protocol</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>net.shrine</groupId>
+            <artifactId>shrine-email</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>net.shrine</groupId>
+            <artifactId>shrine-data-commons</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>net.shrine</groupId>
+            <artifactId>shrine-client</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>net.shrine</groupId>
+            <artifactId>shrine-crypto</artifactId>
+            <version>${project.version}</version>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>net.shrine</groupId>
+            <artifactId>shrine-auth</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>${mysql-version}</version>
+        </dependency>
+    </dependencies>
+</project>

@@ -1,3 +1,74 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:c27863fb33e148112361980bf729df66db1080bf422a67ac5b8be92c15e61247
-size 2508
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<name>SHRINE Adapter Client API</name>
+	<artifactId>shrine-adapter-client-api</artifactId>
+	<parent>
+		<groupId>net.shrine</groupId>
+		<artifactId>shrine-base</artifactId>
+		<version>1.25.1.1-SNAPSHOT</version>
+		<relativePath>../../pom.xml</relativePath>
+	</parent>
+	<build>
+		<sourceDirectory>src/main/scala</sourceDirectory>
+	        <testSourceDirectory>src/test/scala</testSourceDirectory>
+		<plugins>
+			<plugin>
+				<groupId>net.alchim31.maven</groupId>
+				<artifactId>scala-maven-plugin</artifactId>
+			</plugin>
+		</plugins>
+	</build>
+	<dependencies>
+		<dependency>
+			<groupId>net.shrine</groupId>
+			<artifactId>shrine-crypto</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>net.shrine</groupId>
+			<artifactId>shrine-client</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>net.shrine</groupId>
+			<artifactId>shrine-protocol</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<!-- Test Scoped dependencies -->
+        <!-- For Jersey's in-process web server JAX-RS testing framework -->
+        <dependency>
+            <groupId>com.sun.jersey.jersey-test-framework</groupId>
+            <artifactId>jersey-test-framework-http</artifactId>
+            <version>${jersey-version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.jersey.contribs</groupId>
+            <artifactId>jersey-simple-server</artifactId>
+            <version>${jersey-version}</version>
+            <scope>test</scope>
+        </dependency>
+		<dependency>
+			<groupId>net.shrine</groupId>
+			<artifactId>shrine-test-commons</artifactId>
+			<version>${project.version}</version>
+			<type>test-jar</type>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>net.shrine</groupId>
+			<artifactId>shrine-client</artifactId>
+			<version>${project.version}</version>
+			<type>test-jar</type>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>net.shrine</groupId>
+			<artifactId>shrine-config</artifactId>
+			<version>${project.version}</version>
+			<type>test-jar</type>
+			<scope>test</scope>
+		</dependency>
+		<!-- End Test Scoped dependencies -->
+	</dependencies>
+</project>

@@ -1,3 +1,18 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:6f3e8eb0b6d2a3b7bc751e96068d07fe276a2d2ec259b1163aeadc96581a9dce
-size 1206
+<?xml version='1.0' encoding='utf-8'?>
+<Context swallowOutput="true">
+    <Resource name="jdbc/shrineDB" auth="Container" type="javax.sql.DataSource"
+               maxActive="100" maxIdle="30" maxWait="10000"
+               username="SHRINE_MYSQL_USER" password="SHRINE_MYSQL_PASSWORD" driverClassName="com.mysql.jdbc.Driver"
+               url="jdbc:mysql://SHRINE_MYSQL_HOST:3306/SHRINE_DB_NAME"
+               testOnBorrow="true" validationQuery="SELECT 1"/>
+    <Resource name="jdbc/adapterAuditDB" auth="Container" type="javax.sql.DataSource"
+              maxActive="100" maxIdle="30" maxWait="10000"
+              username="shrine" password="examplePassword" driverClassName="com.mysql.jdbc.Driver"
+              url="jdbc:mysql://localhost:3306/adapterAuditDB"
+              testOnBorrow="true" validationQuery="SELECT 1"/>
+    <Resource name="jdbc/qepAuditDB" auth="Container" type="javax.sql.DataSource"
+              maxActive="100" maxIdle="30" maxWait="10000"
+              username="shrine" password="examplePassword" driverClassName="com.mysql.jdbc.Driver"
+              url="jdbc:mysql://localhost:3306/qepAuditDB"
+              testOnBorrow="true" validationQuery="SELECT 1"/>
+</Context>

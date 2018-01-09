@@ -1,3 +1,508 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:5eaaf8a514258be41d8484e4dc4bdf8a9c6ac056845804e18c916a40d6d200a9
-size 19446
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ns6:request xmlns:ns4="http://www.i2b2.org/xsd/cell/crc/psm/1.1/" xmlns:ns7="http://www.i2b2.org/xsd/cell/ont/1.1/" xmlns:ns3="http://www.i2b2.org/xsd/cell/crc/pdo/1.1/" xmlns:ns5="http://www.i2b2.org/xsd/hive/plugin/" xmlns:ns2="http://www.i2b2.org/xsd/hive/pdo/1.1/" xmlns:ns6="http://www.i2b2.org/xsd/hive/msg/1.1/" xmlns:ns8="http://www.i2b2.org/xsd/cell/crc/psm/querydefinition/1.1/">
+	<message_header>
+		<proxy>
+            <redirect_url>https://cbmi-lab.med.harvard.edu:8443/shrine-test/rest/i2b2/request</redirect_url>
+        </proxy>
+
+		<sending_application>
+			<application_name>i2b2_QueryTool</application_name>
+			<application_version>1.6</application_version>
+		</sending_application>
+		<sending_facility>
+			<facility_name>PHS</facility_name>
+		</sending_facility>
+		<receiving_application>
+			<application_name>i2b2_DataRepositoryCell</application_name>
+			<application_version>1.6</application_version>
+		</receiving_application>
+		<receiving_facility>
+			<facility_name>PHS</facility_name>
+		</receiving_facility>
+		<security>
+			<domain>i2b2demo</domain>
+			<username>ij22</username>
+			<password token_ms_timeout="1800000" is_token="true">SessionKey:SZCLAmJLisD6xxY132Fj</password>
+		</security>
+		<message_type>
+			<message_code>Q04</message_code>
+			<event_type>EQQ</event_type>
+		</message_type>
+		<message_control_id>
+			<message_num>8dZe5xH52pLhxMqB2Em27</message_num>
+			<instance_num>0</instance_num>
+		</message_control_id>
+		<processing_id>
+			<processing_id>P</processing_id>
+			<processing_mode>I</processing_mode>
+		</processing_id>
+		<accept_acknowledgement_type>messageId</accept_acknowledgement_type>
+		<project_id>SHRINE</project_id>
+	</message_header>
+	<request_header>
+		<result_waittime_ms>180000</result_waittime_ms>
+	</request_header>
+	<message_body>
+		<ns4:psmheader>
+			<user group="SHRINE" login="ij22">ij22</user>
+			<patient_set_limit>0</patient_set_limit>
+			<estimated_time>0</estimated_time>
+			<query_mode>optimize_without_temp_table</query_mode>
+			<request_type>CRC_QRY_runQueryInstance_fromQueryDefinition</request_type>
+		</ns4:psmheader>
+		<ns4:request xsi:type="ns4:query_definition_requestType" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+			<query_definition>
+	<query_name>(762.0) Placent@16:07:51</query_name>
+	<query_timing>ANY</query_timing>
+	<specificity_scale>0</specificity_scale>
+	<use_shrine>1</use_shrine>
+	<panel>
+		<panel_number>1</panel_number>
+		<panel_accuracy_scale>100</panel_accuracy_scale>
+		<invert>0</invert>
+		<panel_timing>ANY</panel_timing>
+		<total_item_occurrences>1</total_item_occurrences>
+		<item>
+			<hlevel>5</hlevel>
+			<item_name>(762.0) Placenta previa affecting fetus or newborn</item_name>
+			<item_key>\\SHRINE\SHRINE\Diagnoses\Certain conditions originating in the perinatal period (760-779.99)\Maternal causes of perinatal morbidity and mortality (760-763.99)\Fetus or newborn affected by complications of placenta, cord, and membranes (762)\(762.0) Placenta previa affecting fetus or newborn\</item_key>
+			<tooltip>Diagnoses\Certain conditions originating in the perinatal period (760-779.99)\Maternal causes of perinatal morbidity and mortality (760-763.99)\Fetus or newborn affected by complications of placenta, cord, and membranes (762)\(762.0) Placenta previa affecting fetus or newborn\</tooltip>
+			<class>ENC</class>
+			<item_icon>LA</item_icon>
+			<item_is_synonym>false</item_is_synonym>
+		</item>
+	</panel>
+</query_definition>
+
+			<result_output_list><result_output priority_index="10" name="patient_count_xml"/>
+<result_output priority_index="11" name="patient_vitalstatus_count_xml"/>
+<result_output priority_index="12" name="patient_gender_count_xml"/>
+<result_output priority_index="13" name="patient_age_count_xml"/>
+<result_output priority_index="14" name="patient_race_count_xml"/>
+</result_output_list>
+
+		</ns4:request>
+		<shrine><queryTopicID>235</queryTopicID></shrine>
+	</message_body>
+</ns6:request>
+<ns4:response xmlns:ns11="http://www.i2b2.org/xsd/hive/msg/result/1.1/" xmlns:ns10="http://www.i2b2.org/xsd/cell/ont/1.1/" xmlns:ns9="http://www.i2b2.org/xsd/cell/crc/psm/analysisdefinition/1.1/" xmlns:ns8="http://www.i2b2.org/xsd/cell/crc/psm/querydefinition/1.1/" xmlns:ns7="http://sheriff.shrine.net/" xmlns:ns6="http://www.i2b2.org/xsd/cell/pm/1.1/" xmlns:ns5="http://www.i2b2.org/xsd/cell/crc/psm/1.1/" xmlns:ns4="http://www.i2b2.org/xsd/hive/msg/1.1/" xmlns:ns3="http://www.i2b2.org/xsd/cell/crc/pdo/1.1/" xmlns:ns2="http://www.i2b2.org/xsd/hive/pdo/1.1/" xmlns="">
+  <message_header>
+    <i2b2_version_compatible>1.1</i2b2_version_compatible>
+    <hl7_version_compatible>2.4</hl7_version_compatible>
+    <sending_application>
+      <application_name>SHRINE</application_name>
+      <application_version>1.3-compatible</application_version>
+    </sending_application>
+    <sending_facility>
+      <facility_name>SHRINE</facility_name>
+    </sending_facility>
+    <datetime_of_message>2011-04-08T16:21:12.251-04:00</datetime_of_message>
+    <security/>
+    <project_id xsi:nil="true" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"/>
+  </message_header>
+  <response_header>
+    <result_status>
+      <status type="DONE">DONE</status>
+    </result_status>
+  </response_header>
+  <message_body>
+    <ns5:response xsi:type="ns5:master_instance_result_responseType" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="">
+      <status>
+        <condition type="DONE">DONE</condition>
+      </status>
+      <query_master>
+        <query_master_id>8107823587021662818</query_master_id>
+        <name>(762.0) Placent@16:07:51</name>
+        <user_id>ij22</user_id>
+        <group_id>SHRINE</group_id>
+        <create_date>2016-05-31T16:07:59.385-04:00</create_date>
+        <request_xml>
+          <query_definition>
+            <query_name>(762.0) Placent@16:07:51</query_name>
+            <query_timing>ANY</query_timing>
+            <specificity_scale>0</specificity_scale>
+            <use_shrine>1</use_shrine>
+            <panel>
+              <panel_number>1</panel_number>
+              <invert>0</invert>
+              <panel_timing>ANY</panel_timing>
+              <total_item_occurrences>1</total_item_occurrences>
+              <item>
+                <hlevel>5</hlevel>
+                <item_name>\\SHRINE\SHRINE\Diagnoses\Certain conditions originating in the perinatal period (760-779.99)\Maternal causes of perinatal morbidity and mortality (760-763.99)\Fetus or newborn affected by complications of placenta, cord, and membranes (762)\(762.0) Placenta previa affecting fetus or newborn\</item_name>
+                <item_key>\\SHRINE\SHRINE\Diagnoses\Certain conditions originating in the perinatal period (760-779.99)\Maternal causes of perinatal morbidity and mortality (760-763.99)\Fetus or newborn affected by complications of placenta, cord, and membranes (762)\(762.0) Placenta previa affecting fetus or newborn\</item_key>
+                <tooltip>\\SHRINE\SHRINE\Diagnoses\Certain conditions originating in the perinatal period (760-779.99)\Maternal causes of perinatal morbidity and mortality (760-763.99)\Fetus or newborn affected by complications of placenta, cord, and membranes (762)\(762.0) Placenta previa affecting fetus or newborn\</tooltip>
+                <class>ENC</class>
+                <constrain_by_date></constrain_by_date>
+                <item_icon>LA</item_icon>
+                <item_is_synonym>false</item_is_synonym>
+              </item>
+            </panel>
+          </query_definition>
+        </request_xml>
+      </query_master>
+      <query_instance>
+        <query_instance_id>-1</query_instance_id>
+        <query_master_id>8107823587021662818</query_master_id>
+        <user_id>ij22</user_id>
+        <group_id>SHRINE</group_id>
+        <query_status_type>
+          <status_type_id>6</status_type_id>
+          <name>COMPLETED</name>
+          <description>COMPLETED</description>
+        </query_status_type>
+      </query_instance>
+      <query_result_instance>
+        <result_instance_id>39397</result_instance_id>
+        <query_instance_id>-1</query_instance_id>
+        <description>BIDMC Test</description>
+        <query_result_type>
+          <result_type_id>4</result_type_id>
+          <name>PATIENT_COUNT_XML</name>
+          <display_type>CATNUM</display_type>
+          <visual_attribute_type>LA</visual_attribute_type>
+          <description>Number of patients</description>
+        </query_result_type>
+        <set_size>13</set_size>
+        <start_date>2016-05-31T16:07:55.933-04:00</start_date>
+        <end_date>2016-05-31T16:07:55.937-04:00</end_date>
+        <query_status_type>
+          <name>FINISHED</name>
+          <status_type_id>3</status_type_id>
+          <description>FINISHED</description>
+        </query_status_type>
+        <breakdown_data>
+          <resultType>PATIENT_AGE_COUNT_XML</resultType>
+          <column>
+            <name> 0-9 years old</name>
+            <value>-1</value>
+          </column>
+          <column>
+            <name> 10-17 years old</name>
+            <value>-1</value>
+          </column>
+          <column>
+            <name> 18-34 years old</name>
+            <value>-1</value>
+          </column>
+          <column>
+            <name> 35-44 years old</name>
+            <value>-1</value>
+          </column>
+          <column>
+            <name> 45-54 years old</name>
+            <value>-1</value>
+          </column>
+          <column>
+            <name> 55-64 years old</name>
+            <value>-1</value>
+          </column>
+          <column>
+            <name> 65-74 years old</name>
+            <value>-1</value>
+          </column>
+          <column>
+            <name> 75-84 years old</name>
+            <value>-1</value>
+          </column>
+          <column>
+            <name>&gt;= 65 years old</name>
+            <value>-1</value>
+          </column>
+          <column>
+            <name>&gt;= 85 years old</name>
+            <value>-1</value>
+          </column>
+          <column>
+            <name>Not recorded</name>
+            <value>-1</value>
+          </column>
+        </breakdown_data>
+        <breakdown_data>
+          <resultType>PATIENT_GENDER_COUNT_XML</resultType>
+          <column>
+            <name>Female</name>
+            <value>-1</value>
+          </column>
+          <column>
+            <name>Male</name>
+            <value>-1</value>
+          </column>
+          <column>
+            <name>Unknown</name>
+            <value>-1</value>
+          </column>
+        </breakdown_data>
+        <breakdown_data>
+          <resultType>PATIENT_RACE_COUNT_XML</resultType>
+          <column>
+            <name>AMERICAN INDIAN/ALASKA NATIVE</name>
+            <value>-1</value>
+          </column>
+          <column>
+            <name>ASIAN</name>
+            <value>-1</value>
+          </column>
+          <column>
+            <name>BLACK/AFRICAN AMERICAN</name>
+            <value>-1</value>
+          </column>
+          <column>
+            <name>HISPANIC OR LATINO</name>
+            <value>-1</value>
+          </column>
+          <column>
+            <name>NATIVE HAWAIIAN OR OTHER PACIFIC ISLAND</name>
+            <value>-1</value>
+          </column>
+          <column>
+            <name>OTHER</name>
+            <value>-1</value>
+          </column>
+          <column>
+            <name>PATIENT DECLINED TO ANSWER</name>
+            <value>-1</value>
+          </column>
+          <column>
+            <name>UNKNOWN/NOT SPECIFIED</name>
+            <value>-1</value>
+          </column>
+          <column>
+            <name>WHITE</name>
+            <value>-1</value>
+          </column>
+        </breakdown_data>
+        <breakdown_data>
+          <resultType>PATIENT_VITALSTATUS_COUNT_XML</resultType>
+          <column>
+            <name>Deceased</name>
+            <value>-1</value>
+          </column>
+        </breakdown_data>
+      </query_result_instance>
+      <query_result_instance>
+        <result_instance_id>15855</result_instance_id>
+        <query_instance_id>-1</query_instance_id>
+        <description>CHB Test</description>
+        <query_result_type>
+          <name>PATIENT_COUNT_XML</name>
+        </query_result_type>
+        <set_size>-1</set_size>
+        <start_date>2016-05-31T16:07:55.000-04:00</start_date>
+        <end_date>2016-05-31T16:07:56.000-04:00</end_date>
+        <query_status_type>
+          <name>ERROR</name>
+          <description>ERROR</description>
+        </query_status_type>
+      </query_result_instance>
+      <query_result_instance>
+        <result_instance_id>1303</result_instance_id>
+        <query_instance_id>-1</query_instance_id>
+        <description>PHS Test</description>
+        <query_result_type>
+          <result_type_id>4</result_type_id>
+          <name>PATIENT_COUNT_XML</name>
+          <display_type>CATNUM</display_type>
+          <visual_attribute_type>LA</visual_attribute_type>
+          <description>Number of patients</description>
+        </query_result_type>
+        <set_size>453</set_size>
+        <start_date>2016-05-31T20:07:54.673Z</start_date>
+        <end_date>2016-05-31T20:07:56.177Z</end_date>
+        <query_status_type>
+          <name>FINISHED</name>
+          <status_type_id>3</status_type_id>
+          <description>FINISHED</description>
+        </query_status_type>
+        <breakdown_data>
+          <resultType>PATIENT_AGE_COUNT_XML</resultType>
+          <column>
+            <name>0-9 years old</name>
+            <value>192</value>
+          </column>
+          <column>
+            <name>10-17 years old</name>
+            <value>105</value>
+          </column>
+          <column>
+            <name>18-34 years old</name>
+            <value>25</value>
+          </column>
+          <column>
+            <name>35-44 years old</name>
+            <value>65</value>
+          </column>
+          <column>
+            <name>45-54 years old</name>
+            <value>48</value>
+          </column>
+          <column>
+            <name>55-64 years old</name>
+            <value>-1</value>
+          </column>
+          <column>
+            <name>65-74 years old</name>
+            <value>-1</value>
+          </column>
+          <column>
+            <name>75-84 years old</name>
+            <value>-1</value>
+          </column>
+          <column>
+            <name>&gt; 85 years old</name>
+            <value>-1</value>
+          </column>
+          <column>
+            <name>&gt;= 65 years old</name>
+            <value>-1</value>
+          </column>
+          <column>
+            <name>&gt;= 85 years old</name>
+            <value>-1</value>
+          </column>
+          <column>
+            <name>zz not recorded</name>
+            <value>-1</value>
+          </column>
+        </breakdown_data>
+        <breakdown_data>
+          <resultType>PATIENT_GENDER_COUNT_XML</resultType>
+          <column>
+            <name>Female</name>
+            <value>292</value>
+          </column>
+          <column>
+            <name>Male</name>
+            <value>160</value>
+          </column>
+          <column>
+            <name>Unknown</name>
+            <value>-1</value>
+          </column>
+        </breakdown_data>
+        <breakdown_data>
+          <resultType>PATIENT_RACE_COUNT_XML</resultType>
+          <column>
+            <name>Aleutian</name>
+            <value>-1</value>
+          </column>
+          <column>
+            <name>American Indian</name>
+            <value>-1</value>
+          </column>
+          <column>
+            <name>Asian</name>
+            <value>33</value>
+          </column>
+          <column>
+            <name>Asian Pacific Islander</name>
+            <value>-1</value>
+          </column>
+          <column>
+            <name>Black</name>
+            <value>21</value>
+          </column>
+          <column>
+            <name>Dominican</name>
+            <value>-1</value>
+          </column>
+          <column>
+            <name>Eskimo</name>
+            <value>-1</value>
+          </column>
+          <column>
+            <name>European</name>
+            <value>-1</value>
+          </column>
+          <column>
+            <name>Hawaiian</name>
+            <value>-1</value>
+          </column>
+          <column>
+            <name>Hispanic</name>
+            <value>36</value>
+          </column>
+          <column>
+            <name>Indian</name>
+            <value>-1</value>
+          </column>
+          <column>
+            <name>Middle Eastern</name>
+            <value>-1</value>
+          </column>
+          <column>
+            <name>Multiracial</name>
+            <value>-1</value>
+          </column>
+          <column>
+            <name>Native American</name>
+            <value>-1</value>
+          </column>
+          <column>
+            <name>Navajo</name>
+            <value>-1</value>
+          </column>
+          <column>
+            <name>Not recorded</name>
+            <value>59</value>
+          </column>
+          <column>
+            <name>Oriental</name>
+            <value>-1</value>
+          </column>
+          <column>
+            <name>Other</name>
+            <value>38</value>
+          </column>
+          <column>
+            <name>Vietnamese</name>
+            <value>-1</value>
+          </column>
+          <column>
+            <name>White</name>
+            <value>241</value>
+          </column>
+        </breakdown_data>
+        <breakdown_data>
+          <resultType>PATIENT_VITALSTATUS_COUNT_XML</resultType>
+          <column>
+            <name>Deceased</name>
+            <value>-1</value>
+          </column>
+          <column>
+            <name>Deferred</name>
+            <value>-1</value>
+          </column>
+          <column>
+            <name>Living</name>
+            <value>452</value>
+          </column>
+          <column>
+            <name>Not recorded</name>
+            <value>-1</value>
+          </column>
+        </breakdown_data>
+      </query_result_instance>
+      <query_result_instance>
+        <result_instance_id>0</result_instance_id>
+        <query_instance_id>-1</query_instance_id>
+        <description>DFCI</description>
+        <query_result_type>
+          <name></name>
+        </query_result_type>
+        <set_size>0</set_size>
+        <query_status_type>
+          <name>ERROR</name>
+          <description>Hub received a fatal error response</description>
+          <problem>
+            <codec>net.shrine.adapter.client.HttpErrorCodeFromAdapter</codec>
+            <stamp>Tue May 31 16:07:54 EDT 2016 on cbmi-lab Adapter</stamp>
+            <summary>Hub received a fatal error response</summary>
+            <description>Hub received error code 503 from the adapter at https://dfci.partners.org/shrine-test/rest/adapter/requests</description>
+            <details>Http response body was &lt;!DOCTYPE HTML PUBLIC &quot;-//IETF//DTD HTML 2.0//EN&quot;&gt; &lt;html&gt;&lt;head&gt; &lt;title&gt;503 Service Temporarily Unavailable&lt;/title&gt; &lt;/head&gt;&lt;body&gt; &lt;h1&gt;Service Temporarily Unavailable&lt;/h1&gt; &lt;p&gt;The server is temporarily unable to service your request due to maintenance downtime or capacity problems. Please try again later.&lt;/p&gt; &lt;hr&gt; &lt;address&gt;Apache/2.2.3 (CentOS) Server at 155.52.48.107 Port 443&lt;/address&gt; &lt;/body&gt;&lt;/html&gt; </details>
+          </problem>
+        </query_status_type>
+      </query_result_instance>
+    </ns5:response>
+  </message_body>
+</ns4:response>

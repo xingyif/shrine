@@ -1,3 +1,27 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:e05b1c972d4f6b575e57170269cbd89fc3af23a53f6808449cb9e9b1f8b73836
-size 954
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app>
+    <listener>
+    	<listener-class>net.shrine.war.AdapterMapShutdownServletContextListener</listener-class>
+    	<listener-class>net.shrine.war.ShrineShutdownServletContextListener</listener-class>
+    </listener>
+
+	<servlet>
+		<servlet-name>Shrine</servlet-name>
+		<servlet-class>com.sun.jersey.spi.container.servlet.ServletContainer</servlet-class>
+		<init-param>
+          <param-name>javax.ws.rs.Application</param-name>
+          <param-value>net.shrine.jersey.DefaultShrineResourceConfig</param-value>
+    	</init-param>
+		<init-param>
+			<param-name>com.sun.jersey.spi.container.ContainerRequestFilters</param-name>
+			<param-value>net.shrine.status.PermittedHostOnly</param-value>
+		</init-param>
+    	<load-on-startup>1</load-on-startup>
+	</servlet>
+
+    <servlet-mapping>
+        <servlet-name>Shrine</servlet-name>
+        <url-pattern>/rest/*</url-pattern>
+    </servlet-mapping>
+
+</web-app>

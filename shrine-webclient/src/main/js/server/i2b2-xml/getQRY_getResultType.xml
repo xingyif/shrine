@@ -1,3 +1,64 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:84f124e5a8eafe0060ca1423f19b52ecd9649df8b7de8b08f4e00c8c8e856eec
-size 3122
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ns4:response xmlns:ns11="http://www.i2b2.org/xsd/hive/msg/result/1.1/" xmlns:ns10="http://www.i2b2.org/xsd/cell/ont/1.1/" xmlns:ns9="http://www.i2b2.org/xsd/cell/crc/psm/analysisdefinition/1.1/" xmlns:ns8="http://www.i2b2.org/xsd/cell/crc/psm/querydefinition/1.1/" xmlns:ns7="http://sheriff.shrine.net/" xmlns:ns6="http://www.i2b2.org/xsd/cell/pm/1.1/" xmlns:ns5="http://www.i2b2.org/xsd/cell/crc/psm/1.1/" xmlns:ns4="http://www.i2b2.org/xsd/hive/msg/1.1/" xmlns:ns3="http://www.i2b2.org/xsd/cell/crc/pdo/1.1/" xmlns:ns2="http://www.i2b2.org/xsd/hive/pdo/1.1/" xmlns="">
+  <message_header>
+    <i2b2_version_compatible>1.1</i2b2_version_compatible>
+    <hl7_version_compatible>2.4</hl7_version_compatible>
+    <sending_application>
+      <application_name>SHRINE</application_name>
+      <application_version>1.3-compatible</application_version>
+    </sending_application>
+    <sending_facility>
+      <facility_name>SHRINE</facility_name>
+    </sending_facility>
+    <datetime_of_message>2011-04-08T16:21:12.251-04:00</datetime_of_message>
+    <security/>
+    <project_id xsi:nil="true" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"/>
+  </message_header>
+  <response_header>
+    <result_status>
+      <status type="DONE">DONE</status>
+    </result_status>
+  </response_header>
+  <message_body>
+    <ns4:response xsi:type="ns4:result_type_responseType" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="">
+      <status>
+        <condition type="DONE">DONE</condition>
+      </status>
+      <query_result_type>
+        <result_type_id>1</result_type_id>
+        <name>PATIENT_COUNT_XML</name>
+        <display_type>CATNUM</display_type>
+        <visual_attribute_type>LA</visual_attribute_type>
+        <description>Number of patients</description>
+      </query_result_type>
+      <query_result_type>
+        <result_type_id>2</result_type_id>
+        <name>PATIENT_AGE_COUNT_XML</name>
+        <display_type>CATNUM</display_type>
+        <visual_attribute_type>LA</visual_attribute_type>
+        <description>Age patient breakdown</description>
+      </query_result_type>
+      <query_result_type>
+        <result_type_id>3</result_type_id>
+        <name>PATIENT_RACE_COUNT_XML</name>
+        <display_type>CATNUM</display_type>
+        <visual_attribute_type>LA</visual_attribute_type>
+        <description>Race patient breakdown</description>
+      </query_result_type>
+      <query_result_type>
+        <result_type_id>4</result_type_id>
+        <name>PATIENT_GENDER_COUNT_XML</name>
+        <display_type>CATNUM</display_type>
+        <visual_attribute_type>LA</visual_attribute_type>
+        <description>Gender patient breakdown</description>
+      </query_result_type>
+      <query_result_type>
+        <result_type_id>5</result_type_id>
+        <name>PATIENT_VITALSTATUS_COUNT_XML</name>
+        <display_type>CATNUM</display_type>
+        <visual_attribute_type>LA</visual_attribute_type>
+        <description>Vital Status patient breakdown</description>
+      </query_result_type>
+    </ns4:response>
+  </message_body>
+</ns4:response>

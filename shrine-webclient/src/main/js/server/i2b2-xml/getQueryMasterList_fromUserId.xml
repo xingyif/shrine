@@ -1,3 +1,29 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:9faddfea0ed2e6787bad6b797097ccfe02c567f39fa8c1e3e9792b5d387dcd5c
-size 1609
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ns4:response xmlns:ns11="http://www.i2b2.org/xsd/hive/msg/result/1.1/" xmlns:ns10="http://www.i2b2.org/xsd/cell/ont/1.1/" xmlns:ns9="http://www.i2b2.org/xsd/cell/crc/psm/analysisdefinition/1.1/" xmlns:ns8="http://www.i2b2.org/xsd/cell/crc/psm/querydefinition/1.1/" xmlns:ns7="http://sheriff.shrine.net/" xmlns:ns6="http://www.i2b2.org/xsd/cell/pm/1.1/" xmlns:ns5="http://www.i2b2.org/xsd/cell/crc/psm/1.1/" xmlns:ns4="http://www.i2b2.org/xsd/hive/msg/1.1/" xmlns:ns3="http://www.i2b2.org/xsd/cell/crc/pdo/1.1/" xmlns:ns2="http://www.i2b2.org/xsd/hive/pdo/1.1/" xmlns="">
+  <message_header>
+    <i2b2_version_compatible>1.1</i2b2_version_compatible>
+    <hl7_version_compatible>2.4</hl7_version_compatible>
+    <sending_application>
+      <application_name>SHRINE</application_name>
+      <application_version>1.3-compatible</application_version>
+    </sending_application>
+    <sending_facility>
+      <facility_name>SHRINE</facility_name>
+    </sending_facility>
+    <datetime_of_message>2011-04-08T16:21:12.251-04:00</datetime_of_message>
+    <security/>
+    <project_id xsi:nil="true" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"/>
+  </message_header>
+  <response_header>
+    <result_status>
+      <status type="DONE">DONE</status>
+    </result_status>
+  </response_header>
+  <message_body>
+    <ns5:response xsi:type="ns5:master_responseType" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="">
+      <status>
+        <condition type="DONE">DONE</condition>
+      </status>
+    </ns5:response>
+  </message_body>
+</ns4:response>

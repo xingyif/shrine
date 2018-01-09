@@ -1,3 +1,32 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:81661c313a0eb7e6a4b55d361378c8a339700cdafd01670c524b1091aac3c1a1
-size 925
+<?xml version="1.0" encoding="UTF-8"?>
+<assembly xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2 http://maven.apache.org/xsd/assembly-1.1.2.xsd">
+	<id>dist</id>
+	<formats>
+		<format>zip</format>
+	</formats>
+	<includeBaseDirectory>true</includeBaseDirectory>
+	<fileSets>
+		<fileSet>
+			<directory>etc</directory>
+			<outputDirectory>.</outputDirectory>
+			<includes>
+				<include>**/*</include>
+			</includes>
+		</fileSet>
+		<fileSet>
+			<directory>src/main/resources</directory>
+			<outputDirectory>lib</outputDirectory>
+			<includes>
+				<include>log4j.properties</include>
+			</includes>
+		</fileSet>
+	</fileSets>
+	<dependencySets>
+		<dependencySet>
+			<outputDirectory>lib</outputDirectory>
+		</dependencySet>
+	</dependencySets>
+</assembly>
+

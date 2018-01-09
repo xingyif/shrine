@@ -1,3 +1,397 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:2d7bb11e9494d9fdcb7205af1a75bfba19983ee9bbd99a464668697ec1e80a06
-size 14867
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<name>SHRINE</name>
+	<groupId>net.shrine</groupId>
+	<artifactId>shrine-base</artifactId>
+	<packaging>pom</packaging>
+	<version>1.25.1.1-SNAPSHOT</version>
+	<!-- -->
+        <properties>
+			<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+			<spring.version>5.0.2.RELEASE</spring.version>
+			<lift-version>2.6.2</lift-version> <!-- todo where do we use lift? If it's the json library, shift to json4s . Stuck on 2.6.2 due to commons/util/src/main/scala/net/shrine/serialization/JsonMarshaller.scala:21: type mismatch -->
+			<scala-version>2.11.11</scala-version>
+			<scala-major-version>2.11</scala-major-version>
+			<junit-version>4.12</junit-version>
+			<slf4j-version>1.7.25</slf4j-version>
+			<log4j-version>1.2.17</log4j-version> <!-- todo log4j 1 is EOL. Use something else. -->
+			<jersey-version>1.19</jersey-version> <!-- todo jersey moved into glassfish. Need to update all its dependencies-->
+			<scalatest-version>2.2.6</scalatest-version> <!-- todo can't move to 3.0.1 due to a runtime return type check -->
+			<scala-maven-plugin-version>3.2.2</scala-maven-plugin-version> <!-- todo upgrading to 3.3.1 will not compile java code on bamboo See ITEAM-2030 -->
+			<squeryl-version>0.9.9</squeryl-version>
+			<typesafe-config-version>1.3.2</typesafe-config-version> <!-- 1.3.0 compiled with JDK 8-->
+			<h2-version>1.4.196</h2-version>
+			<easymock-version>3.5.1</easymock-version>
+			<mysql-version>5.1.45</mysql-version> <!-- todo Maybe move to 5.1.45, maybe move to 6.0.6. 8.0.8 is in the works -->
+			<opencsv-version>2.3</opencsv-version> <!-- todo may be an easy move to 4.1 and com.opencsv . some package names change -->
+			<servlet-api-version>3.0.1</servlet-api-version><!-- todo for tomcat 8, you can go to 3.1.0 , but need to fix /Users/david/projects/shrine-dev/apps/proxy/src/test/scala/net/shrine/proxy/ShrineProxyServletTest.scala:119: class MockHttpServletRequest needs to be abstract -->
+			<scallop-version>0.9.5</scallop-version><!-- todo Tried 3.1.1 and got compile errors  -->
+			<spray-version>1.3.4</spray-version>
+			<akka-version>2.4.16</akka-version><!-- todo shutdown method is gone in 2.5.8 -->
+			<akka-testkit-version>2.4.16</akka-testkit-version>
+			<json4s-version>3.5.3</json4s-version>
+			<slick-version>3.2.1</slick-version>
+			<bouncy-castle-version>1.58</bouncy-castle-version>
+			<courier-version>0.1.3</courier-version>
+			<mock-javamail-version>1.9</mock-javamail-version>
+			<jjwt-version>0.9.0</jjwt-version>
+			<jtds-version>1.3.1</jtds-version>
+			<jawn-version>0.10.4</jawn-version>         <!-- todo both jawn and rapture need some attention before updating -->
+			<rapture-version>2.0.0-M8</rapture-version>
+        </properties>
+	<!-- -->
+	<modules>
+		<module>apps/meta-app</module>
+		<module>apps/meta-war</module>
+		<module>apps/dashboard-app</module>
+		<module>apps/dashboard-war</module>
+		<module>apps/steward-app</module>
+		<module>apps/steward-war</module>
+		<module>apps/proxy</module>
+		<module>apps/shrine-app</module>
+		<module>apps/war</module>
+		<module>qep/service</module>
+		<module>messagequeue/messagequeueclient</module>
+        <module>messagequeue/messagequeuemiddleware</module>
+        <module>messagequeue/messagequeueservice</module>
+		<module>hub/broadcaster-aggregator</module>
+		<module>hub/broadcaster-service</module>
+		<module>adapter/adapter-api</module>
+		<module>adapter/adapter-service</module>
+		<module>hms-support</module>
+		<module>tools</module>
+		<module>commons/json-store</module>
+		<module>commons/util</module>
+		<module>commons/email</module>
+		<module>commons/auth</module>
+		<module>commons/protocol-query</module>
+		<module>commons/data-commons</module>
+		<module>commons/protocol</module>
+		<module>commons/crypto</module>
+		<module>commons/client</module>
+		<module>commons/config</module>
+		<module>commons/ont-support</module>
+		<module>commons/test-commons</module>
+		<module>install</module>
+		<module>integration</module>
+		<module>shrine-webclient</module>
+		<module>shrine-setup</module>
+	</modules>
+	<!-- -->
+	<build>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>net.alchim31.maven</groupId>
+					<artifactId>scala-maven-plugin</artifactId>
+					<version>${scala-maven-plugin-version}</version>
+                    <executions>
+                        <!-- Allows Java and Scala code to be compiled together and call each other -->
+                        <execution>
+                            <id>compile</id>
+                            <goals>
+                                <goal>compile</goal>
+                            </goals>
+                            <phase>compile</phase>
+                        </execution>
+                        <execution>
+                            <id>test-compile</id>
+                            <goals>
+                                <goal>testCompile</goal>
+                            </goals>
+                            <phase>test-compile</phase>
+                        </execution>
+                        <execution>
+                            <phase>process-resources</phase>
+                            <goals>
+                                <goal>compile</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+					<configuration>
+						<!-- NB: recompileMode must be set to 'incremental' to get Zinc support; just 
+						     setting useZincServer to true won't do it :( -->
+						<recompileMode>incremental</recompileMode>
+						<useZincServer>true</useZincServer>
+						<jvmArgs>
+							<jvmArg>-XX:+AggressiveOpts</jvmArg>
+							<jvmArg>-XX:CompileThreshold=500</jvmArg>
+							<jvmArg>-XX:+UseFastAccessorMethods</jvmArg>
+							<jvmArg>-XX:+UseStringCache</jvmArg>
+							<jvmArg>-XX:+OptimizeStringConcat</jvmArg>
+							<jvmArg>-XX:+TieredCompilation</jvmArg>
+							<jvmArg>-XX:+UseConcMarkSweepGC</jvmArg>
+							<jvmArg>-XX:+DoEscapeAnalysis</jvmArg>
+							<jvmArg>-server</jvmArg>
+							<jvmArg>-Xms64m</jvmArg>
+							<jvmArg>-Xmx1024m</jvmArg>
+							<jvmArg>-XX:MaxPermSize=384m</jvmArg>
+						</jvmArgs>
+						<scalaVersion>${scala-version}</scalaVersion>
+						<args>
+							<arg>-Xcheckinit</arg>
+							<arg>-unchecked</arg>
+							<arg>-deprecation</arg>
+							<arg>-Xlint:adapted-args,inaccessible,infer-any,missing-interpolator,private-shadow,type-parameter-shadow,unsound-match</arg>
+							<!--<arg>-Xfatal-warnings</arg>-->
+						</args>
+                        <source>7</source>
+                        <target>7</target>
+					</configuration>
+				</plugin>
+				<plugin>
+					<artifactId>maven-compiler-plugin</artifactId>
+					<configuration>
+						<source>7</source>
+						<target>7</target>
+					</configuration>
+				</plugin>
+				<plugin>
+					<groupId>org.codehaus.mojo</groupId>
+					<artifactId>buildnumber-maven-plugin</artifactId>
+					<!-- use explicit version because 1.0-beta-4 came with borked checksums -->
+					<version>1.1</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-jar-plugin</artifactId>
+					<version>2.4</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-war-plugin</artifactId>
+					<version>2.1.1</version>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+		<plugins>
+			<!-- This creates properties ${timestamp} and ${buildNumber} (the SCM 
+				revision number) -->
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>buildnumber-maven-plugin</artifactId>
+				<executions>
+					<execution>
+						<phase>validate</phase>
+						<goals>
+							<goal>create</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<timestampFormat>{0,date,yyyy-MM-dd HH:mm:ss}</timestampFormat>
+					<revisionOnScmFailure>(not available)</revisionOnScmFailure>
+				</configuration>
+			</plugin>
+			<!-- Add versioning information to jars and wars -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<configuration>
+					<archive>
+						<manifest>
+							<addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+						</manifest>
+						<manifestEntries>
+							<SCM-Revision>${buildNumber}</SCM-Revision>
+							<SCM-Branch>${scmBranch}</SCM-Branch>
+							<buildDate>${timestamp}</buildDate>
+						</manifestEntries>
+					</archive>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-war-plugin</artifactId>
+				<configuration>
+					<archive>
+						<manifest>
+							<addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+						</manifest>
+						<manifestEntries>
+							<SCM-Revision>${buildNumber}</SCM-Revision>
+							<SCM-Branch>${scmBranch}</SCM-Branch>
+							<buildDate>${timestamp}</buildDate>
+						</manifestEntries>
+					</archive>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.tomcat.maven</groupId>
+				<artifactId>tomcat7-maven-plugin</artifactId>
+				<version>2.2</version>
+				<configuration>
+					<useTestClasspath>true</useTestClasspath>
+					<systemProperties>
+						<shrine.steward.gruntWatch>true</shrine.steward.gruntWatch>
+						<shrine.steward.database.createTablesOnStart>true</shrine.steward.database.createTablesOnStart>
+						<shrine.dashboard.gruntWatch>true</shrine.dashboard.gruntWatch>
+						<shrine.dashboard.happyBaseUrl>http://shrine-dev1.catalyst:6060/shrine/rest/happy</shrine.dashboard.happyBaseUrl>
+					</systemProperties>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+	<!-- -->
+	<scm>
+        <developerConnection>scm:git:https://open.med.harvard.edu/stash/scm/shrine/shrine.git</developerConnection>
+    </scm>
+	<!-- -->
+	<repositories>
+		<!-- <repository> <id>CBMI-Nexus</id> <url>https://repo.open.med.harvard.edu/nexus/content/groups/public/</url> 
+			<snapshots> <enabled>true</enabled> </snapshots> <releases> <enabled>true</enabled> 
+			</releases> </repository> -->
+	</repositories>
+	<!-- -->
+	<pluginRepositories>
+		<pluginRepository>
+			<id>CBMI-Nexus</id>
+			<url>https://repo.open.med.harvard.edu/nexus/content/groups/public/</url>
+		</pluginRepository>
+	</pluginRepositories>
+	<!-- -->
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>com.typesafe</groupId>
+				<artifactId>config</artifactId>
+				<version>${typesafe-config-version}</version>
+			</dependency>
+			<dependency>
+				<groupId>log4j</groupId>
+				<artifactId>log4j</artifactId>
+				<version>${log4j-version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework</groupId>
+				<artifactId>spring-jdbc</artifactId>
+				<version>${spring.version}</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
+				<groupId>com.h2database</groupId>
+				<artifactId>h2</artifactId>
+				<version>${h2-version}</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.easymock</groupId>
+				<artifactId>easymock</artifactId>
+				<version>${easymock-version}</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.slf4j</groupId>
+				<artifactId>slf4j-log4j12</artifactId>
+				<version>${slf4j-version}</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
+				<groupId>mysql</groupId>
+				<artifactId>mysql-connector-java</artifactId>
+				<version>${mysql-version}</version>
+			</dependency>
+			<dependency>
+				<groupId>net.sf.opencsv</groupId>
+				<artifactId>opencsv</artifactId>
+				<version>${opencsv-version}</version>
+			</dependency>
+			<dependency>
+				<groupId>net.liftweb</groupId>
+				<artifactId>lift-json_${scala-major-version}</artifactId>
+				<version>${lift-version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.sun.jersey</groupId>
+				<artifactId>jersey-server</artifactId>
+				<version>${jersey-version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.sun.jersey</groupId>
+				<artifactId>jersey-servlet</artifactId>
+				<version>${jersey-version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.sun.jersey</groupId>
+				<artifactId>jersey-client</artifactId>
+				<version>${jersey-version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.squeryl</groupId>
+				<artifactId>squeryl_${scala-major-version}</artifactId>
+				<version>${squeryl-version}</version>
+			</dependency>
+			<dependency>
+				<groupId>javax.servlet</groupId>
+				<artifactId>javax.servlet-api</artifactId>
+				<version>${servlet-api-version}</version>
+				<scope>provided</scope>
+			</dependency>
+			<!-- https://mvnrepository.com/artifact/org.bouncycastle/bcprov-jdk15on -->
+			<!-- https://mvnrepository.com/artifact/org.bouncycastle/bcpkix-jdk15on -->
+			<dependency>
+				<groupId>org.bouncycastle</groupId>
+				<artifactId>bcpkix-jdk15on</artifactId>
+				<version>${bouncy-castle-version}</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+	<!-- -->
+	<dependencies>
+		<dependency>
+			<groupId>org.scala-lang</groupId>
+			<artifactId>scala-library</artifactId>
+			<version>${scala-version}</version>
+		</dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>${junit-version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.scalatest</groupId>
+			<artifactId>scalatest_${scala-major-version}</artifactId>
+			<version>${scalatest-version}</version>
+			<scope>test</scope>
+			<exclusions>
+				<!-- Exclude old (Scala 2.10.0) transitive dependencies -->
+				<exclusion>
+					<groupId>org.scala-lang</groupId>
+					<artifactId>scala-actors</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.scala-lang</groupId>
+					<artifactId>scala-reflect</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<!-- Re-add transitive dependencies for ScalaTest with up-to-date Scala 
+			versions -->
+		<dependency>
+			<groupId>org.scala-lang</groupId>
+			<artifactId>scala-actors</artifactId>
+			<version>${scala-version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.scala-lang</groupId>
+			<artifactId>scala-reflect</artifactId>
+			<version>${scala-version}</version>
+		</dependency>
+	</dependencies>
+	<!-- -->
+	<distributionManagement>
+		<snapshotRepository>
+			<id>nexus</id>
+			<name>Nexus Repo</name>
+			<url>https://repo.open.med.harvard.edu/nexus/content/repositories/snapshots</url>
+			<uniqueVersion>false</uniqueVersion>
+		</snapshotRepository>
+		<repository>
+			<id>nexus</id>
+			<name>Nexus Repo</name>
+			<url>https://repo.open.med.harvard.edu/nexus/content/repositories/releases</url>
+		</repository>
+	</distributionManagement>
+</project>

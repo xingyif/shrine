@@ -1,3 +1,175 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:4055139185ffd84d8d20f5c4c6fe2d04f956dbb7cc4cbe1d3a5c9059805f359c
-size 4839
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<name>SHRINE Adapter</name>
+	<artifactId>shrine-adapter-service</artifactId>
+	<packaging>jar</packaging>
+	<parent>
+		<groupId>net.shrine</groupId>
+		<artifactId>shrine-base</artifactId>
+		<version>1.25.1.1-SNAPSHOT</version>
+		<relativePath>../../pom.xml</relativePath>
+	</parent>
+	<build>
+		<sourceDirectory>src/main/scala</sourceDirectory>
+		<testSourceDirectory>src/test/scala</testSourceDirectory>
+		<plugins>
+			<plugin>
+				<groupId>net.alchim31.maven</groupId>
+				<artifactId>scala-maven-plugin</artifactId>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<executions>
+					<execution>
+						<goals>
+							<goal>test-jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+	<dependencies>
+		<dependency>
+			<groupId>org.squeryl</groupId>
+			<artifactId>squeryl_${scala-major-version}</artifactId>
+			<exclusions>
+				<!-- Exclude scalap, because it pulls in an old version of scala-compiler -->
+				<exclusion>
+					<groupId>org.scala-lang</groupId>
+					<artifactId>scalap</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		
+		<!-- Replace older transitive dependency pulled in by Squeryl -->
+		<dependency>
+			<groupId>org.scala-lang</groupId>
+			<artifactId>scalap</artifactId>
+			<version>${scala-version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>net.shrine</groupId>
+			<artifactId>shrine-auth</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>net.shrine</groupId>
+			<artifactId>shrine-adapter-client-api</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>net.shrine</groupId>
+			<artifactId>shrine-data-commons</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>net.shrine</groupId>
+			<artifactId>shrine-crypto</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>net.shrine</groupId>
+			<artifactId>shrine-crypto</artifactId>
+			<version>${project.version}</version>
+			<type>test-jar</type>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>net.shrine</groupId>
+			<artifactId>shrine-client</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>net.shrine</groupId>
+			<artifactId>shrine-protocol</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>net.shrine</groupId>
+			<artifactId>shrine-config</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.typesafe.slick</groupId>
+			<artifactId>slick_2.11</artifactId>
+			<version>${slick-version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-log4j12</artifactId>
+			<version>${slf4j-version}</version>
+		</dependency>
+		<dependency>
+			<groupId>mysql</groupId>
+			<artifactId>mysql-connector-java</artifactId>
+		</dependency>
+
+		<!--Test scoped dependencies below this comment -->
+
+		<!-- Test Scoped dependencies -->
+		<!-- For Jersey's in-process web server JAX-RS testing framework -->
+		<dependency>
+			<groupId>com.sun.jersey.jersey-test-framework</groupId>
+			<artifactId>jersey-test-framework-http</artifactId>
+			<version>${jersey-version}</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.sun.jersey.contribs</groupId>
+			<artifactId>jersey-simple-server</artifactId>
+			<version>${jersey-version}</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.h2database</groupId>
+			<artifactId>h2</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.easymock</groupId>
+			<artifactId>easymock</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-jdbc</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>net.shrine</groupId>
+			<artifactId>shrine-util</artifactId>
+			<version>${project.version}</version>
+			<type>test-jar</type>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>net.shrine</groupId>
+			<artifactId>shrine-test-commons</artifactId>
+			<version>${project.version}</version>
+			<type>test-jar</type>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>net.shrine</groupId>
+			<artifactId>shrine-data-commons</artifactId>
+			<version>${project.version}</version>
+			<type>test-jar</type>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+</project>

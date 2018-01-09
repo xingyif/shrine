@@ -1,3 +1,48 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:4b43b03c2f3fc56002ff361bfd8abc74d21351169d7e0f4564208afb71d55259
-size 1813
+<?xml version="1.0" encoding="UTF-8"?>
+<assembly xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2 http://maven.apache.org/xsd/assembly-1.1.2.xsd">
+    <id>dist</id>
+    <formats>
+        <format>zip</format>
+    </formats>
+    <includeBaseDirectory>false</includeBaseDirectory>
+    <fileSets>
+        <fileSet>
+            <directory>src/main/resources</directory>
+            <outputDirectory>${artifactId}</outputDirectory>
+            <includes>
+                 <include>**/*</include>
+            </includes>
+        </fileSet>
+        <fileSet>
+            <directory>../qep/service/src/main/sql</directory>
+            <outputDirectory>${artifactId}/qep/sql</outputDirectory>
+            <includes>
+                <include>**/*</include>
+            </includes>
+        </fileSet>
+        <fileSet>
+            <directory>../adapter/adapter-service/src/main/sql</directory>
+            <outputDirectory>${artifactId}/adapter/sql</outputDirectory>
+            <includes>
+                <include>**/*</include>
+            </includes>
+        </fileSet>
+        <fileSet>
+            <directory>../apps/steward-app/src/main/sql</directory>
+            <outputDirectory>${artifactId}/dsa/sql</outputDirectory>
+            <includes>
+                <include>**/*</include>
+            </includes>
+        </fileSet>
+        <fileSet>
+            <directory>../hub/broadcaster-aggregator/src/main/sql</directory>
+            <outputDirectory>${artifactId}/hub/sql</outputDirectory>
+            <includes>
+                <include>**/*</include>
+            </includes>
+        </fileSet>
+    </fileSets>
+</assembly>
+

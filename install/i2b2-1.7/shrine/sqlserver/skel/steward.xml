@@ -1,3 +1,10 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:4cb8fb1542c6c0376d3501cfd910e159de5df9f4107998a737ca13835b02839f
-size 524
+<?xml version='1.0' encoding='utf-8'?>
+<Context swallowOutput="true">
+
+    <Resource name="jdbc/stewardDB" auth="Container" type="javax.sql.DataSource"
+              maxActive="100" maxIdle="30" maxWait="10000"
+              username="SHRINE_DB_USER" password="SHRINE_DB_PASSWORD"
+              driverClassName="com.microsoft.sqlserver.jdbc.SQLServerDriver"
+              url="jdbc:sqlserver://SHRINE_DB_HOST:1433;databaseName=SHRINE_STEWARD_DB_NAME"
+              testOnBorrow="true" validationQuery="SELECT 1"/>
+</Context>

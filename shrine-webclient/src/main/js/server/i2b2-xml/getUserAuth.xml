@@ -1,3 +1,109 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:8d900290c8675e21c908ee5761d26b6bb252633f58da51fb45a8fb3255bd7e67
-size 10998
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ns2:response xmlns:ns2="http://www.i2b2.org/xsd/hive/msg/1.1/" xmlns:ns4="http://www.i2b2.org/xsd/cell/pm/1.1/" xmlns:ns3="http://www.i2b2.org/xsd/hive/msg/version/">
+    <message_header>
+        <i2b2_version_compatible>1.1</i2b2_version_compatible>
+        <hl7_version_compatible>2.4</hl7_version_compatible>
+        <sending_application>
+            <application_name>PM Cell</application_name>
+            <application_version>1.700</application_version>
+        </sending_application>
+        <sending_facility>
+            <facility_name>i2b2 Hive</facility_name>
+        </sending_facility>
+        <receiving_application>
+            <application_name>PM Cell</application_name>
+            <application_version>1.700</application_version>
+        </receiving_application>
+        <receiving_facility>
+            <facility_name>i2b2 Hive</facility_name>
+        </receiving_facility>
+        <datetime_of_message>2017-01-19T10:07:46.228-05:00</datetime_of_message>
+        <message_control_id>
+            <message_num>L2j53P9ErVD9gX3fzM6yR</message_num>
+            <instance_num>1</instance_num>
+        </message_control_id>
+        <processing_id>
+            <processing_id>P</processing_id>
+            <processing_mode>I</processing_mode>
+        </processing_id>
+        <accept_acknowledgement_type>AL</accept_acknowledgement_type>
+        <application_acknowledgement_type>AL</application_acknowledgement_type>
+        <country_code>US</country_code>
+        <project_id>undefined</project_id>
+    </message_header>
+    <response_header>
+        <result_status>
+            <status type="DONE">PM processing completed</status>
+        </result_status>
+    </response_header>
+    <message_body>
+        <ns4:configure>
+            <environment>DEVELOPMENT</environment>
+            <helpURL>http://www.i2b2.org</helpURL>
+            <user>
+                <full_name>Steward Test Steward Dave</full_name>
+                <user_name>dave</user_name>
+                <password token_ms_timeout="1800000" is_token="true">SessionKey:8hskJEVwRhKORrpqS5pA</password>
+                <domain>i2b2demo</domain>
+                <is_admin>false</is_admin>
+                <param name="DataSteward">true</param>
+                <project id="SHRINE">
+                    <name>SHRINE</name>
+                    <wiki>http://open.med.harvard.edu/display/SHRINE</wiki>
+                    <path>/SHRINE</path>
+                    <role>DATA_OBFSC</role>
+                    <role>USER</role>
+                    <param name="announcement">&amp;lt;div style='overflow:auto;height:325px;'&amp;gt;&amp;lt;p style='text-align:center;font-family:Arial;font-size:10px;font-weight:bold;'&amp;gt;Shared Health Research Informatics Network (SHRINE) &amp;lt;br&amp;gt;Terms-of-Data-Access Agreement&amp;lt;/p&amp;gt;&amp;lt;p style='text-align:left;font-family:Arial;font-size:9px;font-weight:normal;'&amp;gt;This Terms-of-Data-Access Agreement is designed to permit approved users access to the SHRINE federated query tool for the purpose of requesting aggregate clinical data from participating Harvard Catalyst Clinical and Translational Science Center organizations who are members of the SHRINE network (&amp;quot;Participating SHRINE Organization&amp;quot;). As of October 1, 2009, the Participating SHRINE Organizations are:  Beth Israel Deaconess Medical Center, Brigham and Women's Hospital, Children's Hospital Boston and Massachusetts General Hospital. Each Organization individually contributes and allows access to aggregate clinical data &amp;lt;b&amp;gt;for research purposes only&amp;lt;/b&amp;gt;. Your signature certifies that you understand and agree to all applicable terms contained herein.&amp;lt;/p&amp;gt;&amp;lt;ol style='text-align:left;font-family:Arial;font-size:9px;font-weight:normal;'&amp;gt;&amp;lt;li&amp;gt;I assert that I am a member of the Harvard Medical School Faculty appointed at or above the Instructor level and am employed by a Participating SHRINE Organization (or that organization's Physician's Organization) (&amp;quot;Qualified Faculty Member&amp;quot;).&amp;lt;/li&amp;gt;&amp;lt;li&amp;gt;I understand that access to SHRINE is currently limited to Qualified Faculty Members of Participating SHRINE Organizations (as defined above).&amp;lt;/li&amp;gt;&amp;lt;li&amp;gt;I understand that I may collaborate with investigators who are not Qualified Faculty Members under the following conditions:&amp;lt;ol style='text-align:left;font-family:Arial;font-size:9px;font-weight:normal;list-style-type:lower-alpha;'&amp;gt;&amp;lt;li&amp;gt;My collaborator is appointed at or above the Instructor level at Harvard University and is employed at Harvard University;&amp;lt;/li&amp;gt;&amp;lt;li&amp;gt;Our collaboration must be in my area of scientific expertise;&amp;lt;/li&amp;gt;&amp;lt;li&amp;gt;I am the only individual who will be authorized to conduct actual queries.&amp;lt;/li&amp;gt;&amp;lt;li&amp;gt;I assume full responsibility for adherence by my collaborator with the SHRINE Business Rules and will obtain and retain a signed copy of this Terms-of-Access Agreement to certify my collaborator's compliance with the SHRINE Business Rules.&amp;lt;/li&amp;gt;&amp;lt;/ol&amp;gt;&amp;lt;/li&amp;gt;&amp;lt;li&amp;gt;I understand that collaboration and/or sharing of primary data with other individuals orparties, including but not limited to other academic health centers and industry, is prohibited.&amp;lt;/li&amp;gt;&amp;lt;li&amp;gt;I understand that my Participating SHRINE Organization has agreed to comply with the Business Rules (link) under which access to clinical data is allowed and that I will be held accountable by my employing institution.&amp;lt;/li&amp;gt;&amp;lt;li&amp;gt;I understand that only aggregate numbers of patients satisfying an approved data query will be provided at this time.&amp;lt;/li&amp;gt;&amp;lt;li&amp;gt;&amp;lt;b&amp;gt;I further acknowledge the additional level of ethical sensitivity inherent in accessing data from institutions and patients other than my employing institution and agree to exercise exemplary ethical conduct when so doing&amp;lt;/b&amp;gt;. This includes but is not limited to the following specific issues:&amp;lt;ol style='text-align:left;font-family:Arial;font-size:9px;font-weight:normal;list-style-type:lower-alpha;'&amp;gt;&amp;lt;li&amp;gt;I  agree to restrict requested query topics and associated individual queries to bona fide research issues;&amp;lt;/li&amp;gt;&amp;lt;li&amp;gt;I agree to restrict all queries to the query topic approved by the Data Steward.&amp;lt;/li&amp;gt;&amp;lt;li&amp;gt;I will not formulate queries that could be used for competitive institutional or individual advantage;&amp;lt;/li&amp;gt;&amp;lt;li&amp;gt;I understand that all proposed query topics will be reviewed and approved or rejected by a Data Steward and that subsequent individual query requests will be audited for adherence to the initial approval.&amp;lt;/li&amp;gt;&amp;lt;li&amp;gt;I agree not to attempt to identify any individual or set of patients contained in the aggregate data.&amp;lt;/li&amp;gt;&amp;lt;/ol&amp;gt;&amp;lt;/li&amp;gt;&amp;lt;li&amp;gt;I understand that the use of each approved query topic will be limited to a six month period following approval of the query request.&amp;lt;/li&amp;gt;&amp;lt;li&amp;gt;I understand that if I wish to identify any of the Participating SHRINE Organizations by name in a publication, permission to use that name must be solicited from the named Institution (Link to designated Institutional Official).&amp;lt;/li&amp;gt;&amp;lt;li&amp;gt;I understand that disposition of any intellectual property deriving from SHRINE data acquisition and analysis is governed by a separate agreement requiring that I initiate the resolution process by reporting potential &amp;quot;discoveries&amp;quot; to my institution's technology transfer or intellectual property office.&amp;lt;/li&amp;gt;&amp;lt;li&amp;gt;I agree to adhere to my home institution's policy regarding retention and destruction of data.&amp;lt;/li&amp;gt;&amp;lt;li&amp;gt;This Terms-of-Data-Access Agreement will end upon termination of my appointment at Harvard Medical School or termination of my employment by a Participating SHRINE Organization.&amp;lt;/li&amp;gt;&amp;lt;li&amp;gt;I understand that any violation of this agreement will subject me to disciplinary action by my institution in consultation with the appropriate office at Harvard Medical School/Harvard University.&amp;lt;/li&amp;gt;&amp;lt;/ol&amp;gt;&amp;lt;/div&amp;gt;</param>
+                </project>
+            </user>
+            <domain_name>i2b2demo</domain_name>
+            <domain_id>i2b2</domain_id>
+            <active>true</active>
+            <cell_datas>
+                <cell_data id="CRC">
+                    <name>Data Repository</name>
+                    <url>http://localhost:9090/i2b2/services/QueryToolService/</url>
+                    <project_path>/</project_path>
+                    <method>REST</method>
+                    <can_override>true</can_override>
+                </cell_data>
+                <cell_data id="FRC">
+                    <name>File Repository </name>
+                    <url>http://localhost:9090/i2b2/services/FRService/</url>
+                    <project_path>/</project_path>
+                    <method>SOAP</method>
+                    <can_override>true</can_override>
+                </cell_data>
+                <cell_data id="ONT">
+                    <name>Ontology Cell</name>
+                    <url>http://localhost:9090/i2b2/services/OntologyService/</url>
+                    <project_path>/</project_path>
+                    <method>REST</method>
+                    <can_override>true</can_override>
+                </cell_data>
+                <cell_data id="WORK">
+                    <name>Workplace Cell</name>
+                    <url>http://localhost:9090/i2b2/services/WorkplaceService/</url>
+                    <project_path>/</project_path>
+                    <method>REST</method>
+                    <can_override>true</can_override>
+                </cell_data>
+                <cell_data id="IM">
+                    <name>IM Cell</name>
+                    <url>http://localhost:9090/i2b2/services/IMService/</url>
+                    <project_path>/</project_path>
+                    <method>REST</method>
+                    <can_override>true</can_override>
+                </cell_data>
+                <cell_data id="CRC">
+                    <name>SHRINE Federated Query</name>
+                    <url>https://10.118.12.41:6443/shrine/rest/i2b2/</url>
+                    <project_path>/SHRINE</project_path>
+                    <method>REST</method>
+                    <can_override>true</can_override>
+                </cell_data>
+            </cell_datas>
+            <global_data />
+        </ns4:configure>
+    </message_body>
+</ns2:response>

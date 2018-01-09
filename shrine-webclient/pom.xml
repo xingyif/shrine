@@ -1,3 +1,44 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:e9af6280b72d67e0d33262bf6a85726ca6d366ef61b3293f1a7bc0a1a72c62d0
-size 1783
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <name>SHRINE Web Client</name>
+    <artifactId>shrine-webclient</artifactId>
+    <packaging>pom</packaging>
+
+    <parent>
+        <groupId>net.shrine</groupId>
+        <artifactId>shrine-base</artifactId>
+        <version>1.25.1.1-SNAPSHOT</version>
+    </parent>
+
+    <properties>
+        <gmaven-plugin-version>1.5</gmaven-plugin-version>
+        <assembly-plugin-version>2.4</assembly-plugin-version>
+    </properties>
+
+    <build>
+            <plugins>
+                
+                <plugin>
+                    <artifactId>maven-assembly-plugin</artifactId>
+                    <version>${assembly-plugin-version}</version>
+                    <executions>
+                        <execution>
+                            <id>assembly</id>
+                            <phase>package</phase>
+                            <goals>
+                                <goal>single</goal>
+                            </goals>
+                            <configuration>
+                                <descriptors>
+                                    <descriptor>src/main/assembly/assembly.xml</descriptor>
+                                </descriptors>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+                <!-- if you ever decide to try and kick off build from maven instead of manually:
+                https://github.com/eirslett/frontend-maven-plugin/issues/589
+                -->
+            </plugins>  
+    </build>
+</project>

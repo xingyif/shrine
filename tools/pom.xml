@@ -1,3 +1,80 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:6dffd45ebdf06f0a08391d6a661e281125b297c511d883239ae0f5206f820690
-size 2923
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <name>SHRINE Tools</name>
+    <artifactId>shrine-tools</artifactId>
+    <packaging>pom</packaging>
+
+    <parent>
+        <groupId>net.shrine</groupId>
+        <artifactId>shrine-base</artifactId>
+        <version>1.25.1.1-SNAPSHOT</version>
+    </parent>
+    <properties>
+        <gmaven-plugin-version>1.5</gmaven-plugin-version>
+        <assembly-plugin-version>2.4</assembly-plugin-version>
+    </properties>
+
+    <modules>
+        <module>monitor</module>
+        <module>utility-commons</module>
+        <module>scanner</module>
+        <module>batch-querier</module>
+        <module>adapter-queries-to-qep</module>
+        <module>many-qep-queries</module>
+	<module>mapping-automation</module>
+    </modules>
+
+    <dependencies>
+
+        <dependency>
+            <groupId>net.shrine</groupId>
+            <artifactId>shrine-protocol</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+    </dependencies>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.codehaus.gmaven</groupId>
+                    <artifactId>gmaven-plugin</artifactId>
+                    <version>${gmaven-plugin-version}</version>
+                    <executions>
+                        <execution>
+                            <goals>
+                                <goal>compile</goal>
+                                <goal>testCompile</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                    <configuration>
+                        <debug>true</debug>
+                        <verbose>true</verbose>
+                        <stacktrace>true</stacktrace>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-assembly-plugin</artifactId>
+                    <version>${assembly-plugin-version}</version>
+                    <executions>
+                        <execution>
+                            <id>assembly</id>
+                            <phase>package</phase>
+                            <goals>
+                                <goal>single</goal>
+                            </goals>
+                            <configuration>
+                                <descriptors>
+                                    <descriptor>src/main/assembly/assembly.xml</descriptor>
+                                </descriptors>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+</project>
+

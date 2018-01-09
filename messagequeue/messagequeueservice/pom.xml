@@ -1,3 +1,40 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:c9f126781372b6297ea4d29a804c1fd2b349a3c5349fce31dab265340cad6a1a
-size 1557
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <name>SHRINE MessageQueueService</name>
+    <artifactId>shrine-messagequeueservice</artifactId>
+    <packaging>jar</packaging>
+    <parent>
+        <groupId>net.shrine</groupId>
+        <artifactId>shrine-base</artifactId>
+        <version>1.25.1.1-SNAPSHOT</version>
+        <relativePath>../../pom.xml</relativePath>
+    </parent>
+    <build>
+        <sourceDirectory>src/main/scala</sourceDirectory>
+        <testSourceDirectory>src/test/scala</testSourceDirectory>
+        <plugins>
+            <plugin>
+                <groupId>net.alchim31.maven</groupId>
+                <artifactId>scala-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>test-jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+    <dependencies>
+        <dependency>
+            <groupId>net.shrine</groupId>
+            <artifactId>shrine-config</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+    </dependencies>
+</project>

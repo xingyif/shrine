@@ -1,3 +1,51 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:92f641064c55bfe636df229a02a7ddfabc7d95e08bffd545c19abfb663d615b3
-size 1969
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <name>SHRINE Create Many Queries in the QEP database</name>
+    <artifactId>many-qep-queries</artifactId>
+    <packaging>jar</packaging>
+    <parent>
+        <groupId>net.shrine</groupId>
+        <artifactId>shrine-tools</artifactId>
+        <version>1.25.1.1-SNAPSHOT</version>
+    </parent>
+
+    <dependencies>
+        <dependency>
+            <groupId>net.shrine</groupId>
+            <artifactId>shrine-data-commons</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.typesafe</groupId>
+            <artifactId>config</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>net.shrine</groupId>
+            <artifactId>shrine-qep</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+            <version>${slf4j-version}</version>
+            <scope>runtime</scope>
+        </dependency>
+    </dependencies>
+    <build>
+        <sourceDirectory>src/main/scala</sourceDirectory>
+        <testSourceDirectory>src/test/scala</testSourceDirectory>
+        <plugins>
+            <plugin>
+                <groupId>net.alchim31.maven</groupId>
+                <artifactId>scala-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <configuration>
+                    <finalName>many-qep-queries-${project.version}</finalName>
+                    <appendAssemblyId>false</appendAssemblyId>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>

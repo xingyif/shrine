@@ -1,3 +1,46 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:5508bf6068a0e75099556d6af53579b3348ce17a25db39d6e541b6211dcb31e0
-size 2194
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<AdapterMappings>
+    <hostname>cbmi-lab.med.harvard.edu</hostname>
+    <timestamp>2009-12-16T15:54:47.043-06:00</timestamp>
+    <mappings>
+        <entry>
+            <key>\\SHRINE\SHRINE\Demographics\Age\0-9 years old\</key>
+            <value>
+                <local_key>\\i2b2\i2b2\Demographics\Age\0-9 years old\0\</local_key>
+                <local_key>\\i2b2\i2b2\Demographics\Age\0-9 years old\1\</local_key>
+                <local_key>\\i2b2\i2b2\Demographics\Age\0-9 years old\2\</local_key>
+                <local_key>\\i2b2\i2b2\Demographics\Age\0-9 years old\3\</local_key>
+                <local_key>\\i2b2\i2b2\Demographics\Age\0-9 years old\4\</local_key>
+                <local_key>\\i2b2\i2b2\Demographics\Age\0-9 years old\5\</local_key>
+                <local_key>\\i2b2\i2b2\Demographics\Age\0-9 years old\6\</local_key>
+                <local_key>\\i2b2\i2b2\Demographics\Age\0-9 years old\7\</local_key>
+                <local_key>\\i2b2\i2b2\Demographics\Age\0-9 years old\8\</local_key>
+                <local_key>\\i2b2\i2b2\Demographics\Age\0-9 years old\9\</local_key>
+            </value>
+        </entry>
+        <entry>
+            <key>\\SHRINE\SHRINE\Demographics\Age\0-9 years old\0 years old\</key>
+            <value>
+                <local_key>\\i2b2\i2b2\Demographics\Age\0-9 years old\0\</local_key>
+            </value>
+        </entry>
+        <entry>
+            <key>\\SHRINE\SHRINE\Demographics\Age\0-9 years old\1 years old\</key>
+            <value>
+                <local_key>\\i2b2\i2b2\Demographics\Age\0-9 years old\1\</local_key>
+            </value>
+        </entry>
+        <entry>
+            <key>\\SHRINE\SHRINE\Demographics\Age\0-9 years old\2 years old\</key>
+            <value>
+                <local_key>\\i2b2\i2b2\Demographics\Age\0-9 years old\2\</local_key>
+            </value>
+        </entry>
+        <entry>
+            <key>\\SHRINE\SHRINE\Demographics\Age\0-9 years old\3 years old\</key>
+            <value>
+                <local_key>\\i2b2\i2b2\Demographics\Age\0-9 years old\3\</local_key>
+            </value>
+        </entry>
+    </mappings>
+</AdapterMappings>
